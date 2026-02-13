@@ -1,4 +1,4 @@
-/* GridKit JS v1.0 – Vanilla, zero dependencies */
+/* GridKit JS v1.1 – Vanilla, zero dependencies */
 (function() {
     'use strict';
 
@@ -50,7 +50,6 @@
                 });
             },
             submit(form) {
-                // Clear errors
                 form.querySelectorAll('.gk-field-error').forEach(el => el.textContent = '');
                 form.querySelectorAll('.gk-has-error').forEach(el => el.classList.remove('gk-has-error'));
 
@@ -88,6 +87,20 @@
             },
             bindTable(wrap) {
                 const id = wrap.dataset.gkTable;
+                const isStatic = wrap.hasAttribute('data-gk-static');
+
+                // Load static data if available
+                if (isStatic) {
+                    const scriptEl = wrap.querySelector('script[data-gk-data]');
+                    if (scriptEl) {
+                        try {
+                            wrap._gkData = JSON.parse(scriptEl.textContent);
+                            wrap._gkSort = { col: '', dir: 'asc' };
+                            wrap._gkSearch = '';
+                            wrap._gkFilters = {};
+                        } catch (e) { /* ignore */ }
+                    }
+                }
 
                 // Modal buttons
                 wrap.addEventListener('click', e => {
@@ -104,7 +117,14 @@
                 wrap.addEventListener('click', e => {
                     const th = e.target.closest('[data-gk-sort]');
                     if (!th) return;
-                    this.reload(wrap, { gk_sort: th.dataset.gkSort, gk_dir: th.dataset.gkDir, gk_page: 1 });
+                    if (isStatic && wrap._gkData) {
+                        const col = th.dataset.gkSort;
+                        const dir = th.dataset.gkDir;
+                        wrap._gkSort = { col, dir };
+                        this.renderStatic(wrap);
+                    } else {
+                        this.reload(wrap, { gk_sort: th.dataset.gkSort, gk_dir: th.dataset.gkDir, gk_page: 1 });
+                    }
                 });
 
                 // Pagination
@@ -120,10 +140,201 @@
                     let timer;
                     searchInput.addEventListener('input', () => {
                         clearTimeout(timer);
-                        timer = setTimeout(() => this.reload(wrap, { gk_search: searchInput.value, gk_page: 1 }), 300);
+                        timer = setTimeout(() => {
+                            if (isStatic && wrap._gkData) {
+                                wrap._gkSearch = searchInput.value;
+                                this.renderStatic(wrap);
+                            } else {
+                                this.reload(wrap, { gk_search: searchInput.value, gk_page: 1 });
+                            }
+                        }, 300);
                     });
                 }
+
+                // Filters
+                wrap.querySelectorAll('[data-gk-filter]').forEach(sel => {
+                    sel.addEventListener('change', () => {
+                        if (isStatic && wrap._gkData) {
+                            wrap._gkFilters[sel.dataset.gkFilter] = sel.value;
+                            this.renderStatic(wrap);
+                        } else {
+                            const params = { gk_page: 1 };
+                            params['gk_filter_' + sel.dataset.gkFilter] = sel.value;
+                            this.reload(wrap, params);
+                        }
+                    });
+                });
             },
+
+            // Client-side render for static data
+            renderStatic(wrap) {
+                const data = wrap._gkData;
+                if (!data) return;
+
+                let rows = data.rows.slice();
+                const columns = data.columns;
+                const colKeys = Object.keys(columns);
+
+                // Apply filters
+                const filters = wrap._gkFilters || {};
+                Object.entries(filters).forEach(([col, val]) => {
+                    if (val !== '') {
+                        rows = rows.filter(r => String(r[col] ?? '') === val);
+                    }
+                });
+
+                // Apply search
+                const query = (wrap._gkSearch || '').toLowerCase().trim();
+                if (query) {
+                    rows = rows.filter(row => {
+                        return colKeys.some(key => {
+                            return String(row[key] ?? '').toLowerCase().includes(query);
+                        });
+                    });
+                }
+
+                // Apply sort
+                const sort = wrap._gkSort || {};
+                if (sort.col && columns[sort.col]) {
+                    const col = sort.col;
+                    const dir = sort.dir === 'desc' ? -1 : 1;
+                    rows.sort((a, b) => {
+                        let va = a[col] ?? '';
+                        let vb = b[col] ?? '';
+                        // Try numeric comparison
+                        const na = parseFloat(va), nb = parseFloat(vb);
+                        if (!isNaN(na) && !isNaN(nb)) return (na - nb) * dir;
+                        return String(va).localeCompare(String(vb), 'de') * dir;
+                    });
+                }
+
+                // Build HTML
+                const e = s => {
+                    const d = document.createElement('div');
+                    d.textContent = String(s);
+                    return d.innerHTML;
+                };
+
+                const formatVal = (val, col) => {
+                    const fmt = col.format || null;
+                    if (!fmt) return e(val);
+                    switch (fmt) {
+                        case 'currency': return e(parseFloat(val || 0).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €');
+                        case 'percent': return e(parseInt(val || 0) + '%');
+                        case 'date': return val ? e(new Date(val).toLocaleDateString('de-DE')) : '';
+                        case 'datetime': return val ? e(new Date(val).toLocaleString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})) : '';
+                        case 'boolean': return parseInt(val) ? '<span class="gk-bool gk-bool-yes">✓</span>' : '<span class="gk-bool gk-bool-no">–</span>';
+                        case 'email': return val ? '<a href="mailto:' + e(val) + '">' + e(val) + '</a>' : '';
+                        case 'label': return renderLabel(val, col.labels || {});
+                        default: return e(val);
+                    }
+                };
+
+                const renderLabel = (val, custom) => {
+                    const v = String(val || '').toLowerCase().trim();
+                    const map = {
+                        green: ['aktiv','bezahlt','paid','ja','yes','1','true','gesendet','delivered'],
+                        orange: ['offen','pending','entwurf','draft','warnung'],
+                        red: ['storniert','cancelled','überfällig','overdue','fehler','error'],
+                        gray: ['inaktiv','0','false','nein','no']
+                    };
+                    let color = custom[v] || null;
+                    if (!color) {
+                        for (const [c, vals] of Object.entries(map)) {
+                            if (vals.includes(v)) { color = c; break; }
+                        }
+                    }
+                    color = color || 'gray';
+                    return '<span class="gk-label gk-label-' + e(color) + '">' + e(val) + '</span>';
+                };
+
+                // Determine next sort direction for headers
+                const sortCol = sort.col || '';
+                const sortDir = sort.dir || 'asc';
+
+                let html = '<table class="gk-table"><thead><tr>';
+                for (const [key, col] of Object.entries(columns)) {
+                    const style = col.width ? ' style="width:' + e(col.width) + '"' : '';
+                    const sortable = col.sortable || false;
+                    let cls = '', attrs = '';
+                    if (sortable) {
+                        const newDir = (sortCol === key && sortDir === 'asc') ? 'desc' : 'asc';
+                        attrs = ' data-gk-sort="' + e(key) + '" data-gk-dir="' + newDir + '"';
+                        if (sortCol === key) {
+                            cls = ' class="gk-sortable gk-sorted-' + sortDir + '"';
+                        } else {
+                            cls = ' class="gk-sortable"';
+                        }
+                    }
+                    html += '<th' + cls + style + attrs + '>' + e(col.label) + '</th>';
+                }
+                const hasButtons = data.buttons && Object.keys(data.buttons).length > 0;
+                if (hasButtons) html += '<th class="gk-actions-col"></th>';
+                html += '</tr></thead><tbody>';
+
+                if (rows.length === 0) {
+                    const colspan = colKeys.length + (hasButtons ? 1 : 0);
+                    html += '<tr><td colspan="' + colspan + '" class="gk-empty">Keine Einträge gefunden</td></tr>';
+                } else {
+                    rows.forEach(row => {
+                        html += '<tr>';
+                        for (const [key, col] of Object.entries(columns)) {
+                            const val = row[key] ?? '';
+                            const align = col.align ? ' style="text-align:' + e(col.align) + '"' : '';
+                            html += '<td' + align + '>' + formatVal(val, col) + '</td>';
+                        }
+                        if (hasButtons) {
+                            html += '<td class="gk-actions">';
+                            for (const [bname, bopts] of Object.entries(data.buttons)) {
+                                let cls = 'gk-btn gk-btn-icon';
+                                if (bopts['class']) cls += ' gk-btn-' + bopts['class'];
+                                const params = {};
+                                if (bopts.params) {
+                                    Object.entries(bopts.params).forEach(([pk, pcol]) => {
+                                        params[pk] = row[pcol] ?? '';
+                                    });
+                                }
+                                let btnAttrs = '';
+                                if (bopts.modal) btnAttrs += ' data-gk-modal="' + e(bopts.modal) + '"';
+                                btnAttrs += " data-gk-params='" + e(JSON.stringify(params)) + "'";
+                                const icon = GK.table.iconSvg(bopts.icon || bname);
+                                html += '<button class="' + cls + '"' + btnAttrs + '>' + icon + '</button>';
+                            }
+                            html += '</td>';
+                        }
+                        html += '</tr>';
+                    });
+                }
+
+                html += '</tbody></table>';
+
+                // Replace table content (keep toolbar, templates, script)
+                const oldTable = wrap.querySelector('.gk-table');
+                const oldPag = wrap.querySelector('.gk-pagination');
+                if (oldTable) oldTable.remove();
+                if (oldPag) oldPag.remove();
+
+                const toolbar = wrap.querySelector('.gk-toolbar');
+                if (toolbar) {
+                    toolbar.insertAdjacentHTML('afterend', html);
+                } else {
+                    wrap.insertAdjacentHTML('afterbegin', html);
+                }
+            },
+
+            iconSvg(name) {
+                switch (name) {
+                    case 'pencil': case 'edit':
+                        return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+                    case 'trash': case 'delete':
+                        return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14Z"/></svg>';
+                    case 'plus':
+                        return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>';
+                    default:
+                        return '<span>' + name + '</span>';
+                }
+            },
+
             reload(wrap, overrides) {
                 const id = wrap.dataset.gkTable;
                 const url = new URL(window.location);
@@ -133,21 +344,23 @@
                 fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(r => r.text())
                     .then(html => {
-                        // Replace table + pagination (everything after toolbar)
                         const toolbar = wrap.querySelector('.gk-toolbar');
                         const templates = wrap.querySelectorAll('template');
-                        // Remove old table content
                         Array.from(wrap.children).forEach(ch => {
-                            if (ch !== toolbar && ch.tagName !== 'TEMPLATE') ch.remove();
+                            if (ch !== toolbar && ch.tagName !== 'TEMPLATE' && ch.tagName !== 'SCRIPT') ch.remove();
                         });
                         toolbar.insertAdjacentHTML('afterend', html);
-                        // Re-bind URL params
-                        const params = url.searchParams;
                         window.history.replaceState(null, '', url);
                     });
             },
             refreshAll() {
-                document.querySelectorAll('[data-gk-table]').forEach(wrap => this.reload(wrap, {}));
+                document.querySelectorAll('[data-gk-table]').forEach(wrap => {
+                    if (wrap.hasAttribute('data-gk-static') && wrap._gkData) {
+                        this.renderStatic(wrap);
+                    } else {
+                        this.reload(wrap, {});
+                    }
+                });
             }
         },
 

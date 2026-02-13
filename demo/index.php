@@ -139,6 +139,14 @@ use GridKit\Modal;
             ->column('net_price', 'Netto', ['format' => 'currency', 'align' => 'right'])
             ->column('tax_rate', 'MwSt', ['format' => 'percent', 'width' => '80px'])
             ->column('is_active', 'Status', ['format' => 'label'])
+            ->filter('is_active', 'select', [
+                'options' => ['aktiv' => 'Aktiv', 'inaktiv' => 'Inaktiv', 'entwurf' => 'Entwurf'],
+                'placeholder' => 'Alle Status'
+            ])
+            ->filter('unit', 'select', [
+                'options' => ['Stk' => 'Stück', 'h' => 'Stunde', 'psch' => 'Pauschal'],
+                'placeholder' => 'Alle Einheiten'
+            ])
             ->button('edit', ['icon' => 'pencil', 'modal' => 'edit_form', 'params' => ['id' => 'article_id']])
             ->button('delete', ['icon' => 'trash', 'class' => 'danger', 'modal' => 'delete_form', 'params' => ['id' => 'article_id']])
             ->modal('edit_form', 'Artikel bearbeiten', 'form/f_articles.php', ['size' => 'medium'])

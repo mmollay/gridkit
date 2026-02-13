@@ -29,9 +29,16 @@
 
 /* === TABLE === */
 .gk-table-wrap { background: var(--gk-bg); border-radius: var(--gk-radius); box-shadow: var(--gk-shadow); overflow: hidden; }
-.gk-toolbar { display: flex; justify-content: space-between; align-items: center; padding: var(--gk-spacing); gap: var(--gk-spacing); border-bottom: 1px solid var(--gk-border); }
+.gk-toolbar { display: flex; flex-wrap: wrap; align-items: center; padding: var(--gk-spacing); gap: var(--gk-spacing); border-bottom: 1px solid var(--gk-border); }
+.gk-toolbar .gk-btn-primary { margin-left: auto; }
 .gk-search { padding: 6px 10px; border: 1px solid var(--gk-border); border-radius: var(--gk-radius-sm); font-size: var(--gk-font-size); outline: none; min-width: 200px; }
 .gk-search:focus { border-color: var(--gk-primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+
+/* Filters */
+.gk-filter { padding: 6px 10px; border: 1px solid var(--gk-border); border-radius: var(--gk-radius-sm); font-size: var(--gk-font-size); background: var(--gk-bg); color: var(--gk-text); outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 28px; }
+.gk-filter:focus { border-color: var(--gk-primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+.gk-filter { padding: 6px 10px; border: 1px solid var(--gk-border); border-radius: var(--gk-radius-sm); font-size: var(--gk-font-size); background: var(--gk-bg); color: var(--gk-text); outline: none; cursor: pointer; }
+.gk-filter:focus { border-color: var(--gk-primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
 
 .gk-table { width: 100%; border-collapse: collapse; }
 .gk-table th, .gk-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--gk-border); }
@@ -130,5 +137,6 @@ textarea.gk-input { resize: vertical; }
     .gk-row > .gk-field { flex: 1 1 100% !important; }
     .gk-toolbar { flex-direction: column; }
     .gk-search { width: 100%; min-width: 0; }
+    .gk-filter { width: 100%; }
     .gk-table-wrap { overflow-x: auto; }
 }

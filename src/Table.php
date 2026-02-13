@@ -9,6 +9,7 @@ class Table
     private array $modals = [];
     private array $rows = [];
     private array $searchCols = [];
+    private array $filters = [];
     private ?string $newBtnLabel = null;
     private array $newBtnOpts = [];
     private int $perPage = 0;
@@ -19,6 +20,7 @@ class Table
     private string $searchQuery = '';
     private ?\mysqli $db = null;
     private string $baseQuery = '';
+    private bool $isStatic = false;
 
     public function __construct(string $id)
     {
@@ -77,6 +79,13 @@ class Table
     {
         $this->rows = $rows;
         $this->totalRows = count($rows);
+        $this->isStatic = true;
+        return $this;
+    }
+
+    public function filter(string $column, string $type, array $opts = []): static
+    {
+        $this->filters[$column] = ['type' => $type, ...$opts];
         return $this;
     }
 
@@ -146,12 +155,34 @@ class Table
         }
 
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
-        echo '<div class="gk-root gk-table-wrap" data-gk-table="' . $e($this->id) . '">';
+        $staticAttr = $this->isStatic ? ' data-gk-static' : '';
+        echo '<div class="gk-root gk-table-wrap" data-gk-table="' . $e($this->id) . '"' . $staticAttr . '>';
+
+        // Embed JSON data + column config for client-side operations
+        if ($this->isStatic) {
+            $colConfig = [];
+            foreach ($this->columns as $key => $col) {
+                $colConfig[$key] = $col;
+            }
+            echo '<script type="application/json" data-gk-data>' . json_encode([
+                'rows' => $this->rows,
+                'columns' => $colConfig,
+                'buttons' => $this->buttons,
+            ], JSON_UNESCAPED_UNICODE) . '</script>';
+        }
 
         // Toolbar
         echo '<div class="gk-toolbar">';
         if ($this->searchCols) {
             echo '<input type="text" class="gk-search" data-gk-search placeholder="Suchen…" value="' . $e($this->searchQuery) . '">';
+        }
+        foreach ($this->filters as $col => $f) {
+            echo '<select class="gk-filter" data-gk-filter="' . $e($col) . '">';
+            echo '<option value="">' . $e($f['placeholder'] ?? 'Alle') . '</option>';
+            foreach ($f['options'] ?? [] as $val => $label) {
+                echo '<option value="' . $e($val) . '">' . $e($label) . '</option>';
+            }
+            echo '</select>';
         }
         if ($this->newBtnLabel) {
             $modal = $e($this->newBtnOpts['modal'] ?? '');
