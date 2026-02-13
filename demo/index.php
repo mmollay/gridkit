@@ -242,7 +242,7 @@ $form-&gt;action('save/process.php')
     </div>
 </div>
 
-<?php Modal::renderContainer(); ?>
+<?php Modal::container(); ?>
 <script src="../js/gridkit.js"></script>
 </body>
 </html>

@@ -44,6 +44,12 @@ class Table
         return $this;
     }
 
+    public function searchable(bool $enabled): static
+    {
+        if (!$enabled) $this->searchCols = [];
+        return $this;
+    }
+
     public function column(string $key, string $label, array $opts = []): static
     {
         $this->columns[$key] = ['label' => $label, ...$opts];
@@ -69,9 +75,9 @@ class Table
         return $this;
     }
 
-    public function paginate(int $perPage): static
+    public function paginate(int|bool $perPage): static
     {
-        $this->perPage = $perPage;
+        $this->perPage = (int)$perPage;
         return $this;
     }
 
