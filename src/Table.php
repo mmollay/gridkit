@@ -191,6 +191,7 @@ class Table
             echo '</select>';
         }
         if ($this->newBtnLabel) {
+            echo '<div class="gk-toolbar-spacer"></div>';
             $modal = $e($this->newBtnOpts['modal'] ?? '');
             echo '<button class="gk-btn gk-btn-primary" data-gk-modal="' . $modal . '">' . $e($this->newBtnLabel) . '</button>';
         }
@@ -225,41 +226,35 @@ class Table
             }
             echo "<th{$cls}{$style}{$attrs}>" . $e($col['label']) . "</th>";
         }
-        if ($this->buttons) echo '<th class="gk-actions-col"></th>';
+        $leftButtons = array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'left');
+        $rightButtons = array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'right');
+        if ($leftButtons) echo '<th class="gk-actions-col"></th>';
+        if ($rightButtons) echo '<th class="gk-actions-col"></th>';
         echo '</tr></thead><tbody>';
 
         foreach ($this->rows as $row) {
             echo '<tr>';
+            if ($leftButtons) {
+                echo '<td class="gk-actions gk-actions-left"><div class="gk-btn-group">';
+                $this->renderButtons($leftButtons, $row, $e);
+                echo '</div></td>';
+            }
             foreach ($this->columns as $key => $col) {
                 $val = $row[$key] ?? '';
                 $align = isset($col['align']) ? ' style="text-align:' . $e($col['align']) . '"' : '';
                 $formatted = $this->format($val, $col);
                 echo "<td{$align}>{$formatted}</td>";
             }
-            if ($this->buttons) {
-                echo '<td class="gk-actions">';
-                foreach ($this->buttons as $bname => $bopts) {
-                    $cls = 'gk-btn gk-btn-icon';
-                    if (isset($bopts['class'])) $cls .= ' gk-btn-' . $bopts['class'];
-                    $params = [];
-                    foreach ($bopts['params'] ?? [] as $pkey => $pcol) {
-                        $params[$pkey] = $row[$pcol] ?? '';
-                    }
-                    $attrs = '';
-                    if (isset($bopts['modal'])) {
-                        $attrs .= ' data-gk-modal="' . $e($bopts['modal']) . '"';
-                    }
-                    $attrs .= " data-gk-params='" . $e(json_encode($params)) . "'";
-                    $icon = $this->icon($bopts['icon'] ?? $bname);
-                    echo "<button class=\"{$cls}\"{$attrs}>{$icon}</button>";
-                }
-                echo '</td>';
+            if ($rightButtons) {
+                echo '<td class="gk-actions gk-actions-right"><div class="gk-btn-group">';
+                $this->renderButtons($rightButtons, $row, $e);
+                echo '</div></td>';
             }
             echo '</tr>';
         }
 
         if (!$this->rows) {
-            $colspan = count($this->columns) + ($this->buttons ? 1 : 0);
+            $colspan = count($this->columns) + ($leftButtons ? 1 : 0) + ($rightButtons ? 1 : 0);
             echo "<tr><td colspan=\"{$colspan}\" class=\"gk-empty\">Keine Einträge gefunden</td></tr>";
         }
 
@@ -274,6 +269,27 @@ class Table
                 echo '<button class="gk-page-btn' . $active . '" data-gk-page="' . $i . '">' . $i . '</button>';
             }
             echo '</div>';
+        }
+    }
+
+    private function renderButtons(array $buttons, array $row, \Closure $e): void
+    {
+        foreach ($buttons as $bname => $bopts) {
+            $hasText = !empty($bopts['text']);
+            $cls = $hasText ? 'gk-btn gk-btn-icon-text' : 'gk-btn gk-btn-icon';
+            if (isset($bopts['class'])) $cls .= ' gk-btn-' . $bopts['class'];
+            $params = [];
+            foreach ($bopts['params'] ?? [] as $pkey => $pcol) {
+                $params[$pkey] = $row[$pcol] ?? '';
+            }
+            $attrs = '';
+            if (isset($bopts['modal'])) {
+                $attrs .= ' data-gk-modal="' . $e($bopts['modal']) . '"';
+            }
+            $attrs .= " data-gk-params='" . $e(json_encode($params)) . "'";
+            $icon = isset($bopts['icon']) ? $this->icon($bopts['icon']) : '';
+            $text = $hasText ? '<span>' . $e($bopts['text']) . '</span>' : '';
+            echo "<button class=\"{$cls}\"{$attrs}>{$icon}{$text}</button>";
         }
     }
 

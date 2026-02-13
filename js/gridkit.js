@@ -268,40 +268,48 @@
                     }
                     html += '<th' + cls + style + attrs + '>' + e(col.label) + '</th>';
                 }
-                const hasButtons = data.buttons && Object.keys(data.buttons).length > 0;
-                if (hasButtons) html += '<th class="gk-actions-col"></th>';
+                const allBtns = data.buttons || {};
+                const leftBtns = Object.fromEntries(Object.entries(allBtns).filter(([,b]) => (b.position || 'right') === 'left'));
+                const rightBtns = Object.fromEntries(Object.entries(allBtns).filter(([,b]) => (b.position || 'right') === 'right'));
+                const hasLeft = Object.keys(leftBtns).length > 0;
+                const hasRight = Object.keys(rightBtns).length > 0;
+                if (hasLeft) html += '<th class="gk-actions-col"></th>';
+                if (hasRight) html += '<th class="gk-actions-col"></th>';
                 html += '</tr></thead><tbody>';
 
+                const renderBtnGroup = (btns, row) => {
+                    let h = '';
+                    for (const [bname, bopts] of Object.entries(btns)) {
+                        const hasText = !!bopts.text;
+                        let cls = hasText ? 'gk-btn gk-btn-icon-text' : 'gk-btn gk-btn-icon';
+                        if (bopts['class']) cls += ' gk-btn-' + bopts['class'];
+                        const params = {};
+                        if (bopts.params) {
+                            Object.entries(bopts.params).forEach(([pk, pcol]) => { params[pk] = row[pcol] ?? ''; });
+                        }
+                        let btnAttrs = '';
+                        if (bopts.modal) btnAttrs += ' data-gk-modal="' + e(bopts.modal) + '"';
+                        btnAttrs += " data-gk-params='" + e(JSON.stringify(params)) + "'";
+                        const icon = bopts.icon ? GK.table.iconSvg(bopts.icon) : '';
+                        const text = hasText ? '<span>' + e(bopts.text) + '</span>' : '';
+                        h += '<button class="' + cls + '"' + btnAttrs + '>' + icon + text + '</button>';
+                    }
+                    return h;
+                };
+
                 if (rows.length === 0) {
-                    const colspan = colKeys.length + (hasButtons ? 1 : 0);
+                    const colspan = colKeys.length + (hasLeft ? 1 : 0) + (hasRight ? 1 : 0);
                     html += '<tr><td colspan="' + colspan + '" class="gk-empty">Keine Einträge gefunden</td></tr>';
                 } else {
                     rows.forEach(row => {
                         html += '<tr>';
+                        if (hasLeft) html += '<td class="gk-actions gk-actions-left"><div class="gk-btn-group">' + renderBtnGroup(leftBtns, row) + '</div></td>';
                         for (const [key, col] of Object.entries(columns)) {
                             const val = row[key] ?? '';
                             const align = col.align ? ' style="text-align:' + e(col.align) + '"' : '';
                             html += '<td' + align + '>' + formatVal(val, col) + '</td>';
                         }
-                        if (hasButtons) {
-                            html += '<td class="gk-actions">';
-                            for (const [bname, bopts] of Object.entries(data.buttons)) {
-                                let cls = 'gk-btn gk-btn-icon';
-                                if (bopts['class']) cls += ' gk-btn-' + bopts['class'];
-                                const params = {};
-                                if (bopts.params) {
-                                    Object.entries(bopts.params).forEach(([pk, pcol]) => {
-                                        params[pk] = row[pcol] ?? '';
-                                    });
-                                }
-                                let btnAttrs = '';
-                                if (bopts.modal) btnAttrs += ' data-gk-modal="' + e(bopts.modal) + '"';
-                                btnAttrs += " data-gk-params='" + e(JSON.stringify(params)) + "'";
-                                const icon = GK.table.iconSvg(bopts.icon || bname);
-                                html += '<button class="' + cls + '"' + btnAttrs + '>' + icon + '</button>';
-                            }
-                            html += '</td>';
-                        }
+                        if (hasRight) html += '<td class="gk-actions gk-actions-right"><div class="gk-btn-group">' + renderBtnGroup(rightBtns, row) + '</div></td>';
                         html += '</tr>';
                     });
                 }

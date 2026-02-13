@@ -147,8 +147,8 @@ use GridKit\Modal;
                 'options' => ['Stk' => 'Stück', 'h' => 'Stunde', 'psch' => 'Pauschal'],
                 'placeholder' => 'Alle Einheiten'
             ])
-            ->button('edit', ['icon' => 'pencil', 'modal' => 'edit_form', 'params' => ['id' => 'article_id']])
-            ->button('delete', ['icon' => 'trash', 'class' => 'danger', 'modal' => 'delete_form', 'params' => ['id' => 'article_id']])
+            ->button('edit', ['icon' => 'pencil', 'text' => 'Bearbeiten', 'position' => 'left', 'modal' => 'edit_form', 'params' => ['id' => 'article_id']])
+            ->button('delete', ['icon' => 'trash', 'class' => 'danger', 'position' => 'right', 'modal' => 'delete_form', 'params' => ['id' => 'article_id']])
             ->modal('edit_form', 'Artikel bearbeiten', 'form/f_articles.php', ['size' => 'medium'])
             ->modal('delete_form', 'Artikel löschen', 'form/f_delete.php', ['size' => 'small'])
             ->newButton('Neuer Artikel', ['modal' => 'edit_form'])
