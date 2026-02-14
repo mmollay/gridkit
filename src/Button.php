@@ -27,6 +27,7 @@ class Button
      *   - loading: bool (shows spinner)
      *   - badge: string|int (small badge on button)
      *   - fullWidth: bool
+     *   - shape: 'rounded'|'pill'|'circle'|'square' (default: 'rounded')
      */
     public static function render(string $label = '', array $opts = []): string
     {
@@ -42,6 +43,7 @@ class Button
         $iconPos = $opts['iconPosition'] ?? 'left';
         $loading = $opts['loading'] ?? false;
         $fullWidth = $opts['fullWidth'] ?? false;
+        $shape = $opts['shape'] ?? 'rounded';
 
         // Build class list
         $classes = ['gk-btn'];
@@ -52,6 +54,7 @@ class Button
         if ($loading) $classes[] = 'gk-btn-loading';
         if ($fullWidth) $classes[] = 'gk-btn-full';
         if ($label === '' && $icon !== '') $classes[] = 'gk-btn-icon-only';
+        if ($shape !== 'rounded') $classes[] = 'gk-btn-' . $shape;
         if (!empty($opts['class'])) $classes[] = $opts['class'];
 
         $cls = implode(' ', $classes);
@@ -110,6 +113,45 @@ class Button
     {
         $opts['icon'] = $icon;
         return self::render('', $opts);
+    }
+
+    /**
+     * Floating Action Button (FAB)
+     *
+     * @param string $icon Material Icon name
+     * @param array $opts Options:
+     *   - size: 'sm'|'md'|'lg' (default: 'md' = 56px)
+     *   - color: 'primary'|'success'|'warning'|'danger'|'neutral' (default: 'primary')
+     *   - variant: 'filled'|'tonal'|'outlined' (default: 'filled')
+     *   - extended: bool (pill shape with icon + label)
+     *   - label: string (text for extended FAB)
+     *   - href, onclick, id, class, title, data, disabled
+     */
+    public static function fab(string $icon, array $opts = []): string
+    {
+        $size = $opts['size'] ?? 'md';
+        $extended = $opts['extended'] ?? false;
+        $label = $opts['label'] ?? '';
+
+        $opts['icon'] = $icon;
+        $opts['variant'] = $opts['variant'] ?? 'filled';
+        $opts['color'] = $opts['color'] ?? 'primary';
+
+        // Build FAB-specific classes
+        $fabClass = 'gk-fab';
+        if ($size === 'sm') $fabClass .= ' gk-fab-sm';
+        if ($size === 'lg') $fabClass .= ' gk-fab-lg';
+        if ($extended) $fabClass .= ' gk-fab-extended';
+
+        $opts['class'] = trim(($opts['class'] ?? '') . ' ' . $fabClass);
+
+        // For non-extended FAB, render as icon-only
+        if (!$extended) {
+            return self::render('', $opts);
+        }
+
+        // Extended FAB: render with label
+        return self::render($label, $opts);
     }
 
     /** Render a button group */
