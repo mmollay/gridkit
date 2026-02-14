@@ -417,6 +417,67 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
         ?>
     </div>
 
+    <!-- Select-Erweiterungen -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Select-Erweiterungen</h3>
+
+        <p style="margin:0 0 12px; font-size:13px; color:#6b7280;"><strong>Searchable Select</strong> – Land-Auswahl mit Suchfeld</p>
+        <?php
+        $formSearch = new Form('searchable_select_demo');
+        $formSearch->field('country', 'Land', 'select', [
+                'options' => [
+                    'AT' => 'Österreich', 'DE' => 'Deutschland', 'CH' => 'Schweiz',
+                    'IT' => 'Italien', 'FR' => 'Frankreich', 'ES' => 'Spanien',
+                    'GB' => 'Großbritannien', 'NL' => 'Niederlande', 'BE' => 'Belgien',
+                    'PL' => 'Polen', 'CZ' => 'Tschechien', 'HU' => 'Ungarn',
+                    'SK' => 'Slowakei', 'SI' => 'Slowenien', 'HR' => 'Kroatien',
+                    'SE' => 'Schweden', 'NO' => 'Norwegen', 'DK' => 'Dänemark',
+                    'FI' => 'Finnland', 'PT' => 'Portugal',
+                ],
+                'searchable' => true,
+                'placeholder' => 'Land suchen...',
+                'value' => 'AT'
+            ])
+            ->render();
+        ?>
+
+        <hr style="border:none; border-top:1px solid var(--gk-outline-variant); margin:20px 0;">
+
+        <p style="margin:0 0 12px; font-size:13px; color:#6b7280;"><strong>Multi-Select</strong> – Mehrere Kategorien wählen (mit Chips)</p>
+        <?php
+        $formMulti = new Form('multiselect_demo');
+        $formMulti->field('tags', 'Kategorien', 'multiselect', [
+                'options' => [
+                    'web' => 'Webdesign', 'seo' => 'SEO', 'hosting' => 'Hosting',
+                    'dev' => 'Entwicklung', 'support' => 'Support', 'beratung' => 'Beratung',
+                ],
+                'value' => ['web', 'seo'],
+                'placeholder' => 'Kategorien suchen...',
+                'searchable' => true,
+            ])
+            ->render();
+        ?>
+
+        <hr style="border:none; border-top:1px solid var(--gk-outline-variant); margin:20px 0;">
+
+        <p style="margin:0 0 12px; font-size:13px; color:#6b7280;"><strong>Ajax Select</strong> – Kundensuche per API (min. 2 Zeichen)</p>
+        <?php
+        $formAjax = new Form('ajax_select_demo');
+        $formAjax->field('customer_id', 'Kunde', 'ajaxselect', [
+                'url' => 'api/search.php',
+                'value' => '',
+                'displayValue' => '',
+                'placeholder' => 'Kunde suchen...',
+                'labelField' => 'name',
+                'valueField' => 'id',
+                'subtextField' => 'city',
+                'minChars' => 2,
+                'searchParam' => 'q',
+            ])
+            ->render();
+        ?>
+    </div>
+
     <div class="demo-code"><pre>// Grid-Layout (16-Spalten)
 $form->row()
     ->field('name', 'Name', 'text', ['width' => 8])

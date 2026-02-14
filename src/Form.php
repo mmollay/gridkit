@@ -124,12 +124,84 @@ class Form
                 break;
 
             case 'select':
-                echo "<select name=\"{$e($name)}\" id=\"{$e($name)}\" class=\"gk-input\"{$req}>";
-                foreach ($f['options'] ?? [] as $k => $v) {
-                    $sel = (string)$k === (string)$value ? ' selected' : '';
-                    echo "<option value=\"{$e($k)}\"{$sel}>{$e($v)}</option>";
+                if (!empty($f['searchable'])) {
+                    $options = $f['options'] ?? [];
+                    $placeholder = $f['placeholder'] ?? 'Suchen...';
+                    $displayValue = isset($options[$value]) ? $options[$value] : ($placeholder);
+                    echo '<div class="gk-select-search" data-gk-select-search>';
+                    echo "<input type=\"hidden\" name=\"{$e($name)}\" value=\"{$e($value)}\">";
+                    echo '<div class="gk-select-display" tabindex="0">';
+                    echo '<span class="gk-select-value">' . $e($displayValue) . '</span>';
+                    echo '<span class="material-icons gk-select-arrow">expand_more</span>';
+                    echo '</div>';
+                    echo '<div class="gk-select-dropdown">';
+                    echo '<div class="gk-select-search-input"><span class="material-icons">search</span>';
+                    echo "<input type=\"text\" placeholder=\"{$e($placeholder)}\" autocomplete=\"off\">";
+                    echo '</div><div class="gk-select-options">';
+                    foreach ($options as $k => $v) {
+                        $sel = (string)$k === (string)$value ? ' selected' : '';
+                        echo "<div class=\"gk-select-option{$sel}\" data-value=\"{$e($k)}\">{$e($v)}</div>";
+                    }
+                    echo '</div></div></div>';
+                } else {
+                    echo "<select name=\"{$e($name)}\" id=\"{$e($name)}\" class=\"gk-input\"{$req}>";
+                    foreach ($f['options'] ?? [] as $k => $v) {
+                        $sel = (string)$k === (string)$value ? ' selected' : '';
+                        echo "<option value=\"{$e($k)}\"{$sel}>{$e($v)}</option>";
+                    }
+                    echo '</select>';
                 }
-                echo '</select>';
+                break;
+
+            case 'multiselect':
+                $options = $f['options'] ?? [];
+                $selectedValues = is_array($value) ? $value : ($value ? explode(',', $value) : []);
+                $placeholder = $f['placeholder'] ?? 'Suchen...';
+                $searchable = !empty($f['searchable']);
+                echo '<div class="gk-multiselect" data-gk-multiselect>';
+                echo "<input type=\"hidden\" name=\"{$e($name)}\" value=\"{$e(implode(',', $selectedValues))}\">";
+                echo '<div class="gk-multiselect-display" tabindex="0">';
+                echo '<div class="gk-multiselect-chips">';
+                foreach ($selectedValues as $sv) {
+                    if (isset($options[$sv])) {
+                        echo "<span class=\"gk-chip-selected\" data-value=\"{$e($sv)}\">{$e($options[$sv])} <button type=\"button\" class=\"gk-chip-remove\">&times;</button></span>";
+                    }
+                }
+                if ($searchable) {
+                    echo "<input type=\"text\" class=\"gk-multiselect-input\" placeholder=\"{$e($placeholder)}\" autocomplete=\"off\">";
+                }
+                echo '</div>';
+                echo '<span class="material-icons gk-select-arrow">expand_more</span>';
+                echo '</div>';
+                echo '<div class="gk-select-dropdown"><div class="gk-select-options">';
+                foreach ($options as $k => $v) {
+                    $sel = in_array((string)$k, array_map('strval', $selectedValues)) ? ' selected' : '';
+                    $check = $sel ? '<span class="material-icons" style="font-size:16px;">check</span> ' : '';
+                    echo "<div class=\"gk-select-option{$sel}\" data-value=\"{$e($k)}\">{$check}{$e($v)}</div>";
+                }
+                echo '</div></div></div>';
+                break;
+
+            case 'ajaxselect':
+                $url = $f['url'] ?? '';
+                $displayValue = $f['displayValue'] ?? '';
+                $placeholder = $f['placeholder'] ?? 'Suchen...';
+                $labelField = $f['labelField'] ?? 'name';
+                $valueField = $f['valueField'] ?? 'id';
+                $subtextField = $f['subtextField'] ?? '';
+                $minChars = $f['minChars'] ?? 2;
+                $searchParam = $f['searchParam'] ?? 'q';
+                echo "<div class=\"gk-ajax-select\" data-gk-ajax-select data-url=\"{$e($url)}\" data-label-field=\"{$e($labelField)}\" data-value-field=\"{$e($valueField)}\" data-subtext-field=\"{$e($subtextField)}\" data-min-chars=\"{$e($minChars)}\" data-search-param=\"{$e($searchParam)}\">";
+                echo "<input type=\"hidden\" name=\"{$e($name)}\" value=\"{$e($value)}\">";
+                echo '<div class="gk-select-display" tabindex="0">';
+                echo '<span class="material-icons gk-select-icon">search</span>';
+                $clearStyle = $value ? '' : ' style="display:none;"';
+                echo "<input type=\"text\" class=\"gk-ajax-search-input\" value=\"{$e($displayValue)}\" placeholder=\"{$e($placeholder)}\" autocomplete=\"off\">";
+                echo "<button type=\"button\" class=\"gk-ajax-clear\"{$clearStyle}>&times;</button>";
+                echo '</div>';
+                echo '<div class="gk-select-dropdown"><div class="gk-select-options"></div>';
+                echo '<div class="gk-select-loading" style="display:none;"><span class="material-icons gk-spin">sync</span> Suche...</div>';
+                echo '</div></div>';
                 break;
 
             case 'toggle':

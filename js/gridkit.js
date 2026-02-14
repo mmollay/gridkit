@@ -590,6 +590,9 @@
         GK.initRangeSliders();
         GK.initUploadZones();
         GK.initRichtext();
+        if (GK.selectSearch) GK.selectSearch.init();
+        if (GK.multiSelect) GK.multiSelect.init();
+        if (GK.ajaxSelect) GK.ajaxSelect.init();
     };
 
     // Dropdown toggle (Header user menu etc.)
@@ -646,6 +649,260 @@
         var modeBtn = e.target.closest('[data-gk-toggle-mode]');
         if (modeBtn) GK.theme.toggleMode();
     });
+
+    // === SEARCHABLE SELECT ===
+    GK.selectSearch = {
+        init(root) {
+            (root || document).querySelectorAll('[data-gk-select-search]').forEach(wrap => {
+                if (wrap._gkBound) return;
+                wrap._gkBound = true;
+                var display = wrap.querySelector('.gk-select-display');
+                var dropdown = wrap.querySelector('.gk-select-dropdown');
+                var searchInput = dropdown.querySelector('input[type="text"]');
+                var hidden = wrap.querySelector('input[type="hidden"]');
+                var valueSpan = wrap.querySelector('.gk-select-value');
+                var options = wrap.querySelectorAll('.gk-select-option');
+
+                display.addEventListener('click', function() {
+                    display.classList.toggle('open');
+                    if (display.classList.contains('open')) {
+                        searchInput.value = '';
+                        options.forEach(o => o.classList.remove('hidden'));
+                        var empty = dropdown.querySelector('.gk-select-empty');
+                        if (empty) empty.remove();
+                        setTimeout(() => searchInput.focus(), 50);
+                    }
+                });
+
+                searchInput.addEventListener('input', function() {
+                    var q = this.value.toLowerCase();
+                    var found = 0;
+                    options.forEach(o => {
+                        var match = o.textContent.toLowerCase().includes(q);
+                        o.classList.toggle('hidden', !match);
+                        if (match) found++;
+                    });
+                    var empty = dropdown.querySelector('.gk-select-empty');
+                    if (found === 0 && !empty) {
+                        var e = document.createElement('div');
+                        e.className = 'gk-select-empty';
+                        e.textContent = 'Keine Treffer';
+                        dropdown.querySelector('.gk-select-options').appendChild(e);
+                    } else if (found > 0 && empty) empty.remove();
+                });
+
+                options.forEach(opt => {
+                    opt.addEventListener('click', function() {
+                        hidden.value = this.dataset.value;
+                        valueSpan.textContent = this.textContent;
+                        options.forEach(o => o.classList.remove('selected'));
+                        this.classList.add('selected');
+                        display.classList.remove('open');
+                        hidden.dispatchEvent(new Event('change', {bubbles: true}));
+                    });
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!wrap.contains(e.target)) display.classList.remove('open');
+                });
+            });
+        }
+    };
+
+    // === MULTI-SELECT ===
+    GK.multiSelect = {
+        init(root) {
+            (root || document).querySelectorAll('[data-gk-multiselect]').forEach(wrap => {
+                if (wrap._gkBound) return;
+                wrap._gkBound = true;
+                var display = wrap.querySelector('.gk-multiselect-display');
+                var dropdown = wrap.querySelector('.gk-select-dropdown');
+                var hidden = wrap.querySelector('input[type="hidden"]');
+                var chipsContainer = wrap.querySelector('.gk-multiselect-chips');
+                var searchInput = wrap.querySelector('.gk-multiselect-input');
+                var optionsContainer = dropdown.querySelector('.gk-select-options');
+                var allOptions = wrap.querySelectorAll('.gk-select-option');
+
+                function getSelected() {
+                    return hidden.value ? hidden.value.split(',').filter(Boolean) : [];
+                }
+
+                function updateHidden(vals) {
+                    hidden.value = vals.join(',');
+                    hidden.dispatchEvent(new Event('change', {bubbles: true}));
+                }
+
+                function rebuildChips() {
+                    // Remove old chips
+                    wrap.querySelectorAll('.gk-chip-selected').forEach(c => c.remove());
+                    var vals = getSelected();
+                    vals.forEach(v => {
+                        var opt = optionsContainer.querySelector('[data-value="' + v + '"]');
+                        if (!opt) return;
+                        var label = opt.textContent.replace('check', '').trim();
+                        var chip = document.createElement('span');
+                        chip.className = 'gk-chip-selected';
+                        chip.dataset.value = v;
+                        chip.innerHTML = label + ' <button type="button" class="gk-chip-remove">&times;</button>';
+                        chip.querySelector('.gk-chip-remove').addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            toggleValue(v);
+                        });
+                        if (searchInput) chipsContainer.insertBefore(chip, searchInput);
+                        else chipsContainer.appendChild(chip);
+                    });
+                }
+
+                function toggleValue(val) {
+                    var vals = getSelected();
+                    var idx = vals.indexOf(val);
+                    if (idx >= 0) vals.splice(idx, 1);
+                    else vals.push(val);
+                    updateHidden(vals);
+                    // Update option states
+                    allOptions.forEach(o => {
+                        var isSelected = vals.includes(o.dataset.value);
+                        o.classList.toggle('selected', isSelected);
+                        // Update check icon
+                        var check = o.querySelector('.material-icons');
+                        if (isSelected && !check) {
+                            var s = document.createElement('span');
+                            s.className = 'material-icons';
+                            s.style.fontSize = '16px';
+                            s.textContent = 'check';
+                            o.insertBefore(s, o.firstChild);
+                            o.insertBefore(document.createTextNode(' '), s.nextSibling);
+                        } else if (!isSelected && check) {
+                            if (check.nextSibling && check.nextSibling.nodeType === 3) check.nextSibling.remove();
+                            check.remove();
+                        }
+                    });
+                    rebuildChips();
+                }
+
+                display.addEventListener('click', function(e) {
+                    if (e.target.closest('.gk-chip-remove')) return;
+                    display.classList.toggle('open');
+                    if (display.classList.contains('open') && searchInput) {
+                        setTimeout(() => searchInput.focus(), 50);
+                    }
+                });
+
+                allOptions.forEach(opt => {
+                    opt.addEventListener('click', function() {
+                        toggleValue(this.dataset.value);
+                    });
+                });
+
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        var q = this.value.toLowerCase();
+                        var found = 0;
+                        allOptions.forEach(o => {
+                            var match = o.textContent.toLowerCase().includes(q);
+                            o.classList.toggle('hidden', !match);
+                            if (match) found++;
+                        });
+                        var empty = dropdown.querySelector('.gk-select-empty');
+                        if (found === 0 && !empty) {
+                            var e = document.createElement('div');
+                            e.className = 'gk-select-empty';
+                            e.textContent = 'Keine Treffer';
+                            optionsContainer.appendChild(e);
+                        } else if (found > 0 && empty) empty.remove();
+                    });
+                    searchInput.addEventListener('focus', function() {
+                        display.classList.add('open');
+                    });
+                }
+
+                document.addEventListener('click', function(e) {
+                    if (!wrap.contains(e.target)) display.classList.remove('open');
+                });
+            });
+        }
+    };
+
+    // === AJAX SELECT ===
+    GK.ajaxSelect = {
+        init(root) {
+            (root || document).querySelectorAll('[data-gk-ajax-select]').forEach(wrap => {
+                if (wrap._gkBound) return;
+                wrap._gkBound = true;
+                var input = wrap.querySelector('.gk-ajax-search-input');
+                var hidden = wrap.querySelector('input[type="hidden"]');
+                var dropdown = wrap.querySelector('.gk-select-dropdown');
+                var optionsContainer = dropdown.querySelector('.gk-select-options');
+                var loading = dropdown.querySelector('.gk-select-loading');
+                var clearBtn = wrap.querySelector('.gk-ajax-clear');
+                var url = wrap.dataset.url;
+                var labelField = wrap.dataset.labelField || 'name';
+                var valueField = wrap.dataset.valueField || 'id';
+                var subtextField = wrap.dataset.subtextField || '';
+                var minChars = parseInt(wrap.dataset.minChars) || 2;
+                var searchParam = wrap.dataset.searchParam || 'q';
+                var timer;
+
+                input.addEventListener('input', function() {
+                    var q = this.value.trim();
+                    clearBtn.style.display = q ? '' : 'none';
+                    if (q.length < minChars) { dropdown.style.display = 'none'; return; }
+                    clearTimeout(timer);
+                    timer = setTimeout(function() {
+                        loading.style.display = '';
+                        optionsContainer.innerHTML = '';
+                        dropdown.style.display = 'block';
+                        fetch(url + '?' + searchParam + '=' + encodeURIComponent(q))
+                            .then(r => r.json())
+                            .then(data => {
+                                loading.style.display = 'none';
+                                if (!data.length) {
+                                    optionsContainer.innerHTML = '<div class="gk-select-empty">Keine Treffer</div>';
+                                    return;
+                                }
+                                data.forEach(item => {
+                                    var opt = document.createElement('div');
+                                    opt.className = 'gk-select-option';
+                                    opt.dataset.value = item[valueField];
+                                    opt.dataset.json = JSON.stringify(item);
+                                    var label = item[labelField] || '';
+                                    var esc = function(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
+                                    opt.innerHTML = '<div>' + esc(label) + '</div>';
+                                    if (subtextField && item[subtextField]) {
+                                        opt.innerHTML += '<div class="gk-select-option-sub">' + esc(item[subtextField]) + '</div>';
+                                    }
+                                    optionsContainer.appendChild(opt);
+                                });
+                            })
+                            .catch(() => { loading.style.display = 'none'; });
+                    }, 300);
+                });
+
+                optionsContainer.addEventListener('click', function(e) {
+                    var opt = e.target.closest('.gk-select-option');
+                    if (!opt) return;
+                    hidden.value = opt.dataset.value;
+                    input.value = opt.querySelector('div').textContent;
+                    dropdown.style.display = 'none';
+                    clearBtn.style.display = '';
+                    hidden.dispatchEvent(new Event('change', {bubbles: true}));
+                    wrap.dispatchEvent(new CustomEvent('gk-select', {detail: JSON.parse(opt.dataset.json)}));
+                });
+
+                if (clearBtn) clearBtn.addEventListener('click', function() {
+                    hidden.value = '';
+                    input.value = '';
+                    clearBtn.style.display = 'none';
+                    dropdown.style.display = 'none';
+                    hidden.dispatchEvent(new Event('change', {bubbles: true}));
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!wrap.contains(e.target)) dropdown.style.display = 'none';
+                });
+            });
+        }
+    };
 
     window.GridKit = GK;
     window.GK = GK;
