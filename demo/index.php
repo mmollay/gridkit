@@ -97,7 +97,7 @@ use GridKit\YearFilter;
 
 <div class="demo-header">
     <h1>GridKit <span class="version">v<?= trim(file_get_contents(__DIR__ . '/../VERSION')) ?></span></h1>
-    <p>Schlankes PHP-Framework fuer Tabellen, Formulare &amp; Dashboards. Null Abhaengigkeiten.</p>
+    <p>Schlankes PHP-Framework fuer Tabellen, Formulare, Dashboards &amp; UI-Kit. Null Abhaengigkeiten.</p>
 </div>
 
 <div class="demo-section">
@@ -111,7 +111,7 @@ use GridKit\YearFilter;
             <div class="lbl">CSS File</div>
         </div>
         <div class="demo-stat">
-            <div class="num">~1300</div>
+            <div class="num">~1400</div>
             <div class="lbl">Zeilen gesamt</div>
         </div>
         <div class="demo-stat">
@@ -226,47 +226,104 @@ $form-&gt;action('save/process.php')
     <div class="demo-card">
         <p style="color:#6b7280; margin:0 0 16px; font-size:14px;">
             Modals werden per AJAX geladen und arbeiten nahtlos mit Table und Form zusammen.
-            Klicke in der Tabelle oben auf "Bearbeiten" oder "Loeschen" um ein Modal zu oeffnen.
         </p>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Neuer Artikel', 'form/f_articles.php', {}, 'medium')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Medium Modal
+            <button class="gk-btn gk-btn-primary" onclick="window.GK && GK.modal.open('Neuer Artikel', 'form/f_articles.php', {}, 'small')">
+                <span class="material-icons" style="font-size:16px;">add</span>
+                Small Modal (Formular)
             </button>
-            <button class="gk-btn" onclick="GK.modal.open('Eintrag loeschen', 'form/f_delete.php', {}, 'small')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                Small Modal
+            <button class="gk-btn gk-btn-primary" onclick="window.GK && GK.modal.open('Artikel bearbeiten', 'form/f_articles.php', {}, 'medium')">
+                <span class="material-icons" style="font-size:16px;">edit</span>
+                Medium Modal (Formular)
+            </button>
+            <button class="gk-btn" onclick="window.GK && GK.modal.open('Eintrag loeschen', 'form/f_delete.php', {}, 'small')">
+                <span class="material-icons" style="font-size:16px;">delete</span>
+                Delete Modal
             </button>
         </div>
     </div>
 
     <div class="demo-code"><pre>&lt;?php
-// 1. Tabelle definiert Modals
+// Tabelle mit Modal-Integration
 $table = new Table('articles');
 $table-&gt;query($db, "SELECT * FROM articles")
-    -&gt;button('edit', ['icon' =&gt; 'pencil', 'modal' =&gt; 'edit_form'])
-    -&gt;modal('edit_form', 'Artikel bearbeiten', 'form/edit.php', ['size' =&gt; 'medium'])
+    -&gt;button('edit', ['icon' =&gt; 'edit', 'modal' =&gt; 'edit_form'])
+    -&gt;modal('edit_form', 'Bearbeiten', 'form/edit.php', ['size' =&gt; 'medium'])
     -&gt;render();
 
-// 2. Modal laedt Form per AJAX (form/edit.php)
-$form = new Form('article_form');
-$form-&gt;action('save/process.php')
-    -&gt;ajax()
-    -&gt;field('name', 'Name', 'text', ['required' =&gt; true])
-    -&gt;submit('Speichern')
-    -&gt;render();
-
-// 3. Nach Submit: Modal schliesst, Tabelle refresht automatisch
-
-// 4. Modal-Container am Ende der Seite
+// Am Ende der Seite:
 Modal::container();
 
-// Features:
-// - AJAX-Loading mit Spinner
-// - Backdrop-Click schliesst
-// - ESC-Taste schliesst
-// - Groessen: small (420px), medium (640px), large (900px)
-// - Auto-Refresh der Tabelle nach erfolgreichem Submit</pre></div>
+// Groessen: small (420px), medium (640px), large (900px)
+// Features: AJAX-Loading, Backdrop-Close, ESC-Close, Auto-Refresh</pre></div>
+</div>
+
+<!-- TOAST DEMO -->
+<div class="demo-section">
+    <h2>Toast</h2>
+    <div class="demo-card">
+        <p style="color:#6b7280; margin:0 0 16px; font-size:14px;">
+            Toast-Benachrichtigungen fuer Erfolgs-, Fehler- und Info-Meldungen.
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="gk-btn" style="background:#059669;color:#fff;border-color:#059669;" onclick="window.GK && GK.toast.success('Erfolgreich gespeichert!')">
+                <span class="material-icons" style="font-size:16px;">check_circle</span> Success
+            </button>
+            <button class="gk-btn" style="background:#dc2626;color:#fff;border-color:#dc2626;" onclick="window.GK && GK.toast.error('Fehler beim Speichern!')">
+                <span class="material-icons" style="font-size:16px;">error</span> Error
+            </button>
+            <button class="gk-btn" style="background:#d97706;color:#fff;border-color:#d97706;" onclick="window.GK && GK.toast.warning('Achtung: Limit erreicht!')">
+                <span class="material-icons" style="font-size:16px;">warning</span> Warning
+            </button>
+            <button class="gk-btn" style="background:#2563eb;color:#fff;border-color:#2563eb;" onclick="window.GK && GK.toast.info('3 neue Eintraege verfuegbar')">
+                <span class="material-icons" style="font-size:16px;">info</span> Info
+            </button>
+        </div>
+    </div>
+
+    <div class="demo-code"><pre>// Toast-Benachrichtigungen
+GK.toast.success('Erfolgreich gespeichert!');
+GK.toast.error('Fehler beim Speichern!');
+GK.toast.warning('Achtung: Limit erreicht!');
+GK.toast.info('3 neue Eintraege verfuegbar');
+
+// Optional: Dauer in ms (Standard: 3000)
+GK.toast.success('Gespeichert!', 5000);</pre></div>
+</div>
+
+<!-- CONFIRM DEMO -->
+<div class="demo-section">
+    <h2>Confirm</h2>
+    <div class="demo-card">
+        <p style="color:#6b7280; margin:0 0 16px; font-size:14px;">
+            Confirm-Dialoge als saubere Modals. Promise-basiert, mit Danger-Mode fuer destruktive Aktionen.
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="gk-btn gk-btn-primary" onclick="window.GK && GK.confirm('Rechnung an den Kunden versenden?', {title:'Rechnung versenden', confirmText:'Versenden'}).then(function(ok){ if(ok) GK.toast.success('Versendet!'); })">
+                <span class="material-icons" style="font-size:16px;">send</span> Standard Confirm
+            </button>
+            <button class="gk-btn gk-btn-danger" onclick="window.GK && GK.confirm('Diesen Eintrag wirklich unwiderruflich loeschen?', {title:'Eintrag loeschen', confirmText:'Loeschen', danger:true}).then(function(ok){ if(ok) GK.toast.success('Geloescht!'); })">
+                <span class="material-icons" style="font-size:16px;">delete_forever</span> Danger Confirm
+            </button>
+        </div>
+    </div>
+
+    <div class="demo-code"><pre>// Standard-Bestaetigung
+GK.confirm('Rechnung versenden?', {
+    title: 'Rechnung versenden',
+    confirmText: 'Versenden'
+}).then(function(ok) {
+    if (ok) GK.toast.success('Versendet!');
+});
+
+// Danger-Modus (roter Button)
+GK.confirm('Eintrag wirklich loeschen?', {
+    title: 'Loeschen',
+    confirmText: 'Loeschen',
+    danger: true
+}).then(function(ok) {
+    if (ok) { /* delete logic */ }
+});</pre></div>
 </div>
 
 <!-- FORMATTER DEMO -->
