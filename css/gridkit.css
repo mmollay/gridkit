@@ -214,6 +214,11 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-sidebar.collapsed .gk-sidebar-close { display: none; }
 .gk-sidebar-collapse-btn { display: flex; align-items: center; justify-content: center; background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 6px; border-radius: 4px; flex-shrink: 0; transition: all .15s; }
 .gk-sidebar-collapse-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.gk-sidebar-collapse-bottom { gap: 8px; padding: 12px 14px; margin: 4px 10px 12px; border-top: 1px solid rgba(255,255,255,0.08); border-radius: 6px; width: calc(100% - 20px); font-size: 13px; justify-content: flex-start; }
+.gk-sidebar-collapse-bottom .material-icons { font-size: 20px; transition: transform .25s; }
+.gk-sidebar.collapsed .gk-sidebar-collapse-bottom { justify-content: center; margin: 4px 6px 12px; width: calc(100% - 12px); }
+.gk-sidebar.collapsed .gk-sidebar-collapse-bottom .material-icons { transform: rotate(180deg); }
+.gk-sidebar.collapsed .gk-sidebar-collapse-label { display: none; }
 .gk-sidebar.collapsed .gk-sidebar-item { position: relative; }
 .gk-sidebar.collapsed .gk-sidebar-item::after { content: attr(data-label); position: absolute; left: 100%; top: 50%; transform: translateY(-50%); background: #1e293b; color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .15s; margin-left: 8px; z-index: 1001; }
 .gk-sidebar.collapsed .gk-sidebar-item:hover::after { opacity: 1; }

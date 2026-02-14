@@ -12,6 +12,7 @@ class Sidebar
     private array $items = [];
     private array $groups = [];
     private string $currentGroup = '';
+    private string $collapsePosition = 'bottom';
 
     public function __construct(string $id = 'main')
     {
@@ -23,6 +24,13 @@ class Sidebar
         $this->brand = $title;
         $this->brandIcon = $icon;
         $this->version = $version;
+        return $this;
+    }
+
+    /** Set collapse button position: 'top' (in brand) or 'bottom' (after nav). Default: 'bottom' */
+    public function collapsePosition(string $position): self
+    {
+        $this->collapsePosition = $position;
         return $this;
     }
 
@@ -58,12 +66,14 @@ class Sidebar
         echo '<div class="gk-sidebar-overlay" data-gk-sidebar-overlay onclick="GK.sidebar.close()"></div>';
         echo '<aside class="gk-sidebar" data-gk-sidebar="' . $e($this->id) . '">';
 
-        // Brand + collapse toggle
+        // Brand
         if ($this->brand !== '') {
             echo '<div class="gk-sidebar-brand">';
-            echo '<button class="gk-sidebar-collapse-btn" onclick="window.GK&&GK.sidebar.collapse()" title="Ein-/Ausklappen">';
-            echo '<span class="material-icons">menu</span>';
-            echo '</button>';
+            if ($this->collapsePosition === 'top') {
+                echo '<button class="gk-sidebar-collapse-btn" onclick="window.GK&&GK.sidebar.collapse()" title="Ein-/Ausklappen">';
+                echo '<span class="material-icons">menu</span>';
+                echo '</button>';
+            }
             if ($this->brandIcon) {
                 echo '<span class="material-icons gk-sidebar-brand-icon">' . $e($this->brandIcon) . '</span>';
             }
@@ -96,6 +106,14 @@ class Sidebar
         }
 
         echo '</nav>';
+
+        if ($this->collapsePosition === 'bottom') {
+            echo '<button class="gk-sidebar-collapse-btn gk-sidebar-collapse-bottom" onclick="window.GK&&GK.sidebar.collapse()" title="Ein-/Ausklappen">';
+            echo '<span class="material-icons">chevron_left</span>';
+            echo '<span class="gk-sidebar-collapse-label">Einklappen</span>';
+            echo '</button>';
+        }
+
         echo '</aside>';
     }
 
