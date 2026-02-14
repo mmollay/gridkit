@@ -57,11 +57,11 @@
 .gk-actions-left { text-align: left; }
 .gk-actions-right { text-align: right; }
 .gk-actions-col { width: 1%; }
-.gk-btn-group { display: inline-flex; }
+.gk-btn-group { display: inline-flex; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
 .gk-btn-group .gk-btn { border-radius: 0; margin: 0; border-right-width: 0; }
-.gk-btn-group .gk-btn:first-child { border-radius: var(--gk-radius-sm) 0 0 var(--gk-radius-sm); }
-.gk-btn-group .gk-btn:last-child { border-radius: 0 var(--gk-radius-sm) var(--gk-radius-sm) 0; border-right-width: 1px; }
-.gk-btn-group .gk-btn:only-child { border-radius: var(--gk-radius-sm); }
+.gk-btn-group .gk-btn:first-child { border-radius: 10px 0 0 10px; }
+.gk-btn-group .gk-btn:last-child { border-radius: 0 10px 10px 0; border-right-width: 1.5px; }
+.gk-btn-group .gk-btn:only-child { border-radius: 10px; }
 .gk-btn-icon-text { gap: 5px; }
 .gk-btn-icon-text svg { flex-shrink: 0; }
 
