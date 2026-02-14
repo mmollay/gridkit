@@ -220,6 +220,55 @@ $form-&gt;action('save/process.php')
     -&gt;render();</pre></div>
 </div>
 
+<!-- MODAL DEMO -->
+<div class="demo-section">
+    <h2>Modal</h2>
+    <div class="demo-card">
+        <p style="color:#6b7280; margin:0 0 16px; font-size:14px;">
+            Modals werden per AJAX geladen und arbeiten nahtlos mit Table und Form zusammen.
+            Klicke in der Tabelle oben auf "Bearbeiten" oder "Loeschen" um ein Modal zu oeffnen.
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Neuer Artikel', 'form/f_articles.php', {}, 'medium')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Medium Modal
+            </button>
+            <button class="gk-btn" onclick="GK.modal.open('Eintrag loeschen', 'form/f_delete.php', {}, 'small')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Small Modal
+            </button>
+        </div>
+    </div>
+
+    <div class="demo-code"><pre>&lt;?php
+// 1. Tabelle definiert Modals
+$table = new Table('articles');
+$table-&gt;query($db, "SELECT * FROM articles")
+    -&gt;button('edit', ['icon' =&gt; 'pencil', 'modal' =&gt; 'edit_form'])
+    -&gt;modal('edit_form', 'Artikel bearbeiten', 'form/edit.php', ['size' =&gt; 'medium'])
+    -&gt;render();
+
+// 2. Modal laedt Form per AJAX (form/edit.php)
+$form = new Form('article_form');
+$form-&gt;action('save/process.php')
+    -&gt;ajax()
+    -&gt;field('name', 'Name', 'text', ['required' =&gt; true])
+    -&gt;submit('Speichern')
+    -&gt;render();
+
+// 3. Nach Submit: Modal schliesst, Tabelle refresht automatisch
+
+// 4. Modal-Container am Ende der Seite
+Modal::container();
+
+// Features:
+// - AJAX-Loading mit Spinner
+// - Backdrop-Click schliesst
+// - ESC-Taste schliesst
+// - Groessen: small (420px), medium (640px), large (900px)
+// - Auto-Refresh der Tabelle nach erfolgreichem Submit</pre></div>
+</div>
+
 <!-- FORMATTER DEMO -->
 <div class="demo-section">
     <h2>Formatter</h2>
