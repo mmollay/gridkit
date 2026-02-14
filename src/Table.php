@@ -282,9 +282,12 @@ class Table
             foreach ($bopts['params'] ?? [] as $pkey => $pcol) {
                 $params[$pkey] = $row[$pcol] ?? '';
             }
-            $attrs = '';
+            $attrs = ' data-gk-action="' . $e($bname) . '"';
             if (isset($bopts['modal'])) {
                 $attrs .= ' data-gk-modal="' . $e($bopts['modal']) . '"';
+            }
+            if (isset($bopts['title'])) {
+                $attrs .= ' title="' . $e($bopts['title']) . '"';
             }
             $attrs .= " data-gk-params='" . $e(json_encode($params)) . "'";
             $icon = isset($bopts['icon']) ? $this->icon($bopts['icon']) : '';
