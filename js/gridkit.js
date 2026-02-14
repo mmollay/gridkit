@@ -385,5 +385,35 @@
         GK.init();
     }
 
+    // Toast system
+    GK.toast = {
+        container: null,
+        ensure() {
+            if (!this.container) {
+                this.container = document.createElement('div');
+                this.container.className = 'gk-toast-container';
+                document.body.appendChild(this.container);
+            }
+        },
+        show(message, type, duration) {
+            this.ensure();
+            type = type || 'info';
+            duration = duration || 3000;
+            var icons = {success:'check_circle', error:'error', warning:'warning', info:'info'};
+            var el = document.createElement('div');
+            el.className = 'gk-toast gk-toast-' + type;
+            el.innerHTML = '<span class="material-icons gk-toast-icon">' + (icons[type]||'info') + '</span>' +
+                '<span>' + message + '</span>' +
+                '<button class="gk-toast-close">&times;</button>';
+            el.querySelector('.gk-toast-close').onclick = function() { el.classList.add('gk-toast-out'); setTimeout(function(){el.remove()},300); };
+            this.container.appendChild(el);
+            setTimeout(function() { if (el.parentNode) { el.classList.add('gk-toast-out'); setTimeout(function(){el.remove()},300); } }, duration);
+        },
+        success(msg, dur) { this.show(msg, 'success', dur); },
+        error(msg, dur) { this.show(msg, 'error', dur); },
+        warning(msg, dur) { this.show(msg, 'warning', dur); },
+        info(msg, dur) { this.show(msg, 'info', dur); }
+    };
+
     window.GridKit = GK;
 })();

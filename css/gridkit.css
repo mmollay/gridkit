@@ -177,6 +177,27 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 /* === YEAR FILTER === */
 .gk-year-filter { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 12px; }
 
+/* === TOOLTIP === */
+.gk-tooltip { position: relative; }
+.gk-btn[title] { position: relative; }
+.gk-btn[title]:hover::after { content: attr(title); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 4px; white-space: nowrap; pointer-events: none; z-index: 100; animation: gk-tooltip-in .15s ease; }
+.gk-btn[title]:hover::before { content: ''; position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%); border: 4px solid transparent; border-top-color: #1e293b; pointer-events: none; z-index: 100; animation: gk-tooltip-in .15s ease; }
+@keyframes gk-tooltip-in { from { opacity: 0; transform: translateX(-50%) translateY(4px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+/* === TOAST === */
+.gk-toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.gk-toast { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: var(--gk-radius); background: #1e293b; color: #fff; font-size: 14px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.2); pointer-events: auto; animation: gk-toast-in .3s ease; max-width: 400px; }
+.gk-toast-success { background: #059669; }
+.gk-toast-error { background: #dc2626; }
+.gk-toast-warning { background: #d97706; }
+.gk-toast-info { background: #2563eb; }
+.gk-toast-icon { font-size: 18px; flex-shrink: 0; }
+.gk-toast-close { background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 18px; padding: 0 0 0 8px; line-height: 1; }
+.gk-toast-close:hover { color: #fff; }
+.gk-toast.gk-toast-out { animation: gk-toast-out .3s ease forwards; }
+@keyframes gk-toast-in { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes gk-toast-out { to { opacity: 0; transform: translateX(40px); } }
+
 /* === RESPONSIVE === */
 @media (max-width: 640px) {
     .gk-row { flex-direction: column; }
