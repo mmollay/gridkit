@@ -101,8 +101,8 @@ $sidebar->render();
             ->filter('is_active', 'select', ['options' => ['aktiv' => 'Aktiv', 'inaktiv' => 'Inaktiv', 'entwurf' => 'Entwurf'], 'placeholder' => 'Alle Status'])
             ->button('edit', ['icon' => 'pencil', 'text' => 'Bearbeiten', 'position' => 'left', 'modal' => 'edit_form', 'params' => ['id' => 'article_id']])
             ->button('delete', ['icon' => 'trash', 'class' => 'danger', 'position' => 'right', 'modal' => 'delete_form', 'params' => ['id' => 'article_id']])
-            ->modal('edit_form', 'Artikel bearbeiten', 'form/f_articles.php', ['size' => 'medium'])
-            ->modal('delete_form', 'Artikel loeschen', 'form/f_delete.php', ['size' => 'small'])
+            ->modal('edit_form', 'Artikel bearbeiten', 'demo/form/f_articles.php', ['size' => 'medium'])
+            ->modal('delete_form', 'Artikel loeschen', 'demo/form/f_delete.php', ['size' => 'small'])
             ->newButton('Neuer Artikel', ['modal' => 'edit_form'])
             ->paginate(25)
             ->render();
@@ -164,16 +164,16 @@ $form->action('save/process.php')
     <div class="demo-card">
         <p class="demo-intro">Modals in vier Groessen. Werden per AJAX geladen, Backdrop-Click und ESC schliessen.</p>
         <div class="demo-btn-row">
-            <button class="gk-btn" onclick="GK.modal.open('Small (420px)', 'form/f_delete.php', {}, 'small')">
+            <button class="gk-btn" onclick="GK.modal.open('Small (420px)', 'demo/form/f_delete.php', {}, 'small')">
                 <span class="material-icons" style="font-size:16px">crop_square</span> Small
             </button>
-            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Medium (640px)', 'form/f_articles.php', {}, 'medium')">
+            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Medium (640px)', 'demo/form/f_articles.php', {}, 'medium')">
                 <span class="material-icons" style="font-size:16px">crop_din</span> Medium
             </button>
-            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Large (900px)', 'form/f_articles.php', {}, 'large')">
+            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Large (900px)', 'demo/form/f_articles.php', {}, 'large')">
                 <span class="material-icons" style="font-size:16px">crop_free</span> Large
             </button>
-            <button class="gk-btn" style="background:#1e293b;color:#fff;border-color:#1e293b" onclick="GK.modal.open('Fullscreen Modal', 'form/f_articles.php', {}, 'full')">
+            <button class="gk-btn" style="background:#1e293b;color:#fff;border-color:#1e293b" onclick="GK.modal.open('Fullscreen Modal', 'demo/form/f_articles.php', {}, 'full')">
                 <span class="material-icons" style="font-size:16px">fullscreen</span> Full
             </button>
         </div>
@@ -182,7 +182,7 @@ $form->action('save/process.php')
         <h3 style="margin:0 0 8px; font-size:15px; color:#374151;">Verschachtelung: Modal mit Formular</h3>
         <p class="demo-intro">Ein Modal laedt ein Formular per AJAX – der haeufigste Anwendungsfall.</p>
         <div class="demo-btn-row">
-            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Artikel bearbeiten', 'form/f_articles.php', {}, 'medium')">
+            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Artikel bearbeiten', 'demo/form/f_articles.php', {}, 'medium')">
                 <span class="material-icons" style="font-size:16px">edit</span> Modal + Form
             </button>
         </div>
@@ -192,7 +192,7 @@ $form->action('save/process.php')
         <h3 style="margin:0 0 8px; font-size:15px; color:#374151;">Verschachtelung: Modal mit Tabelle + Sub-Modal</h3>
         <p class="demo-intro">Ein Large-Modal zeigt eine Kundenliste. Klick auf "Bearbeiten" oeffnet ein zweites Modal mit dem Formular.</p>
         <div class="demo-btn-row">
-            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Kundenverwaltung', 'form/f_table_modal.php', {}, 'large')">
+            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Kundenverwaltung', 'demo/form/f_table_modal.php', {}, 'large')">
                 <span class="material-icons" style="font-size:16px">people</span> Modal + Table + Sub-Modal
             </button>
         </div>
