@@ -130,6 +130,8 @@ textarea.gk-input { resize: vertical; }
 .gk-modal-small { max-width: 420px; }
 .gk-modal-medium { max-width: 640px; }
 .gk-modal-large { max-width: 900px; }
+.gk-modal-full { max-width: none; width: calc(100% - 32px); height: calc(100% - 32px); display: flex; flex-direction: column; }
+.gk-modal-full .gk-modal-body { flex: 1; overflow-y: auto; }
 .gk-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--gk-border); }
 .gk-modal-title { margin: 0; font-size: 16px; font-weight: 600; }
 .gk-modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gk-text-muted); padding: 0 4px; line-height: 1; }

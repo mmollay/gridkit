@@ -162,25 +162,31 @@ $form->action('save/process.php')
 <div class="demo-section" data-section="modal">
     <h2>Modal</h2>
     <div class="demo-card">
-        <p class="demo-intro">Modals werden per AJAX geladen. Drei Groessen: small (420px), medium (640px), large (900px).</p>
+        <p class="demo-intro">Modals in vier Groessen. Werden per AJAX geladen, Backdrop-Click und ESC schliessen.</p>
         <div class="demo-btn-row">
-            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Small Modal', 'form/f_articles.php', {}, 'small')">
-                <span class="material-icons" style="font-size:16px">add</span> Small
+            <button class="gk-btn" onclick="GK.modal.open('Small (420px)', 'form/f_delete.php', {}, 'small')">
+                <span class="material-icons" style="font-size:16px">crop_square</span> Small
             </button>
-            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Medium Modal', 'form/f_articles.php', {}, 'medium')">
-                <span class="material-icons" style="font-size:16px">edit</span> Medium
+            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Medium (640px)', 'form/f_articles.php', {}, 'medium')">
+                <span class="material-icons" style="font-size:16px">crop_din</span> Medium
             </button>
-            <button class="gk-btn" onclick="GK.modal.open('Delete Modal', 'form/f_delete.php', {}, 'small')">
-                <span class="material-icons" style="font-size:16px">delete</span> Delete
+            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Large (900px)', 'form/f_articles.php', {}, 'large')">
+                <span class="material-icons" style="font-size:16px">crop_free</span> Large
+            </button>
+            <button class="gk-btn" style="background:#1e293b;color:#fff;border-color:#1e293b" onclick="GK.modal.open('Fullscreen Modal', 'form/f_articles.php', {}, 'full')">
+                <span class="material-icons" style="font-size:16px">fullscreen</span> Full
             </button>
         </div>
     </div>
-    <div class="demo-code"><pre>// PHP: Modal an Table-Button binden
-$table->button('edit', ['icon' => 'edit', 'modal' => 'edit_form'])
-    ->modal('edit_form', 'Bearbeiten', 'form/edit.php', ['size' => 'medium']);
-
-// JS: Modal direkt oeffnen
+    <div class="demo-code"><pre>// Sizes: small (420px), medium (640px), large (900px), full (100%)
+GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'small');
 GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'medium');
+GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'large');
+GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'full');
+
+// PHP: Modal an Table-Button binden
+$table->button('edit', ['icon' => 'edit', 'modal' => 'edit_form'])
+    ->modal('edit_form', 'Bearbeiten', 'form/edit.php', ['size' => 'large']);
 
 // Am Seitenende: Modal::container();</pre></div>
 </div>
