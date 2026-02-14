@@ -515,6 +515,42 @@ GK.sidebar.close();</pre></div>
         </div>
     </div>
 
+    <!-- Shapes -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Shapes</h3>
+        <div class="demo-btn-row" style="align-items:center">
+            <?= \GridKit\Button::render('Rounded', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'star', 'shape' => 'rounded']) ?>
+            <?= \GridKit\Button::render('Pill', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'star', 'shape' => 'pill']) ?>
+            <?= \GridKit\Button::icon('star', ['variant' => 'filled', 'color' => 'primary', 'shape' => 'circle', 'title' => 'Circle']) ?>
+            <?= \GridKit\Button::render('Square', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'star', 'shape' => 'square']) ?>
+        </div>
+        <div class="demo-btn-row" style="align-items:center; margin-top:12px">
+            <?= \GridKit\Button::render('Pill Outlined', ['variant' => 'outlined', 'color' => 'success', 'icon' => 'check_circle', 'shape' => 'pill']) ?>
+            <?= \GridKit\Button::render('Pill Tonal', ['variant' => 'tonal', 'color' => 'danger', 'icon' => 'delete', 'shape' => 'pill']) ?>
+            <?= \GridKit\Button::render('Pill Text', ['variant' => 'text', 'color' => 'primary', 'icon' => 'link', 'shape' => 'pill']) ?>
+        </div>
+    </div>
+
+    <!-- FAB -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">FAB (Floating Action Button)</h3>
+        <div class="demo-btn-row" style="align-items:center; gap:16px">
+            <?= \GridKit\Button::fab('add', ['size' => 'sm']) ?>
+            <?= \GridKit\Button::fab('add') ?>
+            <?= \GridKit\Button::fab('add', ['size' => 'lg']) ?>
+        </div>
+        <div class="demo-btn-row" style="align-items:center; gap:16px; margin-top:16px">
+            <?= \GridKit\Button::fab('edit', ['extended' => true, 'label' => 'Bearbeiten']) ?>
+            <?= \GridKit\Button::fab('add', ['extended' => true, 'label' => 'Erstellen', 'color' => 'success']) ?>
+            <?= \GridKit\Button::fab('delete', ['extended' => true, 'label' => 'Entfernen', 'color' => 'danger']) ?>
+        </div>
+        <div class="demo-btn-row" style="align-items:center; gap:16px; margin-top:16px">
+            <?= \GridKit\Button::fab('star', ['color' => 'warning']) ?>
+            <?= \GridKit\Button::fab('favorite', ['color' => 'danger']) ?>
+            <?= \GridKit\Button::fab('share', ['color' => 'neutral', 'variant' => 'tonal']) ?>
+        </div>
+    </div>
+
     <div class="demo-code"><pre>use GridKit\Button;
 
 // Filled + Icon
@@ -540,7 +576,17 @@ echo Button::render('Badge', ['icon' => 'mail', 'badge' => 3]);
 echo Button::group([
     Button::icon('undo', ['variant' => 'outlined', 'color' => 'neutral']),
     Button::icon('redo', ['variant' => 'outlined', 'color' => 'neutral']),
-]);</pre></div>
+]);
+
+// Shapes: rounded (default), pill, circle, square
+echo Button::render('Pill', ['shape' => 'pill', 'icon' => 'star']);
+echo Button::icon('star', ['shape' => 'circle']);
+
+// FAB (Floating Action Button)
+echo Button::fab('add');                              // 56px default
+echo Button::fab('add', ['size' => 'sm']);            // 40px
+echo Button::fab('add', ['size' => 'lg']);            // 96px
+echo Button::fab('edit', ['extended' => true, 'label' => 'Bearbeiten']); // Extended FAB</pre></div>
 </div>
 
 <!-- ===== DASHBOARD DEMO ===== -->
