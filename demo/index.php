@@ -73,7 +73,7 @@ $sidebar->render();
 $demoHeader = new Header();
 echo $demoHeader->title('GridKit v' . $version)
     ->sidebarToggle(true)
-    ->sticky(true)
+    ->fixed(true)
     ->action(Theme::switcher())
     ->render();
 ?>

@@ -104,8 +104,8 @@ a:hover { text-decoration: none; }
 
     /* Sidebar Colors */
     --gk-sidebar-bg: #1e293b;
-    --gk-sidebar-text: #e2e8f0;
-    --gk-sidebar-text-muted: rgba(255,255,255,0.5);
+    --gk-sidebar-text: #f1f5f9;
+    --gk-sidebar-text-muted: rgba(255,255,255,0.75);
     --gk-sidebar-text-hover: #ffffff;
     --gk-sidebar-item-hover: rgba(255,255,255,0.08);
     --gk-sidebar-item-active: rgba(255,255,255,0.12);
@@ -480,8 +480,8 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-sidebar-close-mobile { display: none; background: none; border: none; color: var(--gk-sidebar-text-muted); cursor: pointer; padding: 4px; }
 .gk-sidebar-close-mobile:hover { color: var(--gk-sidebar-text-hover); }
 .gk-sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; }
-.gk-sidebar-group-label { font-size: 11px; font-weight: 600; color: var(--gk-sidebar-text-muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 16px 12px 6px; opacity: 0.7; }
-.gk-sidebar-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 6px; color: var(--gk-sidebar-text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: all .15s; }
+.gk-sidebar-group-label { font-size: 11px; font-weight: 600; color: var(--gk-sidebar-text-muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 16px 12px 6px; }
+.gk-sidebar-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 6px; color: var(--gk-sidebar-text); text-decoration: none; font-size: 13px; font-weight: 500; transition: all .15s; }
 .gk-sidebar-item:hover { background: var(--gk-sidebar-item-hover); color: var(--gk-sidebar-text-hover); }
 .gk-sidebar-item.active { background: var(--gk-sidebar-item-active); color: var(--gk-sidebar-text-hover); }
 .gk-sidebar-item.active .gk-sidebar-icon { color: var(--gk-primary, #6366f1); }
@@ -495,7 +495,7 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-sidebar-group-toggle.collapsed .gk-sidebar-chevron { transform: rotate(-90deg); }
 .gk-sidebar-subitems { display: flex; flex-direction: column; gap: 1px; overflow: hidden; max-height: 500px; transition: max-height .25s ease, opacity .2s ease; opacity: 1; }
 .gk-sidebar-subitems.collapsed { max-height: 0; opacity: 0; }
-.gk-sidebar-subitem { display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 46px; border-radius: 6px; color: var(--gk-sidebar-text-muted); text-decoration: none; font-size: 13px; transition: all .15s; }
+.gk-sidebar-subitem { display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 46px; border-radius: 6px; color: var(--gk-sidebar-text); text-decoration: none; font-size: 13px; transition: all .15s; opacity: 0.85; }
 .gk-sidebar-subitem:hover { background: var(--gk-sidebar-item-hover); color: var(--gk-sidebar-text); }
 .gk-sidebar-subitem.active { color: var(--gk-sidebar-text-hover); background: var(--gk-sidebar-item-active); }
 .gk-sidebar-subitem .gk-sidebar-icon { font-size: 17px; width: 20px; opacity: 0.6; }
