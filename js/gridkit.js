@@ -415,5 +415,31 @@
         info(msg, dur) { this.show(msg, 'info', dur); }
     };
 
+    // Confirm dialog (replaces window.confirm)
+    GK.confirm = function(message, options) {
+        options = options || {};
+        return new Promise(function(resolve) {
+            var overlay = document.createElement('div');
+            overlay.className = 'gk-confirm-overlay';
+            var title = options.title || 'Bestätigung';
+            var confirmText = options.confirmText || 'Bestätigen';
+            var cancelText = options.cancelText || 'Abbrechen';
+            var confirmClass = options.danger ? 'gk-btn gk-btn-danger' : 'gk-btn gk-btn-primary';
+            overlay.innerHTML = '<div class="gk-confirm-box">' +
+                '<div class="gk-confirm-header"><h3>' + title + '</h3></div>' +
+                '<div class="gk-confirm-body"><p>' + message + '</p></div>' +
+                '<div class="gk-confirm-footer">' +
+                '<button class="gk-btn gk-confirm-cancel">' + cancelText + '</button>' +
+                '<button class="' + confirmClass + ' gk-confirm-ok">' + confirmText + '</button>' +
+                '</div></div>';
+            document.body.appendChild(overlay);
+            overlay.querySelector('.gk-confirm-cancel').onclick = function() { overlay.remove(); resolve(false); };
+            overlay.querySelector('.gk-confirm-ok').onclick = function() { overlay.remove(); resolve(true); };
+            overlay.addEventListener('click', function(e) { if (e.target === overlay) { overlay.remove(); resolve(false); } });
+            document.addEventListener('keydown', function handler(e) { if (e.key === 'Escape') { overlay.remove(); resolve(false); document.removeEventListener('keydown', handler); } });
+            setTimeout(function() { overlay.querySelector('.gk-confirm-ok').focus(); }, 50);
+        });
+    };
+
     window.GridKit = GK;
 })();
