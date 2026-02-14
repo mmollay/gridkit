@@ -11,6 +11,7 @@ class Header
     private ?array $searchOpts = null;
     private ?array $userOpts = null;
     private bool $sticky = false;
+    private bool $fixed = false;
     private bool $sidebarToggle = true;
 
     public function title(string $title): self
@@ -55,6 +56,12 @@ class Header
         return $this;
     }
 
+    public function fixed(bool $enabled = true): self
+    {
+        $this->fixed = $enabled;
+        return $this;
+    }
+
     public function sidebarToggle(bool $enabled = true): self
     {
         $this->sidebarToggle = $enabled;
@@ -66,7 +73,8 @@ class Header
         $e = fn(string $s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
         $cls = 'gk-header';
-        if ($this->sticky) $cls .= ' gk-header-sticky';
+        if ($this->fixed) $cls .= ' gk-header-fixed';
+        elseif ($this->sticky) $cls .= ' gk-header-sticky';
 
         $html = '<header class="' . $cls . '">';
 

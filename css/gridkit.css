@@ -560,19 +560,50 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
     background: #fff;
     border-bottom: 1px solid var(--gk-border, #e2e8f0);
     gap: 16px;
-    z-index: 100;
+    z-index: 200;
     width: 100%;
     box-sizing: border-box;
 }
 .gk-header > * { flex-shrink: 0; }
 
-/* Sticky */
+/* Fixed Header (full-width, oben fixiert) */
+.gk-header-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+/* Sticky Header (scrollt mit, klebt oben) */
 .gk-header-sticky {
     position: sticky;
     top: 0;
     backdrop-filter: blur(12px);
     background: rgba(255,255,255,0.85);
-    z-index: 100;
+}
+
+/* Sidebar offset when fixed header present */
+.gk-header-fixed ~ .gk-with-sidebar .gk-sidebar,
+.gk-header-fixed + .gk-sidebar {
+    top: 64px;
+    height: calc(100vh - 64px);
+}
+
+/* Sidebar with-header fallback class */
+.gk-sidebar-with-header {
+    top: 64px !important;
+    height: calc(100vh - 64px) !important;
+}
+
+/* Body offset when fixed header */
+.gk-header-fixed ~ .gk-with-sidebar {
+    padding-top: 64px;
+}
+.gk-header-fixed ~ .gk-with-sidebar .gk-main {
+    margin-top: 0;
+}
+.gk-body-with-header {
+    padding-top: 64px;
 }
 
 .gk-header-left { display: flex; flex-direction: row; align-items: center; gap: 12px; flex: 0 0 auto; }

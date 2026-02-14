@@ -906,6 +906,8 @@ echo Button::fab('edit', ['extended' => true, 'label' => 'Bearbeiten']); // Exte
             ->render();
         ?>
     </div>
+    <p class="gk-text-muted" style="padding: 12px 24px; margin: 0; font-size: 13px; color: #6b7280;">In der Praxis: <code>-&gt;fixed(true)</code> fixiert den Header am oberen Rand.
+Die Sidebar beginnt dann automatisch unterhalb (64px offset).</p>
     <div class="demo-code"><pre>use GridKit\Header;
 use GridKit\Button;
 
@@ -925,7 +927,12 @@ echo $header->title('Rechnungen')
         ],
     ])
     ->sticky()
-    ->render();</pre></div>
+    ->render();
+
+// Standard-Layout mit fixed Header + Sidebar:
+// echo $header->title('Dashboard')->fixed(true)->render();
+// echo $sidebar->render();  // beginnt unter dem Header
+// echo '&lt;main class="gk-main gk-body-with-header"&gt;...&lt;/main&gt;';</pre></div>
 </div>
 
 <!-- ===== DASHBOARD DEMO ===== -->

@@ -13,6 +13,7 @@ class Sidebar
     private array $groups = [];
     private string $currentGroup = '';
     private string $collapsePosition = 'bottom';
+    private bool $headerOffset = false;
 
     public function __construct(string $id = 'main')
     {
@@ -31,6 +32,12 @@ class Sidebar
     public function collapsePosition(string $position): self
     {
         $this->collapsePosition = $position;
+        return $this;
+    }
+
+    public function headerOffset(bool $enabled = true): self
+    {
+        $this->headerOffset = $enabled;
         return $this;
     }
 
@@ -77,7 +84,9 @@ class Sidebar
     {
         $e = fn(string $s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
         echo '<div class="gk-sidebar-overlay" data-gk-sidebar-overlay onclick="GK.sidebar.close()"></div>';
-        echo '<aside class="gk-sidebar" data-gk-sidebar="' . $e($this->id) . '">';
+        $sidebarCls = 'gk-sidebar';
+        if ($this->headerOffset) $sidebarCls .= ' gk-sidebar-with-header';
+        echo '<aside class="' . $sidebarCls . '" data-gk-sidebar="' . $e($this->id) . '">';
 
         // Brand
         if ($this->brand !== '') {
