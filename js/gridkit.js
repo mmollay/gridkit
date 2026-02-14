@@ -601,12 +601,45 @@
         if (dropdown) dropdown.classList.toggle('open');
     });
 
+    // Theme System
+    GK.theme = {
+        set(theme) {
+            document.body.dataset.gkTheme = theme;
+            try { localStorage.setItem('gk-theme', theme); } catch(e) {}
+            document.querySelectorAll('[data-gk-set-theme]').forEach(b => {
+                b.classList.toggle('gk-theme-active', b.dataset.gkSetTheme === theme);
+            });
+        },
+        toggleMode() {
+            var mode = document.body.dataset.gkMode === 'dark' ? 'light' : 'dark';
+            document.body.dataset.gkMode = mode;
+            try { localStorage.setItem('gk-mode', mode); } catch(e) {}
+        },
+        restore() {
+            try {
+                var theme = localStorage.getItem('gk-theme');
+                var mode = localStorage.getItem('gk-mode');
+                if (theme) this.set(theme);
+                if (mode) document.body.dataset.gkMode = mode;
+            } catch(e) {}
+        }
+    };
+
+    // Auto-bind theme buttons
+    document.addEventListener('click', function(e) {
+        var themeBtn = e.target.closest('[data-gk-set-theme]');
+        if (themeBtn) GK.theme.set(themeBtn.dataset.gkSetTheme);
+        var modeBtn = e.target.closest('[data-gk-toggle-mode]');
+        if (modeBtn) GK.theme.toggleMode();
+    });
+
     window.GridKit = GK;
     window.GK = GK;
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => GK.init());
+        document.addEventListener('DOMContentLoaded', function() { GK.init(); GK.theme.restore(); });
     } else {
         GK.init();
+        GK.theme.restore();
     }
 })();

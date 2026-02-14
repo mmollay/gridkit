@@ -4,8 +4,64 @@
 a { text-decoration: none; color: inherit; }
 a:hover { text-decoration: none; }
 
-.gk-root {
-    /* === PRIMARY (Indigo-Blue) === */
+/* === M3 COLOR ROLES === */
+.gk-root, [data-gk-theme] {
+    /* Key Colors */
+    --gk-primary: #6366f1;
+    --gk-on-primary: #ffffff;
+    --gk-primary-container: #e0e0ff;
+    --gk-on-primary-container: #1a1a6b;
+
+    --gk-secondary: #625b71;
+    --gk-on-secondary: #ffffff;
+    --gk-secondary-container: #e8def8;
+    --gk-on-secondary-container: #1d192b;
+
+    --gk-tertiary: #10b981;
+    --gk-on-tertiary: #ffffff;
+    --gk-tertiary-container: #d1fae5;
+    --gk-on-tertiary-container: #064e3b;
+
+    --gk-error: #f43f5e;
+    --gk-on-error: #ffffff;
+    --gk-error-container: #ffe4e6;
+    --gk-on-error-container: #881337;
+
+    /* Surface Roles */
+    --gk-surface-dim: #ddd8e4;
+    --gk-surface: #ffffff;
+    --gk-surface-bright: #ffffff;
+    --gk-surface-container-lowest: #ffffff;
+    --gk-surface-container-low: #f7f2fa;
+    --gk-surface-container: #f1f5f9;
+    --gk-surface-container-high: #ece6f0;
+    --gk-surface-container-highest: #e6e0ec;
+    --gk-on-surface: #0f172a;
+    --gk-on-surface-variant: #475569;
+    --gk-outline: #94a3b8;
+    --gk-outline-variant: #e2e8f0;
+
+    /* Backward-compat aliases */
+    --gk-bg: var(--gk-surface);
+    --gk-bg-muted: var(--gk-surface-container);
+    --gk-bg-subtle: var(--gk-surface-container-low);
+    --gk-bg-hover: var(--gk-surface-container-high);
+    --gk-text: var(--gk-on-surface);
+    --gk-text-muted: var(--gk-on-surface-variant);
+    --gk-text-subtle: var(--gk-outline);
+    --gk-border: var(--gk-outline-variant);
+    --gk-success: var(--gk-tertiary);
+    --gk-warning: #f59e0b;
+    --gk-danger: var(--gk-error);
+    --gk-info: #0ea5e9;
+
+    /* Legacy hover aliases */
+    --gk-primary-hover: #4f46e5;
+    --gk-success-hover: #059669;
+    --gk-warning-hover: #d97706;
+    --gk-danger-hover: #e11d48;
+
+    /* Legacy scale aliases (backward compat) */
     --gk-primary-50:  #eef2ff;
     --gk-primary-100: #e0e7ff;
     --gk-primary-200: #c7d2fe;
@@ -14,8 +70,6 @@ a:hover { text-decoration: none; }
     --gk-primary-500: #6366f1;
     --gk-primary-600: #4f46e5;
     --gk-primary-700: #4338ca;
-
-    /* === SUCCESS (Emerald) === */
     --gk-success-50:  #ecfdf5;
     --gk-success-100: #d1fae5;
     --gk-success-200: #a7f3d0;
@@ -23,8 +77,6 @@ a:hover { text-decoration: none; }
     --gk-success-500: #10b981;
     --gk-success-600: #059669;
     --gk-success-700: #047857;
-
-    /* === WARNING (Amber) === */
     --gk-warning-50:  #fffbeb;
     --gk-warning-100: #fef3c7;
     --gk-warning-200: #fde68a;
@@ -32,8 +84,6 @@ a:hover { text-decoration: none; }
     --gk-warning-500: #f59e0b;
     --gk-warning-600: #d97706;
     --gk-warning-700: #b45309;
-
-    /* === DANGER (Rose) === */
     --gk-danger-50:  #fff1f2;
     --gk-danger-100: #ffe4e6;
     --gk-danger-200: #fecdd3;
@@ -41,8 +91,6 @@ a:hover { text-decoration: none; }
     --gk-danger-500: #f43f5e;
     --gk-danger-600: #e11d48;
     --gk-danger-700: #be123c;
-
-    /* === NEUTRAL (Slate) === */
     --gk-neutral-50:  #f8fafc;
     --gk-neutral-100: #f1f5f9;
     --gk-neutral-200: #e2e8f0;
@@ -54,30 +102,17 @@ a:hover { text-decoration: none; }
     --gk-neutral-800: #1e293b;
     --gk-neutral-900: #0f172a;
 
-    /* === SEMANTIC MAPPINGS === */
-    --gk-primary: #6366f1;
-    --gk-primary-hover: #4f46e5;
-    --gk-success: #10b981;
-    --gk-success-hover: #059669;
-    --gk-warning: #f59e0b;
-    --gk-warning-hover: #d97706;
-    --gk-danger: #f43f5e;
-    --gk-danger-hover: #e11d48;
-    --gk-info: #0ea5e9;
-    --gk-bg: #ffffff;
-    --gk-bg-subtle: #f9fafb;
-    --gk-bg-hover: #f3f4f6;
-    --gk-border: #e5e7eb;
-    --gk-text: #1f2937;
-    --gk-text-muted: #6b7280;
+    /* Elevation (M3 uses tonal elevation) */
+    --gk-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    --gk-shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+    --gk-radius: 12px;
+    --gk-radius-sm: 8px;
+    --gk-radius-lg: 16px;
+
     --gk-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --gk-font-size: 14px;
     --gk-font-size-sm: 12px;
-    --gk-radius: 6px;
-    --gk-radius-sm: 4px;
     --gk-spacing: 12px;
-    --gk-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    --gk-shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
     font-family: var(--gk-font);
     font-size: var(--gk-font-size);
     color: var(--gk-text);
@@ -733,3 +768,104 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 @media (max-width: 768px) {
     .gk-hide-mobile { display: none !important; }
 }
+
+/* === DARK MODE === */
+[data-gk-mode="dark"], .gk-dark {
+    --gk-primary: #a5b4fc;
+    --gk-on-primary: #2e2e8a;
+    --gk-primary-container: #4345b0;
+    --gk-on-primary-container: #e0e0ff;
+
+    --gk-secondary: #ccc2dc;
+    --gk-on-secondary: #332d41;
+    --gk-secondary-container: #4a4458;
+    --gk-on-secondary-container: #e8def8;
+
+    --gk-tertiary: #6ee7b7;
+    --gk-on-tertiary: #064e3b;
+    --gk-tertiary-container: #065f46;
+    --gk-on-tertiary-container: #d1fae5;
+
+    --gk-error: #fda4af;
+    --gk-on-error: #6b1028;
+    --gk-error-container: #881337;
+    --gk-on-error-container: #ffe4e6;
+
+    --gk-surface-dim: #0f172a;
+    --gk-surface: #1e293b;
+    --gk-surface-bright: #334155;
+    --gk-surface-container-lowest: #0b1120;
+    --gk-surface-container-low: #141d2e;
+    --gk-surface-container: #1e293b;
+    --gk-surface-container-high: #283548;
+    --gk-surface-container-highest: #334155;
+    --gk-on-surface: #e2e8f0;
+    --gk-on-surface-variant: #94a3b8;
+    --gk-outline: #64748b;
+    --gk-outline-variant: #334155;
+
+    --gk-warning: #fbbf24;
+    --gk-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    --gk-shadow-lg: 0 10px 25px rgba(0,0,0,0.4);
+
+    /* Legacy dark overrides */
+    --gk-primary-hover: #818cf8;
+    --gk-success-hover: #34d399;
+    --gk-warning-hover: #fbbf24;
+    --gk-danger-hover: #fda4af;
+    --gk-neutral-50:  #334155;
+    --gk-neutral-100: #283548;
+    --gk-neutral-200: #1e293b;
+    --gk-neutral-800: #e2e8f0;
+    --gk-neutral-900: #f8fafc;
+
+    color-scheme: dark;
+}
+
+/* Dark mode: Component adjustments */
+[data-gk-mode="dark"] .gk-header,
+.gk-dark .gk-header { background: var(--gk-surface); border-color: var(--gk-outline-variant); }
+[data-gk-mode="dark"] .gk-header-sticky,
+.gk-dark .gk-header-sticky { background: rgba(30,41,59,0.85); }
+[data-gk-mode="dark"] .gk-modal,
+.gk-dark .gk-modal { background: var(--gk-surface-container-high); }
+[data-gk-mode="dark"] .gk-table thead th,
+.gk-dark .gk-table thead th { background: var(--gk-surface-container); }
+[data-gk-mode="dark"] .gk-table tbody tr:hover,
+.gk-dark .gk-table tbody tr:hover { background: var(--gk-surface-container-high); }
+[data-gk-mode="dark"] .gk-sidebar,
+.gk-dark .gk-sidebar { background: var(--gk-surface-dim); }
+[data-gk-mode="dark"] input,
+[data-gk-mode="dark"] select,
+[data-gk-mode="dark"] textarea,
+.gk-dark input, .gk-dark select, .gk-dark textarea {
+    background: var(--gk-surface-container-high);
+    color: var(--gk-on-surface);
+    border-color: var(--gk-outline);
+}
+[data-gk-mode="dark"] .gk-table-wrap,
+.gk-dark .gk-table-wrap { background: var(--gk-surface); }
+[data-gk-mode="dark"] .gk-confirm-box,
+.gk-dark .gk-confirm-box { background: var(--gk-surface-container-high); }
+[data-gk-mode="dark"] .gk-toast,
+.gk-dark .gk-toast { background: var(--gk-surface-container-highest); color: var(--gk-on-surface); }
+
+/* === THEME SWITCHER WIDGET === */
+.gk-theme-switcher { display: flex; align-items: center; gap: 12px; }
+.gk-theme-colors { display: flex; gap: 8px; }
+.gk-theme-dot {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent;
+    cursor: pointer; transition: all .15s; box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+.gk-theme-dot:hover { transform: scale(1.15); }
+.gk-theme-dot.gk-theme-active { border-color: var(--gk-on-surface); transform: scale(1.15); }
+.gk-mode-toggle {
+    display: flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: var(--gk-surface-container); cursor: pointer;
+    color: var(--gk-on-surface); transition: all .15s;
+}
+.gk-mode-toggle:hover { background: var(--gk-surface-container-high); }
+[data-gk-mode="light"] .gk-mode-dark { display: none; }
+[data-gk-mode="dark"] .gk-mode-light { display: none; }
+.gk-mode-dark { display: none; }

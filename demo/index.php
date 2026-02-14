@@ -9,6 +9,7 @@ use GridKit\FilterChips;
 use GridKit\YearFilter;
 use GridKit\Header;
 use GridKit\Button;
+use GridKit\Theme;
 
 $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
 ?>
@@ -19,27 +20,28 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GridKit Demo v<?= $version ?></title>
     <link rel="stylesheet" href="../css/gridkit.css">
+    <link rel="stylesheet" href="../css/themes.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
-        body { margin:0; padding:0; background:#f0f1f3; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#1f2937; }
-        .demo-header { background:#1e293b; color:#fff; padding:24px 32px; display:flex; align-items:center; gap:16px; }
+        body { margin:0; padding:0; background:var(--gk-surface-container, #f0f1f3); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:var(--gk-on-surface, #1f2937); }
+        .demo-header { background:var(--gk-surface-dim, #1e293b); color:var(--gk-on-surface, #fff); padding:24px 32px; display:flex; align-items:center; gap:16px; }
         .demo-header h1 { margin:0; font-size:22px; font-weight:700; }
         .demo-header .version { background:rgba(255,255,255,0.15); padding:2px 10px; border-radius:12px; font-size:12px; }
         .demo-section { max-width:1100px; margin:24px auto; padding:0 24px; display:none; }
         .demo-section.active { display:block; }
         .demo-section h2 { font-size:20px; margin:0 0 16px; color:#374151; }
-        .demo-card { background:#fff; border-radius:8px; padding:24px; box-shadow:0 1px 3px rgba(0,0,0,0.08); margin-bottom:24px; }
-        .demo-code { background:#1e293b; color:#e2e8f0; padding:20px; border-radius:8px; overflow-x:auto; font-family:'SF Mono',Monaco,Consolas,monospace; font-size:13px; line-height:1.6; margin-top:16px; }
+        .demo-card { background:var(--gk-surface, #fff); border-radius:8px; padding:24px; box-shadow:var(--gk-shadow); margin-bottom:24px; }
+        .demo-code { background:var(--gk-surface-dim, #1e293b); color:var(--gk-on-surface, #e2e8f0); padding:20px; border-radius:8px; overflow-x:auto; font-family:'SF Mono',Monaco,Consolas,monospace; font-size:13px; line-height:1.6; margin-top:16px; }
         .demo-code pre { margin:0; }
         .demo-stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:24px; }
-        .demo-stat { background:#fff; border-radius:8px; padding:20px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
-        .demo-stat .num { font-size:28px; font-weight:700; color:#2563eb; }
-        .demo-stat .lbl { font-size:13px; color:#6b7280; margin-top:4px; }
+        .demo-stat { background:var(--gk-surface, #fff); border-radius:8px; padding:20px; text-align:center; box-shadow:var(--gk-shadow); }
+        .demo-stat .num { font-size:28px; font-weight:700; color:var(--gk-primary); }
+        .demo-stat .lbl { font-size:13px; color:var(--gk-on-surface-variant, #6b7280); margin-top:4px; }
         .demo-intro { color:#6b7280; margin:0 0 16px; font-size:14px; line-height:1.6; }
         .demo-btn-row { display:flex; gap:8px; flex-wrap:wrap; }
     </style>
 </head>
-<body>
+<body data-gk-theme="indigo" data-gk-mode="light" class="gk-root">
 
 <?php
 $sidebar = new Sidebar('demo');
@@ -53,6 +55,8 @@ $sidebar->brand('GridKit', 'widgets', 'v' . $version)
     ->item('StatCards', '#statcards', 'analytics')
     ->item('FilterChips', '#filterchips', 'filter_list')
     ->item('YearFilter', '#yearfilter', 'date_range')
+    ->group('Design')
+    ->item('Themes', '#themes', 'palette')
     ->group('UI-Kit')
     ->item('Toast', '#toast', 'notifications')
     ->item('Confirm', '#confirm', 'help_outline')
@@ -69,6 +73,8 @@ $sidebar->render();
 <div class="demo-header">
     <?php Sidebar::toggleButton(); ?>
     <h1>GridKit <span class="version">v<?= $version ?></span></h1>
+    <div style="flex:1"></div>
+    <?= Theme::switcher() ?>
 </div>
 
 <!-- ===== OVERVIEW (default) ===== -->
@@ -933,6 +939,69 @@ echo $header->title('Rechnungen')
 // echo $header->title('Dashboard')->fixed(true)->render();
 // echo $sidebar->render();  // beginnt unter dem Header
 // echo '&lt;main class="gk-main gk-body-with-header"&gt;...&lt;/main&gt;';</pre></div>
+</div>
+
+<!-- ===== THEMES ===== -->
+<div class="demo-section" data-section="themes">
+    <h2>Themes</h2>
+    <div class="demo-card">
+        <p class="demo-intro">M3-konformes Theme-System mit 6 Themes und Dark/Light Mode. Themes werden per <code>data-gk-theme</code> und <code>data-gk-mode</code> Attributen am Body gesteuert.</p>
+
+        <h3 style="margin:16px 0 12px; font-size:15px;">Theme-Auswahl</h3>
+        <?= Theme::switcher() ?>
+
+        <h3 style="margin:24px 0 12px; font-size:15px;">Live-Vorschau</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+            <div style="background:var(--gk-surface-container); border-radius:var(--gk-radius); padding:20px; border:1px solid var(--gk-outline-variant);">
+                <h4 style="margin:0 0 8px; color:var(--gk-on-surface);">Card Title</h4>
+                <p style="margin:0 0 12px; color:var(--gk-on-surface-variant); font-size:13px;">This card uses surface-container background with on-surface text colors.</p>
+                <input type="text" placeholder="Input field..." style="width:100%; padding:8px 12px; border:1px solid var(--gk-outline); border-radius:var(--gk-radius-sm); background:var(--gk-surface); color:var(--gk-on-surface); margin-bottom:12px; box-sizing:border-box;">
+                <div style="display:flex; gap:8px;">
+                    <button class="gk-btn gk-btn-primary" style="background:var(--gk-primary); color:var(--gk-on-primary); border:none; padding:8px 16px; border-radius:var(--gk-radius-sm); cursor:pointer;">Primary</button>
+                    <button style="background:var(--gk-primary-container); color:var(--gk-on-primary-container); border:none; padding:8px 16px; border-radius:var(--gk-radius-sm); cursor:pointer;">Container</button>
+                    <button style="background:var(--gk-error); color:var(--gk-on-error); border:none; padding:8px 16px; border-radius:var(--gk-radius-sm); cursor:pointer;">Error</button>
+                </div>
+            </div>
+            <div style="background:var(--gk-surface-container-high); border-radius:var(--gk-radius); padding:20px; border:1px solid var(--gk-outline-variant);">
+                <h4 style="margin:0 0 12px; color:var(--gk-on-surface);">Color Roles</h4>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                    <span style="background:var(--gk-primary); color:var(--gk-on-primary); padding:4px 12px; border-radius:99px; font-size:12px;">Primary</span>
+                    <span style="background:var(--gk-secondary); color:var(--gk-on-secondary); padding:4px 12px; border-radius:99px; font-size:12px;">Secondary</span>
+                    <span style="background:var(--gk-tertiary); color:var(--gk-on-tertiary); padding:4px 12px; border-radius:99px; font-size:12px;">Tertiary</span>
+                    <span style="background:var(--gk-error); color:var(--gk-on-error); padding:4px 12px; border-radius:99px; font-size:12px;">Error</span>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+                    <span style="background:var(--gk-primary-container); color:var(--gk-on-primary-container); padding:4px 12px; border-radius:99px; font-size:12px;">Primary Container</span>
+                    <span style="background:var(--gk-secondary-container); color:var(--gk-on-secondary-container); padding:4px 12px; border-radius:99px; font-size:12px;">Secondary Container</span>
+                    <span style="background:var(--gk-tertiary-container); color:var(--gk-on-tertiary-container); padding:4px 12px; border-radius:99px; font-size:12px;">Tertiary Container</span>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+                    <span style="background:var(--gk-surface); color:var(--gk-on-surface); padding:4px 12px; border-radius:99px; font-size:12px; border:1px solid var(--gk-outline);">Surface</span>
+                    <span style="background:var(--gk-surface-container); color:var(--gk-on-surface); padding:4px 12px; border-radius:99px; font-size:12px; border:1px solid var(--gk-outline);">Container</span>
+                    <span style="background:var(--gk-surface-container-highest); color:var(--gk-on-surface); padding:4px 12px; border-radius:99px; font-size:12px; border:1px solid var(--gk-outline);">Highest</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="demo-code"><pre>use GridKit\Theme;
+
+// Set theme + mode
+Theme::set('ocean', 'dark');
+
+// Body tag with attributes
+echo Theme::bodyTag('gk-root');
+// &lt;body data-gk-theme="ocean" data-gk-mode="dark" class="gk-root"&gt;
+
+// Theme switcher widget
+echo Theme::switcher();
+
+// Available themes
+$themes = Theme::available();
+
+// JS API
+GK.theme.set('forest');     // Switch theme
+GK.theme.toggleMode();      // Toggle dark/light
+GK.theme.restore();         // Restore from localStorage</pre></div>
 </div>
 
 <!-- ===== DASHBOARD DEMO ===== -->
