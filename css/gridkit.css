@@ -1,4 +1,9 @@
-/* GridKit Core CSS v1.0 */
+/* GridKit Core CSS v0.5 */
+
+/* Global link reset */
+a { text-decoration: none; color: inherit; }
+a:hover { text-decoration: none; }
+
 .gk-root {
     /* === PRIMARY (Indigo-Blue) === */
     --gk-primary-50:  #eef2ff;
