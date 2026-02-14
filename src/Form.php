@@ -1,6 +1,8 @@
 <?php
 namespace GridKit;
 
+use GridKit\Button;
+
 class Form
 {
     private string $id;
@@ -64,7 +66,7 @@ class Form
         }
 
         if ($this->submitLabel) {
-            echo '<div class="gk-form-actions"><button type="submit" class="gk-btn gk-btn-primary">' . $e($this->submitLabel) . '</button></div>';
+            echo '<div class="gk-form-actions">' . Button::render($this->submitLabel, ['variant' => 'filled', 'color' => 'success', 'type' => 'submit', 'icon' => 'save']) . '</div>';
         }
 
         echo '</form>';
