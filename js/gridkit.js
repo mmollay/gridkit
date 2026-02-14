@@ -601,6 +601,20 @@
         if (dropdown) dropdown.classList.toggle('open');
     });
 
+    // Layout System
+    GK.layout = {
+        set(mode) {
+            document.body.dataset.gkLayout = mode;
+            try { localStorage.setItem('gk-layout', mode); } catch(e) {}
+        },
+        restore() {
+            try {
+                var mode = localStorage.getItem('gk-layout');
+                if (mode) document.body.dataset.gkLayout = mode;
+            } catch(e) {}
+        }
+    };
+
     // Theme System
     GK.theme = {
         set(theme) {
@@ -637,9 +651,10 @@
     window.GK = GK;
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() { GK.init(); GK.theme.restore(); });
+        document.addEventListener('DOMContentLoaded', function() { GK.init(); GK.theme.restore(); GK.layout.restore(); });
     } else {
         GK.init();
         GK.theme.restore();
+        GK.layout.restore();
     }
 })();

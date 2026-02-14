@@ -632,28 +632,61 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
     background: rgba(255,255,255,0.85);
 }
 
-/* Sidebar offset when fixed header present */
-.gk-header-fixed ~ .gk-with-sidebar .gk-sidebar,
-.gk-header-fixed + .gk-sidebar {
+/* Backward-compat utility */
+.gk-body-with-header {
+    padding-top: 64px;
+}
+
+/* === LAYOUT: header-first (Default) === */
+[data-gk-layout="header-first"] .gk-header-fixed,
+.gk-layout-header-first .gk-header-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+}
+[data-gk-layout="header-first"] .gk-sidebar,
+.gk-layout-header-first .gk-sidebar {
     top: 64px;
     height: calc(100vh - 64px);
 }
-
-/* Sidebar with-header fallback class */
-.gk-sidebar-with-header {
-    top: 64px !important;
-    height: calc(100vh - 64px) !important;
-}
-
-/* Body offset when fixed header */
-.gk-header-fixed ~ .gk-with-sidebar {
+[data-gk-layout="header-first"] .gk-with-sidebar,
+.gk-layout-header-first .gk-with-sidebar {
     padding-top: 64px;
 }
-.gk-header-fixed ~ .gk-with-sidebar .gk-main {
-    margin-top: 0;
+
+/* === LAYOUT: sidebar-first === */
+[data-gk-layout="sidebar-first"] .gk-header-fixed,
+.gk-layout-sidebar-first .gk-header-fixed {
+    position: fixed;
+    top: 0;
+    left: 260px;
+    right: 0;
+    z-index: 200;
+    transition: left 0.25s ease;
 }
-.gk-body-with-header {
+[data-gk-layout="sidebar-first"] .gk-sidebar,
+.gk-layout-sidebar-first .gk-sidebar {
+    top: 0;
+    height: 100vh;
+    z-index: 300; /* Sidebar ueber Header */
+}
+[data-gk-layout="sidebar-first"] .gk-sidebar.collapsed ~ .gk-with-sidebar .gk-header-fixed,
+.gk-layout-sidebar-first .gk-sidebar.collapsed ~ .gk-with-sidebar .gk-header-fixed,
+[data-gk-layout="sidebar-first"] .gk-sidebar.collapsed + .gk-header-fixed,
+.gk-layout-sidebar-first .gk-sidebar.collapsed + .gk-header-fixed {
+    left: 60px;
+}
+[data-gk-layout="sidebar-first"] .gk-with-sidebar,
+.gk-layout-sidebar-first .gk-with-sidebar {
     padding-top: 64px;
+}
+
+/* Mobile: Immer header-first */
+@media (max-width: 768px) {
+    [data-gk-layout="sidebar-first"] .gk-header-fixed { left: 0 !important; }
+    [data-gk-layout="sidebar-first"] .gk-sidebar { top: 0; height: 100vh; }
 }
 
 .gk-header-left { display: flex; flex-direction: row; align-items: center; gap: 12px; flex: 0 0 auto; }

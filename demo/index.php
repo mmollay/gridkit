@@ -10,6 +10,7 @@ use GridKit\YearFilter;
 use GridKit\Header;
 use GridKit\Button;
 use GridKit\Theme;
+use GridKit\Layout;
 
 $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
 ?>
@@ -39,7 +40,7 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-btn-row { display:flex; gap:8px; flex-wrap:wrap; }
     </style>
 </head>
-<body data-gk-theme="indigo" data-gk-mode="light" class="gk-root">
+<?= Layout::bodyTag('gk-root') ?>
 
 <?php
 $sidebar = new Sidebar('demo');
@@ -946,6 +947,14 @@ echo $header->title('Rechnungen')
     <h2>Themes</h2>
     <div class="demo-card">
         <p class="demo-intro">M3-konformes Theme-System mit 6 Themes und Dark/Light Mode. Themes werden per <code>data-gk-theme</code> und <code>data-gk-mode</code> Attributen am Body gesteuert.</p>
+
+        <h3 style="margin:16px 0 12px; font-size:15px;">Layout-Modus</h3>
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <?= Button::render('Header First', ['variant' => 'tonal', 'color' => 'primary', 'onclick' => "GK.layout.set('header-first')"]) ?>
+            <?= Button::render('Sidebar First', ['variant' => 'tonal', 'color' => 'primary', 'onclick' => "GK.layout.set('sidebar-first')"]) ?>
+        </div>
+        <p class="gk-text-muted" style="font-size:13px; color:var(--gk-on-surface-variant); margin-bottom:16px;">Header First: Header ueber volle Breite, Sidebar darunter (Gmail-Style).<br>
+        Sidebar First: Sidebar volle Hoehe, Header daneben (Admin-Panel-Style).</p>
 
         <h3 style="margin:16px 0 12px; font-size:15px;">Theme-Auswahl</h3>
         <?= Theme::switcher() ?>
