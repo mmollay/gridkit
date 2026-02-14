@@ -179,13 +179,13 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 
 /* === SIDEBAR === */
 .gk-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: #1e293b; color: #e2e8f0; display: flex; flex-direction: column; z-index: 1000; transition: transform .25s ease; overflow-y: auto; }
-.gk-sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 20px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.gk-sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 14px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
 .gk-sidebar-brand-icon { font-size: 28px; color: var(--gk-primary, #2563eb); }
 .gk-sidebar-brand-text { flex: 1; min-width: 0; }
 .gk-sidebar-brand-title { display: block; font-size: 16px; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; }
 .gk-sidebar-brand-version { font-size: 11px; color: rgba(255,255,255,0.4); }
-.gk-sidebar-close { display: none; background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 4px; }
-.gk-sidebar-close:hover { color: #fff; }
+.gk-sidebar-close-mobile { display: none; background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 4px; }
+.gk-sidebar-close-mobile:hover { color: #fff; }
 .gk-sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; }
 .gk-sidebar-group-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.05em; padding: 16px 12px 6px; }
 .gk-sidebar-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 6px; color: rgba(255,255,255,0.65); text-decoration: none; font-size: 13px; font-weight: 500; transition: all .15s; }
@@ -206,18 +206,14 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-sidebar.collapsed .gk-sidebar-label,
 .gk-sidebar.collapsed .gk-sidebar-badge,
 .gk-sidebar.collapsed .gk-sidebar-group-label { display: none; }
-.gk-sidebar.collapsed .gk-sidebar-brand { padding: 16px 0; justify-content: center; }
-.gk-sidebar.collapsed .gk-sidebar-brand-icon { margin: 0; }
+.gk-sidebar.collapsed .gk-sidebar-brand { padding: 14px 0; justify-content: center; gap: 0; }
+.gk-sidebar.collapsed .gk-sidebar-brand-icon { display: none; }
 .gk-sidebar.collapsed .gk-sidebar-item { justify-content: center; padding: 10px 0; }
 .gk-sidebar.collapsed .gk-sidebar-icon { width: auto; font-size: 22px; }
 .gk-sidebar.collapsed .gk-sidebar-nav { padding: 12px 6px; }
 .gk-sidebar.collapsed .gk-sidebar-close { display: none; }
-.gk-sidebar-collapse-btn { display: flex; align-items: center; gap: 8px; padding: 10px 14px; margin: 8px 10px; border: none; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); border-radius: 6px; cursor: pointer; font-size: 13px; transition: all .15s; width: calc(100% - 20px); }
+.gk-sidebar-collapse-btn { display: flex; align-items: center; justify-content: center; background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 6px; border-radius: 4px; flex-shrink: 0; transition: all .15s; }
 .gk-sidebar-collapse-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-.gk-sidebar-collapse-btn .material-icons { font-size: 20px; transition: transform .25s; }
-.gk-sidebar.collapsed .gk-sidebar-collapse-btn { justify-content: center; padding: 10px 0; margin: 8px 6px; width: calc(100% - 12px); }
-.gk-sidebar.collapsed .gk-sidebar-collapse-btn .material-icons { transform: rotate(180deg); }
-.gk-sidebar.collapsed .gk-sidebar-collapse-btn span:not(.material-icons) { display: none; }
 .gk-sidebar.collapsed .gk-sidebar-item { position: relative; }
 .gk-sidebar.collapsed .gk-sidebar-item::after { content: attr(data-label); position: absolute; left: 100%; top: 50%; transform: translateY(-50%); background: #1e293b; color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .15s; margin-left: 8px; z-index: 1001; }
 .gk-sidebar.collapsed .gk-sidebar-item:hover::after { opacity: 1; }
@@ -229,7 +225,8 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 @media (max-width: 768px) {
     .gk-sidebar { transform: translateX(-100%); }
     .gk-sidebar.open { transform: translateX(0); }
-    .gk-sidebar-close { display: block; }
+    .gk-sidebar-close-mobile { display: block; }
+    .gk-sidebar-collapse-btn { display: none; }
     .gk-sidebar-overlay.open { display: block; }
     .gk-sidebar-toggle { display: inline-flex; }
     .gk-with-sidebar { margin-left: 0; }

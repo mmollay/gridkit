@@ -58,9 +58,12 @@ class Sidebar
         echo '<div class="gk-sidebar-overlay" data-gk-sidebar-overlay onclick="GK.sidebar.close()"></div>';
         echo '<aside class="gk-sidebar" data-gk-sidebar="' . $e($this->id) . '">';
 
-        // Brand
+        // Brand + collapse toggle
         if ($this->brand !== '') {
             echo '<div class="gk-sidebar-brand">';
+            echo '<button class="gk-sidebar-collapse-btn" onclick="window.GK&&GK.sidebar.collapse()" title="Ein-/Ausklappen">';
+            echo '<span class="material-icons">menu</span>';
+            echo '</button>';
             if ($this->brandIcon) {
                 echo '<span class="material-icons gk-sidebar-brand-icon">' . $e($this->brandIcon) . '</span>';
             }
@@ -70,7 +73,7 @@ class Sidebar
                 echo '<span class="gk-sidebar-brand-version">' . $e($this->version) . '</span>';
             }
             echo '</div>';
-            echo '<button class="gk-sidebar-close" onclick="GK.sidebar.close()">';
+            echo '<button class="gk-sidebar-close-mobile" onclick="window.GK&&GK.sidebar.close()">';
             echo '<span class="material-icons">close</span>';
             echo '</button>';
             echo '</div>';
@@ -93,13 +96,6 @@ class Sidebar
         }
 
         echo '</nav>';
-
-        // Collapse toggle
-        echo '<button class="gk-sidebar-collapse-btn" onclick="GK.sidebar.collapse()">';
-        echo '<span class="material-icons">chevron_left</span>';
-        echo '<span>Einklappen</span>';
-        echo '</button>';
-
         echo '</aside>';
     }
 
