@@ -287,15 +287,21 @@ class Table
             $color = $colorMap[$bopts['class'] ?? ''] ?? 'neutral';
 
             $data = [
-                'action' => $bname,
+                'gk-action' => $bname,
                 'gk-params' => json_encode($params),
             ];
             if (isset($bopts['modal'])) {
                 $data['gk-modal'] = $bopts['modal'];
             }
+            if (!empty($bopts['title'])) {
+                $data['title'] = $bopts['title'];
+            }
 
             $hasText = !empty($bopts['text']);
             $iconName = $bopts['icon'] ?? '';
+            // Map legacy icon names to Material Icons
+            $iconMap = ['pencil' => 'edit', 'trash' => 'delete', 'plus' => 'add', 'search' => 'search', 'eye' => 'visibility', 'download' => 'download', 'upload' => 'upload', 'copy' => 'content_copy', 'mail' => 'mail', 'print' => 'print'];
+            $iconName = $iconMap[$iconName] ?? $iconName;
 
             if ($hasText && $iconName) {
                 echo Button::render($bopts['text'], [
