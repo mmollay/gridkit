@@ -464,7 +464,7 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
         <?php
         $formAjax = new Form('ajax_select_demo');
         $formAjax->field('customer_id', 'Kunde', 'ajaxselect', [
-                'url' => 'api/search.php',
+                'url' => 'demo/api/search.php',
                 'value' => '',
                 'displayValue' => '',
                 'placeholder' => 'Kunde suchen...',
