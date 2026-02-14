@@ -1,10 +1,11 @@
 /* GridKit Themes – M3 Color System */
 
 /* === THEME: Indigo (Default) === */
-[data-gk-theme="indigo"] { /* already in gk-root */ }
+[data-gk-theme="indigo"] { --gk-sidebar-bg: #1e293b; }
 
 /* === THEME: Ocean (Blue-Teal) === */
 [data-gk-theme="ocean"] {
+    --gk-sidebar-bg: #0c4a6e;
     --gk-primary: #0ea5e9;
     --gk-on-primary: #fff;
     --gk-primary-container: #e0f2fe;
@@ -17,6 +18,7 @@
 
 /* === THEME: Forest (Green) === */
 [data-gk-theme="forest"] {
+    --gk-sidebar-bg: #064e3b;
     --gk-primary: #059669;
     --gk-on-primary: #fff;
     --gk-primary-container: #d1fae5;
@@ -29,6 +31,7 @@
 
 /* === THEME: Rose (Pink-Purple) === */
 [data-gk-theme="rose"] {
+    --gk-sidebar-bg: #4a1942;
     --gk-primary: #ec4899;
     --gk-on-primary: #fff;
     --gk-primary-container: #fce7f3;
@@ -41,6 +44,7 @@
 
 /* === THEME: Amber (Warm) === */
 [data-gk-theme="amber"] {
+    --gk-sidebar-bg: #451a03;
     --gk-primary: #d97706;
     --gk-on-primary: #fff;
     --gk-primary-container: #fef3c7;
@@ -53,6 +57,7 @@
 
 /* === THEME: Slate (Neutral/Minimal) === */
 [data-gk-theme="slate"] {
+    --gk-sidebar-bg: #1e293b;
     --gk-primary: #475569;
     --gk-on-primary: #fff;
     --gk-primary-container: #e2e8f0;

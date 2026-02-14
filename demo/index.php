@@ -642,7 +642,7 @@ GK.confirm('Wirklich loeschen?', {
         <p class="demo-intro">Responsive Sidebar-Navigation mit Gruppen, Icons, Badges und Mobile-Toggle. Auf dieser Seite live zu sehen.</p>
     </div>
     <div class="demo-code"><pre>$sidebar = new Sidebar('main');
-$sidebar->brand('Mein Projekt', 'dashboard', 'v0.5.0')
+$sidebar->brand('Mein Projekt', 'dashboard', 'v0.6.0')
     ->group('Module')
     ->item('Dashboard', '/dashboard', 'analytics', ['active' => true])
     ->item('Rechnungen', '/invoices', 'receipt_long', ['badge' => 3])
