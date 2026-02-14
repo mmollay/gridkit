@@ -178,6 +178,26 @@ $form->action('save/process.php')
             </button>
         </div>
     </div>
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px; font-size:15px; color:#374151;">Verschachtelung: Modal mit Formular</h3>
+        <p class="demo-intro">Ein Modal laedt ein Formular per AJAX – der haeufigste Anwendungsfall.</p>
+        <div class="demo-btn-row">
+            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Artikel bearbeiten', 'form/f_articles.php', {}, 'medium')">
+                <span class="material-icons" style="font-size:16px">edit</span> Modal + Form
+            </button>
+        </div>
+    </div>
+
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px; font-size:15px; color:#374151;">Verschachtelung: Modal mit Tabelle + Sub-Modal</h3>
+        <p class="demo-intro">Ein Large-Modal zeigt eine Kundenliste. Klick auf "Bearbeiten" oeffnet ein zweites Modal mit dem Formular.</p>
+        <div class="demo-btn-row">
+            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Kundenverwaltung', 'form/f_table_modal.php', {}, 'large')">
+                <span class="material-icons" style="font-size:16px">people</span> Modal + Table + Sub-Modal
+            </button>
+        </div>
+    </div>
+
     <div class="demo-code"><pre>// Sizes: small (420px), medium (640px), large (900px), full (100%)
 GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'small');
 GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'medium');

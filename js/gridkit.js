@@ -5,35 +5,54 @@
     const GK = {
         // === MODAL ===
         modal: {
-            overlay: null,
+            stack: [],
             init() {
-                this.overlay = document.querySelector('[data-gk-modal-overlay]');
-                if (!this.overlay) return;
-                this.overlay.querySelector('[data-gk-modal-close]').addEventListener('click', () => this.close());
-                this.overlay.addEventListener('click', e => { if (e.target === this.overlay) this.close(); });
-                document.addEventListener('keydown', e => { if (e.key === 'Escape' && this.overlay.style.display !== 'none') this.close(); });
+                document.addEventListener('keydown', e => { if (e.key === 'Escape' && this.stack.length) this.close(); });
+            },
+            _createOverlay() {
+                var ov = document.createElement('div');
+                ov.className = 'gk-modal-overlay';
+                ov.style.zIndex = 9000 + this.stack.length * 10;
+                ov.innerHTML = '<div class="gk-modal" data-gk-modal-container>' +
+                    '<div class="gk-modal-header"><h3 class="gk-modal-title" data-gk-modal-title-el></h3>' +
+                    '<button class="gk-modal-close" data-gk-modal-close>&times;</button></div>' +
+                    '<div class="gk-modal-body" data-gk-modal-body></div></div>';
+                ov.querySelector('[data-gk-modal-close]').addEventListener('click', () => this.close());
+                ov.addEventListener('click', e => { if (e.target === ov) this.close(); });
+                document.body.appendChild(ov);
+                return ov;
             },
             open(title, url, params, size) {
-                if (!this.overlay) return;
-                const container = this.overlay.querySelector('[data-gk-modal-container]');
-                const titleEl = this.overlay.querySelector('[data-gk-modal-title-el]');
-                const body = this.overlay.querySelector('[data-gk-modal-body]');
+                var ov = this._createOverlay();
+                var container = ov.querySelector('[data-gk-modal-container]');
+                var titleEl = ov.querySelector('[data-gk-modal-title-el]');
+                var body = ov.querySelector('[data-gk-modal-body]');
                 titleEl.textContent = title;
                 container.className = 'gk-modal gk-modal-' + (size || 'medium');
                 body.innerHTML = '';
                 body.classList.add('gk-loading');
-                this.overlay.style.display = '';
+                this.stack.push(ov);
 
-                const fd = new FormData();
+                var fd = new FormData();
                 if (params) Object.entries(params).forEach(([k, v]) => fd.append(k, v));
 
                 fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(r => r.text())
-                    .then(html => { body.classList.remove('gk-loading'); body.innerHTML = html; GK.form.bind(body); })
+                    .then(html => {
+                        body.classList.remove('gk-loading');
+                        body.innerHTML = html;
+                        GK.form.bind(body);
+                        GK.table.init(body);
+                    })
                     .catch(() => { body.classList.remove('gk-loading'); body.innerHTML = '<p style="color:var(--gk-danger)">Fehler beim Laden</p>'; });
             },
             close() {
-                if (this.overlay) this.overlay.style.display = 'none';
+                if (!this.stack.length) return;
+                var ov = this.stack.pop();
+                ov.remove();
+            },
+            closeAll() {
+                while (this.stack.length) this.close();
             }
         },
 
@@ -82,8 +101,8 @@
 
         // === TABLE ===
         table: {
-            init() {
-                document.querySelectorAll('[data-gk-table]').forEach(wrap => this.bindTable(wrap));
+            init(root) {
+                (root || document).querySelectorAll('[data-gk-table]').forEach(wrap => this.bindTable(wrap));
             },
             bindTable(wrap) {
                 const id = wrap.dataset.gkTable;
