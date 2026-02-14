@@ -84,6 +84,8 @@ $sidebar->render();
 <!-- ===== TABLE ===== -->
 <div class="demo-section" data-section="table">
     <h2>Table</h2>
+
+    <h3 style="margin: 32px 0 16px;">Vollstaendige Tabelle mit allen Features</h3>
     <div class="demo-card">
         <?php
         $articles = [
@@ -92,6 +94,16 @@ $sidebar->render();
             ['article_id' => 3, 'article_number' => 'ART-003', 'name' => 'SEO Beratung', 'unit' => 'h', 'net_price' => 95.00, 'tax_rate' => 20, 'is_active' => 'inaktiv'],
             ['article_id' => 4, 'article_number' => 'ART-004', 'name' => 'Logo Design', 'unit' => 'psch', 'net_price' => 450.00, 'tax_rate' => 20, 'is_active' => 'entwurf'],
             ['article_id' => 5, 'article_number' => 'ART-005', 'name' => 'Newsletter Setup', 'unit' => 'psch', 'net_price' => 350.00, 'tax_rate' => 20, 'is_active' => 'aktiv'],
+            ['article_id' => 6, 'article_number' => 'ART-006', 'name' => 'Social Media Paket', 'unit' => 'psch', 'net_price' => 680.00, 'tax_rate' => 20, 'is_active' => 'aktiv'],
+            ['article_id' => 7, 'article_number' => 'ART-007', 'name' => 'E-Mail Marketing', 'unit' => 'psch', 'net_price' => 420.00, 'tax_rate' => 20, 'is_active' => 'entwurf'],
+            ['article_id' => 8, 'article_number' => 'ART-008', 'name' => 'Content Erstellung', 'unit' => 'h', 'net_price' => 75.00, 'tax_rate' => 20, 'is_active' => 'aktiv'],
+            ['article_id' => 9, 'article_number' => 'ART-009', 'name' => 'Server Administration', 'unit' => 'h', 'net_price' => 110.00, 'tax_rate' => 20, 'is_active' => 'inaktiv'],
+            ['article_id' => 10, 'article_number' => 'ART-010', 'name' => 'SSL Zertifikat', 'unit' => 'Stk', 'net_price' => 49.00, 'tax_rate' => 20, 'is_active' => 'aktiv'],
+            ['article_id' => 11, 'article_number' => 'ART-011', 'name' => 'Domain Registration', 'unit' => 'Stk', 'net_price' => 15.00, 'tax_rate' => 20, 'is_active' => 'aktiv'],
+            ['article_id' => 12, 'article_number' => 'ART-012', 'name' => 'Webdesign Paket L', 'unit' => 'psch', 'net_price' => 3500.00, 'tax_rate' => 20, 'is_active' => 'aktiv'],
+            ['article_id' => 13, 'article_number' => 'ART-013', 'name' => 'App Entwicklung', 'unit' => 'h', 'net_price' => 125.00, 'tax_rate' => 20, 'is_active' => 'entwurf'],
+            ['article_id' => 14, 'article_number' => 'ART-014', 'name' => 'Datenbank Migration', 'unit' => 'psch', 'net_price' => 890.00, 'tax_rate' => 20, 'is_active' => 'aktiv'],
+            ['article_id' => 15, 'article_number' => 'ART-015', 'name' => 'Security Audit', 'unit' => 'psch', 'net_price' => 1500.00, 'tax_rate' => 20, 'is_active' => 'inaktiv'],
         ];
         $table = new Table('articles');
         $table->setData($articles)
@@ -100,28 +112,110 @@ $sidebar->render();
             ->column('name', 'Bezeichnung', ['sortable' => true, 'nowrap' => true])
             ->column('unit', 'Einheit', ['width' => '80px', 'nowrap' => true])
             ->column('net_price', 'Netto', ['format' => 'currency', 'align' => 'right', 'width' => '100px', 'nowrap' => true])
-            ->column('tax_rate', 'MwSt', ['format' => 'percent', 'width' => '80px'])
-            ->column('is_active', 'Status', ['format' => 'label'])
+            ->column('tax_rate', 'MwSt', ['format' => 'percent', 'width' => '80px', 'nowrap' => true])
+            ->column('is_active', 'Status', ['format' => 'label', 'nowrap' => true])
             ->filter('is_active', 'select', ['options' => ['aktiv' => 'Aktiv', 'inaktiv' => 'Inaktiv', 'entwurf' => 'Entwurf'], 'placeholder' => 'Alle Status'])
-            ->button('edit', ['icon' => 'pencil', 'text' => 'Bearbeiten', 'position' => 'left', 'modal' => 'edit_form', 'params' => ['id' => 'article_id']])
-            ->button('delete', ['icon' => 'trash', 'class' => 'danger', 'position' => 'right', 'modal' => 'delete_form', 'params' => ['id' => 'article_id']])
-            ->modal('edit_form', 'Artikel bearbeiten', 'demo/form/f_articles.php', ['size' => 'medium'])
-            ->modal('delete_form', 'Artikel loeschen', 'demo/form/f_delete.php', ['size' => 'small'])
-            ->newButton('Neuer Artikel', ['modal' => 'edit_form'])
-            ->paginate(25)
+            ->button('edit', ['icon' => 'edit', 'class' => 'primary', 'position' => 'right', 'params' => ['id' => 'article_id']])
+            ->button('delete', ['icon' => 'delete', 'class' => 'danger', 'position' => 'right', 'params' => ['id' => 'article_id']])
+            ->newButton('Neuer Artikel', ['icon' => 'add'])
+            ->nowrap(true)
+            ->paginate(5)
             ->render();
         ?>
     </div>
-    <div class="demo-code"><pre>$table = new Table('articles');
-$table->query($db, "SELECT * FROM articles")
+
+    <h3 style="margin: 32px 0 16px;">Rechnungsliste mit Datums- und Waehrungsformatierung</h3>
+    <div class="demo-card">
+        <?php
+        $invoiceData = [
+            ['number' => 'RE-2026-001', 'customer' => 'Mustermann GmbH', 'date' => '2026-02-01', 'due_date' => '2026-03-01', 'total' => 1450.00, 'status' => 'bezahlt'],
+            ['number' => 'RE-2026-002', 'customer' => 'Tech Solutions AG', 'date' => '2026-02-05', 'due_date' => '2026-03-05', 'total' => 3200.00, 'status' => 'offen'],
+            ['number' => 'RE-2026-003', 'customer' => 'Weber & Partner', 'date' => '2026-02-08', 'due_date' => '2026-03-08', 'total' => 890.50, 'status' => 'ueberfaellig'],
+            ['number' => 'RE-2026-004', 'customer' => 'Digital Agentur Wien', 'date' => '2026-02-10', 'due_date' => '2026-03-10', 'total' => 5600.00, 'status' => 'entwurf'],
+            ['number' => 'RE-2026-005', 'customer' => 'Startup Hub Vienna', 'date' => '2026-02-12', 'due_date' => '2026-03-12', 'total' => 2100.00, 'status' => 'bezahlt'],
+            ['number' => 'RE-2026-006', 'customer' => 'Cafe Central KG', 'date' => '2026-02-14', 'due_date' => '2026-03-14', 'total' => 780.00, 'status' => 'offen'],
+            ['number' => 'RE-2026-007', 'customer' => 'Alpen Consulting', 'date' => '2026-02-15', 'due_date' => '2026-03-15', 'total' => 4200.00, 'status' => 'bezahlt'],
+            ['number' => 'RE-2026-008', 'customer' => 'Donau Logistics', 'date' => '2026-02-17', 'due_date' => '2026-03-17', 'total' => 1890.00, 'status' => 'offen'],
+            ['number' => 'RE-2026-009', 'customer' => 'Wiener Werkstatt', 'date' => '2026-02-18', 'due_date' => '2026-03-18', 'total' => 560.00, 'status' => 'entwurf'],
+            ['number' => 'RE-2026-010', 'customer' => 'Graz IT Services', 'date' => '2026-02-20', 'due_date' => '2026-03-20', 'total' => 3450.00, 'status' => 'bezahlt'],
+            ['number' => 'RE-2026-011', 'customer' => 'Salzburg Media', 'date' => '2026-02-22', 'due_date' => '2026-03-22', 'total' => 1200.00, 'status' => 'ueberfaellig'],
+            ['number' => 'RE-2026-012', 'customer' => 'Linz Digital', 'date' => '2026-02-25', 'due_date' => '2026-03-25', 'total' => 2750.00, 'status' => 'offen'],
+        ];
+        $invoiceTable = new Table('invoices');
+        $invoiceTable->setData($invoiceData)
+            ->search(['number', 'customer'])
+            ->column('number', 'Re.-Nr.', ['width' => '120px', 'nowrap' => true, 'sortable' => true])
+            ->column('customer', 'Kunde', ['sortable' => true, 'nowrap' => true])
+            ->column('date', 'Datum', ['format' => 'date', 'width' => '100px', 'sortable' => true])
+            ->column('due_date', 'Faellig', ['format' => 'date', 'width' => '100px'])
+            ->column('total', 'Betrag', ['format' => 'currency', 'align' => 'right', 'width' => '120px', 'sortable' => true])
+            ->column('status', 'Status', ['format' => 'label', 'width' => '100px'])
+            ->button('view', ['icon' => 'visibility', 'position' => 'left'])
+            ->button('edit', ['icon' => 'edit', 'class' => 'primary'])
+            ->button('pdf', ['icon' => 'picture_as_pdf'])
+            ->button('delete', ['icon' => 'delete', 'class' => 'danger'])
+            ->newButton('Neue Rechnung', ['icon' => 'add'])
+            ->nowrap(true)
+            ->paginate(5)
+            ->render();
+        ?>
+    </div>
+
+    <h3 style="margin: 32px 0 16px;">Kompakt-Tabelle ohne Toolbar</h3>
+    <div class="demo-card">
+        <?php
+        $userData = [
+            ['name' => 'Martin Huber', 'email' => 'martin@example.com', 'role' => 'admin', 'active' => 1],
+            ['name' => 'Anna Schneider', 'email' => 'anna@example.com', 'role' => 'editor', 'active' => 1],
+            ['name' => 'Thomas Berger', 'email' => 'thomas@example.com', 'role' => 'viewer', 'active' => 0],
+            ['name' => 'Lisa Wagner', 'email' => 'lisa@example.com', 'role' => 'editor', 'active' => 1],
+            ['name' => 'Peter Gruber', 'email' => 'peter@example.com', 'role' => 'admin', 'active' => 0],
+        ];
+        $miniTable = new Table('users');
+        $miniTable->setData($userData)
+            ->column('name', 'Name', ['sortable' => true])
+            ->column('email', 'E-Mail', ['format' => 'email'])
+            ->column('role', 'Rolle', ['format' => 'label'])
+            ->column('active', 'Aktiv', ['format' => 'boolean'])
+            ->toolbar(false)
+            ->paginate(false)
+            ->render();
+        ?>
+    </div>
+
+    <div class="demo-code"><pre>// Demo 1: Vollstaendige Artikel-Tabelle mit Pagination
+$table = new Table('articles');
+$table->setData($articles)
     ->search(['article_number', 'name'])
     ->column('name', 'Bezeichnung', ['sortable' => true])
     ->column('net_price', 'Netto', ['format' => 'currency'])
+    ->column('tax_rate', 'MwSt', ['format' => 'percent'])
     ->column('is_active', 'Status', ['format' => 'label'])
-    ->button('edit', ['icon' => 'pencil', 'modal' => 'edit_form'])
-    ->modal('edit_form', 'Bearbeiten', 'form/edit.php')
-    ->newButton('Neuer Artikel', ['modal' => 'edit_form'])
-    ->paginate(25)
+    ->button('edit', ['icon' => 'edit', 'class' => 'primary'])
+    ->button('delete', ['icon' => 'delete', 'class' => 'danger'])
+    ->newButton('Neuer Artikel', ['icon' => 'add'])
+    ->nowrap(true)
+    ->paginate(5)
+    ->render();
+
+// Demo 2: Rechnungsliste
+$invoiceTable = new Table('invoices');
+$invoiceTable->setData($invoiceData)
+    ->column('number', 'Re.-Nr.', ['width' => '120px', 'sortable' => true])
+    ->column('total', 'Betrag', ['format' => 'currency', 'align' => 'right'])
+    ->column('date', 'Datum', ['format' => 'date'])
+    ->column('status', 'Status', ['format' => 'label'])
+    ->paginate(5)
+    ->render();
+
+// Demo 3: Kompakt ohne Toolbar
+$miniTable = new Table('users');
+$miniTable->setData($userData)
+    ->column('name', 'Name', ['sortable' => true])
+    ->column('email', 'E-Mail', ['format' => 'email'])
+    ->column('role', 'Rolle', ['format' => 'label'])
+    ->column('active', 'Aktiv', ['format' => 'boolean'])
+    ->toolbar(false)
     ->render();</pre></div>
 </div>
 
