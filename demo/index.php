@@ -4,6 +4,7 @@ use GridKit\Table;
 use GridKit\Form;
 use GridKit\Modal;
 use GridKit\StatCards;
+use GridKit\Sidebar;
 use GridKit\FilterChips;
 use GridKit\YearFilter;
 ?>
@@ -95,7 +96,34 @@ use GridKit\YearFilter;
 </head>
 <body>
 
-<div class="demo-header">
+<?php
+$version = trim(file_get_contents(__DIR__ . '/../VERSION'));
+$currentSection = $_GET['section'] ?? 'overview';
+
+$sidebar = new Sidebar('demo');
+$sidebar->brand('GridKit', 'widgets', 'v' . $version)
+    ->group('Komponenten')
+    ->item('Table', '?section=overview', 'table_chart', ['active' => $currentSection === 'overview'])
+    ->item('Form', '?section=overview', 'edit_note', ['active' => false])
+    ->item('Modal', '?section=overview', 'open_in_new', ['active' => false])
+    ->item('Formatter', '?section=overview', 'format_paint', ['active' => false])
+    ->group('Dashboard')
+    ->item('StatCards', '?section=overview', 'analytics', ['active' => false])
+    ->item('FilterChips', '?section=overview', 'filter_list', ['active' => false])
+    ->item('YearFilter', '?section=overview', 'date_range', ['active' => false])
+    ->group('UI-Kit')
+    ->item('Toast', '?section=overview', 'notifications', ['active' => false])
+    ->item('Confirm', '?section=overview', 'help_outline', ['active' => false])
+    ->item('Sidebar', '?section=overview', 'menu', ['active' => false])
+    ->group('Beispiele')
+    ->item('Dashboard Demo', '?section=overview', 'dashboard', ['active' => false]);
+$sidebar->render();
+?>
+
+<div class="gk-with-sidebar">
+
+<div class="demo-header" style="display:flex;align-items:center;gap:12px;">
+    <?php Sidebar::toggleButton(); ?>
     <h1>GridKit <span class="version">v<?= trim(file_get_contents(__DIR__ . '/../VERSION')) ?></span></h1>
     <p>Schlankes PHP-Framework fuer Tabellen, Formulare, Dashboards &amp; UI-Kit. Null Abhaengigkeiten.</p>
 </div>
@@ -497,6 +525,7 @@ $table-&gt;query($db, "SELECT * FROM invoices WHERE year = :y", [':y' =&gt; $yea
 </div>
 
 <?php Modal::container(); ?>
+</div><!-- /gk-with-sidebar -->
 <script src="../js/gridkit.js"></script>
 </body>
 </html>

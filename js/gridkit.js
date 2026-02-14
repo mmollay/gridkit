@@ -375,6 +375,7 @@
         init() {
             this.modal.init();
             this.table.init();
+            this.sidebar.init();
             this.form.bind(document);
         }
     };
@@ -415,6 +416,31 @@
         info(msg, dur) { this.show(msg, 'info', dur); }
     };
 
+    // Sidebar
+    GK.sidebar = {
+        el: null,
+        overlay: null,
+        init() {
+            this.el = document.querySelector('[data-gk-sidebar]');
+            this.overlay = document.querySelector('[data-gk-sidebar-overlay]');
+        },
+        toggle() {
+            if (!this.el) return;
+            this.el.classList.toggle('open');
+            if (this.overlay) this.overlay.classList.toggle('open');
+        },
+        close() {
+            if (!this.el) return;
+            this.el.classList.remove('open');
+            if (this.overlay) this.overlay.classList.remove('open');
+        },
+        open() {
+            if (!this.el) return;
+            this.el.classList.add('open');
+            if (this.overlay) this.overlay.classList.add('open');
+        }
+    };
+
     // Confirm dialog (replaces window.confirm)
     GK.confirm = function(message, options) {
         options = options || {};
@@ -442,4 +468,5 @@
     };
 
     window.GridKit = GK;
+    window.GK = GK;
 })();
