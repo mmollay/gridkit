@@ -93,6 +93,13 @@ class Sidebar
         }
 
         echo '</nav>';
+
+        // Collapse toggle
+        echo '<button class="gk-sidebar-collapse-btn" onclick="GK.sidebar.collapse()">';
+        echo '<span class="material-icons">chevron_left</span>';
+        echo '<span>Einklappen</span>';
+        echo '</button>';
+
         echo '</aside>';
     }
 
@@ -100,7 +107,7 @@ class Sidebar
     {
         $cls = 'gk-sidebar-item';
         if ($item['active']) $cls .= ' active';
-        echo '<a href="' . $e($item['href']) . '" class="' . $cls . '">';
+        echo '<a href="' . $e($item['href']) . '" class="' . $cls . '" data-label="' . $e($item['label']) . '">';
         if ($item['icon'] !== '') {
             echo '<span class="material-icons gk-sidebar-icon">' . $e($item['icon']) . '</span>';
         }
