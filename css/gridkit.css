@@ -165,8 +165,14 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-stat-highlight { color: var(--gk-danger); }
 .gk-stat-icon { font-size: 28px; color: var(--gk-primary); opacity: 0.7; }
 .gk-stat-danger .gk-stat-icon { color: var(--gk-danger); }
+.gk-stat-danger .gk-stat-value { color: var(--gk-danger); }
 .gk-stat-success .gk-stat-icon { color: var(--gk-success); }
+.gk-stat-success .gk-stat-value { color: var(--gk-success); }
 .gk-stat-warning .gk-stat-icon { color: var(--gk-warning); }
+.gk-stat-warning .gk-stat-value { color: var(--gk-warning); }
+.gk-stat-blue .gk-stat-icon { color: var(--gk-primary); }
+.gk-stat-primary .gk-stat-icon { color: var(--gk-primary); }
+.gk-stat-info .gk-stat-icon { color: var(--gk-info); }
 
 /* === YEAR FILTER === */
 .gk-year-filter { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
