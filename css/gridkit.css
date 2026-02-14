@@ -142,7 +142,7 @@ textarea.gk-input { resize: vertical; }
 @keyframes gk-spin { to { transform: rotate(360deg); } }
 
 /* === FILTER CHIPS === */
-.gk-filter-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.gk-filter-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
 .gk-chip { display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border-radius: 9999px; font-size: var(--gk-font-size-sm); font-weight: 500; text-decoration: none; cursor: pointer; transition: all .15s; border: 1px solid var(--gk-border); background: var(--gk-bg); color: var(--gk-text); line-height: 1.4; }
 .gk-chip:hover { background: var(--gk-bg-hover); border-color: var(--gk-text-muted); }
 .gk-chip-active { background: var(--gk-primary); color: #fff; border-color: var(--gk-primary); }
@@ -156,7 +156,7 @@ textarea.gk-input { resize: vertical; }
 .gk-chip-active .gk-chip-count { background: rgba(255,255,255,0.2); }
 
 /* === STAT CARDS === */
-.gk-stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--gk-spacing); }
+.gk-stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--gk-spacing); margin-bottom: 16px; }
 .gk-stat-card { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--gk-bg); border-radius: var(--gk-radius); box-shadow: var(--gk-shadow); border: 1px solid var(--gk-border); text-decoration: none; color: inherit; transition: box-shadow .15s; }
 a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-stat-content { display: flex; flex-direction: column; gap: 2px; }
@@ -175,7 +175,7 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-stat-info .gk-stat-icon { color: var(--gk-info); }
 
 /* === YEAR FILTER === */
-.gk-year-filter { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.gk-year-filter { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 12px; }
 
 /* === RESPONSIVE === */
 @media (max-width: 640px) {
