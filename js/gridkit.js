@@ -375,16 +375,10 @@
         init() {
             this.modal.init();
             this.table.init();
-            this.sidebar.init();
+            if (this.sidebar && this.sidebar.init) this.sidebar.init();
             this.form.bind(document);
         }
     };
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => GK.init());
-    } else {
-        GK.init();
-    }
 
     // Toast system
     GK.toast = {
@@ -469,4 +463,10 @@
 
     window.GridKit = GK;
     window.GK = GK;
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => GK.init());
+    } else {
+        GK.init();
+    }
 })();
