@@ -24,6 +24,7 @@ class Table
     private string $baseQuery = '';
     private bool $isStatic = false;
     private bool $globalNowrap = false;
+    private bool $showToolbar = true;
 
     public function __construct(string $id)
     {
@@ -81,6 +82,12 @@ class Table
     public function nowrap(bool $enabled = true): static
     {
         $this->globalNowrap = $enabled;
+        return $this;
+    }
+
+    public function toolbar(bool $show = true): static
+    {
+        $this->showToolbar = $show;
         return $this;
     }
 
@@ -187,6 +194,7 @@ class Table
         }
 
         // Toolbar
+        if ($this->showToolbar) {
         echo '<div class="gk-toolbar">';
         if ($this->searchCols) {
             echo '<input type="text" class="gk-search" data-gk-search placeholder="Suchen…" value="' . $e($this->searchQuery) . '">';
@@ -211,6 +219,7 @@ class Table
             ]);
         }
         echo '</div>';
+        } // end toolbar
 
         $this->renderInner();
 
@@ -291,10 +300,26 @@ class Table
         if ($this->perPage > 0 && $this->totalRows > $this->perPage) {
             $pages = (int)ceil($this->totalRows / $this->perPage);
             echo '<div class="gk-pagination">';
+            echo Button::icon('chevron_left', [
+                'variant' => 'text', 'color' => 'neutral', 'size' => 'sm',
+                'data' => ['gk-page' => max(1, $this->currentPage - 1)],
+                'disabled' => $this->currentPage <= 1,
+            ]);
             for ($i = 1; $i <= $pages; $i++) {
-                $active = $i === $this->currentPage ? ' gk-active' : '';
-                echo '<button class="gk-page-btn' . $active . '" data-gk-page="' . $i . '">' . $i . '</button>';
+                $isActive = $i === $this->currentPage;
+                echo Button::render((string)$i, [
+                    'variant' => $isActive ? 'tonal' : 'text',
+                    'color' => $isActive ? 'primary' : 'neutral',
+                    'size' => 'sm',
+                    'shape' => 'pill',
+                    'data' => ['gk-page' => $i],
+                ]);
             }
+            echo Button::icon('chevron_right', [
+                'variant' => 'text', 'color' => 'neutral', 'size' => 'sm',
+                'data' => ['gk-page' => min($pages, $this->currentPage + 1)],
+                'disabled' => $this->currentPage >= $pages,
+            ]);
             echo '</div>';
         }
     }
