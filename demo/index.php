@@ -3,6 +3,9 @@ require_once __DIR__ . '/../autoload.php';
 use GridKit\Table;
 use GridKit\Form;
 use GridKit\Modal;
+use GridKit\StatCards;
+use GridKit\FilterChips;
+use GridKit\YearFilter;
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -93,13 +96,13 @@ use GridKit\Modal;
 
 <div class="demo-header">
     <h1>GridKit <span class="version">v<?= trim(file_get_contents(__DIR__ . '/../VERSION')) ?></span></h1>
-    <p>Schlankes PHP-Framework für Tabellen &amp; Formulare. Null Abhängigkeiten.</p>
+    <p>Schlankes PHP-Framework fuer Tabellen, Formulare &amp; Dashboards. Null Abhaengigkeiten.</p>
 </div>
 
 <div class="demo-section">
     <div class="demo-stats">
         <div class="demo-stat">
-            <div class="num">2</div>
+            <div class="num">6</div>
             <div class="lbl">Klassen</div>
         </div>
         <div class="demo-stat">
@@ -107,7 +110,7 @@ use GridKit\Modal;
             <div class="lbl">CSS File</div>
         </div>
         <div class="demo-stat">
-            <div class="num">847</div>
+            <div class="num">~1300</div>
             <div class="lbl">Zeilen gesamt</div>
         </div>
         <div class="demo-stat">
@@ -240,6 +243,150 @@ $form-&gt;action('save/process.php')
             ->render();
         ?>
     </div>
+</div>
+
+<!-- STATCARDS DEMO -->
+<div class="demo-section">
+    <h2>StatCards</h2>
+    <div class="demo-card">
+        <?php
+        $stats = new StatCards('demo-stats');
+        $stats->card('Kunden', 248, ['format' => 'number', 'color' => 'blue'])
+            ->card('Umsatz', 84250.00, ['format' => 'currency', 'color' => 'green'])
+            ->card('Bestellungen', 64, ['format' => 'number', 'color' => 'orange'])
+            ->card('Offene Posten', 12480.00, ['format' => 'currency', 'color' => 'red'])
+            ->render();
+        ?>
+    </div>
+
+    <div class="demo-code"><pre>&lt;?php
+$stats = new StatCards('dashboard');
+$stats-&gt;card('Kunden', 248, ['format' =&gt; 'number', 'color' =&gt; 'blue'])
+    -&gt;card('Umsatz', 84250.00, ['format' =&gt; 'currency', 'color' =&gt; 'green'])
+    -&gt;card('Bestellungen', 64, ['format' =&gt; 'number', 'color' =&gt; 'orange'])
+    -&gt;card('Offene Posten', 12480.00, ['format' =&gt; 'currency', 'color' =&gt; 'red'])
+    -&gt;render();</pre></div>
+</div>
+
+<!-- FILTERCHIPS DEMO -->
+<div class="demo-section">
+    <h2>FilterChips</h2>
+    <div class="demo-card">
+        <?php
+        $chips = new FilterChips('status-filter', 'status');
+        $chips->chip('', 'Alle', ['count' => 152])
+            ->chip('aktiv', 'Aktiv', ['count' => 89, 'color' => 'green'])
+            ->chip('entwurf', 'Entwurf', ['count' => 23, 'color' => 'orange'])
+            ->chip('bezahlt', 'Bezahlt', ['count' => 31, 'color' => 'blue'])
+            ->chip('ueberfaellig', 'Ueberfaellig', ['count' => 9, 'color' => 'red'])
+            ->render();
+        ?>
+    </div>
+
+    <div class="demo-code"><pre>&lt;?php
+$chips = new FilterChips('status-filter', 'status');
+$chips-&gt;chip('', 'Alle', ['count' =&gt; 152])
+    -&gt;chip('aktiv', 'Aktiv', ['count' =&gt; 89, 'color' =&gt; 'green'])
+    -&gt;chip('entwurf', 'Entwurf', ['count' =&gt; 23, 'color' =&gt; 'orange'])
+    -&gt;chip('bezahlt', 'Bezahlt', ['count' =&gt; 31, 'color' =&gt; 'blue'])
+    -&gt;chip('ueberfaellig', 'Ueberfaellig', ['count' =&gt; 9, 'color' =&gt; 'red'])
+    -&gt;render();</pre></div>
+</div>
+
+<!-- YEARFILTER DEMO -->
+<div class="demo-section">
+    <h2>YearFilter</h2>
+    <div class="demo-card">
+        <?php
+        $years = new YearFilter('demo-years', 'year');
+        $years->range(2022, 2026)
+            ->render();
+        ?>
+    </div>
+
+    <div class="demo-code"><pre>&lt;?php
+$years = new YearFilter('year-nav', 'year');
+$years-&gt;range(2022, 2026)
+    -&gt;render();
+
+// Oder manuell:
+// $years-&gt;years([2026, 2025, 2024])
+// Aktuelles Jahr: $years-&gt;current()</pre></div>
+</div>
+
+<!-- ZUSAMMENSPIEL DEMO -->
+<div class="demo-section">
+    <h2>Dashboard - Zusammenspiel</h2>
+    <div class="demo-card">
+        <?php
+        // StatCards
+        $dashStats = new StatCards('dash-stats');
+        $dashStats->card('Rechnungen', 152, ['format' => 'number', 'color' => 'blue'])
+            ->card('Umsatz 2026', 127840.00, ['format' => 'currency', 'color' => 'green'])
+            ->card('Offen', 18320.00, ['format' => 'currency', 'color' => 'orange'])
+            ->card('Ueberfaellig', 4280.00, ['format' => 'currency', 'color' => 'red'])
+            ->render();
+
+        // FilterChips
+        $dashChips = new FilterChips('dash-filter', 'dash_status');
+        $dashChips->chip('', 'Alle')
+            ->chip('bezahlt', 'Bezahlt', ['color' => 'green'])
+            ->chip('offen', 'Offen', ['color' => 'orange'])
+            ->chip('ueberfaellig', 'Ueberfaellig', ['color' => 'red'])
+            ->render();
+
+        // YearFilter
+        $dashYears = new YearFilter('dash-years', 'dash_year');
+        $dashYears->range(2024, 2026)->render();
+
+        // Table
+        $invoices = [
+            ['id' => 1, 'number' => 'RE-2026-001', 'customer' => 'Mustermann GmbH', 'amount' => 2400.00, 'date' => '2026-02-01', 'status' => 'bezahlt'],
+            ['id' => 2, 'number' => 'RE-2026-002', 'customer' => 'Technik AG', 'amount' => 5800.00, 'date' => '2026-02-05', 'status' => 'offen'],
+            ['id' => 3, 'number' => 'RE-2026-003', 'customer' => 'Design Studio', 'amount' => 1200.00, 'date' => '2026-01-15', 'status' => 'ueberfaellig'],
+            ['id' => 4, 'number' => 'RE-2026-004', 'customer' => 'Web Solutions', 'amount' => 3600.00, 'date' => '2026-02-10', 'status' => 'bezahlt'],
+            ['id' => 5, 'number' => 'RE-2026-005', 'customer' => 'Media House', 'amount' => 950.00, 'date' => '2026-02-12', 'status' => 'offen'],
+        ];
+
+        $dashTable = new Table('dashboard-invoices');
+        $dashTable->setData($invoices)
+            ->search(['number', 'customer'])
+            ->column('number', 'Rechnungsnr.', ['width' => '140px', 'sortable' => true])
+            ->column('customer', 'Kunde', ['sortable' => true])
+            ->column('amount', 'Betrag', ['format' => 'currency', 'align' => 'right'])
+            ->column('date', 'Datum', ['format' => 'date', 'width' => '120px'])
+            ->column('status', 'Status', ['format' => 'label'])
+            ->paginate(10)
+            ->render();
+        ?>
+    </div>
+
+    <div class="demo-code"><pre>&lt;?php
+// StatCards
+$stats = new StatCards('dashboard');
+$stats-&gt;card('Rechnungen', 152, ['format' =&gt; 'number', 'color' =&gt; 'blue'])
+    -&gt;card('Umsatz', 127840.00, ['format' =&gt; 'currency', 'color' =&gt; 'green'])
+    -&gt;render();
+
+// FilterChips
+$chips = new FilterChips('filter', 'status');
+$chips-&gt;chip('', 'Alle')
+    -&gt;chip('bezahlt', 'Bezahlt', ['color' =&gt; 'green'])
+    -&gt;chip('offen', 'Offen', ['color' =&gt; 'orange'])
+    -&gt;render();
+
+// YearFilter
+$years = new YearFilter('years', 'year');
+$years-&gt;range(2024, 2026)-&gt;render();
+
+// Table
+$table = new Table('invoices');
+$table-&gt;query($db, "SELECT * FROM invoices WHERE year = :y", [':y' =&gt; $years-&gt;current()])
+    -&gt;column('number', 'Rechnungsnr.', ['sortable' =&gt; true])
+    -&gt;column('customer', 'Kunde', ['sortable' =&gt; true])
+    -&gt;column('amount', 'Betrag', ['format' =&gt; 'currency'])
+    -&gt;column('status', 'Status', ['format' =&gt; 'label'])
+    -&gt;render();</pre></div>
 </div>
 
 <?php Modal::container(); ?>

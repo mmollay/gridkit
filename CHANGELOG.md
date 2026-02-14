@@ -3,6 +3,27 @@
 Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [1.1.0] - 2026-02-14
+
+### Added
+- **StatCards** – Kennzahlen-Cards fuer Dashboards
+  - Fluent Interface: card(label, value, opts)
+  - Formate: currency, number, percent
+  - Farben, Icons, Links, Highlight
+- **FilterChips** – Klickbare Filter-Chips
+  - URL-basierte Navigation (kein JS noetig)
+  - Counts, Farben, Icons
+  - Parameter-Preserve fuer Multi-Filter
+- **YearFilter** – Jahres-Navigation
+  - years() oder range() API
+  - URL-basiert mit Parameter-Preserve
+  - Kompakte Chip-Darstellung
+
+### Changed
+- CSS: Neue Styles fuer gk-stat-cards, gk-filter-chips, gk-year-filter
+- Demo-Seite erweitert mit allen neuen Komponenten
+- Dashboard-Zusammenspiel-Demo hinzugefuegt
+
 ## [1.0.0] - 2026-02-13
 
 ### Added
