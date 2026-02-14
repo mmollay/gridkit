@@ -513,6 +513,82 @@
         });
     };
 
+    // === RANGE SLIDERS ===
+    GK.initRangeSliders = function() {
+        document.querySelectorAll('.gk-range').forEach(function(input) {
+            if (input._gkInit) return;
+            input._gkInit = true;
+            var output = input.parentElement.querySelector('.gk-range-value');
+            var update = function() {
+                if (output) output.textContent = input.value;
+                // Fill left side with primary color
+                var pct = (input.value - input.min) / (input.max - input.min) * 100;
+                input.style.background = 'linear-gradient(to right, var(--gk-primary) ' + pct + '%, var(--gk-neutral-200) ' + pct + '%)';
+            };
+            input.addEventListener('input', update);
+            update();
+        });
+    };
+
+    // === FILE UPLOAD ZONES ===
+    GK.initUploadZones = function() {
+        document.querySelectorAll('.gk-upload-zone').forEach(function(zone) {
+            if (zone._gkInit) return;
+            zone._gkInit = true;
+            zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('gk-dragover'); });
+            zone.addEventListener('dragleave', function() { zone.classList.remove('gk-dragover'); });
+            zone.addEventListener('drop', function() { zone.classList.remove('gk-dragover'); });
+        });
+    };
+
+    // === RICHTEXT EDITOR ===
+    GK.initRichtext = function() {
+        document.querySelectorAll('.gk-richtext').forEach(function(editor) {
+            if (editor._gkInit) return;
+            editor._gkInit = true;
+            var toolbar = editor.querySelector('.gk-richtext-toolbar');
+            var content = editor.querySelector('.gk-richtext-content');
+            var hidden = editor.querySelector('input[type="hidden"]');
+
+            toolbar.querySelectorAll('.gk-richtext-btn').forEach(function(btn) {
+                btn.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    var cmd = btn.dataset.cmd;
+                    var val = btn.dataset.val || null;
+                    if (btn.dataset.prompt) {
+                        val = prompt(btn.dataset.prompt);
+                        if (!val) return;
+                    }
+                    if (cmd === 'formatBlock' && val) val = '<' + val + '>';
+                    document.execCommand(cmd, false, val);
+                    content.focus();
+                });
+            });
+
+            // Sync to hidden input on input
+            content.addEventListener('input', function() {
+                if (hidden) hidden.value = content.innerHTML;
+            });
+
+            // Sync before form submit
+            var form = editor.closest('form');
+            if (form) {
+                form.addEventListener('submit', function() {
+                    if (hidden) hidden.value = content.innerHTML;
+                });
+            }
+        });
+    };
+
+    // Extend init
+    var _origInit = GK.init;
+    GK.init = function() {
+        _origInit.call(GK);
+        GK.initRangeSliders();
+        GK.initUploadZones();
+        GK.initRichtext();
+    };
+
     window.GridKit = GK;
     window.GK = GK;
 

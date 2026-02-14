@@ -125,7 +125,10 @@ $table->query($db, "SELECT * FROM articles")
 <!-- ===== FORM ===== -->
 <div class="demo-section" data-section="form">
     <h2>Form</h2>
+
+    <!-- Classic Form -->
     <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Grid-Layout (16-Spalten)</h3>
         <?php
         $form = new Form('article_form');
         $form->action('save/process_article.php')
@@ -141,22 +144,92 @@ $table->query($db, "SELECT * FROM articles")
                 ->field('net_price', 'Netto-Preis', 'number', ['step' => '0.01', 'width' => 5])
                 ->field('tax_rate', 'MwSt %', 'select', ['options' => ['20' => '20%', '10' => '10%', '0' => '0%'], 'width' => 6])
             ->endRow()
-            ->field('is_active', 'Aktiv', 'toggle')
+            ->field('is_active', 'Aktiv', 'toggle', ['inline' => true])
             ->submit('Speichern')
             ->render();
         ?>
     </div>
-    <div class="demo-code"><pre>$form = new Form('article_form');
-$form->action('save/process.php')
-    ->ajax()
-    ->row()
-        ->field('name', 'Name', 'text', ['required' => true, 'width' => 8])
-        ->field('email', 'E-Mail', 'email', ['width' => 8])
-    ->endRow()
-    ->field('notes', 'Notizen', 'textarea', ['rows' => 3])
-    ->field('active', 'Aktiv', 'toggle')
-    ->submit('Speichern')
-    ->render();</pre></div>
+
+    <!-- Checkbox & Radio -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Checkbox &amp; Radio</h3>
+        <?php
+        $form2 = new Form('checkbox_radio_form');
+        $form2->field('agree', 'AGB akzeptieren', 'checkbox', ['checked' => true])
+            ->field('newsletter', 'Newsletter abonnieren', 'checkbox')
+            ->field('payment', 'Zahlungsart', 'radio', [
+                'options' => ['card' => 'Kreditkarte', 'bank' => 'Bankueberweisung', 'paypal' => 'PayPal'],
+                'value' => 'card',
+                'inline' => true,
+            ])
+            ->field('priority', 'Prioritaet', 'radio', [
+                'options' => ['low' => 'Niedrig', 'medium' => 'Mittel', 'high' => 'Hoch'],
+                'value' => 'medium',
+            ])
+            ->render();
+        ?>
+    </div>
+
+    <!-- Toggle & Slider -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Toggle &amp; Slider</h3>
+        <?php
+        $form3 = new Form('toggle_slider_form');
+        $form3->field('dark_mode', 'Dark Mode', 'toggle', ['inline' => true])
+            ->field('notifications', 'Benachrichtigungen', 'toggle', ['inline' => true, 'checked' => true])
+            ->field('volume', 'Lautstaerke', 'range', ['min' => 0, 'max' => 100, 'step' => 1, 'value' => 50])
+            ->field('brightness', 'Helligkeit', 'range', ['min' => 0, 'max' => 100, 'step' => 5, 'value' => 75])
+            ->render();
+        ?>
+    </div>
+
+    <!-- File Upload -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Datei-Upload</h3>
+        <?php
+        $form4 = new Form('upload_form');
+        $form4->field('document', 'Dokument', 'file', ['accept' => '.pdf,.doc,.docx', 'multiple' => true, 'maxSize' => '10MB'])
+            ->render();
+        ?>
+    </div>
+
+    <!-- RichText Editor -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">RichText Editor</h3>
+        <?php
+        $form5 = new Form('richtext_form');
+        $form5->field('content_basic', 'Inhalt (Basic)', 'richtext', ['toolbar' => 'basic'])
+            ->field('content_full', 'Inhalt (Full)', 'richtext', ['toolbar' => 'full'])
+            ->render();
+        ?>
+    </div>
+
+    <div class="demo-code"><pre>// Grid-Layout (16-Spalten)
+$form->row()
+    ->field('name', 'Name', 'text', ['width' => 8])
+    ->field('email', 'E-Mail', 'email', ['width' => 8])
+->endRow()
+
+// Checkbox
+->field('agree', 'AGB akzeptieren', 'checkbox', ['checked' => true])
+
+// Radio (inline)
+->field('payment', 'Zahlungsart', 'radio', [
+    'options' => ['card' => 'Kreditkarte', 'bank' => 'Ueberweisung'],
+    'value' => 'card', 'inline' => true
+])
+
+// Toggle (inline)
+->field('active', 'Aktiv', 'toggle', ['inline' => true])
+
+// Slider
+->field('volume', 'Lautstaerke', 'range', ['min' => 0, 'max' => 100, 'value' => 50])
+
+// File Upload
+->field('doc', 'Dokument', 'file', ['accept' => '.pdf', 'multiple' => true, 'maxSize' => '10MB'])
+
+// RichText Editor
+->field('content', 'Inhalt', 'richtext', ['toolbar' => 'full'])</pre></div>
 </div>
 
 <!-- ===== MODAL ===== -->
