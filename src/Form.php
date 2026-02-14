@@ -27,9 +27,9 @@ class Form
         return $this;
     }
 
-    public function row(): static
+    public function row(int $gap = 16): static
     {
-        $this->fields[] = ['type' => '_row_start'];
+        $this->fields[] = ['type' => '_row_start', 'gap' => $gap];
         $this->inRow = true;
         return $this;
     }
@@ -59,7 +59,7 @@ class Form
         foreach ($this->fields as $f) {
             match ($f['type']) {
                 'hidden' => printf('<input type="hidden" name="%s" value="%s">', $e($f['name']), $e($f['value'])),
-                '_row_start' => print('<div class="gk-row">'),
+                '_row_start' => $this->renderRowStart($f),
                 '_row_end' => print('</div>'),
                 default => $this->renderField($f),
             };
@@ -72,57 +72,145 @@ class Form
         echo '</form>';
     }
 
+    private function renderRowStart(array $f): void
+    {
+        $gap = $f['gap'] ?? 16;
+        $style = $gap !== 16 ? " style=\"gap:{$gap}px\"" : '';
+        echo "<div class=\"gk-form-row\"{$style}>";
+    }
+
     private function renderField(array $f): void
     {
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
         $name = $f['name'];
         $label = $f['label'] ?? '';
         $type = $f['type'];
-        $value = $e($f['value'] ?? '');
+        $value = $f['value'] ?? '';
         $req = ($f['required'] ?? false) ? ' required' : '';
+        $inline = !empty($f['inline']);
         $width = $f['width'] ?? 16;
-        $cls = "gk-field gk-w-{$width}";
 
-        echo "<div class=\"{$cls}\">";
-        if ($label && $type !== 'checkbox') {
+        // Build column class
+        $colClass = '';
+        $colStyle = '';
+        if (is_numeric($width)) {
+            $colClass = "gk-form-col-{$width}";
+        } elseif ($width === 'auto') {
+            $colClass = 'gk-form-col-auto';
+        } elseif (is_string($width) && preg_match('/^\d+px$/', $width)) {
+            $colStyle = " style=\"grid-column:span 1;width:{$width}\"";
+            $colClass = '';
+        }
+
+        $inlineClass = $inline ? ' gk-field-inline' : '';
+        $cls = "gk-field {$colClass}{$inlineClass}";
+
+        echo "<div class=\"{$cls}\"{$colStyle}>";
+
+        // Label (not for checkbox which has label integrated)
+        $showLabel = $label && !in_array($type, ['checkbox']);
+        if ($showLabel) {
             echo '<label class="gk-label-text" for="' . $e($name) . '">' . $e($label);
             if ($req) echo ' <span class="gk-required">*</span>';
             echo '</label>';
         }
+
         echo '<div class="gk-input-wrap">';
 
         switch ($type) {
             case 'textarea':
                 $rows = $f['rows'] ?? 3;
-                echo "<textarea name=\"{$e($name)}\" id=\"{$e($name)}\" rows=\"{$rows}\" class=\"gk-input\"{$req}>{$value}</textarea>";
+                echo "<textarea name=\"{$e($name)}\" id=\"{$e($name)}\" rows=\"{$rows}\" class=\"gk-input\"{$req}>{$e($value)}</textarea>";
                 break;
 
             case 'select':
                 echo "<select name=\"{$e($name)}\" id=\"{$e($name)}\" class=\"gk-input\"{$req}>";
                 foreach ($f['options'] ?? [] as $k => $v) {
-                    $sel = (string)$k === (string)($f['value'] ?? '') ? ' selected' : '';
+                    $sel = (string)$k === (string)$value ? ' selected' : '';
                     echo "<option value=\"{$e($k)}\"{$sel}>{$e($v)}</option>";
                 }
                 echo '</select>';
                 break;
 
             case 'toggle':
-                echo "<label class=\"gk-toggle\"><input type=\"checkbox\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"1\"" . ($value ? ' checked' : '') . "><span class=\"gk-toggle-slider\"></span></label>";
+                $checked = !empty($f['checked']) || !empty($value) ? ' checked' : '';
+                echo "<label class=\"gk-toggle\"><input type=\"checkbox\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"1\"{$checked}><span class=\"gk-toggle-slider\"></span></label>";
                 break;
 
             case 'checkbox':
-                echo "<label class=\"gk-checkbox-label\"><input type=\"checkbox\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"1\"{$req}" . ($value ? ' checked' : '') . "> {$e($label)}</label>";
+                $checked = !empty($f['checked']) || !empty($value) ? ' checked' : '';
+                echo "<label class=\"gk-checkbox-wrap\"><input type=\"checkbox\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"1\"{$req}{$checked}><span class=\"gk-checkbox-custom\"></span><span class=\"gk-checkbox-text\">{$e($label)}</span></label>";
                 break;
 
             case 'radio':
-                foreach ($f['options'] ?? [] as $k => $v) {
-                    $chk = (string)$k === (string)($f['value'] ?? '') ? ' checked' : '';
-                    echo "<label class=\"gk-radio-label\"><input type=\"radio\" name=\"{$e($name)}\" value=\"{$e($k)}\"{$chk}> {$e($v)}</label>";
+                $options = $f['options'] ?? [];
+                $isInline = !empty($f['inline']);
+                $dirClass = $isInline ? 'gk-radio-group-inline' : 'gk-radio-group';
+                echo "<div class=\"{$dirClass}\">";
+                foreach ($options as $k => $v) {
+                    $chk = (string)$k === (string)$value ? ' checked' : '';
+                    echo "<label class=\"gk-radio-wrap\"><input type=\"radio\" name=\"{$e($name)}\" value=\"{$e($k)}\"{$chk}><span class=\"gk-radio-custom\"></span><span class=\"gk-radio-text\">{$e($v)}</span></label>";
                 }
+                echo '</div>';
+                break;
+
+            case 'range':
+                $min = $f['min'] ?? 0;
+                $max = $f['max'] ?? 100;
+                $step = $f['step'] ?? 1;
+                $val = $value !== '' ? $value : $min;
+                echo "<div class=\"gk-range-wrap\">";
+                echo "<input type=\"range\" name=\"{$e($name)}\" id=\"{$e($name)}\" class=\"gk-range\" min=\"{$e($min)}\" max=\"{$e($max)}\" step=\"{$e($step)}\" value=\"{$e($val)}\">";
+                echo "<output class=\"gk-range-value\" for=\"{$e($name)}\">{$e($val)}</output>";
+                echo "</div>";
                 break;
 
             case 'file':
-                echo "<input type=\"file\" name=\"{$e($name)}\" id=\"{$e($name)}\" class=\"gk-input\"{$req}>";
+                $accept = isset($f['accept']) ? " accept=\"{$e($f['accept'])}\"" : '';
+                $multiple = !empty($f['multiple']) ? ' multiple' : '';
+                $maxSize = $f['maxSize'] ?? '';
+                echo "<div class=\"gk-upload-zone\" data-max-size=\"{$e($maxSize)}\">";
+                echo "<input type=\"file\" name=\"{$e($name)}\" id=\"{$e($name)}\" class=\"gk-upload-input\"{$accept}{$multiple}{$req}>";
+                echo "<div class=\"gk-upload-content\">";
+                echo "<span class=\"material-icons gk-upload-icon\">cloud_upload</span>";
+                echo "<span class=\"gk-upload-text\">Datei hierher ziehen oder klicken</span>";
+                if ($maxSize) echo "<span class=\"gk-upload-hint\">Max. {$e($maxSize)}</span>";
+                echo "</div></div>";
+                break;
+
+            case 'richtext':
+                $toolbar = $f['toolbar'] ?? 'basic';
+                $basicBtns = [
+                    ['cmd' => 'bold', 'icon' => 'format_bold'],
+                    ['cmd' => 'italic', 'icon' => 'format_italic'],
+                    ['cmd' => 'underline', 'icon' => 'format_underlined'],
+                    ['cmd' => 'createLink', 'icon' => 'link', 'prompt' => 'URL eingeben:'],
+                    ['cmd' => 'insertUnorderedList', 'icon' => 'format_list_bulleted'],
+                    ['cmd' => 'insertOrderedList', 'icon' => 'format_list_numbered'],
+                ];
+                $fullBtns = [
+                    ['cmd' => 'formatBlock', 'icon' => 'title', 'val' => 'h2', 'title' => 'H2'],
+                    ['cmd' => 'formatBlock', 'icon' => 'text_fields', 'val' => 'h3', 'title' => 'H3'],
+                    ['cmd' => 'formatBlock', 'icon' => 'format_quote', 'val' => 'blockquote'],
+                    ['cmd' => 'formatBlock', 'icon' => 'code', 'val' => 'pre'],
+                    ['cmd' => 'insertImage', 'icon' => 'image', 'prompt' => 'Bild-URL:'],
+                    ['cmd' => 'insertHorizontalRule', 'icon' => 'horizontal_rule'],
+                ];
+                $btns = $toolbar === 'full' ? array_merge($basicBtns, $fullBtns) : $basicBtns;
+
+                echo "<div class=\"gk-richtext\" data-field=\"{$e($name)}\">";
+                echo "<div class=\"gk-richtext-toolbar\">";
+                foreach ($btns as $b) {
+                    $dataAttrs = "data-cmd=\"{$e($b['cmd'])}\"";
+                    if (isset($b['val'])) $dataAttrs .= " data-val=\"{$e($b['val'])}\"";
+                    if (isset($b['prompt'])) $dataAttrs .= " data-prompt=\"{$e($b['prompt'])}\"";
+                    $title = $b['title'] ?? $b['cmd'];
+                    echo "<button type=\"button\" class=\"gk-richtext-btn\" {$dataAttrs} title=\"{$e($title)}\"><span class=\"material-icons\">{$b['icon']}</span></button>";
+                }
+                echo "</div>";
+                echo "<div class=\"gk-richtext-content\" contenteditable=\"true\">{$value}</div>";
+                echo "<input type=\"hidden\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\">";
+                echo "</div>";
                 break;
 
             default: // text, number, email, tel, url, password, date, time, datetime
@@ -130,7 +218,7 @@ class Form
                 $extra = '';
                 if (isset($f['step'])) $extra .= " step=\"{$e($f['step'])}\"";
                 if (isset($f['placeholder'])) $extra .= " placeholder=\"{$e($f['placeholder'])}\"";
-                echo "<input type=\"{$e($htmlType)}\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$value}\" class=\"gk-input\"{$req}{$extra}>";
+                echo "<input type=\"{$e($htmlType)}\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\" class=\"gk-input\"{$req}{$extra}>";
         }
 
         echo '<div class="gk-field-error" data-gk-error="' . $e($name) . '"></div>';

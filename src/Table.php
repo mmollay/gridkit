@@ -23,6 +23,7 @@ class Table
     private ?\mysqli $db = null;
     private string $baseQuery = '';
     private bool $isStatic = false;
+    private bool $globalNowrap = false;
 
     public function __construct(string $id)
     {
@@ -74,6 +75,12 @@ class Table
     {
         $this->newBtnLabel = $label;
         $this->newBtnOpts = $opts;
+        return $this;
+    }
+
+    public function nowrap(bool $enabled = true): static
+    {
+        $this->globalNowrap = $enabled;
         return $this;
     }
 
@@ -194,8 +201,14 @@ class Table
         }
         if ($this->newBtnLabel) {
             echo '<div class="gk-toolbar-spacer"></div>';
-            $modal = $e($this->newBtnOpts['modal'] ?? '');
-            echo '<button class="gk-btn gk-btn-primary" data-gk-modal="' . $modal . '">' . $e($this->newBtnLabel) . '</button>';
+            $modal = $this->newBtnOpts['modal'] ?? '';
+            echo Button::render($this->newBtnLabel, [
+                'variant' => 'filled',
+                'color' => 'primary',
+                'icon' => $this->newBtnOpts['icon'] ?? 'add',
+                'shape' => 'pill',
+                'data' => $modal ? ['gk-modal' => $modal] : [],
+            ]);
         }
         echo '</div>';
 
@@ -213,9 +226,15 @@ class Table
     {
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
-        echo '<table class="gk-table"><thead><tr>';
+        $tableClass = 'gk-table' . ($this->globalNowrap ? ' gk-table-nowrap' : '');
+        echo '<table class="' . $tableClass . '"><thead><tr>';
         foreach ($this->columns as $key => $col) {
-            $style = isset($col['width']) ? ' style="width:' . $e($col['width']) . '"' : '';
+            $styles = [];
+            if (isset($col['width']) && $col['width'] !== 'auto') $styles[] = 'width:' . $e($col['width']);
+            if (isset($col['minWidth'])) $styles[] = 'min-width:' . $e($col['minWidth']);
+            if (isset($col['maxWidth'])) $styles[] = 'max-width:' . $e($col['maxWidth']);
+            if (!empty($col['nowrap'])) $styles[] = 'white-space:nowrap';
+            $style = $styles ? ' style="' . implode(';', $styles) . '"' : '';
             $sortable = $col['sortable'] ?? false;
             $cls = $sortable ? ' class="gk-sortable"' : '';
             $attrs = '';
@@ -243,9 +262,15 @@ class Table
             }
             foreach ($this->columns as $key => $col) {
                 $val = $row[$key] ?? '';
-                $align = isset($col['align']) ? ' style="text-align:' . $e($col['align']) . '"' : '';
+                $tdStyles = [];
+                if (isset($col['align'])) $tdStyles[] = 'text-align:' . $e($col['align']);
+                if (isset($col['width']) && $col['width'] !== 'auto') $tdStyles[] = 'width:' . $e($col['width']);
+                if (isset($col['minWidth'])) $tdStyles[] = 'min-width:' . $e($col['minWidth']);
+                if (isset($col['maxWidth'])) $tdStyles[] = 'max-width:' . $e($col['maxWidth']);
+                if (!empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
+                $tdStyle = $tdStyles ? ' style="' . implode(';', $tdStyles) . '"' : '';
                 $formatted = $this->format($val, $col);
-                echo "<td{$align}>{$formatted}</td>";
+                echo "<td{$tdStyle}>{$formatted}</td>";
             }
             if ($rightButtons) {
                 echo '<td class="gk-actions gk-actions-right"><div class="gk-btn-group">';
