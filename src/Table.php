@@ -1,6 +1,8 @@
 <?php
 namespace GridKit;
 
+use GridKit\Button;
+
 class Table
 {
     private string $id;

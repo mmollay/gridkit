@@ -272,7 +272,7 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-sidebar-group-toggle { width: 100%; text-align: left; cursor: pointer; border: none; font: inherit; }
 .gk-sidebar-chevron { font-size: 18px !important; margin-left: auto; opacity: 0.5; transition: transform .2s ease; flex-shrink: 0; }
 .gk-sidebar-group-toggle.collapsed .gk-sidebar-chevron { transform: rotate(-90deg); }
-.gk-sidebar-subitems { overflow: hidden; max-height: 500px; transition: max-height .25s ease, opacity .2s ease; opacity: 1; }
+.gk-sidebar-subitems { display: flex; flex-direction: column; gap: 1px; overflow: hidden; max-height: 500px; transition: max-height .25s ease, opacity .2s ease; opacity: 1; }
 .gk-sidebar-subitems.collapsed { max-height: 0; opacity: 0; }
 .gk-sidebar-subitem { display: flex; align-items: center; gap: 8px; padding: 7px 12px 7px 44px; border-radius: 6px; color: rgba(255,255,255,0.55); text-decoration: none; font-size: 13px; transition: all .15s; }
 .gk-sidebar-subitem:hover { background: rgba(255,255,255,0.08); color: #fff; }
