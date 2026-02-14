@@ -778,7 +778,17 @@
                         }
                     });
                     rebuildChips();
+                    updatePlaceholder();
                 }
+
+                function updatePlaceholder() {
+                    if (!searchInput) return;
+                    searchInput.placeholder = getSelected().length ? '' : (searchInput.dataset.placeholder || searchInput.getAttribute('placeholder') || '');
+                }
+
+                // Store original placeholder
+                if (searchInput) searchInput.dataset.placeholder = searchInput.getAttribute('placeholder') || '';
+                updatePlaceholder();
 
                 display.addEventListener('click', function(e) {
                     if (e.target.closest('.gk-chip-remove')) return;
