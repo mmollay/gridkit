@@ -7,6 +7,8 @@ use GridKit\StatCards;
 use GridKit\Sidebar;
 use GridKit\FilterChips;
 use GridKit\YearFilter;
+use GridKit\Header;
+use GridKit\Button;
 
 $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
 ?>
@@ -56,6 +58,7 @@ $sidebar->brand('GridKit', 'widgets', 'v' . $version)
     ->item('Confirm', '#confirm', 'help_outline')
     ->item('Sidebar', '#sidebar', 'menu')
     ->item('Buttons', '#buttons', 'smart_button')
+    ->item('Header', '#header', 'web_asset')
     ->group('Beispiele')
     ->item('Dashboard Demo', '#dashboard', 'dashboard');
 $sidebar->render();
@@ -660,6 +663,66 @@ echo Button::fab('add');                              // 56px default
 echo Button::fab('add', ['size' => 'sm']);            // 40px
 echo Button::fab('add', ['size' => 'lg']);            // 96px
 echo Button::fab('edit', ['extended' => true, 'label' => 'Bearbeiten']); // Extended FAB</pre></div>
+</div>
+
+<!-- ===== HEADER ===== -->
+<div class="demo-section" data-section="header">
+    <h2>Header</h2>
+    <div class="demo-card" style="padding:0; overflow:hidden;">
+        <?php
+        $header = new Header();
+        echo $header->title('Rechnungen')
+            ->breadcrumb(['Dashboard' => '/', 'Faktura' => '/faktura', 'Rechnungen'])
+            ->search('Suchen...', 'q')
+            ->action(Button::render('Neue Rechnung', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'add', 'size' => 'sm']))
+            ->action(Button::icon('notifications', ['variant' => 'text', 'color' => 'neutral', 'title' => 'Benachrichtigungen']))
+            ->user('Martin Huber', [
+                'avatar' => 'https://i.pravatar.cc/72?img=12',
+                'role' => 'Administrator',
+                'menu' => [
+                    ['label' => 'Profil', 'href' => '/profil', 'icon' => 'person'],
+                    ['label' => 'Einstellungen', 'href' => '/settings', 'icon' => 'settings'],
+                    'divider',
+                    ['label' => 'Abmelden', 'href' => '/logout', 'icon' => 'logout'],
+                ],
+            ])
+            ->sticky()
+            ->render();
+        ?>
+    </div>
+    <div class="demo-card" style="padding:0; overflow:hidden;">
+        <p style="padding:16px 24px 0; margin:0; font-size:13px; color:#6b7280;">Minimal (nur Titel + User mit Initialen)</p>
+        <?php
+        $header2 = new Header();
+        echo $header2->title('Dashboard')
+            ->user('Anna K.', [
+                'menu' => [
+                    ['label' => 'Abmelden', 'href' => '/logout', 'icon' => 'logout'],
+                ],
+            ])
+            ->render();
+        ?>
+    </div>
+    <div class="demo-code"><pre>use GridKit\Header;
+use GridKit\Button;
+
+$header = new Header();
+echo $header->title('Rechnungen')
+    ->breadcrumb(['Dashboard' => '/', 'Faktura' => '/faktura', 'Rechnungen'])
+    ->search('Suchen...', 'q')
+    ->action(Button::render('Neue Rechnung', ['icon' => 'add', 'size' => 'sm']))
+    ->user('Martin Huber', [
+        'avatar' => 'https://example.com/avatar.jpg',
+        'role' => 'Administrator',
+        'menu' => [
+            ['label' => 'Profil', 'href' => '/profil', 'icon' => 'person'],
+            ['label' => 'Einstellungen', 'href' => '/settings', 'icon' => 'settings'],
+            'divider',
+            ['label' => 'Abmelden', 'href' => '/logout', 'icon' => 'logout'],
+        ],
+    ])
+    ->sticky()
+    ->render();</pre></div>
 </div>
 
 <!-- ===== DASHBOARD DEMO ===== -->

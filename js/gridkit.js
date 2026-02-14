@@ -589,6 +589,15 @@
         GK.initRichtext();
     };
 
+    // Dropdown toggle (Header user menu etc.)
+    document.addEventListener('click', function(e) {
+        var dropdown = e.target.closest('[data-gk-dropdown]');
+        document.querySelectorAll('[data-gk-dropdown].open').forEach(function(el) {
+            if (el !== dropdown) el.classList.remove('open');
+        });
+        if (dropdown) dropdown.classList.toggle('open');
+    });
+
     window.GridKit = GK;
     window.GK = GK;
 
