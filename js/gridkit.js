@@ -436,6 +436,30 @@
         init() {
             this.el = document.querySelector('[data-gk-sidebar]');
             this.overlay = document.querySelector('[data-gk-sidebar-overlay]');
+            if (!this.el) return;
+            // Group toggles
+            this.el.querySelectorAll('[data-gk-toggle]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    var id = btn.getAttribute('data-gk-toggle');
+                    var sub = document.getElementById(id);
+                    if (!sub) return;
+                    var collapsed = sub.classList.toggle('collapsed');
+                    btn.classList.toggle('collapsed', collapsed);
+                    try { localStorage.setItem('gk-nav-' + id, collapsed ? 'closed' : 'open'); } catch(e) {}
+                });
+                // Restore state
+                var id = btn.getAttribute('data-gk-toggle');
+                var sub = document.getElementById(id);
+                if (!sub) return;
+                var stored = localStorage.getItem('gk-nav-' + id);
+                if (stored === 'closed') {
+                    sub.classList.add('collapsed');
+                    btn.classList.add('collapsed');
+                } else if (stored === 'open') {
+                    sub.classList.remove('collapsed');
+                    btn.classList.remove('collapsed');
+                }
+            });
         },
         toggle() {
             if (!this.el) return;
