@@ -55,6 +55,7 @@ $sidebar->brand('GridKit', 'widgets', 'v' . $version)
     ->item('Toast', '#toast', 'notifications')
     ->item('Confirm', '#confirm', 'help_outline')
     ->item('Sidebar', '#sidebar', 'menu')
+    ->item('Buttons', '#buttons', 'smart_button')
     ->group('Beispiele')
     ->item('Dashboard Demo', '#dashboard', 'dashboard');
 $sidebar->render();
@@ -372,6 +373,174 @@ Sidebar::toggleButton();
 GK.sidebar.toggle();
 GK.sidebar.open();
 GK.sidebar.close();</pre></div>
+</div>
+
+<!-- ===== BUTTONS ===== -->
+<div class="demo-section" data-section="buttons">
+    <h2>Buttons</h2>
+
+    <!-- Variants -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Varianten</h3>
+        <div class="demo-btn-row" style="margin-bottom:16px">
+            <?= \GridKit\Button::render('Filled', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'save']) ?>
+            <?= \GridKit\Button::render('Outlined', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'save']) ?>
+            <?= \GridKit\Button::render('Text', ['variant' => 'text', 'color' => 'primary', 'icon' => 'save']) ?>
+            <?= \GridKit\Button::render('Tonal', ['variant' => 'tonal', 'color' => 'primary', 'icon' => 'save']) ?>
+        </div>
+    </div>
+
+    <!-- Colors -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Farben – Filled</h3>
+        <div class="demo-btn-row" style="margin-bottom:16px">
+            <?= \GridKit\Button::render('Primary', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'star']) ?>
+            <?= \GridKit\Button::render('Success', ['variant' => 'filled', 'color' => 'success', 'icon' => 'check_circle']) ?>
+            <?= \GridKit\Button::render('Warning', ['variant' => 'filled', 'color' => 'warning', 'icon' => 'warning']) ?>
+            <?= \GridKit\Button::render('Danger', ['variant' => 'filled', 'color' => 'danger', 'icon' => 'delete']) ?>
+            <?= \GridKit\Button::render('Neutral', ['variant' => 'filled', 'color' => 'neutral', 'icon' => 'settings']) ?>
+        </div>
+
+        <h3 style="margin:16px 0 12px; font-size:15px; color:#374151;">Farben – Outlined</h3>
+        <div class="demo-btn-row" style="margin-bottom:16px">
+            <?= \GridKit\Button::render('Primary', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'star']) ?>
+            <?= \GridKit\Button::render('Success', ['variant' => 'outlined', 'color' => 'success', 'icon' => 'check_circle']) ?>
+            <?= \GridKit\Button::render('Warning', ['variant' => 'outlined', 'color' => 'warning', 'icon' => 'warning']) ?>
+            <?= \GridKit\Button::render('Danger', ['variant' => 'outlined', 'color' => 'danger', 'icon' => 'delete']) ?>
+            <?= \GridKit\Button::render('Neutral', ['variant' => 'outlined', 'color' => 'neutral', 'icon' => 'settings']) ?>
+        </div>
+
+        <h3 style="margin:16px 0 12px; font-size:15px; color:#374151;">Farben – Tonal</h3>
+        <div class="demo-btn-row" style="margin-bottom:16px">
+            <?= \GridKit\Button::render('Primary', ['variant' => 'tonal', 'color' => 'primary', 'icon' => 'star']) ?>
+            <?= \GridKit\Button::render('Success', ['variant' => 'tonal', 'color' => 'success', 'icon' => 'check_circle']) ?>
+            <?= \GridKit\Button::render('Warning', ['variant' => 'tonal', 'color' => 'warning', 'icon' => 'warning']) ?>
+            <?= \GridKit\Button::render('Danger', ['variant' => 'tonal', 'color' => 'danger', 'icon' => 'delete']) ?>
+            <?= \GridKit\Button::render('Neutral', ['variant' => 'tonal', 'color' => 'neutral', 'icon' => 'settings']) ?>
+        </div>
+
+        <h3 style="margin:16px 0 12px; font-size:15px; color:#374151;">Farben – Text</h3>
+        <div class="demo-btn-row">
+            <?= \GridKit\Button::render('Primary', ['variant' => 'text', 'color' => 'primary', 'icon' => 'star']) ?>
+            <?= \GridKit\Button::render('Success', ['variant' => 'text', 'color' => 'success', 'icon' => 'check_circle']) ?>
+            <?= \GridKit\Button::render('Warning', ['variant' => 'text', 'color' => 'warning', 'icon' => 'warning']) ?>
+            <?= \GridKit\Button::render('Danger', ['variant' => 'text', 'color' => 'danger', 'icon' => 'delete']) ?>
+            <?= \GridKit\Button::render('Neutral', ['variant' => 'text', 'color' => 'neutral', 'icon' => 'settings']) ?>
+        </div>
+    </div>
+
+    <!-- Icon only -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Icon-Only</h3>
+        <div class="demo-btn-row" style="margin-bottom:16px">
+            <?= \GridKit\Button::icon('edit', ['variant' => 'filled', 'color' => 'primary', 'title' => 'Bearbeiten']) ?>
+            <?= \GridKit\Button::icon('delete', ['variant' => 'filled', 'color' => 'danger', 'title' => 'Loeschen']) ?>
+            <?= \GridKit\Button::icon('add', ['variant' => 'filled', 'color' => 'success', 'title' => 'Neu']) ?>
+            <?= \GridKit\Button::icon('send', ['variant' => 'filled', 'color' => 'primary', 'title' => 'Senden']) ?>
+            <?= \GridKit\Button::icon('print', ['variant' => 'filled', 'color' => 'neutral', 'title' => 'Drucken']) ?>
+        </div>
+        <div class="demo-btn-row" style="margin-bottom:16px">
+            <?= \GridKit\Button::icon('edit', ['variant' => 'outlined', 'color' => 'primary']) ?>
+            <?= \GridKit\Button::icon('delete', ['variant' => 'outlined', 'color' => 'danger']) ?>
+            <?= \GridKit\Button::icon('add', ['variant' => 'outlined', 'color' => 'success']) ?>
+            <?= \GridKit\Button::icon('send', ['variant' => 'outlined', 'color' => 'primary']) ?>
+            <?= \GridKit\Button::icon('print', ['variant' => 'outlined', 'color' => 'neutral']) ?>
+        </div>
+        <div class="demo-btn-row">
+            <?= \GridKit\Button::icon('edit', ['variant' => 'text', 'color' => 'primary']) ?>
+            <?= \GridKit\Button::icon('delete', ['variant' => 'text', 'color' => 'danger']) ?>
+            <?= \GridKit\Button::icon('add', ['variant' => 'text', 'color' => 'success']) ?>
+            <?= \GridKit\Button::icon('send', ['variant' => 'text', 'color' => 'primary']) ?>
+            <?= \GridKit\Button::icon('print', ['variant' => 'text', 'color' => 'neutral']) ?>
+        </div>
+    </div>
+
+    <!-- Sizes -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Groessen</h3>
+        <div class="demo-btn-row" style="align-items:center">
+            <?= \GridKit\Button::render('Small', ['variant' => 'filled', 'color' => 'primary', 'size' => 'sm', 'icon' => 'edit']) ?>
+            <?= \GridKit\Button::render('Medium', ['variant' => 'filled', 'color' => 'primary', 'size' => 'md', 'icon' => 'edit']) ?>
+            <?= \GridKit\Button::render('Large', ['variant' => 'filled', 'color' => 'primary', 'size' => 'lg', 'icon' => 'edit']) ?>
+        </div>
+    </div>
+
+    <!-- States -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">States</h3>
+        <div class="demo-btn-row" style="margin-bottom:16px">
+            <?= \GridKit\Button::render('Normal', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'check']) ?>
+            <?= \GridKit\Button::render('Disabled', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'block', 'disabled' => true]) ?>
+            <?= \GridKit\Button::render('Loading', ['variant' => 'filled', 'color' => 'primary', 'loading' => true]) ?>
+            <?= \GridKit\Button::render('Inbox', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'mail', 'badge' => '3']) ?>
+        </div>
+        <div class="demo-btn-row">
+            <?= \GridKit\Button::render('Disabled', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'block', 'disabled' => true]) ?>
+            <?= \GridKit\Button::render('Disabled', ['variant' => 'tonal', 'color' => 'danger', 'icon' => 'block', 'disabled' => true]) ?>
+            <?= \GridKit\Button::render('Disabled', ['variant' => 'text', 'color' => 'success', 'icon' => 'block', 'disabled' => true]) ?>
+        </div>
+    </div>
+
+    <!-- Icon position + special -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Icon-Position &amp; Spezial</h3>
+        <div class="demo-btn-row" style="margin-bottom:16px">
+            <?= \GridKit\Button::render('Icon links', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'arrow_back', 'iconPosition' => 'left']) ?>
+            <?= \GridKit\Button::render('Icon rechts', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'arrow_forward', 'iconPosition' => 'right']) ?>
+            <?= \GridKit\Button::render('Nur Text', ['variant' => 'filled', 'color' => 'primary']) ?>
+        </div>
+        <div class="demo-btn-row" style="margin-bottom:16px">
+            <?= \GridKit\Button::render('Als Link', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'open_in_new', 'href' => '#buttons', 'target' => '_self']) ?>
+            <?= \GridKit\Button::render('Submit', ['variant' => 'filled', 'color' => 'success', 'icon' => 'save', 'type' => 'submit']) ?>
+        </div>
+        <div>
+            <?= \GridKit\Button::render('Full Width', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'send', 'fullWidth' => true]) ?>
+        </div>
+    </div>
+
+    <!-- Button Group -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Button Group</h3>
+        <div class="demo-btn-row">
+            <?= \GridKit\Button::group([
+                \GridKit\Button::render('Links', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'format_align_left']),
+                \GridKit\Button::render('Mitte', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'format_align_center']),
+                \GridKit\Button::render('Rechts', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'format_align_right']),
+            ]) ?>
+            &nbsp;
+            <?= \GridKit\Button::group([
+                \GridKit\Button::icon('undo', ['variant' => 'outlined', 'color' => 'neutral']),
+                \GridKit\Button::icon('redo', ['variant' => 'outlined', 'color' => 'neutral']),
+            ]) ?>
+        </div>
+    </div>
+
+    <div class="demo-code"><pre>use GridKit\Button;
+
+// Filled + Icon
+echo Button::render('Speichern', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'save']);
+echo Button::render('Loeschen', ['variant' => 'outlined', 'color' => 'danger', 'icon' => 'delete']);
+echo Button::render('Abbrechen', ['variant' => 'text', 'color' => 'neutral']);
+echo Button::render('Entwurf', ['variant' => 'tonal', 'color' => 'warning', 'icon' => 'edit']);
+
+// Icon-only
+echo Button::icon('edit', ['variant' => 'filled', 'color' => 'primary', 'title' => 'Bearbeiten']);
+echo Button::icon('delete', ['variant' => 'text', 'color' => 'danger']);
+
+// Sizes: sm, md (default), lg
+echo Button::render('Klein', ['size' => 'sm', 'icon' => 'edit']);
+echo Button::render('Gross', ['size' => 'lg', 'icon' => 'edit']);
+
+// States
+echo Button::render('Disabled', ['disabled' => true]);
+echo Button::render('Loading', ['loading' => true]);
+echo Button::render('Badge', ['icon' => 'mail', 'badge' => 3]);
+
+// Group
+echo Button::group([
+    Button::icon('undo', ['variant' => 'outlined', 'color' => 'neutral']),
+    Button::icon('redo', ['variant' => 'outlined', 'color' => 'neutral']),
+]);</pre></div>
 </div>
 
 <!-- ===== DASHBOARD DEMO ===== -->
