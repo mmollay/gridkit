@@ -277,24 +277,43 @@ class Table
     private function renderButtons(array $buttons, array $row, \Closure $e): void
     {
         foreach ($buttons as $bname => $bopts) {
-            $hasText = !empty($bopts['text']);
-            $cls = $hasText ? 'gk-btn gk-btn-icon-text' : 'gk-btn gk-btn-icon';
-            if (isset($bopts['class'])) $cls .= ' gk-btn-' . $bopts['class'];
             $params = [];
             foreach ($bopts['params'] ?? [] as $pkey => $pcol) {
                 $params[$pkey] = $row[$pcol] ?? '';
             }
-            $attrs = ' data-gk-action="' . $e($bname) . '"';
+
+            // Map legacy 'class' option to Button color
+            $colorMap = ['danger' => 'danger', 'success' => 'success', 'warning' => 'warning', 'primary' => 'primary'];
+            $color = $colorMap[$bopts['class'] ?? ''] ?? 'neutral';
+
+            $data = [
+                'action' => $bname,
+                'gk-params' => json_encode($params),
+            ];
             if (isset($bopts['modal'])) {
-                $attrs .= ' data-gk-modal="' . $e($bopts['modal']) . '"';
+                $data['gk-modal'] = $bopts['modal'];
             }
-            if (isset($bopts['title'])) {
-                $attrs .= ' title="' . $e($bopts['title']) . '"';
+
+            $hasText = !empty($bopts['text']);
+            $iconName = $bopts['icon'] ?? '';
+
+            if ($hasText && $iconName) {
+                echo Button::render($bopts['text'], [
+                    'icon' => $iconName,
+                    'variant' => 'text',
+                    'color' => $color,
+                    'title' => $bopts['title'] ?? '',
+                    'data' => $data,
+                ]);
+            } elseif ($iconName) {
+                echo Button::icon($iconName, [
+                    'variant' => 'text',
+                    'color' => $color,
+                    'title' => $bopts['title'] ?? '',
+                    'size' => 'sm',
+                    'data' => $data,
+                ]);
             }
-            $attrs .= " data-gk-params='" . $e(json_encode($params)) . "'";
-            $icon = isset($bopts['icon']) ? $this->icon($bopts['icon']) : '';
-            $text = $hasText ? '<span>' . $e($bopts['text']) . '</span>' : '';
-            echo "<button class=\"{$cls}\"{$attrs}>{$icon}{$text}</button>";
         }
     }
 
@@ -336,13 +355,4 @@ class Table
         return '<span class="gk-label gk-label-' . $e($color) . '">' . $e($val) . '</span>';
     }
 
-    private function icon(string $name): string
-    {
-        return match ($name) {
-            'pencil', 'edit' => '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
-            'trash', 'delete' => '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14Z"/></svg>',
-            'plus' => '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
-            default => '<span class="material-icons" style="font-size:16px;vertical-align:middle;">' . htmlspecialchars($name) . '</span>',
-        };
-    }
 }
