@@ -282,18 +282,18 @@ select.gk-input { appearance: none; -webkit-appearance: none; padding-right: 40p
 .gk-checkbox-label, .gk-radio-label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: var(--gk-font-size); }
 
 /* === MODAL === */
-.gk-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(2px); }
-.gk-modal { background: var(--gk-bg); border-radius: var(--gk-radius); box-shadow: var(--gk-shadow-lg); width: 90%; max-height: 90vh; display: flex; flex-direction: column; }
+.gk-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
+.gk-modal { background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05); width: 90%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
 .gk-modal-small { max-width: 420px; }
 .gk-modal-medium { max-width: 640px; }
 .gk-modal-large { max-width: 900px; }
 .gk-modal-full { max-width: none; width: calc(100% - 32px); height: calc(100% - 32px); display: flex; flex-direction: column; }
 .gk-modal-full .gk-modal-body { flex: 1; overflow-y: auto; }
-.gk-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--gk-border); }
-.gk-modal-title { margin: 0; font-size: 16px; font-weight: 600; }
-.gk-modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gk-text-muted); padding: 0 4px; line-height: 1; }
-.gk-modal-close:hover { color: var(--gk-text); }
-.gk-modal-body { padding: 18px; overflow-y: auto; }
+.gk-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--gk-border, #e2e8f0); background: #fff; }
+.gk-modal-title { margin: 0; font-size: 17px; font-weight: 600; color: var(--gk-text, #0f172a); }
+.gk-modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--gk-text-muted, #94a3b8); padding: 4px 8px; line-height: 1; border-radius: 6px; transition: all .15s; }
+.gk-modal-close:hover { color: var(--gk-text, #0f172a); background: var(--gk-bg-muted, #f1f5f9); }
+.gk-modal-body { padding: 24px; overflow-y: auto; background: #fff; }
 .gk-modal-body .gk-form { margin: 0; }
 
 /* Loading spinner */
