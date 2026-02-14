@@ -68,10 +68,10 @@
 /* === BUTTONS === */
 .gk-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid var(--gk-border); border-radius: var(--gk-radius-sm); background: var(--gk-bg); color: var(--gk-text); font-size: var(--gk-font-size-sm); cursor: pointer; transition: all .15s; line-height: 1.4; }
 .gk-btn:hover { background: var(--gk-bg-hover); }
-.gk-btn-primary { background: var(--gk-primary); color: #fff; border-color: var(--gk-primary); }
-.gk-btn-primary:hover { background: var(--gk-primary-hover); }
-.gk-btn-danger { background: transparent; color: var(--gk-danger); border-color: var(--gk-danger); }
-.gk-btn-danger:hover { background: var(--gk-danger); color: #fff; }
+button.gk-btn-primary, .gk-btn.gk-btn-primary { background: var(--gk-primary, #2563eb) !important; color: #fff !important; border-color: var(--gk-primary, #2563eb) !important; }
+button.gk-btn-primary:hover, .gk-btn.gk-btn-primary:hover { background: var(--gk-primary-hover, #1d4ed8) !important; }
+button.gk-btn-danger, .gk-btn.gk-btn-danger { background: transparent !important; color: var(--gk-danger, #dc2626) !important; border-color: var(--gk-danger, #dc2626) !important; }
+button.gk-btn-danger:hover, .gk-btn.gk-btn-danger:hover { background: var(--gk-danger, #dc2626) !important; color: #fff !important; }
 .gk-btn-icon { padding: 5px 7px; }
 .gk-btn-icon svg { display: block; }
 
