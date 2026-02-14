@@ -24,9 +24,7 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         body { margin:0; padding:0; background:var(--gk-surface-container, #f0f1f3); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:var(--gk-on-surface, #1f2937); }
-        .demo-header { background:var(--gk-surface-dim, #1e293b); color:var(--gk-on-surface, #fff); padding:24px 32px; display:flex; align-items:center; gap:16px; }
-        .demo-header h1 { margin:0; font-size:22px; font-weight:700; }
-        .demo-header .version { background:rgba(255,255,255,0.15); padding:2px 10px; border-radius:12px; font-size:12px; }
+        /* Demo header now uses GridKit Header component */
         .demo-section { max-width:1100px; margin:24px auto; padding:0 24px; display:none; }
         .demo-section.active { display:block; }
         .demo-section h2 { font-size:20px; margin:0 0 16px; color:#374151; }
@@ -70,12 +68,14 @@ $sidebar->render();
 
 <div class="gk-with-sidebar">
 
-<div class="demo-header">
-    <?php Sidebar::toggleButton(); ?>
-    <h1>GridKit <span class="version">v<?= $version ?></span></h1>
-    <div style="flex:1"></div>
-    <?= Theme::switcher() ?>
-</div>
+<?php
+$demoHeader = new Header();
+echo $demoHeader->title('GridKit v' . $version)
+    ->sidebarToggle(true)
+    ->sticky(true)
+    ->action(Theme::switcher())
+    ->render();
+?>
 
 <!-- ===== OVERVIEW (default) ===== -->
 <div class="demo-section active" data-section="overview">
