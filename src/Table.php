@@ -25,6 +25,9 @@ class Table
     private bool $isStatic = false;
     private bool $globalNowrap = false;
     private bool $showToolbar = true;
+    private string $size = 'md';
+    private string $variant = 'default';
+    private string $mobileMode = 'card';
 
     public function __construct(string $id)
     {
@@ -94,6 +97,24 @@ class Table
     public function paginate(int|bool $perPage): static
     {
         $this->perPage = (int)$perPage;
+        return $this;
+    }
+
+    public function size(string $size): static
+    {
+        $this->size = $size;
+        return $this;
+    }
+
+    public function variant(string $variant): static
+    {
+        $this->variant = $variant;
+        return $this;
+    }
+
+    public function mobile(string $mode): static
+    {
+        $this->mobileMode = $mode;
         return $this;
     }
 
@@ -178,7 +199,12 @@ class Table
 
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
         $staticAttr = $this->isStatic ? ' data-gk-static' : '';
-        echo '<div class="gk-root gk-table-wrap" data-gk-table="' . $e($this->id) . '"' . $staticAttr . '>';
+        $wrapClasses = 'gk-root gk-table-wrap';
+        $wrapClasses .= ' gk-table-' . $this->size;
+        if ($this->variant !== 'default') $wrapClasses .= ' gk-table-' . $this->variant;
+        if ($this->mobileMode === 'card') $wrapClasses .= ' gk-table-mobile-card';
+        elseif ($this->mobileMode === 'scroll') $wrapClasses .= ' gk-table-mobile-scroll';
+        echo '<div class="' . $wrapClasses . '" data-gk-table="' . $e($this->id) . '"' . $staticAttr . '>';
 
         // Embed JSON data + column config for client-side operations
         if ($this->isStatic) {
@@ -245,15 +271,18 @@ class Table
             if (!empty($col['nowrap'])) $styles[] = 'white-space:nowrap';
             $style = $styles ? ' style="' . implode(';', $styles) . '"' : '';
             $sortable = $col['sortable'] ?? false;
-            $cls = $sortable ? ' class="gk-sortable"' : '';
+            $clsList = [];
+            if ($sortable) $clsList[] = 'gk-sortable';
+            if (!empty($col['hideOnMobile'])) $clsList[] = 'gk-hide-mobile';
             $attrs = '';
             if ($sortable) {
                 $newDir = ($this->sortCol === $key && $this->sortDir === 'asc') ? 'desc' : 'asc';
                 $attrs = ' data-gk-sort="' . $e($key) . '" data-gk-dir="' . $newDir . '"';
                 if ($this->sortCol === $key) {
-                    $cls = ' class="gk-sortable gk-sorted-' . $this->sortDir . '"';
+                    $clsList[] = 'gk-sorted-' . $this->sortDir;
                 }
             }
+            $cls = $clsList ? ' class="' . implode(' ', $clsList) . '"' : '';
             echo "<th{$cls}{$style}{$attrs}>" . $e($col['label']) . "</th>";
         }
         $leftButtons = array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'left');
@@ -278,8 +307,10 @@ class Table
                 if (isset($col['maxWidth'])) $tdStyles[] = 'max-width:' . $e($col['maxWidth']);
                 if (!empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
                 $tdStyle = $tdStyles ? ' style="' . implode(';', $tdStyles) . '"' : '';
+                $tdClass = !empty($col['hideOnMobile']) ? ' class="gk-hide-mobile"' : '';
+                $dataLabel = ' data-label="' . $e($col['label']) . '"';
                 $formatted = $this->format($val, $col);
-                echo "<td{$tdStyle}>{$formatted}</td>";
+                echo "<td{$tdClass}{$tdStyle}{$dataLabel}>{$formatted}</td>";
             }
             if ($rightButtons) {
                 echo '<td class="gk-actions gk-actions-right"><div class="gk-btn-group">';

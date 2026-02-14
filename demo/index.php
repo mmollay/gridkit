@@ -183,6 +183,95 @@ $sidebar->render();
         ?>
     </div>
 
+    <!-- === TABLE SIZES === -->
+    <h3 style="margin: 32px 0 16px;">Sizes: sm / md / lg</h3>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+        <?php
+        $sizeData = [
+            ['name' => 'Widget A', 'value' => '1.200 €', 'status' => 'aktiv'],
+            ['name' => 'Widget B', 'value' => '340 €', 'status' => 'inaktiv'],
+            ['name' => 'Widget C', 'value' => '890 €', 'status' => 'aktiv'],
+        ];
+        foreach (['sm', 'md', 'lg'] as $sz) {
+            echo '<div class="demo-card" style="padding:0;overflow:hidden"><h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:#6b7280">size(\'' . $sz . '\')</h4>';
+            $t = new Table('size-' . $sz);
+            $t->setData($sizeData)
+                ->column('name', 'Name')
+                ->column('value', 'Wert')
+                ->column('status', 'Status', ['format' => 'label'])
+                ->size($sz)->toolbar(false)->paginate(false)->render();
+            echo '</div>';
+        }
+        ?>
+    </div>
+
+    <!-- === TABLE VARIANTS === -->
+    <h3 style="margin: 32px 0 16px;">Darstellungsvarianten</h3>
+    <?php
+    $varData = [
+        ['name' => 'Webdesign Paket', 'price' => '1.200 €', 'status' => 'aktiv'],
+        ['name' => 'Hosting Standard', 'price' => '9,90 €', 'status' => 'aktiv'],
+        ['name' => 'SEO Beratung', 'price' => '95 €', 'status' => 'inaktiv'],
+        ['name' => 'Logo Design', 'price' => '450 €', 'status' => 'entwurf'],
+    ];
+    foreach (['default', 'bordered', 'striped', 'minimal', 'flat'] as $var) {
+        echo '<div class="demo-card" style="margin-bottom:16px;padding:0;overflow:hidden"><h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:#6b7280">variant(\'' . $var . '\')</h4>';
+        $t = new Table('var-' . $var);
+        $t->setData($varData)
+            ->column('name', 'Bezeichnung')
+            ->column('price', 'Preis')
+            ->column('status', 'Status', ['format' => 'label'])
+            ->variant($var)->toolbar(false)->paginate(false)->render();
+        echo '</div>';
+    }
+    ?>
+
+    <!-- === MOBILE DEMO === -->
+    <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
+    <p class="demo-intro">Verkleinere das Browserfenster auf &lt;768px um die Mobile-Darstellung zu sehen.</p>
+
+    <div class="demo-card" style="padding:0;overflow:hidden">
+        <h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:#6b7280">mobile('card') – Standard</h4>
+        <?php
+        $mobileData = [
+            ['nr' => 'ART-001', 'name' => 'Webdesign Paket S', 'price' => '1.200 €', 'status' => 'aktiv'],
+            ['nr' => 'ART-002', 'name' => 'Hosting Standard', 'price' => '9,90 €', 'status' => 'aktiv'],
+            ['nr' => 'ART-003', 'name' => 'SEO Beratung', 'price' => '95 €', 'status' => 'inaktiv'],
+        ];
+        $t = new Table('mobile-card');
+        $t->setData($mobileData)
+            ->column('nr', 'Artikelnr.')
+            ->column('name', 'Bezeichnung')
+            ->column('price', 'Preis')
+            ->column('status', 'Status', ['format' => 'label'])
+            ->mobile('card')->toolbar(false)->paginate(false)->render();
+        ?>
+    </div>
+    <div class="demo-card" style="margin-top:16px;padding:0;overflow:hidden">
+        <h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:#6b7280">mobile('scroll') – Horizontal Scroll</h4>
+        <?php
+        $t = new Table('mobile-scroll');
+        $t->setData($mobileData)
+            ->column('nr', 'Artikelnr.')
+            ->column('name', 'Bezeichnung')
+            ->column('price', 'Preis')
+            ->column('status', 'Status', ['format' => 'label'])
+            ->mobile('scroll')->toolbar(false)->paginate(false)->render();
+        ?>
+    </div>
+    <div class="demo-card" style="margin-top:16px;padding:0;overflow:hidden">
+        <h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:#6b7280">hideOnMobile – Spalten ausblenden</h4>
+        <?php
+        $t = new Table('mobile-hide');
+        $t->setData($mobileData)
+            ->column('nr', 'Artikelnr.')
+            ->column('name', 'Bezeichnung')
+            ->column('price', 'Preis', ['hideOnMobile' => true])
+            ->column('status', 'Status', ['format' => 'label'])
+            ->mobile('scroll')->toolbar(false)->paginate(false)->render();
+        ?>
+    </div>
+
     <div class="demo-code"><pre>// Demo 1: Vollstaendige Artikel-Tabelle mit Pagination
 $table = new Table('articles');
 $table->setData($articles)
@@ -216,7 +305,27 @@ $miniTable->setData($userData)
     ->column('role', 'Rolle', ['format' => 'label'])
     ->column('active', 'Aktiv', ['format' => 'boolean'])
     ->toolbar(false)
-    ->render();</pre></div>
+    ->render();
+
+// Sizes
+$table->size('sm');  // kompakt
+$table->size('md');  // standard (default)
+$table->size('lg');  // grosszuegig
+
+// Varianten
+$table->variant('bordered');  // Volle Rahmenlinien
+$table->variant('striped');   // Zebra-Streifen
+$table->variant('minimal');   // Nur Zeilen-Separator
+$table->variant('flat');      // Komplett flach
+
+// Kombinierbar
+$table->variant('bordered')->size('sm');
+
+// Mobile-Responsive
+$table->mobile('card');      // Cards auf Mobile (default)
+$table->mobile('scroll');    // Horizontal Scroll
+$table->mobile('scroll');    // + hideOnMobile auf Spalten:
+$table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 </div>
 
 <!-- ===== FORM ===== -->

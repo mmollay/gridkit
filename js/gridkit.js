@@ -280,10 +280,12 @@
                         const newDir = (sortCol === key && sortDir === 'asc') ? 'desc' : 'asc';
                         attrs = ' data-gk-sort="' + e(key) + '" data-gk-dir="' + newDir + '"';
                         if (sortCol === key) {
-                            cls = ' class="gk-sortable gk-sorted-' + sortDir + '"';
+                            cls = ' class="gk-sortable gk-sorted-' + sortDir + (col.hideOnMobile ? ' gk-hide-mobile' : '') + '"';
                         } else {
-                            cls = ' class="gk-sortable"';
+                            cls = ' class="gk-sortable' + (col.hideOnMobile ? ' gk-hide-mobile' : '') + '"';
                         }
+                    } else if (col.hideOnMobile) {
+                        cls = ' class="gk-hide-mobile"';
                     }
                     html += '<th' + cls + style + attrs + '>' + e(col.label) + '</th>';
                 }
@@ -326,7 +328,8 @@
                         for (const [key, col] of Object.entries(columns)) {
                             const val = row[key] ?? '';
                             const align = col.align ? ' style="text-align:' + e(col.align) + '"' : '';
-                            html += '<td' + align + '>' + formatVal(val, col) + '</td>';
+                            var hideCls = col.hideOnMobile ? ' class="gk-hide-mobile"' : '';
+                            html += '<td' + hideCls + align + ' data-label="' + e(col.label) + '">' + formatVal(val, col) + '</td>';
                         }
                         if (hasRight) html += '<td class="gk-actions gk-actions-right"><div class="gk-btn-group">' + renderBtnGroup(rightBtns, row) + '</div></td>';
                         html += '</tr>';
