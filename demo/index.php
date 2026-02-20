@@ -214,6 +214,9 @@ echo $demoHeader->title('GridKit v' . $version)
         }
         ?>
     </div>
+    <div class="demo-code"><pre>$table->size('sm');  // kompakt
+$table->size('md');  // standard (default)
+$table->size('lg');  // großzügig</pre></div>
 
     <!-- === TABLE VARIANTS === -->
     <h3 style="margin: 32px 0 16px;">Darstellungsvarianten</h3>
@@ -235,6 +238,14 @@ echo $demoHeader->title('GridKit v' . $version)
         echo '</div>';
     }
     ?>
+    <div class="demo-code"><pre>$table->variant('default');   // Standard (Zeilen-Separator)
+$table->variant('bordered');  // Volle Rahmenlinien
+$table->variant('striped');   // Zebra-Streifen
+$table->variant('minimal');   // Nur Zeilen-Separator, kein Außenrahmen
+$table->variant('flat');      // Komplett flach, kein Rahmen
+
+// Kombinierbar mit size():
+$table->variant('bordered')->size('sm');</pre></div>
 
     <!-- === MOBILE DEMO === -->
     <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
@@ -317,24 +328,9 @@ $miniTable->setData($userData)
     ->toolbar(false)
     ->render();
 
-// Sizes
-$table->size('sm');  // kompakt
-$table->size('md');  // standard (default)
-$table->size('lg');  // grosszuegig
-
-// Varianten
-$table->variant('bordered');  // Volle Rahmenlinien
-$table->variant('striped');   // Zebra-Streifen
-$table->variant('minimal');   // Nur Zeilen-Separator
-$table->variant('flat');      // Komplett flach
-
-// Kombinierbar
-$table->variant('bordered')->size('sm');
-
 // Mobile-Responsive
 $table->mobile('card');      // Cards auf Mobile (default)
 $table->mobile('scroll');    // Horizontal Scroll
-$table->mobile('scroll');    // + hideOnMobile auf Spalten:
 $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 </div>
 
