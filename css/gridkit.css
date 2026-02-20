@@ -109,7 +109,7 @@ a:hover { text-decoration: none; }
     --gk-sidebar-text-muted: #9ca3af;
     --gk-sidebar-text-hover: #111827;
     --gk-sidebar-item-hover: rgba(0,0,0,0.05);
-    --gk-sidebar-item-active: var(--gk-primary-container);
+    --gk-sidebar-item-active: rgba(0,0,0,0.07);
     --gk-sidebar-border: rgba(0,0,0,0.07);
     --gk-sidebar-brand-bg: transparent;
     --gk-sidebar-accent: var(--gk-primary);
@@ -476,14 +476,14 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 
 /* === SIDEBAR === */
 /* Sidebar Hintergrund direkt gesetzt (hohe Spezifität, zuverlässiger als var()-Kette) */
-[data-gk-theme] .gk-sidebar                              { background: #e2e8f0; color: #374151; border-right: 1px solid rgba(0,0,0,0.08); }
+[data-gk-theme] .gk-sidebar                              { background: #f4f5f7; color: #374151; border-right: 1px solid #e2e8f0; }
 [data-gk-mode="dark"] .gk-sidebar                        { color: rgba(255,255,255,0.78); }
-[data-gk-theme="indigo"] .gk-sidebar                     { background: #dde4ff; }
-[data-gk-theme="ocean"]  .gk-sidebar                     { background: #d8eefb; }
-[data-gk-theme="forest"] .gk-sidebar                     { background: #d4f0e2; }
-[data-gk-theme="rose"]   .gk-sidebar                     { background: #fad5ed; }
-[data-gk-theme="amber"]  .gk-sidebar                     { background: #faecd5; }
-[data-gk-theme="slate"]  .gk-sidebar                     { background: #e2e8f0; }
+
+
+
+
+
+
 [data-gk-mode="dark"]    .gk-sidebar                     { background: #0d1225; border-right-color: rgba(255,255,255,0.09); }
 [data-gk-theme="indigo"][data-gk-mode="dark"] .gk-sidebar { background: #0d1225; }
 [data-gk-theme="ocean"][data-gk-mode="dark"]  .gk-sidebar { background: #071a2d; }
