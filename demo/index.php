@@ -28,7 +28,7 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         /* Demo header now uses GridKit Header component */
         .demo-section { max-width:1100px; margin:24px auto; padding:0 24px; display:none; }
         .demo-section.active { display:block; }
-        .demo-section h2 { font-size:20px; margin:0 0 16px; color:#374151; }
+        .demo-section h2 { font-size:20px; margin:0 0 16px; color:var(--gk-on-surface, #374151); }
         .demo-card { background:var(--gk-surface, #fff); border-radius:8px; padding:24px; border:1px solid transparent; box-shadow:var(--gk-shadow); margin-bottom:24px; }
         [data-gk-mode="dark"] .demo-card, .gk-dark .demo-card { border-color:rgba(255,255,255,0.1); box-shadow:none; }
         .demo-card .gk-table-wrap { border:none !important; }
@@ -38,7 +38,7 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-stat { background:var(--gk-surface, #fff); border-radius:8px; padding:20px; text-align:center; box-shadow:var(--gk-shadow); }
         .demo-stat .num { font-size:28px; font-weight:700; color:var(--gk-primary); }
         .demo-stat .lbl { font-size:13px; color:var(--gk-on-surface-variant, #6b7280); margin-top:4px; }
-        .demo-intro { color:#6b7280; margin:0 0 16px; font-size:14px; line-height:1.6; }
+        .demo-intro { color:var(--gk-on-surface-variant, #6b7280); margin:0 0 16px; font-size:14px; line-height:1.6; }
         .demo-btn-row { display:flex; gap:8px; flex-wrap:wrap; }
     </style>
 </head>
@@ -203,7 +203,7 @@ echo $demoHeader->title('GridKit v' . $version)
             ['name' => 'Widget C', 'value' => '890 €', 'status' => 'aktiv'],
         ];
         foreach (['sm', 'md', 'lg'] as $sz) {
-            echo '<div class="demo-card" style="padding:0;overflow:hidden"><h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:#6b7280">size(\'' . $sz . '\')</h4>';
+            echo '<div class="demo-card" style="padding:0;overflow:hidden"><h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:var(--gk-on-surface-variant, #6b7280)">size(\'' . $sz . '\')</h4>';
             $t = new Table('size-' . $sz);
             $t->setData($sizeData)
                 ->column('name', 'Name')
@@ -228,7 +228,7 @@ $table->size('lg');  // großzügig</pre></div>
         ['name' => 'Logo Design', 'price' => '450 €', 'status' => 'entwurf'],
     ];
     foreach (['default', 'bordered', 'striped', 'minimal', 'flat'] as $var) {
-        echo '<div class="demo-card" style="margin-bottom:16px;padding:0;overflow:hidden"><h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:#6b7280">variant(\'' . $var . '\')</h4>';
+        echo '<div class="demo-card" style="margin-bottom:16px;padding:0;overflow:hidden"><h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:var(--gk-on-surface-variant, #6b7280)">variant(\'' . $var . '\')</h4>';
         $t = new Table('var-' . $var);
         $t->setData($varData)
             ->column('name', 'Bezeichnung')
@@ -252,7 +252,7 @@ $table->variant('bordered')->size('sm');</pre></div>
     <p class="demo-intro">Verkleinere das Browserfenster auf &lt;768px um die Mobile-Darstellung zu sehen.</p>
 
     <div class="demo-card" style="padding:0;overflow:hidden">
-        <h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:#6b7280">mobile('card') – Standard</h4>
+        <h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:var(--gk-on-surface-variant, #6b7280)">mobile('card') – Standard</h4>
         <?php
         $mobileData = [
             ['nr' => 'ART-001', 'name' => 'Webdesign Paket S', 'price' => '1.200 €', 'status' => 'aktiv'],
@@ -269,7 +269,7 @@ $table->variant('bordered')->size('sm');</pre></div>
         ?>
     </div>
     <div class="demo-card" style="margin-top:16px;padding:0;overflow:hidden">
-        <h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:#6b7280">mobile('scroll') – Horizontal Scroll</h4>
+        <h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:var(--gk-on-surface-variant, #6b7280)">mobile('scroll') – Horizontal Scroll</h4>
         <?php
         $t = new Table('mobile-scroll');
         $t->setData($mobileData)
@@ -281,7 +281,7 @@ $table->variant('bordered')->size('sm');</pre></div>
         ?>
     </div>
     <div class="demo-card" style="margin-top:16px;padding:0;overflow:hidden">
-        <h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:#6b7280">hideOnMobile – Spalten ausblenden</h4>
+        <h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:var(--gk-on-surface-variant, #6b7280)">hideOnMobile – Spalten ausblenden</h4>
         <?php
         $t = new Table('mobile-hide');
         $t->setData($mobileData)
@@ -340,7 +340,7 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 
     <!-- Classic Form -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Grid-Layout (16-Spalten)</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Grid-Layout (16-Spalten)</h3>
         <?php
         $form = new Form('article_form');
         $form->action('save/process_article.php')
@@ -364,7 +364,7 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 
     <!-- Checkbox & Radio -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Checkbox &amp; Radio</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Checkbox &amp; Radio</h3>
         <?php
         $form2 = new Form('checkbox_radio_form');
         $form2->field('agree', 'AGB akzeptieren', 'checkbox', ['checked' => true])
@@ -384,7 +384,7 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 
     <!-- Toggle & Slider -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Toggle &amp; Slider</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Toggle &amp; Slider</h3>
         <?php
         $form3 = new Form('toggle_slider_form');
         $form3->field('dark_mode', 'Dark Mode', 'toggle', ['inline' => true])
@@ -397,7 +397,7 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 
     <!-- File Upload -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Datei-Upload</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Datei-Upload</h3>
         <?php
         $form4 = new Form('upload_form');
         $form4->field('document', 'Dokument', 'file', ['accept' => '.pdf,.doc,.docx', 'multiple' => true, 'maxSize' => '10MB'])
@@ -407,7 +407,7 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 
     <!-- RichText Editor -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">RichText Editor</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">RichText Editor</h3>
         <?php
         $form5 = new Form('richtext_form');
         $form5->field('content_basic', 'Inhalt (Basic)', 'richtext', ['toolbar' => 'basic'])
@@ -418,9 +418,9 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 
     <!-- Select-Erweiterungen -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Select-Erweiterungen</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Select-Erweiterungen</h3>
 
-        <p style="margin:0 0 12px; font-size:13px; color:#6b7280;"><strong>Searchable Select</strong> – Land-Auswahl mit Suchfeld</p>
+        <p style="margin:0 0 12px; font-size:13px; color:var(--gk-on-surface-variant, #6b7280);"><strong>Searchable Select</strong> – Land-Auswahl mit Suchfeld</p>
         <?php
         $formSearch = new Form('searchable_select_demo');
         $formSearch->field('country', 'Land', 'select', [
@@ -442,7 +442,7 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 
         <hr style="border:none; border-top:1px solid var(--gk-outline-variant); margin:20px 0;">
 
-        <p style="margin:0 0 12px; font-size:13px; color:#6b7280;"><strong>Multi-Select</strong> – Mehrere Kategorien wählen (mit Chips)</p>
+        <p style="margin:0 0 12px; font-size:13px; color:var(--gk-on-surface-variant, #6b7280);"><strong>Multi-Select</strong> – Mehrere Kategorien wählen (mit Chips)</p>
         <?php
         $formMulti = new Form('multiselect_demo');
         $formMulti->field('tags', 'Kategorien', 'multiselect', [
@@ -459,7 +459,7 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 
         <hr style="border:none; border-top:1px solid var(--gk-outline-variant); margin:20px 0;">
 
-        <p style="margin:0 0 12px; font-size:13px; color:#6b7280;"><strong>Ajax Select</strong> – Kundensuche per API (min. 2 Zeichen)</p>
+        <p style="margin:0 0 12px; font-size:13px; color:var(--gk-on-surface-variant, #6b7280);"><strong>Ajax Select</strong> – Kundensuche per API (min. 2 Zeichen)</p>
         <?php
         $formAjax = new Form('ajax_select_demo');
         $formAjax->field('customer_id', 'Kunde', 'ajaxselect', [
@@ -520,13 +520,13 @@ $form->row()
             <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Large (900px)', 'demo/form/f_articles.php', {}, 'large')">
                 <span class="material-icons" style="font-size:16px">crop_free</span> Large
             </button>
-            <button class="gk-btn" style="background:#1e293b;color:#fff;border-color:#1e293b" onclick="GK.modal.open('Fullscreen Modal', 'demo/form/f_articles.php', {}, 'full')">
+            <button class="gk-btn gk-btn-filled gk-btn-neutral" onclick="GK.modal.open('Fullscreen Modal', 'demo/form/f_articles.php', {}, 'full')">
                 <span class="material-icons" style="font-size:16px">fullscreen</span> Full
             </button>
         </div>
     </div>
     <div class="demo-card">
-        <h3 style="margin:0 0 8px; font-size:15px; color:#374151;">Verschachtelung: Modal mit Formular</h3>
+        <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Verschachtelung: Modal mit Formular</h3>
         <p class="demo-intro">Ein Modal laedt ein Formular per AJAX – der haeufigste Anwendungsfall.</p>
         <div class="demo-btn-row">
             <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Artikel bearbeiten', 'demo/form/f_articles.php', {}, 'medium')">
@@ -536,7 +536,7 @@ $form->row()
     </div>
 
     <div class="demo-card">
-        <h3 style="margin:0 0 8px; font-size:15px; color:#374151;">Verschachtelung: Modal mit Tabelle + Sub-Modal</h3>
+        <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Verschachtelung: Modal mit Tabelle + Sub-Modal</h3>
         <p class="demo-intro">Ein Large-Modal zeigt eine Kundenliste. Klick auf "Bearbeiten" oeffnet ein zweites Modal mit dem Formular.</p>
         <div class="demo-btn-row">
             <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Kundenverwaltung', 'demo/form/f_table_modal.php', {}, 'large')">
@@ -649,16 +649,16 @@ $years->range(2022, 2026)->render();
     <div class="demo-card">
         <p class="demo-intro">Toast-Benachrichtigungen fuer Erfolgs-, Fehler- und Info-Meldungen. Verschwinden nach 3 Sekunden.</p>
         <div class="demo-btn-row">
-            <button class="gk-btn" style="background:#059669;color:#fff;border-color:#059669" onclick="GK.toast.success('Erfolgreich gespeichert!')">
+            <button class="gk-btn gk-btn-filled gk-btn-success" onclick="GK.toast.success('Erfolgreich gespeichert!')">
                 <span class="material-icons" style="font-size:16px">check_circle</span> Success
             </button>
-            <button class="gk-btn" style="background:#dc2626;color:#fff;border-color:#dc2626" onclick="GK.toast.error('Fehler beim Speichern!')">
+            <button class="gk-btn gk-btn-filled gk-btn-danger" onclick="GK.toast.error('Fehler beim Speichern!')">
                 <span class="material-icons" style="font-size:16px">error</span> Error
             </button>
-            <button class="gk-btn" style="background:#d97706;color:#fff;border-color:#d97706" onclick="GK.toast.warning('Achtung: Limit erreicht!')">
+            <button class="gk-btn gk-btn-filled gk-btn-warning" onclick="GK.toast.warning('Achtung: Limit erreicht!')">
                 <span class="material-icons" style="font-size:16px">warning</span> Warning
             </button>
-            <button class="gk-btn" style="background:#2563eb;color:#fff;border-color:#2563eb" onclick="GK.toast.info('3 neue Eintraege verfuegbar')">
+            <button class="gk-btn gk-btn-primary" onclick="GK.toast.info('3 neue Eintraege verfuegbar')">
                 <span class="material-icons" style="font-size:16px">info</span> Info
             </button>
         </div>
@@ -727,7 +727,7 @@ GK.sidebar.close();</pre></div>
 
     <!-- Variants -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Varianten</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Varianten</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
             <?= \GridKit\Button::render('Filled', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'save']) ?>
             <?= \GridKit\Button::render('Outlined', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'save']) ?>
@@ -738,7 +738,7 @@ GK.sidebar.close();</pre></div>
 
     <!-- Colors -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Farben – Filled</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Farben – Filled</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
             <?= \GridKit\Button::render('Primary', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'star']) ?>
             <?= \GridKit\Button::render('Success', ['variant' => 'filled', 'color' => 'success', 'icon' => 'check_circle']) ?>
@@ -747,7 +747,7 @@ GK.sidebar.close();</pre></div>
             <?= \GridKit\Button::render('Neutral', ['variant' => 'filled', 'color' => 'neutral', 'icon' => 'settings']) ?>
         </div>
 
-        <h3 style="margin:16px 0 12px; font-size:15px; color:#374151;">Farben – Outlined</h3>
+        <h3 style="margin:16px 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Farben – Outlined</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
             <?= \GridKit\Button::render('Primary', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'star']) ?>
             <?= \GridKit\Button::render('Success', ['variant' => 'outlined', 'color' => 'success', 'icon' => 'check_circle']) ?>
@@ -756,7 +756,7 @@ GK.sidebar.close();</pre></div>
             <?= \GridKit\Button::render('Neutral', ['variant' => 'outlined', 'color' => 'neutral', 'icon' => 'settings']) ?>
         </div>
 
-        <h3 style="margin:16px 0 12px; font-size:15px; color:#374151;">Farben – Tonal</h3>
+        <h3 style="margin:16px 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Farben – Tonal</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
             <?= \GridKit\Button::render('Primary', ['variant' => 'tonal', 'color' => 'primary', 'icon' => 'star']) ?>
             <?= \GridKit\Button::render('Success', ['variant' => 'tonal', 'color' => 'success', 'icon' => 'check_circle']) ?>
@@ -765,7 +765,7 @@ GK.sidebar.close();</pre></div>
             <?= \GridKit\Button::render('Neutral', ['variant' => 'tonal', 'color' => 'neutral', 'icon' => 'settings']) ?>
         </div>
 
-        <h3 style="margin:16px 0 12px; font-size:15px; color:#374151;">Farben – Text</h3>
+        <h3 style="margin:16px 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Farben – Text</h3>
         <div class="demo-btn-row">
             <?= \GridKit\Button::render('Primary', ['variant' => 'text', 'color' => 'primary', 'icon' => 'star']) ?>
             <?= \GridKit\Button::render('Success', ['variant' => 'text', 'color' => 'success', 'icon' => 'check_circle']) ?>
@@ -777,7 +777,7 @@ GK.sidebar.close();</pre></div>
 
     <!-- Icon only -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Icon-Only</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Icon-Only</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
             <?= \GridKit\Button::icon('edit', ['variant' => 'filled', 'color' => 'primary', 'title' => 'Bearbeiten']) ?>
             <?= \GridKit\Button::icon('delete', ['variant' => 'filled', 'color' => 'danger', 'title' => 'Loeschen']) ?>
@@ -803,7 +803,7 @@ GK.sidebar.close();</pre></div>
 
     <!-- Sizes -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Groessen</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Groessen</h3>
         <div class="demo-btn-row" style="align-items:center">
             <?= \GridKit\Button::render('Small', ['variant' => 'filled', 'color' => 'primary', 'size' => 'sm', 'icon' => 'edit']) ?>
             <?= \GridKit\Button::render('Medium', ['variant' => 'filled', 'color' => 'primary', 'size' => 'md', 'icon' => 'edit']) ?>
@@ -813,7 +813,7 @@ GK.sidebar.close();</pre></div>
 
     <!-- States -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">States</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">States</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
             <?= \GridKit\Button::render('Normal', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'check']) ?>
             <?= \GridKit\Button::render('Disabled', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'block', 'disabled' => true]) ?>
@@ -829,7 +829,7 @@ GK.sidebar.close();</pre></div>
 
     <!-- Icon position + special -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Icon-Position &amp; Spezial</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Icon-Position &amp; Spezial</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
             <?= \GridKit\Button::render('Icon links', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'arrow_back', 'iconPosition' => 'left']) ?>
             <?= \GridKit\Button::render('Icon rechts', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'arrow_forward', 'iconPosition' => 'right']) ?>
@@ -846,7 +846,7 @@ GK.sidebar.close();</pre></div>
 
     <!-- Button Group -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Button Group</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Button Group</h3>
         <div class="demo-btn-row">
             <?= \GridKit\Button::group([
                 \GridKit\Button::render('Links', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'format_align_left']),
@@ -863,7 +863,7 @@ GK.sidebar.close();</pre></div>
 
     <!-- Shapes -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">Shapes</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Shapes</h3>
         <div class="demo-btn-row" style="align-items:center">
             <?= \GridKit\Button::render('Rounded', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'star', 'shape' => 'rounded']) ?>
             <?= \GridKit\Button::render('Pill', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'star', 'shape' => 'pill']) ?>
@@ -879,7 +879,7 @@ GK.sidebar.close();</pre></div>
 
     <!-- FAB -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:#374151;">FAB (Floating Action Button)</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">FAB (Floating Action Button)</h3>
         <div class="demo-btn-row" style="align-items:center; gap:16px">
             <?= \GridKit\Button::fab('add', ['size' => 'sm']) ?>
             <?= \GridKit\Button::fab('add') ?>
@@ -961,7 +961,7 @@ echo Button::fab('edit', ['extended' => true, 'label' => 'Bearbeiten']); // Exte
         ?>
     </div>
     <div class="demo-card" style="padding:0; overflow:hidden;">
-        <p style="padding:16px 24px 0; margin:0; font-size:13px; color:#6b7280;">Minimal (nur Titel + User mit Initialen)</p>
+        <p style="padding:16px 24px 0; margin:0; font-size:13px; color:var(--gk-on-surface-variant, #6b7280);">Minimal (nur Titel + User mit Initialen)</p>
         <?php
         $header2 = new Header();
         echo $header2->title('Dashboard')
@@ -1132,7 +1132,7 @@ GK.theme.restore();         // Restore from localStorage</pre></div>
     </div>
 
     <div class="demo-card">
-        <h3 style="margin:0 0 16px;font-size:15px;color:#374151;">Anatomie</h3>
+        <h3 style="margin:0 0 16px;font-size:15px;color:var(--gk-on-surface, #374151);">Anatomie</h3>
         <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;font-size:13px;">
             <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-primary);">
                 <strong>Konfiguration</strong><br>
@@ -1173,7 +1173,7 @@ GK.theme.restore();         // Restore from localStorage</pre></div>
     </div>
 
     <div class="demo-card">
-        <h3 style="margin:0 0 12px;font-size:15px;color:#374151;">Vollständiger Code (skeleton.php)</h3>
+        <h3 style="margin:0 0 12px;font-size:15px;color:var(--gk-on-surface, #374151);">Vollständiger Code (skeleton.php)</h3>
         <div class="demo-code" style="max-height:520px;overflow-y:auto;"><pre>&lt;?php
 /**
  * GridKit Skeleton
