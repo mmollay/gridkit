@@ -3,6 +3,17 @@
 Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [1.9.2] - 2026-02-20
+
+### Changed
+- **Sidebar Light Mode – komplettes Redesign**
+  - Sidebar ist jetzt hell und harmonisch statt schwerer dunkler Block
+  - Theme-Charakter kommt über Akzent/Active-State, nicht über dunkle Fläche
+  - Light Mode Sidebar Bgs: indigo=`#eef2ff` · ocean=`#f0f9ff` · forest=`#f0fdf4` · rose=`#fdf2f8` · amber=`#fffbeb` · slate=`#f8fafc`
+  - Text jetzt dunkel (`#374151`), Gruppen-Labels mittelgrau, Icons gedämmtes Grau
+  - Active Item: `primary-container` Hintergrund + primäre Akzentfarbe (Left-Border + Icon)
+  - Dark Mode bleibt unverändert dunkel (eigene Overrides)
+
 ## [1.9.1] - 2026-02-20
 
 ### Fixed

@@ -2,14 +2,12 @@
 
 /* === THEME: Indigo (Default) === */
 [data-gk-theme="indigo"] {
-    --gk-sidebar-bg: #1e293b;
-    --gk-sidebar-accent: #a5b4fc;
+    --gk-sidebar-bg: #eef2ff;
 }
 
 /* === THEME: Ocean (Blue-Teal) === */
 [data-gk-theme="ocean"] {
-    --gk-sidebar-bg: #0c4a6e;
-    --gk-sidebar-accent: #38bdf8;
+    --gk-sidebar-bg: #f0f9ff;
     --gk-primary: #0ea5e9;
     --gk-on-primary: #fff;
     --gk-primary-container: #e0f2fe;
@@ -22,8 +20,7 @@
 
 /* === THEME: Forest (Green) === */
 [data-gk-theme="forest"] {
-    --gk-sidebar-bg: #064e3b;
-    --gk-sidebar-accent: #34d399;
+    --gk-sidebar-bg: #f0fdf4;
     --gk-primary: #059669;
     --gk-on-primary: #fff;
     --gk-primary-container: #d1fae5;
@@ -36,8 +33,7 @@
 
 /* === THEME: Rose (Pink-Purple) === */
 [data-gk-theme="rose"] {
-    --gk-sidebar-bg: #4a1942;
-    --gk-sidebar-accent: #f472b6;
+    --gk-sidebar-bg: #fdf2f8;
     --gk-primary: #ec4899;
     --gk-on-primary: #fff;
     --gk-primary-container: #fce7f3;
@@ -50,8 +46,7 @@
 
 /* === THEME: Amber (Warm) === */
 [data-gk-theme="amber"] {
-    --gk-sidebar-bg: #451a03;
-    --gk-sidebar-accent: #fcd34d;
+    --gk-sidebar-bg: #fffbeb;
     --gk-primary: #d97706;
     --gk-on-primary: #fff;
     --gk-primary-container: #fef3c7;
@@ -64,8 +59,7 @@
 
 /* === THEME: Slate (Neutral/Minimal) === */
 [data-gk-theme="slate"] {
-    --gk-sidebar-bg: #1e293b;
-    --gk-sidebar-accent: #7dd3fc;
+    --gk-sidebar-bg: #f8fafc;
     --gk-primary: #475569;
     --gk-on-primary: #fff;
     --gk-primary-container: #e2e8f0;

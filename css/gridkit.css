@@ -103,16 +103,17 @@ a:hover { text-decoration: none; }
     --gk-neutral-900: #0f172a;
 
     /* Sidebar Colors */
-    --gk-sidebar-bg: #1e293b;
-    --gk-sidebar-text: rgba(255,255,255,0.78);
-    --gk-sidebar-text-muted: rgba(255,255,255,0.38);
-    --gk-sidebar-text-hover: #ffffff;
-    --gk-sidebar-item-hover: rgba(255,255,255,0.09);
-    --gk-sidebar-item-active: rgba(255,255,255,0.13);
-    --gk-sidebar-border: rgba(255,255,255,0.09);
+    /* Sidebar – Light Mode (dunkel = Dark Mode Block unten) */
+    --gk-sidebar-bg: #f1f5f9;
+    --gk-sidebar-text: #374151;
+    --gk-sidebar-text-muted: #9ca3af;
+    --gk-sidebar-text-hover: #111827;
+    --gk-sidebar-item-hover: rgba(0,0,0,0.05);
+    --gk-sidebar-item-active: var(--gk-primary-container);
+    --gk-sidebar-border: rgba(0,0,0,0.07);
     --gk-sidebar-brand-bg: transparent;
-    --gk-sidebar-accent: #818cf8;
-    --gk-sidebar-icon-muted: rgba(255,255,255,0.45);
+    --gk-sidebar-accent: var(--gk-primary);
+    --gk-sidebar-icon-muted: #94a3b8;
 
     /* Elevation (M3 uses tonal elevation) */
     --gk-shadow: 0 1px 3px rgba(0,0,0,0.08);
