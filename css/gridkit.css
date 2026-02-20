@@ -475,6 +475,23 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-year-filter { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 12px; }
 
 /* === SIDEBAR === */
+/* Sidebar Hintergrund direkt gesetzt (hohe Spezifität, zuverlässiger als var()-Kette) */
+[data-gk-theme] .gk-sidebar                              { background: #f1f5f9; color: #374151; border-right: 1px solid rgba(0,0,0,0.07); }
+[data-gk-mode="dark"] .gk-sidebar                        { color: rgba(255,255,255,0.78); }
+[data-gk-theme="indigo"] .gk-sidebar                     { background: #eef2ff; }
+[data-gk-theme="ocean"]  .gk-sidebar                     { background: #f0f9ff; }
+[data-gk-theme="forest"] .gk-sidebar                     { background: #f0fdf4; }
+[data-gk-theme="rose"]   .gk-sidebar                     { background: #fdf2f8; }
+[data-gk-theme="amber"]  .gk-sidebar                     { background: #fffbeb; }
+[data-gk-theme="slate"]  .gk-sidebar                     { background: #f8fafc; }
+[data-gk-mode="dark"]    .gk-sidebar                     { background: #0d1225; border-right-color: rgba(255,255,255,0.09); }
+[data-gk-theme="indigo"][data-gk-mode="dark"] .gk-sidebar { background: #0d1225; }
+[data-gk-theme="ocean"][data-gk-mode="dark"]  .gk-sidebar { background: #071a2d; }
+[data-gk-theme="forest"][data-gk-mode="dark"] .gk-sidebar { background: #071a12; }
+[data-gk-theme="rose"][data-gk-mode="dark"]   .gk-sidebar { background: #1a0818; }
+[data-gk-theme="amber"][data-gk-mode="dark"]  .gk-sidebar { background: #1a0d06; }
+[data-gk-theme="slate"][data-gk-mode="dark"]  .gk-sidebar { background: #0d1424; }
+
 .gk-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: var(--gk-sidebar-bg); color: var(--gk-sidebar-text); display: flex; flex-direction: column; z-index: 1000; transition: width .25s ease, transform .25s ease; overflow-y: auto; overflow-x: hidden; border-right: 1px solid var(--gk-sidebar-border); }
 .gk-sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 14px 12px; border-bottom: 1px solid var(--gk-sidebar-border); background: var(--gk-sidebar-brand-bg); }
 .gk-sidebar-brand-icon { font-size: 28px; color: var(--gk-sidebar-accent, #818cf8); }

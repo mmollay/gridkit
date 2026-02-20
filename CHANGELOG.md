@@ -3,6 +3,14 @@
 Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [1.9.3] - 2026-02-20
+
+### Fixed
+- **Sidebar Hintergrund** – direktes CSS statt CSS Variable (zuverlässiger)
+  - `[data-gk-theme="rose"] .gk-sidebar { background: #fdf2f8; }` etc. mit höherer Spezifität
+  - Light Mode: definitiv helle Farben unabhängig von var()-Auflösung
+  - Dark Mode: direktes dunkles Hintergrundsetzen per Selektor
+
 ## [1.9.2] - 2026-02-20
 
 ### Changed
