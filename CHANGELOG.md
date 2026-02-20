@@ -3,6 +3,12 @@
 Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [1.9.4] - 2026-02-20
+
+### Changed
+- Sidebar Light Mode: mittlere Töne (nicht zu hell, nicht zu dunkel)
+  - indigo=#dde4ff · ocean=#d8eefb · forest=#d4f0e2 · rose=#fad5ed · amber=#faecd5 · slate=#e2e8f0
+
 ## [1.9.3] - 2026-02-20
 
 ### Fixed
