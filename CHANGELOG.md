@@ -3,6 +3,18 @@
 Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [1.9.1] - 2026-02-20
+
+### Fixed
+- **Dark Mode komplett** – alle Komponenten bekommen jetzt korrekte dunkle Farben
+  - `--gk-bg`, `--gk-text`, `--gk-border` etc. im Dark Mode Block explizit hardcoded (var()-Kette war unzuverlässig)
+  - StatCards: dunkler Hintergrund + korrekte Text-/Label-Farben
+  - Chips (FilterChips, YearFilter): dunkler Hintergrund, Active State mit Primary Container
+  - Cards: dunkler Hintergrund
+  - Pagination Buttons: dunkler Hintergrund, Active in Primary
+  - Header Search, User-Menü, Dropdown: explizit dunkel
+  - Confirm Footer: explizit dunkel
+
 ## [1.9.0] - 2026-02-20
 
 ### Fixed
