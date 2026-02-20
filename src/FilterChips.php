@@ -42,7 +42,7 @@ class FilterChips
     {
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
-        echo '<div class="gk-root gk-filter-chips" data-gk-chips="' . $e($this->id) . '">';
+        echo '<div class="gk-filter-chips" data-gk-chips="' . $e($this->id) . '">';
         foreach ($this->chips as $chip) {
             $val = $chip['value'];
             $isActive = $this->currentValue === $val;

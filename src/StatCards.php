@@ -24,7 +24,7 @@ class StatCards
     {
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
-        echo '<div class="gk-root gk-stat-cards" data-gk-stats="' . $e($this->id) . '">';
+        echo '<div class="gk-stat-cards" data-gk-stats="' . $e($this->id) . '">';
         foreach ($this->cards as $card) {
             $cls = 'gk-stat-card';
             if (isset($card['color'])) $cls .= ' gk-stat-' . $card['color'];

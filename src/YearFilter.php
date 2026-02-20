@@ -55,7 +55,7 @@ class YearFilter
 
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
-        echo '<div class="gk-root gk-year-filter" data-gk-years="' . $e($this->id) . '">';
+        echo '<div class="gk-year-filter" data-gk-years="' . $e($this->id) . '">';
         foreach ($this->years as $year) {
             $year = (int)$year;
             $isActive = $year === $this->currentYear;

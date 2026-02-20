@@ -50,7 +50,7 @@ class Form
     public function render(): void
     {
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
-        $attrs = 'class="gk-root gk-form" id="' . $e($this->id) . '"';
+        $attrs = 'class="gk-form" id="' . $e($this->id) . '"';
         if ($this->action) $attrs .= ' action="' . $e($this->action) . '"';
         if ($this->isAjax) $attrs .= ' data-gk-ajax';
 

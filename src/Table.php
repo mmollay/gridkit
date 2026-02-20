@@ -199,7 +199,7 @@ class Table
 
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
         $staticAttr = $this->isStatic ? ' data-gk-static' : '';
-        $wrapClasses = 'gk-root gk-table-wrap';
+        $wrapClasses = 'gk-table-wrap';
         $wrapClasses .= ' gk-table-' . $this->size;
         if ($this->variant !== 'default') $wrapClasses .= ' gk-table-' . $this->variant;
         if ($this->mobileMode === 'card') $wrapClasses .= ' gk-table-mobile-card';
