@@ -3,6 +3,17 @@
 Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [1.7.0] - 2026-02-20
+
+### Added
+- **skeleton.php** – Startpunkt für neue Projekte
+  - Sidebar, Header (fixed), Theme-Switcher, Content-Bereich, Modal, JS — komplett verdrahtet
+  - SPA-Navigation mit `?section=...` als Einstiegsmuster
+  - Beispiel-Sektionen: Dashboard (StatCards), Artikel (Table+Form), Platzhalter
+
+### Changed
+- README komplett überarbeitet: skeleton, aktuelle Komponentenliste, Struktur aktualisiert
+
 ## [1.6.0] - 2026-02-20
 
 ### Added

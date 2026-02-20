@@ -4,10 +4,10 @@ Schlankes PHP-Framework für einheitliche Tabellen und Formulare. Null Abhängig
 
 ## Warum GridKit?
 
-- **2 Klassen, 1 CSS-File.** `Table` + `Form`. Fertig.
+- **11 Komponenten, 1 CSS-File, 1 JS-File.** Null Abhängigkeiten.
 - **Kein jQuery, kein Bootstrap, kein Fomantic UI.**
-- **847 Zeilen** gesamt (PHP + CSS + JS).
-- **Themes** über CSS Custom Properties.
+- **Themes** über CSS Custom Properties (M3-konform).
+- **Skeleton** für sofortigen Einstieg ohne Boilerplate-Aufwand.
 
 ## Installation
 
@@ -20,7 +20,17 @@ In deinem Projekt:
 require_once '/path/to/gridkit/autoload.php';
 ```
 
-## Quick Start
+## Quick Start – Skeleton
+
+Das schnellste Fundament für ein neues Projekt:
+
+```bash
+cp /path/to/gridkit/skeleton.php mein-projekt/index.php
+```
+
+`skeleton.php` enthält: Sidebar, Header (fixed), Theme-Switcher, Content-Bereich, Modal-Container, JS-Einbindung — alles korrekt verdrahtet. Nur Titel, Navigation und Inhalte anpassen.
+
+## Quick Start – Komponenten
 
 ### Tabelle
 
@@ -119,18 +129,26 @@ Eigenes Theme erstellen – nur Variables überschreiben:
 ```
 gridkit/
 ├── autoload.php           # PSR-4 Autoloader
+├── skeleton.php           # ⭐ Startpunkt für neue Projekte
 ├── src/
-│   ├── Table.php          # Tabellen-Klasse
-│   ├── Form.php           # Formular-Klasse
-│   └── Modal.php          # Modal-Container
+│   ├── Table.php          # Datentabellen
+│   ├── Form.php           # Formulare (inkl. Searchable/Multi/Ajax Select)
+│   ├── Modal.php          # Modal-Container
+│   ├── Header.php         # Seiten-Header (fixed, Breadcrumb, User-Menü)
+│   ├── Sidebar.php        # Navigations-Sidebar (collapsible)
+│   ├── Button.php         # Button-System (Filled/Outlined/Tonal/Text, FAB)
+│   ├── StatCards.php      # Kennzahlen-Cards
+│   ├── FilterChips.php    # Klickbare Filter-Chips
+│   ├── YearFilter.php     # Jahres-Navigation
+│   ├── Theme.php          # Theme-System (6 Themes, Dark/Light)
+│   └── Layout.php         # Layout-Modus (header-first / sidebar-first)
 ├── css/
 │   ├── gridkit.css        # Core Styles
-│   └── themes/
-│       └── default.css    # Default Theme
+│   └── themes.css         # Alle Themes + Dark Mode
 ├── js/
 │   └── gridkit.js         # Vanilla JS
 └── demo/
-    └── index.php          # Live Demo
+    └── index.php          # Live Demo aller Komponenten
 ```
 
 ## Lizenz
