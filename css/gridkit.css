@@ -925,9 +925,24 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 [data-gk-mode="dark"] .gk-modal,
 .gk-dark .gk-modal { background: var(--gk-surface-container-high); }
 [data-gk-mode="dark"] .gk-table thead th,
-.gk-dark .gk-table thead th { background: var(--gk-surface-container); }
+.gk-dark .gk-table thead th { background: var(--gk-surface-container-low); color: var(--gk-on-surface-variant); }
 [data-gk-mode="dark"] .gk-table tbody tr:hover,
 .gk-dark .gk-table tbody tr:hover { background: var(--gk-surface-container-high); }
+[data-gk-mode="dark"] .gk-table tbody tr:nth-child(even),
+.gk-dark .gk-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+[data-gk-mode="dark"] .gk-table tbody tr:nth-child(even):hover,
+.gk-dark .gk-table tbody tr:nth-child(even):hover { background: var(--gk-surface-container-high); }
+[data-gk-mode="dark"] .gk-table th,
+[data-gk-mode="dark"] .gk-table td,
+.gk-dark .gk-table th, .gk-dark .gk-table td { border-bottom-color: var(--gk-outline-variant); }
+[data-gk-mode="dark"] .gk-table-wrap,
+.gk-dark .gk-table-wrap { background: var(--gk-surface); }
+[data-gk-mode="dark"] .gk-toolbar,
+.gk-dark .gk-toolbar { border-bottom-color: var(--gk-outline-variant); }
+[data-gk-mode="dark"] .gk-search,
+.gk-dark .gk-search { background-color: var(--gk-surface-container-high); border-color: var(--gk-outline); color: var(--gk-on-surface); }
+[data-gk-mode="dark"] .gk-filter,
+.gk-dark .gk-filter { background-color: var(--gk-surface-container-high); border-color: var(--gk-outline); color: var(--gk-on-surface); }
 [data-gk-mode="dark"] input,
 [data-gk-mode="dark"] select,
 [data-gk-mode="dark"] textarea,
@@ -936,8 +951,6 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
     color: var(--gk-on-surface);
     border-color: var(--gk-outline);
 }
-[data-gk-mode="dark"] .gk-table-wrap,
-.gk-dark .gk-table-wrap { background: var(--gk-surface); }
 [data-gk-mode="dark"] .gk-confirm-box,
 .gk-dark .gk-confirm-box { background: var(--gk-surface-container-high); }
 [data-gk-mode="dark"] .gk-toast,
