@@ -936,7 +936,7 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 [data-gk-mode="dark"] .gk-table td,
 .gk-dark .gk-table th, .gk-dark .gk-table td { border-bottom-color: rgba(255,255,255,0.1); }
 [data-gk-mode="dark"] .gk-table-wrap,
-.gk-dark .gk-table-wrap { background: var(--gk-surface); }
+.gk-dark .gk-table-wrap { background: var(--gk-surface); border: 1px solid rgba(255,255,255,0.1); }
 [data-gk-mode="dark"] .gk-toolbar,
 .gk-dark .gk-toolbar { border-bottom-color: var(--gk-outline-variant); }
 [data-gk-mode="dark"] .gk-search,
