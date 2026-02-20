@@ -63,7 +63,8 @@ $sidebar->brand('GridKit', 'widgets', 'v' . $version)
     ->item('Buttons', '#buttons', 'smart_button')
     ->item('Header', '#header', 'web_asset')
     ->group('Beispiele')
-    ->item('Dashboard Demo', '#dashboard', 'dashboard');
+    ->item('Dashboard Demo', '#dashboard', 'dashboard')
+    ->item('Skeleton',       '#skeleton',  'rocket_launch');
 $sidebar->render();
 ?>
 
@@ -1113,6 +1114,194 @@ GK.theme.restore();         // Restore from localStorage</pre></div>
             ->column('status', 'Status', ['format' => 'label'])
             ->paginate(10)->render();
         ?>
+    </div>
+</div>
+
+<!-- ===== SKELETON ===== -->
+<div class="demo-section" data-section="skeleton">
+    <h2>Skeleton – Startpunkt für neue Projekte</h2>
+
+    <div class="demo-card">
+        <p class="demo-intro">
+            <code>skeleton.php</code> ist das fertige Grundgerüst für ein neues GridKit-Projekt.
+            Einfach kopieren, Titel + Navigation anpassen, Sektionen befüllen — fertig.<br><br>
+            Enthält alles korrekt verdrahtet: Theme, Layout, Sidebar, Header (fixed), Content-Bereich, Modal-Container, JS.
+        </p>
+        <div style="background:var(--gk-primary-container);color:var(--gk-on-primary-container);border-radius:var(--gk-radius);padding:16px 20px;font-size:14px;line-height:1.7;">
+            <strong>Schnellstart:</strong><br>
+            <code style="font-size:13px;">cp /path/to/gridkit/skeleton.php mein-projekt/index.php</code>
+        </div>
+    </div>
+
+    <div class="demo-card">
+        <h3 style="margin:0 0 16px;font-size:15px;color:#374151;">Anatomie</h3>
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;font-size:13px;">
+            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-primary);">
+                <strong>Konfiguration</strong><br>
+                <span style="color:var(--gk-on-surface-variant)">Theme, Layout-Modus, Seiten-Titel, aktive Sektion</span>
+            </div>
+            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">
+                Theme::set('indigo', 'light') · Layout::mode('header-first')
+            </div>
+            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-secondary);">
+                <strong>Sidebar</strong><br>
+                <span style="color:var(--gk-on-surface-variant)">Brand, Gruppen, Navigation-Items mit Icons + Badges</span>
+            </div>
+            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">
+                ->brand() · ->group() · ->item(label, url, icon, opts)
+            </div>
+            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-tertiary);">
+                <strong>Header</strong><br>
+                <span style="color:var(--gk-on-surface-variant)">Fixed, Sidebar-Toggle, Action-Buttons, Theme-Switcher, User-Menü</span>
+            </div>
+            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">
+                ->title() · ->fixed() · ->action() · ->user(name, opts)
+            </div>
+            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-error);">
+                <strong>Content</strong><br>
+                <span style="color:var(--gk-on-surface-variant)">Sektionen via ?section=... — Dashboard (StatCards), Artikel (Table)</span>
+            </div>
+            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">
+                &lt;main class="gk-main"&gt; · if/elseif-Blöcke pro Sektion
+            </div>
+            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-outline);">
+                <strong>Footer</strong><br>
+                <span style="color:var(--gk-on-surface-variant)">Modal::container() + gridkit.js — immer am Ende</span>
+            </div>
+            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">
+                Modal::container() · &lt;script src="/gridkit/js/gridkit.js"&gt;&lt;/script&gt;
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px;font-size:15px;color:#374151;">Vollständiger Code (skeleton.php)</h3>
+        <div class="demo-code" style="max-height:520px;overflow-y:auto;"><pre>&lt;?php
+/**
+ * GridKit Skeleton
+ * ----------------
+ * Kopieren, anpassen, loslegen.
+ * Benötigt: autoload.php, css/gridkit.css, css/themes.css, js/gridkit.js
+ */
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/autoload.php';
+
+use GridKit\Header;
+use GridKit\Sidebar;
+use GridKit\Layout;
+use GridKit\Theme;
+use GridKit\Modal;
+use GridKit\Button;
+use GridKit\Table;
+use GridKit\Form;
+use GridKit\StatCards;
+
+// ─── Konfiguration ──────────────────────────────────────────────────────────
+$pageTitle     = 'Mein Projekt';
+$activeSection = $_GET['section'] ?? 'dashboard';
+
+// Theme: indigo | ocean | forest | sunset | rose | slate  (+ light | dark)
+Theme::set('indigo', 'light');
+
+// Layout: header-first (Header volle Breite) | sidebar-first (Sidebar volle Höhe)
+Layout::mode('header-first');
+
+?&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html lang="de"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;&lt;?= htmlspecialchars($pageTitle) ?&gt;&lt;/title&gt;
+    &lt;link rel="stylesheet" href="/gridkit/css/gridkit.css"&gt;
+    &lt;link rel="stylesheet" href="/gridkit/css/themes.css"&gt;
+    &lt;link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"&gt;
+&lt;/head&gt;
+&lt;?= Layout::bodyTag('gk-root') ?&gt;
+
+&lt;!-- Sidebar --&gt;
+&lt;?php
+$sidebar = new Sidebar('main');
+$sidebar
+    -&gt;brand($pageTitle, 'widgets')
+    -&gt;group('Navigation')
+    -&gt;item('Dashboard',   '?section=dashboard',   'dashboard',    ['active' =&gt; $activeSection === 'dashboard'])
+    -&gt;item('Artikel',     '?section=artikel',     'inventory_2',  ['active' =&gt; $activeSection === 'artikel'])
+    -&gt;item('Kunden',      '?section=kunden',      'people',       ['active' =&gt; $activeSection === 'kunden'])
+    -&gt;item('Rechnungen',  '?section=rechnungen',  'receipt_long', ['active' =&gt; $activeSection === 'rechnungen', 'badge' =&gt; 3])
+    -&gt;group('System')
+    -&gt;item('Einstellungen', '?section=einstellungen', 'settings')
+    -&gt;render();
+?&gt;
+
+&lt;div class="gk-with-sidebar"&gt;
+
+    &lt;!-- Header --&gt;
+    &lt;?php
+    $header = new Header();
+    echo $header
+        -&gt;title($pageTitle)
+        -&gt;sidebarToggle(true)
+        -&gt;fixed(true)
+        -&gt;action(Button::render('Neu', ['variant' =&gt; 'filled', 'color' =&gt; 'primary', 'icon' =&gt; 'add', 'size' =&gt; 'sm']))
+        -&gt;action(Theme::switcher())
+        -&gt;user('Max Mustermann', [
+            'role' =&gt; 'Administrator',
+            'menu' =&gt; [
+                ['label' =&gt; 'Profil',        'href' =&gt; '/profil',   'icon' =&gt; 'person'],
+                ['label' =&gt; 'Einstellungen', 'href' =&gt; '/settings', 'icon' =&gt; 'settings'],
+                'divider',
+                ['label' =&gt; 'Abmelden',      'href' =&gt; '/logout',   'icon' =&gt; 'logout'],
+            ],
+        ])
+        -&gt;render();
+    ?&gt;
+
+    &lt;!-- Content --&gt;
+    &lt;main class="gk-main"&gt;
+
+        &lt;?php if ($activeSection === 'dashboard'): ?&gt;
+            &lt;?php
+            $stats = new StatCards('dashboard-stats');
+            $stats
+                -&gt;card('Kunden',     248,      ['format' =&gt; 'number',   'color' =&gt; 'blue'])
+                -&gt;card('Umsatz',     84250.00, ['format' =&gt; 'currency', 'color' =&gt; 'green'])
+                -&gt;card('Offen',      12480.00, ['format' =&gt; 'currency', 'color' =&gt; 'orange'])
+                -&gt;card('Überfällig',  3200.00, ['format' =&gt; 'currency', 'color' =&gt; 'red'])
+                -&gt;render();
+            ?&gt;
+
+        &lt;?php elseif ($activeSection === 'artikel'): ?&gt;
+            &lt;?php
+            $table = new Table('artikel');
+            $table
+                -&gt;setData([...])  // oder: -&gt;query($db, "SELECT ...")
+                -&gt;search(['nr', 'name'])
+                -&gt;column('nr',     'Artikelnr.',  ['width' =&gt; '120px', 'sortable' =&gt; true])
+                -&gt;column('name',   'Bezeichnung', ['sortable' =&gt; true])
+                -&gt;column('preis',  'Preis',       ['format' =&gt; 'currency'])
+                -&gt;column('status', 'Status',      ['format' =&gt; 'label'])
+                -&gt;button('edit',   ['icon' =&gt; 'edit',   'class' =&gt; 'primary'])
+                -&gt;button('delete', ['icon' =&gt; 'delete', 'class' =&gt; 'danger'])
+                -&gt;newButton('Neu', ['icon' =&gt; 'add', 'modal' =&gt; 'form'])
+                -&gt;modal('form', 'Bearbeiten', 'forms/artikel.php', ['size' =&gt; 'medium'])
+                -&gt;paginate(25)
+                -&gt;render();
+            ?&gt;
+
+        &lt;?php endif; ?&gt;
+
+    &lt;/main&gt;
+
+    &lt;?php Modal::container(); ?&gt;
+
+&lt;/div&gt;&lt;!-- /gk-with-sidebar --&gt;
+
+&lt;script src="/gridkit/js/gridkit.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre></div>
     </div>
 </div>
 
