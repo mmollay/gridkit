@@ -34,6 +34,11 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-card .gk-table-wrap { border:none !important; }
         .demo-code { background:var(--gk-surface-dim, #1e293b); color:var(--gk-on-surface, #e2e8f0); padding:20px; border-radius:8px; overflow-x:auto; font-family:'SF Mono',Monaco,Consolas,monospace; font-size:13px; line-height:1.6; margin-top:16px; }
         .demo-code pre { margin:0; }
+        .demo-pair { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; margin-bottom:24px; }
+        .demo-pair .demo-card { margin-bottom:0; }
+        .demo-pair .demo-code { margin-top:0; }
+        .demo-pair-left { display:flex; flex-direction:column; gap:16px; }
+        @media(max-width:900px) { .demo-pair { grid-template-columns:1fr; } }
         .demo-stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:24px; }
         .demo-stat { background:var(--gk-surface, #fff); border-radius:8px; padding:20px; text-align:center; box-shadow:var(--gk-shadow); }
         .demo-stat .num { font-size:28px; font-weight:700; color:var(--gk-primary); }
@@ -227,8 +232,9 @@ $table->size('lg');  // großzügig</pre></div>
         ['name' => 'SEO Beratung', 'price' => '95 €', 'status' => 'inaktiv'],
         ['name' => 'Logo Design', 'price' => '450 €', 'status' => 'entwurf'],
     ];
+    echo '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">';
     foreach (['default', 'bordered', 'striped', 'minimal', 'flat'] as $var) {
-        echo '<div class="demo-card" style="margin-bottom:16px;padding:0;overflow:hidden"><h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:var(--gk-on-surface-variant, #6b7280)">variant(\'' . $var . '\')</h4>';
+        echo '<div class="demo-card" style="padding:0;overflow:hidden"><h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:var(--gk-on-surface-variant, #6b7280)">variant(\'' . $var . '\')</h4>';
         $t = new Table('var-' . $var);
         $t->setData($varData)
             ->column('name', 'Bezeichnung')
@@ -237,6 +243,7 @@ $table->size('lg');  // großzügig</pre></div>
             ->variant($var)->toolbar(false)->paginate(false)->render();
         echo '</div>';
     }
+    echo '</div>';
     ?>
     <div class="demo-code"><pre>$table->variant('default');   // Standard (Zeilen-Separator)
 $table->variant('bordered');  // Volle Rahmenlinien
@@ -508,44 +515,45 @@ $form->row()
 <!-- ===== MODAL ===== -->
 <div class="demo-section" data-section="modal">
     <h2>Modal</h2>
-    <div class="demo-card">
-        <p class="demo-intro">Modals in vier Groessen. Werden per AJAX geladen, Backdrop-Click und ESC schliessen.</p>
-        <div class="demo-btn-row">
-            <button class="gk-btn" onclick="GK.modal.open('Small (420px)', 'demo/form/f_delete.php', {}, 'small')">
-                <span class="material-icons" style="font-size:16px">crop_square</span> Small
-            </button>
-            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Medium (640px)', 'demo/form/f_articles.php', {}, 'medium')">
-                <span class="material-icons" style="font-size:16px">crop_din</span> Medium
-            </button>
-            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Large (900px)', 'demo/form/f_articles.php', {}, 'large')">
-                <span class="material-icons" style="font-size:16px">crop_free</span> Large
-            </button>
-            <button class="gk-btn gk-btn-filled gk-btn-neutral" onclick="GK.modal.open('Fullscreen Modal', 'demo/form/f_articles.php', {}, 'full')">
-                <span class="material-icons" style="font-size:16px">fullscreen</span> Full
-            </button>
+    <div class="demo-pair">
+        <div class="demo-pair-left">
+            <div class="demo-card">
+                <p class="demo-intro">Modals in vier Groessen. Werden per AJAX geladen, Backdrop-Click und ESC schliessen.</p>
+                <div class="demo-btn-row">
+                    <button class="gk-btn" onclick="GK.modal.open('Small (420px)', 'demo/form/f_delete.php', {}, 'small')">
+                        <span class="material-icons" style="font-size:16px">crop_square</span> Small
+                    </button>
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Medium (640px)', 'demo/form/f_articles.php', {}, 'medium')">
+                        <span class="material-icons" style="font-size:16px">crop_din</span> Medium
+                    </button>
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Large (900px)', 'demo/form/f_articles.php', {}, 'large')">
+                        <span class="material-icons" style="font-size:16px">crop_free</span> Large
+                    </button>
+                    <button class="gk-btn gk-btn-filled gk-btn-neutral" onclick="GK.modal.open('Fullscreen Modal', 'demo/form/f_articles.php', {}, 'full')">
+                        <span class="material-icons" style="font-size:16px">fullscreen</span> Full
+                    </button>
+                </div>
+            </div>
+            <div class="demo-card">
+                <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Verschachtelung: Modal mit Formular</h3>
+                <p class="demo-intro">Ein Modal laedt ein Formular per AJAX – der haeufigste Anwendungsfall.</p>
+                <div class="demo-btn-row">
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Artikel bearbeiten', 'demo/form/f_articles.php', {}, 'medium')">
+                        <span class="material-icons" style="font-size:16px">edit</span> Modal + Form
+                    </button>
+                </div>
+            </div>
+            <div class="demo-card">
+                <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Verschachtelung: Modal mit Tabelle + Sub-Modal</h3>
+                <p class="demo-intro">Ein Large-Modal zeigt eine Kundenliste. Klick auf "Bearbeiten" oeffnet ein zweites Modal mit dem Formular.</p>
+                <div class="demo-btn-row">
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Kundenverwaltung', 'demo/form/f_table_modal.php', {}, 'large')">
+                        <span class="material-icons" style="font-size:16px">people</span> Modal + Table + Sub-Modal
+                    </button>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="demo-card">
-        <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Verschachtelung: Modal mit Formular</h3>
-        <p class="demo-intro">Ein Modal laedt ein Formular per AJAX – der haeufigste Anwendungsfall.</p>
-        <div class="demo-btn-row">
-            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Artikel bearbeiten', 'demo/form/f_articles.php', {}, 'medium')">
-                <span class="material-icons" style="font-size:16px">edit</span> Modal + Form
-            </button>
-        </div>
-    </div>
-
-    <div class="demo-card">
-        <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Verschachtelung: Modal mit Tabelle + Sub-Modal</h3>
-        <p class="demo-intro">Ein Large-Modal zeigt eine Kundenliste. Klick auf "Bearbeiten" oeffnet ein zweites Modal mit dem Formular.</p>
-        <div class="demo-btn-row">
-            <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Kundenverwaltung', 'demo/form/f_table_modal.php', {}, 'large')">
-                <span class="material-icons" style="font-size:16px">people</span> Modal + Table + Sub-Modal
-            </button>
-        </div>
-    </div>
-
-    <div class="demo-code"><pre>// Sizes: small (420px), medium (640px), large (900px), full (100%)
+        <div class="demo-code"><pre>// Sizes: small (420px), medium (640px), large (900px), full (100%)
 GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'small');
 GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'medium');
 GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'large');
@@ -556,11 +564,13 @@ $table->button('edit', ['icon' => 'edit', 'modal' => 'edit_form'])
     ->modal('edit_form', 'Bearbeiten', 'form/edit.php', ['size' => 'large']);
 
 // Am Seitenende: Modal::container();</pre></div>
+    </div>
 </div>
 
 <!-- ===== FORMATTER ===== -->
 <div class="demo-section" data-section="formatter">
     <h2>Formatter</h2>
+    <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">Eingebaute Formatierungen fuer Table-Spalten: currency, percent, date, boolean, label, email.</p>
         <?php
@@ -586,11 +596,13 @@ $table->button('edit', ['icon' => 'edit', 'modal' => 'edit_form'])
 ->column('active', 'Aktiv', ['format' => 'boolean'])      // Ja / Nein
 ->column('status', 'Status', ['format' => 'label'])       // Farbiges Label
 ->column('email', 'E-Mail', ['format' => 'email'])        // mailto: Link</pre></div>
+    </div>
 </div>
 
 <!-- ===== STATCARDS ===== -->
 <div class="demo-section" data-section="statcards">
     <h2>StatCards</h2>
+    <div class="demo-pair">
     <div class="demo-card">
         <?php
         $stats = new StatCards('demo-stats');
@@ -606,11 +618,13 @@ $stats->card('Kunden', 248, ['format' => 'number', 'color' => 'blue'])
     ->card('Umsatz', 84250.00, ['format' => 'currency', 'color' => 'green'])
     ->card('Offene Posten', 12480.00, ['format' => 'currency', 'color' => 'red'])
     ->render();</pre></div>
+    </div>
 </div>
 
 <!-- ===== FILTERCHIPS ===== -->
 <div class="demo-section" data-section="filterchips">
     <h2>FilterChips</h2>
+    <div class="demo-pair">
     <div class="demo-card">
         <?php
         $chips = new FilterChips('status-filter', 'status');
@@ -627,11 +641,13 @@ $chips->chip('', 'Alle', ['count' => 152])
     ->chip('aktiv', 'Aktiv', ['count' => 89, 'color' => 'green'])
     ->chip('offen', 'Offen', ['count' => 23, 'color' => 'orange'])
     ->render();</pre></div>
+    </div>
 </div>
 
 <!-- ===== YEARFILTER ===== -->
 <div class="demo-section" data-section="yearfilter">
     <h2>YearFilter</h2>
+    <div class="demo-pair">
     <div class="demo-card">
         <?php
         $years = new YearFilter('demo-years', 'year');
@@ -641,11 +657,13 @@ $chips->chip('', 'Alle', ['count' => 152])
     <div class="demo-code"><pre>$years = new YearFilter('year-nav', 'year');
 $years->range(2022, 2026)->render();
 // Aktuelles Jahr: $years->current()</pre></div>
+    </div>
 </div>
 
 <!-- ===== TOAST ===== -->
 <div class="demo-section" data-section="toast">
     <h2>Toast</h2>
+    <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">Toast-Benachrichtigungen fuer Erfolgs-, Fehler- und Info-Meldungen. Verschwinden nach 3 Sekunden.</p>
         <div class="demo-btn-row">
@@ -669,11 +687,13 @@ GK.toast.warning('Achtung: Limit erreicht!');
 GK.toast.info('3 neue Eintraege');
 
 // Mit Dauer (ms): GK.toast.success('OK!', 5000);</pre></div>
+    </div>
 </div>
 
 <!-- ===== CONFIRM ===== -->
 <div class="demo-section" data-section="confirm">
     <h2>Confirm</h2>
+    <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">Confirm-Dialoge als saubere Modals. Promise-basiert, mit Danger-Mode fuer destruktive Aktionen.</p>
         <div class="demo-btn-row">
@@ -694,11 +714,13 @@ GK.toast.info('3 neue Eintraege');
 GK.confirm('Wirklich loeschen?', {
     title: 'Loeschen', confirmText: 'Loeschen', danger: true
 }).then(ok => { if (ok) { /* ... */ } });</pre></div>
+    </div>
 </div>
 
 <!-- ===== SIDEBAR ===== -->
 <div class="demo-section" data-section="sidebar">
     <h2>Sidebar</h2>
+    <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">Responsive Sidebar-Navigation mit Gruppen, Icons, Badges und Mobile-Toggle. Auf dieser Seite live zu sehen.</p>
     </div>
@@ -719,6 +741,7 @@ Sidebar::toggleButton();
 GK.sidebar.toggle();
 GK.sidebar.open();
 GK.sidebar.close();</pre></div>
+    </div>
 </div>
 
 <!-- ===== BUTTONS ===== -->
