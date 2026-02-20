@@ -77,12 +77,21 @@
 }
 
 /* === Dark variants per theme === */
+/* Sidebar: dunkler als Content (#1e293b) → niedrigere Elevation, M3-konform */
+/* Accent: helle Version der Theme-Farbe die auf dunklem Hintergrund leuchtet  */
+
+[data-gk-theme="indigo"][data-gk-mode="dark"] {
+    --gk-sidebar-bg: #0d1225;
+    --gk-sidebar-accent: #a5b4fc;
+}
 [data-gk-theme="ocean"][data-gk-mode="dark"] {
     --gk-primary: #38bdf8;
     --gk-on-primary: #0c4a6e;
     --gk-primary-container: #075985;
     --gk-on-primary-container: #e0f2fe;
     --gk-tertiary: #5eead4;
+    --gk-sidebar-bg: #071a2d;
+    --gk-sidebar-accent: #38bdf8;
 }
 [data-gk-theme="forest"][data-gk-mode="dark"] {
     --gk-primary: #34d399;
@@ -90,6 +99,8 @@
     --gk-primary-container: #065f46;
     --gk-on-primary-container: #d1fae5;
     --gk-tertiary: #a78bfa;
+    --gk-sidebar-bg: #071a12;
+    --gk-sidebar-accent: #34d399;
 }
 [data-gk-theme="rose"][data-gk-mode="dark"] {
     --gk-primary: #f9a8d4;
@@ -97,6 +108,8 @@
     --gk-primary-container: #9d174d;
     --gk-on-primary-container: #fce7f3;
     --gk-tertiary: #c084fc;
+    --gk-sidebar-bg: #1a0818;
+    --gk-sidebar-accent: #f9a8d4;
 }
 [data-gk-theme="amber"][data-gk-mode="dark"] {
     --gk-primary: #fbbf24;
@@ -104,6 +117,8 @@
     --gk-primary-container: #92400e;
     --gk-on-primary-container: #fef3c7;
     --gk-tertiary: #38bdf8;
+    --gk-sidebar-bg: #1a0d06;
+    --gk-sidebar-accent: #fbbf24;
 }
 [data-gk-theme="slate"][data-gk-mode="dark"] {
     --gk-primary: #94a3b8;
@@ -111,4 +126,6 @@
     --gk-primary-container: #334155;
     --gk-on-primary-container: #e2e8f0;
     --gk-tertiary: #a5b4fc;
+    --gk-sidebar-bg: #0d1424;
+    --gk-sidebar-accent: #7dd3fc;
 }

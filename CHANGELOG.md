@@ -3,6 +3,15 @@
 Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [1.9.0] - 2026-02-20
+
+### Fixed
+- **Sidebar Dark Mode** – pro Theme eigene dunkle Sidebar-Bg (tiefer als Content = niedrigere Elevation)
+  - indigo=`#0d1225` · ocean=`#071a2d` · forest=`#071a12` · rose=`#1a0818` · amber=`#1a0d06` · slate=`#0d1424`
+  - Dark Mode Accent pro Theme korrekt gesetzt (helle Variante der Theme-Farbe)
+  - Default Dark Mode Sidebar vereinheitlicht (gleiche Variablen wie Light Mode)
+  - Sidebar bekommt subtile rechte Border (`--gk-sidebar-border`) für klare Trennung
+
 ## [1.8.0] - 2026-02-20
 
 ### Changed

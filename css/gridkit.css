@@ -474,7 +474,7 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-year-filter { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 12px; }
 
 /* === SIDEBAR === */
-.gk-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: var(--gk-sidebar-bg); color: var(--gk-sidebar-text); display: flex; flex-direction: column; z-index: 1000; transition: width .25s ease, transform .25s ease; overflow-y: auto; overflow-x: hidden; }
+.gk-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: var(--gk-sidebar-bg); color: var(--gk-sidebar-text); display: flex; flex-direction: column; z-index: 1000; transition: width .25s ease, transform .25s ease; overflow-y: auto; overflow-x: hidden; border-right: 1px solid var(--gk-sidebar-border); }
 .gk-sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 14px 12px; border-bottom: 1px solid var(--gk-sidebar-border); background: var(--gk-sidebar-brand-bg); }
 .gk-sidebar-brand-icon { font-size: 28px; color: var(--gk-sidebar-accent, #818cf8); }
 .gk-sidebar-brand-text { flex: 1; min-width: 0; }
@@ -876,13 +876,15 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
     --gk-neutral-900: #f8fafc;
 
     /* Sidebar dark mode */
-    --gk-sidebar-bg: var(--gk-surface-dim);
-    --gk-sidebar-text: var(--gk-on-surface);
-    --gk-sidebar-text-muted: var(--gk-on-surface-variant);
+    --gk-sidebar-bg: #0d1225;
+    --gk-sidebar-text: rgba(255,255,255,0.78);
+    --gk-sidebar-text-muted: rgba(255,255,255,0.38);
     --gk-sidebar-text-hover: #ffffff;
-    --gk-sidebar-item-hover: var(--gk-surface-container);
-    --gk-sidebar-item-active: var(--gk-surface-container-high);
-    --gk-sidebar-border: var(--gk-outline-variant);
+    --gk-sidebar-item-hover: rgba(255,255,255,0.09);
+    --gk-sidebar-item-active: rgba(255,255,255,0.13);
+    --gk-sidebar-border: rgba(255,255,255,0.09);
+    --gk-sidebar-accent: #a5b4fc;
+    --gk-sidebar-icon-muted: rgba(255,255,255,0.45);
 
     color-scheme: dark;
 }
