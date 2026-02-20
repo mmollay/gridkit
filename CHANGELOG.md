@@ -3,6 +3,18 @@
 Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [1.8.0] - 2026-02-20
+
+### Changed
+- **Sidebar Redesign** – Klares Kontrast-System für alle Themes
+  - Neu: `--gk-sidebar-accent` pro Theme (leuchtende Akzentfarbe auf dunklem Hintergrund)
+  - Neu: `--gk-sidebar-icon-muted` – Icons getrennt von Text, gedämmter
+  - Active Item: farbiger linker Balken (3px, Accent-Farbe) + Icon in Accent-Farbe
+  - Gruppen-Labels: stärker gedimmt (0.38 statt 0.75) – klar sekundär
+  - Icon-Farbe: explizite Variable statt opacity-Hack
+  - Brand-Icon: nutzt `--gk-sidebar-accent` statt `--gk-primary`
+  - Per-Theme Accents: indigo=#a5b4fc · ocean=#38bdf8 · forest=#34d399 · rose=#f472b6 · amber=#fcd34d · slate=#7dd3fc
+
 ## [1.7.0] - 2026-02-20
 
 ### Added
