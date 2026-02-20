@@ -986,7 +986,7 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 [data-gk-mode="dark"] .gk-card,
 .gk-dark .gk-card {
     background: var(--gk-surface-container-high);
-    border-color: var(--gk-outline-variant);
+    border-color: rgba(255,255,255,0.14);
     color: var(--gk-on-surface);
 }
 

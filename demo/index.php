@@ -29,7 +29,8 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-section { max-width:1100px; margin:24px auto; padding:0 24px; display:none; }
         .demo-section.active { display:block; }
         .demo-section h2 { font-size:20px; margin:0 0 16px; color:#374151; }
-        .demo-card { background:var(--gk-surface, #fff); border-radius:8px; padding:24px; box-shadow:var(--gk-shadow); margin-bottom:24px; }
+        .demo-card { background:var(--gk-surface, #fff); border-radius:8px; padding:24px; border:1px solid transparent; box-shadow:var(--gk-shadow); margin-bottom:24px; }
+        [data-gk-mode="dark"] .demo-card, .gk-dark .demo-card { background:var(--gk-surface-container-high); border-color:rgba(255,255,255,0.12); box-shadow:none; }
         .demo-code { background:var(--gk-surface-dim, #1e293b); color:var(--gk-on-surface, #e2e8f0); padding:20px; border-radius:8px; overflow-x:auto; font-family:'SF Mono',Monaco,Consolas,monospace; font-size:13px; line-height:1.6; margin-top:16px; }
         .demo-code pre { margin:0; }
         .demo-stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:24px; }
