@@ -208,7 +208,8 @@ echo $demoHeader->title('GridKit v' . $version)
             ['name' => 'Widget C', 'value' => '890 €', 'status' => 'aktiv'],
         ];
         foreach (['sm', 'md', 'lg'] as $sz) {
-            echo '<div class="demo-card" style="padding:0;overflow:hidden"><h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:var(--gk-on-surface-variant, #6b7280)">size(\'' . $sz . '\')</h4>';
+            echo '<div class="demo-card" style="padding:0;overflow:hidden">';
+            echo '<div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">size(\'' . $sz . '\')</div>';
             $t = new Table('size-' . $sz);
             $t->setData($sizeData)
                 ->column('name', 'Name')
@@ -234,7 +235,8 @@ $table->size('lg');  // großzügig</pre></div>
     ];
     echo '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">';
     foreach (['default', 'bordered', 'striped', 'minimal', 'flat'] as $var) {
-        echo '<div class="demo-card" style="padding:0;overflow:hidden"><h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:var(--gk-on-surface-variant, #6b7280)">variant(\'' . $var . '\')</h4>';
+        echo '<div class="demo-card" style="padding:0;overflow:hidden">';
+        echo '<div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">variant(\'' . $var . '\')</div>';
         $t = new Table('var-' . $var);
         $t->setData($varData)
             ->column('name', 'Bezeichnung')
@@ -259,7 +261,7 @@ $table->variant('bordered')->size('sm');</pre></div>
     <p class="demo-intro">Verkleinere das Browserfenster auf &lt;768px um die Mobile-Darstellung zu sehen.</p>
 
     <div class="demo-card" style="padding:0;overflow:hidden">
-        <h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:var(--gk-on-surface-variant, #6b7280)">mobile('card') – Standard</h4>
+        <div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">mobile('card') – Standard</div>
         <?php
         $mobileData = [
             ['nr' => 'ART-001', 'name' => 'Webdesign Paket S', 'price' => '1.200 €', 'status' => 'aktiv'],
@@ -276,7 +278,7 @@ $table->variant('bordered')->size('sm');</pre></div>
         ?>
     </div>
     <div class="demo-card" style="margin-top:16px;padding:0;overflow:hidden">
-        <h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:var(--gk-on-surface-variant, #6b7280)">mobile('scroll') – Horizontal Scroll</h4>
+        <div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">mobile('scroll') – Horizontal Scroll</div>
         <?php
         $t = new Table('mobile-scroll');
         $t->setData($mobileData)
@@ -288,7 +290,7 @@ $table->variant('bordered')->size('sm');</pre></div>
         ?>
     </div>
     <div class="demo-card" style="margin-top:16px;padding:0;overflow:hidden">
-        <h4 style="padding:12px 16px 0;margin:0;font-size:13px;color:var(--gk-on-surface-variant, #6b7280)">hideOnMobile – Spalten ausblenden</h4>
+        <div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">hideOnMobile – Spalten ausblenden</div>
         <?php
         $t = new Table('mobile-hide');
         $t->setData($mobileData)

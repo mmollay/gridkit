@@ -11,6 +11,13 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
 
+## [0.9.10] - 2026-02-23
+
+### Fixed
+- **Demo** – Tabellen-Labels (size/variant) waren als `h4` direkt an die Spaltenköpfe geklebt. Jetzt als dedizierte Caption-Bar mit Border-Bottom und grauem Hintergrund (klar vom Table-Content getrennt)
+
+---
+
 ## [0.9.9] - 2026-02-23
 
 ### Fixed
