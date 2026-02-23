@@ -11,6 +11,13 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
 
+## [0.9.9] - 2026-02-23
+
+### Fixed
+- **`gk-table-wrap`** – `box-shadow` entfernt, stattdessen `border: 1px solid var(--gk-outline-variant)` wie `gk-card` → konsistentes Aussehen, kein "schwebender" Tabelleneffekt mehr
+
+---
+
 ## [0.9.8] - 2026-02-23
 
 ### Added
