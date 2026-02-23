@@ -8,7 +8,27 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 ## [Unreleased]
 - Weitere Komponenten geplant (Flash Messages/Alerts, Standalone Select)
 - Dokumentation vervollständigen
-- SSI-Core vollständig auf GridKit migrieren
+
+---
+
+## [0.9.2] - 2026-02-23
+
+### Added
+- **Utility-Klassen** – vollständige Migrationsbasis für Panel-Apps:
+  - `.gk-page-header` – Seitentitel + Actions-Row (flex, space-between, dark-mode-aware)
+  - `.gk-section-title` – Abschnittsüberschriften
+  - `.gk-spacer`, `.gk-spacer-sm`, `.gk-spacer-md`, `.gk-spacer-lg`, `.gk-spacer-xl` – Abstände
+  - `.gk-text-muted` – gedämpfte Textfarbe via `--gk-on-surface-variant`
+  - `.gk-grid`, `.gk-grid-2`, `.gk-grid-4` – responsive Grid-Layouts
+  - `.gk-form-page`, `.gk-form-actions` – Formular-Seitenlayout
+
+---
+
+## [0.9.1] - 2026-02-21
+
+### Fixed
+- Dark Mode Demo-Cards und standalone Table-Borders korrigiert
+- Code-Blöcke neben Beispielen in Demo
 
 ---
 

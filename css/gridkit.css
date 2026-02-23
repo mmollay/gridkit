@@ -1155,3 +1155,30 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
     display: flex; align-items: center; justify-content: center; gap: 8px;
 }
 .gk-select-option-sub { font-size: 12px; color: var(--gk-outline); margin-top: 2px; }
+
+/* === PAGE HEADER === */
+.gk-page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.gk-page-header h1, .gk-page-header h2 { font-size: 20px; font-weight: 700; margin: 0; color: var(--gk-on-surface); }
+.gk-page-header h3 { font-size: 16px; font-weight: 600; margin: 0; color: var(--gk-on-surface); }
+
+/* === SECTION TITLE === */
+.gk-section-title { font-size: 15px; font-weight: 600; margin: 0 0 12px 0; color: var(--gk-on-surface); }
+
+/* === SPACER === */
+.gk-spacer    { height: 16px; }
+.gk-spacer-sm { height: 8px; }
+.gk-spacer-md { height: 20px; }
+.gk-spacer-lg { height: 24px; }
+.gk-spacer-xl { height: 32px; }
+
+/* === TEXT UTILITIES === */
+.gk-text-muted { color: var(--gk-on-surface-variant); }
+
+/* === GRID === */
+.gk-grid   { display: grid; gap: 16px; }
+.gk-grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.gk-grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+/* === FORM PAGE LAYOUT === */
+.gk-form-page { max-width: 800px; }
+.gk-form-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 16px; border-top: 1px solid var(--gk-outline-variant); margin-top: 16px; }
