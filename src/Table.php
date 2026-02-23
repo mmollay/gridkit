@@ -418,6 +418,7 @@ class Table
             'boolean' => (int)$val ? '<span class="gk-bool gk-bool-yes">✓</span>' : '<span class="gk-bool gk-bool-no">–</span>',
             'email' => '<a href="mailto:' . $e($val) . '">' . $e($val) . '</a>',
             'label' => $this->renderLabel($val, $col['labels'] ?? []),
+            'html' => (string)$val,
             default => $e($val),
         };
     }

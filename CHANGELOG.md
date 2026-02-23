@@ -11,6 +11,13 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
 
+## [0.9.4] - 2026-02-23
+
+### Added
+- **Table `format => 'html'`** – Spalten können vorgerendertes HTML ausgeben (für Chips, Badges, etc.)
+
+---
+
 ## [0.9.3] - 2026-02-23
 
 ### Fixed
