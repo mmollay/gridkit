@@ -428,8 +428,9 @@ select.gk-input { appearance: none; -webkit-appearance: none; padding-right: 40p
 /* === MODAL === */
 .gk-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
 .gk-modal { background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05); width: 90%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
-.gk-modal-small { max-width: 420px; }
+.gk-modal-small  { max-width: 420px; }
 .gk-modal-medium { max-width: 640px; }
+.gk-modal-large  { max-width: 860px; }
 .gk-modal-large { max-width: 900px; }
 .gk-modal-full { max-width: none; width: calc(100% - 32px); height: calc(100% - 32px); display: flex; flex-direction: column; }
 .gk-modal-full .gk-modal-body { flex: 1; overflow-y: auto; }

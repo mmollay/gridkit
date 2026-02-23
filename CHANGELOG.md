@@ -133,3 +133,7 @@ Erster stabiler Stand. Alle Kern-Komponenten vorhanden und getestet.
 ---
 
 *Ältere Entwicklungsversionen (0.1–0.7) archiviert und entfernt.*
+
+## [0.9.13] - 2026-02-23
+### Added
+- gk-modal-large: max-width 860px für große Modals (z.B. PDF-Vorschau)
