@@ -914,6 +914,41 @@
         }
     };
 
+    // === AJAX PAGINATION ===
+    // Wraps table + pagination in [data-gk-ajax-table="id"].
+    // Intercepts gk-page-btn link clicks, fetches new page, swaps innerHTML.
+    document.addEventListener('click', function(e) {
+        var link = e.target.closest('a.gk-page-btn');
+        if (!link || !link.href) return;
+        var wrap = link.closest('[data-gk-ajax-table]');
+        if (!wrap) return;
+        e.preventDefault();
+        var url = link.href;
+        var id = wrap.getAttribute('data-gk-ajax-table');
+        wrap.style.opacity = '0.5';
+        wrap.style.pointerEvents = 'none';
+        wrap.style.transition = 'opacity .15s';
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.text(); })
+            .then(function(html) {
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                var newWrap = doc.querySelector('[data-gk-ajax-table="' + id + '"]');
+                if (newWrap) {
+                    wrap.innerHTML = newWrap.innerHTML;
+                    GK.table.init(wrap);
+                    GK.form.bind(wrap);
+                }
+                wrap.style.opacity = '';
+                wrap.style.pointerEvents = '';
+                history.pushState(null, '', url);
+            })
+            .catch(function() {
+                wrap.style.opacity = '';
+                wrap.style.pointerEvents = '';
+                window.location.href = url;
+            });
+    });
+
     window.GridKit = GK;
     window.GK = GK;
 

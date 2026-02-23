@@ -11,6 +11,13 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
 
+## [0.9.6] - 2026-02-23
+
+### Added
+- **AJAX Pagination** – `[data-gk-ajax-table="id"]` wrapper aktiviert seitenloses Blättern ohne Full-Reload. Funktioniert automatisch für alle `a.gk-page-btn` Links innerhalb des Wrappers. Fallback auf normalen Link bei Fetch-Fehler.
+
+---
+
 ## [0.9.5] - 2026-02-23
 
 ### Fixed
