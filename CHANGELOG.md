@@ -11,6 +11,13 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
 
+## [0.9.5] - 2026-02-23
+
+### Fixed
+- **Pagination `gk-page-btn`** – `display: inline-flex; align-items/justify-content: center` ergänzt, Buttons werden nicht mehr zu großen Kreisen
+
+---
+
 ## [0.9.4] - 2026-02-23
 
 ### Added

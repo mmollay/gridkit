@@ -286,7 +286,7 @@ a:hover { text-decoration: none; }
 
 /* === PAGINATION === */
 .gk-pagination { display: flex; gap: 4px; padding: var(--gk-spacing); justify-content: center; border-top: 1px solid var(--gk-border); }
-.gk-page-btn { min-width: 32px; height: 32px; border: 1px solid var(--gk-border); border-radius: 9999px; background: var(--gk-bg); cursor: pointer; font-size: var(--gk-font-size-sm); transition: all .15s; }
+.gk-page-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; padding: 0 4px; border: 1px solid var(--gk-border); border-radius: 9999px; background: var(--gk-bg); cursor: pointer; font-size: var(--gk-font-size-sm); text-decoration: none; color: var(--gk-on-surface); transition: all .15s; }
 .gk-page-btn:hover { background: var(--gk-bg-hover); }
 .gk-page-btn.gk-active { background: var(--gk-primary-50, #eef2ff); color: var(--gk-primary-700, #4338ca); border-color: transparent; font-weight: 600; }
 
