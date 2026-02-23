@@ -11,6 +11,13 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
 
+## [0.9.7] - 2026-02-23
+
+### Changed
+- **`--gk-surface-dim`** Light Mode: `#ddd8e4` → `#e8edf2` — neutrales Slate-Grau statt lila M3-Tönung
+
+---
+
 ## [0.9.6] - 2026-02-23
 
 ### Added
