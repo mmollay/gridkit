@@ -12,6 +12,8 @@ class Form
     private bool $inRow = false;
     private string $submitLabel = '';
     private bool $wrapCard = false;
+    private string $cancelLabel = '';
+    private string $cancelHref = '';
 
     public function __construct(string $id)
     {
@@ -21,6 +23,7 @@ class Form
     public function action(string $url): static { $this->action = $url; return $this; }
     public function ajax(): static { $this->isAjax = true; return $this; }
     public function card(bool $wrap = true): static { $this->wrapCard = $wrap; return $this; }
+    public function cancel(string $label, string $href): static { $this->cancelLabel = $label; $this->cancelHref = $href; return $this; }
     public function submit(string $label): static { $this->submitLabel = $label; return $this; }
 
     public function hidden(string $name, mixed $value): static
@@ -68,8 +71,15 @@ class Form
             };
         }
 
-        if ($this->submitLabel) {
-            echo '<div class="gk-form-actions">' . Button::render($this->submitLabel, ['variant' => 'filled', 'color' => 'success', 'type' => 'submit', 'icon' => 'save']) . '</div>';
+        if ($this->submitLabel || $this->cancelLabel) {
+            echo '<div class="gk-form-actions">';
+            if ($this->cancelLabel) {
+                echo Button::render($this->cancelLabel, ['variant' => 'outlined', 'color' => 'neutral', 'href' => $this->cancelHref]);
+            }
+            if ($this->submitLabel) {
+                echo Button::render($this->submitLabel, ['variant' => 'filled', 'color' => 'success', 'type' => 'submit', 'icon' => 'save']);
+            }
+            echo '</div>';
         }
 
         echo '</form>';
