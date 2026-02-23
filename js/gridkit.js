@@ -914,6 +914,20 @@
         }
     };
 
+    // === TABS ===
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.gk-tab-btn');
+        if (!btn) return;
+        var tabs = btn.closest('.gk-tabs');
+        if (!tabs) return;
+        var target = btn.dataset.tab;
+        tabs.querySelectorAll('.gk-tab-btn').forEach(function(b) { b.classList.remove('gk-active'); });
+        tabs.querySelectorAll('.gk-tab-panel').forEach(function(p) { p.classList.remove('gk-active'); });
+        btn.classList.add('gk-active');
+        var panel = tabs.querySelector('.gk-tab-panel[data-tab="' + target + '"]');
+        if (panel) panel.classList.add('gk-active');
+    });
+
     // === AJAX PAGINATION ===
     // Wraps table + pagination in [data-gk-ajax-table="id"].
     // Intercepts gk-page-btn link clicks, fetches new page, swaps innerHTML.

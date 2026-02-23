@@ -11,6 +11,13 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
 
+## [0.9.8] - 2026-02-23
+
+### Added
+- **Tabs** (`gk-tabs`, `gk-tab-nav`, `gk-tab-btn`, `gk-tab-panel`) – CSS + JS Tab-System, data-tab Attribute, Dark Mode ready
+
+---
+
 ## [0.9.7] - 2026-02-23
 
 ### Changed

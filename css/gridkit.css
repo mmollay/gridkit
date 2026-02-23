@@ -1168,6 +1168,15 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-page-header h3 { font-size: 16px; font-weight: 600; margin: 0; color: var(--gk-on-surface); }
 
 /* === SECTION TITLE === */
+/* === TABS === */
+.gk-tabs { width: 100%; }
+.gk-tab-nav { display: flex; gap: 2px; border-bottom: 2px solid var(--gk-border); margin-bottom: 20px; }
+.gk-tab-btn { padding: 9px 18px; font-size: 14px; font-weight: 500; color: var(--gk-text-muted); background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; transition: color .15s, border-color .15s; border-radius: 4px 4px 0 0; display: flex; align-items: center; gap: 6px; }
+.gk-tab-btn:hover { color: var(--gk-text); background: var(--gk-bg-hover); }
+.gk-tab-btn.gk-active { color: var(--gk-primary); border-bottom-color: var(--gk-primary); }
+.gk-tab-panel { display: none; }
+.gk-tab-panel.gk-active { display: block; }
+
 .gk-section-title { font-size: 15px; font-weight: 600; margin: 0 0 12px 0; color: var(--gk-on-surface); }
 
 /* === SPACER === */
