@@ -11,6 +11,7 @@ class Form
     private array $fields = [];
     private bool $inRow = false;
     private string $submitLabel = '';
+    private bool $wrapCard = false;
 
     public function __construct(string $id)
     {
@@ -19,6 +20,7 @@ class Form
 
     public function action(string $url): static { $this->action = $url; return $this; }
     public function ajax(): static { $this->isAjax = true; return $this; }
+    public function card(bool $wrap = true): static { $this->wrapCard = $wrap; return $this; }
     public function submit(string $label): static { $this->submitLabel = $label; return $this; }
 
     public function hidden(string $name, mixed $value): static
@@ -54,6 +56,7 @@ class Form
         if ($this->action) $attrs .= ' action="' . $e($this->action) . '"';
         if ($this->isAjax) $attrs .= ' data-gk-ajax';
 
+        if ($this->wrapCard) echo '<div class="gk-card" style="padding:24px;">';
         echo "<form {$attrs}>";
 
         foreach ($this->fields as $f) {
@@ -70,6 +73,7 @@ class Form
         }
 
         echo '</form>';
+        if ($this->wrapCard) echo '</div>';
     }
 
     private function renderRowStart(array $f): void

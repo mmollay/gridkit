@@ -11,6 +11,16 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
 
+## [0.9.11] - 2026-02-23
+
+### Fixed
+- **`gk-form-actions`** – Duplikat entfernt, `align-items: center` ergänzt → Buttons verschiedener Höhe/Typen (a, button) stehen auf gleicher Linie
+
+### Added
+- **`Form::card()`** – optionaler gk-card Wrapper um das gerenderte Formular (`->card()` in der Form-Chain)
+
+---
+
 ## [0.9.10] - 2026-02-23
 
 ### Fixed

@@ -362,7 +362,7 @@ select.gk-input { appearance: none; -webkit-appearance: none; padding-right: 40p
 .gk-toggle input:checked + .gk-toggle-slider { background: var(--gk-primary); }
 .gk-toggle input:checked + .gk-toggle-slider::before { transform: translateX(20px); }
 
-.gk-form-actions { padding-top: var(--gk-spacing); display: flex; justify-content: flex-end; }
+.gk-form-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 16px; border-top: 1px solid var(--gk-outline-variant); margin-top: 16px; }
 .gk-field-error { color: var(--gk-danger); font-size: 12px; min-height: 0; margin-top: 4px; }
 .gk-field-error:not(:empty) { min-height: 18px; }
 .gk-input.gk-has-error { border-color: var(--gk-danger); }
@@ -1196,4 +1196,3 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 
 /* === FORM PAGE LAYOUT === */
 .gk-form-page { max-width: 800px; }
-.gk-form-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 16px; border-top: 1px solid var(--gk-outline-variant); margin-top: 16px; }
