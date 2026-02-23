@@ -11,6 +11,14 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
 
+## [0.9.3] - 2026-02-23
+
+### Fixed
+- **Labels Dark Mode** – `.gk-label-green/orange/red/gray/blue` jetzt mit Dark Mode Overrides (invertierte Farben)
+- **gk-page-header** – `flex-wrap: wrap` entfernt, Button bleibt rechts statt in neue Zeile zu wrappen
+
+---
+
 ## [0.9.2] - 2026-02-23
 
 ### Added

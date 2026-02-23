@@ -292,11 +292,17 @@ a:hover { text-decoration: none; }
 
 /* === LABELS === */
 .gk-label { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: var(--gk-font-size-sm); font-weight: 500; }
-.gk-label-green { background: #dcfce7; color: #166534; }
+.gk-label-green  { background: #dcfce7; color: #166534; }
 .gk-label-orange { background: #fef3c7; color: #92400e; }
-.gk-label-red { background: #fee2e2; color: #991b1b; }
-.gk-label-gray { background: #f3f4f6; color: #6b7280; }
-.gk-label-blue { background: #dbeafe; color: #1e40af; }
+.gk-label-red    { background: #fee2e2; color: #991b1b; }
+.gk-label-gray   { background: #f3f4f6; color: #6b7280; }
+.gk-label-blue   { background: #dbeafe; color: #1e40af; }
+/* Dark Mode Labels */
+[data-gk-mode="dark"] .gk-label-green,  .gk-dark .gk-label-green  { background: #166534; color: #bbf7d0; }
+[data-gk-mode="dark"] .gk-label-orange, .gk-dark .gk-label-orange { background: #92400e; color: #fde68a; }
+[data-gk-mode="dark"] .gk-label-red,    .gk-dark .gk-label-red    { background: #991b1b; color: #fecaca; }
+[data-gk-mode="dark"] .gk-label-gray,   .gk-dark .gk-label-gray   { background: #374151; color: #d1d5db; }
+[data-gk-mode="dark"] .gk-label-blue,   .gk-dark .gk-label-blue   { background: #1e40af; color: #bfdbfe; }
 
 .gk-bool-yes { color: var(--gk-success); font-weight: bold; }
 .gk-bool-no { color: var(--gk-text-muted); }
@@ -1157,7 +1163,7 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-select-option-sub { font-size: 12px; color: var(--gk-outline); margin-top: 2px; }
 
 /* === PAGE HEADER === */
-.gk-page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.gk-page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
 .gk-page-header h1, .gk-page-header h2 { font-size: 20px; font-weight: 700; margin: 0; color: var(--gk-on-surface); }
 .gk-page-header h3 { font-size: 16px; font-weight: 600; margin: 0; color: var(--gk-on-surface); }
 
