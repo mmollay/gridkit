@@ -309,7 +309,8 @@ a:hover { text-decoration: none; }
 .gk-bool-no { color: var(--gk-text-muted); }
 
 /* === FORM === */
-.gk-form { width: 100%; }
+.gk-form { width: 100%; max-width: 960px; }
+.gk-form-wide { max-width: none; }
 
 /* Grid-based row layout (16-column grid) */
 .gk-form-row { display: grid; grid-template-columns: repeat(16, 1fr); gap: 16px; align-items: start; margin-bottom: 20px; }
