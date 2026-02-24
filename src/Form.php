@@ -270,7 +270,7 @@ class Form
                 echo "<div id=\"{$editorId}\">{$value}</div>";
                 echo "</div>";
                 echo "<input type=\"hidden\" name=\"{$e($name)}\" id=\"{$editorId}-hidden\" value=\"{$e($value)}\">";
-                echo "<script>document.addEventListener('DOMContentLoaded',function(){var CE=window.CKEDITOR&&window.CKEDITOR.ClassicEditor?window.CKEDITOR.ClassicEditor:(window.ClassicEditor||null);if(CE){CE.create(document.getElementById('{$editorId}'),{language:'de'}).then(function(editor){var h=document.getElementById('{$editorId}-hidden');if(h)h.value=editor.getData();editor.model.document.on('change:data',function(){if(h)h.value=editor.getData();});var f=document.getElementById('{$editorId}')?.closest('form');if(f)f.addEventListener('submit',function(){if(h)h.value=editor.getData();});}).catch(console.error);}});</script>";
+                echo "<script>document.addEventListener('DOMContentLoaded',function(){var CE=window.CKEDITOR&&window.CKEDITOR.ClassicEditor?window.CKEDITOR.ClassicEditor:(window.ClassicEditor||null);if(CE){CE.create(document.getElementById('{$editorId}'),{licenseKey:'GPL',language:'de'}).then(function(editor){var h=document.getElementById('{$editorId}-hidden');if(h)h.value=editor.getData();editor.model.document.on('change:data',function(){if(h)h.value=editor.getData();});var f=document.getElementById('{$editorId}')?.closest('form');if(f)f.addEventListener('submit',function(){if(h)h.value=editor.getData();});}).catch(console.error);}});</script>";
                 break;
 
             default: // text, number, email, tel, url, password, date, time, datetime

@@ -12,6 +12,7 @@ class Table
     private array $rows = [];
     private array $searchCols = [];
     private array $filters = [];
+    private string $toolbarHtml = '';
     private ?string $newBtnLabel = null;
     private array $newBtnOpts = [];
     private int $perPage = 0;
@@ -85,6 +86,12 @@ class Table
     public function nowrap(bool $enabled = true): static
     {
         $this->globalNowrap = $enabled;
+        return $this;
+    }
+
+    public function toolbarHtml(string $html): static
+    {
+        $this->toolbarHtml = $html;
         return $this;
     }
 
@@ -224,6 +231,9 @@ class Table
         echo '<div class="gk-toolbar">';
         if ($this->searchCols) {
             echo '<input type="text" class="gk-search" data-gk-search placeholder="Suchen…" value="' . $e($this->searchQuery) . '">';
+        }
+        if ($this->toolbarHtml !== '') {
+            echo $this->toolbarHtml;
         }
         foreach ($this->filters as $col => $f) {
             echo '<select class="gk-filter" data-gk-filter="' . $e($col) . '">';
