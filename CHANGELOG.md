@@ -9,6 +9,14 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 - Weitere Komponenten geplant (Flash Messages/Alerts, Standalone Select)
 - Dokumentation vervollständigen
 
+## [0.9.20] - 2026-02-24
+
+### Added
+- **CKEditor5 Integration als gk-richtext** – `case 'richtext':` in Form.php nutzt jetzt CKEditor5 statt execCommand-basiertem Editor
+- **`.gk-richtext-wrap`** – CSS-Wrapper für CKEditor5 mit GridKit-konformer Border/Focus-Gestaltung
+- **`/vendor/ckeditor5/`** – Lokale CKEditor5 UMD-Build (`ckeditor5.umd.js` + `ckeditor5.css`)
+- **gk-card Form-Layout** – Newsletter campaign-edit.php in Karten-Struktur (Absender & Empfänger, Inhalt, Zeitplanung) umgebaut
+
 ## [0.9.15] - 2026-02-24
 
 ### Added

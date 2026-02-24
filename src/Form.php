@@ -265,38 +265,12 @@ class Form
                 break;
 
             case 'richtext':
-                $toolbar = $f['toolbar'] ?? 'basic';
-                $basicBtns = [
-                    ['cmd' => 'bold', 'icon' => 'format_bold'],
-                    ['cmd' => 'italic', 'icon' => 'format_italic'],
-                    ['cmd' => 'underline', 'icon' => 'format_underlined'],
-                    ['cmd' => 'createLink', 'icon' => 'link', 'prompt' => 'URL eingeben:'],
-                    ['cmd' => 'insertUnorderedList', 'icon' => 'format_list_bulleted'],
-                    ['cmd' => 'insertOrderedList', 'icon' => 'format_list_numbered'],
-                ];
-                $fullBtns = [
-                    ['cmd' => 'formatBlock', 'icon' => 'title', 'val' => 'h2', 'title' => 'H2'],
-                    ['cmd' => 'formatBlock', 'icon' => 'text_fields', 'val' => 'h3', 'title' => 'H3'],
-                    ['cmd' => 'formatBlock', 'icon' => 'format_quote', 'val' => 'blockquote'],
-                    ['cmd' => 'formatBlock', 'icon' => 'code', 'val' => 'pre'],
-                    ['cmd' => 'insertImage', 'icon' => 'image', 'prompt' => 'Bild-URL:'],
-                    ['cmd' => 'insertHorizontalRule', 'icon' => 'horizontal_rule'],
-                ];
-                $btns = $toolbar === 'full' ? array_merge($basicBtns, $fullBtns) : $basicBtns;
-
-                echo "<div class=\"gk-richtext\" data-field=\"{$e($name)}\">";
-                echo "<div class=\"gk-richtext-toolbar\">";
-                foreach ($btns as $b) {
-                    $dataAttrs = "data-cmd=\"{$e($b['cmd'])}\"";
-                    if (isset($b['val'])) $dataAttrs .= " data-val=\"{$e($b['val'])}\"";
-                    if (isset($b['prompt'])) $dataAttrs .= " data-prompt=\"{$e($b['prompt'])}\"";
-                    $title = $b['title'] ?? $b['cmd'];
-                    echo "<button type=\"button\" class=\"gk-richtext-btn\" {$dataAttrs} title=\"{$e($title)}\"><span class=\"material-icons\">{$b['icon']}</span></button>";
-                }
+                $editorId = 'gk-editor-' . $name . '-' . substr(md5($name . microtime()), 0, 6);
+                echo "<div class=\"gk-richtext-wrap\">";
+                echo "<div id=\"{$editorId}\">{$value}</div>";
                 echo "</div>";
-                echo "<div class=\"gk-richtext-content\" contenteditable=\"true\">{$value}</div>";
-                echo "<input type=\"hidden\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\">";
-                echo "</div>";
+                echo "<input type=\"hidden\" name=\"{$e($name)}\" id=\"{$editorId}-hidden\" value=\"{$e($value)}\">";
+                echo "<script>document.addEventListener('DOMContentLoaded',function(){var CE=window.CKEDITOR&&window.CKEDITOR.ClassicEditor?window.CKEDITOR.ClassicEditor:(window.ClassicEditor||null);if(CE){CE.create(document.getElementById('{$editorId}'),{language:'de'}).then(function(editor){var h=document.getElementById('{$editorId}-hidden');if(h)h.value=editor.getData();editor.model.document.on('change:data',function(){if(h)h.value=editor.getData();});var f=document.getElementById('{$editorId}')?.closest('form');if(f)f.addEventListener('submit',function(){if(h)h.value=editor.getData();});}).catch(console.error);}});</script>";
                 break;
 
             default: // text, number, email, tel, url, password, date, time, datetime

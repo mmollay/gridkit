@@ -545,43 +545,8 @@
     };
 
     // === RICHTEXT EDITOR ===
-    GK.initRichtext = function() {
-        document.querySelectorAll('.gk-richtext').forEach(function(editor) {
-            if (editor._gkInit) return;
-            editor._gkInit = true;
-            var toolbar = editor.querySelector('.gk-richtext-toolbar');
-            var content = editor.querySelector('.gk-richtext-content');
-            var hidden = editor.querySelector('input[type="hidden"]');
-
-            toolbar.querySelectorAll('.gk-richtext-btn').forEach(function(btn) {
-                btn.addEventListener('mousedown', function(e) {
-                    e.preventDefault();
-                    var cmd = btn.dataset.cmd;
-                    var val = btn.dataset.val || null;
-                    if (btn.dataset.prompt) {
-                        val = prompt(btn.dataset.prompt);
-                        if (!val) return;
-                    }
-                    if (cmd === 'formatBlock' && val) val = '<' + val + '>';
-                    document.execCommand(cmd, false, val);
-                    content.focus();
-                });
-            });
-
-            // Sync to hidden input on input
-            content.addEventListener('input', function() {
-                if (hidden) hidden.value = content.innerHTML;
-            });
-
-            // Sync before form submit
-            var form = editor.closest('form');
-            if (form) {
-                form.addEventListener('submit', function() {
-                    if (hidden) hidden.value = content.innerHTML;
-                });
-            }
-        });
-    };
+    // gk-richtext wird nun via CKEditor5 initialisiert (siehe Form.php)
+    GK.initRichtext = function() {};
 
     // Extend init
     var _origInit = GK.init;

@@ -1,4 +1,4 @@
-/* GridKit Core CSS v0.9.19 */
+/* GridKit Core CSS v0.9.20 */
 
 /* Global link reset */
 a { text-decoration: none; color: inherit; }
@@ -1203,3 +1203,9 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 
 /* === FORM PAGE LAYOUT === */
 .gk-form-page { max-width: 800px; }
+
+/* === CKEDITOR5 in GridKit === */
+.gk-richtext-wrap { border: 1.5px solid var(--gk-border); border-radius: var(--gk-radius-sm); overflow: hidden; transition: border-color .15s; }
+.gk-richtext-wrap:focus-within { border-color: var(--gk-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+.gk-richtext-wrap .ck-editor__editable { min-height: 320px; font-family: var(--gk-font); font-size: 14px; border: none !important; box-shadow: none !important; }
+.gk-richtext-wrap .ck.ck-toolbar { border: none; border-bottom: 1px solid var(--gk-border) !important; background: var(--gk-bg-muted) !important; }
