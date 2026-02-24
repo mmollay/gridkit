@@ -1,4 +1,4 @@
-/* GridKit Core CSS v0.9.16 */
+/* GridKit Core CSS v0.9.17 */
 
 /* Global link reset */
 a { text-decoration: none; color: inherit; }
@@ -571,25 +571,9 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-with-sidebar { margin-left: 260px; transition: margin-left .25s ease; }
 
 /* === LAYOUT MAX-WIDTH (--gk-content-max-width) ===
-   Auf breiten Screens wird das gesamte Layout zentriert.
-   Sidebar, Header und Content-Bereich verschieben sich mit. */
-@media (min-width: 1201px) {
-    .gk-sidebar {
-        left: calc((100vw - var(--gk-content-max-width, 1200px)) / 2);
-    }
-    .gk-header-fixed {
-        left: calc((100vw - var(--gk-content-max-width, 1200px)) / 2);
-        right: calc((100vw - var(--gk-content-max-width, 1200px)) / 2);
-    }
-    .gk-with-sidebar {
-        margin-left: calc(260px + (100vw - var(--gk-content-max-width, 1200px)) / 2);
-        max-width: calc(var(--gk-content-max-width, 1200px) - 260px);
-    }
-    .gk-sidebar.collapsed ~ .gk-with-sidebar {
-        margin-left: calc(60px + (100vw - var(--gk-content-max-width, 1200px)) / 2);
-        max-width: calc(var(--gk-content-max-width, 1200px) - 60px);
-    }
-}
+   Sidebar bleibt links. Content-Bereich wird auf (max-width - sidebar) begrenzt. */
+.gk-with-sidebar { max-width: calc(var(--gk-content-max-width, 1200px) - 260px); }
+.gk-sidebar.collapsed ~ .gk-with-sidebar { max-width: calc(var(--gk-content-max-width, 1200px) - 60px); }
 .gk-sidebar.collapsed ~ .gk-with-sidebar { margin-left: 60px; }
 
 @media (max-width: 768px) {
