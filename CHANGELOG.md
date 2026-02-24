@@ -9,6 +9,11 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 - Weitere Komponenten geplant (Flash Messages/Alerts, Standalone Select)
 - Dokumentation vervollständigen
 
+## [0.9.14] - 2026-02-24
+
+### Added
+- `--gk-content-max-width: 1400px` — Zentrales Layout-Token für maximale Content-Breite
+
 ---
 
 ## [0.9.11] - 2026-02-23

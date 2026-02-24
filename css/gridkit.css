@@ -1,4 +1,4 @@
-/* GridKit Core CSS v0.6 */
+/* GridKit Core CSS v0.9.14 */
 
 /* Global link reset */
 a { text-decoration: none; color: inherit; }
@@ -126,6 +126,7 @@ a:hover { text-decoration: none; }
     --gk-font-size: 14px;
     --gk-font-size-sm: 12px;
     --gk-spacing: 12px;
+    --gk-content-max-width: 1400px;
     font-family: var(--gk-font);
     font-size: var(--gk-font-size);
     color: var(--gk-text);
