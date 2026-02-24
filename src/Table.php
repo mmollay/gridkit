@@ -272,12 +272,10 @@ class Table
                . '<span class="material-icons" style="font-size:18px;">check_box</span>'
                . '<span class="gk-bulk-count">0 ausgewählt</span>'
                . '<div class="gk-toolbar-spacer"></div>'
-               . '<button type="button" class="gk-btn gk-btn-sm gk-btn-danger gk-btn-filled" data-gk-bulk-delete>'
+               . '<button type="button" data-gk-bulk-delete>'
                .   '<span class="material-icons">delete</span> Löschen'
                . '</button>'
-               . '<button type="button" class="gk-btn gk-btn-sm gk-btn-neutral gk-btn-outlined" data-gk-bulk-cancel>'
-               .   'Abbrechen'
-               . '</button>'
+               . '<button type="button" data-gk-bulk-cancel>Abbrechen</button>'
                . '</div>';
         }
 
