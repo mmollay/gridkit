@@ -1,4 +1,4 @@
-/* GridKit Core CSS v0.9.17 */
+/* GridKit Core CSS v0.9.18 */
 
 /* Global link reset */
 a { text-decoration: none; color: inherit; }
@@ -126,7 +126,7 @@ a:hover { text-decoration: none; }
     --gk-font-size: 14px;
     --gk-font-size-sm: 12px;
     --gk-spacing: 12px;
-    --gk-content-max-width: 1200px;
+    --gk-content-max-width: 1400px;
     font-family: var(--gk-font);
     font-size: var(--gk-font-size);
     color: var(--gk-text);
@@ -572,8 +572,8 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 
 /* === LAYOUT MAX-WIDTH (--gk-content-max-width) ===
    Sidebar bleibt links. Content-Bereich wird auf (max-width - sidebar) begrenzt. */
-.gk-with-sidebar { max-width: calc(var(--gk-content-max-width, 1200px) - 260px); }
-.gk-sidebar.collapsed ~ .gk-with-sidebar { max-width: calc(var(--gk-content-max-width, 1200px) - 60px); }
+.gk-with-sidebar { max-width: calc(var(--gk-content-max-width, 1400px) - 260px); }
+.gk-sidebar.collapsed ~ .gk-with-sidebar { max-width: calc(var(--gk-content-max-width, 1400px) - 60px); }
 .gk-sidebar.collapsed ~ .gk-with-sidebar { margin-left: 60px; }
 
 @media (max-width: 768px) {
