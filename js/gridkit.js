@@ -210,12 +210,12 @@
 
                 // Row checkboxes
                 wrap.addEventListener('change', function(e) {
-                    const cb = e.target.closest('td.gk-cb-col input[type=checkbox]') || (e.target.tagName === 'INPUT' && e.target.closest('td.gk-cb-col') ? e.target : null);
-                    if (!cb) return;
-                    const tr = cb.closest('tr[data-gk-row-id]');
+                    if (e.target.tagName !== 'INPUT' || e.target.type !== 'checkbox') return;
+                    if (!e.target.closest('td.gk-cb-col')) return;
+                    const tr = e.target.closest('tr[data-gk-row-id]');
                     if (!tr) return;
-                    if (cb.checked) selected.add(getRowId(tr));
-                    else            selected.delete(getRowId(tr));
+                    if (e.target.checked) selected.add(getRowId(tr));
+                    else                  selected.delete(getRowId(tr));
                     updateBar();
                 });
 
