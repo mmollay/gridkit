@@ -629,13 +629,14 @@
                 var options = wrap.querySelectorAll('.gk-select-option');
 
                 display.addEventListener('click', function() {
+                    if (wrap.hasAttribute('data-disabled')) return;
                     display.classList.toggle('open');
                     if (display.classList.contains('open')) {
-                        searchInput.value = '';
+                        if (searchInput) { searchInput.value = ''; }
                         options.forEach(o => o.classList.remove('hidden'));
                         var empty = dropdown.querySelector('.gk-select-empty');
                         if (empty) empty.remove();
-                        setTimeout(() => searchInput.focus(), 50);
+                        if (searchInput) setTimeout(() => searchInput.focus(), 50);
                     }
                 });
 

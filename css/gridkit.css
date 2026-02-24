@@ -1117,6 +1117,7 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-select-option.selected { background: rgba(99,102,241,0.08); color: var(--gk-primary); font-weight: 500; }
 .gk-select-option.hidden { display: none; }
 .gk-select-empty { padding: 16px; text-align: center; color: var(--gk-outline); font-size: 13px; }
+.gk-select-disabled .gk-select-display { opacity: .55; cursor: not-allowed; pointer-events: none; background: var(--gk-bg-muted); }
 
 /* === MULTI-SELECT === */
 .gk-multiselect { position: relative; }
