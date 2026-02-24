@@ -183,6 +183,79 @@
                         }
                     });
                 });
+
+                // Multi-select
+                if (wrap.hasAttribute('data-gk-selectable')) this.initSelectable(wrap);
+            },
+
+            initSelectable(wrap) {
+                const selected = new Set();
+                const bulkBar  = wrap.querySelector('.gk-bulk-bar');
+
+                function getRowId(row) { return row.dataset.gkRowId; }
+
+                function updateBar() {
+                    if (!bulkBar) return;
+                    const n = selected.size;
+                    bulkBar.querySelector('.gk-bulk-count').textContent = n + ' ausgewählt';
+                    bulkBar.style.display = n > 0 ? 'flex' : 'none';
+                    wrap.querySelectorAll('tbody tr[data-gk-row-id]').forEach(tr => {
+                        tr.classList.toggle('gk-row-selected', selected.has(getRowId(tr)));
+                    });
+                    const all = wrap.querySelectorAll('tbody tr[data-gk-row-id]');
+                    const selAll = wrap.querySelector('[data-gk-select-all]');
+                    if (selAll) selAll.indeterminate = n > 0 && n < all.length;
+                    if (selAll) selAll.checked = n > 0 && n === all.length;
+                }
+
+                // Row checkboxes
+                wrap.addEventListener('change', function(e) {
+                    const cb = e.target.closest('td.gk-cb-col input[type=checkbox]') || (e.target.tagName === 'INPUT' && e.target.closest('td.gk-cb-col') ? e.target : null);
+                    if (!cb) return;
+                    const tr = cb.closest('tr[data-gk-row-id]');
+                    if (!tr) return;
+                    if (cb.checked) selected.add(getRowId(tr));
+                    else            selected.delete(getRowId(tr));
+                    updateBar();
+                });
+
+                // Select-all checkbox
+                const selAll = wrap.querySelector('[data-gk-select-all]');
+                if (selAll) {
+                    selAll.addEventListener('change', function() {
+                        wrap.querySelectorAll('tbody tr[data-gk-row-id]').forEach(tr => {
+                            const cb = tr.querySelector('td.gk-cb-col input[type=checkbox]');
+                            if (this.checked) { selected.add(getRowId(tr)); if (cb) cb.checked = true; }
+                            else              { selected.delete(getRowId(tr)); if (cb) cb.checked = false; }
+                        });
+                        updateBar();
+                    });
+                }
+
+                // Bulk delete
+                const delBtn = bulkBar && bulkBar.querySelector('[data-gk-bulk-delete]');
+                if (delBtn) {
+                    delBtn.addEventListener('click', function() {
+                        if (!selected.size) return;
+                        const ids = [...selected];
+                        GK.confirm(ids.length + ' Einträge wirklich löschen?', {title: 'Löschen', confirmText: 'Löschen', danger: true})
+                            .then(ok => {
+                                if (!ok) return;
+                                wrap.dispatchEvent(new CustomEvent('gk:bulkdelete', { bubbles: true, detail: { ids, tableId: wrap.dataset.gkTable } }));
+                            });
+                    });
+                }
+
+                // Cancel
+                const cancelBtn = bulkBar && bulkBar.querySelector('[data-gk-bulk-cancel]');
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', function() {
+                        selected.clear();
+                        wrap.querySelectorAll('tbody input[type=checkbox]').forEach(cb => cb.checked = false);
+                        if (selAll) { selAll.checked = false; selAll.indeterminate = false; }
+                        updateBar();
+                    });
+                }
             },
 
             // Client-side render for static data

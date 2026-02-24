@@ -29,6 +29,8 @@ class Table
     private string $size = 'md';
     private string $variant = 'default';
     private string $mobileMode = 'card';
+    private bool $selectable = false;
+    private string $selectKey = 'id';
 
     public function __construct(string $id)
     {
@@ -125,6 +127,13 @@ class Table
         return $this;
     }
 
+    public function selectable(string $key = 'id'): static
+    {
+        $this->selectable = true;
+        $this->selectKey  = $key;
+        return $this;
+    }
+
     public function setData(array $rows): static
     {
         $this->rows = $rows;
@@ -205,13 +214,14 @@ class Table
         }
 
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
-        $staticAttr = $this->isStatic ? ' data-gk-static' : '';
-        $wrapClasses = 'gk-table-wrap';
-        $wrapClasses .= ' gk-table-' . $this->size;
+        $staticAttr    = $this->isStatic   ? ' data-gk-static'    : '';
+        $selectAttr    = $this->selectable ? ' data-gk-selectable' : '';
+        $wrapClasses   = 'gk-table-wrap';
+        $wrapClasses  .= ' gk-table-' . $this->size;
         if ($this->variant !== 'default') $wrapClasses .= ' gk-table-' . $this->variant;
         if ($this->mobileMode === 'card') $wrapClasses .= ' gk-table-mobile-card';
         elseif ($this->mobileMode === 'scroll') $wrapClasses .= ' gk-table-mobile-scroll';
-        echo '<div class="' . $wrapClasses . '" data-gk-table="' . $e($this->id) . '"' . $staticAttr . '>';
+        echo '<div class="' . $wrapClasses . '" data-gk-table="' . $e($this->id) . '"' . $staticAttr . $selectAttr . '>';
 
         // Embed JSON data + column config for client-side operations
         if ($this->isStatic) {
@@ -257,6 +267,20 @@ class Table
         echo '</div>';
         } // end toolbar
 
+        if ($this->selectable) {
+            echo '<div class="gk-bulk-bar" style="display:none;">'
+               . '<span class="material-icons" style="font-size:18px;">check_box</span>'
+               . '<span class="gk-bulk-count">0 ausgewählt</span>'
+               . '<div class="gk-toolbar-spacer"></div>'
+               . '<button type="button" class="gk-btn gk-btn-sm gk-btn-danger gk-btn-filled" data-gk-bulk-delete>'
+               .   '<span class="material-icons">delete</span> Löschen'
+               . '</button>'
+               . '<button type="button" class="gk-btn gk-btn-sm gk-btn-neutral gk-btn-outlined" data-gk-bulk-cancel>'
+               .   'Abbrechen'
+               . '</button>'
+               . '</div>';
+        }
+
         $this->renderInner();
 
         // Modals
@@ -273,6 +297,9 @@ class Table
 
         $tableClass = 'gk-table' . ($this->globalNowrap ? ' gk-table-nowrap' : '');
         echo '<table class="' . $tableClass . '"><thead><tr>';
+        if ($this->selectable) {
+            echo '<th class="gk-cb-col"><input type="checkbox" data-gk-select-all title="Alle auswählen"></th>';
+        }
         foreach ($this->columns as $key => $col) {
             $styles = [];
             if (isset($col['width']) && $col['width'] !== 'auto') $styles[] = 'width:' . $e($col['width']);
@@ -302,7 +329,12 @@ class Table
         echo '</tr></thead><tbody>';
 
         foreach ($this->rows as $row) {
-            echo '<tr>';
+            $rowId = $this->selectable ? $e($row[$this->selectKey] ?? '') : '';
+            $rowIdAttr = $this->selectable ? ' data-gk-row-id="' . $rowId . '"' : '';
+            echo '<tr' . $rowIdAttr . '>';
+            if ($this->selectable) {
+                echo '<td class="gk-cb-col"><input type="checkbox" value="' . $rowId . '"></td>';
+            }
             if ($leftButtons) {
                 echo '<td class="gk-actions gk-actions-left"><div class="gk-btn-group">';
                 $this->renderButtons($leftButtons, $row, $e);
@@ -331,7 +363,7 @@ class Table
         }
 
         if (!$this->rows) {
-            $colspan = count($this->columns) + ($leftButtons ? 1 : 0) + ($rightButtons ? 1 : 0);
+            $colspan = count($this->columns) + ($leftButtons ? 1 : 0) + ($rightButtons ? 1 : 0) + ($this->selectable ? 1 : 0);
             echo "<tr><td colspan=\"{$colspan}\" class=\"gk-empty\">Keine Einträge gefunden</td></tr>";
         }
 
