@@ -1,4 +1,4 @@
-/* GridKit Core CSS v0.9.14 */
+/* GridKit Core CSS v0.9.15 */
 
 /* Global link reset */
 a { text-decoration: none; color: inherit; }
@@ -569,6 +569,27 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 
 /* Sidebar: content offset */
 .gk-with-sidebar { margin-left: 260px; transition: margin-left .25s ease; }
+
+/* === LAYOUT MAX-WIDTH (--gk-content-max-width) ===
+   Auf breiten Screens wird das gesamte Layout zentriert.
+   Sidebar, Header und Content-Bereich verschieben sich mit. */
+@media (min-width: 1401px) {
+    .gk-sidebar {
+        left: calc((100vw - var(--gk-content-max-width, 1400px)) / 2);
+    }
+    .gk-header-fixed {
+        left: calc((100vw - var(--gk-content-max-width, 1400px)) / 2);
+        right: calc((100vw - var(--gk-content-max-width, 1400px)) / 2);
+    }
+    .gk-with-sidebar {
+        margin-left: calc(260px + (100vw - var(--gk-content-max-width, 1400px)) / 2);
+        max-width: calc(var(--gk-content-max-width, 1400px) - 260px);
+    }
+    .gk-sidebar.collapsed ~ .gk-with-sidebar {
+        margin-left: calc(60px + (100vw - var(--gk-content-max-width, 1400px)) / 2);
+        max-width: calc(var(--gk-content-max-width, 1400px) - 60px);
+    }
+}
 .gk-sidebar.collapsed ~ .gk-with-sidebar { margin-left: 60px; }
 
 @media (max-width: 768px) {

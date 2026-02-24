@@ -9,6 +9,11 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 - Weitere Komponenten geplant (Flash Messages/Alerts, Standalone Select)
 - Dokumentation vervollständigen
 
+## [0.9.15] - 2026-02-24
+
+### Added
+- Zentriertes Layout auf breiten Screens: Sidebar, Header und Content werden bei Viewports > 1400px automatisch zentriert via `--gk-content-max-width`
+
 ## [0.9.14] - 2026-02-24
 
 ### Added
