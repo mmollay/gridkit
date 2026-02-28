@@ -258,33 +258,125 @@ class Form
                 break;
 
             case 'file':
-                $accept = isset($f['accept']) ? " accept=\"{$e($f['accept'])}\"" : '';
-                $multiple = !empty($f['multiple']) ? ' multiple' : '';
-                $maxSize = $f['maxSize'] ?? '';
-                echo "<div class=\"gk-upload-zone\" data-max-size=\"{$e($maxSize)}\">";
-                echo "<input type=\"file\" name=\"{$e($name)}\" id=\"{$e($name)}\" class=\"gk-upload-input\"{$accept}{$multiple}{$req}>";
-                echo "<div class=\"gk-upload-content\">";
-                echo "<span class=\"material-icons gk-upload-icon\">cloud_upload</span>";
-                echo "<span class=\"gk-upload-text\">Datei hierher ziehen oder klicken</span>";
-                if ($maxSize) echo "<span class=\"gk-upload-hint\">Max. {$e($maxSize)}</span>";
-                echo "</div></div>";
+                $multiple    = !empty($f['multiple']) ? ' multiple' : '';
+                $maxSize     = $f['maxSize'] ?? '';
+                $hint        = $f['hint'] ?? ($maxSize ? 'Max. ' . $maxSize : '');
+                $icon        = $e($f['icon'] ?? 'cloud_upload');
+                $label       = $e($f['label_text'] ?? ($multiple ? 'Dateien hierher ziehen oder klicken' : 'Datei hierher ziehen oder klicken'));
+                // accept: array ['pdf','jpg',...] oder string '.pdf,.jpg,...'
+                $acceptRaw   = $f['accept'] ?? [];
+                if (is_array($acceptRaw)) {
+                    $acceptStr = implode(',', array_map(
+                        fn($ext) => str_starts_with($ext, '.') ? $ext : '.' . $ext,
+                        $acceptRaw
+                    ));
+                } else {
+                    $acceptStr = (string) $acceptRaw;
+                }
+                $acceptAttr  = $acceptStr !== '' ? " accept=\"{$e($acceptStr)}\"" : '';
+                $minSize     = $f['minSize']      ?? '';
+                $maxTotalSize= $f['maxTotalSize'] ?? '';
+                $maxFiles    = isset($f['maxFiles']) ? (int)$f['maxFiles'] : 0;
+                $withPreview = !empty($f['preview']);
+                $dataAttrs   = ' data-gk-upload';
+                if ($multiple)       $dataAttrs .= ' data-gk-multiple';
+                if ($acceptStr)      $dataAttrs .= " data-gk-accept=\"{$e($acceptStr)}\"";
+                if ($maxSize)        $dataAttrs .= " data-gk-max-size=\"{$e($maxSize)}\"";
+                if ($minSize)        $dataAttrs .= " data-gk-min-size=\"{$e($minSize)}\"";
+                if ($maxTotalSize)   $dataAttrs .= " data-gk-max-total-size=\"{$e($maxTotalSize)}\"";
+                if ($maxFiles > 0)   $dataAttrs .= " data-gk-max-files=\"{$maxFiles}\"";
+                if ($withPreview)    $dataAttrs .= ' data-gk-preview';
+                echo "<div class=\"gk-upload-zone\"{$dataAttrs}>";
+                echo "<input type=\"file\" name=\"{$e($name)}[]\" id=\"{$e($name)}\" class=\"gk-upload-input\"{$acceptAttr}{$multiple}{$req}>";
+                echo "<div class=\"gk-upload-content gk-upload-idle\">";
+                echo "<span class=\"material-icons gk-upload-icon\">{$icon}</span>";
+                echo "<span class=\"gk-upload-text\">{$label}</span>";
+                if ($hint) echo "<span class=\"gk-upload-hint\">{$e($hint)}</span>";
+                echo "</div>";
+                echo "<div class=\"gk-upload-progress\" style=\"display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none;\">";
+                echo "<span class=\"material-icons gk-spin\" style=\"font-size:32px;color:var(--gk-primary);\">sync</span>";
+                echo "<span class=\"gk-upload-text gk-upload-progress-label\">Wird hochgeladen…</span>";
+                echo "</div>";
+                echo "</div>";
+                break;
+
+            case 'color':
+                $colorId  = 'gk-color-' . $name . '-' . substr(md5($name . microtime()), 0, 6);
+                $hexId    = $colorId . '-hex';
+                $colorVal = $value ?: '#6750a4';
+                echo "<div class=\"gk-color-wrap\" id=\"{$colorId}-wrap\">";
+                echo "<div class=\"gk-color-swatch\">";
+                echo "<input type=\"color\" id=\"{$colorId}\" value=\"{$e($colorVal)}\" name=\"{$e($name)}\">";
+                echo "</div>";
+                echo "<input type=\"text\" id=\"{$hexId}\" class=\"gk-color-hex\" maxlength=\"7\" value=\"" . strtoupper($e($colorVal)) . "\" placeholder=\"#RRGGBB\" pattern=\"#[0-9A-Fa-f]{6}\">";
+                echo "</div>";
+                echo "<script>(function(){";
+                echo "var sw=document.getElementById('{$colorId}');";
+                echo "var hex=document.getElementById('{$hexId}');";
+                echo "if(!sw||!hex)return;";
+                echo "sw.addEventListener('input',function(){hex.value=sw.value.toUpperCase();});";
+                echo "hex.addEventListener('input',function(){var v=hex.value;if(/^#[0-9A-Fa-f]{6}$/.test(v))sw.value=v;});";
+                echo "hex.addEventListener('blur',function(){if(!/^#[0-9A-Fa-f]{6}$/.test(hex.value))hex.value=sw.value.toUpperCase();});";
+                echo "})();</script>";
                 break;
 
             case 'richtext':
                 $editorId = 'gk-editor-' . $name . '-' . substr(md5($name . microtime()), 0, 6);
+                $preset   = $f['preset'] ?? 'full'; // 'basic' | 'full'
+                if ($preset === 'basic') {
+                    $ckPlugins  = "CK.Essentials,CK.Paragraph,CK.Bold,CK.Italic,CK.Underline,CK.Strikethrough,CK.Link,CK.List,CK.Undo";
+                    $ckToolbar  = "'bold','italic','underline','strikethrough','|','link','|','bulletedList','numberedList','|','undo','redo'";
+                } else {
+                    $ckPlugins  = "CK.Essentials,CK.Paragraph,CK.Heading,CK.Bold,CK.Italic,CK.Underline,CK.Strikethrough,CK.Link,CK.BlockQuote,CK.List,CK.Table,CK.TableToolbar,CK.TableProperties,CK.TableCellProperties,CK.Alignment,CK.Undo,CK.SourceEditing";
+                    $ckToolbar  = "'heading','|','bold','italic','underline','strikethrough','|','link','blockQuote','|','bulletedList','numberedList','|','insertTable','|','alignment','|','undo','redo','|','sourceEditing'";
+                }
                 echo "<div class=\"gk-richtext-wrap\">";
-                echo "<div id=\"{$editorId}\">{$value}</div>";
+                echo "<div id=\"{$editorId}\"></div>";
                 echo "</div>";
                 echo "<input type=\"hidden\" name=\"{$e($name)}\" id=\"{$editorId}-hidden\" value=\"{$e($value)}\">";
-                echo "<script>document.addEventListener('DOMContentLoaded',function(){var CK=window.CKEDITOR||{};var CE=CK.ClassicEditor||null;if(!CE)return;var p=[CK.Essentials,CK.Paragraph,CK.Heading,CK.Bold,CK.Italic,CK.Underline,CK.Link,CK.BlockQuote,CK.BulletedList,CK.NumberedList,CK.Table,CK.TableToolbar,CK.Alignment,CK.Undo,CK.SourceEditing].filter(Boolean);CE.create(document.getElementById('{$editorId}'),{licenseKey:'GPL',plugins:p,toolbar:['heading','|','bold','italic','underline','|','link','blockQuote','|','bulletedList','numberedList','|','insertTable','|','alignment','|','undo','redo'],language:'de'}).then(function(editor){var h=document.getElementById('{$editorId}-hidden');if(h)h.value=editor.getData();editor.model.document.on('change:data',function(){if(h)h.value=editor.getData();});var f=document.getElementById('{$editorId}');if(f)f=f.closest('form');if(f)f.addEventListener('submit',function(){if(h)h.value=editor.getData();});}).catch(console.error);});</script>";
+                // Lazy-init via IntersectionObserver — works inside hidden tabs
+                $jsonValue = json_encode($value ?? '');
+                echo "<script>(function(){";
+                echo "var _id='{$editorId}';";
+                echo "var _init=false;";
+                echo "var _start=function(){";
+                echo "if(_init)return;_init=true;";
+                echo "var CK=window.CKEDITOR||{};var CE=CK.ClassicEditor;if(!CE)return;";
+                echo "var p=[{$ckPlugins}].filter(Boolean);";
+                echo "CE.create(document.getElementById(_id),{licenseKey:'GPL',plugins:p,toolbar:[{$ckToolbar}],language:'de'})";
+                echo ".then(function(editor){";
+                echo "var initial={$jsonValue};if(initial)editor.setData(initial);";
+                echo "var h=document.getElementById(_id+'-hidden');";
+                echo "if(h)h.value=editor.getData();";
+                echo "editor.model.document.on('change:data',function(){if(h)h.value=editor.getData();});";
+                echo "var frm=document.getElementById(_id);if(frm)frm=frm.closest('form');";
+                echo "if(frm)frm.addEventListener('submit',function(){if(h)h.value=editor.getData();});";
+                echo "}).catch(console.error);};";
+                // Use IntersectionObserver to detect when element enters viewport / becomes visible
+                echo "var _el=document.getElementById(_id);";
+                echo "if(!_el){return;}";
+                echo "if(typeof IntersectionObserver!=='undefined'){";
+                echo "var _obs=new IntersectionObserver(function(entries){if(entries[0].isIntersecting){_start();_obs.disconnect();}},{threshold:0});";
+                echo "_obs.observe(_el);";
+                echo "}else{document.addEventListener('DOMContentLoaded',_start);}";
+                echo "})();</script>";
                 break;
 
             default: // text, number, email, tel, url, password, date, time, datetime
-                $htmlType = $type === 'datetime' ? 'datetime-local' : $type;
+                $htmlType  = $type === 'datetime' ? 'datetime-local' : $type;
+                $clearable = !empty($f['clearable']);
                 $extra = '';
-                if (isset($f['step'])) $extra .= " step=\"{$e($f['step'])}\"";
+                if (isset($f['step']))        $extra .= " step=\"{$e($f['step'])}\"";
                 if (isset($f['placeholder'])) $extra .= " placeholder=\"{$e($f['placeholder'])}\"";
-                echo "<input type=\"{$e($htmlType)}\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\" class=\"gk-input\"{$req}{$extra}>";
+                if ($clearable) {
+                    $hasVal = $value !== '' && $value !== null ? '' : ' style="display:none"';
+                    echo "<div class=\"gk-input-clearable\">";
+                    echo "<input type=\"{$e($htmlType)}\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\" class=\"gk-input\"{$req}{$extra} oninput=\"this.nextElementSibling.style.display=this.value?'':'none'\">";
+                    echo "<button type=\"button\" class=\"gk-input-clear\" title=\"Leeren\"{$hasVal} onclick=\"this.previousElementSibling.value='';this.style.display='none';\"><span class=\"material-icons\">delete</span></button>";
+                    echo "</div>";
+                } else {
+                    echo "<input type=\"{$e($htmlType)}\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\" class=\"gk-input\"{$req}{$extra}>";
+                }
         }
 
         echo '<div class="gk-field-error" data-gk-error="' . $e($name) . '"></div>';

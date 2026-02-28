@@ -23,6 +23,8 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
     <link rel="stylesheet" href="../css/gridkit.css">
     <link rel="stylesheet" href="../css/themes.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="../vendor/ckeditor5/ckeditor5.css">
+    <script src="../vendor/ckeditor5/ckeditor5.umd.js"></script>
     <style>
         body { margin:0; padding:0; background:var(--gk-surface-container, #f0f1f3); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:var(--gk-on-surface, #1f2937); }
         /* Demo header now uses GridKit Header component */
@@ -34,11 +36,8 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-card .gk-table-wrap { border:none !important; }
         .demo-code { background:var(--gk-surface-dim, #1e293b); color:var(--gk-on-surface, #e2e8f0); padding:20px; border-radius:8px; overflow-x:auto; font-family:'SF Mono',Monaco,Consolas,monospace; font-size:13px; line-height:1.6; margin-top:16px; }
         .demo-code pre { margin:0; }
-        .demo-pair { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; margin-bottom:24px; }
-        .demo-pair .demo-card { margin-bottom:0; }
-        .demo-pair .demo-code { margin-top:0; }
-        .demo-pair-left { display:flex; flex-direction:column; gap:16px; }
-        @media(max-width:900px) { .demo-pair { grid-template-columns:1fr; } }
+        .demo-pair { display:flex; flex-direction:column; gap:16px; margin-bottom:24px; }
+        .demo-pair-left { display:contents; }
         .demo-stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:24px; }
         .demo-stat { background:var(--gk-surface, #fff); border-radius:8px; padding:20px; text-align:center; box-shadow:var(--gk-shadow); }
         .demo-stat .num { font-size:28px; font-weight:700; color:var(--gk-primary); }
@@ -55,6 +54,8 @@ $sidebar->brand('GridKit', 'widgets', 'v' . $version)
     ->group('Komponenten')
     ->item('Table', '#table', 'table_chart', ['active' => true])
     ->item('Form', '#form', 'edit_note')
+    ->item('Upload',       '#upload',       'upload_file')
+    ->item('Color Picker', '#color',        'palette')
     ->item('Modal', '#modal', 'open_in_new')
     ->item('Formatter', '#formatter', 'format_paint')
     ->group('Dashboard')
@@ -233,7 +234,7 @@ $table->size('lg');  // großzügig</pre></div>
         ['name' => 'SEO Beratung', 'price' => '95 €', 'status' => 'inaktiv'],
         ['name' => 'Logo Design', 'price' => '450 €', 'status' => 'entwurf'],
     ];
-    echo '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">';
+    echo '<div style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px;">';
     foreach (['default', 'bordered', 'striped', 'minimal', 'flat'] as $var) {
         echo '<div class="demo-card" style="padding:0;overflow:hidden">';
         echo '<div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">variant(\'' . $var . '\')</div>';
@@ -416,11 +417,41 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 
     <!-- RichText Editor -->
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">RichText Editor</h3>
+        <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">RichText Editor (CKEditor 5)</h3>
+        <p class="demo-intro">Lokaler Vendor-Bundle (<code>vendor/ckeditor5/</code>), kein CDN. Initialisierung per <code>IntersectionObserver</code> — funktioniert auch in Tabs und Modals.</p>
         <?php
         $form5 = new Form('richtext_form');
-        $form5->field('content_basic', 'Inhalt (Basic)', 'richtext', ['toolbar' => 'basic'])
-            ->field('content_full', 'Inhalt (Full)', 'richtext', ['toolbar' => 'full'])
+        $form5->field('content_basic', 'Inhalt (Basic)', 'richtext', ['preset' => 'basic'])
+            ->field('content_full', 'Inhalt (Full)', 'richtext', ['preset' => 'full'])
+            ->render();
+        ?>
+    </div>
+
+    <!-- Clearable Felder -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Clearable Datum/Zeit-Felder</h3>
+        <p class="demo-intro">Mistkübel-Icon erscheint nur wenn ein Wert gesetzt ist — verschwindet nach dem Löschen automatisch.</p>
+        <?php
+        $formClearable = new Form('clearable_form');
+        $formClearable
+            ->field('datum',  'Datum',    'date',     ['value' => date('Y-m-d'),      'clearable' => true])
+            ->field('zeit',   'Uhrzeit',  'time',     ['value' => '09:00',            'clearable' => true])
+            ->field('termin', 'Termin',   'datetime', ['value' => date('Y-m-d\TH:i'), 'clearable' => true])
+            ->render();
+        ?>
+    </div>
+
+    <!-- Neue Feldtypen -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Neue Feldtypen</h3>
+        <p class="demo-intro">Einheitliche Höhe von 44px für alle Input-Typen. Bei <code>number</code> kein Browser-Spinner.</p>
+        <?php
+        $formNew = new Form('new_fields_form');
+        $formNew
+            ->field('farbe', 'Farbe',  'color',  ['value' => '#6750a4'])
+            ->field('monat', 'Monat',  'month',  ['value' => date('Y-m')])
+            ->field('kw',    'KW',     'week',   ['value' => date('Y-\WW')])
+            ->field('preis', 'Preis',  'number', ['placeholder' => '0.00'])
             ->render();
         ?>
     </div>
@@ -510,8 +541,264 @@ $form->row()
 // File Upload
 ->field('doc', 'Dokument', 'file', ['accept' => '.pdf', 'multiple' => true, 'maxSize' => '10MB'])
 
-// RichText Editor
-->field('content', 'Inhalt', 'richtext', ['toolbar' => 'full'])</pre></div>
+// RichText Editor (preset: 'basic' | 'full')
+->field('content', 'Inhalt', 'richtext', ['preset' => 'full'])
+
+// Clearable Datum/Zeit
+->field('datum',  'Datum',    'date',     ['value' => date('Y-m-d'),      'clearable' => true])
+->field('zeit',   'Uhrzeit',  'time',     ['value' => '09:00',            'clearable' => true])
+->field('termin', 'Termin',   'datetime', ['value' => date('Y-m-d\TH:i'), 'clearable' => true])
+
+// Neue Feldtypen (44px Höhe, kein Spinner bei number)
+->field('farbe', 'Farbe',  'color',  ['value' => '#6750a4'])
+->field('monat', 'Monat',  'month',  ['value' => date('Y-m')])
+->field('kw',    'KW',     'week',   ['value' => date('Y-\WW')])
+->field('preis', 'Preis',  'number', ['placeholder' => '0.00'])</pre></div>
+</div>
+
+<!-- ===== UPLOAD ===== -->
+<div class="demo-section" data-section="upload">
+    <h2>Upload</h2>
+
+    <!-- Übersicht -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;">
+        <div class="demo-card" style="text-align:center;">
+            <span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">drag_indicator</span>
+            <strong>Drag &amp; Drop</strong>
+            <p class="demo-intro" style="margin:8px 0 0;">Dateien per Drag &amp; Drop oder Klick auswählen</p>
+        </div>
+        <div class="demo-card" style="text-align:center;">
+            <span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">verified</span>
+            <strong>Validierung</strong>
+            <p class="demo-intro" style="margin:8px 0 0;">Typ, Größe (min/max), Anzahl und Gesamtgröße</p>
+        </div>
+        <div class="demo-card" style="text-align:center;">
+            <span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">image</span>
+            <strong>Vorschau</strong>
+            <p class="demo-intro" style="margin:8px 0 0;">Bild-Thumbnails direkt in der Upload-Zone</p>
+        </div>
+        <div class="demo-card" style="text-align:center;">
+            <span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">list_alt</span>
+            <strong>Queue-UI</strong>
+            <p class="demo-intro" style="margin:8px 0 0;">Fortschrittsanzeige, Zustände, Fehler pro Datei</p>
+        </div>
+    </div>
+
+    <!-- Variante 1: Einfach -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Variante 1 — Einfach</h3>
+        <p class="demo-intro">Dokument-Upload mit Typfilter und Größenlimit.</p>
+        <?php
+        (new Form('up-simple'))->field('doc', 'Dokument', 'file', [
+            'accept'  => ['pdf', 'doc', 'docx'],
+            'maxSize' => '10 MB',
+            'hint'    => 'PDF oder Word, max. 10 MB',
+        ])->render();
+        ?>
+        <pre class="demo-code">(new Form('up-simple'))->field('doc', 'Dokument', 'file', [
+    'accept'  => ['pdf', 'doc', 'docx'],
+    'maxSize' => '10 MB',
+    'hint'    => 'PDF oder Word, max. 10 MB',
+])->render();</pre>
+    </div>
+
+    <!-- Variante 2: Bilder mit Vorschau -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Variante 2 — Bilder mit Vorschau</h3>
+        <p class="demo-intro">Mehrfach-Upload mit Bild-Thumbnails direkt in der Zone.</p>
+        <?php
+        (new Form('up-images'))->field('fotos', 'Fotos', 'file', [
+            'multiple' => true,
+            'preview'  => true,
+            'accept'   => ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+            'maxSize'  => '8 MB',
+            'maxFiles' => 6,
+        ])->render();
+        ?>
+        <pre class="demo-code">(new Form('up-images'))->field('fotos', 'Fotos', 'file', [
+    'multiple' => true,
+    'preview'  => true,
+    'accept'   => ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    'maxSize'  => '8 MB',
+    'maxFiles' => 6,
+])->render();</pre>
+    </div>
+
+    <!-- Variante 3: Volle Konfiguration -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Variante 3 — Volle Konfiguration</h3>
+        <p class="demo-intro">Alle Optionen kombiniert: Typen, Min/Max-Größe, Gesamtlimit, Dateianzahl.</p>
+        <?php
+        (new Form('up-full'))->field('attachments', 'Anhänge', 'file', [
+            'multiple'     => true,
+            'preview'      => true,
+            'accept'       => ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'doc', 'docx', 'txt'],
+            'minSize'      => '1 KB',
+            'maxSize'      => '10 MB',
+            'maxTotalSize' => '50 MB',
+            'maxFiles'     => 10,
+            'hint'         => 'Max. 10 MB/Datei · 50 MB gesamt · 10 Dateien',
+        ])->render();
+        ?>
+        <pre class="demo-code">(new Form('up-full'))->field('attachments', 'Anhänge', 'file', [
+    'multiple'     => true,
+    'preview'      => true,
+    'accept'       => ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'doc', 'docx', 'txt'],
+    'minSize'      => '1 KB',
+    'maxSize'      => '10 MB',
+    'maxTotalSize' => '50 MB',
+    'maxFiles'     => 10,
+    'hint'         => 'Max. 10 MB/Datei · 50 MB gesamt · 10 Dateien',
+])->render();</pre>
+    </div>
+
+    <!-- Queue-Zustände live -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Queue-Zustände live</h3>
+        <p class="demo-intro">Queue-Items manuell durch Zustände schalten: pending → uploading → done / error.</p>
+        <div class="demo-btn-row" style="margin-bottom:16px;">
+            <button class="gk-btn gk-btn-primary" id="btn-queue-sim">
+                <span class="material-icons" style="font-size:16px;">add_circle</span> Datei simulieren
+            </button>
+            <button class="gk-btn gk-btn-filled gk-btn-danger" id="btn-queue-err">
+                <span class="material-icons" style="font-size:16px;">error_outline</span> Fehler simulieren
+            </button>
+        </div>
+        <div id="queue-demo-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <pre class="demo-code">// Queue-Zustände per JS API
+var item = GK.uqAddItem(zone, file);  // Item zur Queue hinzufügen
+GK.uqSetUploading(item);              // → Fortschrittsanzeige
+GK.uqSetDone(item, 'filename.pdf');   // → Grüner Haken
+GK.uqSetError(item, 'Fehlertext');    // → Roter Fehler</pre>
+    </div>
+
+    <!-- Validierungsfehler Demo -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Validierungsfehler Demo</h3>
+        <p class="demo-intro">Zone mit strikten Limits — PDF only, max. 100 KB. Zum Selbst-Testen: einfach eine andere Datei hochladen.</p>
+        <?php
+        (new Form('up-validate'))->field('strict_file', 'Strikt (PDF, max. 100 KB)', 'file', [
+            'accept'  => ['pdf'],
+            'maxSize' => '100 KB',
+            'hint'    => 'Nur PDF, max. 100 KB — andere Dateien werden abgelehnt',
+        ])->render();
+        ?>
+    </div>
+
+    <!-- PHP API Tabelle -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 16px;font-size:15px;color:var(--gk-on-surface, #374151);">PHP API — <code>Form::field('file')</code> Optionen</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+                <tr style="background:var(--gk-surface-container);">
+                    <th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--gk-outline-variant);">Option</th>
+                    <th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--gk-outline-variant);">Typ</th>
+                    <th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--gk-outline-variant);">Default</th>
+                    <th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--gk-outline-variant);">Beschreibung</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ([
+                    ['multiple',      'bool',           'false',  'Mehrfachauswahl erlauben'],
+                    ['preview',       'bool',           'false',  'Bild-Thumbnails anzeigen'],
+                    ['accept',        'array|string',   '–',      'Erlaubte Dateitypen (z. B. [\'pdf\', \'jpg\'])'],
+                    ['maxSize',       'string',         '–',      'Max. Dateigröße pro Datei (z. B. \'10 MB\')'],
+                    ['minSize',       'string',         '–',      'Min. Dateigröße pro Datei'],
+                    ['maxTotalSize',  'string',         '–',      'Max. Gesamtgröße aller Dateien'],
+                    ['maxFiles',      'int',            '–',      'Max. Anzahl Dateien'],
+                    ['label_text',    'string',         'auto',   'Text in der Upload-Zone'],
+                    ['icon',          'string',         'upload_file', 'Material Icon in der Zone'],
+                    ['hint',          'string',         '–',      'Hilfetext unterhalb der Zone'],
+                ] as $row): ?>
+                <tr style="border-bottom:1px solid var(--gk-outline-variant);">
+                    <td style="padding:8px 12px;font-family:monospace;color:var(--gk-primary);"><?= htmlspecialchars($row[0]) ?></td>
+                    <td style="padding:8px 12px;color:var(--gk-on-surface-variant);"><?= htmlspecialchars($row[1]) ?></td>
+                    <td style="padding:8px 12px;font-family:monospace;color:var(--gk-on-surface-variant);"><?= htmlspecialchars($row[2]) ?></td>
+                    <td style="padding:8px 12px;"><?= htmlspecialchars($row[3]) ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- HTML data-Attribute -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">HTML <code>data-</code> Attribute</h3>
+        <p class="demo-intro">Upload-Zones ohne PHP Form-Klasse — direkt per HTML-Attributen konfigurieren.</p>
+        <pre class="demo-code">&lt;div data-gk-upload
+     data-gk-multiple
+     data-gk-preview
+     data-gk-accept="pdf,jpg,png"
+     data-gk-max-size="10 MB"
+     data-gk-min-size="1 KB"
+     data-gk-max-total-size="50 MB"
+     data-gk-max-files="10"&gt;&lt;/div&gt;</pre>
+    </div>
+
+    <!-- JS API -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">JS API</h3>
+        <pre class="demo-code">GK.uqSetUploading(item)               // Item auf "uploading" schalten
+GK.uqSetDone(item, 'filename.pdf')    // Item auf "done" setzen
+GK.uqSetError(item, 'Fehlertext')     // Item auf "error" setzen
+
+GK._parseSize('10 MB')                // → Bytes (10485760)
+GK._formatSize(1048576)               // → '1 MB'
+GK._uploadFileIcon('invoice.pdf')     // → 'picture_as_pdf'
+
+// gk:files Event auf der Upload-Zone:
+zone.addEventListener('gk:files', function(e) {
+    // e.detail.files  → File[]
+    // e.detail.items  → [{file, el, id}]
+    // e.detail.zone   → HTMLElement
+    e.detail.items.forEach(function(item) {
+        GK.uqSetUploading(item);
+        // ... XHR / fetch upload ...
+        GK.uqSetDone(item, item.file.name);
+    });
+});</pre>
+    </div>
+</div>
+
+<!-- ===== COLOR PICKER ===== -->
+<div class="demo-section" data-section="color">
+    <h2>Color Picker</h2>
+
+    <p class="demo-intro">Styled nativer Color-Input — Farbswatch links (klickbar) + Hex-Feld rechts. Swatch und Hex-Wert synchronisieren sich automatisch, Validierung auf <code>#RRGGBB</code>.</p>
+
+    <!-- Demo -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Live-Demo</h3>
+        <?php
+        (new Form('color-demo'))
+            ->field('primary',   'Primärfarbe',   'color', ['value' => '#6750a4'])
+            ->field('secondary', 'Sekundärfarbe', 'color', ['value' => '#2563eb'])
+            ->field('accent',    'Akzentfarbe',   'color', ['value' => '#16a34a'])
+            ->render();
+        ?>
+    </div>
+
+    <!-- Code -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Code</h3>
+        <pre class="demo-code">(new Form('color-demo'))
+    ->field('primary',   'Primärfarbe',   'color', ['value' => '#6750a4'])
+    ->field('secondary', 'Sekundärfarbe', 'color', ['value' => '#2563eb'])
+    ->field('accent',    'Akzentfarbe',   'color', ['value' => '#16a34a'])
+    ->render();</pre>
+    </div>
+
+    <!-- Verhalten -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px;font-size:15px;color:var(--gk-on-surface, #374151);">Verhalten</h3>
+        <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;color:var(--gk-on-surface-variant);">
+            <li>Klick auf den <strong>Farbswatch</strong> öffnet den nativen Browser-Color-Picker</li>
+            <li>Das <strong>Hex-Textfeld</strong> zeigt den aktuellen Wert und ist direkt editierbar</li>
+            <li>Beide Felder synchronisieren sich in Echtzeit</li>
+            <li>Validierung: nur gültige <code>#RRGGBB</code> Werte werden akzeptiert</li>
+            <li>Einheitliche <strong>44px Höhe</strong> wie alle anderen GridKit-Inputs</li>
+        </ul>
+    </div>
 </div>
 
 <!-- ===== MODAL ===== -->
@@ -1372,6 +1659,57 @@ $sidebar
         // Show overview + table by default
         showSection('table');
     }
+})();
+
+// Upload-Zonen: gk:files Event abfangen und Upload simulieren
+document.querySelectorAll('.gk-upload-zone[data-gk-upload]').forEach(function(zone) {
+    zone.addEventListener('gk:files', function(e) {
+        e.detail.items.forEach(function(item) {
+            GK.uqSetUploading(item);
+            setTimeout(function() {
+                GK.uqSetDone(item, item.file ? item.file.name : 'Datei');
+            }, 1000 + Math.random() * 1000);
+        });
+    });
+});
+
+// Queue-Demo: Simulations-Buttons
+(function() {
+    var simCounter = 0;
+
+    function makeQueueItem(label, isError) {
+        var list = document.getElementById('queue-demo-list');
+        if (!list) return;
+        var fakeFile = { name: label, size: Math.floor(Math.random() * 5 * 1024 * 1024) };
+        var item = { file: fakeFile, el: null, id: 'qdemo-' + (++simCounter) };
+
+        // Erstelle ein minimales DOM-Element im Queue-Stil
+        var el = document.createElement('div');
+        el.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-surface-container);border-radius:6px;font-size:13px;';
+        el.innerHTML = '<span class="material-icons" style="font-size:18px;color:var(--gk-primary);">hourglass_empty</span>'
+                     + '<span style="flex:1;">' + label + '</span>'
+                     + '<span style="color:var(--gk-on-surface-variant);">' + (GK._formatSize ? GK._formatSize(fakeFile.size) : '') + '</span>';
+        item.el = el;
+        list.appendChild(el);
+
+        setTimeout(function() {
+            el.querySelector('.material-icons').textContent = 'upload';
+            el.querySelector('.material-icons').style.color = 'var(--gk-primary)';
+            GK.uqSetUploading && GK.uqSetUploading(item);
+            setTimeout(function() {
+                if (isError) {
+                    GK.uqSetError && GK.uqSetError(item, 'Verbindung unterbrochen');
+                } else {
+                    GK.uqSetDone && GK.uqSetDone(item, label);
+                }
+            }, 1200 + Math.random() * 800);
+        }, 300);
+    }
+
+    var btnSim = document.getElementById('btn-queue-sim');
+    var btnErr = document.getElementById('btn-queue-err');
+    if (btnSim) btnSim.addEventListener('click', function() { makeQueueItem('dokument_' + simCounter + '.pdf', false); });
+    if (btnErr) btnErr.addEventListener('click', function() { makeQueueItem('fehler_' + simCounter + '.zip', true); });
 })();
 </script>
 </body>

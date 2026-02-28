@@ -611,10 +611,237 @@
         document.querySelectorAll('.gk-upload-zone').forEach(function(zone) {
             if (zone._gkInit) return;
             zone._gkInit = true;
-            zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('gk-dragover'); });
-            zone.addEventListener('dragleave', function() { zone.classList.remove('gk-dragover'); });
-            zone.addEventListener('drop', function() { zone.classList.remove('gk-dragover'); });
+
+            zone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                zone.classList.add('gk-dragover');
+            });
+            zone.addEventListener('dragleave', function(e) {
+                if (!zone.contains(e.relatedTarget)) zone.classList.remove('gk-dragover');
+            });
+            zone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                zone.classList.remove('gk-dragover');
+                var files = e.dataTransfer && e.dataTransfer.files;
+                if (files && files.length) GK._uploadZoneValidate(zone, files);
+            });
+
+            var input = zone.querySelector('.gk-upload-input');
+            if (input) {
+                input.addEventListener('change', function() {
+                    if (this.files && this.files.length) GK._uploadZoneValidate(zone, this.files);
+                    this.value = '';
+                });
+            }
+
+            // Queue-Container anlegen falls noch nicht vorhanden
+            if (!zone.nextElementSibling || !zone.nextElementSibling.classList.contains('gk-upload-queue')) {
+                var q = document.createElement('div');
+                q.className = 'gk-upload-queue';
+                zone.insertAdjacentElement('afterend', q);
+            }
         });
+    };
+
+    // ── Hilfsfunktionen ──────────────────────────────────────────
+    GK._parseSize = function(str) {
+        if (!str) return 0;
+        var m = String(str).trim().match(/^([\d.]+)\s*(B|KB|MB|GB)?$/i);
+        if (!m) return 0;
+        var n = parseFloat(m[1]);
+        var units = { B: 1, KB: 1024, MB: 1048576, GB: 1073741824 };
+        return Math.round(n * (units[(m[2] || 'B').toUpperCase()] || 1));
+    };
+
+    GK._formatSize = function(bytes) {
+        if (bytes >= 1048576) return (Math.round(bytes / 104857.6) / 10) + ' MB';
+        if (bytes >= 1024)    return (Math.round(bytes / 102.4) / 10) + ' KB';
+        return bytes + ' B';
+    };
+
+    // ── Validierung ───────────────────────────────────────────────
+    GK._uploadZoneValidate = function(zone, fileList) {
+        var cfg = {
+            maxSize:      GK._parseSize(zone.dataset.gkMaxSize),
+            minSize:      GK._parseSize(zone.dataset.gkMinSize),
+            maxTotalSize: GK._parseSize(zone.dataset.gkMaxTotalSize),
+            maxFiles:     parseInt(zone.dataset.gkMaxFiles)  || 0,
+            accept:       (zone.dataset.gkAccept || '').toLowerCase().split(',').map(function(s) { return s.trim().replace(/^\./, ''); }).filter(Boolean),
+        };
+
+        var files    = Array.from(fileList);
+        var accepted = [];
+        var errors   = [];
+
+        // Max Dateianzahl
+        if (cfg.maxFiles > 0 && files.length > cfg.maxFiles) {
+            errors.push('Max. ' + cfg.maxFiles + ' Datei' + (cfg.maxFiles > 1 ? 'en' : '') + ' erlaubt — ' + files.length + ' ausgewählt');
+            files = files.slice(0, cfg.maxFiles);
+        }
+
+        files.forEach(function(f) {
+            var ext = (f.name.split('.').pop() || '').toLowerCase();
+            if (cfg.accept.length && !cfg.accept.includes(ext)) {
+                errors.push(f.name + ': Format nicht erlaubt (.'+ext+')');
+                return;
+            }
+            if (cfg.maxSize > 0 && f.size > cfg.maxSize) {
+                errors.push(f.name + ': zu groß (' + GK._formatSize(f.size) + ', max. ' + zone.dataset.gkMaxSize + ')');
+                return;
+            }
+            if (cfg.minSize > 0 && f.size < cfg.minSize) {
+                errors.push(f.name + ': zu klein (' + GK._formatSize(f.size) + ', min. ' + zone.dataset.gkMinSize + ')');
+                return;
+            }
+            accepted.push(f);
+        });
+
+        // Max Gesamtgröße
+        if (cfg.maxTotalSize > 0 && accepted.length) {
+            var total = accepted.reduce(function(s, f) { return s + f.size; }, 0);
+            if (total > cfg.maxTotalSize) {
+                errors.push('Gesamtgröße ' + GK._formatSize(total) + ' überschreitet Maximum (' + zone.dataset.gkMaxTotalSize + ')');
+                accepted = [];
+            }
+        }
+
+        errors.forEach(function(msg) { GK.toast && GK.toast.error(msg); });
+        if (!accepted.length) return;
+
+        // Queue-Items anlegen + Event feuern
+        var items = GK._uploadQueueAdd(zone, accepted);
+        zone.dispatchEvent(new CustomEvent('gk:files', {
+            bubbles: true,
+            detail: { files: accepted, items: items, zone: zone }
+        }));
+    };
+
+    // ── Queue UI ─────────────────────────────────────────────────
+    GK._uploadQueueAdd = function(zone, files) {
+        var queue = zone.nextElementSibling;
+        if (!queue || !queue.classList.contains('gk-upload-queue')) return [];
+        var withPreview = zone.hasAttribute('data-gk-preview');
+        var items = [];
+
+        files.forEach(function(file) {
+            var id   = 'gkuq-' + Math.random().toString(36).slice(2, 9);
+            var ext  = (file.name.split('.').pop() || '').toLowerCase();
+            var isImg = /^(jpg|jpeg|png|gif|webp|svg)$/.test(ext);
+
+            var item = document.createElement('div');
+            item.className = 'gk-uq-item gk-uq-pending';
+            item.dataset.gkUqId = id;
+
+            // Thumb
+            var thumb = document.createElement('div');
+            thumb.className = 'gk-uq-thumb';
+            if (isImg && withPreview) {
+                var img = document.createElement('img');
+                img.className = 'gk-uq-img';
+                var reader = new FileReader();
+                reader.onload = function(e) { img.src = e.target.result; };
+                reader.readAsDataURL(file);
+                thumb.appendChild(img);
+            } else {
+                var icon = document.createElement('span');
+                icon.className = 'material-icons gk-uq-icon';
+                icon.textContent = GK._uploadFileIcon(ext);
+                thumb.appendChild(icon);
+            }
+            item.appendChild(thumb);
+
+            // Info
+            var info = document.createElement('div');
+            info.className = 'gk-uq-info';
+            var name = document.createElement('span');
+            name.className = 'gk-uq-name';
+            name.textContent = file.name;
+            name.title       = file.name;
+            var size = document.createElement('span');
+            size.className = 'gk-uq-size';
+            size.textContent = GK._formatSize(file.size);
+            info.appendChild(name);
+            info.appendChild(size);
+            item.appendChild(info);
+
+            // Status
+            var status = document.createElement('span');
+            status.className = 'gk-uq-status';
+            status.textContent = 'Bereit';
+            item.appendChild(status);
+
+            // Remove-Button (nur im Pending-State)
+            var rm = document.createElement('button');
+            rm.type = 'button';
+            rm.className = 'gk-uq-remove';
+            rm.innerHTML = '<span class="material-icons" style="font-size:16px;">close</span>';
+            rm.title = 'Entfernen';
+            rm.addEventListener('click', function() {
+                item.classList.add('gk-uq-removing');
+                setTimeout(function() { item.remove(); }, 200);
+            });
+            item.appendChild(rm);
+
+            queue.appendChild(item);
+            items.push({ file: file, el: item, id: id });
+        });
+
+        return items;
+    };
+
+    GK._uploadFileIcon = function(ext) {
+        var map = {
+            pdf: 'picture_as_pdf',
+            doc: 'description', docx: 'description',
+            xls: 'table_chart',  xlsx: 'table_chart',
+            zip: 'folder_zip',   rar: 'folder_zip', gz: 'folder_zip',
+            mp3: 'audio_file',   wav: 'audio_file',
+            mp4: 'video_file',   mov: 'video_file',
+            txt: 'article',      csv: 'table_rows',
+        };
+        return map[ext] || 'insert_drive_file';
+    };
+
+    // ── Queue-Status-Helpers (für App-Code) ──────────────────────
+    GK.uqSetUploading = function(item) {
+        item.el.className = 'gk-uq-item gk-uq-uploading';
+        item.el.querySelector('.gk-uq-status').innerHTML =
+            '<span class="material-icons gk-spin" style="font-size:14px;vertical-align:middle;">sync</span> Lädt…';
+        var rm = item.el.querySelector('.gk-uq-remove');
+        if (rm) rm.style.display = 'none';
+    };
+
+    GK.uqSetDone = function(item, label) {
+        item.el.className = 'gk-uq-item gk-uq-done';
+        item.el.querySelector('.gk-uq-status').textContent = label || 'Hochgeladen';
+        var rm = item.el.querySelector('.gk-uq-remove');
+        if (rm) rm.style.display = 'none';
+        setTimeout(function() {
+            item.el.classList.add('gk-uq-removing');
+            setTimeout(function() { item.el.remove(); }, 300);
+        }, 2500);
+    };
+
+    GK.uqSetError = function(item, msg) {
+        item.el.className = 'gk-uq-item gk-uq-error';
+        item.el.querySelector('.gk-uq-status').textContent = msg || 'Fehler';
+        var rm = item.el.querySelector('.gk-uq-remove');
+        if (rm) rm.style.display = '';
+    };
+
+    // Legacy-Helpers (Rückwärtskompatibilität)
+    GK.uploadZoneBusy = function(zone, label) {
+        var idle = zone.querySelector('.gk-upload-idle');
+        var prog = zone.querySelector('.gk-upload-progress');
+        if (idle) idle.style.display = 'none';
+        if (prog) prog.style.display = 'flex';
+        if (label) { var l = zone.querySelector('.gk-upload-progress-label'); if (l) l.textContent = label; }
+    };
+    GK.uploadZoneIdle = function(zone) {
+        var idle = zone.querySelector('.gk-upload-idle');
+        var prog = zone.querySelector('.gk-upload-progress');
+        if (idle) idle.style.display = '';
+        if (prog) prog.style.display = 'none';
     };
 
     // === RICHTEXT EDITOR ===

@@ -155,3 +155,15 @@ Erster stabiler Stand. Alle Kern-Komponenten vorhanden und getestet.
 ## [0.9.13] - 2026-02-23
 ### Added
 - gk-modal-large: max-width 860px für große Modals (z.B. PDF-Vorschau)
+
+## [0.9.29] - 2026-02-24
+
+### Added
+- **Upload-Zone**: Client-seitige Größenvalidierung via `data-gk-max-size` — überschrittene Dateien werden vor dem Upload mit Toast abgewiesen; `_parseMaxSize()` versteht B/KB/MB/GB
+
+## [0.9.28] - 2026-02-24
+
+### Changed
+- **`Form::field('file')`**: `accept` akzeptiert jetzt Array `['pdf','jpg',...]` oder String; `hint` Option für Hinweistext; `label_text` für Custom-Label; `icon` Option; `multiple` erzeugt automatisch `name[]`-Array
+- **`gk-upload-zone`**: Data-Attribute `data-gk-upload`, `data-gk-multiple`, `data-gk-accept`, `data-gk-max-size`; Progress/Idle States via `.gk-upload-idle` + `.gk-upload-progress`
+- **GridKit JS**: `initUploadZones` feuert `gk:files` CustomEvent mit `{files, zone}`; `GK.uploadZoneBusy(zone, label)` + `GK.uploadZoneIdle(zone)` Helper; dragleave-Fix (kein Flackern mehr)
