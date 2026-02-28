@@ -595,8 +595,8 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 
 .gk-sidebar-badge { font-size: 11px; font-weight: 600; background: var(--gk-primary, #6366f1); color: #fff; padding: 1px 7px; border-radius: 9999px; min-width: 20px; text-align: center; }
 .gk-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; }
-.gk-sidebar-toggle { display: none; background: none; border: 1px solid var(--gk-border, #e5e7eb); border-radius: 6px; padding: 6px 8px; cursor: pointer; color: var(--gk-text, #1f2937); }
-.gk-sidebar-toggle:hover { background: var(--gk-bg-hover, #f3f4f6); }
+.gk-sidebar-toggle { display: none; background: none; border: none; border-radius: 8px; padding: 8px; cursor: pointer; color: var(--gk-text-muted, #64748b); transition: all .15s; }
+.gk-sidebar-toggle:hover { background: var(--gk-surface-container, #f1f5f9); color: var(--gk-text); }
 
 /* Sidebar: collapsed state (icons only) */
 .gk-sidebar.collapsed { width: 60px; }
@@ -614,8 +614,9 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-sidebar.collapsed .gk-sidebar-label { display: none !important; }
 .gk-sidebar.collapsed .gk-sidebar-nav { padding: 8px 4px; gap: 2px; }
 .gk-sidebar.collapsed .gk-sidebar-close-mobile { display: none; }
-.gk-sidebar-collapse-btn { display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--gk-sidebar-text-muted); cursor: pointer; padding: 6px; border-radius: 4px; flex-shrink: 0; transition: all .15s; }
+.gk-sidebar-collapse-btn { display: flex; align-items: center; justify-content: center; background: none; border: none; color: var(--gk-sidebar-text-muted); cursor: pointer; padding: 8px; border-radius: 8px; flex-shrink: 0; transition: all .15s; }
 .gk-sidebar-collapse-btn:hover { background: var(--gk-sidebar-item-hover); color: var(--gk-sidebar-text-hover); }
+.gk-sidebar.collapsed .gk-sidebar-collapse-btn:not(.gk-sidebar-collapse-bottom) { padding: 10px; border-radius: 10px; margin: 0 auto; display: flex; background: var(--gk-sidebar-item-hover, rgba(255,255,255,.08)); }
 .gk-sidebar-collapse-bottom { gap: 8px; padding: 12px 14px; margin: 4px 10px 12px; border-top: 1px solid var(--gk-sidebar-border); border-radius: 6px; width: calc(100% - 20px); font-size: 13px; justify-content: flex-start; }
 .gk-sidebar-collapse-bottom .material-icons { font-size: 20px; transition: transform .25s; }
 .gk-sidebar.collapsed .gk-sidebar-collapse-bottom { justify-content: center; margin: 4px 6px 12px; width: calc(100% - 12px); }
