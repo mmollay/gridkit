@@ -1118,21 +1118,28 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 }
 
 /* === THEME SWITCHER WIDGET === */
-.gk-theme-switcher { display: flex; align-items: center; gap: 12px; }
+.gk-theme-switcher { display: flex; align-items: center; gap: 12px; padding: 2px 0; }
 .gk-theme-colors { display: flex; gap: 8px; }
 .gk-theme-dot {
-    width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent;
-    cursor: pointer; transition: all .15s; box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    width: 28px; height: 28px; border-radius: 50%; border: 3px solid rgba(255,255,255,.25);
+    cursor: pointer; transition: all .15s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.2);
 }
-.gk-theme-dot:hover { transform: scale(1.15); }
-.gk-theme-dot.gk-theme-active { border-color: var(--gk-on-surface); transform: scale(1.15); }
+.gk-theme-dot:hover { transform: scale(1.18); border-color: rgba(255,255,255,.6); }
+.gk-theme-dot.gk-theme-active { border-color: #fff; transform: scale(1.18); box-shadow: 0 0 0 2px var(--gk-primary), 0 2px 6px rgba(0,0,0,.4); }
+[data-gk-mode="light"] .gk-theme-dot { border-color: rgba(0,0,0,.15); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+[data-gk-mode="light"] .gk-theme-dot:hover { border-color: rgba(0,0,0,.4); }
+[data-gk-mode="light"] .gk-theme-dot.gk-theme-active { border-color: var(--gk-primary); box-shadow: 0 0 0 2px var(--gk-primary); }
 .gk-mode-toggle {
     display: flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px; border-radius: 50%; border: none;
+    width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--gk-outline-variant);
     background: var(--gk-surface-container); cursor: pointer;
-    color: var(--gk-on-surface); transition: all .15s;
+    color: var(--gk-on-surface); transition: all .15s; flex-shrink: 0;
 }
-.gk-mode-toggle:hover { background: var(--gk-surface-container-high); }
+.gk-mode-toggle:hover { background: var(--gk-surface-container-high); border-color: var(--gk-outline); }
+/* Dropdown HTML-Items (z.B. Theme-Switcher im Avatar-Menü) */
+.gk-dropdown-html { cursor: default; padding: 8px 16px; }
+.gk-dropdown-html:hover { background: transparent; }
 [data-gk-mode="light"] .gk-mode-dark { display: none; }
 [data-gk-mode="dark"] .gk-mode-light { display: none; }
 .gk-mode-dark { display: none; }
