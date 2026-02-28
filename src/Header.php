@@ -99,6 +99,8 @@ class Header
                     if (is_int($key)) {
                         // Last item (no link)
                         $parts[] = '<span class="gk-breadcrumb-current">' . $e($value) . '</span>';
+                    } elseif ($key === 'home') {
+                        $parts[] = '<a href="' . $e($value) . '" title="Dashboard" style="display:inline-flex;align-items:center;"><span class="material-icons" style="font-size:16px;vertical-align:middle;">home</span></a>';
                     } else {
                         $parts[] = '<a href="' . $e($value) . '">' . $e($key) . '</a>';
                     }
