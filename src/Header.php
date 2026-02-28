@@ -5,7 +5,8 @@ namespace GridKit;
 
 class Header
 {
-    private string $title = '';
+    private string $title    = '';
+    private bool   $titleRaw = false;
     private array $breadcrumb = [];
     private array $actions = [];
     private ?array $searchOpts = null;
@@ -14,9 +15,10 @@ class Header
     private bool $fixed = false;
     private bool $sidebarToggle = true;
 
-    public function title(string $title): self
+    public function title(string $title, bool $raw = false): self
     {
-        $this->title = $title;
+        $this->title    = $title;
+        $this->titleRaw = $raw;
         return $this;
     }
 
@@ -88,7 +90,7 @@ class Header
         if ($this->title !== '' || !empty($this->breadcrumb)) {
             $html .= '<div class="gk-header-title">';
             if ($this->title !== '') {
-                $html .= '<h1>' . $e($this->title) . '</h1>';
+                $html .= '<h1>' . ($this->titleRaw ? $this->title : $e($this->title)) . '</h1>';
             }
             if (!empty($this->breadcrumb)) {
                 $html .= '<nav class="gk-breadcrumb">';
