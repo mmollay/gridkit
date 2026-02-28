@@ -152,6 +152,11 @@ class Header
                         $html .= '<div class="gk-dropdown-divider"></div>';
                         continue;
                     }
+                    // HTML-Block direkt einfügen
+                    if (isset($item['html'])) {
+                        $html .= '<div class="gk-dropdown-item gk-dropdown-html">' . $item['html'] . '</div>';
+                        continue;
+                    }
                     $href = $item['href'] ?? '#';
                     $icon = $item['icon'] ?? '';
                     $label = $item['label'] ?? '';
