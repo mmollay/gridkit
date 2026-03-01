@@ -167,3 +167,8 @@ Erster stabiler Stand. Alle Kern-Komponenten vorhanden und getestet.
 - **`Form::field('file')`**: `accept` akzeptiert jetzt Array `['pdf','jpg',...]` oder String; `hint` Option für Hinweistext; `label_text` für Custom-Label; `icon` Option; `multiple` erzeugt automatisch `name[]`-Array
 - **`gk-upload-zone`**: Data-Attribute `data-gk-upload`, `data-gk-multiple`, `data-gk-accept`, `data-gk-max-size`; Progress/Idle States via `.gk-upload-idle` + `.gk-upload-progress`
 - **GridKit JS**: `initUploadZones` feuert `gk:files` CustomEvent mit `{files, zone}`; `GK.uploadZoneBusy(zone, label)` + `GK.uploadZoneIdle(zone)` Helper; dragleave-Fix (kein Flackern mehr)
+
+## [0.9.33] - 2026-03-01
+
+### Fixed
+- `gk-row`: Alle `gk-w-1` bis `gk-w-16` jetzt vollständig mit `flex: 0 0 calc(...)` definiert — bisher fehlten w-1 bis w-4, w-7, w-9 bis w-16; Spalten wurden fälschlicherweise alle gleich breit
