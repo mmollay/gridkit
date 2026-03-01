@@ -172,3 +172,8 @@ Erster stabiler Stand. Alle Kern-Komponenten vorhanden und getestet.
 
 ### Fixed
 - `gk-row`: Alle `gk-w-1` bis `gk-w-16` jetzt vollständig mit `flex: 0 0 calc(...)` definiert — bisher fehlten w-1 bis w-4, w-7, w-9 bis w-16; Spalten wurden fälschlicherweise alle gleich breit
+
+## [0.9.34] - 2026-03-01
+
+### Added
+- `.gk-field-hint` — Hilfetext unter Formularfeldern (font-size:12px, text-secondary)

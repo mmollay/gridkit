@@ -410,11 +410,11 @@ select.gk-input { appearance: none; -webkit-appearance: none; padding-right: 40p
 .gk-toggle input:checked + .gk-toggle-slider::before { transform: translateX(20px); }
 
 .gk-form-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 16px; border-top: 1px solid var(--gk-outline-variant); margin-top: 16px; }
+.gk-field-hint { font-size: 12px; color: var(--gk-text-secondary, #64748b); margin-top: 4px; }
 .gk-field-error { color: var(--gk-danger); font-size: 12px; min-height: 0; margin-top: 4px; }
 .gk-field-error:not(:empty) { min-height: 18px; }
 .gk-input.gk-has-error { border-color: var(--gk-danger); }
 .gk-input.gk-has-error:focus { box-shadow: 0 0 0 3px rgba(244,63,94,0.1); }
-.gk-has-error + .gk-field-error { color: var(--gk-danger); }
 .gk-field.gk-field-has-error .gk-label-text { color: var(--gk-danger); }
 
 /* === CHECKBOX (M3 Style) === */
