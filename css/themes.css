@@ -123,3 +123,19 @@
     --gk-sidebar-bg: #0d1424;
     --gk-sidebar-accent: #7dd3fc;
 }
+
+/* === Global Dark Mode — Surface & Text Colors === */
+[data-gk-mode="dark"] {
+    --gk-surface-dim:               #0f172a;
+    --gk-surface:                   #1e293b;
+    --gk-surface-bright:            #293548;
+    --gk-surface-container-lowest:  #0a1120;
+    --gk-surface-container-low:     #172033;
+    --gk-surface-container:         #1e293b;
+    --gk-surface-container-high:    #243044;
+    --gk-surface-container-highest: #2d3a52;
+    --gk-on-surface:                #e2e8f0;
+    --gk-on-surface-variant:        #94a3b8;
+    --gk-outline:                   #475569;
+    --gk-outline-variant:           rgba(255,255,255,0.08);
+}
