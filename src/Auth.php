@@ -234,7 +234,7 @@ HTML;
         $file = self::$tokenDir . '/' . hash('sha256', $token);
         if (!file_exists($file)) return false;
 
-        $lines  = explode(n, file_get_contents($file));
+        $lines  = explode("\n", file_get_contents($file));
         $stored = $lines[0] ?? '';
         $expiry = (int)($lines[1] ?? 0);
 
