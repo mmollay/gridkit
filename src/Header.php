@@ -43,8 +43,14 @@ class Header
     }
 
     /**
-     * @param string $name Display name
-     * @param array $opts Keys: avatar, role, menu (array of ['label'=>..,'href'=>..,'icon'=>..] or 'divider')
+     * Avatar user menu — theme switcher is included automatically by default.
+     *
+     * @param string $name  Display name
+     * @param array  $opts  Keys:
+     *   avatar         string  — URL to avatar image (optional, initials used otherwise)
+     *   role           string  — shown as non-clickable role label at top of menu
+     *   theme_switcher bool    — include theme/mode switcher in menu (default: true)
+     *   menu           array   — items: ['label'=>.., 'href'=>.., 'icon'=>..] or 'divider' or ['html'=>..]
      */
     public function user(string $name, array $opts = []): self
     {
@@ -97,7 +103,6 @@ class Header
                 $parts = [];
                 foreach ($this->breadcrumb as $key => $value) {
                     if (is_int($key)) {
-                        // Last item (no link)
                         $parts[] = '<span class="gk-breadcrumb-current">' . $e($value) . '</span>';
                     } elseif ($key === 'home') {
                         $parts[] = '<a href="' . $e($value) . '" title="Dashboard" style="display:inline-flex;align-items:center;"><span class="material-icons" style="font-size:16px;vertical-align:middle;">home</span></a>';
@@ -129,11 +134,14 @@ class Header
         }
         if ($this->userOpts !== null) {
             $u = $this->userOpts;
+            $showThemeSwitcher = $u['theme_switcher'] ?? true;
+
             $html .= '<div class="gk-header-user" data-gk-dropdown>';
+
+            // Avatar
             if (!empty($u['avatar'])) {
                 $html .= '<img class="gk-avatar" src="' . $e($u['avatar']) . '" alt="' . $e($u['name']) . '">';
             } else {
-                // Generate initials avatar
                 $initials = '';
                 foreach (explode(' ', $u['name']) as $w) {
                     if ($w !== '') $initials .= mb_strtoupper(mb_substr($w, 0, 1));
@@ -143,37 +151,49 @@ class Header
             $html .= '<span class="gk-header-user-name">' . $e($u['name']) . '</span>';
             $html .= '<span class="material-icons">expand_more</span>';
 
-            if (!empty($u['menu'])) {
-                $html .= '<div class="gk-dropdown-menu">';
-                if (!empty($u['role'])) {
-                    $html .= '<div class="gk-dropdown-item" style="pointer-events:none;opacity:.6">';
-                    $html .= '<span class="material-icons">badge</span>' . $e($u['role']);
-                    $html .= '</div>';
-                    $html .= '<div class="gk-dropdown-divider"></div>';
-                }
-                foreach ($u['menu'] as $item) {
-                    if ($item === 'divider') {
-                        $html .= '<div class="gk-dropdown-divider"></div>';
-                        continue;
-                    }
-                    // HTML-Block direkt einfügen
-                    if (isset($item['html'])) {
-                        $html .= '<div class="gk-dropdown-item gk-dropdown-html">' . $item['html'] . '</div>';
-                        continue;
-                    }
-                    $href = $item['href'] ?? '#';
-                    $icon = $item['icon'] ?? '';
-                    $label = $item['label'] ?? '';
-                    $html .= '<a class="gk-dropdown-item" href="' . $e($href) . '">';
-                    if ($icon !== '') $html .= '<span class="material-icons">' . $e($icon) . '</span>';
-                    $html .= $e($label);
-                    $html .= '</a>';
-                }
+            // Dropdown menu
+            $html .= '<div class="gk-dropdown-menu">';
+
+            // Role label
+            if (!empty($u['role'])) {
+                $html .= '<div class="gk-dropdown-item" style="pointer-events:none;opacity:.6">';
+                $html .= '<span class="material-icons">badge</span>' . $e($u['role']);
                 $html .= '</div>';
+                $html .= '<div class="gk-dropdown-divider"></div>';
             }
-            $html .= '</div>';
+
+            // User-defined menu items
+            foreach (($u['menu'] ?? []) as $item) {
+                if ($item === 'divider') {
+                    $html .= '<div class="gk-dropdown-divider"></div>';
+                    continue;
+                }
+                if (isset($item['html'])) {
+                    $html .= '<div class="gk-dropdown-item gk-dropdown-html">' . $item['html'] . '</div>';
+                    continue;
+                }
+                $href  = $item['href']  ?? '#';
+                $icon  = $item['icon']  ?? '';
+                $label = $item['label'] ?? '';
+                $html .= '<a class="gk-dropdown-item" href="' . $e($href) . '">';
+                if ($icon !== '') $html .= '<span class="material-icons">' . $e($icon) . '</span>';
+                $html .= $e($label);
+                $html .= '</a>';
+            }
+
+            // Auto theme switcher section
+            if ($showThemeSwitcher) {
+                $html .= '<div class="gk-dropdown-divider"></div>';
+                $html .= '<div class="gk-dropdown-item gk-dropdown-html">'
+                       . '<span style="font-size:11px;color:var(--gk-on-surface-variant);font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:2px 0;">Design</span>'
+                       . '</div>';
+                $html .= '<div class="gk-dropdown-item gk-dropdown-html">' . Theme::switcher() . '</div>';
+            }
+
+            $html .= '</div>'; // gk-dropdown-menu
+            $html .= '</div>'; // gk-header-user
         }
-        $html .= '</div>';
+        $html .= '</div>'; // gk-header-right
 
         $html .= '</header>';
         return $html;

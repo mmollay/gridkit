@@ -9,6 +9,77 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 - Weitere Komponenten geplant (Flash Messages/Alerts, Standalone Select)
 - Dokumentation vervollständigen
 
+## [0.9.34] - 2026-03-01
+
+### Added
+- gk-field-hint Klasse hinzugefügt
+
+## [0.9.33] - 2026-03-01
+
+### Changed
+- gk-row: alle gk-w-1..16 mit korrektem flex-basis
+
+## [0.9.32] - 2026-03-01
+
+### Added
+- Breadcrumb: home-Icon Support
+
+## [0.9.31] - 2026-03-01
+
+### Added
+- Header: title(raw=true) für HTML-Titel
+- Sidebar collapsed: Hamburger-Button perfekt zentriert
+
+## [0.9.30] - 2026-03-01
+
+### Changed
+- Sidebar collapse-btn: kein Border, zentriert im collapsed-State
+
+## [0.9.29] - 2026-03-01
+
+### Changed
+- Theme-Dots: Dark Mode Fix — sichtbare Ränder, aktiver Dot mit Ring
+
+## [0.9.28] - 2026-03-01
+
+### Added
+- Header user-menu: html-Item Typ für eingebettete Komponenten
+
+## [0.9.27] - 2026-03-01
+
+### Changed
+- Bulk-Bar: Buttons neu gestylt — Löschen rot, Abbrechen weiss-transparent
+
+## [0.9.26] - 2026-03-01
+
+### Fixed
+- initSelectable: closest()-Bug beim Checkbox-Change-Listener gefixt
+
+## [0.9.25] - 2026-03-01
+
+### Added
+- Table.selectable(): Multi-Delete mit Checkbox-Spalte, Bulk-Bar und gk:bulkdelete Event
+
+## [0.9.24] - 2026-03-01
+
+### Changed
+- gk-form max-width: 960px als Standard
+
+## [0.9.23] - 2026-03-01
+
+### Changed
+- CKEditor5 v43 API: Plugins explizit deklariert
+
+## [0.9.22] - 2026-03-01
+
+### Changed
+- gk-select-search: searchInput null-safe
+
+## [0.9.21] - 2026-03-01
+
+### Added
+- gk-select-search als Default für alle Form-Selects
+
 ## [0.9.20] - 2026-02-24
 
 ### Added
