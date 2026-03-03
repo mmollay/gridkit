@@ -72,7 +72,8 @@ $sidebar->brand('GridKit', 'widgets', 'v' . $version)
     ->item('Header', '#header', 'web_asset')
     ->group('Beispiele')
     ->item('Dashboard Demo', '#dashboard', 'dashboard')
-    ->item('Skeleton',       '#skeleton',  'rocket_launch');
+    ->item('Skeleton',       '#skeleton',  'rocket_launch')
+    ->item('Auth',           '#auth',      'lock');
 $sidebar->render();
 ?>
 
@@ -1615,6 +1616,116 @@ $sidebar
     </div>
 </div>
 
+
+<div class="demo-section" data-section="auth">
+    <h2>Auth — Login-Schutz</h2>
+
+    <div class="demo-card">
+        <h3 style="margin:0 0 12px">Übersicht</h3>
+        <p style="color:var(--gk-on-surface-variant);margin:0 0 16px">
+            <code>Auth</code> schützt Seiten mit Session-basiertem Login.
+            Passwörter werden als bcrypt-Hash in einer Konfigurationsdatei
+            außerhalb des Webroots gespeichert.
+        </p>
+        <div class="demo-code"># /etc/gridkit-users.conf (außerhalb Webroot!)
+# Format: username:bcrypt_hash
+
+admin:\y\...
+viewer:\y\...</div>
+    </div>
+
+    <div class="demo-card">
+        <h3 style="margin:0 0 4px">Seite schützen</h3>
+        <p style="font-size:13px;color:var(--gk-on-surface-variant);margin:0 0 12px">
+            Eine Zeile am Seitenanfang — fertig.
+        </p>
+        <div class="demo-code">&lt;?php
+require_once __DIR__ . '/gridkit/autoload.php';
+use GridKit\Auth;
+
+Auth::protect();  // ← leitet zu login.php weiter wenn nicht eingeloggt
+
+// ... rest der Seite</div>
+    </div>
+
+    <div class="demo-card">
+        <h3 style="margin:0 0 4px">Login-Seite erstellen</h3>
+        <p style="font-size:13px;color:var(--gk-on-surface-variant);margin:0 0 12px">
+            <code>login.php</code> — komplett in 15 Zeilen:
+        </p>
+        <div class="demo-code">&lt;?php
+require_once __DIR__ . '/gridkit/autoload.php';
+use GridKit\{Theme, Auth};
+
+Theme::set('indigo', 'dark');
+
+\ = '';
+if (\['REQUEST_METHOD'] === 'POST') {
+    if (Auth::login(\['username'] ?? '', \['password'] ?? '')) {
+        header('Location: index.php');
+        exit;
+    }
+    \ = 'Falscher Benutzername oder Passwort.';
+}
+
+Auth::renderLogin([
+    'error' => \,
+    'title' => 'Mein System',
+    'icon'  => 'lock',
+]);</div>
+    </div>
+
+    <div class="demo-card">
+        <h3 style="margin:0 0 4px">Alle Methoden</h3>
+        <div class="demo-code">Auth::protect('login.php')     // Seite schützen (redirect falls nicht eingeloggt)
+Auth::login(\, \)   // Login-Versuch → true/false
+Auth::logout('login.php')    // Session löschen + redirect
+Auth::check()                // → true wenn eingeloggt
+Auth::user()                 // → aktueller Username oder null
+Auth::hashPassword('abc')   // → bcrypt-Hash für users.conf
+Auth::setUsersFile('/pfad') // Eigene users-Datei (Standard: /etc/gridkit-users.conf)
+Auth::renderLogin([          // Komplette Login-Page ausgeben
+    'title' => 'Mein System',
+    'icon'  => 'admin_panel_settings',
+    'error' => 'Falsches Passwort',
+])</div>
+    </div>
+
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px">Logout-Button im Header</h3>
+        <div class="demo-code">&lt;?php
+\ = new Header();
+echo     ->title('Mein System')
+    ->action('&lt;a href="logout.php" class="gk-btn gk-btn-outlined gk-btn-neutral gk-btn-sm"&gt;
+        &lt;span class="material-icons" style="font-size:16px"&gt;logout&lt;/span&gt; Abmelden
+    &lt;/a&gt;')
+    ->render();</div>
+    </div>
+
+    <div class="demo-card">
+        <h3 style="margin:0 0 8px">Passwort-Hash generieren</h3>
+        <p style="font-size:13px;color:var(--gk-on-surface-variant);margin:0 0 12px">
+            Im Terminal auf dem Server:
+        </p>
+        <div class="demo-code">php -r "echo GridKit\Auth::hashPassword('meinPasswort') . PHP_EOL;"</div>
+        <p style="font-size:13px;color:var(--gk-on-surface-variant);margin:12px 0 0">
+            → Ausgabe in <code>/etc/gridkit-users.conf</code> einfügen.
+        </p>
+    </div>
+
+    <div class="demo-card" style="text-align:center">
+        <p style="margin:0 0 12px;color:var(--gk-on-surface-variant)">
+            Live-Demo der Login-Seite öffnen:
+        </p>
+        <a href="login.php" target="_blank" class="gk-btn gk-btn-filled gk-btn-primary">
+            <span class="material-icons">lock_open</span>
+            Login Demo öffnen
+        </a>
+        <p style="margin:12px 0 0;font-size:12px;color:var(--gk-on-surface-variant)">
+            Zugangsdaten: <strong>demo</strong> / <strong>demo</strong>
+        </p>
+    </div>
+</div>
 <?php Modal::container(); ?>
 </div><!-- /gk-with-sidebar -->
 
