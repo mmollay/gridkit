@@ -3,30 +3,23 @@ declare(strict_types=1);
 namespace GridKit;
 
 /**
- * GRIDKit Auth — Session-based authentication
+ * GRIDKit Auth — Session-based authentication with optional Remember Me
  *
  * Usage:
- *   // In any protected page:
  *   Auth::protect();
  *
- *   // Login page:
- *   if (Auth::login($_POST['username'], $_POST['password'])) {
- *       header('Location: index.php'); exit;
- *   }
- *   Auth::renderLogin(['error' => 'Falsches Passwort', 'title' => 'Mein System']);
+ *   // Login (with remember me):
+ *   Auth::login($user, $pass, remember: (bool)($_POST['remember'] ?? false));
  *
- *   // Logout:
  *   Auth::logout();
- *
- * Users file (/etc/gridkit-users.conf):
- *   # username:bcrypt_hash
- *   admin:$2y$12$...
+ *   Auth::user();   // current username or null
  */
 class Auth {
-    private static string $usersFile = '/etc/gridkit-users.conf';
+    private static string $usersFile  = '/etc/gridkit-users.conf';
+    private static string $tokenDir   = '/var/lib/gridkit/tokens';
     private static string $sessionKey = 'gk_user';
+    private static int    $rememberDays = 30;
 
-    /** Set custom path to users file */
     public static function setUsersFile(string $path): void {
         self::$usersFile = $path;
     }
@@ -34,80 +27,66 @@ class Auth {
     /** Guard a page — redirects to login if not authenticated */
     public static function protect(string $loginUrl = 'login.php'): void {
         if (session_status() === PHP_SESSION_NONE) session_start();
-        if (!self::check()) {
+        if (!self::check() && !self::checkRememberCookie()) {
             $_SESSION['gk_intended'] = $_SERVER['REQUEST_URI'];
             header('Location: ' . $loginUrl);
             exit;
         }
     }
 
-    /** Attempt login. Returns true on success. */
-    public static function login(string $username, string $password): bool {
-        if (self::verify($username, $password)) {
-            if (session_status() === PHP_SESSION_NONE) session_start();
-            session_regenerate_id(true);
-            $_SESSION[self::$sessionKey] = $username;
-            return true;
-        }
-        return false;
+    /** Attempt login. Pass remember=true to set persistent cookie. */
+    public static function login(string $username, string $password, bool $remember = false): bool {
+        if (!self::verify($username, $password)) return false;
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        session_regenerate_id(true);
+        $_SESSION[self::$sessionKey] = $username;
+        if ($remember) self::setRememberCookie($username);
+        return true;
     }
 
-    /** Logout and redirect */
+    /** Logout — clears session and remember cookie */
     public static function logout(string $redirect = 'login.php'): void {
+        self::clearRememberCookie();
         if (session_status() === PHP_SESSION_NONE) session_start();
         session_destroy();
         header('Location: ' . $redirect);
         exit;
     }
 
-    /** Check if user is authenticated */
     public static function check(): bool {
         if (session_status() === PHP_SESSION_NONE) session_start();
         return !empty($_SESSION[self::$sessionKey]);
     }
 
-    /** Get current username or null */
     public static function user(): ?string {
         if (session_status() === PHP_SESSION_NONE) session_start();
         return $_SESSION[self::$sessionKey] ?? null;
     }
 
-    /** Hash a password for use in users file */
     public static function hashPassword(string $password): string {
         return password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
     }
 
-    /**
-     * Render a complete standalone login page (outputs HTML and exits on GET).
-     *
-     * Options:
-     *   error  => string   — Error message to display
-     *   title  => string   — App title (default: 'Login')
-     *   icon   => string   — Material Icon name (default: 'lock')
-     *   action => string   — Form action URL (default: current page)
-     */
+    /** Render a complete standalone login page */
     public static function renderLogin(array $options = []): void {
         $error  = htmlspecialchars($options['error']  ?? '');
         $title  = htmlspecialchars($options['title']  ?? 'Login');
         $icon   = htmlspecialchars($options['icon']   ?? 'lock');
         $action = htmlspecialchars($options['action'] ?? '');
 
-        $themeAttr  = '';
-        $layoutAttr = 'data-gk-layout="header-first"';
-        if (class_exists('\GridKit\Theme')) {
-            $themeAttr = Theme::attributes();
-        }
+        $themeAttr  = class_exists('\GridKit\Theme')  ? Theme::attributes()              : '';
+        $layoutAttr = class_exists('\GridKit\Layout') ? 'data-gk-layout= . Layout::getMode() . ' : 'data-gk-layout=header-first';
 
         echo <<<HTML
 <!DOCTYPE html>
-<html lang="de">
+<html lang=de>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset=UTF-8>
+    <meta name=viewport content=width=device-width, initial-scale=1.0>
     <title>{$title}</title>
-    <link rel="stylesheet" href="gridkit/css/gridkit.css">
-    <link rel="stylesheet" href="gridkit/css/themes.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel=stylesheet href=gridkit/css/gridkit.css>
+    <link rel=stylesheet href=gridkit/css/themes.css>
+    <link rel=stylesheet href=https://fonts.googleapis.com/icon?family=Material+Icons>
     <style>
         html, body { height: 100%; margin: 0; }
         .gk-login-wrap {
@@ -126,7 +105,7 @@ class Auth {
             width: 100%;
             max-width: 380px;
         }
-        [data-gk-mode="dark"] .gk-login-card {
+        [data-gk-mode=dark] .gk-login-card {
             background: var(--gk-surface-container-high, #1e293b);
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
@@ -141,128 +120,180 @@ class Auth {
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 16px;
         }
-        .gk-login-icon .material-icons {
-            font-size: 32px;
-            color: var(--gk-primary, #6366f1);
-        }
+        .gk-login-icon .material-icons { font-size: 32px; color: var(--gk-primary, #6366f1); }
         .gk-login-title {
-            font-size: 22px;
-            font-weight: 600;
+            font-size: 22px; font-weight: 600;
             color: var(--gk-on-surface, #1f2937);
             margin: 0 0 4px;
         }
-        .gk-login-subtitle {
-            font-size: 13px;
-            color: var(--gk-on-surface-variant, #6b7280);
-            margin: 0;
-        }
-        .gk-login-field {
-            margin-bottom: 16px;
-        }
+        .gk-login-subtitle { font-size: 13px; color: var(--gk-on-surface-variant, #6b7280); margin: 0; }
+        .gk-login-field { margin-bottom: 16px; }
         .gk-login-field label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--gk-on-surface-variant, #4b5563);
-            margin-bottom: 6px;
+            display: block; font-size: 13px; font-weight: 500;
+            color: var(--gk-on-surface-variant, #4b5563); margin-bottom: 6px;
         }
-        .gk-login-field input {
-            width: 100%;
-            padding: 10px 14px;
+        .gk-login-field input[type=text],
+        .gk-login-field input[type=password] {
+            width: 100%; padding: 10px 14px;
             border: 1.5px solid var(--gk-outline-variant, #d1d5db);
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 8px; font-size: 14px;
             background: var(--gk-surface-container-lowest, #fff);
             color: var(--gk-on-surface, #1f2937);
-            outline: none;
-            transition: border-color .15s;
-            box-sizing: border-box;
+            outline: none; transition: border-color .15s; box-sizing: border-box;
         }
-        .gk-login-field input:focus {
-            border-color: var(--gk-primary, #6366f1);
-        }
-        [data-gk-mode="dark"] .gk-login-field input {
+        .gk-login-field input:focus { border-color: var(--gk-primary, #6366f1); }
+        [data-gk-mode=dark] .gk-login-field input[type=text],
+        [data-gk-mode=dark] .gk-login-field input[type=password] {
             background: var(--gk-surface-container, #0f172a);
             border-color: var(--gk-outline-variant, #334155);
         }
+        .gk-login-remember {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: var(--gk-on-surface-variant, #6b7280);
+            cursor: pointer; margin-bottom: 20px; user-select: none;
+        }
+        .gk-login-remember input[type=checkbox] {
+            width: 16px; height: 16px; accent-color: var(--gk-primary, #6366f1);
+            cursor: pointer; flex-shrink: 0;
+        }
         .gk-login-error {
-            background: rgba(244, 63, 94, 0.1);
-            border: 1px solid rgba(244, 63, 94, 0.3);
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 13px;
-            color: #f43f5e;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.3);
+            border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #f43f5e;
+            margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
         }
         .gk-login-btn {
-            width: 100%;
-            padding: 11px;
+            width: 100%; padding: 11px;
             background: var(--gk-primary, #6366f1);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
+            color: #fff; border: none; border-radius: 8px;
+            font-size: 15px; font-weight: 500; cursor: pointer;
             transition: background .15s, box-shadow .15s;
-            margin-top: 8px;
         }
         .gk-login-btn:hover {
             background: var(--gk-primary-variant, #4f46e5);
             box-shadow: 0 2px 8px rgba(99,102,241,0.35);
         }
         .gk-login-footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 12px;
-            color: var(--gk-on-surface-variant, #9ca3af);
+            text-align: center; margin-top: 20px;
+            font-size: 12px; color: var(--gk-on-surface-variant, #9ca3af);
         }
     </style>
 </head>
-<body {$layoutAttr} {$themeAttr} class="gk-root">
+<body {$layoutAttr} {$themeAttr} class=gk-root>
 
-<div class="gk-login-wrap">
-    <div class="gk-login-card">
-        <div class="gk-login-header">
-            <div class="gk-login-icon">
-                <span class="material-icons">{$icon}</span>
+<div class=gk-login-wrap>
+    <div class=gk-login-card>
+        <div class=gk-login-header>
+            <div class=gk-login-icon>
+                <span class=material-icons>{$icon}</span>
             </div>
-            <h1 class="gk-login-title">{$title}</h1>
-            <p class="gk-login-subtitle">Bitte melde dich an</p>
+            <h1 class=gk-login-title>{$title}</h1>
+            <p class=gk-login-subtitle>Bitte melde dich an</p>
         </div>
 
-        <form method="post" action="{$action}">
+        <form method=post action={$action}>
 HTML;
         if ($error) {
             echo '<div class=gk-login-error><span class=material-icons style=font-size:16px>error_outline</span>' . $error . '</div>';
         }
         echo <<<HTML
-            <div class="gk-login-field">
-                <label for="gk-username">Benutzername</label>
-                <input type="text" id="gk-username" name="username"
-                       autocomplete="username" autofocus required>
+            <div class=gk-login-field>
+                <label for=gk-username>Benutzername</label>
+                <input type=text id=gk-username name=username
+                       autocomplete=username autofocus required>
             </div>
-            <div class="gk-login-field">
-                <label for="gk-password">Passwort</label>
-                <input type="password" id="gk-password" name="password"
-                       autocomplete="current-password" required>
+            <div class=gk-login-field>
+                <label for=gk-password>Passwort</label>
+                <input type=password id=gk-password name=password
+                       autocomplete=current-password required>
             </div>
-            <button type="submit" class="gk-login-btn">Anmelden</button>
+            <label class=gk-login-remember>
+                <input type=checkbox name=remember value=1>
+                Angemeldet bleiben (30 Tage)
+            </label>
+            <button type=submit class=gk-login-btn>Anmelden</button>
         </form>
-        <p class="gk-login-footer">GRIDKit Auth</p>
+        <p class=gk-login-footer>GRIDKit Auth</p>
     </div>
 </div>
 
-<script src="gridkit/js/gridkit.js"></script>
+<script src=gridkit/js/gridkit.js></script>
 </body>
 </html>
 HTML;
     }
 
-    /** Verify username + password against users file */
+    // ─── Remember-Me Cookie ───────────────────────────────────────────────────
+
+    private static function checkRememberCookie(): bool {
+        $cookie = $_COOKIE['gk_remember'] ?? '';
+        if (!str_contains($cookie, ':')) return false;
+
+        [$username, $token] = explode(':', $cookie, 2);
+        if (!$username || !$token) return false;
+
+        $file = self::$tokenDir . '/' . hash('sha256', $token);
+        if (!file_exists($file)) return false;
+
+        $lines  = explode(n, file_get_contents($file));
+        $stored = $lines[0] ?? '';
+        $expiry = (int)($lines[1] ?? 0);
+
+        if ($stored !== $username || time() > $expiry) {
+            @unlink($file);
+            return false;
+        }
+
+        // Valid — start session
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        session_regenerate_id(true);
+        $_SESSION[self::$sessionKey] = $username;
+
+        // Rotate token for security
+        @unlink($file);
+        self::setRememberCookie($username);
+
+        return true;
+    }
+
+    private static function setRememberCookie(string $username): void {
+        if (!is_dir(self::$tokenDir)) {
+            mkdir(self::$tokenDir, 0700, true);
+        }
+
+        $token  = bin2hex(random_bytes(32));
+        $expiry = time() + (self::$rememberDays * 86400);
+
+        file_put_contents(
+            self::$tokenDir . '/' . hash('sha256', $token),
+            $username . n . $expiry
+        );
+
+        setcookie('gk_remember', $username . ':' . $token, [
+            'expires'  => $expiry,
+            'path'     => '/',
+            'httponly' => true,
+            'secure'   => !empty($_SERVER['HTTPS']),
+            'samesite' => 'Strict',
+        ]);
+    }
+
+    private static function clearRememberCookie(): void {
+        $cookie = $_COOKIE['gk_remember'] ?? '';
+        if (str_contains($cookie, ':')) {
+            [, $token] = explode(':', $cookie, 2);
+            @unlink(self::$tokenDir . '/' . hash('sha256', $token));
+        }
+        setcookie('gk_remember', '', [
+            'expires'  => time() - 3600,
+            'path'     => '/',
+            'httponly' => true,
+            'secure'   => !empty($_SERVER['HTTPS']),
+            'samesite' => 'Strict',
+        ]);
+    }
+
+    // ─── Intern ───────────────────────────────────────────────────────────────
+
     private static function verify(string $username, string $password): bool {
         if (!file_exists(self::$usersFile)) return false;
         foreach (file(self::$usersFile) as $line) {
