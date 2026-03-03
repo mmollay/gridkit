@@ -133,6 +133,7 @@ a:hover { text-decoration: none; }
     box-sizing: border-box;
 }
 .gk-root *, .gk-root *::before, .gk-root *::after { box-sizing: border-box; }
+.gk-root { background-color: var(--gk-surface-container); color: var(--gk-on-surface); min-height: 100vh; }
 
 /* === TABLE === */
 .gk-table-wrap { background: var(--gk-bg); border: 1px solid var(--gk-outline-variant, #e2e8f0); border-radius: 12px; overflow: hidden; }
@@ -1293,3 +1294,115 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-richtext-wrap:focus-within { border-color: var(--gk-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
 .gk-richtext-wrap .ck-editor__editable { min-height: 320px; font-family: var(--gk-font); font-size: 14px; border: none !important; box-shadow: none !important; }
 .gk-richtext-wrap .ck.ck-toolbar { border: none; border-bottom: 1px solid var(--gk-border) !important; background: var(--gk-bg-muted) !important; }
+
+/* ============================================================
+   DARK MODE — Comprehensive Overrides
+   Fixes für alle hardcodierten Light-Mode Farben
+   ============================================================ */
+
+/* --- Buttons: outlined neutral (weißer Rahmen → dezent) --- */
+[data-gk-mode="dark"] .gk-btn-outlined.gk-btn-neutral,
+.gk-dark .gk-btn-outlined.gk-btn-neutral {
+    color: var(--gk-on-surface-variant);
+    border-color: var(--gk-outline);
+}
+[data-gk-mode="dark"] .gk-btn-outlined.gk-btn-neutral:hover,
+.gk-dark .gk-btn-outlined.gk-btn-neutral:hover {
+    background: rgba(255,255,255,0.06);
+    color: var(--gk-on-surface);
+    border-color: var(--gk-on-surface-variant);
+}
+
+/* --- Buttons: outlined primary/colors → theme-aware --- */
+[data-gk-mode="dark"] .gk-btn-outlined.gk-btn-primary,
+.gk-dark .gk-btn-outlined.gk-btn-primary {
+    color: var(--gk-primary);
+    border-color: var(--gk-primary);
+}
+[data-gk-mode="dark"] .gk-btn-outlined.gk-btn-primary:hover,
+.gk-dark .gk-btn-outlined.gk-btn-primary:hover {
+    background: rgba(var(--gk-primary-rgb, 99,102,241), 0.12);
+}
+
+/* --- Buttons: filled primary → theme-aware --- */
+[data-gk-mode="dark"] .gk-btn-filled.gk-btn-primary,
+.gk-dark .gk-btn-filled.gk-btn-primary {
+    background: var(--gk-primary);
+    border-color: var(--gk-primary);
+    color: var(--gk-on-primary);
+}
+[data-gk-mode="dark"] .gk-btn-filled.gk-btn-primary:hover,
+.gk-dark .gk-btn-filled.gk-btn-primary:hover {
+    filter: brightness(1.1);
+}
+
+/* --- Buttons: text neutral --- */
+[data-gk-mode="dark"] .gk-btn-text.gk-btn-neutral,
+.gk-dark .gk-btn-text.gk-btn-neutral {
+    color: var(--gk-on-surface-variant);
+}
+[data-gk-mode="dark"] .gk-btn-text.gk-btn-neutral:hover,
+.gk-dark .gk-btn-text.gk-btn-neutral:hover {
+    background: rgba(255,255,255,0.06);
+    color: var(--gk-on-surface);
+}
+
+/* --- Tabellen: helle Kopfzeilen & Streifen → dark surfaces --- */
+[data-gk-mode="dark"] .gk-table thead th,
+.gk-dark .gk-table thead th {
+    background: var(--gk-surface-container-highest);
+    color: var(--gk-on-surface-variant);
+    border-bottom-color: var(--gk-outline-variant);
+}
+[data-gk-mode="dark"] .gk-table th,
+[data-gk-mode="dark"] .gk-table td,
+.gk-dark .gk-table th,
+.gk-dark .gk-table td {
+    border-bottom-color: var(--gk-outline-variant);
+}
+[data-gk-mode="dark"] .gk-table tbody tr:hover,
+.gk-dark .gk-table tbody tr:hover {
+    background: var(--gk-surface-container-high);
+}
+[data-gk-mode="dark"] .gk-table tbody tr:nth-child(even),
+.gk-dark .gk-table tbody tr:nth-child(even) {
+    background: rgba(255,255,255,0.025);
+}
+[data-gk-mode="dark"] .gk-table tbody tr:nth-child(even):hover,
+.gk-dark .gk-table tbody tr:nth-child(even):hover {
+    background: var(--gk-surface-container-high);
+}
+[data-gk-mode="dark"] .gk-table-wrap,
+.gk-dark .gk-table-wrap {
+    background: var(--gk-surface-container);
+    border-color: var(--gk-outline-variant);
+}
+
+/* --- Inputs & Forms --- */
+[data-gk-mode="dark"] .gk-input,
+.gk-dark .gk-input {
+    background: var(--gk-surface-container-low);
+    border-color: var(--gk-outline);
+    color: var(--gk-on-surface);
+}
+[data-gk-mode="dark"] .gk-input:focus,
+.gk-dark .gk-input:focus {
+    border-color: var(--gk-primary);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+
+/* --- Modal Header/Body --- */
+[data-gk-mode="dark"] .gk-modal-header,
+.gk-dark .gk-modal-header {
+    background: var(--gk-surface-container-high);
+    border-bottom-color: var(--gk-outline-variant);
+}
+[data-gk-mode="dark"] .gk-modal-body,
+.gk-dark .gk-modal-body {
+    background: var(--gk-surface-container);
+}
+[data-gk-mode="dark"] .gk-modal-close:hover,
+.gk-dark .gk-modal-close:hover {
+    background: var(--gk-surface-container-highest);
+    color: var(--gk-on-surface);
+}
