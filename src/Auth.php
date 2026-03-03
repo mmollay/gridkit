@@ -265,7 +265,8 @@ HTML;
 
         file_put_contents(
             self::$tokenDir . '/' . hash('sha256', $token),
-            $username . n . $expiry
+            $username . "
+" . $expiry
         );
 
         setcookie('gk_remember', $username . ':' . $token, [
