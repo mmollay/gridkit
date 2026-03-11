@@ -1136,10 +1136,10 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 }
 
 /* === THEME SWITCHER WIDGET === */
-.gk-theme-switcher { display: flex; align-items: center; gap: 12px; padding: 2px 0; }
-.gk-theme-colors { display: flex; gap: 8px; }
+.gk-theme-switcher { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+.gk-theme-colors { display: flex; gap: 6px; }
 .gk-theme-dot {
-    width: 28px; height: 28px; border-radius: 50%; border: 3px solid rgba(255,255,255,.25);
+    width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25);
     cursor: pointer; transition: all .15s;
     box-shadow: 0 1px 4px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.2);
 }
