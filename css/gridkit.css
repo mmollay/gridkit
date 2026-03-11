@@ -1137,10 +1137,10 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 }
 
 /* === THEME SWITCHER WIDGET === */
-.gk-theme-switcher { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
-.gk-theme-colors { display: flex; gap: 6px; }
+.gk-theme-switcher { display: flex; align-items: center; gap: 6px; padding: 1px 0; }
+.gk-theme-colors { display: flex; gap: 4px; }
 .gk-theme-dot {
-    width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25);
+    width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25);
     cursor: pointer; transition: all .15s;
     box-shadow: 0 1px 4px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.2);
 }
@@ -1151,13 +1151,14 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 [data-gk-mode="light"] .gk-theme-dot.gk-theme-active { border-color: var(--gk-primary); box-shadow: 0 0 0 2px var(--gk-primary); }
 .gk-mode-toggle {
     display: flex; align-items: center; justify-content: center;
-    width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--gk-outline-variant);
+    width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--gk-outline-variant);
     background: var(--gk-surface-container); cursor: pointer;
     color: var(--gk-on-surface); transition: all .15s; flex-shrink: 0;
 }
 .gk-mode-toggle:hover { background: var(--gk-surface-container-high); border-color: var(--gk-outline); }
+.gk-mode-toggle .material-icons { font-size: 14px; }
 /* Dropdown HTML-Items (z.B. Theme-Switcher im Avatar-Menü) */
-.gk-dropdown-html { cursor: default; padding: 8px 16px; }
+.gk-dropdown-html { cursor: default; padding: 6px 16px; }
 .gk-dropdown-html:hover { background: transparent; }
 [data-gk-mode="light"] .gk-mode-dark { display: none; }
 [data-gk-mode="dark"] .gk-mode-light { display: none; }
