@@ -375,6 +375,7 @@ a:hover { text-decoration: none; }
 .gk-field-inline > .gk-input-wrap { flex: 1; }
 
 .gk-label-text { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--gk-on-surface-variant, #475569); text-transform: uppercase; letter-spacing: 0.03em; }
+.gk-label-text .material-icons, .gk-label-text .material-symbols-outlined, .gk-label-text .material-symbols-rounded { text-transform: none; font-size: 1em; vertical-align: middle; }
 .gk-required { color: var(--gk-danger); }
 .gk-input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--gk-outline-variant, #cbd5e1); border-radius: 8px; font-size: 14px; font-family: var(--gk-font); background: var(--gk-surface-container-lowest, #fff); color: var(--gk-text); outline: none; transition: border-color .15s, box-shadow .15s; box-sizing: border-box; height: 44px; }
 .gk-input::placeholder { color: var(--gk-outline, #94a3b8); }
