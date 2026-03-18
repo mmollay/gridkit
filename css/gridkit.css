@@ -893,6 +893,18 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-table-xs th { padding: 4px 8px; font-size: 10px; }
 .gk-table-xs td { padding: 4px 8px; font-size: 12px; }
 
+/* Compact */
+.gk-table-compact th,
+.gk-table-compact td {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+.gk-table-very-compact th,
+.gk-table-very-compact td {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
 /* Single Line: Kein Textumbruch */
 .gk-table-single-line td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
 

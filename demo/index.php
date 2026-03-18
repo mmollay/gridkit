@@ -237,9 +237,20 @@ $table->size('lg');  // großzügig</pre></div>
         ['name' => 'SEO Beratung', 'price' => '95 €', 'status' => 'inaktiv'],
         ['name' => 'Logo Design', 'price' => '450 €', 'status' => 'entwurf'],
     ];
-    $varLabels = ['default' => 'Standard', 'bordered' => 'Mit Rahmen', 'striped' => 'Zebra-Streifen', 'celled' => 'Gitternetz', 'minimal' => 'Minimal', 'flat' => 'Flach', 'padded' => 'Grosszuegig', 'selectable' => 'Klickbar', 'definition' => 'Definition', 'inverted' => 'Invertiert'];
+    $variants = [
+        'default'      => 'Standard',
+        'bordered'     => 'Mit Rahmen',
+        'striped'      => 'Zebra-Streifen',
+        'celled'       => 'Gitterlinien',
+        'padded'       => 'Extra Platz',
+        'compact'      => 'Kompakt',
+        'selectable'   => 'Auswaehlbar',
+        'minimal'      => 'Minimal',
+        'flat'         => 'Flach',
+        'inverted'     => 'Invertiert',
+    ];
     echo '<div style="display:flex;flex-direction:column;gap:24px;margin-bottom:24px;">';
-    foreach (['default', 'bordered', 'striped', 'celled', 'minimal', 'flat', 'padded', 'selectable', 'definition', 'inverted'] as $var) {
+    foreach ($variants as $var => $label) {
         echo '<div>';
         echo '<div style="font-size:13px;font-weight:500;color:var(--gk-on-surface-variant);display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="font-size:11px;font-family:monospace;background:var(--gk-surface-container);padding:2px 8px;border-radius:4px;color:var(--gk-on-surface-variant)">variant(\'' . $var . '\')</span> ' . $label . '</div>';
         $t = new Table('var-' . $var);
@@ -252,19 +263,35 @@ $table->size('lg');  // großzügig</pre></div>
     }
     echo '</div>';
     ?>
-    <div class="demo-code"><pre>$table->variant('default');     // Standard (Zeilen-Separator)
+    <h3 style="margin: 32px 0 16px;">Definition-Tabelle</h3>
+    <p class="demo-intro">Erste Spalte als Label/Schluessel — ideal fuer Detailansichten.</p>
+    <div class="gk-table-wrap">
+        <table class="gk-table gk-table-definition">
+            <tbody>
+                <tr><td>Firmenname</td><td>SSI Schaefer IT Solutions GmbH</td></tr>
+                <tr><td>Gruendung</td><td>2003</td></tr>
+                <tr><td>Standort</td><td>Wien, Oesterreich</td></tr>
+                <tr><td>Mitarbeiter</td><td>24</td></tr>
+                <tr><td>Website</td><td>ssi.at</td></tr>
+                <tr><td>Status</td><td><span class="gk-label gk-label-green">Aktiv</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="demo-code"><pre>$table->variant('default');     // Standard
 $table->variant('bordered');    // Volle Rahmenlinien
 $table->variant('striped');     // Zebra-Streifen
-$table->variant('celled');      // Vollständiges Gitternetz
-$table->variant('minimal');     // Nur Zeilen-Separator, kein Außenrahmen
-$table->variant('flat');        // Komplett flach, kein Rahmen
-$table->variant('padded');      // Extra Padding, grosszügig
-$table->variant('selectable');  // Zeilen wirken klickbar
-$table->variant('definition');  // Erste Spalte als Label
-$table->variant('inverted');    // Dunkle Tabelle im Light Mode
+$table->variant('celled');      // Gitterlinien um jede Zelle
+$table->variant('padded');      // Extra Platz
+$table->variant('compact');     // Kompakt, mehr Zeilen
+$table->variant('selectable');  // Hover-Cursor, klickbar
+$table->variant('minimal');     // Nur Separator, kein Rahmen
+$table->variant('flat');        // Komplett flach
+$table->variant('inverted');    // Dunkle Tabelle (auch im Light Mode)
 
-// Kombinierbar mit size():
-$table->variant('bordered')->size('sm');</pre></div>
+// Kombinierbar:
+$table->variant('striped')->size('compact');
+$table->variant('celled')->variant('padded');</pre></div>
 
     <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
     <p class="demo-intro">Verkleinere das Browserfenster auf &lt;768px um die Mobile-Darstellung zu sehen.</p>
