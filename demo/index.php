@@ -1243,9 +1243,9 @@ Auth::renderLogin([...]);    // Login-Page</div>
 document.querySelectorAll('.gk-upload-zone[data-gk-upload]').forEach(function(zone) {
     zone.addEventListener('gk:files', function(e) {
         e.detail.items.forEach(function(item) {
-            GK.uqSetUploading(item);
+            GK.uqSetUploading && item.el && GK.uqSetUploading(item);
             setTimeout(function() {
-                GK.uqSetDone(item, item.file ? item.file.name : 'Datei');
+                GK.uqSetDone && item.el && GK.uqSetDone(item, item.file ? item.file.name : 'Datei');
             }, 1000 + Math.random() * 1000);
         });
     });
@@ -1268,7 +1268,7 @@ document.querySelectorAll('.gk-upload-zone[data-gk-upload]').forEach(function(zo
         setTimeout(function() {
             el.querySelector('.material-icons').textContent = 'upload';
             el.querySelector('.material-icons').style.color = 'var(--gk-primary)';
-            GK.uqSetUploading && GK.uqSetUploading(item);
+            GK.uqSetUploading && GK.uqSetUploading && item.el && GK.uqSetUploading(item);
             setTimeout(function() {
                 if (isError) { GK.uqSetError && GK.uqSetError(item, 'Verbindung unterbrochen'); }
                 else { GK.uqSetDone && GK.uqSetDone(item, label); }
