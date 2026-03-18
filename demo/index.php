@@ -70,7 +70,7 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
 
 <?php
 $sidebar = new Sidebar('demo');
-$sidebar->brand('GridKit', 'widgets', 'v' . $version)
+$sidebar->brand('GridKit', 'widgets')
     ->group('Komponenten')
     ->item('Table', '#table', 'table_chart', ['active' => true])
     ->item('Form', '#form', 'edit_note')
