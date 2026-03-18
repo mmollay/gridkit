@@ -758,6 +758,98 @@ $stats->card('Kunden', 248, ['format' => 'number', 'color' => 'blue'])
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
+    <h3 style="margin: 32px 0 16px;">Avatar</h3>
+    <p class="demo-intro">Profilbilder mit Initialen-Fallback, Status-Dot und Gruppen.</p>
+
+    <div class="gk-segment">
+        <div class="gk-segment-header">Gr&ouml;ssen</div>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <div class="gk-avatar gk-avatar-xs">XS</div>
+            <div class="gk-avatar gk-avatar-sm">SM</div>
+            <div class="gk-avatar gk-avatar-md">MD</div>
+            <div class="gk-avatar gk-avatar-lg">LG</div>
+            <div class="gk-avatar gk-avatar-xl">XL</div>
+            <div class="gk-avatar gk-avatar-lg"><img src="https://i.pravatar.cc/112?img=12" alt=""></div>
+            <div class="gk-avatar gk-avatar-lg"><img src="https://i.pravatar.cc/112?img=32" alt=""></div>
+        </div>
+    </div>
+
+    <div class="gk-segment" style="margin-top:12px">
+        <div class="gk-segment-header">Status</div>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <div class="gk-avatar gk-avatar-lg"><img src="https://i.pravatar.cc/112?img=12" alt=""><span class="gk-avatar-status online"></span></div>
+            <div class="gk-avatar gk-avatar-lg"><img src="https://i.pravatar.cc/112?img=32" alt=""><span class="gk-avatar-status away"></span></div>
+            <div class="gk-avatar gk-avatar-lg"><img src="https://i.pravatar.cc/112?img=44" alt=""><span class="gk-avatar-status busy"></span></div>
+            <div class="gk-avatar gk-avatar-lg">MM<span class="gk-avatar-status offline"></span></div>
+        </div>
+    </div>
+
+    <div class="gk-segment" style="margin-top:12px">
+        <div class="gk-segment-header">Gruppe (gestapelt)</div>
+        <div class="gk-avatar-group">
+            <div class="gk-avatar gk-avatar-md"><img src="https://i.pravatar.cc/80?img=12" alt=""></div>
+            <div class="gk-avatar gk-avatar-md"><img src="https://i.pravatar.cc/80?img=32" alt=""></div>
+            <div class="gk-avatar gk-avatar-md"><img src="https://i.pravatar.cc/80?img=44" alt=""></div>
+            <div class="gk-avatar gk-avatar-md"><img src="https://i.pravatar.cc/80?img=55" alt=""></div>
+            <div class="gk-avatar gk-avatar-md">+3</div>
+        </div>
+    </div>
+
+    <div class="demo-code"><pre>.gk-avatar.gk-avatar-lg           // Gr&ouml;ssen: xs, sm, md, lg, xl
+.gk-avatar-status.online          // Status: online, away, busy, offline
+.gk-avatar-group                  // Gestapelte Gruppe
+.gk-avatar-square                 // Eckig statt rund</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3 style="margin: 32px 0 16px;">Gallery + Lightbox</h3>
+    <p class="demo-intro">Bilder-Grid mit Lazy-Loading, Hover-Overlay und Lightbox (Pfeiltasten, Escape).</p>
+
+    <div class="gk-gallery">
+        <div class="gk-gallery-item" data-lightbox="https://picsum.photos/800/600?random=1" data-caption="Landschaft 1" data-lazy>
+            <img data-src="https://picsum.photos/400/400?random=1" alt="Landschaft 1">
+            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Landschaft</span></div>
+        </div>
+        <div class="gk-gallery-item" data-lightbox="https://picsum.photos/800/600?random=2" data-caption="Architektur" data-lazy>
+            <img data-src="https://picsum.photos/400/400?random=2" alt="Architektur">
+            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Architektur</span></div>
+        </div>
+        <div class="gk-gallery-item" data-lightbox="https://picsum.photos/800/600?random=3" data-caption="Natur" data-lazy>
+            <img data-src="https://picsum.photos/400/400?random=3" alt="Natur">
+            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Natur</span></div>
+        </div>
+        <div class="gk-gallery-item" data-lightbox="https://picsum.photos/800/600?random=4" data-caption="Stadt" data-lazy>
+            <img data-src="https://picsum.photos/400/400?random=4" alt="Stadt">
+            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Stadt</span></div>
+        </div>
+        <div class="gk-gallery-item" data-lightbox="https://picsum.photos/800/600?random=5" data-caption="Abstrakt" data-lazy>
+            <img data-src="https://picsum.photos/400/400?random=5" alt="Abstrakt">
+            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Abstrakt</span></div>
+        </div>
+        <div class="gk-gallery-item" data-lightbox="https://picsum.photos/800/600?random=6" data-caption="Panorama" data-lazy>
+            <img data-src="https://picsum.photos/400/400?random=6" alt="Panorama">
+            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Panorama</span></div>
+        </div>
+    </div>
+
+    <div class="demo-code"><pre>&lt;div class="gk-gallery"&gt;
+    &lt;div class="gk-gallery-item" data-lightbox="full.jpg" data-caption="Titel" data-lazy&gt;
+        &lt;img data-src="thumb.jpg" alt=""&gt;
+        &lt;div class="gk-gallery-overlay"&gt;
+            &lt;span class="gk-gallery-caption"&gt;Titel&lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+// Varianten:
+.gk-gallery-sm              // Kleinere Thumbnails (100px min)
+.gk-gallery-lg              // Gr&ouml;ssere Thumbnails (220px min)
+.gk-gallery-masonry         // Pinterest-Layout (Spalten)
+// Lightbox: Pfeiltasten, Escape, Klick-Aussen-Schliessen
+// data-lazy: Bilder erst laden wenn sichtbar</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
     <h3 style="margin: 32px 0 16px;">Breadcrumb</h3>
     <p class="demo-intro">Pfad-Navigation zur Orientierung in verschachtelten Bereichen.</p>
 

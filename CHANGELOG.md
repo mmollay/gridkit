@@ -7,6 +7,14 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-03-18
+
+### Added
+- Avatar-Komponente (xs-xl, Status-Dots, Gruppen, Square-Variante)
+- Gallery/Thumbnail Grid (responsive, Lazy-Loading, Masonry-Variante)
+- Lightbox (Prev/Next, Keyboard-Navigation, Counter, Caption)
+- Demo: Avatar-, Gallery- und Lightbox-Beispiele in Cards-Section
+
 ## [0.11.0] - 2026-03-18
 
 ### Added
