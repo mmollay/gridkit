@@ -237,11 +237,11 @@ $table->size('lg');  // großzügig</pre></div>
         ['name' => 'SEO Beratung', 'price' => '95 €', 'status' => 'inaktiv'],
         ['name' => 'Logo Design', 'price' => '450 €', 'status' => 'entwurf'],
     ];
-    $varLabels = ['default' => 'Standard', 'bordered' => 'Mit Rahmen', 'striped' => 'Zebra-Streifen', 'minimal' => 'Minimal', 'flat' => 'Flach'];
+    $varLabels = ['default' => 'Standard', 'bordered' => 'Mit Rahmen', 'striped' => 'Zebra-Streifen', 'celled' => 'Gitternetz', 'minimal' => 'Minimal', 'flat' => 'Flach', 'padded' => 'Grosszuegig', 'selectable' => 'Klickbar', 'definition' => 'Definition', 'inverted' => 'Invertiert'];
     echo '<div style="display:flex;flex-direction:column;gap:24px;margin-bottom:24px;">';
-    foreach (['default', 'bordered', 'striped', 'minimal', 'flat'] as $var) {
+    foreach (['default', 'bordered', 'striped', 'celled', 'minimal', 'flat', 'padded', 'selectable', 'definition', 'inverted'] as $var) {
         echo '<div>';
-        echo '<div style="font-size:13px;font-weight:500;color:var(--gk-on-surface-variant);display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="font-size:11px;font-family:monospace;background:var(--gk-surface-container);padding:2px 8px;border-radius:4px;color:var(--gk-on-surface-variant)">variant(\'' . $var . '\')</span> ' . $varLabels[$var] . '</div>';
+        echo '<div style="font-size:13px;font-weight:500;color:var(--gk-on-surface-variant);display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="font-size:11px;font-family:monospace;background:var(--gk-surface-container);padding:2px 8px;border-radius:4px;color:var(--gk-on-surface-variant)">variant(\'' . $var . '\')</span> ' . $label . '</div>';
         $t = new Table('var-' . $var);
         $t->setData($varData)
             ->column('name', 'Bezeichnung')
@@ -252,11 +252,16 @@ $table->size('lg');  // großzügig</pre></div>
     }
     echo '</div>';
     ?>
-    <div class="demo-code"><pre>$table->variant('default');   // Standard (Zeilen-Separator)
-$table->variant('bordered');  // Volle Rahmenlinien
-$table->variant('striped');   // Zebra-Streifen
-$table->variant('minimal');   // Nur Zeilen-Separator, kein Außenrahmen
-$table->variant('flat');      // Komplett flach, kein Rahmen
+    <div class="demo-code"><pre>$table->variant('default');     // Standard (Zeilen-Separator)
+$table->variant('bordered');    // Volle Rahmenlinien
+$table->variant('striped');     // Zebra-Streifen
+$table->variant('celled');      // Vollständiges Gitternetz
+$table->variant('minimal');     // Nur Zeilen-Separator, kein Außenrahmen
+$table->variant('flat');        // Komplett flach, kein Rahmen
+$table->variant('padded');      // Extra Padding, grosszügig
+$table->variant('selectable');  // Zeilen wirken klickbar
+$table->variant('definition');  // Erste Spalte als Label
+$table->variant('inverted');    // Dunkle Tabelle im Light Mode
 
 // Kombinierbar mit size():
 $table->variant('bordered')->size('sm');</pre></div>

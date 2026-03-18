@@ -879,6 +879,45 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-table-flat th { background: transparent; border-bottom: 2px solid var(--gk-border, #e2e8f0); }
 .gk-table-flat td { border-bottom: 1px solid var(--gk-border, #f1f5f9); }
 
+/* Celled: Vollstaendiges Gitternetz */
+.gk-table-celled, .gk-table-celled th, .gk-table-celled td {
+    border: 1px solid var(--gk-outline-variant, #D0D7DE);
+}
+.gk-table-celled { border-collapse: collapse; }
+
+/* Padded: Extra Padding fuer bessere Lesbarkeit */
+.gk-table-padded th { padding: 14px 20px; }
+.gk-table-padded td { padding: 16px 20px; font-size: 15px; }
+
+/* Very Compact: Noch dichter als sm */
+.gk-table-xs th { padding: 4px 8px; font-size: 10px; }
+.gk-table-xs td { padding: 4px 8px; font-size: 12px; }
+
+/* Single Line: Kein Textumbruch */
+.gk-table-single-line td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+
+/* Fixed: Gleiche Spaltenbreiten */
+.gk-table-fixed { table-layout: fixed; }
+
+/* Selectable: Zeilen wirken klickbar */
+.gk-table-selectable tbody tr { cursor: pointer; transition: background .1s; }
+.gk-table-selectable tbody tr:hover { background: var(--gk-primary-50, #eef2ff); }
+
+/* Definition: Erste Spalte als Label */
+.gk-table-definition td:first-child {
+    font-weight: 600; color: var(--gk-on-surface-variant);
+    background: var(--gk-surface-container, #F6F8FA);
+    white-space: nowrap;
+}
+.gk-table-definition thead th:first-child { background: transparent; }
+
+/* Inverted: Dunkle Tabelle im Light Mode */
+.gk-table-inverted { background: #1e293b; color: #e2e8f0; }
+.gk-table-inverted th { background: #0f172a; color: #94a3b8; border-bottom-color: rgba(255,255,255,0.1); }
+.gk-table-inverted td { border-bottom-color: rgba(255,255,255,0.06); }
+.gk-table-inverted tbody tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+.gk-table-inverted tbody tr:hover { background: rgba(255,255,255,0.06); }
+
 /* === TABLE MOBILE: Card === */
 @media (max-width: 768px) {
     .gk-table-mobile-card table { display: block; }
@@ -1712,20 +1751,76 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 }
 [data-gk-mode="dark"] .gk-table tbody tr:hover,
 .gk-dark .gk-table tbody tr:hover {
-    background: #21262D;
+    background: #262D38;
 }
 [data-gk-mode="dark"] .gk-table tbody tr:nth-child(even),
 .gk-dark .gk-table tbody tr:nth-child(even) {
-    background: #161B22;
+    background: #1C2128;
 }
 [data-gk-mode="dark"] .gk-table tbody tr:nth-child(even):hover,
 .gk-dark .gk-table tbody tr:nth-child(even):hover {
-    background: #21262D;
+    background: #262D38;
 }
 [data-gk-mode="dark"] .gk-table-wrap,
 .gk-dark .gk-table-wrap {
     background: #161B22;
     border-color: rgba(255,255,255,0.10);
+}
+
+
+/* Dark: Celled */
+[data-gk-mode="dark"] .gk-table-celled th,
+[data-gk-mode="dark"] .gk-table-celled td,
+.gk-dark .gk-table-celled th,
+.gk-dark .gk-table-celled td {
+    border-color: rgba(255,255,255,0.10);
+}
+
+/* Dark: Bordered */
+[data-gk-mode="dark"] .gk-table-bordered th,
+[data-gk-mode="dark"] .gk-table-bordered td,
+.gk-dark .gk-table-bordered th,
+.gk-dark .gk-table-bordered td {
+    border-color: rgba(255,255,255,0.10);
+}
+
+/* Dark: Minimal */
+[data-gk-mode="dark"] .gk-table-minimal th,
+.gk-dark .gk-table-minimal th {
+    color: #8B949E;
+}
+[data-gk-mode="dark"] .gk-table-minimal td,
+.gk-dark .gk-table-minimal td {
+    border-bottom-color: rgba(255,255,255,0.06);
+}
+
+/* Dark: Flat */
+[data-gk-mode="dark"] .gk-table-flat th,
+.gk-dark .gk-table-flat th {
+    border-bottom-color: rgba(255,255,255,0.12);
+}
+[data-gk-mode="dark"] .gk-table-flat td,
+.gk-dark .gk-table-flat td {
+    border-bottom-color: rgba(255,255,255,0.06);
+}
+
+/* Dark: Selectable */
+[data-gk-mode="dark"] .gk-table-selectable tbody tr:hover,
+.gk-dark .gk-table-selectable tbody tr:hover {
+    background: rgba(99,102,241,0.12);
+}
+
+/* Dark: Definition */
+[data-gk-mode="dark"] .gk-table-definition td:first-child,
+.gk-dark .gk-table-definition td:first-child {
+    background: #0D1117;
+    color: #8B949E;
+}
+
+/* Dark: Striped (explizit) */
+[data-gk-mode="dark"] .gk-table-striped tbody tr:nth-child(even),
+.gk-dark .gk-table-striped tbody tr:nth-child(even) {
+    background: #1C2128;
 }
 
 /* Dark Mode: Table Mobile Card */
@@ -1739,6 +1834,8 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-dark .gk-table-mobile-card td {
     border-bottom-color: rgba(255,255,255,0.06);
 }
+
+
 
 /* --- Inputs & Forms --- */
 [data-gk-mode="dark"] .gk-input,
