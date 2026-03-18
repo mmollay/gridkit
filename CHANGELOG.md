@@ -9,6 +9,19 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 - Weitere Komponenten geplant (Flash Messages/Alerts, Standalone Select)
 - Dokumentation vervollständigen
 
+## [0.9.40] - 2026-03-18
+
+### Changed
+- Dark Mode: Text-Kontrast verbessert (--gk-on-surface-variant #94a3b8 → #b0bec5)
+- Dark Mode: --gk-text-muted ebenfalls heller (#94a3b8 → #b0bec5)
+- Dark Mode: Tabellen-Header mit staerkerem Hintergrund (surface-container-highest statt -low)
+- Dark Mode: Tabellen-Streifen sichtbarer (rgba 0.025/0.05 → 0.06)
+- Dark Mode: Borders konsistent via CSS-Variablen statt hardcoded rgba-Werte
+- Dark Mode: Hardcoded Farbwerte in Button-Tonals durch CSS-Variablen ersetzt
+
+### Fixed
+- Doppelte Dark-Mode-Tabellen-Definitionen konsolidiert (Zeile ~1018 vs ~1352)
+
 ## [0.9.34] - 2026-03-01
 
 ### Added
@@ -243,6 +256,19 @@ Erster stabiler Stand. Alle Kern-Komponenten vorhanden und getestet.
 
 ### Fixed
 - `gk-row`: Alle `gk-w-1` bis `gk-w-16` jetzt vollständig mit `flex: 0 0 calc(...)` definiert — bisher fehlten w-1 bis w-4, w-7, w-9 bis w-16; Spalten wurden fälschlicherweise alle gleich breit
+
+## [0.9.40] - 2026-03-18
+
+### Changed
+- Dark Mode: Text-Kontrast verbessert (--gk-on-surface-variant #94a3b8 → #b0bec5)
+- Dark Mode: --gk-text-muted ebenfalls heller (#94a3b8 → #b0bec5)
+- Dark Mode: Tabellen-Header mit staerkerem Hintergrund (surface-container-highest statt -low)
+- Dark Mode: Tabellen-Streifen sichtbarer (rgba 0.025/0.05 → 0.06)
+- Dark Mode: Borders konsistent via CSS-Variablen statt hardcoded rgba-Werte
+- Dark Mode: Hardcoded Farbwerte in Button-Tonals durch CSS-Variablen ersetzt
+
+### Fixed
+- Doppelte Dark-Mode-Tabellen-Definitionen konsolidiert (Zeile ~1018 vs ~1352)
 
 ## [0.9.34] - 2026-03-01
 
