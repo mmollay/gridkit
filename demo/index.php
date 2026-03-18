@@ -376,6 +376,7 @@ $table->mobile('scroll');    // Horizontal Scroll
 $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 </div>
 
+</div>
 <!-- ===== SEGMENT ===== -->
 <div class="demo-section" data-section="segment">
     <h2>Segment</h2>
