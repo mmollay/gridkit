@@ -370,6 +370,186 @@ $table->mobile('scroll');    // Horizontal Scroll
 $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 </div>
 
+<!-- ===== SEGMENT ===== -->
+<div class="demo-section" data-section="segment">
+    <h2>Segment</h2>
+    <p class="demo-intro">Container für zusammengehörige Inhalte — einzeln, gestapelt oder mit Header.</p>
+    
+    <h3 style="margin: 32px 0 16px;">Einfaches Segment</h3>
+    <div class="gk-segment">
+        <p>Ein einfaches Segment gruppiert zusammengehörige Inhalte visuell.</p>
+    </div>
+    
+    <h3 style="margin: 32px 0 16px;">Segment mit Header</h3>
+    <div class="gk-segment">
+        <div class="gk-segment-header">Projektübersicht</div>
+        <p>Segmente können einen Header haben um den Inhalt zu beschreiben.</p>
+    </div>
+    
+    <h3 style="margin: 32px 0 16px;">Gestapelte Segments</h3>
+    <div class="gk-segments">
+        <div class="gk-segment">
+            <div class="gk-segment-header">Schritt 1</div>
+            <p>Konto erstellen und E-Mail bestätigen.</p>
+        </div>
+        <div class="gk-segment">
+            <div class="gk-segment-header">Schritt 2</div>
+            <p>Profil ausfüllen und Einstellungen konfigurieren.</p>
+        </div>
+        <div class="gk-segment">
+            <div class="gk-segment-header">Schritt 3</div>
+            <p>Erstes Projekt anlegen und loslegen.</p>
+        </div>
+    </div>
+    
+    <h3 style="margin: 32px 0 16px;">Varianten</h3>
+    <div class="gk-segment gk-segment-raised">
+        <div class="gk-segment-header">Raised</div>
+        <p>Mit Schatten — hebt sich stärker vom Hintergrund ab.</p>
+    </div>
+    <div class="gk-segment gk-segment-muted">
+        <div class="gk-segment-header">Muted</div>
+        <p>Gedämpfter Hintergrund — für sekundäre Inhalte.</p>
+    </div>
+    <div class="gk-segment gk-segment-compact">
+        <div class="gk-segment-header">Compact</div>
+        <p>Weniger Padding — für dichtere Layouts.</p>
+    </div>
+    
+    <div class="demo-code"><pre>.gk-segment                 // Standard
+.gk-segment-raised          // Mit Schatten
+.gk-segment-muted           // Gedämpfter Hintergrund
+.gk-segment-compact         // Weniger Padding
+.gk-segment-padded          // Mehr Padding
+.gk-segment-basic           // Kein Rahmen, transparent
+.gk-segments > .gk-segment  // Gestapelt (verbunden)</pre></div>
+</div>
+
+<!-- ===== MESSAGE ===== -->
+<div class="demo-section" data-section="message">
+    <h2>Message</h2>
+    <p class="demo-intro">Hinweise, Warnungen und Statusmeldungen für Benutzer.</p>
+    
+    <h3 style="margin: 32px 0 16px;">Standard</h3>
+    <div class="gk-message">
+        <span class="material-icons">info</span>
+        <div class="gk-message-content">
+            Eine neutrale Nachricht ohne spezifischen Status.
+        </div>
+    </div>
+    
+    <h3 style="margin: 32px 0 16px;">Typen</h3>
+    <div class="gk-message gk-message-info">
+        <span class="material-icons">info</span>
+        <div class="gk-message-content">
+            <div class="gk-message-header">Information</div>
+            Deine Änderungen werden automatisch gespeichert.
+        </div>
+    </div>
+    <div class="gk-message gk-message-success">
+        <span class="material-icons">check_circle</span>
+        <div class="gk-message-content">
+            <div class="gk-message-header">Erfolg</div>
+            Das Profil wurde erfolgreich aktualisiert.
+        </div>
+    </div>
+    <div class="gk-message gk-message-warning">
+        <span class="material-icons">warning</span>
+        <div class="gk-message-content">
+            <div class="gk-message-header">Achtung</div>
+            Dein SSL-Zertifikat läuft in 7 Tagen ab.
+        </div>
+    </div>
+    <div class="gk-message gk-message-error">
+        <span class="material-icons">error</span>
+        <div class="gk-message-content">
+            <div class="gk-message-header">Fehler</div>
+            Die Verbindung zur Datenbank konnte nicht hergestellt werden.
+            <ul class="gk-message-list">
+                <li>Host nicht erreichbar</li>
+                <li>Timeout nach 30 Sekunden</li>
+            </ul>
+        </div>
+    </div>
+    
+    <h3 style="margin: 32px 0 16px;">Kompakt</h3>
+    <div class="gk-message gk-message-info gk-message-compact">
+        <span class="material-icons">info</span>
+        <div class="gk-message-content">Kompakte Nachricht für weniger Platz.</div>
+    </div>
+    
+    <h3 style="margin: 32px 0 16px;">Dismissible</h3>
+    <div class="gk-message gk-message-warning" id="demo-dismiss-msg">
+        <span class="material-icons">warning</span>
+        <div class="gk-message-content">Diese Nachricht kann geschlossen werden.</div>
+        <button class="gk-message-dismiss" onclick="this.parentElement.style.display='none'"><span class="material-icons">close</span></button>
+    </div>
+    
+    <div class="demo-code"><pre>.gk-message                  // Standard (neutral)
+.gk-message-info             // Blau
+.gk-message-success          // Grün
+.gk-message-warning          // Orange
+.gk-message-error            // Rot
+.gk-message-compact          // Weniger Padding
+.gk-message-dismiss          // Schliessen-Button</pre></div>
+</div>
+
+<!-- ===== CARDS ===== -->
+<div class="demo-section" data-section="cards">
+    <h2>Cards</h2>
+    <p class="demo-intro">Karten-Grid für strukturierte Inhalte — responsiv, mit Header, Body und Footer.</p>
+    
+    <h3 style="margin: 32px 0 16px;">Auto-Grid (responsive)</h3>
+    <div class="gk-cards">
+        <div class="gk-card">
+            <div class="gk-card-header">Webdesign</div>
+            <div class="gk-card-body">
+                <div class="gk-card-meta">Paket S · ab 1.200 €</div>
+                <div class="gk-card-description">Responsives Design, CMS-Integration und SEO-Grundlagen für kleine Projekte.</div>
+            </div>
+            <div class="gk-card-footer">5 Projekte aktiv</div>
+        </div>
+        <div class="gk-card">
+            <div class="gk-card-header">Hosting</div>
+            <div class="gk-card-body">
+                <div class="gk-card-meta">Managed · ab 9,90 €/Monat</div>
+                <div class="gk-card-description">SSD-Speicher, tägliche Backups und SSL inklusive. 99,9% Uptime.</div>
+            </div>
+            <div class="gk-card-footer">12 Server aktiv</div>
+        </div>
+        <div class="gk-card">
+            <div class="gk-card-header">SEO</div>
+            <div class="gk-card-body">
+                <div class="gk-card-meta">Beratung · 95 €/h</div>
+                <div class="gk-card-description">Keyword-Analyse, On-Page-Optimierung und monatliche Reports.</div>
+            </div>
+            <div class="gk-card-footer">3 Kunden aktiv</div>
+        </div>
+    </div>
+    
+    <h3 style="margin: 32px 0 16px;">Feste Spaltenanzahl</h3>
+    <div class="gk-cards gk-cards-4">
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);margin-bottom:8px;display:block">speed</span><strong>Performance</strong><div class="gk-card-meta" style="margin-top:4px">99.9% Uptime</div></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-success);margin-bottom:8px;display:block">security</span><strong>Sicherheit</strong><div class="gk-card-meta" style="margin-top:4px">SSL & Firewall</div></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-warning);margin-bottom:8px;display:block">support_agent</span><strong>Support</strong><div class="gk-card-meta" style="margin-top:4px">24/7 erreichbar</div></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-info);margin-bottom:8px;display:block">backup</span><strong>Backups</strong><div class="gk-card-meta" style="margin-top:4px">Täglich automatisch</div></div></div>
+    </div>
+    
+    <div class="demo-code"><pre>.gk-cards                    // Auto-Grid (min 280px)
+.gk-cards-2                  // 2 Spalten
+.gk-cards-3                  // 3 Spalten
+.gk-cards-4                  // 4 Spalten
+
+// Card-Struktur:
+.gk-card
+  .gk-card-header            // Optional: Titel-Bereich
+  .gk-card-body              // Hauptinhalt
+    .gk-card-meta            // Kleine Zusatzinfo
+    .gk-card-description     // Beschreibungstext
+  .gk-card-footer            // Optional: Footer
+.gk-card-link                // Klickbare Card (hover-Effekt)</pre></div>
+</div>
+
 <!-- ===== FORM ===== -->
 <div class="demo-section" data-section="form">
     <h2>Form</h2>
@@ -1751,6 +1931,44 @@ echo     ->title('Mein System')
         </p>
     </div>
 </div>
+
+<!-- ===== CHANGELOG ===== -->
+<div class="demo-section" data-section="changelog">
+    <h2>Changelog</h2>
+    <?php
+    // CHANGELOG.md parsen und als Segments rendern
+    $changelog = file_get_contents(__DIR__ . '/../CHANGELOG.md');
+    $versions = preg_split('/^## /m', $changelog);
+    array_shift($versions); // Header entfernen
+    $count = 0;
+    foreach ($versions as $v) {
+        if ($count >= 8) break;
+        if (str_starts_with($v, '[Unreleased]')) continue;
+        $lines = explode("\n", trim($v));
+        $title = array_shift($lines);
+        $title = trim($title, '[] ');
+        // Version und Datum trennen
+        $parts = explode(' - ', $title, 2);
+        $ver = $parts[0] ?? $title;
+        $date = $parts[1] ?? '';
+        echo '<div class="gk-segment" style="margin-bottom:12px">';
+        echo '<div class="gk-segment-header" style="display:flex;align-items:center;gap:8px">';
+        echo '<span style="font-family:monospace;background:var(--gk-primary);color:#fff;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:600">' . htmlspecialchars($ver) . '</span>';
+        if ($date) echo '<span style="font-size:12px;color:var(--gk-on-surface-variant)">' . htmlspecialchars($date) . '</span>';
+        echo '</div>';
+        echo '<div style="font-size:13px;line-height:1.7;color:var(--gk-on-surface-variant);margin-top:8px">';
+        $body = implode("\n", $lines);
+        // Markdown-light: ### Headers, - list items
+        $body = htmlspecialchars($body);
+        $body = preg_replace('/^### (.+)$/m', '<strong style="color:var(--gk-on-surface);display:block;margin-top:8px">$1</strong>', $body);
+        $body = preg_replace('/^- (.+)$/m', '<span style="display:block;padding-left:12px">&middot; $1</span>', $body);
+        echo $body;
+        echo '</div></div>';
+        $count++;
+    }
+    ?>
+</div>
+
 <?php Modal::container(); ?>
 </div><!-- /gk-with-sidebar -->
 
