@@ -32,7 +32,27 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-section.active { display:block; }
         .demo-section h2 { font-size:20px; margin:0 0 16px; color:var(--gk-on-surface, #374151); }
         .demo-card { background:var(--gk-surface, #fff); border-radius:8px; padding:24px; border:1px solid transparent; box-shadow:var(--gk-shadow); margin-bottom:24px; }
-        [data-gk-mode="dark"] .demo-card, .gk-dark .demo-card { border-color:rgba(255,255,255,0.1); box-shadow:none; }
+        [data-gk-mode="dark"] .demo-card, .gk-dark .demo-card {
+            background:var(--gk-surface-container);
+            border:1px solid rgba(255,255,255,0.14);
+            box-shadow:none;
+        }
+        [data-gk-mode="dark"] .demo-stat, .gk-dark .demo-stat {
+            background:var(--gk-surface-container);
+            border:1px solid rgba(255,255,255,0.14);
+            box-shadow:none;
+        }
+        [data-gk-mode="dark"] .demo-code, .gk-dark .demo-code {
+            background:var(--gk-surface);
+            border:1px solid rgba(255,255,255,0.08);
+            color:#E6EDF3;
+        }
+        [data-gk-mode="dark"] .demo-intro, .gk-dark .demo-intro {
+            color:#8B949E;
+        }
+        [data-gk-mode="dark"] .demo-section h2, .gk-dark .demo-section h2 {
+            color:#E6EDF3;
+        }
         .demo-card .gk-table-wrap { border:none !important; }
         .demo-code { background:var(--gk-surface-dim, #1e293b); color:var(--gk-on-surface, #e2e8f0); padding:20px; border-radius:8px; overflow-x:auto; font-family:'SF Mono',Monaco,Consolas,monospace; font-size:13px; line-height:1.6; margin-top:16px; }
         .demo-code pre { margin:0; }
