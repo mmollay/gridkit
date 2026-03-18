@@ -14,23 +14,58 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 ### Changed
 - Dark Mode: Text-Kontrast verbessert (--gk-on-surface-variant #94a3b8 → #b0bec5)
 - Dark Mode: --gk-text-muted ebenfalls heller (#94a3b8 → #b0bec5)
-- Dark Mode: Tabellen-Header mit staerkerem Hintergrund (surface-container-highest statt -low)
+- Dark Mode: Tabellen-Header mit stärkerem Hintergrund (surface-container-highest statt -low)
 - Dark Mode: Tabellen-Streifen sichtbarer (rgba 0.025/0.05 → 0.06)
 - Dark Mode: Borders konsistent via CSS-Variablen statt hardcoded rgba-Werte
 - Dark Mode: Hardcoded Farbwerte in Button-Tonals durch CSS-Variablen ersetzt
 
 ### Fixed
-- Doppelte Dark-Mode-Tabellen-Definitionen konsolidiert (Zeile ~1018 vs ~1352)
+- Doppelte Dark-Mode-Tabellen-Definitionen konsolidiert
+
+## [0.9.39] - 2026-03-18
+
+### Changed
+- Cache-Bust für Theme-Fixes (VERSION bump)
+
+## [0.9.38] - 2026-03-18
+
+### Changed
+- Design-Switcher kompakter — Dots 14px, Toggle 26px
+
+## [0.9.37] - 2026-03-18
+
+### Added
+- text-transform:none für material-icons in gk-label-text
+
+## [0.9.36] - 2026-03-18
+
+### Changed
+- Theme-Dots kleiner (28px → 18px), kompakterer Switcher
+- Dark Mode: surface colors + body background korrigiert
+
+### Added
+- Umfassende Dark Mode Overrides für alle UI-Komponenten
+
+## [0.9.35] - 2026-03-11
+
+### Added
+- **Auth-Klasse** — Session-Login mit `Auth::protect()`, `Auth::login()`, `Auth::logout()`
+- **Remember Me** — Cookie-basiert (30 Tage, Token-Rotation)
+- **Header Avatar-Menü** — mit Auto Theme-Switcher als Default
+
+### Fixed
+- Auth: explode(n) → explode("\n") beim Remember-Me Token
+- Auth: Newline-Escape in Token-Datei korrigiert
 
 ## [0.9.34] - 2026-03-01
 
 ### Added
-- gk-field-hint Klasse hinzugefügt
+- `.gk-field-hint` — Hilfetext unter Formularfeldern (font-size:12px, text-secondary)
 
 ## [0.9.33] - 2026-03-01
 
-### Changed
-- gk-row: alle gk-w-1..16 mit korrektem flex-basis
+### Fixed
+- `gk-row`: Alle `gk-w-1` bis `gk-w-16` mit korrektem `flex: 0 0 calc(...)` — bisher fehlten w-1 bis w-4, w-7, w-9 bis w-16
 
 ## [0.9.32] - 2026-03-01
 
@@ -40,7 +75,7 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 ## [0.9.31] - 2026-03-01
 
 ### Added
-- Header: title(raw=true) für HTML-Titel
+- Header: `title(raw=true)` für HTML-Titel
 - Sidebar collapsed: Hamburger-Button perfekt zentriert
 
 ## [0.9.30] - 2026-03-01
@@ -53,10 +88,17 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 ### Changed
 - Theme-Dots: Dark Mode Fix — sichtbare Ränder, aktiver Dot mit Ring
 
+### Added
+- Upload-Zone: Client-seitige Größenvalidierung via `data-gk-max-size`
+
 ## [0.9.28] - 2026-03-01
 
 ### Added
 - Header user-menu: html-Item Typ für eingebettete Komponenten
+
+### Changed
+- `Form::field(file)`: accept akzeptiert Array oder String; hint, label_text, icon, multiple Optionen
+- `gk-upload-zone`: Data-Attribute, Progress/Idle States, `gk:files` CustomEvent
 
 ## [0.9.27] - 2026-03-01
 
@@ -96,181 +138,101 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 ## [0.9.20] - 2026-02-24
 
 ### Added
-- **CKEditor5 Integration als gk-richtext** – `case 'richtext':` in Form.php nutzt jetzt CKEditor5 statt execCommand-basiertem Editor
-- **`.gk-richtext-wrap`** – CSS-Wrapper für CKEditor5 mit GridKit-konformer Border/Focus-Gestaltung
-- **`/vendor/ckeditor5/`** – Lokale CKEditor5 UMD-Build (`ckeditor5.umd.js` + `ckeditor5.css`)
-- **gk-card Form-Layout** – Newsletter campaign-edit.php in Karten-Struktur (Absender & Empfänger, Inhalt, Zeitplanung) umgebaut
+- **CKEditor5 Integration als gk-richtext** — nutzt CKEditor5 statt execCommand-basiertem Editor
+- **`.gk-richtext-wrap`** — CSS-Wrapper mit GridKit-konformer Border/Focus-Gestaltung
+- **`/vendor/ckeditor5/`** — Lokale CKEditor5 UMD-Build
 
 ## [0.9.15] - 2026-02-24
 
 ### Added
-- Zentriertes Layout auf breiten Screens: Sidebar, Header und Content werden bei Viewports > 1400px automatisch zentriert via `--gk-content-max-width`
+- Zentriertes Layout: Sidebar, Header und Content bei Viewports > 1400px via `--gk-content-max-width`
 
 ## [0.9.14] - 2026-02-24
 
 ### Added
-- `--gk-content-max-width: 1400px` — Zentrales Layout-Token für maximale Content-Breite
+- `--gk-content-max-width: 1400px` — Layout-Token für maximale Content-Breite
 
----
+## [0.9.13] - 2026-02-23
+
+### Added
+- gk-modal-large: max-width 860px für große Modals
 
 ## [0.9.11] - 2026-02-23
 
 ### Fixed
-- **`gk-form-actions`** – Duplikat entfernt, `align-items: center` ergänzt → Buttons verschiedener Höhe/Typen (a, button) stehen auf gleicher Linie
+- `gk-form-actions` — Duplikat entfernt, `align-items: center` ergänzt
 
 ### Added
-- **`Form::card()`** – optionaler gk-card Wrapper um das gerenderte Formular (`->card()` in der Form-Chain)
-
----
+- `Form::card()` — optionaler gk-card Wrapper um Formulare
 
 ## [0.9.10] - 2026-02-23
 
 ### Fixed
-- **Demo** – Tabellen-Labels (size/variant) waren als `h4` direkt an die Spaltenköpfe geklebt. Jetzt als dedizierte Caption-Bar mit Border-Bottom und grauem Hintergrund (klar vom Table-Content getrennt)
-
----
+- Demo: Tabellen-Labels als dedizierte Caption-Bar statt direkt an Spaltenköpfe
 
 ## [0.9.9] - 2026-02-23
 
 ### Fixed
-- **`gk-table-wrap`** – `box-shadow` entfernt, stattdessen `border: 1px solid var(--gk-outline-variant)` wie `gk-card` → konsistentes Aussehen, kein "schwebender" Tabelleneffekt mehr
-
----
+- `gk-table-wrap` — box-shadow entfernt, border wie gk-card
 
 ## [0.9.8] - 2026-02-23
 
 ### Added
-- **Tabs** (`gk-tabs`, `gk-tab-nav`, `gk-tab-btn`, `gk-tab-panel`) – CSS + JS Tab-System, data-tab Attribute, Dark Mode ready
-
----
+- **Tabs** — CSS + JS Tab-System (gk-tabs, gk-tab-nav, gk-tab-btn, gk-tab-panel)
 
 ## [0.9.7] - 2026-02-23
 
 ### Changed
-- **`--gk-surface-dim`** Light Mode: `#ddd8e4` → `#e8edf2` — neutrales Slate-Grau statt lila M3-Tönung
-
----
+- `--gk-surface-dim` Light Mode: `#ddd8e4` → `#e8edf2` — neutrales Slate-Grau
 
 ## [0.9.6] - 2026-02-23
 
 ### Added
-- **AJAX Pagination** – `[data-gk-ajax-table="id"]` wrapper aktiviert seitenloses Blättern ohne Full-Reload. Funktioniert automatisch für alle `a.gk-page-btn` Links innerhalb des Wrappers. Fallback auf normalen Link bei Fetch-Fehler.
-
----
+- **AJAX Pagination** — `[data-gk-ajax-table="id"]` für seitenloses Blättern
 
 ## [0.9.5] - 2026-02-23
 
 ### Fixed
-- **Pagination `gk-page-btn`** – `display: inline-flex; align-items/justify-content: center` ergänzt, Buttons werden nicht mehr zu großen Kreisen
-
----
+- Pagination `gk-page-btn` — display: inline-flex, korrekte Zentrierung
 
 ## [0.9.4] - 2026-02-23
 
 ### Added
-- **Table `format => 'html'`** – Spalten können vorgerendertes HTML ausgeben (für Chips, Badges, etc.)
-
----
+- Table `format => html` — Spalten mit vorgerendertem HTML
 
 ## [0.9.3] - 2026-02-23
 
 ### Fixed
-- **Labels Dark Mode** – `.gk-label-green/orange/red/gray/blue` jetzt mit Dark Mode Overrides (invertierte Farben)
-- **gk-page-header** – `flex-wrap: wrap` entfernt, Button bleibt rechts statt in neue Zeile zu wrappen
-
----
+- Labels Dark Mode — Overrides für gk-label-green/orange/red/gray/blue
+- gk-page-header — flex-wrap entfernt
 
 ## [0.9.2] - 2026-02-23
 
 ### Added
-- **Utility-Klassen** – vollständige Migrationsbasis für Panel-Apps:
-  - `.gk-page-header` – Seitentitel + Actions-Row (flex, space-between, dark-mode-aware)
-  - `.gk-section-title` – Abschnittsüberschriften
-  - `.gk-spacer`, `.gk-spacer-sm`, `.gk-spacer-md`, `.gk-spacer-lg`, `.gk-spacer-xl` – Abstände
-  - `.gk-text-muted` – gedämpfte Textfarbe via `--gk-on-surface-variant`
-  - `.gk-grid`, `.gk-grid-2`, `.gk-grid-4` – responsive Grid-Layouts
-  - `.gk-form-page`, `.gk-form-actions` – Formular-Seitenlayout
-
----
+- **Utility-Klassen** — gk-page-header, gk-section-title, gk-spacer, gk-text-muted, gk-grid, gk-form-page, gk-form-actions
 
 ## [0.9.1] - 2026-02-21
 
 ### Fixed
-- Dark Mode Demo-Cards und standalone Table-Borders korrigiert
-- Code-Blöcke neben Beispielen in Demo
-
----
+- Dark Mode Demo-Cards und Table-Borders korrigiert
 
 ## [0.9.0] - 2026-02-20
 
 Erster stabiler Stand. Alle Kern-Komponenten vorhanden und getestet.
 
 ### Komponenten
-- **Table** – Sortierung, Filterung, Suche, Pagination, Status-Labels, Actions
-- **Form** – Inputs, Select, Textarea, Validierung, Grid-Layout
-- **Modal** – Öffnen/Schließen, Overlay, Body-Scroll-Lock
-- **StatCards** – Kennzahl-Karten mit Trend-Indikatoren
-- **FilterChips** – Aktiv/Inaktiv Toggle Chips
-- **YearFilter** – Jahres-Navigation mit Pfeil-Controls
-- **Formatter** – Zahlen, Währung, Datum, Status als Hilfsfunktionen (JS)
-- **Toast** – Kurze Benachrichtigungen (success/error/warning/info)
-- **Confirm** – Bestätigungs-Dialog
-- **Buttons** – Primary, Secondary, Danger, Ghost, Icon
-- **Header** – Fixed Header mit Menü-Toggle, Suche, Actions
+- Table, Form, Modal, StatCards, FilterChips, YearFilter, Formatter, Toast, Confirm, Buttons, Header
 
 ### Design-System
-- 6 Themes: `indigo`, `ocean`, `forest`, `rose`, `amber`, `slate`
-- Light & Dark Mode mit vollständigen CSS Custom Properties
-- Sidebar: neutral `#f4f5f7` für alle Themes, Theme-Identität über Active-State
-- Dark Mode Sidebar: pro Theme eigenes sehr dunkles Hintergrund-BG
-- M3-inspirierte Farbpalette (surface, on-surface, primary-container etc.)
+- 6 Themes: indigo, ocean, forest, rose, amber, slate
+- Light & Dark Mode mit CSS Custom Properties
+- M3-inspirierte Farbpalette
 
 ### Technisches
-- Zero Dependencies – reines CSS + Vanilla JS
-- `gridkit.css` + `themes.css` + `gridkit.js`
-- PHP-Komponenten: `Sidebar.php`, `Header.php`, `Layout.php`, `Theme.php`
-- `skeleton.php` als Startpunkt für neue Projekte
-- Live Demo: [gridkit.ssi.at/demo/](https://gridkit.ssi.at/demo/)
+- Zero Dependencies — reines CSS + Vanilla JS
+- PHP-Komponenten: Sidebar, Header, Layout, Theme
+- skeleton.php als Startpunkt
 
 ---
 
-*Ältere Entwicklungsversionen (0.1–0.7) archiviert und entfernt.*
-
-## [0.9.13] - 2026-02-23
-### Added
-- gk-modal-large: max-width 860px für große Modals (z.B. PDF-Vorschau)
-
-## [0.9.29] - 2026-02-24
-
-### Added
-- **Upload-Zone**: Client-seitige Größenvalidierung via `data-gk-max-size` — überschrittene Dateien werden vor dem Upload mit Toast abgewiesen; `_parseMaxSize()` versteht B/KB/MB/GB
-
-## [0.9.28] - 2026-02-24
-
-### Changed
-- **`Form::field('file')`**: `accept` akzeptiert jetzt Array `['pdf','jpg',...]` oder String; `hint` Option für Hinweistext; `label_text` für Custom-Label; `icon` Option; `multiple` erzeugt automatisch `name[]`-Array
-- **`gk-upload-zone`**: Data-Attribute `data-gk-upload`, `data-gk-multiple`, `data-gk-accept`, `data-gk-max-size`; Progress/Idle States via `.gk-upload-idle` + `.gk-upload-progress`
-- **GridKit JS**: `initUploadZones` feuert `gk:files` CustomEvent mit `{files, zone}`; `GK.uploadZoneBusy(zone, label)` + `GK.uploadZoneIdle(zone)` Helper; dragleave-Fix (kein Flackern mehr)
-
-## [0.9.33] - 2026-03-01
-
-### Fixed
-- `gk-row`: Alle `gk-w-1` bis `gk-w-16` jetzt vollständig mit `flex: 0 0 calc(...)` definiert — bisher fehlten w-1 bis w-4, w-7, w-9 bis w-16; Spalten wurden fälschlicherweise alle gleich breit
-
-## [0.9.40] - 2026-03-18
-
-### Changed
-- Dark Mode: Text-Kontrast verbessert (--gk-on-surface-variant #94a3b8 → #b0bec5)
-- Dark Mode: --gk-text-muted ebenfalls heller (#94a3b8 → #b0bec5)
-- Dark Mode: Tabellen-Header mit staerkerem Hintergrund (surface-container-highest statt -low)
-- Dark Mode: Tabellen-Streifen sichtbarer (rgba 0.025/0.05 → 0.06)
-- Dark Mode: Borders konsistent via CSS-Variablen statt hardcoded rgba-Werte
-- Dark Mode: Hardcoded Farbwerte in Button-Tonals durch CSS-Variablen ersetzt
-
-### Fixed
-- Doppelte Dark-Mode-Tabellen-Definitionen konsolidiert (Zeile ~1018 vs ~1352)
-
-## [0.9.34] - 2026-03-01
-
-### Added
-- `.gk-field-hint` — Hilfetext unter Formularfeldern (font-size:12px, text-secondary)
+*Ältere Entwicklungsversionen (0.1–0.7) archiviert.*
