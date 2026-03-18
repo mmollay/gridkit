@@ -9,6 +9,22 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 - Weitere Komponenten geplant (Flash Messages/Alerts, Standalone Select)
 - Dokumentation vervollständigen
 
+## [0.9.41] - 2026-03-18
+
+### Changed
+- Dark Mode komplett überarbeitet: 3-Level Kontrast-System (Page → Panel → Interactive)
+- Page-Background: #0D1117 (dunkelster Level)
+- Card/Panel-Background: #161B22 (mittlerer Level, klar abgesetzt)
+- Interactive/Rows: #1C2128, Alternating Rows: #1A1F26
+- Tabellen-Header: #111318, uppercase, letter-spacing 0.08em, font-weight 600
+- Text primary: #E6EDF3 (near-white), Text secondary: #8B949E
+- Inputs: dunkelster Background (#0D1117), Borders rgba(255,255,255,0.15)
+- Cards/Stat-Cards: Border rgba(255,255,255,0.10), Value-Text #F0F6FC
+- Filter-Buttons: Border rgba(255,255,255,0.12), Text #8B949E
+- Sidebar: #090D13 (noch dunkler als Page)
+- Row-Borders: rgba(255,255,255,0.06) — fein aber sichtbar
+- GitHub-inspirierte Farbpalette für maximale Lesbarkeit
+
 ## [0.9.40] - 2026-03-18
 
 ### Changed
