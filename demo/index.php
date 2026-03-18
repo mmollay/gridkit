@@ -78,6 +78,9 @@ $sidebar->brand('', 'widgets')
     ->item('Form', '#form', 'edit_note')
     ->item('Upload',       '#upload',       'upload_file')
     ->item('Color Picker', '#color',        'palette')
+    ->item('Segment', '#segment', 'layers')
+    ->item('Message', '#message', 'chat_bubble_outline')
+    ->item('Cards', '#cards', 'grid_view')
     ->item('Modal', '#modal', 'open_in_new')
     ->item('Formatter', '#formatter', 'format_paint')
     ->group('Dashboard')
@@ -95,7 +98,9 @@ $sidebar->brand('', 'widgets')
     ->group('Beispiele')
     ->item('Dashboard Demo', '#dashboard', 'dashboard')
     ->item('Skeleton',       '#skeleton',  'rocket_launch')
-    ->item('Auth',           '#auth',      'lock');
+    ->item('Auth',           '#auth',      'lock')
+    ->group('Info')
+    ->item('Changelog', '#changelog', 'history');
 $sidebar->render();
 ?>
 
