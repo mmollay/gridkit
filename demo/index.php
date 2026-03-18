@@ -224,17 +224,18 @@ echo $demoHeader->title($headerTitle, true)
         ?>
 
     <!-- === TABLE SIZES === -->
-    <h3 style="margin: 32px 0 16px;">Sizes: sm / md / lg</h3>
-    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+    <h3 style="margin: 32px 0 16px;">Sizes</h3>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px;">
         <?php
         $sizeData = [
             ['name' => 'Widget A', 'value' => '1.200 €', 'status' => 'aktiv'],
             ['name' => 'Widget B', 'value' => '340 €', 'status' => 'inaktiv'],
             ['name' => 'Widget C', 'value' => '890 €', 'status' => 'aktiv'],
         ];
+        $sizeLabels = ['sm' => 'Kompakt', 'md' => 'Standard', 'lg' => 'Grosszuegig'];
         foreach (['sm', 'md', 'lg'] as $sz) {
-            echo '<div style="overflow:hidden">';
-            echo '<div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">size(\'' . $sz . '\')</div>';
+            echo '<div>';
+            echo '<div style="padding:6px 0 10px;font-size:13px;font-weight:500;color:var(--gk-on-surface-variant);display:flex;align-items:center;gap:6px"><span style="font-size:11px;font-family:monospace;background:var(--gk-surface-container);padding:2px 8px;border-radius:4px;color:var(--gk-on-surface-variant)">size(\'' . $sz . '\')</span> ' . $sizeLabels[$sz] . '</div>';
             $t = new Table('size-' . $sz);
             $t->setData($sizeData)
                 ->column('name', 'Name')
@@ -258,10 +259,11 @@ $table->size('lg');  // großzügig</pre></div>
         ['name' => 'SEO Beratung', 'price' => '95 €', 'status' => 'inaktiv'],
         ['name' => 'Logo Design', 'price' => '450 €', 'status' => 'entwurf'],
     ];
-    echo '<div style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px;">';
+    $varLabels = ['default' => 'Standard', 'bordered' => 'Mit Rahmen', 'striped' => 'Zebra-Streifen', 'minimal' => 'Minimal', 'flat' => 'Flach'];
+    echo '<div style="display:flex;flex-direction:column;gap:24px;margin-bottom:24px;">';
     foreach (['default', 'bordered', 'striped', 'minimal', 'flat'] as $var) {
-        echo '<div style="overflow:hidden">';
-        echo '<div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">variant(\'' . $var . '\')</div>';
+        echo '<div>';
+        echo '<div style="padding:6px 0 10px;font-size:13px;font-weight:500;color:var(--gk-on-surface-variant);display:flex;align-items:center;gap:6px"><span style="font-size:11px;font-family:monospace;background:var(--gk-surface-container);padding:2px 8px;border-radius:4px;color:var(--gk-on-surface-variant)">variant(\'' . $var . '\')</span> ' . $varLabels[$var] . '</div>';
         $t = new Table('var-' . $var);
         $t->setData($varData)
             ->column('name', 'Bezeichnung')
