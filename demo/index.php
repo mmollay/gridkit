@@ -580,6 +580,19 @@ $form->row()
         <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-info);margin-bottom:8px;display:block">backup</span><strong>Backups</strong><div class="gk-card-meta" style="margin-top:4px">Täglich automatisch</div></div></div>
     </div>
 
+    <h3 style="margin: 32px 0 16px;">2-Spalten</h3>
+    <div class="gk-cards gk-cards-2">
+        <div class="gk-card"><div class="gk-card-header">Entwicklung</div><div class="gk-card-body"><div class="gk-card-description">Frontend und Backend Entwicklung mit modernen Technologien.</div></div></div>
+        <div class="gk-card"><div class="gk-card-header">Consulting</div><div class="gk-card-body"><div class="gk-card-description">Strategische IT-Beratung f&uuml;r digitale Transformation.</div></div></div>
+    </div>
+
+    <h3 style="margin: 32px 0 16px;">3-Spalten</h3>
+    <div class="gk-cards gk-cards-3">
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:28px;color:var(--gk-primary);display:block;margin-bottom:6px">web</span><strong>Web</strong></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:28px;color:var(--gk-success);display:block;margin-bottom:6px">phone_android</span><strong>Mobile</strong></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:28px;color:var(--gk-warning);display:block;margin-bottom:6px">cloud</span><strong>Cloud</strong></div></div>
+    </div>
+
     <div class="demo-code"><pre>.gk-cards          // Auto-Grid (min 280px)
 .gk-cards-2 / -3 / -4  // Feste Spalten
 .gk-card .gk-card-header / .gk-card-body / .gk-card-footer
@@ -767,6 +780,104 @@ $stats->card('Kunden', 248, ['format' => 'number', 'color' => 'blue'])
     &lt;div class="gk-tab-panel gk-active" data-tab="tab-1"&gt;Inhalt 1&lt;/div&gt;
     &lt;div class="gk-tab-panel" data-tab="tab-2"&gt;Inhalt 2&lt;/div&gt;
 &lt;/div&gt;</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3 style="margin: 32px 0 16px;">Kombinationen</h3>
+    <p class="demo-intro">Kombinations-Beispiele die das volle Potenzial von GRIDKit zeigen.</p>
+
+    <h3 style="margin: 32px 0 16px;">Tabs + Accordion (kombiniert)</h3>
+    <p class="demo-intro">Tabs f&uuml;r Hauptkategorien, Accordion f&uuml;r Details &mdash; ein h&auml;ufiges Pattern in Admin-UIs.</p>
+
+    <div class="gk-tabs">
+        <div class="gk-tab-nav">
+            <button class="gk-tab-btn gk-active" data-tab="combo-produkte">Produkte</button>
+            <button class="gk-tab-btn" data-tab="combo-kunden">Kunden</button>
+            <button class="gk-tab-btn" data-tab="combo-einstellungen">Einstellungen</button>
+        </div>
+        <div class="gk-tab-panel gk-active" data-tab="combo-produkte">
+            <div class="gk-accordion" data-gk-single style="margin-top:16px">
+                <div class="gk-accordion-item open">
+                    <button class="gk-accordion-trigger">
+                        <span>Webdesign Pakete</span>
+                        <span class="material-icons">expand_more</span>
+                    </button>
+                    <div class="gk-accordion-content">
+                        <div class="gk-accordion-body">3 Pakete verf&uuml;gbar: S (1.200 &euro;), M (2.400 &euro;), L (3.500 &euro;). Alle inkl. responsive Design und CMS.</div>
+                    </div>
+                </div>
+                <div class="gk-accordion-item">
+                    <button class="gk-accordion-trigger">
+                        <span>Hosting &amp; Server</span>
+                        <span class="material-icons">expand_more</span>
+                    </button>
+                    <div class="gk-accordion-content">
+                        <div class="gk-accordion-body">Managed Hosting ab 9,90 &euro;/Monat. SSD, Backups, SSL inklusive. 99,9% Uptime-Garantie.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="gk-tab-panel" data-tab="combo-kunden">
+            <div class="gk-message gk-message-info" style="margin-top:16px">
+                <span class="material-icons">info</span>
+                <div class="gk-message-content">24 aktive Kunden, 3 offene Anfragen</div>
+            </div>
+            <div class="gk-cards gk-cards-3" style="margin-top:12px">
+                <div class="gk-card"><div class="gk-card-body"><strong>Mustermann GmbH</strong><div class="gk-card-meta">Seit 2024 &middot; 12 Projekte</div></div></div>
+                <div class="gk-card"><div class="gk-card-body"><strong>Tech Solutions AG</strong><div class="gk-card-meta">Seit 2023 &middot; 8 Projekte</div></div></div>
+                <div class="gk-card"><div class="gk-card-body"><strong>Weber &amp; Partner</strong><div class="gk-card-meta">Seit 2025 &middot; 3 Projekte</div></div></div>
+            </div>
+        </div>
+        <div class="gk-tab-panel" data-tab="combo-einstellungen">
+            <div class="gk-segment" style="margin-top:16px">
+                <div class="gk-segment-header">Benachrichtigungen</div>
+                <label class="gk-checkbox-wrap"><input type="checkbox" checked><span class="gk-checkbox-custom"></span><span>E-Mail bei neuen Anfragen</span></label>
+                <br><br>
+                <label class="gk-checkbox-wrap"><input type="checkbox"><span class="gk-checkbox-custom"></span><span>W&ouml;chentlicher Report</span></label>
+            </div>
+        </div>
+    </div>
+
+    <h3 style="margin: 32px 0 16px;">Segment + Message + Table</h3>
+    <p class="demo-intro">Dashboard-Ansicht mit Status-Meldung und Datentabelle in einem Segment.</p>
+
+    <div class="gk-segment">
+        <div class="gk-segment-header">Server-Status</div>
+        <div class="gk-message gk-message-success gk-message-compact" style="margin-bottom:16px">
+            <span class="material-icons">check_circle</span>
+            <div class="gk-message-content">Alle 3 Server sind online &mdash; letzter Check vor 2 Minuten.</div>
+        </div>
+        <table class="gk-table">
+            <thead><tr><th>Server</th><th>Status</th><th>CPU</th><th>RAM</th><th>Uptime</th></tr></thead>
+            <tbody>
+                <tr><td>Baerli (server8)</td><td><span class="gk-label gk-label-green">Online</span></td><td>12%</td><td>4.2 GB</td><td>47 Tage</td></tr>
+                <tr><td>Theo (server7)</td><td><span class="gk-label gk-label-green">Online</span></td><td>8%</td><td>3.8 GB</td><td>23 Tage</td></tr>
+                <tr><td>Waldi (server6)</td><td><span class="gk-label gk-label-green">Online</span></td><td>15%</td><td>5.1 GB</td><td>31 Tage</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3 style="margin: 32px 0 16px;">Pagination (standalone)</h3>
+    <p class="demo-intro">Seitennavigation &mdash; wird automatisch von Table generiert, kann aber auch standalone genutzt werden.</p>
+    <div class="gk-segment">
+        <nav class="gk-pagination">
+            <button class="gk-page-btn" disabled>&laquo;</button>
+            <button class="gk-page-btn gk-active">1</button>
+            <button class="gk-page-btn">2</button>
+            <button class="gk-page-btn">3</button>
+            <button class="gk-page-btn">4</button>
+            <button class="gk-page-btn">5</button>
+            <button class="gk-page-btn">&raquo;</button>
+        </nav>
+    </div>
+    <div class="demo-code"><pre>&lt;nav class="gk-pagination"&gt;
+    &lt;button class="gk-page-btn" disabled&gt;&amp;laquo;&lt;/button&gt;
+    &lt;button class="gk-page-btn gk-active"&gt;1&lt;/button&gt;
+    &lt;button class="gk-page-btn"&gt;2&lt;/button&gt;
+    &lt;button class="gk-page-btn"&gt;&amp;raquo;&lt;/button&gt;
+&lt;/nav&gt;</pre></div>
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
@@ -1077,6 +1188,57 @@ echo Button::render('Speichern', ['variant' => 'filled', 'color' => 'primary', '
 echo Button::icon('edit', ['variant' => 'filled', 'color' => 'primary']);
 echo Button::fab('add');
 echo Button::fab('edit', ['extended' => true, 'label' => 'Bearbeiten']);</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>Labels</h3>
+    <div class="demo-card">
+        <p class="demo-intro">Farbige Labels f&uuml;r Status-Anzeigen &mdash; auch standalone nutzbar, nicht nur in Tabellen.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <span class="gk-label gk-label-green">Aktiv</span>
+            <span class="gk-label gk-label-orange">Entwurf</span>
+            <span class="gk-label gk-label-red">Fehler</span>
+            <span class="gk-label gk-label-gray">Archiviert</span>
+            <span class="gk-label gk-label-blue">Info</span>
+        </div>
+    </div>
+    <div class="demo-code"><pre>&lt;span class="gk-label gk-label-green"&gt;Aktiv&lt;/span&gt;
+&lt;span class="gk-label gk-label-orange"&gt;Entwurf&lt;/span&gt;
+&lt;span class="gk-label gk-label-red"&gt;Fehler&lt;/span&gt;
+&lt;span class="gk-label gk-label-gray"&gt;Archiviert&lt;/span&gt;
+&lt;span class="gk-label gk-label-blue"&gt;Info&lt;/span&gt;</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>Tooltip</h3>
+    <div class="demo-card">
+        <p class="demo-intro">Tooltips erscheinen automatisch bei Buttons mit <code>title</code>-Attribut. Hover &uuml;ber die Buttons:</p>
+        <div class="demo-btn-row">
+            <?= \GridKit\Button::icon('edit', ['variant' => 'filled', 'color' => 'primary', 'title' => 'Eintrag bearbeiten']) ?>
+            <?= \GridKit\Button::icon('delete', ['variant' => 'filled', 'color' => 'danger', 'title' => 'Eintrag l&ouml;schen']) ?>
+            <?= \GridKit\Button::icon('visibility', ['variant' => 'filled', 'color' => 'neutral', 'title' => 'Vorschau anzeigen']) ?>
+            <?= \GridKit\Button::icon('download', ['variant' => 'outlined', 'color' => 'primary', 'title' => 'PDF herunterladen']) ?>
+        </div>
+    </div>
+    <div class="demo-code"><pre>// Tooltip via title-Attribut (CSS-only, kein JS)
+Button::icon('edit', ['title' => 'Bearbeiten']);
+&lt;button class="gk-btn" title="Tooltip-Text"&gt;...&lt;/button&gt;</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>Empty State</h3>
+    <div class="demo-card">
+        <p class="demo-intro">Platzhalter f&uuml;r leere Tabellen oder Listen.</p>
+        <div class="gk-table-wrap">
+            <table class="gk-table">
+                <thead><tr><th>Name</th><th>E-Mail</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td colspan="3"><div class="gk-empty"><span class="material-icons" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.5">inbox</span>Keine Eintr&auml;ge vorhanden</div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="demo-code"><pre>&lt;div class="gk-empty"&gt;Keine Eintr&auml;ge vorhanden&lt;/div&gt;</pre></div>
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
