@@ -72,14 +72,17 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
 <?php
 $sidebar = new Sidebar('demo');
 $sidebar->brand('', 'widgets')
+    ->group('Komponenten')
     ->item('Table', '#table', 'table_chart', ['active' => true])
     ->item('Form', '#form', 'edit_note')
     ->item('Cards', '#cards', 'grid_view')
     ->item('Layout', '#layout', 'layers')
-    ->item('Filter', '#navigation', 'filter_list')
+    ->item('Navigation', '#navigation', 'filter_list')
     ->item('Feedback', '#feedback', 'notifications')
-    ->item('UI', '#ui', 'smart_button')
+    ->item('UI', '#ui', 'palette')
+    ->group('Beispiele')
     ->item('Beispiele', '#examples', 'rocket_launch')
+    ->group('Info')
     ->item('Changelog', '#changelog', 'history');
 $sidebar->render();
 ?>
