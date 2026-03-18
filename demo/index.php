@@ -70,7 +70,7 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
 
 <?php
 $sidebar = new Sidebar('demo');
-$sidebar->brand('GridKit', 'widgets')
+$sidebar->brand('', 'widgets')
     ->group('Komponenten')
     ->item('Table', '#table', 'table_chart', ['active' => true])
     ->item('Form', '#form', 'edit_note')
@@ -101,7 +101,8 @@ $sidebar->render();
 
 <?php
 $demoHeader = new Header();
-echo $demoHeader->title('GridKit v' . $version)
+$headerTitle = 'GridKit <span style="font-size:11px;font-weight:400;color:var(--gk-on-surface-variant);margin-left:4px">v' . $version . '</span>';
+echo $demoHeader->title($headerTitle, true)
     ->sidebarToggle(true)
     ->fixed(true)
     ->user('Demo User', [
@@ -131,7 +132,6 @@ echo $demoHeader->title('GridKit v' . $version)
     <h2>Table</h2>
 
     <h3 style="margin: 32px 0 16px;">Vollstaendige Tabelle mit allen Features</h3>
-    <div class="demo-card">
         <?php
         $articles = [
             ['article_id' => 1, 'article_number' => 'ART-001', 'name' => 'Webdesign Paket S', 'unit' => 'psch', 'net_price' => 1200.00, 'tax_rate' => 20, 'is_active' => 'aktiv'],
@@ -167,10 +167,8 @@ echo $demoHeader->title('GridKit v' . $version)
             ->paginate(5)
             ->render();
         ?>
-    </div>
 
     <h3 style="margin: 32px 0 16px;">Rechnungsliste mit Datums- und Waehrungsformatierung</h3>
-    <div class="demo-card">
         <?php
         $invoiceData = [
             ['number' => 'RE-2026-001', 'customer' => 'Mustermann GmbH', 'date' => '2026-02-01', 'due_date' => '2026-03-01', 'total' => 1450.00, 'status' => 'bezahlt'],
@@ -204,10 +202,8 @@ echo $demoHeader->title('GridKit v' . $version)
             ->paginate(5)
             ->render();
         ?>
-    </div>
 
     <h3 style="margin: 32px 0 16px;">Kompakt-Tabelle ohne Toolbar</h3>
-    <div class="demo-card">
         <?php
         $userData = [
             ['name' => 'Martin Huber', 'email' => 'martin@example.com', 'role' => 'admin', 'active' => 1],
@@ -226,7 +222,6 @@ echo $demoHeader->title('GridKit v' . $version)
             ->paginate(false)
             ->render();
         ?>
-    </div>
 
     <!-- === TABLE SIZES === -->
     <h3 style="margin: 32px 0 16px;">Sizes: sm / md / lg</h3>
@@ -238,7 +233,7 @@ echo $demoHeader->title('GridKit v' . $version)
             ['name' => 'Widget C', 'value' => '890 €', 'status' => 'aktiv'],
         ];
         foreach (['sm', 'md', 'lg'] as $sz) {
-            echo '<div class="demo-card" style="padding:0;overflow:hidden">';
+            echo '<div style="overflow:hidden">';
             echo '<div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">size(\'' . $sz . '\')</div>';
             $t = new Table('size-' . $sz);
             $t->setData($sizeData)
@@ -265,7 +260,7 @@ $table->size('lg');  // großzügig</pre></div>
     ];
     echo '<div style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px;">';
     foreach (['default', 'bordered', 'striped', 'minimal', 'flat'] as $var) {
-        echo '<div class="demo-card" style="padding:0;overflow:hidden">';
+        echo '<div style="overflow:hidden">';
         echo '<div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">variant(\'' . $var . '\')</div>';
         $t = new Table('var-' . $var);
         $t->setData($varData)
@@ -290,7 +285,7 @@ $table->variant('bordered')->size('sm');</pre></div>
     <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
     <p class="demo-intro">Verkleinere das Browserfenster auf &lt;768px um die Mobile-Darstellung zu sehen.</p>
 
-    <div class="demo-card" style="padding:0;overflow:hidden">
+    <div style="overflow:hidden">
         <div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">mobile('card') – Standard</div>
         <?php
         $mobileData = [
@@ -307,7 +302,7 @@ $table->variant('bordered')->size('sm');</pre></div>
             ->mobile('card')->toolbar(false)->paginate(false)->render();
         ?>
     </div>
-    <div class="demo-card" style="margin-top:16px;padding:0;overflow:hidden">
+    <div style="margin-top:16px;overflow:hidden">
         <div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">mobile('scroll') – Horizontal Scroll</div>
         <?php
         $t = new Table('mobile-scroll');
@@ -319,7 +314,7 @@ $table->variant('bordered')->size('sm');</pre></div>
             ->mobile('scroll')->toolbar(false)->paginate(false)->render();
         ?>
     </div>
-    <div class="demo-card" style="margin-top:16px;padding:0;overflow:hidden">
+    <div style="margin-top:16px;overflow:hidden">
         <div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">hideOnMobile – Spalten ausblenden</div>
         <?php
         $t = new Table('mobile-hide');
