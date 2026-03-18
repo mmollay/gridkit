@@ -31,6 +31,8 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-section { max-width:1100px; margin:24px auto; padding:0 24px; display:none; }
         .demo-section.active { display:block; }
         .demo-section h2 { font-size:20px; margin:0 0 16px; color:var(--gk-on-surface, #374151); }
+        .demo-section .gk-form { max-width:none; }
+        .demo-section .gk-richtext-wrap { border-width:1px; }
         .demo-card { background:var(--gk-surface, #fff); border-radius:8px; padding:24px; border:1px solid transparent; box-shadow:var(--gk-shadow); margin-bottom:24px; }
         [data-gk-mode="dark"] .demo-card, .gk-dark .demo-card {
             background:var(--gk-surface-container);
@@ -235,14 +237,13 @@ echo $demoHeader->title($headerTitle, true)
         $sizeLabels = ['sm' => 'Kompakt', 'md' => 'Standard', 'lg' => 'Grosszuegig'];
         foreach (['sm', 'md', 'lg'] as $sz) {
             echo '<div>';
-            echo '<div style="padding:6px 0 10px;font-size:13px;font-weight:500;color:var(--gk-on-surface-variant);display:flex;align-items:center;gap:6px"><span style="font-size:11px;font-family:monospace;background:var(--gk-surface-container);padding:2px 8px;border-radius:4px;color:var(--gk-on-surface-variant)">size(\'' . $sz . '\')</span> ' . $sizeLabels[$sz] . '</div>';
+            echo '<div style="font-size:13px;font-weight:500;color:var(--gk-on-surface-variant);display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="font-size:11px;font-family:monospace;background:var(--gk-surface-container);padding:2px 8px;border-radius:4px;color:var(--gk-on-surface-variant)">size(\'' . $sz . '\')</span> ' . $sizeLabels[$sz] . '</div>';
             $t = new Table('size-' . $sz);
             $t->setData($sizeData)
                 ->column('name', 'Name')
                 ->column('value', 'Wert')
                 ->column('status', 'Status', ['format' => 'label'])
                 ->size($sz)->toolbar(false)->paginate(false)->render();
-            echo '</div>';
         }
         ?>
     </div>
@@ -263,7 +264,7 @@ $table->size('lg');  // großzügig</pre></div>
     echo '<div style="display:flex;flex-direction:column;gap:24px;margin-bottom:24px;">';
     foreach (['default', 'bordered', 'striped', 'minimal', 'flat'] as $var) {
         echo '<div>';
-        echo '<div style="padding:6px 0 10px;font-size:13px;font-weight:500;color:var(--gk-on-surface-variant);display:flex;align-items:center;gap:6px"><span style="font-size:11px;font-family:monospace;background:var(--gk-surface-container);padding:2px 8px;border-radius:4px;color:var(--gk-on-surface-variant)">variant(\'' . $var . '\')</span> ' . $varLabels[$var] . '</div>';
+        echo '<div style="font-size:13px;font-weight:500;color:var(--gk-on-surface-variant);display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="font-size:11px;font-family:monospace;background:var(--gk-surface-container);padding:2px 8px;border-radius:4px;color:var(--gk-on-surface-variant)">variant(\'' . $var . '\')</span> ' . $varLabels[$var] . '</div>';
         $t = new Table('var-' . $var);
         $t->setData($varData)
             ->column('name', 'Bezeichnung')
