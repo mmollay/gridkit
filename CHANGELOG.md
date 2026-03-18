@@ -9,6 +9,30 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 - Weitere Komponenten geplant (Flash Messages/Alerts, Standalone Select)
 - Dokumentation vervollständigen
 
+## [0.10.0] - 2026-03-18
+
+### Changed
+- **BREAKING**: Light Mode Surface-Variablen von lila M3-Toenen auf neutrale Slate-Grau-Palette umgestellt
+- Light Mode: `--gk-surface-container-low` #F6F8FA, `-high` #EAEEF2, `-highest` #D8DEE4
+- Light Mode: Tabellen-Header 11px, uppercase, #F6F8FA Background, #57606A Text
+- Light Mode: Tabellen Even-Rows #F6F8FA, Row-Borders #D8DEE4
+- Light Mode: Cards und Table-Wrap mit #D0D7DE Border statt outline-variant
+- Light Mode: Input Placeholder #6E7781
+- Dark Mode: 4-Level Kontrast-System konsequent umgesetzt (Page #0D1117, Panel #161B22, Interactive #21262D, Elevated #2D333B)
+- Dark Mode: Sidebar einheitlich #010409 fuer alle Themes (dunkelster Level)
+- Dark Mode: Sidebar Border rgba(255,255,255,0.06), Text rgba(255,255,255,0.70)
+- Dark Mode: Cards, Stat-Cards, Table-Wrap auf Panel-Level (#161B22) mit rgba(255,255,255,0.10) Border
+- Dark Mode: Inputs auf Page-Level (#0D1117), Placeholder #484F58
+- Dark Mode: Dropdowns und Tooltips auf Elevated-Level (#2D333B)
+- Dark Mode: Tonal-Buttons mit helleren Textfarben fuer besseren Kontrast
+- Dark Mode: Labels (green, orange, red, gray, blue) alle mit font-weight: 600
+- Upload-Zone Light: #D0D7DE dashed Border
+- `--gk-spacing` von 12px auf 16px erhoht (mehr Luft)
+
+### Fixed
+- Doppelte Dark-Mode-Tabellen-Definitionen konsolidiert (Component adjustments Block bereinigt)
+- Alle hardcodierten var()-Referenzen in Dark Mode durch explizite 4-Level-Farbwerte ersetzt
+
 ## [0.9.41] - 2026-03-18
 
 ### Changed
