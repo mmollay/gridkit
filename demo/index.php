@@ -27,7 +27,6 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
     <script src="../vendor/ckeditor5/ckeditor5.umd.js"></script>
     <style>
         body { margin:0; padding:0; background:var(--gk-surface-container, #f0f1f3); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:var(--gk-on-surface, #1f2937); }
-        /* Demo header now uses GridKit Header component */
         .demo-section { max-width:1100px; margin:24px auto; padding:0 24px; display:none; }
         .demo-section.active { display:block; }
         .demo-section h2 { font-size:20px; margin:0 0 16px; color:var(--gk-on-surface, #374151); }
@@ -73,33 +72,14 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
 <?php
 $sidebar = new Sidebar('demo');
 $sidebar->brand('', 'widgets')
-    ->group('Komponenten')
     ->item('Table', '#table', 'table_chart', ['active' => true])
     ->item('Form', '#form', 'edit_note')
-    ->item('Upload',       '#upload',       'upload_file')
-    ->item('Color Picker', '#color',        'palette')
-    ->item('Segment', '#segment', 'layers')
-    ->item('Message', '#message', 'chat_bubble_outline')
     ->item('Cards', '#cards', 'grid_view')
-    ->item('StatCards', '#statcards', 'analytics')
-    ->item('Modal', '#modal', 'open_in_new')
-    ->group('Formular')
-    ->item('FilterChips', '#filterchips', 'filter_list')
-    ->item('YearFilter', '#yearfilter', 'date_range')
-    ->item('Formatter', '#formatter', 'format_paint')
-    ->group('Layout')
-    ->item('Sidebar', '#sidebar', 'menu')
-    ->item('Header', '#header', 'web_asset')
-    ->item('Buttons', '#buttons', 'smart_button')
-    ->item('Themes', '#themes', 'palette')
-    ->group('Feedback')
-    ->item('Toast', '#toast', 'notifications')
-    ->item('Confirm', '#confirm', 'help_outline')
-    ->group('Beispiele')
-    ->item('Dashboard Demo', '#dashboard', 'dashboard')
-    ->item('Skeleton',       '#skeleton',  'rocket_launch')
-    ->item('Auth',           '#auth',      'lock')
-    ->group('Info')
+    ->item('Layout', '#layout', 'layers')
+    ->item('Filter', '#navigation', 'filter_list')
+    ->item('Feedback', '#feedback', 'notifications')
+    ->item('UI', '#ui', 'smart_button')
+    ->item('Beispiele', '#examples', 'rocket_launch')
     ->item('Changelog', '#changelog', 'history');
 $sidebar->render();
 ?>
@@ -124,18 +104,8 @@ echo $demoHeader->title($headerTitle, true)
     ->render();
 ?>
 
-<!-- ===== OVERVIEW (default) ===== -->
-<div class="demo-section active" data-section="overview">
-    <div class="demo-stats-grid">
-        <div class="demo-stat"><div class="num">7</div><div class="lbl">PHP-Klassen</div></div>
-        <div class="demo-stat"><div class="num">1</div><div class="lbl">CSS + 1 JS</div></div>
-        <div class="demo-stat"><div class="num">~1500</div><div class="lbl">Zeilen gesamt</div></div>
-        <div class="demo-stat"><div class="num">0</div><div class="lbl">Abhaengigkeiten</div></div>
-    </div>
-</div>
-
 <!-- ===== TABLE ===== -->
-<div class="demo-section" data-section="table">
+<div class="demo-section active" data-section="table">
     <h2>Table</h2>
 
     <h3 style="margin: 32px 0 16px;">Vollstaendige Tabelle mit allen Features</h3>
@@ -230,7 +200,6 @@ echo $demoHeader->title($headerTitle, true)
             ->render();
         ?>
 
-    <!-- === TABLE SIZES === -->
     <h3 style="margin: 32px 0 16px;">Sizes</h3>
     <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px;">
         <?php
@@ -249,6 +218,7 @@ echo $demoHeader->title($headerTitle, true)
                 ->column('value', 'Wert')
                 ->column('status', 'Status', ['format' => 'label'])
                 ->size($sz)->toolbar(false)->paginate(false)->render();
+            echo "</div>";
         }
         ?>
     </div>
@@ -256,7 +226,6 @@ echo $demoHeader->title($headerTitle, true)
 $table->size('md');  // standard (default)
 $table->size('lg');  // großzügig</pre></div>
 
-    <!-- === TABLE VARIANTS === -->
     <h3 style="margin: 32px 0 16px;">Darstellungsvarianten</h3>
     <?php
     $varData = [
@@ -289,7 +258,6 @@ $table->variant('flat');      // Komplett flach, kein Rahmen
 // Kombinierbar mit size():
 $table->variant('bordered')->size('sm');</pre></div>
 
-    <!-- === MOBILE DEMO === -->
     <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
     <p class="demo-intro">Verkleinere das Browserfenster auf &lt;768px um die Mobile-Darstellung zu sehen.</p>
 
@@ -350,220 +318,16 @@ $table->setData($articles)
     ->paginate(5)
     ->render();
 
-// Demo 2: Rechnungsliste
-$invoiceTable = new Table('invoices');
-$invoiceTable->setData($invoiceData)
-    ->column('number', 'Re.-Nr.', ['width' => '120px', 'sortable' => true])
-    ->column('total', 'Betrag', ['format' => 'currency', 'align' => 'right'])
-    ->column('date', 'Datum', ['format' => 'date'])
-    ->column('status', 'Status', ['format' => 'label'])
-    ->paginate(5)
-    ->render();
-
-// Demo 3: Kompakt ohne Toolbar
-$miniTable = new Table('users');
-$miniTable->setData($userData)
-    ->column('name', 'Name', ['sortable' => true])
-    ->column('email', 'E-Mail', ['format' => 'email'])
-    ->column('role', 'Rolle', ['format' => 'label'])
-    ->column('active', 'Aktiv', ['format' => 'boolean'])
-    ->toolbar(false)
-    ->render();
-
 // Mobile-Responsive
 $table->mobile('card');      // Cards auf Mobile (default)
 $table->mobile('scroll');    // Horizontal Scroll
 $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
 </div>
 
-</div>
-</div>
-</div>
-<!-- ===== SEGMENT ===== -->
-<div class="demo-section" data-section="segment">
-    <h2>Segment</h2>
-    <p class="demo-intro">Container für zusammengehörige Inhalte — einzeln, gestapelt oder mit Header.</p>
-    
-    <h3 style="margin: 32px 0 16px;">Einfaches Segment</h3>
-    <div class="gk-segment">
-        <p>Ein einfaches Segment gruppiert zusammengehörige Inhalte visuell.</p>
-    </div>
-    
-    <h3 style="margin: 32px 0 16px;">Segment mit Header</h3>
-    <div class="gk-segment">
-        <div class="gk-segment-header">Projektübersicht</div>
-        <p>Segmente können einen Header haben um den Inhalt zu beschreiben.</p>
-    </div>
-    
-    <h3 style="margin: 32px 0 16px;">Gestapelte Segments</h3>
-    <div class="gk-segments">
-        <div class="gk-segment">
-            <div class="gk-segment-header">Schritt 1</div>
-            <p>Konto erstellen und E-Mail bestätigen.</p>
-        </div>
-        <div class="gk-segment">
-            <div class="gk-segment-header">Schritt 2</div>
-            <p>Profil ausfüllen und Einstellungen konfigurieren.</p>
-        </div>
-        <div class="gk-segment">
-            <div class="gk-segment-header">Schritt 3</div>
-            <p>Erstes Projekt anlegen und loslegen.</p>
-        </div>
-    </div>
-    
-    <h3 style="margin: 32px 0 16px;">Varianten</h3>
-    <div class="gk-segment gk-segment-raised">
-        <div class="gk-segment-header">Raised</div>
-        <p>Mit Schatten — hebt sich stärker vom Hintergrund ab.</p>
-    </div>
-    <div class="gk-segment gk-segment-muted">
-        <div class="gk-segment-header">Muted</div>
-        <p>Gedämpfter Hintergrund — für sekundäre Inhalte.</p>
-    </div>
-    <div class="gk-segment gk-segment-compact">
-        <div class="gk-segment-header">Compact</div>
-        <p>Weniger Padding — für dichtere Layouts.</p>
-    </div>
-    
-    <div class="demo-code"><pre>.gk-segment                 // Standard
-.gk-segment-raised          // Mit Schatten
-.gk-segment-muted           // Gedämpfter Hintergrund
-.gk-segment-compact         // Weniger Padding
-.gk-segment-padded          // Mehr Padding
-.gk-segment-basic           // Kein Rahmen, transparent
-.gk-segments > .gk-segment  // Gestapelt (verbunden)</pre></div>
-</div>
-
-<!-- ===== MESSAGE ===== -->
-<div class="demo-section" data-section="message">
-    <h2>Message</h2>
-    <p class="demo-intro">Hinweise, Warnungen und Statusmeldungen für Benutzer.</p>
-    
-    <h3 style="margin: 32px 0 16px;">Standard</h3>
-    <div class="gk-message">
-        <span class="material-icons">info</span>
-        <div class="gk-message-content">
-            Eine neutrale Nachricht ohne spezifischen Status.
-        </div>
-    </div>
-    
-    <h3 style="margin: 32px 0 16px;">Typen</h3>
-    <div class="gk-message gk-message-info">
-        <span class="material-icons">info</span>
-        <div class="gk-message-content">
-            <div class="gk-message-header">Information</div>
-            Deine Änderungen werden automatisch gespeichert.
-        </div>
-    </div>
-    <div class="gk-message gk-message-success">
-        <span class="material-icons">check_circle</span>
-        <div class="gk-message-content">
-            <div class="gk-message-header">Erfolg</div>
-            Das Profil wurde erfolgreich aktualisiert.
-        </div>
-    </div>
-    <div class="gk-message gk-message-warning">
-        <span class="material-icons">warning</span>
-        <div class="gk-message-content">
-            <div class="gk-message-header">Achtung</div>
-            Dein SSL-Zertifikat läuft in 7 Tagen ab.
-        </div>
-    </div>
-    <div class="gk-message gk-message-error">
-        <span class="material-icons">error</span>
-        <div class="gk-message-content">
-            <div class="gk-message-header">Fehler</div>
-            Die Verbindung zur Datenbank konnte nicht hergestellt werden.
-            <ul class="gk-message-list">
-                <li>Host nicht erreichbar</li>
-                <li>Timeout nach 30 Sekunden</li>
-            </ul>
-        </div>
-    </div>
-    
-    <h3 style="margin: 32px 0 16px;">Kompakt</h3>
-    <div class="gk-message gk-message-info gk-message-compact">
-        <span class="material-icons">info</span>
-        <div class="gk-message-content">Kompakte Nachricht für weniger Platz.</div>
-    </div>
-    
-    <h3 style="margin: 32px 0 16px;">Dismissible</h3>
-    <div class="gk-message gk-message-warning" id="demo-dismiss-msg">
-        <span class="material-icons">warning</span>
-        <div class="gk-message-content">Diese Nachricht kann geschlossen werden.</div>
-        <button class="gk-message-dismiss" onclick="this.parentElement.style.display='none'"><span class="material-icons">close</span></button>
-    </div>
-    
-    <div class="demo-code"><pre>.gk-message                  // Standard (neutral)
-.gk-message-info             // Blau
-.gk-message-success          // Grün
-.gk-message-warning          // Orange
-.gk-message-error            // Rot
-.gk-message-compact          // Weniger Padding
-.gk-message-dismiss          // Schliessen-Button</pre></div>
-</div>
-
-<!-- ===== CARDS ===== -->
-<div class="demo-section" data-section="cards">
-    <h2>Cards</h2>
-    <p class="demo-intro">Karten-Grid für strukturierte Inhalte — responsiv, mit Header, Body und Footer.</p>
-    
-    <h3 style="margin: 32px 0 16px;">Auto-Grid (responsive)</h3>
-    <div class="gk-cards">
-        <div class="gk-card">
-            <div class="gk-card-header">Webdesign</div>
-            <div class="gk-card-body">
-                <div class="gk-card-meta">Paket S · ab 1.200 €</div>
-                <div class="gk-card-description">Responsives Design, CMS-Integration und SEO-Grundlagen für kleine Projekte.</div>
-            </div>
-            <div class="gk-card-footer">5 Projekte aktiv</div>
-        </div>
-        <div class="gk-card">
-            <div class="gk-card-header">Hosting</div>
-            <div class="gk-card-body">
-                <div class="gk-card-meta">Managed · ab 9,90 €/Monat</div>
-                <div class="gk-card-description">SSD-Speicher, tägliche Backups und SSL inklusive. 99,9% Uptime.</div>
-            </div>
-            <div class="gk-card-footer">12 Server aktiv</div>
-        </div>
-        <div class="gk-card">
-            <div class="gk-card-header">SEO</div>
-            <div class="gk-card-body">
-                <div class="gk-card-meta">Beratung · 95 €/h</div>
-                <div class="gk-card-description">Keyword-Analyse, On-Page-Optimierung und monatliche Reports.</div>
-            </div>
-            <div class="gk-card-footer">3 Kunden aktiv</div>
-        </div>
-    </div>
-    
-    <h3 style="margin: 32px 0 16px;">Feste Spaltenanzahl</h3>
-    <div class="gk-cards gk-cards-4">
-        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);margin-bottom:8px;display:block">speed</span><strong>Performance</strong><div class="gk-card-meta" style="margin-top:4px">99.9% Uptime</div></div></div>
-        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-success);margin-bottom:8px;display:block">security</span><strong>Sicherheit</strong><div class="gk-card-meta" style="margin-top:4px">SSL & Firewall</div></div></div>
-        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-warning);margin-bottom:8px;display:block">support_agent</span><strong>Support</strong><div class="gk-card-meta" style="margin-top:4px">24/7 erreichbar</div></div></div>
-        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-info);margin-bottom:8px;display:block">backup</span><strong>Backups</strong><div class="gk-card-meta" style="margin-top:4px">Täglich automatisch</div></div></div>
-    </div>
-    
-    <div class="demo-code"><pre>.gk-cards                    // Auto-Grid (min 280px)
-.gk-cards-2                  // 2 Spalten
-.gk-cards-3                  // 3 Spalten
-.gk-cards-4                  // 4 Spalten
-
-// Card-Struktur:
-.gk-card
-  .gk-card-header            // Optional: Titel-Bereich
-  .gk-card-body              // Hauptinhalt
-    .gk-card-meta            // Kleine Zusatzinfo
-    .gk-card-description     // Beschreibungstext
-  .gk-card-footer            // Optional: Footer
-.gk-card-link                // Klickbare Card (hover-Effekt)</pre></div>
-</div>
-
-<!-- ===== FORM ===== -->
+<!-- ===== FORM (merged: form + upload + color) ===== -->
 <div class="demo-section" data-section="form">
     <h2>Form</h2>
 
-    <!-- Classic Form -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Grid-Layout (16-Spalten)</h3>
         <?php
@@ -587,7 +351,6 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
         ?>
     </div>
 
-    <!-- Checkbox & Radio -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Checkbox &amp; Radio</h3>
         <?php
@@ -607,7 +370,6 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
         ?>
     </div>
 
-    <!-- Toggle & Slider -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Toggle &amp; Slider</h3>
         <?php
@@ -620,7 +382,6 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
         ?>
     </div>
 
-    <!-- File Upload -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Datei-Upload</h3>
         <?php
@@ -630,7 +391,6 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
         ?>
     </div>
 
-    <!-- RichText Editor -->
     <div class="demo-card">
         <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">RichText Editor (CKEditor 5)</h3>
         <p class="demo-intro">Lokaler Vendor-Bundle (<code>vendor/ckeditor5/</code>), kein CDN. Initialisierung per <code>IntersectionObserver</code> — funktioniert auch in Tabs und Modals.</p>
@@ -642,7 +402,6 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
         ?>
     </div>
 
-    <!-- Clearable Felder -->
     <div class="demo-card">
         <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Clearable Datum/Zeit-Felder</h3>
         <p class="demo-intro">Mistkübel-Icon erscheint nur wenn ein Wert gesetzt ist — verschwindet nach dem Löschen automatisch.</p>
@@ -656,7 +415,6 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
         ?>
     </div>
 
-    <!-- Neue Feldtypen -->
     <div class="demo-card">
         <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Neue Feldtypen</h3>
         <p class="demo-intro">Einheitliche Höhe von 44px für alle Input-Typen. Bei <code>number</code> kein Browser-Spinner.</p>
@@ -671,10 +429,8 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
         ?>
     </div>
 
-    <!-- Select-Erweiterungen -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Select-Erweiterungen</h3>
-
         <p style="margin:0 0 12px; font-size:13px; color:var(--gk-on-surface-variant, #6b7280);"><strong>Searchable Select</strong> – Land-Auswahl mit Suchfeld</p>
         <?php
         $formSearch = new Form('searchable_select_demo');
@@ -688,47 +444,26 @@ $table->column('desc', 'Beschreibung', ['hideOnMobile' => true]);</pre></div>
                     'SE' => 'Schweden', 'NO' => 'Norwegen', 'DK' => 'Dänemark',
                     'FI' => 'Finnland', 'PT' => 'Portugal',
                 ],
-                'searchable' => true,
-                'placeholder' => 'Land suchen...',
-                'value' => 'AT'
-            ])
-            ->render();
+                'searchable' => true, 'placeholder' => 'Land suchen...', 'value' => 'AT'
+            ])->render();
         ?>
-
         <hr style="border:none; border-top:1px solid var(--gk-outline-variant); margin:20px 0;">
-
         <p style="margin:0 0 12px; font-size:13px; color:var(--gk-on-surface-variant, #6b7280);"><strong>Multi-Select</strong> – Mehrere Kategorien wählen (mit Chips)</p>
         <?php
         $formMulti = new Form('multiselect_demo');
         $formMulti->field('tags', 'Kategorien', 'multiselect', [
-                'options' => [
-                    'web' => 'Webdesign', 'seo' => 'SEO', 'hosting' => 'Hosting',
-                    'dev' => 'Entwicklung', 'support' => 'Support', 'beratung' => 'Beratung',
-                ],
-                'value' => ['web', 'seo'],
-                'placeholder' => 'Kategorien suchen...',
-                'searchable' => true,
-            ])
-            ->render();
+                'options' => ['web' => 'Webdesign', 'seo' => 'SEO', 'hosting' => 'Hosting', 'dev' => 'Entwicklung', 'support' => 'Support', 'beratung' => 'Beratung'],
+                'value' => ['web', 'seo'], 'placeholder' => 'Kategorien suchen...', 'searchable' => true,
+            ])->render();
         ?>
-
         <hr style="border:none; border-top:1px solid var(--gk-outline-variant); margin:20px 0;">
-
         <p style="margin:0 0 12px; font-size:13px; color:var(--gk-on-surface-variant, #6b7280);"><strong>Ajax Select</strong> – Kundensuche per API (min. 2 Zeichen)</p>
         <?php
         $formAjax = new Form('ajax_select_demo');
         $formAjax->field('customer_id', 'Kunde', 'ajaxselect', [
-                'url' => 'demo/api/search.php',
-                'value' => '',
-                'displayValue' => '',
-                'placeholder' => 'Kunde suchen...',
-                'labelField' => 'name',
-                'valueField' => 'id',
-                'subtextField' => 'city',
-                'minChars' => 2,
-                'searchParam' => 'q',
-            ])
-            ->render();
+                'url' => 'demo/api/search.php', 'value' => '', 'displayValue' => '', 'placeholder' => 'Kunde suchen...',
+                'labelField' => 'name', 'valueField' => 'id', 'subtextField' => 'city', 'minChars' => 2, 'searchParam' => 'q',
+            ])->render();
         ?>
     </div>
 
@@ -737,251 +472,68 @@ $form->row()
     ->field('name', 'Name', 'text', ['width' => 8])
     ->field('email', 'E-Mail', 'email', ['width' => 8])
 ->endRow()
-
-// Checkbox
 ->field('agree', 'AGB akzeptieren', 'checkbox', ['checked' => true])
-
-// Radio (inline)
 ->field('payment', 'Zahlungsart', 'radio', [
     'options' => ['card' => 'Kreditkarte', 'bank' => 'Ueberweisung'],
     'value' => 'card', 'inline' => true
 ])
-
-// Toggle (inline)
 ->field('active', 'Aktiv', 'toggle', ['inline' => true])
-
-// Slider
 ->field('volume', 'Lautstaerke', 'range', ['min' => 0, 'max' => 100, 'value' => 50])
-
-// File Upload
 ->field('doc', 'Dokument', 'file', ['accept' => '.pdf', 'multiple' => true, 'maxSize' => '10MB'])
-
-// RichText Editor (preset: 'basic' | 'full')
 ->field('content', 'Inhalt', 'richtext', ['preset' => 'full'])
-
-// Clearable Datum/Zeit
 ->field('datum',  'Datum',    'date',     ['value' => date('Y-m-d'),      'clearable' => true])
-->field('zeit',   'Uhrzeit',  'time',     ['value' => '09:00',            'clearable' => true])
-->field('termin', 'Termin',   'datetime', ['value' => date('Y-m-d\TH:i'), 'clearable' => true])
-
-// Neue Feldtypen (44px Höhe, kein Spinner bei number)
 ->field('farbe', 'Farbe',  'color',  ['value' => '#6750a4'])
-->field('monat', 'Monat',  'month',  ['value' => date('Y-m')])
-->field('kw',    'KW',     'week',   ['value' => date('Y-\WW')])
 ->field('preis', 'Preis',  'number', ['placeholder' => '0.00'])</pre></div>
-</div>
 
-<!-- ===== UPLOAD ===== -->
-<div class="demo-section" data-section="upload">
-    <h2>Upload</h2>
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <!-- Übersicht -->
+    <h3>Datei-Upload (erweitert)</h3>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;">
-        <div class="demo-card" style="text-align:center;">
-            <span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">drag_indicator</span>
-            <strong>Drag &amp; Drop</strong>
-            <p class="demo-intro" style="margin:8px 0 0;">Dateien per Drag &amp; Drop oder Klick auswählen</p>
-        </div>
-        <div class="demo-card" style="text-align:center;">
-            <span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">verified</span>
-            <strong>Validierung</strong>
-            <p class="demo-intro" style="margin:8px 0 0;">Typ, Größe (min/max), Anzahl und Gesamtgröße</p>
-        </div>
-        <div class="demo-card" style="text-align:center;">
-            <span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">image</span>
-            <strong>Vorschau</strong>
-            <p class="demo-intro" style="margin:8px 0 0;">Bild-Thumbnails direkt in der Upload-Zone</p>
-        </div>
-        <div class="demo-card" style="text-align:center;">
-            <span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">list_alt</span>
-            <strong>Queue-UI</strong>
-            <p class="demo-intro" style="margin:8px 0 0;">Fortschrittsanzeige, Zustände, Fehler pro Datei</p>
-        </div>
+        <div class="demo-card" style="text-align:center;"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">drag_indicator</span><strong>Drag &amp; Drop</strong><p class="demo-intro" style="margin:8px 0 0;">Dateien per Drag &amp; Drop oder Klick auswählen</p></div>
+        <div class="demo-card" style="text-align:center;"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">verified</span><strong>Validierung</strong><p class="demo-intro" style="margin:8px 0 0;">Typ, Größe (min/max), Anzahl und Gesamtgröße</p></div>
+        <div class="demo-card" style="text-align:center;"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">image</span><strong>Vorschau</strong><p class="demo-intro" style="margin:8px 0 0;">Bild-Thumbnails direkt in der Upload-Zone</p></div>
+        <div class="demo-card" style="text-align:center;"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">list_alt</span><strong>Queue-UI</strong><p class="demo-intro" style="margin:8px 0 0;">Fortschrittsanzeige, Zustände, Fehler pro Datei</p></div>
     </div>
 
-    <!-- Variante 1: Einfach -->
     <div class="demo-card">
         <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Variante 1 — Einfach</h3>
         <p class="demo-intro">Dokument-Upload mit Typfilter und Größenlimit.</p>
-        <?php
-        (new Form('up-simple'))->field('doc', 'Dokument', 'file', [
-            'accept'  => ['pdf', 'doc', 'docx'],
-            'maxSize' => '10 MB',
-            'hint'    => 'PDF oder Word, max. 10 MB',
-        ])->render();
-        ?>
-        <pre class="demo-code">(new Form('up-simple'))->field('doc', 'Dokument', 'file', [
-    'accept'  => ['pdf', 'doc', 'docx'],
-    'maxSize' => '10 MB',
-    'hint'    => 'PDF oder Word, max. 10 MB',
-])->render();</pre>
+        <?php (new Form('up-simple'))->field('doc', 'Dokument', 'file', ['accept' => ['pdf', 'doc', 'docx'], 'maxSize' => '10 MB', 'hint' => 'PDF oder Word, max. 10 MB'])->render(); ?>
     </div>
 
-    <!-- Variante 2: Bilder mit Vorschau -->
     <div class="demo-card">
         <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Variante 2 — Bilder mit Vorschau</h3>
         <p class="demo-intro">Mehrfach-Upload mit Bild-Thumbnails direkt in der Zone.</p>
-        <?php
-        (new Form('up-images'))->field('fotos', 'Fotos', 'file', [
-            'multiple' => true,
-            'preview'  => true,
-            'accept'   => ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-            'maxSize'  => '8 MB',
-            'maxFiles' => 6,
-        ])->render();
-        ?>
-        <pre class="demo-code">(new Form('up-images'))->field('fotos', 'Fotos', 'file', [
-    'multiple' => true,
-    'preview'  => true,
-    'accept'   => ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-    'maxSize'  => '8 MB',
-    'maxFiles' => 6,
-])->render();</pre>
+        <?php (new Form('up-images'))->field('fotos', 'Fotos', 'file', ['multiple' => true, 'preview' => true, 'accept' => ['jpg', 'jpeg', 'png', 'gif', 'webp'], 'maxSize' => '8 MB', 'maxFiles' => 6])->render(); ?>
     </div>
 
-    <!-- Variante 3: Volle Konfiguration -->
     <div class="demo-card">
         <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Variante 3 — Volle Konfiguration</h3>
         <p class="demo-intro">Alle Optionen kombiniert: Typen, Min/Max-Größe, Gesamtlimit, Dateianzahl.</p>
-        <?php
-        (new Form('up-full'))->field('attachments', 'Anhänge', 'file', [
-            'multiple'     => true,
-            'preview'      => true,
-            'accept'       => ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'doc', 'docx', 'txt'],
-            'minSize'      => '1 KB',
-            'maxSize'      => '10 MB',
-            'maxTotalSize' => '50 MB',
-            'maxFiles'     => 10,
-            'hint'         => 'Max. 10 MB/Datei · 50 MB gesamt · 10 Dateien',
-        ])->render();
-        ?>
-        <pre class="demo-code">(new Form('up-full'))->field('attachments', 'Anhänge', 'file', [
-    'multiple'     => true,
-    'preview'      => true,
-    'accept'       => ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'doc', 'docx', 'txt'],
-    'minSize'      => '1 KB',
-    'maxSize'      => '10 MB',
-    'maxTotalSize' => '50 MB',
-    'maxFiles'     => 10,
-    'hint'         => 'Max. 10 MB/Datei · 50 MB gesamt · 10 Dateien',
-])->render();</pre>
+        <?php (new Form('up-full'))->field('attachments', 'Anhänge', 'file', ['multiple' => true, 'preview' => true, 'accept' => ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'doc', 'docx', 'txt'], 'minSize' => '1 KB', 'maxSize' => '10 MB', 'maxTotalSize' => '50 MB', 'maxFiles' => 10, 'hint' => 'Max. 10 MB/Datei · 50 MB gesamt · 10 Dateien'])->render(); ?>
     </div>
 
-    <!-- Queue-Zustände live -->
     <div class="demo-card">
         <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Queue-Zustände live</h3>
         <p class="demo-intro">Queue-Items manuell durch Zustände schalten: pending → uploading → done / error.</p>
         <div class="demo-btn-row" style="margin-bottom:16px;">
-            <button class="gk-btn gk-btn-primary" id="btn-queue-sim">
-                <span class="material-icons" style="font-size:16px;">add_circle</span> Datei simulieren
-            </button>
-            <button class="gk-btn gk-btn-filled gk-btn-danger" id="btn-queue-err">
-                <span class="material-icons" style="font-size:16px;">error_outline</span> Fehler simulieren
-            </button>
+            <button class="gk-btn gk-btn-primary" id="btn-queue-sim"><span class="material-icons" style="font-size:16px;">add_circle</span> Datei simulieren</button>
+            <button class="gk-btn gk-btn-filled gk-btn-danger" id="btn-queue-err"><span class="material-icons" style="font-size:16px;">error_outline</span> Fehler simulieren</button>
         </div>
         <div id="queue-demo-list" style="display:flex;flex-direction:column;gap:8px;"></div>
-        <pre class="demo-code">// Queue-Zustände per JS API
-var item = GK.uqAddItem(zone, file);  // Item zur Queue hinzufügen
-GK.uqSetUploading(item);              // → Fortschrittsanzeige
-GK.uqSetDone(item, 'filename.pdf');   // → Grüner Haken
-GK.uqSetError(item, 'Fehlertext');    // → Roter Fehler</pre>
     </div>
 
-    <!-- Validierungsfehler Demo -->
     <div class="demo-card">
         <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Validierungsfehler Demo</h3>
-        <p class="demo-intro">Zone mit strikten Limits — PDF only, max. 100 KB. Zum Selbst-Testen: einfach eine andere Datei hochladen.</p>
-        <?php
-        (new Form('up-validate'))->field('strict_file', 'Strikt (PDF, max. 100 KB)', 'file', [
-            'accept'  => ['pdf'],
-            'maxSize' => '100 KB',
-            'hint'    => 'Nur PDF, max. 100 KB — andere Dateien werden abgelehnt',
-        ])->render();
-        ?>
+        <p class="demo-intro">Zone mit strikten Limits — PDF only, max. 100 KB.</p>
+        <?php (new Form('up-validate'))->field('strict_file', 'Strikt (PDF, max. 100 KB)', 'file', ['accept' => ['pdf'], 'maxSize' => '100 KB', 'hint' => 'Nur PDF, max. 100 KB — andere Dateien werden abgelehnt'])->render(); ?>
     </div>
 
-    <!-- PHP API Tabelle -->
-    <div class="demo-card">
-        <h3 style="margin:0 0 16px;font-size:15px;color:var(--gk-on-surface, #374151);">PHP API — <code>Form::field('file')</code> Optionen</h3>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <thead>
-                <tr style="background:var(--gk-surface-container);">
-                    <th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--gk-outline-variant);">Option</th>
-                    <th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--gk-outline-variant);">Typ</th>
-                    <th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--gk-outline-variant);">Default</th>
-                    <th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--gk-outline-variant);">Beschreibung</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ([
-                    ['multiple',      'bool',           'false',  'Mehrfachauswahl erlauben'],
-                    ['preview',       'bool',           'false',  'Bild-Thumbnails anzeigen'],
-                    ['accept',        'array|string',   '–',      'Erlaubte Dateitypen (z. B. [\'pdf\', \'jpg\'])'],
-                    ['maxSize',       'string',         '–',      'Max. Dateigröße pro Datei (z. B. \'10 MB\')'],
-                    ['minSize',       'string',         '–',      'Min. Dateigröße pro Datei'],
-                    ['maxTotalSize',  'string',         '–',      'Max. Gesamtgröße aller Dateien'],
-                    ['maxFiles',      'int',            '–',      'Max. Anzahl Dateien'],
-                    ['label_text',    'string',         'auto',   'Text in der Upload-Zone'],
-                    ['icon',          'string',         'upload_file', 'Material Icon in der Zone'],
-                    ['hint',          'string',         '–',      'Hilfetext unterhalb der Zone'],
-                ] as $row): ?>
-                <tr style="border-bottom:1px solid var(--gk-outline-variant);">
-                    <td style="padding:8px 12px;font-family:monospace;color:var(--gk-primary);"><?= htmlspecialchars($row[0]) ?></td>
-                    <td style="padding:8px 12px;color:var(--gk-on-surface-variant);"><?= htmlspecialchars($row[1]) ?></td>
-                    <td style="padding:8px 12px;font-family:monospace;color:var(--gk-on-surface-variant);"><?= htmlspecialchars($row[2]) ?></td>
-                    <td style="padding:8px 12px;"><?= htmlspecialchars($row[3]) ?></td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <!-- HTML data-Attribute -->
-    <div class="demo-card">
-        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">HTML <code>data-</code> Attribute</h3>
-        <p class="demo-intro">Upload-Zones ohne PHP Form-Klasse — direkt per HTML-Attributen konfigurieren.</p>
-        <pre class="demo-code">&lt;div data-gk-upload
-     data-gk-multiple
-     data-gk-preview
-     data-gk-accept="pdf,jpg,png"
-     data-gk-max-size="10 MB"
-     data-gk-min-size="1 KB"
-     data-gk-max-total-size="50 MB"
-     data-gk-max-files="10"&gt;&lt;/div&gt;</pre>
-    </div>
-
-    <!-- JS API -->
-    <div class="demo-card">
-        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">JS API</h3>
-        <pre class="demo-code">GK.uqSetUploading(item)               // Item auf "uploading" schalten
-GK.uqSetDone(item, 'filename.pdf')    // Item auf "done" setzen
-GK.uqSetError(item, 'Fehlertext')     // Item auf "error" setzen
-
-GK._parseSize('10 MB')                // → Bytes (10485760)
-GK._formatSize(1048576)               // → '1 MB'
-GK._uploadFileIcon('invoice.pdf')     // → 'picture_as_pdf'
-
-// gk:files Event auf der Upload-Zone:
-zone.addEventListener('gk:files', function(e) {
-    // e.detail.files  → File[]
-    // e.detail.items  → [{file, el, id}]
-    // e.detail.zone   → HTMLElement
-    e.detail.items.forEach(function(item) {
-        GK.uqSetUploading(item);
-        // ... XHR / fetch upload ...
-        GK.uqSetDone(item, item.file.name);
-    });
-});</pre>
-    </div>
-</div>
-
-<!-- ===== COLOR PICKER ===== -->
-<div class="demo-section" data-section="color">
-    <h2>Color Picker</h2>
-
+    <h3>Color Picker</h3>
     <p class="demo-intro">Styled nativer Color-Input — Farbswatch links (klickbar) + Hex-Feld rechts. Swatch und Hex-Wert synchronisieren sich automatisch, Validierung auf <code>#RRGGBB</code>.</p>
 
-    <!-- Demo -->
     <div class="demo-card">
         <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Live-Demo</h3>
         <?php
@@ -993,17 +545,6 @@ zone.addEventListener('gk:files', function(e) {
         ?>
     </div>
 
-    <!-- Code -->
-    <div class="demo-card">
-        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Code</h3>
-        <pre class="demo-code">(new Form('color-demo'))
-    ->field('primary',   'Primärfarbe',   'color', ['value' => '#6750a4'])
-    ->field('secondary', 'Sekundärfarbe', 'color', ['value' => '#2563eb'])
-    ->field('accent',    'Akzentfarbe',   'color', ['value' => '#16a34a'])
-    ->render();</pre>
-    </div>
-
-    <!-- Verhalten -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px;font-size:15px;color:var(--gk-on-surface, #374151);">Verhalten</h3>
         <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;color:var(--gk-on-surface-variant);">
@@ -1016,64 +557,145 @@ zone.addEventListener('gk:files', function(e) {
     </div>
 </div>
 
-<!-- ===== MODAL ===== -->
-<div class="demo-section" data-section="modal">
-    <h2>Modal</h2>
+<!-- ===== CARDS (merged: cards + statcards) ===== -->
+<div class="demo-section" data-section="cards">
+    <h2>Cards</h2>
+    <p class="demo-intro">Karten-Grid für strukturierte Inhalte — responsiv, mit Header, Body und Footer.</p>
+
+    <h3 style="margin: 32px 0 16px;">Auto-Grid (responsive)</h3>
+    <div class="gk-cards">
+        <div class="gk-card"><div class="gk-card-header">Webdesign</div><div class="gk-card-body"><div class="gk-card-meta">Paket S · ab 1.200 €</div><div class="gk-card-description">Responsives Design, CMS-Integration und SEO-Grundlagen für kleine Projekte.</div></div><div class="gk-card-footer">5 Projekte aktiv</div></div>
+        <div class="gk-card"><div class="gk-card-header">Hosting</div><div class="gk-card-body"><div class="gk-card-meta">Managed · ab 9,90 €/Monat</div><div class="gk-card-description">SSD-Speicher, tägliche Backups und SSL inklusive. 99,9% Uptime.</div></div><div class="gk-card-footer">12 Server aktiv</div></div>
+        <div class="gk-card"><div class="gk-card-header">SEO</div><div class="gk-card-body"><div class="gk-card-meta">Beratung · 95 €/h</div><div class="gk-card-description">Keyword-Analyse, On-Page-Optimierung und monatliche Reports.</div></div><div class="gk-card-footer">3 Kunden aktiv</div></div>
+    </div>
+
+    <h3 style="margin: 32px 0 16px;">Feste Spaltenanzahl</h3>
+    <div class="gk-cards gk-cards-4">
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);margin-bottom:8px;display:block">speed</span><strong>Performance</strong><div class="gk-card-meta" style="margin-top:4px">99.9% Uptime</div></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-success);margin-bottom:8px;display:block">security</span><strong>Sicherheit</strong><div class="gk-card-meta" style="margin-top:4px">SSL & Firewall</div></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-warning);margin-bottom:8px;display:block">support_agent</span><strong>Support</strong><div class="gk-card-meta" style="margin-top:4px">24/7 erreichbar</div></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-info);margin-bottom:8px;display:block">backup</span><strong>Backups</strong><div class="gk-card-meta" style="margin-top:4px">Täglich automatisch</div></div></div>
+    </div>
+
+    <div class="demo-code"><pre>.gk-cards          // Auto-Grid (min 280px)
+.gk-cards-2 / -3 / -4  // Feste Spalten
+.gk-card .gk-card-header / .gk-card-body / .gk-card-footer
+.gk-card-link      // Klickbare Card</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>Stat Cards</h3>
     <div class="demo-pair">
-        <div class="demo-pair-left">
-            <div class="demo-card">
-                <p class="demo-intro">Modals in vier Groessen. Werden per AJAX geladen, Backdrop-Click und ESC schliessen.</p>
-                <div class="demo-btn-row">
-                    <button class="gk-btn" onclick="GK.modal.open('Small (420px)', 'demo/form/f_delete.php', {}, 'small')">
-                        <span class="material-icons" style="font-size:16px">crop_square</span> Small
-                    </button>
-                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Medium (640px)', 'demo/form/f_articles.php', {}, 'medium')">
-                        <span class="material-icons" style="font-size:16px">crop_din</span> Medium
-                    </button>
-                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Large (900px)', 'demo/form/f_articles.php', {}, 'large')">
-                        <span class="material-icons" style="font-size:16px">crop_free</span> Large
-                    </button>
-                    <button class="gk-btn gk-btn-filled gk-btn-neutral" onclick="GK.modal.open('Fullscreen Modal', 'demo/form/f_articles.php', {}, 'full')">
-                        <span class="material-icons" style="font-size:16px">fullscreen</span> Full
-                    </button>
-                </div>
-            </div>
-            <div class="demo-card">
-                <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Verschachtelung: Modal mit Formular</h3>
-                <p class="demo-intro">Ein Modal laedt ein Formular per AJAX – der haeufigste Anwendungsfall.</p>
-                <div class="demo-btn-row">
-                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Artikel bearbeiten', 'demo/form/f_articles.php', {}, 'medium')">
-                        <span class="material-icons" style="font-size:16px">edit</span> Modal + Form
-                    </button>
-                </div>
-            </div>
-            <div class="demo-card">
-                <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Verschachtelung: Modal mit Tabelle + Sub-Modal</h3>
-                <p class="demo-intro">Ein Large-Modal zeigt eine Kundenliste. Klick auf "Bearbeiten" oeffnet ein zweites Modal mit dem Formular.</p>
-                <div class="demo-btn-row">
-                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Kundenverwaltung', 'demo/form/f_table_modal.php', {}, 'large')">
-                        <span class="material-icons" style="font-size:16px">people</span> Modal + Table + Sub-Modal
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="demo-code"><pre>// Sizes: small (420px), medium (640px), large (900px), full (100%)
-GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'small');
-GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'medium');
-GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'large');
-GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'full');
-
-// PHP: Modal an Table-Button binden
-$table->button('edit', ['icon' => 'edit', 'modal' => 'edit_form'])
-    ->modal('edit_form', 'Bearbeiten', 'form/edit.php', ['size' => 'large']);
-
-// Am Seitenende: Modal::container();</pre></div>
+    <div class="demo-card">
+        <?php
+        $stats = new StatCards('demo-stats');
+        $stats->card('Kunden', 248, ['format' => 'number', 'color' => 'blue'])
+            ->card('Umsatz', 84250.00, ['format' => 'currency', 'color' => 'green'])
+            ->card('Bestellungen', 64, ['format' => 'number', 'color' => 'orange'])
+            ->card('Offene Posten', 12480.00, ['format' => 'currency', 'color' => 'red'])
+            ->render();
+        ?>
+    </div>
+    <div class="demo-code"><pre>$stats = new StatCards('dashboard');
+$stats->card('Kunden', 248, ['format' => 'number', 'color' => 'blue'])
+    ->card('Umsatz', 84250.00, ['format' => 'currency', 'color' => 'green'])
+    ->card('Offene Posten', 12480.00, ['format' => 'currency', 'color' => 'red'])
+    ->render();</pre></div>
     </div>
 </div>
 
-<!-- ===== FORMATTER ===== -->
-<div class="demo-section" data-section="formatter">
-    <h2>Formatter</h2>
+<!-- ===== LAYOUT (merged: segment + message) ===== -->
+<div class="demo-section" data-section="layout">
+    <h2>Layout</h2>
+
+    <h3 style="margin: 32px 0 16px;">Segment</h3>
+    <p class="demo-intro">Container für zusammengehörige Inhalte — einzeln, gestapelt oder mit Header.</p>
+
+    <div class="gk-segment"><p>Ein einfaches Segment gruppiert zusammengehörige Inhalte visuell.</p></div>
+
+    <h3 style="margin: 32px 0 16px;">Segment mit Header</h3>
+    <div class="gk-segment"><div class="gk-segment-header">Projektübersicht</div><p>Segmente können einen Header haben um den Inhalt zu beschreiben.</p></div>
+
+    <h3 style="margin: 32px 0 16px;">Gestapelte Segments</h3>
+    <div class="gk-segments">
+        <div class="gk-segment"><div class="gk-segment-header">Schritt 1</div><p>Konto erstellen und E-Mail bestätigen.</p></div>
+        <div class="gk-segment"><div class="gk-segment-header">Schritt 2</div><p>Profil ausfüllen und Einstellungen konfigurieren.</p></div>
+        <div class="gk-segment"><div class="gk-segment-header">Schritt 3</div><p>Erstes Projekt anlegen und loslegen.</p></div>
+    </div>
+
+    <h3 style="margin: 32px 0 16px;">Varianten</h3>
+    <div class="gk-segment gk-segment-raised"><div class="gk-segment-header">Raised</div><p>Mit Schatten — hebt sich stärker vom Hintergrund ab.</p></div>
+    <div class="gk-segment gk-segment-muted"><div class="gk-segment-header">Muted</div><p>Gedämpfter Hintergrund — für sekundäre Inhalte.</p></div>
+    <div class="gk-segment gk-segment-compact"><div class="gk-segment-header">Compact</div><p>Weniger Padding — für dichtere Layouts.</p></div>
+
+    <div class="demo-code"><pre>.gk-segment / .gk-segment-raised / .gk-segment-muted / .gk-segment-compact
+.gk-segment-padded / .gk-segment-basic
+.gk-segments > .gk-segment  // Gestapelt</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>Message</h3>
+    <p class="demo-intro">Hinweise, Warnungen und Statusmeldungen für Benutzer.</p>
+
+    <div class="gk-message"><span class="material-icons">info</span><div class="gk-message-content">Eine neutrale Nachricht ohne spezifischen Status.</div></div>
+
+    <h3 style="margin: 32px 0 16px;">Typen</h3>
+    <div class="gk-message gk-message-info"><span class="material-icons">info</span><div class="gk-message-content"><div class="gk-message-header">Information</div>Deine Änderungen werden automatisch gespeichert.</div></div>
+    <div class="gk-message gk-message-success"><span class="material-icons">check_circle</span><div class="gk-message-content"><div class="gk-message-header">Erfolg</div>Das Profil wurde erfolgreich aktualisiert.</div></div>
+    <div class="gk-message gk-message-warning"><span class="material-icons">warning</span><div class="gk-message-content"><div class="gk-message-header">Achtung</div>Dein SSL-Zertifikat läuft in 7 Tagen ab.</div></div>
+    <div class="gk-message gk-message-error"><span class="material-icons">error</span><div class="gk-message-content"><div class="gk-message-header">Fehler</div>Die Verbindung zur Datenbank konnte nicht hergestellt werden.<ul class="gk-message-list"><li>Host nicht erreichbar</li><li>Timeout nach 30 Sekunden</li></ul></div></div>
+
+    <h3 style="margin: 32px 0 16px;">Kompakt</h3>
+    <div class="gk-message gk-message-info gk-message-compact"><span class="material-icons">info</span><div class="gk-message-content">Kompakte Nachricht für weniger Platz.</div></div>
+
+    <h3 style="margin: 32px 0 16px;">Dismissible</h3>
+    <div class="gk-message gk-message-warning" id="demo-dismiss-msg"><span class="material-icons">warning</span><div class="gk-message-content">Diese Nachricht kann geschlossen werden.</div><button class="gk-message-dismiss" onclick="this.parentElement.style.display='none'"><span class="material-icons">close</span></button></div>
+
+    <div class="demo-code"><pre>.gk-message / .gk-message-info / .gk-message-success
+.gk-message-warning / .gk-message-error / .gk-message-compact
+.gk-message-dismiss  // Schliessen-Button</pre></div>
+</div>
+
+<!-- ===== NAVIGATION (merged: filterchips + yearfilter + formatter) ===== -->
+<div class="demo-section" data-section="navigation">
+    <h2>Filter & Formatter</h2>
+
+    <h3 style="margin: 32px 0 16px;">FilterChips</h3>
+    <div class="demo-pair">
+    <div class="demo-card">
+        <?php
+        $chips = new FilterChips('status-filter', 'status');
+        $chips->chip('', 'Alle', ['count' => 152])
+            ->chip('aktiv', 'Aktiv', ['count' => 89, 'color' => 'green'])
+            ->chip('entwurf', 'Entwurf', ['count' => 23, 'color' => 'orange'])
+            ->chip('bezahlt', 'Bezahlt', ['count' => 31, 'color' => 'blue'])
+            ->chip('ueberfaellig', 'Ueberfaellig', ['count' => 9, 'color' => 'red'])
+            ->render();
+        ?>
+    </div>
+    <div class="demo-code"><pre>$chips = new FilterChips('status-filter', 'status');
+$chips->chip('', 'Alle', ['count' => 152])
+    ->chip('aktiv', 'Aktiv', ['count' => 89, 'color' => 'green'])
+    ->render();</pre></div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>YearFilter</h3>
+    <div class="demo-pair">
+    <div class="demo-card">
+        <?php
+        $years = new YearFilter('demo-years', 'year');
+        $years->range(2022, 2026)->render();
+        ?>
+    </div>
+    <div class="demo-code"><pre>$years = new YearFilter('year-nav', 'year');
+$years->range(2022, 2026)->render();</pre></div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>Formatter</h3>
     <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">Eingebaute Formatierungen fuer Table-Spalten: currency, percent, date, boolean, label, email.</p>
@@ -1103,156 +725,92 @@ $table->button('edit', ['icon' => 'edit', 'modal' => 'edit_form'])
     </div>
 </div>
 
-<!-- ===== STATCARDS ===== -->
-<div class="demo-section" data-section="statcards">
-    <h2>StatCards</h2>
-    <div class="demo-pair">
-    <div class="demo-card">
-        <?php
-        $stats = new StatCards('demo-stats');
-        $stats->card('Kunden', 248, ['format' => 'number', 'color' => 'blue'])
-            ->card('Umsatz', 84250.00, ['format' => 'currency', 'color' => 'green'])
-            ->card('Bestellungen', 64, ['format' => 'number', 'color' => 'orange'])
-            ->card('Offene Posten', 12480.00, ['format' => 'currency', 'color' => 'red'])
-            ->render();
-        ?>
-    </div>
-    <div class="demo-code"><pre>$stats = new StatCards('dashboard');
-$stats->card('Kunden', 248, ['format' => 'number', 'color' => 'blue'])
-    ->card('Umsatz', 84250.00, ['format' => 'currency', 'color' => 'green'])
-    ->card('Offene Posten', 12480.00, ['format' => 'currency', 'color' => 'red'])
-    ->render();</pre></div>
-    </div>
-</div>
+<!-- ===== FEEDBACK (merged: toast + confirm + modal) ===== -->
+<div class="demo-section" data-section="feedback">
+    <h2>Feedback & Dialoge</h2>
 
-<!-- ===== FILTERCHIPS ===== -->
-<div class="demo-section" data-section="filterchips">
-    <h2>FilterChips</h2>
-    <div class="demo-pair">
-    <div class="demo-card">
-        <?php
-        $chips = new FilterChips('status-filter', 'status');
-        $chips->chip('', 'Alle', ['count' => 152])
-            ->chip('aktiv', 'Aktiv', ['count' => 89, 'color' => 'green'])
-            ->chip('entwurf', 'Entwurf', ['count' => 23, 'color' => 'orange'])
-            ->chip('bezahlt', 'Bezahlt', ['count' => 31, 'color' => 'blue'])
-            ->chip('ueberfaellig', 'Ueberfaellig', ['count' => 9, 'color' => 'red'])
-            ->render();
-        ?>
-    </div>
-    <div class="demo-code"><pre>$chips = new FilterChips('status-filter', 'status');
-$chips->chip('', 'Alle', ['count' => 152])
-    ->chip('aktiv', 'Aktiv', ['count' => 89, 'color' => 'green'])
-    ->chip('offen', 'Offen', ['count' => 23, 'color' => 'orange'])
-    ->render();</pre></div>
-    </div>
-</div>
-
-<!-- ===== YEARFILTER ===== -->
-<div class="demo-section" data-section="yearfilter">
-    <h2>YearFilter</h2>
-    <div class="demo-pair">
-    <div class="demo-card">
-        <?php
-        $years = new YearFilter('demo-years', 'year');
-        $years->range(2022, 2026)->render();
-        ?>
-    </div>
-    <div class="demo-code"><pre>$years = new YearFilter('year-nav', 'year');
-$years->range(2022, 2026)->render();
-// Aktuelles Jahr: $years->current()</pre></div>
-    </div>
-</div>
-
-<!-- ===== TOAST ===== -->
-<div class="demo-section" data-section="toast">
-    <h2>Toast</h2>
+    <h3 style="margin: 32px 0 16px;">Toast</h3>
     <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">Toast-Benachrichtigungen fuer Erfolgs-, Fehler- und Info-Meldungen. Verschwinden nach 3 Sekunden.</p>
         <div class="demo-btn-row">
-            <button class="gk-btn gk-btn-filled gk-btn-success" onclick="GK.toast.success('Erfolgreich gespeichert!')">
-                <span class="material-icons" style="font-size:16px">check_circle</span> Success
-            </button>
-            <button class="gk-btn gk-btn-filled gk-btn-danger" onclick="GK.toast.error('Fehler beim Speichern!')">
-                <span class="material-icons" style="font-size:16px">error</span> Error
-            </button>
-            <button class="gk-btn gk-btn-filled gk-btn-warning" onclick="GK.toast.warning('Achtung: Limit erreicht!')">
-                <span class="material-icons" style="font-size:16px">warning</span> Warning
-            </button>
-            <button class="gk-btn gk-btn-primary" onclick="GK.toast.info('3 neue Eintraege verfuegbar')">
-                <span class="material-icons" style="font-size:16px">info</span> Info
-            </button>
+            <button class="gk-btn gk-btn-filled gk-btn-success" onclick="GK.toast.success('Erfolgreich gespeichert!')"><span class="material-icons" style="font-size:16px">check_circle</span> Success</button>
+            <button class="gk-btn gk-btn-filled gk-btn-danger" onclick="GK.toast.error('Fehler beim Speichern!')"><span class="material-icons" style="font-size:16px">error</span> Error</button>
+            <button class="gk-btn gk-btn-filled gk-btn-warning" onclick="GK.toast.warning('Achtung: Limit erreicht!')"><span class="material-icons" style="font-size:16px">warning</span> Warning</button>
+            <button class="gk-btn gk-btn-primary" onclick="GK.toast.info('3 neue Eintraege verfuegbar')"><span class="material-icons" style="font-size:16px">info</span> Info</button>
         </div>
     </div>
     <div class="demo-code"><pre>GK.toast.success('Erfolgreich gespeichert!');
 GK.toast.error('Fehler beim Speichern!');
 GK.toast.warning('Achtung: Limit erreicht!');
-GK.toast.info('3 neue Eintraege');
-
-// Mit Dauer (ms): GK.toast.success('OK!', 5000);</pre></div>
+GK.toast.info('3 neue Eintraege');</pre></div>
     </div>
-</div>
 
-<!-- ===== CONFIRM ===== -->
-<div class="demo-section" data-section="confirm">
-    <h2>Confirm</h2>
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>Confirm</h3>
     <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">Confirm-Dialoge als saubere Modals. Promise-basiert, mit Danger-Mode fuer destruktive Aktionen.</p>
         <div class="demo-btn-row">
-            <button class="gk-btn gk-btn-primary" onclick="GK.confirm('Rechnung an den Kunden versenden?', {title:'Rechnung versenden', confirmText:'Versenden'}).then(function(ok){ if(ok) GK.toast.success('Versendet!'); })">
-                <span class="material-icons" style="font-size:16px">send</span> Standard Confirm
-            </button>
-            <button class="gk-btn gk-btn-danger" onclick="GK.confirm('Diesen Eintrag wirklich unwiderruflich loeschen?', {title:'Eintrag loeschen', confirmText:'Loeschen', danger:true}).then(function(ok){ if(ok) GK.toast.success('Geloescht!'); })">
-                <span class="material-icons" style="font-size:16px">delete_forever</span> Danger Confirm
-            </button>
+            <button class="gk-btn gk-btn-primary" onclick="GK.confirm('Rechnung an den Kunden versenden?', {title:'Rechnung versenden', confirmText:'Versenden'}).then(function(ok){ if(ok) GK.toast.success('Versendet!'); })"><span class="material-icons" style="font-size:16px">send</span> Standard Confirm</button>
+            <button class="gk-btn gk-btn-danger" onclick="GK.confirm('Diesen Eintrag wirklich unwiderruflich loeschen?', {title:'Eintrag loeschen', confirmText:'Loeschen', danger:true}).then(function(ok){ if(ok) GK.toast.success('Geloescht!'); })"><span class="material-icons" style="font-size:16px">delete_forever</span> Danger Confirm</button>
         </div>
     </div>
     <div class="demo-code"><pre>GK.confirm('Rechnung versenden?', {
-    title: 'Rechnung versenden',
-    confirmText: 'Versenden'
+    title: 'Rechnung versenden', confirmText: 'Versenden'
 }).then(ok => { if (ok) GK.toast.success('Versendet!'); });
 
-// Danger-Modus (roter Button)
 GK.confirm('Wirklich loeschen?', {
     title: 'Loeschen', confirmText: 'Loeschen', danger: true
 }).then(ok => { if (ok) { /* ... */ } });</pre></div>
     </div>
-</div>
 
-<!-- ===== SIDEBAR ===== -->
-<div class="demo-section" data-section="sidebar">
-    <h2>Sidebar</h2>
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>Modal</h3>
     <div class="demo-pair">
-    <div class="demo-card">
-        <p class="demo-intro">Responsive Sidebar-Navigation mit Gruppen, Icons, Badges und Mobile-Toggle. Auf dieser Seite live zu sehen.</p>
-    </div>
-    <div class="demo-code"><pre>$sidebar = new Sidebar('main');
-$sidebar->brand('Mein Projekt', 'dashboard', 'v0.7.0')
-    ->group('Module')
-    ->item('Dashboard', '/dashboard', 'analytics', ['active' => true])
-    ->item('Rechnungen', '/invoices', 'receipt_long', ['badge' => 3])
-    ->item('Kunden', '/customers', 'people')
-    ->group('System')
-    ->item('Einstellungen', '/settings', 'settings');
-$sidebar->render();
+        <div class="demo-pair-left">
+            <div class="demo-card">
+                <p class="demo-intro">Modals in vier Groessen. Werden per AJAX geladen, Backdrop-Click und ESC schliessen.</p>
+                <div class="demo-btn-row">
+                    <button class="gk-btn" onclick="GK.modal.open('Small (420px)', 'demo/form/f_delete.php', {}, 'small')"><span class="material-icons" style="font-size:16px">crop_square</span> Small</button>
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Medium (640px)', 'demo/form/f_articles.php', {}, 'medium')"><span class="material-icons" style="font-size:16px">crop_din</span> Medium</button>
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Large (900px)', 'demo/form/f_articles.php', {}, 'large')"><span class="material-icons" style="font-size:16px">crop_free</span> Large</button>
+                    <button class="gk-btn gk-btn-filled gk-btn-neutral" onclick="GK.modal.open('Fullscreen Modal', 'demo/form/f_articles.php', {}, 'full')"><span class="material-icons" style="font-size:16px">fullscreen</span> Full</button>
+                </div>
+            </div>
+            <div class="demo-card">
+                <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Verschachtelung: Modal mit Formular</h3>
+                <p class="demo-intro">Ein Modal laedt ein Formular per AJAX – der haeufigste Anwendungsfall.</p>
+                <div class="demo-btn-row">
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Artikel bearbeiten', 'demo/form/f_articles.php', {}, 'medium')"><span class="material-icons" style="font-size:16px">edit</span> Modal + Form</button>
+                </div>
+            </div>
+            <div class="demo-card">
+                <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Verschachtelung: Modal mit Tabelle + Sub-Modal</h3>
+                <p class="demo-intro">Ein Large-Modal zeigt eine Kundenliste. Klick auf "Bearbeiten" oeffnet ein zweites Modal mit dem Formular.</p>
+                <div class="demo-btn-row">
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Kundenverwaltung', 'demo/form/f_table_modal.php', {}, 'large')"><span class="material-icons" style="font-size:16px">people</span> Modal + Table + Sub-Modal</button>
+                </div>
+            </div>
+        </div>
+        <div class="demo-code"><pre>GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'small');
+GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'medium');
+GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'large');
+GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'full');
 
-// Im Header:
-Sidebar::toggleButton();
-
-// JS API:
-GK.sidebar.toggle();
-GK.sidebar.open();
-GK.sidebar.close();</pre></div>
+$table->button('edit', ['icon' => 'edit', 'modal' => 'edit_form'])
+    ->modal('edit_form', 'Bearbeiten', 'form/edit.php', ['size' => 'large']);</pre></div>
     </div>
 </div>
 
-<!-- ===== BUTTONS ===== -->
-<div class="demo-section" data-section="buttons">
-    <h2>Buttons</h2>
+<!-- ===== UI (merged: buttons + header + sidebar + themes) ===== -->
+<div class="demo-section" data-section="ui">
+    <h2>UI-Komponenten</h2>
 
-    <!-- Variants -->
+    <h3 style="margin: 32px 0 16px;">Buttons</h3>
+
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Varianten</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
@@ -1263,7 +821,6 @@ GK.sidebar.close();</pre></div>
         </div>
     </div>
 
-    <!-- Colors -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Farben – Filled</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
@@ -1273,7 +830,6 @@ GK.sidebar.close();</pre></div>
             <?= \GridKit\Button::render('Danger', ['variant' => 'filled', 'color' => 'danger', 'icon' => 'delete']) ?>
             <?= \GridKit\Button::render('Neutral', ['variant' => 'filled', 'color' => 'neutral', 'icon' => 'settings']) ?>
         </div>
-
         <h3 style="margin:16px 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Farben – Outlined</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
             <?= \GridKit\Button::render('Primary', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'star']) ?>
@@ -1282,7 +838,6 @@ GK.sidebar.close();</pre></div>
             <?= \GridKit\Button::render('Danger', ['variant' => 'outlined', 'color' => 'danger', 'icon' => 'delete']) ?>
             <?= \GridKit\Button::render('Neutral', ['variant' => 'outlined', 'color' => 'neutral', 'icon' => 'settings']) ?>
         </div>
-
         <h3 style="margin:16px 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Farben – Tonal</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
             <?= \GridKit\Button::render('Primary', ['variant' => 'tonal', 'color' => 'primary', 'icon' => 'star']) ?>
@@ -1291,7 +846,6 @@ GK.sidebar.close();</pre></div>
             <?= \GridKit\Button::render('Danger', ['variant' => 'tonal', 'color' => 'danger', 'icon' => 'delete']) ?>
             <?= \GridKit\Button::render('Neutral', ['variant' => 'tonal', 'color' => 'neutral', 'icon' => 'settings']) ?>
         </div>
-
         <h3 style="margin:16px 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Farben – Text</h3>
         <div class="demo-btn-row">
             <?= \GridKit\Button::render('Primary', ['variant' => 'text', 'color' => 'primary', 'icon' => 'star']) ?>
@@ -1302,7 +856,6 @@ GK.sidebar.close();</pre></div>
         </div>
     </div>
 
-    <!-- Icon only -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Icon-Only</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
@@ -1328,7 +881,6 @@ GK.sidebar.close();</pre></div>
         </div>
     </div>
 
-    <!-- Sizes -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Groessen</h3>
         <div class="demo-btn-row" style="align-items:center">
@@ -1338,7 +890,6 @@ GK.sidebar.close();</pre></div>
         </div>
     </div>
 
-    <!-- States -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">States</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
@@ -1354,7 +905,6 @@ GK.sidebar.close();</pre></div>
         </div>
     </div>
 
-    <!-- Icon position + special -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Icon-Position &amp; Spezial</h3>
         <div class="demo-btn-row" style="margin-bottom:16px">
@@ -1363,32 +913,21 @@ GK.sidebar.close();</pre></div>
             <?= \GridKit\Button::render('Nur Text', ['variant' => 'filled', 'color' => 'primary']) ?>
         </div>
         <div class="demo-btn-row" style="margin-bottom:16px">
-            <?= \GridKit\Button::render('Als Link', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'open_in_new', 'href' => '#buttons', 'target' => '_self']) ?>
+            <?= \GridKit\Button::render('Als Link', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'open_in_new', 'href' => '#ui', 'target' => '_self']) ?>
             <?= \GridKit\Button::render('Submit', ['variant' => 'filled', 'color' => 'success', 'icon' => 'save', 'type' => 'submit']) ?>
         </div>
-        <div>
-            <?= \GridKit\Button::render('Full Width', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'send', 'fullWidth' => true]) ?>
-        </div>
+        <div><?= \GridKit\Button::render('Full Width', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'send', 'fullWidth' => true]) ?></div>
     </div>
 
-    <!-- Button Group -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Button Group</h3>
         <div class="demo-btn-row">
-            <?= \GridKit\Button::group([
-                \GridKit\Button::render('Links', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'format_align_left']),
-                \GridKit\Button::render('Mitte', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'format_align_center']),
-                \GridKit\Button::render('Rechts', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'format_align_right']),
-            ]) ?>
+            <?= \GridKit\Button::group([\GridKit\Button::render('Links', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'format_align_left']), \GridKit\Button::render('Mitte', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'format_align_center']), \GridKit\Button::render('Rechts', ['variant' => 'outlined', 'color' => 'primary', 'icon' => 'format_align_right'])]) ?>
             &nbsp;
-            <?= \GridKit\Button::group([
-                \GridKit\Button::icon('undo', ['variant' => 'outlined', 'color' => 'neutral']),
-                \GridKit\Button::icon('redo', ['variant' => 'outlined', 'color' => 'neutral']),
-            ]) ?>
+            <?= \GridKit\Button::group([\GridKit\Button::icon('undo', ['variant' => 'outlined', 'color' => 'neutral']), \GridKit\Button::icon('redo', ['variant' => 'outlined', 'color' => 'neutral'])]) ?>
         </div>
     </div>
 
-    <!-- Shapes -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Shapes</h3>
         <div class="demo-btn-row" style="align-items:center">
@@ -1404,7 +943,6 @@ GK.sidebar.close();</pre></div>
         </div>
     </div>
 
-    <!-- FAB -->
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">FAB (Floating Action Button)</h3>
         <div class="demo-btn-row" style="align-items:center; gap:16px">
@@ -1425,46 +963,14 @@ GK.sidebar.close();</pre></div>
     </div>
 
     <div class="demo-code"><pre>use GridKit\Button;
-
-// Filled + Icon
 echo Button::render('Speichern', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'save']);
-echo Button::render('Loeschen', ['variant' => 'outlined', 'color' => 'danger', 'icon' => 'delete']);
-echo Button::render('Abbrechen', ['variant' => 'text', 'color' => 'neutral']);
-echo Button::render('Entwurf', ['variant' => 'tonal', 'color' => 'warning', 'icon' => 'edit']);
+echo Button::icon('edit', ['variant' => 'filled', 'color' => 'primary']);
+echo Button::fab('add');
+echo Button::fab('edit', ['extended' => true, 'label' => 'Bearbeiten']);</pre></div>
 
-// Icon-only
-echo Button::icon('edit', ['variant' => 'filled', 'color' => 'primary', 'title' => 'Bearbeiten']);
-echo Button::icon('delete', ['variant' => 'text', 'color' => 'danger']);
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-// Sizes: sm, md (default), lg
-echo Button::render('Klein', ['size' => 'sm', 'icon' => 'edit']);
-echo Button::render('Gross', ['size' => 'lg', 'icon' => 'edit']);
-
-// States
-echo Button::render('Disabled', ['disabled' => true]);
-echo Button::render('Loading', ['loading' => true]);
-echo Button::render('Badge', ['icon' => 'mail', 'badge' => 3]);
-
-// Group
-echo Button::group([
-    Button::icon('undo', ['variant' => 'outlined', 'color' => 'neutral']),
-    Button::icon('redo', ['variant' => 'outlined', 'color' => 'neutral']),
-]);
-
-// Shapes: rounded (default), pill, circle, square
-echo Button::render('Pill', ['shape' => 'pill', 'icon' => 'star']);
-echo Button::icon('star', ['shape' => 'circle']);
-
-// FAB (Floating Action Button)
-echo Button::fab('add');                              // 56px default
-echo Button::fab('add', ['size' => 'sm']);            // 40px
-echo Button::fab('add', ['size' => 'lg']);            // 96px
-echo Button::fab('edit', ['extended' => true, 'label' => 'Bearbeiten']); // Extended FAB</pre></div>
-</div>
-
-<!-- ===== HEADER ===== -->
-<div class="demo-section" data-section="header">
-    <h2>Header</h2>
+    <h3>Header</h3>
     <div class="demo-card" style="padding:0; overflow:hidden;">
         <?php
         $header = new Header();
@@ -1474,8 +980,7 @@ echo Button::fab('edit', ['extended' => true, 'label' => 'Bearbeiten']); // Exte
             ->action(Button::render('Neue Rechnung', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'add', 'size' => 'sm']))
             ->action(Button::icon('notifications', ['variant' => 'text', 'color' => 'neutral', 'title' => 'Benachrichtigungen']))
             ->user('Martin Huber', [
-                'avatar' => 'https://i.pravatar.cc/72?img=12',
-                'role' => 'Administrator',
+                'avatar' => 'https://i.pravatar.cc/72?img=12', 'role' => 'Administrator',
                 'menu' => [
                     ['label' => 'Profil', 'href' => '/profil', 'icon' => 'person'],
                     ['label' => 'Einstellungen', 'href' => '/settings', 'icon' => 'settings'],
@@ -1483,8 +988,7 @@ echo Button::fab('edit', ['extended' => true, 'label' => 'Bearbeiten']); // Exte
                     ['label' => 'Abmelden', 'href' => '/logout', 'icon' => 'logout'],
                 ],
             ])
-            ->sticky()
-            ->render();
+            ->sticky()->render();
         ?>
     </div>
     <div class="demo-card" style="padding:0; overflow:hidden;">
@@ -1492,65 +996,52 @@ echo Button::fab('edit', ['extended' => true, 'label' => 'Bearbeiten']); // Exte
         <?php
         $header2 = new Header();
         echo $header2->title('Dashboard')
-            ->user('Anna K.', [
-                'menu' => [
-                    ['label' => 'Abmelden', 'href' => '/logout', 'icon' => 'logout'],
-                ],
-            ])
+            ->user('Anna K.', ['menu' => [['label' => 'Abmelden', 'href' => '/logout', 'icon' => 'logout']]])
             ->render();
         ?>
     </div>
-    <p class="gk-text-muted" style="padding: 12px 24px; margin: 0; font-size: 13px; color: #6b7280;">In der Praxis: <code>-&gt;fixed(true)</code> fixiert den Header am oberen Rand.
-Die Sidebar beginnt dann automatisch unterhalb (64px offset).</p>
-    <div class="demo-code"><pre>use GridKit\Header;
-use GridKit\Button;
-
-$header = new Header();
+    <div class="demo-code"><pre>$header = new Header();
 echo $header->title('Rechnungen')
-    ->breadcrumb(['Dashboard' => '/', 'Faktura' => '/faktura', 'Rechnungen'])
+    ->breadcrumb(['Dashboard' => '/', 'Rechnungen'])
     ->search('Suchen...', 'q')
-    ->action(Button::render('Neue Rechnung', ['icon' => 'add', 'size' => 'sm']))
-    ->user('Martin Huber', [
-        'avatar' => 'https://example.com/avatar.jpg',
-        'role' => 'Administrator',
-        'menu' => [
-            ['label' => 'Profil', 'href' => '/profil', 'icon' => 'person'],
-            ['label' => 'Einstellungen', 'href' => '/settings', 'icon' => 'settings'],
-            'divider',
-            ['label' => 'Abmelden', 'href' => '/logout', 'icon' => 'logout'],
-        ],
-    ])
-    ->sticky()
+    ->action(Button::render('Neu', ['icon' => 'add', 'size' => 'sm']))
+    ->user('Martin Huber', ['avatar' => '...', 'menu' => [...]])
+    ->sticky()->render();</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>Sidebar</h3>
+    <div class="demo-pair">
+    <div class="demo-card">
+        <p class="demo-intro">Responsive Sidebar-Navigation mit Gruppen, Icons, Badges und Mobile-Toggle. Auf dieser Seite live zu sehen.</p>
+    </div>
+    <div class="demo-code"><pre>$sidebar = new Sidebar('main');
+$sidebar->brand('Mein Projekt', 'dashboard', 'v0.7.0')
+    ->group('Module')
+    ->item('Dashboard', '/dashboard', 'analytics', ['active' => true])
+    ->item('Rechnungen', '/invoices', 'receipt_long', ['badge' => 3])
     ->render();
 
-// Standard-Layout mit fixed Header + Sidebar:
-// echo $header->title('Dashboard')->fixed(true)->render();
-// echo $sidebar->render();  // beginnt unter dem Header
-// echo '&lt;main class="gk-main gk-body-with-header"&gt;...&lt;/main&gt;';</pre></div>
-</div>
+GK.sidebar.toggle(); GK.sidebar.open(); GK.sidebar.close();</pre></div>
+    </div>
 
-<!-- ===== THEMES ===== -->
-<div class="demo-section" data-section="themes">
-    <h2>Themes</h2>
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>Themes</h3>
     <div class="demo-card">
-        <p class="demo-intro">M3-konformes Theme-System mit 6 Themes und Dark/Light Mode. Themes werden per <code>data-gk-theme</code> und <code>data-gk-mode</code> Attributen am Body gesteuert.</p>
-
+        <p class="demo-intro">M3-konformes Theme-System mit 6 Themes und Dark/Light Mode.</p>
         <h3 style="margin:16px 0 12px; font-size:15px;">Layout-Modus</h3>
         <div style="display:flex; gap:8px; margin-bottom:16px;">
             <?= Button::render('Header First', ['variant' => 'tonal', 'color' => 'primary', 'onclick' => "GK.layout.set('header-first')"]) ?>
             <?= Button::render('Sidebar First', ['variant' => 'tonal', 'color' => 'primary', 'onclick' => "GK.layout.set('sidebar-first')"]) ?>
         </div>
-        <p class="gk-text-muted" style="font-size:13px; color:var(--gk-on-surface-variant); margin-bottom:16px;">Header First: Header ueber volle Breite, Sidebar darunter (Gmail-Style).<br>
-        Sidebar First: Sidebar volle Hoehe, Header daneben (Admin-Panel-Style).</p>
-
         <h3 style="margin:16px 0 12px; font-size:15px;">Theme-Auswahl</h3>
         <?= Theme::switcher() ?>
-
         <h3 style="margin:24px 0 12px; font-size:15px;">Live-Vorschau</h3>
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
             <div style="background:var(--gk-surface-container); border-radius:var(--gk-radius); padding:20px; border:1px solid var(--gk-outline-variant);">
                 <h4 style="margin:0 0 8px; color:var(--gk-on-surface);">Card Title</h4>
-                <p style="margin:0 0 12px; color:var(--gk-on-surface-variant); font-size:13px;">This card uses surface-container background with on-surface text colors.</p>
+                <p style="margin:0 0 12px; color:var(--gk-on-surface-variant); font-size:13px;">Surface-container background with on-surface text colors.</p>
                 <input type="text" placeholder="Input field..." style="width:100%; padding:8px 12px; border:1px solid var(--gk-outline); border-radius:var(--gk-radius-sm); background:var(--gk-surface); color:var(--gk-on-surface); margin-bottom:12px; box-sizing:border-box;">
                 <div style="display:flex; gap:8px;">
                     <button class="gk-btn gk-btn-primary" style="background:var(--gk-primary); color:var(--gk-on-primary); border:none; padding:8px 16px; border-radius:var(--gk-radius-sm); cursor:pointer;">Primary</button>
@@ -1579,30 +1070,17 @@ echo $header->title('Rechnungen')
             </div>
         </div>
     </div>
-    <div class="demo-code"><pre>use GridKit\Theme;
-
-// Set theme + mode
-Theme::set('ocean', 'dark');
-
-// Body tag with attributes
+    <div class="demo-code"><pre>Theme::set('ocean', 'dark');
 echo Theme::bodyTag('gk-root');
-// &lt;body data-gk-theme="ocean" data-gk-mode="dark" class="gk-root"&gt;
-
-// Theme switcher widget
 echo Theme::switcher();
-
-// Available themes
-$themes = Theme::available();
-
-// JS API
-GK.theme.set('forest');     // Switch theme
-GK.theme.toggleMode();      // Toggle dark/light
-GK.theme.restore();         // Restore from localStorage</pre></div>
+GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
 </div>
 
-<!-- ===== DASHBOARD DEMO ===== -->
-<div class="demo-section" data-section="dashboard">
-    <h2>Dashboard - Alle Komponenten</h2>
+<!-- ===== EXAMPLES (merged: dashboard + skeleton + auth) ===== -->
+<div class="demo-section" data-section="examples">
+    <h2>Beispiele</h2>
+
+    <h3 style="margin: 32px 0 16px;">Dashboard Demo</h3>
     <div class="demo-card">
         <?php
         $dashStats = new StatCards('dash-stats');
@@ -1640,304 +1118,50 @@ GK.theme.restore();         // Restore from localStorage</pre></div>
             ->paginate(10)->render();
         ?>
     </div>
-</div>
 
-<!-- ===== SKELETON ===== -->
-<div class="demo-section" data-section="skeleton">
-    <h2>Skeleton – Startpunkt für neue Projekte</h2>
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
+    <h3>Skeleton — Startpunkt für neue Projekte</h3>
     <div class="demo-card">
-        <p class="demo-intro">
-            <code>skeleton.php</code> ist das fertige Grundgerüst für ein neues GridKit-Projekt.
-            Einfach kopieren, Titel + Navigation anpassen, Sektionen befüllen — fertig.<br><br>
-            Enthält alles korrekt verdrahtet: Theme, Layout, Sidebar, Header (fixed), Content-Bereich, Modal-Container, JS.
-        </p>
+        <p class="demo-intro"><code>skeleton.php</code> ist das fertige Grundgerüst für ein neues GridKit-Projekt. Einfach kopieren, Titel + Navigation anpassen, Sektionen befüllen — fertig.</p>
         <div style="background:var(--gk-primary-container);color:var(--gk-on-primary-container);border-radius:var(--gk-radius);padding:16px 20px;font-size:14px;line-height:1.7;">
             <strong>Schnellstart:</strong><br>
             <code style="font-size:13px;">cp /path/to/gridkit/skeleton.php mein-projekt/index.php</code>
         </div>
     </div>
-
     <div class="demo-card">
         <h3 style="margin:0 0 16px;font-size:15px;color:var(--gk-on-surface, #374151);">Anatomie</h3>
         <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;font-size:13px;">
-            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-primary);">
-                <strong>Konfiguration</strong><br>
-                <span style="color:var(--gk-on-surface-variant)">Theme, Layout-Modus, Seiten-Titel, aktive Sektion</span>
-            </div>
-            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">
-                Theme::set('indigo', 'light') · Layout::mode('header-first')
-            </div>
-            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-secondary);">
-                <strong>Sidebar</strong><br>
-                <span style="color:var(--gk-on-surface-variant)">Brand, Gruppen, Navigation-Items mit Icons + Badges</span>
-            </div>
-            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">
-                ->brand() · ->group() · ->item(label, url, icon, opts)
-            </div>
-            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-tertiary);">
-                <strong>Header</strong><br>
-                <span style="color:var(--gk-on-surface-variant)">Fixed, Sidebar-Toggle, Action-Buttons, Theme-Switcher, User-Menü</span>
-            </div>
-            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">
-                ->title() · ->fixed() · ->action() · ->user(name, opts)
-            </div>
-            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-error);">
-                <strong>Content</strong><br>
-                <span style="color:var(--gk-on-surface-variant)">Sektionen via ?section=... — Dashboard (StatCards), Artikel (Table)</span>
-            </div>
-            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">
-                &lt;main class="gk-main"&gt; · if/elseif-Blöcke pro Sektion
-            </div>
-            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-outline);">
-                <strong>Footer</strong><br>
-                <span style="color:var(--gk-on-surface-variant)">Modal::container() + gridkit.js — immer am Ende</span>
-            </div>
-            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">
-                Modal::container() · &lt;script src="/gridkit/js/gridkit.js"&gt;&lt;/script&gt;
-            </div>
+            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-primary);"><strong>Konfiguration</strong><br><span style="color:var(--gk-on-surface-variant)">Theme, Layout-Modus, Seiten-Titel</span></div>
+            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">Theme::set('indigo', 'light') · Layout::mode('header-first')</div>
+            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-secondary);"><strong>Sidebar</strong><br><span style="color:var(--gk-on-surface-variant)">Brand, Gruppen, Navigation-Items</span></div>
+            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">->brand() · ->group() · ->item(label, url, icon, opts)</div>
+            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-tertiary);"><strong>Header</strong><br><span style="color:var(--gk-on-surface-variant)">Fixed, Toggle, Actions, User-Menü</span></div>
+            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">->title() · ->fixed() · ->action() · ->user(name, opts)</div>
+            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-error);"><strong>Content</strong><br><span style="color:var(--gk-on-surface-variant)">Sektionen via ?section=...</span></div>
+            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">&lt;main class="gk-main"&gt; · if/elseif-Blöcke</div>
+            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-outline);"><strong>Footer</strong><br><span style="color:var(--gk-on-surface-variant)">Modal::container() + gridkit.js</span></div>
+            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">Modal::container() · &lt;script src="gridkit.js"&gt;</div>
         </div>
     </div>
 
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>Auth — Login-Schutz</h3>
     <div class="demo-card">
-        <h3 style="margin:0 0 12px;font-size:15px;color:var(--gk-on-surface, #374151);">Vollständiger Code (skeleton.php)</h3>
-        <div class="demo-code" style="max-height:520px;overflow-y:auto;"><pre>&lt;?php
-/**
- * GridKit Skeleton
- * ----------------
- * Kopieren, anpassen, loslegen.
- * Benötigt: autoload.php, css/gridkit.css, css/themes.css, js/gridkit.js
- */
-
-declare(strict_types=1);
-
-require_once __DIR__ . '/autoload.php';
-
-use GridKit\Header;
-use GridKit\Sidebar;
-use GridKit\Layout;
-use GridKit\Theme;
-use GridKit\Modal;
-use GridKit\Button;
-use GridKit\Table;
-use GridKit\Form;
-use GridKit\StatCards;
-
-// ─── Konfiguration ──────────────────────────────────────────────────────────
-$pageTitle     = 'Mein Projekt';
-$activeSection = $_GET['section'] ?? 'dashboard';
-
-// Theme: indigo | ocean | forest | sunset | rose | slate  (+ light | dark)
-Theme::set('indigo', 'light');
-
-// Layout: header-first (Header volle Breite) | sidebar-first (Sidebar volle Höhe)
-Layout::mode('header-first');
-
-?&gt;
-&lt;!DOCTYPE html&gt;
-&lt;html lang="de"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-    &lt;title&gt;&lt;?= htmlspecialchars($pageTitle) ?&gt;&lt;/title&gt;
-    &lt;link rel="stylesheet" href="/gridkit/css/gridkit.css"&gt;
-    &lt;link rel="stylesheet" href="/gridkit/css/themes.css"&gt;
-    &lt;link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"&gt;
-&lt;/head&gt;
-&lt;?= Layout::bodyTag('gk-root') ?&gt;
-
-&lt;!-- Sidebar --&gt;
-&lt;?php
-$sidebar = new Sidebar('main');
-$sidebar
-    -&gt;brand($pageTitle, 'widgets')
-    -&gt;group('Navigation')
-    -&gt;item('Dashboard',   '?section=dashboard',   'dashboard',    ['active' =&gt; $activeSection === 'dashboard'])
-    -&gt;item('Artikel',     '?section=artikel',     'inventory_2',  ['active' =&gt; $activeSection === 'artikel'])
-    -&gt;item('Kunden',      '?section=kunden',      'people',       ['active' =&gt; $activeSection === 'kunden'])
-    -&gt;item('Rechnungen',  '?section=rechnungen',  'receipt_long', ['active' =&gt; $activeSection === 'rechnungen', 'badge' =&gt; 3])
-    -&gt;group('System')
-    -&gt;item('Einstellungen', '?section=einstellungen', 'settings')
-    -&gt;render();
-?&gt;
-
-&lt;div class="gk-with-sidebar"&gt;
-
-    &lt;!-- Header --&gt;
-    &lt;?php
-    $header = new Header();
-    echo $header
-        -&gt;title($pageTitle)
-        -&gt;sidebarToggle(true)
-        -&gt;fixed(true)
-        -&gt;action(Button::render('Neu', ['variant' =&gt; 'filled', 'color' =&gt; 'primary', 'icon' =&gt; 'add', 'size' =&gt; 'sm']))
-        -&gt;action(Theme::switcher())
-        -&gt;user('Max Mustermann', [
-            'role' =&gt; 'Administrator',
-            'menu' =&gt; [
-                ['label' =&gt; 'Profil',        'href' =&gt; '/profil',   'icon' =&gt; 'person'],
-                ['label' =&gt; 'Einstellungen', 'href' =&gt; '/settings', 'icon' =&gt; 'settings'],
-                'divider',
-                ['label' =&gt; 'Abmelden',      'href' =&gt; '/logout',   'icon' =&gt; 'logout'],
-            ],
-        ])
-        -&gt;render();
-    ?&gt;
-
-    &lt;!-- Content --&gt;
-    &lt;main class="gk-main"&gt;
-
-        &lt;?php if ($activeSection === 'dashboard'): ?&gt;
-            &lt;?php
-            $stats = new StatCards('dashboard-stats');
-            $stats
-                -&gt;card('Kunden',     248,      ['format' =&gt; 'number',   'color' =&gt; 'blue'])
-                -&gt;card('Umsatz',     84250.00, ['format' =&gt; 'currency', 'color' =&gt; 'green'])
-                -&gt;card('Offen',      12480.00, ['format' =&gt; 'currency', 'color' =&gt; 'orange'])
-                -&gt;card('Überfällig',  3200.00, ['format' =&gt; 'currency', 'color' =&gt; 'red'])
-                -&gt;render();
-            ?&gt;
-
-        &lt;?php elseif ($activeSection === 'artikel'): ?&gt;
-            &lt;?php
-            $table = new Table('artikel');
-            $table
-                -&gt;setData([...])  // oder: -&gt;query($db, "SELECT ...")
-                -&gt;search(['nr', 'name'])
-                -&gt;column('nr',     'Artikelnr.',  ['width' =&gt; '120px', 'sortable' =&gt; true])
-                -&gt;column('name',   'Bezeichnung', ['sortable' =&gt; true])
-                -&gt;column('preis',  'Preis',       ['format' =&gt; 'currency'])
-                -&gt;column('status', 'Status',      ['format' =&gt; 'label'])
-                -&gt;button('edit',   ['icon' =&gt; 'edit',   'class' =&gt; 'primary'])
-                -&gt;button('delete', ['icon' =&gt; 'delete', 'class' =&gt; 'danger'])
-                -&gt;newButton('Neu', ['icon' =&gt; 'add', 'modal' =&gt; 'form'])
-                -&gt;modal('form', 'Bearbeiten', 'forms/artikel.php', ['size' =&gt; 'medium'])
-                -&gt;paginate(25)
-                -&gt;render();
-            ?&gt;
-
-        &lt;?php endif; ?&gt;
-
-    &lt;/main&gt;
-
-    &lt;?php Modal::container(); ?&gt;
-
-&lt;/div&gt;&lt;!-- /gk-with-sidebar --&gt;
-
-&lt;script src="/gridkit/js/gridkit.js"&gt;&lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;</pre></div>
+        <p style="color:var(--gk-on-surface-variant);margin:0 0 16px"><code>Auth</code> schützt Seiten mit Session-basiertem Login. Passwörter werden als bcrypt-Hash gespeichert.</p>
+        <div class="demo-code">Auth::protect();              // Seite schützen
+Auth::login($user, $pass);   // Login-Versuch
+Auth::logout('login.php');   // Session löschen
+Auth::check();               // eingeloggt?
+Auth::user();                // Username
+Auth::hashPassword('abc');  // bcrypt-Hash
+Auth::renderLogin([...]);    // Login-Page</div>
     </div>
-</div>
-
-
-<div class="demo-section" data-section="auth">
-    <h2>Auth — Login-Schutz</h2>
-
-    <div class="demo-card">
-        <h3 style="margin:0 0 12px">Übersicht</h3>
-        <p style="color:var(--gk-on-surface-variant);margin:0 0 16px">
-            <code>Auth</code> schützt Seiten mit Session-basiertem Login.
-            Passwörter werden als bcrypt-Hash in einer Konfigurationsdatei
-            außerhalb des Webroots gespeichert.
-        </p>
-        <div class="demo-code"># /etc/gridkit-users.conf (außerhalb Webroot!)
-# Format: username:bcrypt_hash
-
-admin:\y\...
-viewer:\y\...</div>
-    </div>
-
-    <div class="demo-card">
-        <h3 style="margin:0 0 4px">Seite schützen</h3>
-        <p style="font-size:13px;color:var(--gk-on-surface-variant);margin:0 0 12px">
-            Eine Zeile am Seitenanfang — fertig.
-        </p>
-        <div class="demo-code">&lt;?php
-require_once __DIR__ . '/gridkit/autoload.php';
-use GridKit\Auth;
-
-Auth::protect();  // ← leitet zu login.php weiter wenn nicht eingeloggt
-
-// ... rest der Seite</div>
-    </div>
-
-    <div class="demo-card">
-        <h3 style="margin:0 0 4px">Login-Seite erstellen</h3>
-        <p style="font-size:13px;color:var(--gk-on-surface-variant);margin:0 0 12px">
-            <code>login.php</code> — komplett in 15 Zeilen:
-        </p>
-        <div class="demo-code">&lt;?php
-require_once __DIR__ . '/gridkit/autoload.php';
-use GridKit\{Theme, Auth};
-
-Theme::set('indigo', 'dark');
-
-\ = '';
-if (\['REQUEST_METHOD'] === 'POST') {
-    if (Auth::login(\['username'] ?? '', \['password'] ?? '')) {
-        header('Location: index.php');
-        exit;
-    }
-    \ = 'Falscher Benutzername oder Passwort.';
-}
-
-Auth::renderLogin([
-    'error' => \,
-    'title' => 'Mein System',
-    'icon'  => 'lock',
-]);</div>
-    </div>
-
-    <div class="demo-card">
-        <h3 style="margin:0 0 4px">Alle Methoden</h3>
-        <div class="demo-code">Auth::protect('login.php')     // Seite schützen (redirect falls nicht eingeloggt)
-Auth::login(\, \)   // Login-Versuch → true/false
-Auth::logout('login.php')    // Session löschen + redirect
-Auth::check()                // → true wenn eingeloggt
-Auth::user()                 // → aktueller Username oder null
-Auth::hashPassword('abc')   // → bcrypt-Hash für users.conf
-Auth::setUsersFile('/pfad') // Eigene users-Datei (Standard: /etc/gridkit-users.conf)
-Auth::renderLogin([          // Komplette Login-Page ausgeben
-    'title' => 'Mein System',
-    'icon'  => 'admin_panel_settings',
-    'error' => 'Falsches Passwort',
-])</div>
-    </div>
-
-    <div class="demo-card">
-        <h3 style="margin:0 0 8px">Logout-Button im Header</h3>
-        <div class="demo-code">&lt;?php
-\ = new Header();
-echo     ->title('Mein System')
-    ->action('&lt;a href="logout.php" class="gk-btn gk-btn-outlined gk-btn-neutral gk-btn-sm"&gt;
-        &lt;span class="material-icons" style="font-size:16px"&gt;logout&lt;/span&gt; Abmelden
-    &lt;/a&gt;')
-    ->render();</div>
-    </div>
-
-    <div class="demo-card">
-        <h3 style="margin:0 0 8px">Passwort-Hash generieren</h3>
-        <p style="font-size:13px;color:var(--gk-on-surface-variant);margin:0 0 12px">
-            Im Terminal auf dem Server:
-        </p>
-        <div class="demo-code">php -r "echo GridKit\Auth::hashPassword('meinPasswort') . PHP_EOL;"</div>
-        <p style="font-size:13px;color:var(--gk-on-surface-variant);margin:12px 0 0">
-            → Ausgabe in <code>/etc/gridkit-users.conf</code> einfügen.
-        </p>
-    </div>
-
     <div class="demo-card" style="text-align:center">
-        <p style="margin:0 0 12px;color:var(--gk-on-surface-variant)">
-            Live-Demo der Login-Seite öffnen:
-        </p>
-        <a href="login.php" target="_blank" class="gk-btn gk-btn-filled gk-btn-primary">
-            <span class="material-icons">lock_open</span>
-            Login Demo öffnen
-        </a>
-        <p style="margin:12px 0 0;font-size:12px;color:var(--gk-on-surface-variant)">
-            Zugangsdaten: <strong>demo</strong> / <strong>demo</strong>
-        </p>
+        <p style="margin:0 0 12px;color:var(--gk-on-surface-variant)">Live-Demo der Login-Seite öffnen:</p>
+        <a href="login.php" target="_blank" class="gk-btn gk-btn-filled gk-btn-primary"><span class="material-icons">lock_open</span> Login Demo öffnen</a>
+        <p style="margin:12px 0 0;font-size:12px;color:var(--gk-on-surface-variant)">Zugangsdaten: <strong>demo</strong> / <strong>demo</strong></p>
     </div>
 </div>
 
@@ -1945,10 +1169,9 @@ echo     ->title('Mein System')
 <div class="demo-section" data-section="changelog">
     <h2>Changelog</h2>
     <?php
-    // CHANGELOG.md parsen und als Segments rendern
     $changelog = file_get_contents(__DIR__ . '/../CHANGELOG.md');
     $versions = preg_split('/^## /m', $changelog);
-    array_shift($versions); // Header entfernen
+    array_shift($versions);
     $count = 0;
     foreach ($versions as $v) {
         if ($count >= 8) break;
@@ -1956,7 +1179,6 @@ echo     ->title('Mein System')
         $lines = explode("\n", trim($v));
         $title = array_shift($lines);
         $title = trim($title, '[] ');
-        // Version und Datum trennen
         $parts = explode(' - ', $title, 2);
         $ver = $parts[0] ?? $title;
         $date = $parts[1] ?? '';
@@ -1967,7 +1189,6 @@ echo     ->title('Mein System')
         echo '</div>';
         echo '<div style="font-size:13px;line-height:1.7;color:var(--gk-on-surface-variant);margin-top:8px">';
         $body = implode("\n", $lines);
-        // Markdown-light: ### Headers, - list items
         $body = htmlspecialchars($body);
         $body = preg_replace('/^### (.+)$/m', '<strong style="color:var(--gk-on-surface);display:block;margin-top:8px">$1</strong>', $body);
         $body = preg_replace('/^- (.+)$/m', '<span style="display:block;padding-left:12px">&middot; $1</span>', $body);
@@ -1984,7 +1205,6 @@ echo     ->title('Mein System')
 <script src="../js/gridkit.js"></script>
 <script>
 (function() {
-    // SPA navigation via sidebar
     var sections = document.querySelectorAll('.demo-section');
     var links = document.querySelectorAll('.gk-sidebar-item');
 
@@ -1992,13 +1212,10 @@ echo     ->title('Mein System')
         sections.forEach(function(s) { s.classList.remove('active'); });
         var target = document.querySelector('[data-section="' + id + '"]');
         if (target) target.classList.add('active');
-
         links.forEach(function(a) {
             a.classList.remove('active');
             if (a.getAttribute('href') === '#' + id) a.classList.add('active');
         });
-
-        // Mobile: close sidebar after nav
         if (window.innerWidth <= 768) GK.sidebar.close();
     }
 
@@ -2007,24 +1224,19 @@ echo     ->title('Mein System')
             var href = this.getAttribute('href');
             if (href && href.startsWith('#')) {
                 e.preventDefault();
-                var id = href.substring(1);
-                showSection(id);
+                showSection(href.substring(1));
                 history.replaceState(null, '', href);
             }
         });
     });
 
-    // Handle initial hash
     if (window.location.hash) {
-        var id = window.location.hash.substring(1);
-        showSection(id);
+        showSection(window.location.hash.substring(1));
     } else {
-        // Show overview + table by default
         showSection('table');
     }
 })();
 
-// Upload-Zonen: gk:files Event abfangen und Upload simulieren
 document.querySelectorAll('.gk-upload-zone[data-gk-upload]').forEach(function(zone) {
     zone.addEventListener('gk:files', function(e) {
         e.detail.items.forEach(function(item) {
@@ -2036,17 +1248,13 @@ document.querySelectorAll('.gk-upload-zone[data-gk-upload]').forEach(function(zo
     });
 });
 
-// Queue-Demo: Simulations-Buttons
 (function() {
     var simCounter = 0;
-
     function makeQueueItem(label, isError) {
         var list = document.getElementById('queue-demo-list');
         if (!list) return;
         var fakeFile = { name: label, size: Math.floor(Math.random() * 5 * 1024 * 1024) };
         var item = { file: fakeFile, el: null, id: 'qdemo-' + (++simCounter) };
-
-        // Erstelle ein minimales DOM-Element im Queue-Stil
         var el = document.createElement('div');
         el.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-surface-container);border-radius:6px;font-size:13px;';
         el.innerHTML = '<span class="material-icons" style="font-size:18px;color:var(--gk-primary);">hourglass_empty</span>'
@@ -2054,21 +1262,16 @@ document.querySelectorAll('.gk-upload-zone[data-gk-upload]').forEach(function(zo
                      + '<span style="color:var(--gk-on-surface-variant);">' + (GK._formatSize ? GK._formatSize(fakeFile.size) : '') + '</span>';
         item.el = el;
         list.appendChild(el);
-
         setTimeout(function() {
             el.querySelector('.material-icons').textContent = 'upload';
             el.querySelector('.material-icons').style.color = 'var(--gk-primary)';
             GK.uqSetUploading && GK.uqSetUploading(item);
             setTimeout(function() {
-                if (isError) {
-                    GK.uqSetError && GK.uqSetError(item, 'Verbindung unterbrochen');
-                } else {
-                    GK.uqSetDone && GK.uqSetDone(item, label);
-                }
+                if (isError) { GK.uqSetError && GK.uqSetError(item, 'Verbindung unterbrochen'); }
+                else { GK.uqSetDone && GK.uqSetDone(item, label); }
             }, 1200 + Math.random() * 800);
         }, 300);
     }
-
     var btnSim = document.getElementById('btn-queue-sim');
     var btnErr = document.getElementById('btn-queue-err');
     if (btnSim) btnSim.addEventListener('click', function() { makeQueueItem('dokument_' + simCounter + '.pdf', false); });
