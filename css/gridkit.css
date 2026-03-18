@@ -957,12 +957,12 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 
     --gk-surface-dim: #0D1117;
     --gk-surface: #0D1117;
-    --gk-surface-bright: #2D333B;
+    --gk-surface-bright: #3A4250;
     --gk-surface-container-lowest: #090D13;
     --gk-surface-container-low: #111318;
-    --gk-surface-container: #161B22;
-    --gk-surface-container-high: #1C2128;
-    --gk-surface-container-highest: #2D333B;
+    --gk-surface-container: #1B2028;
+    --gk-surface-container-high: #262C36;
+    --gk-surface-container-highest: #323842;
     --gk-on-surface: #E6EDF3;
     --gk-on-surface-variant: #8B949E;
     --gk-outline: #484F58;
@@ -974,9 +974,9 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 
     /* Alias-Variablen explizit überschreiben (Fallback-Kette sicherstellen) */
     --gk-bg:         #0D1117;
-    --gk-bg-muted:   #161B22;
+    --gk-bg-muted:   #1B2028;
     --gk-bg-subtle:  #111318;
-    --gk-bg-hover:   #1C2128;
+    --gk-bg-hover:   #262C36;
     --gk-text:       #E6EDF3;
     --gk-text-muted: #8B949E;
     --gk-text-subtle: #484F58;
@@ -987,9 +987,9 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
     --gk-success-hover: #34d399;
     --gk-warning-hover: #fbbf24;
     --gk-danger-hover: #fda4af;
-    --gk-neutral-50:  #2D333B;
-    --gk-neutral-100: #1C2128;
-    --gk-neutral-200: #161B22;
+    --gk-neutral-50:  #323842;
+    --gk-neutral-100: #262C36;
+    --gk-neutral-200: #1B2028;
     --gk-neutral-800: #E6EDF3;
     --gk-neutral-900: #f8fafc;
 
@@ -1019,20 +1019,20 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 [data-gk-mode="dark"] .gk-table tbody tr:hover,
 .gk-dark .gk-table tbody tr:hover { background: var(--gk-surface-container-high); }
 [data-gk-mode="dark"] .gk-table tbody tr:nth-child(even),
-.gk-dark .gk-table tbody tr:nth-child(even) { background: #1A1F26; }
+.gk-dark .gk-table tbody tr:nth-child(even) { background: #212830; }
 [data-gk-mode="dark"] .gk-table tbody tr:nth-child(even):hover,
 .gk-dark .gk-table tbody tr:nth-child(even):hover { background: var(--gk-surface-container-high); }
 [data-gk-mode="dark"] .gk-table th,
 [data-gk-mode="dark"] .gk-table td,
 .gk-dark .gk-table th, .gk-dark .gk-table td { border-bottom-color: rgba(255,255,255,0.06); }
 [data-gk-mode="dark"] .gk-table-wrap,
-.gk-dark .gk-table-wrap { background: var(--gk-surface-container); border-color: rgba(255,255,255,0.10); }
+.gk-dark .gk-table-wrap { background: var(--gk-surface-container); border-color: rgba(255,255,255,0.14); }
 [data-gk-mode="dark"] .gk-toolbar,
 .gk-dark .gk-toolbar { border-bottom-color: var(--gk-outline-variant); }
 [data-gk-mode="dark"] .gk-search,
 .gk-dark .gk-search { background-color: var(--gk-surface); border-color: rgba(255,255,255,0.15); color: var(--gk-on-surface); }
 [data-gk-mode="dark"] .gk-filter,
-.gk-dark .gk-filter { background-color: var(--gk-surface-container); border-color: rgba(255,255,255,0.12); color: #8B949E; }
+.gk-dark .gk-filter { background-color: var(--gk-surface-container); border-color: rgba(255,255,255,0.16); color: #8B949E; }
 [data-gk-mode="dark"] input,
 [data-gk-mode="dark"] select,
 [data-gk-mode="dark"] textarea,
@@ -1076,7 +1076,7 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 [data-gk-mode="dark"] .gk-card,
 .gk-dark .gk-card {
     background: var(--gk-surface-container-high);
-    border-color: rgba(255,255,255,0.10);
+    border-color: rgba(255,255,255,0.14);
     color: var(--gk-on-surface);
 }
 
@@ -1373,7 +1373,7 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 }
 [data-gk-mode="dark"] .gk-table tbody tr:nth-child(even),
 .gk-dark .gk-table tbody tr:nth-child(even) {
-    background: #1A1F26;
+    background: #212830;
 }
 [data-gk-mode="dark"] .gk-table tbody tr:nth-child(even):hover,
 .gk-dark .gk-table tbody tr:nth-child(even):hover {
@@ -1382,7 +1382,7 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 [data-gk-mode="dark"] .gk-table-wrap,
 .gk-dark .gk-table-wrap {
     background: var(--gk-surface-container);
-    border-color: rgba(255,255,255,0.10);
+    border-color: rgba(255,255,255,0.14);
 }
 
 /* --- Inputs & Forms --- */
