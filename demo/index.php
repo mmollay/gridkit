@@ -84,7 +84,15 @@ $demoHeader = new Header();
 echo $demoHeader->title('GridKit v' . $version)
     ->sidebarToggle(true)
     ->fixed(true)
-    ->action(Theme::switcher())
+    ->user('Demo User', [
+        'avatar' => 'https://i.pravatar.cc/72?img=12',
+        'menu' => [
+            ['label' => 'Profil', 'href' => '#', 'icon' => 'person'],
+            ['label' => 'Einstellungen', 'href' => '#', 'icon' => 'settings'],
+            '---',
+            ['label' => 'Abmelden', 'href' => 'login.php?logout=1', 'icon' => 'logout'],
+        ],
+    ])
     ->render();
 ?>
 
