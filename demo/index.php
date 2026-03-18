@@ -661,7 +661,114 @@ $stats->card('Kunden', 248, ['format' => 'number', 'color' => 'blue'])
 
 <!-- ===== NAVIGATION (merged: filterchips + yearfilter + formatter) ===== -->
 <div class="demo-section" data-section="navigation">
-    <h2>Filter & Formatter</h2>
+    <h2>Navigation & Filter</h2>
+
+    <h3 style="margin: 32px 0 16px;">Accordion</h3>
+    <p class="demo-intro">Auf-/zuklappbare Inhaltsbereiche &mdash; einzeln oder als Gruppe.</p>
+
+    <div class="gk-accordion" data-gk-single>
+        <div class="gk-accordion-item open">
+            <button class="gk-accordion-trigger">
+                <span>Was ist GRIDKit?</span>
+                <span class="material-icons">expand_more</span>
+            </button>
+            <div class="gk-accordion-content">
+                <div class="gk-accordion-body">GRIDKit ist ein leichtgewichtiges PHP/CSS/JS Framework f&uuml;r Admin-Dashboards und interne Tools. Zero Dependencies, M3-inspiriert.</div>
+            </div>
+        </div>
+        <div class="gk-accordion-item">
+            <button class="gk-accordion-trigger">
+                <span>Welche Komponenten gibt es?</span>
+                <span class="material-icons">expand_more</span>
+            </button>
+            <div class="gk-accordion-content">
+                <div class="gk-accordion-body">Table, Form, Modal, Cards, StatCards, Sidebar, Header, Tabs, Accordion, Breadcrumb, Toast, Confirm und mehr. Alle mit Light &amp; Dark Mode.</div>
+            </div>
+        </div>
+        <div class="gk-accordion-item">
+            <button class="gk-accordion-trigger">
+                <span>Brauche ich npm oder Build-Tools?</span>
+                <span class="material-icons">expand_more</span>
+            </button>
+            <div class="gk-accordion-content">
+                <div class="gk-accordion-body">Nein. GRIDKit hat keine Abh&auml;ngigkeiten &mdash; eine CSS-Datei, eine JS-Datei, fertig. Einfach einbinden und loslegen.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-code"><pre>&lt;div class="gk-accordion" data-gk-single&gt;
+    &lt;div class="gk-accordion-item open"&gt;
+        &lt;button class="gk-accordion-trigger"&gt;
+            &lt;span&gt;Frage?&lt;/span&gt;
+            &lt;span class="material-icons"&gt;expand_more&lt;/span&gt;
+        &lt;/button&gt;
+        &lt;div class="gk-accordion-content"&gt;
+            &lt;div class="gk-accordion-body"&gt;Antwort...&lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+// data-gk-single: nur ein Item gleichzeitig offen
+// .open: Item standardm&auml;ssig ge&ouml;ffnet</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3 style="margin: 32px 0 16px;">Breadcrumb</h3>
+    <p class="demo-intro">Pfad-Navigation zur Orientierung in verschachtelten Bereichen.</p>
+
+    <div class="gk-segment">
+        <nav class="gk-breadcrumb">
+            <a href="#"><span class="material-icons">home</span></a>
+            <span class="gk-breadcrumb-sep"><span class="material-icons">chevron_right</span></span>
+            <a href="#">Produkte</a>
+            <span class="gk-breadcrumb-sep"><span class="material-icons">chevron_right</span></span>
+            <a href="#">Hosting</a>
+            <span class="gk-breadcrumb-sep"><span class="material-icons">chevron_right</span></span>
+            <span class="gk-breadcrumb-current">Managed Server</span>
+        </nav>
+        <p style="color:var(--gk-on-surface-variant);font-size:13px;margin:0">Seiteninhalt hier...</p>
+    </div>
+
+    <div class="demo-code"><pre>&lt;nav class="gk-breadcrumb"&gt;
+    &lt;a href="#"&gt;&lt;span class="material-icons"&gt;home&lt;/span&gt;&lt;/a&gt;
+    &lt;span class="gk-breadcrumb-sep"&gt;&lt;span class="material-icons"&gt;chevron_right&lt;/span&gt;&lt;/span&gt;
+    &lt;a href="#"&gt;Produkte&lt;/a&gt;
+    &lt;span class="gk-breadcrumb-sep"&gt;...&lt;/span&gt;
+    &lt;span class="gk-breadcrumb-current"&gt;Aktuelle Seite&lt;/span&gt;
+&lt;/nav&gt;</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3 style="margin: 32px 0 16px;">Tabs</h3>
+    <p class="demo-intro">Tab-Navigation zum Umschalten zwischen Inhaltsbereichen.</p>
+
+    <div class="gk-tabs">
+        <div class="gk-tab-nav">
+            <button class="gk-tab-btn gk-active" data-tab="tab-overview">&Uuml;bersicht</button>
+            <button class="gk-tab-btn" data-tab="tab-details">Details</button>
+            <button class="gk-tab-btn" data-tab="tab-settings">Einstellungen</button>
+        </div>
+        <div class="gk-tab-panel gk-active" data-tab="tab-overview">
+            <p>Hier steht die &Uuml;bersicht &mdash; der erste Tab ist standardm&auml;ssig aktiv.</p>
+        </div>
+        <div class="gk-tab-panel" data-tab="tab-details">
+            <p>Detail-Informationen werden hier angezeigt.</p>
+        </div>
+        <div class="gk-tab-panel" data-tab="tab-settings">
+            <p>Einstellungen und Konfigurationsoptionen.</p>
+        </div>
+    </div>
+
+    <div class="demo-code"><pre>&lt;div class="gk-tabs"&gt;
+    &lt;div class="gk-tab-nav"&gt;
+        &lt;button class="gk-tab-btn gk-active" data-tab="tab-1"&gt;Tab 1&lt;/button&gt;
+        &lt;button class="gk-tab-btn" data-tab="tab-2"&gt;Tab 2&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class="gk-tab-panel gk-active" data-tab="tab-1"&gt;Inhalt 1&lt;/div&gt;
+    &lt;div class="gk-tab-panel" data-tab="tab-2"&gt;Inhalt 2&lt;/div&gt;
+&lt;/div&gt;</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
     <h3 style="margin: 32px 0 16px;">FilterChips</h3>
     <div class="demo-pair">

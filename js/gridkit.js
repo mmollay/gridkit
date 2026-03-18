@@ -1241,4 +1241,23 @@
         GK.theme.restore();
         GK.layout.restore();
     }
+
+    // === ACCORDION ===
+    document.querySelectorAll('.gk-accordion').forEach(function(acc) {
+        acc.querySelectorAll('.gk-accordion-trigger').forEach(function(trigger) {
+            trigger.addEventListener('click', function() {
+                var item = this.closest('.gk-accordion-item');
+                var isOpen = item.classList.contains('open');
+                // Optional: close others (single-open mode)
+                if (acc.dataset.gkSingle !== undefined) {
+                    acc.querySelectorAll('.gk-accordion-item.open').forEach(function(i) {
+                        i.classList.remove('open');
+                    });
+                }
+                if (!isOpen) item.classList.add('open');
+                else item.classList.remove('open');
+            });
+        });
+    });
+
 })();

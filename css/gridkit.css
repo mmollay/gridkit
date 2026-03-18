@@ -817,11 +817,26 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-header-title h1 { font-size: 18px; font-weight: 600; margin: 0; line-height: 1.2; }
 
 /* Breadcrumb */
-.gk-breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--gk-text-muted, #94a3b8); }
-.gk-breadcrumb a { color: var(--gk-primary, #6366f1); text-decoration: none; }
-.gk-breadcrumb a:hover { text-decoration: underline; }
-.gk-breadcrumb-current { color: var(--gk-text, #0f172a); font-weight: 500; }
-.gk-breadcrumb-sep { color: var(--gk-text-muted, #94a3b8); }
+/* === BREADCRUMB === */
+.gk-breadcrumb {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--gk-on-surface-variant);
+    padding: 8px 0; margin-bottom: 16px;
+}
+.gk-breadcrumb a {
+    color: var(--gk-on-surface-variant); text-decoration: none;
+    transition: color .15s;
+}
+.gk-breadcrumb a:hover { color: var(--gk-primary); }
+.gk-breadcrumb-sep {
+    font-size: 11px; color: var(--gk-outline);
+    display: flex; align-items: center;
+}
+.gk-breadcrumb-sep .material-icons { font-size: 16px; }
+.gk-breadcrumb-current {
+    color: var(--gk-on-surface); font-weight: 500;
+}
+.gk-breadcrumb .material-icons { font-size: 16px; vertical-align: middle; }
 
 /* Header Search (pill) */
 .gk-header-search { display: flex; align-items: center; background: var(--gk-bg-muted, #f1f5f9); border-radius: 9999px; padding: 8px 16px; gap: 8px; width: 100%; }
@@ -1020,6 +1035,37 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-card-description { font-size: 14px; line-height: 1.6; color: var(--gk-on-surface); }
 .gk-card-link { display: block; text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
 .gk-card-link:hover { box-shadow: var(--gk-shadow-lg); transform: translateY(-2px); }
+
+
+/* === ACCORDION === */
+.gk-accordion { border: 1px solid var(--gk-outline-variant); border-radius: var(--gk-radius); overflow: hidden; }
+.gk-accordion-item { border-bottom: 1px solid var(--gk-outline-variant); }
+.gk-accordion-item:last-child { border-bottom: none; }
+.gk-accordion-trigger {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding: 14px 20px; border: none; background: var(--gk-surface);
+    font-size: 14px; font-weight: 500; color: var(--gk-on-surface);
+    cursor: pointer; text-align: left; font-family: inherit;
+    transition: background .15s;
+}
+.gk-accordion-trigger:hover { background: var(--gk-surface-container); }
+.gk-accordion-trigger .material-icons {
+    font-size: 20px; color: var(--gk-on-surface-variant);
+    transition: transform .2s ease;
+}
+.gk-accordion-item.open .gk-accordion-trigger .material-icons { transform: rotate(180deg); }
+.gk-accordion-content {
+    max-height: 0; overflow: hidden; transition: max-height .3s ease;
+}
+.gk-accordion-item.open .gk-accordion-content { max-height: 500px; }
+.gk-accordion-body {
+    padding: 0 20px 16px; font-size: 14px; line-height: 1.6;
+    color: var(--gk-on-surface-variant);
+}
+.gk-accordion-flush { border: none; border-radius: 0; }
+.gk-accordion-flush .gk-accordion-item { border-bottom: 1px solid var(--gk-outline-variant); }
+.gk-accordion-flush .gk-accordion-trigger { padding-left: 0; padding-right: 0; }
+.gk-accordion-flush .gk-accordion-body { padding-left: 0; padding-right: 0; }
 
 /* === DARK MODE === */
 [data-gk-mode="dark"], .gk-dark {
@@ -1319,7 +1365,21 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 [data-gk-mode="dark"] .gk-breadcrumb a,
 .gk-dark .gk-breadcrumb a { color: #8B949E; }
 [data-gk-mode="dark"] .gk-breadcrumb a:hover,
-.gk-dark .gk-breadcrumb a:hover { color: var(--gk-on-surface); }
+.gk-dark .gk-breadcrumb a:hover { color: var(--gk-primary); }
+[data-gk-mode="dark"] .gk-breadcrumb-current,
+.gk-dark .gk-breadcrumb-current { color: #E6EDF3; }
+
+/* Dark Mode: Accordion */
+[data-gk-mode="dark"] .gk-accordion,
+.gk-dark .gk-accordion { border-color: rgba(255,255,255,0.10); }
+[data-gk-mode="dark"] .gk-accordion-trigger,
+.gk-dark .gk-accordion-trigger { background: #161B22; color: #E6EDF3; }
+[data-gk-mode="dark"] .gk-accordion-trigger:hover,
+.gk-dark .gk-accordion-trigger:hover { background: #21262D; }
+[data-gk-mode="dark"] .gk-accordion-item,
+.gk-dark .gk-accordion-item { border-color: rgba(255,255,255,0.08); }
+[data-gk-mode="dark"] .gk-accordion-body,
+.gk-dark .gk-accordion-body { color: #8B949E; }
 
 /* Dark Mode: Form labels */
 [data-gk-mode="dark"] .gk-label-text,
