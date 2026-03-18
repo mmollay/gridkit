@@ -7,6 +7,44 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-03-18 — Erster stabiler Release
+
+GRIDKit v1.0.0 — ein vollständiges, produktionsreifes CSS/JS Framework für Admin-Dashboards.
+Zero Dependencies, Light & Dark Mode, Mobile-first, 6 Themes.
+
+### Komponenten (17+)
+- **Table** — 6 Varianten (Default, Bordered, Striped, Celled, Compact, Selectable, Inverted, Definition), 3 Sizes, Mobile Card/Scroll, Sortierung, Suche, Filter, Pagination, Multi-Select
+- **Form** — Grid-Layout (16-Spalten), Input, Textarea, Select, Searchable Select, Checkbox, Radio, Toggle, Slider, Color Picker, File Upload (Drag & Drop), RichText (CKEditor5)
+- **Cards** — Responsive Grid (auto-fill, 2/3/4 Spalten), Header/Body/Footer, Meta, Link-Hover
+- **StatCards** — KPI-Karten mit Trend-Indikatoren, Farben
+- **Segment** — Container (Raised, Muted, Compact, Padded, Basic, Stacked)
+- **Message** — Info/Success/Warning/Error, Compact, Dismissible
+- **Accordion** — Auf-/zuklappbar, Single-Open Modus
+- **Tabs** — Tab-Navigation mit Panels
+- **Modal** — Overlay-Dialog, verschachtelbar, Formulare
+- **Breadcrumb** — Pfad-Navigation mit Icons
+- **Avatar** — 5 Grössen (xs-xl), Status-Dots, Gruppen, Square
+- **Gallery** — Thumbnail Grid, Lazy-Loading, Masonry-Variante
+- **Lightbox** — Vollbild-Vorschau, Prev/Next, Keyboard, Counter
+- **Toast** — Benachrichtigungen (4 Typen)
+- **Confirm** — Bestätigungs-Dialog
+- **Buttons** — Filled/Outlined/Text/Tonal, 5 Farben, Sizes, Pill/Circle/Square, FAB
+- **Sidebar** — Responsive, Gruppen, Badges, Collapse, Mobile-Overlay
+- **Header** — Fixed, Suche, User-Dropdown, Theme-Switcher
+
+### Design-System
+- 6 Themes: Indigo, Ocean, Forest, Rose, Amber, Slate
+- Light Mode: Neutrales Slate-Grau (keine M3-Lila-Tönung)
+- Dark Mode: 4-Level Kontrast-System (Page → Panel → Interactive → Elevated)
+- Mobile-Optimierung für alle Komponenten
+- CSS Custom Properties durchgängig
+
+### Technisch
+- Zero Dependencies — 1 CSS + 1 JS, kein Build-Prozess
+- PHP-Klassen: Table, Form, Sidebar, Header, Modal, StatCards, FilterChips, YearFilter, Layout, Theme, Auth, Button
+- Vanilla JS mit Event-Delegation (funktioniert mit dynamischen Inhalten)
+- Demo: gridkit.ssi.at mit allen Komponenten live
+
 ## [0.16.0] - 2026-03-18
 
 ### Added

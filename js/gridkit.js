@@ -1,4 +1,4 @@
-/* GridKit JS v1.1 – Vanilla, zero dependencies */
+/* GridKit JS v1.0.0 – Vanilla, zero dependencies */
 (function() {
     'use strict';
 
