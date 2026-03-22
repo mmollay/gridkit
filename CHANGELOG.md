@@ -7,6 +7,16 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-03-22 — GitHub Release & Landing Page Fix
+
+### Fixed
+- Apache DocumentRoot auf GRIDKit-Root umgestellt — Landing Page wird jetzt als Startseite angezeigt
+- Landing Page Links von `/gridkit/demo/` auf `/demo/` korrigiert
+
+### Changed
+- README.md komplett überarbeitet: Englisch, 17+ Komponenten, Agent-Skill-Positionierung, Badges
+- Git Tags v1.0.0 und v1.1.0 erstellt und auf GitHub gepusht
+
 ## [1.1.0] - 2026-03-20 — Agent Skill & Landing Page
 
 ### Added

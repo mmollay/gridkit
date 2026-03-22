@@ -2,7 +2,7 @@
 
 **Agent-ready PHP component framework for admin dashboards.** Zero dependencies, Material Design 3, AJAX-first.
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue)](https://github.com/mmollay/gridkit/releases/tag/v1.1.0)
+[![Version](https://img.shields.io/badge/version-1.1.1-blue)](https://github.com/mmollay/gridkit/releases/tag/v1.1.1)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-purple)](https://php.net)
 
