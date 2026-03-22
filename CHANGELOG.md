@@ -7,6 +7,16 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-03-22 — Complete JS i18n
+
+### Fixed
+- All remaining hardcoded German strings in `gridkit.js` now use `_t()` i18n function
+- Translated: table empty state, select "no matches", upload queue status (ready/uploading/uploaded/remove), file size validation errors
+- German code comments in JS replaced with English
+
+### Added
+- 8 new JS translation keys in `lang/en.php` and `lang/de.php`: `js.no_entries`, `js.no_matches`, `js.too_small`, `js.total_size_exceeded`, `js.ready`, `js.remove`, `js.uploading`, `js.uploaded`
+
 ## [1.2.0] - 2026-03-22 — Internationalization (i18n) & English Demo
 
 ### Added

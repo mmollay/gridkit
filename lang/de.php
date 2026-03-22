@@ -46,4 +46,12 @@ return [
     'js.confirm_cancel'     => 'Abbrechen',
     'js.max_files'          => 'Max. {n} Datei(en) erlaubt — {m} ausgewählt',
     'js.format_not_allowed' => '{name}: Format nicht erlaubt (.{ext})',
+    'js.no_entries'         => 'Keine Einträge gefunden',
+    'js.no_matches'         => 'Keine Treffer',
+    'js.too_small'          => '{name}: zu klein ({size}, min. {min})',
+    'js.total_size_exceeded'=> 'Gesamtgröße {size} überschreitet Maximum ({max})',
+    'js.ready'              => 'Bereit',
+    'js.remove'             => 'Entfernen',
+    'js.uploading'          => 'Lädt…',
+    'js.uploaded'           => 'Hochgeladen',
 ];

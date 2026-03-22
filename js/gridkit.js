@@ -401,7 +401,7 @@
 
                 if (rows.length === 0) {
                     const colspan = colKeys.length + (hasLeft ? 1 : 0) + (hasRight ? 1 : 0);
-                    html += '<tr><td colspan="' + colspan + '" class="gk-empty">Keine Einträge gefunden</td></tr>';
+                    html += '<tr><td colspan="' + colspan + '" class="gk-empty">' + _t('no_entries') + '</td></tr>';
                 } else {
                     rows.forEach(row => {
                         html += '<tr>';
@@ -642,7 +642,7 @@
                 });
             }
 
-            // Queue-Container anlegen falls noch nicht vorhanden
+            // Create queue container if not present
             if (!zone.nextElementSibling || !zone.nextElementSibling.classList.contains('gk-upload-queue')) {
                 var q = document.createElement('div');
                 q.className = 'gk-upload-queue';
@@ -698,17 +698,17 @@
                 return;
             }
             if (cfg.minSize > 0 && f.size < cfg.minSize) {
-                errors.push(f.name + ': zu klein (' + GK._formatSize(f.size) + ', min. ' + zone.dataset.gkMinSize + ')');
+                errors.push(_t('too_small', {name: f.name, size: GK._formatSize(f.size), min: zone.dataset.gkMinSize}));
                 return;
             }
             accepted.push(f);
         });
 
-        // Max Gesamtgröße
+        // Max total size
         if (cfg.maxTotalSize > 0 && accepted.length) {
             var total = accepted.reduce(function(s, f) { return s + f.size; }, 0);
             if (total > cfg.maxTotalSize) {
-                errors.push('Gesamtgröße ' + GK._formatSize(total) + ' überschreitet Maximum (' + zone.dataset.gkMaxTotalSize + ')');
+                errors.push(_t('total_size_exceeded', {size: GK._formatSize(total), max: zone.dataset.gkMaxTotalSize}));
                 accepted = [];
             }
         }
@@ -716,7 +716,7 @@
         errors.forEach(function(msg) { GK.toast && GK.toast.error(msg); });
         if (!accepted.length) return;
 
-        // Queue-Items anlegen + Event feuern
+        // Create queue items + fire event
         var items = GK._uploadQueueAdd(zone, accepted);
         zone.dispatchEvent(new CustomEvent('gk:files', {
             bubbles: true,
@@ -775,7 +775,7 @@
             // Status
             var status = document.createElement('span');
             status.className = 'gk-uq-status';
-            status.textContent = 'Bereit';
+            status.textContent = _t('ready');
             item.appendChild(status);
 
             // Remove-Button (nur im Pending-State)
@@ -783,7 +783,7 @@
             rm.type = 'button';
             rm.className = 'gk-uq-remove';
             rm.innerHTML = '<span class="material-icons" style="font-size:16px;">close</span>';
-            rm.title = 'Entfernen';
+            rm.title = _t('remove');
             rm.addEventListener('click', function() {
                 item.classList.add('gk-uq-removing');
                 setTimeout(function() { item.remove(); }, 200);
@@ -814,14 +814,14 @@
     GK.uqSetUploading = function(item) {
         item.el.className = 'gk-uq-item gk-uq-uploading';
         item.el.querySelector('.gk-uq-status').innerHTML =
-            '<span class="material-icons gk-spin" style="font-size:14px;vertical-align:middle;">sync</span> Lädt…';
+            '<span class="material-icons gk-spin" style="font-size:14px;vertical-align:middle;">sync</span> ' + _t('uploading');
         var rm = item.el.querySelector('.gk-uq-remove');
         if (rm) rm.style.display = 'none';
     };
 
     GK.uqSetDone = function(item, label) {
         item.el.className = 'gk-uq-item gk-uq-done';
-        item.el.querySelector('.gk-uq-status').textContent = label || 'Hochgeladen';
+        item.el.querySelector('.gk-uq-status').textContent = label || _t('uploaded');
         var rm = item.el.querySelector('.gk-uq-remove');
         if (rm) rm.style.display = 'none';
         setTimeout(function() {
@@ -961,7 +961,7 @@
                         if (found === 0 && !empty) {
                             var e = document.createElement('div');
                             e.className = 'gk-select-empty';
-                            e.textContent = 'Keine Treffer';
+                            e.textContent = _t('no_matches');
                             dropdown.querySelector('.gk-select-options').appendChild(e);
                         } else if (found > 0 && empty) empty.remove();
                     });
@@ -1093,7 +1093,7 @@
                         if (found === 0 && !empty) {
                             var e = document.createElement('div');
                             e.className = 'gk-select-empty';
-                            e.textContent = 'Keine Treffer';
+                            e.textContent = _t('no_matches');
                             optionsContainer.appendChild(e);
                         } else if (found > 0 && empty) empty.remove();
                     });
@@ -1143,7 +1143,7 @@
                             .then(data => {
                                 loading.style.display = 'none';
                                 if (!data.length) {
-                                    optionsContainer.innerHTML = '<div class="gk-select-empty">Keine Treffer</div>';
+                                    optionsContainer.innerHTML = '<div class="gk-select-empty">' + _t('no_matches') + '</div>';
                                     return;
                                 }
                                 data.forEach(item => {
