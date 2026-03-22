@@ -141,7 +141,7 @@ class Form
                 if (empty($f['native'])) {
                     // Default: GridKit styled select (gk-select-search)
                     $options = $f['options'] ?? [];
-                    $placeholder = $f['placeholder'] ?? 'Auswählen…';
+                    $placeholder = $f['placeholder'] ?? Lang::t('form.select');
                     $displayValue = isset($options[$value]) ? $options[$value] : $placeholder;
                     $disabled = !empty($f['disabled']) ? ' gk-select-disabled' : '';
                     echo "<div class=\"gk-select-search{$disabled}\" data-gk-select-search" . (!empty($f['disabled']) ? ' data-disabled' : '') . ">";
@@ -176,7 +176,7 @@ class Form
             case 'multiselect':
                 $options = $f['options'] ?? [];
                 $selectedValues = is_array($value) ? $value : ($value ? explode(',', $value) : []);
-                $placeholder = $f['placeholder'] ?? 'Suchen...';
+                $placeholder = $f['placeholder'] ?? Lang::t('form.search');
                 $searchable = !empty($f['searchable']);
                 echo '<div class="gk-multiselect" data-gk-multiselect>';
                 echo "<input type=\"hidden\" name=\"{$e($name)}\" value=\"{$e(implode(',', $selectedValues))}\">";
@@ -205,7 +205,7 @@ class Form
             case 'ajaxselect':
                 $url = $f['url'] ?? '';
                 $displayValue = $f['displayValue'] ?? '';
-                $placeholder = $f['placeholder'] ?? 'Suchen...';
+                $placeholder = $f['placeholder'] ?? Lang::t('form.search');
                 $labelField = $f['labelField'] ?? 'name';
                 $valueField = $f['valueField'] ?? 'id';
                 $subtextField = $f['subtextField'] ?? '';
@@ -220,7 +220,7 @@ class Form
                 echo "<button type=\"button\" class=\"gk-ajax-clear\"{$clearStyle}>&times;</button>";
                 echo '</div>';
                 echo '<div class="gk-select-dropdown"><div class="gk-select-options"></div>';
-                echo '<div class="gk-select-loading" style="display:none;"><span class="material-icons gk-spin">sync</span> Suche...</div>';
+                echo '<div class="gk-select-loading" style="display:none;"><span class="material-icons gk-spin">sync</span> ' . $e(Lang::t('form.loading')) . '</div>';
                 echo '</div></div>';
                 break;
 
@@ -262,7 +262,7 @@ class Form
                 $maxSize     = $f['maxSize'] ?? '';
                 $hint        = $f['hint'] ?? ($maxSize ? 'Max. ' . $maxSize : '');
                 $icon        = $e($f['icon'] ?? 'cloud_upload');
-                $label       = $e($f['label_text'] ?? ($multiple ? 'Dateien hierher ziehen oder klicken' : 'Datei hierher ziehen oder klicken'));
+                $label       = $e($f['label_text'] ?? ($multiple ? Lang::t('form.upload_multiple') : Lang::t('form.upload_single')));
                 // accept: array ['pdf','jpg',...] oder string '.pdf,.jpg,...'
                 $acceptRaw   = $f['accept'] ?? [];
                 if (is_array($acceptRaw)) {
@@ -295,7 +295,7 @@ class Form
                 echo "</div>";
                 echo "<div class=\"gk-upload-progress\" style=\"display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none;\">";
                 echo "<span class=\"material-icons gk-spin\" style=\"font-size:32px;color:var(--gk-primary);\">sync</span>";
-                echo "<span class=\"gk-upload-text gk-upload-progress-label\">Wird hochgeladen…</span>";
+                echo "<span class=\"gk-upload-text gk-upload-progress-label\">" . $e(Lang::t('form.uploading')) . "</span>";
                 echo "</div>";
                 echo "</div>";
                 break;
@@ -372,7 +372,7 @@ class Form
                     $hasVal = $value !== '' && $value !== null ? '' : ' style="display:none"';
                     echo "<div class=\"gk-input-clearable\">";
                     echo "<input type=\"{$e($htmlType)}\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\" class=\"gk-input\"{$req}{$extra} oninput=\"this.nextElementSibling.style.display=this.value?'':'none'\">";
-                    echo "<button type=\"button\" class=\"gk-input-clear\" title=\"Leeren\"{$hasVal} onclick=\"this.previousElementSibling.value='';this.style.display='none';\"><span class=\"material-icons\">delete</span></button>";
+                    echo "<button type=\"button\" class=\"gk-input-clear\" title=\"" . $e(Lang::t('form.clear')) . "\"{$hasVal} onclick=\"this.previousElementSibling.value='';this.style.display='none';\"><span class=\"material-icons\">delete</span></button>";
                     echo "</div>";
                 } else {
                     echo "<input type=\"{$e($htmlType)}\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\" class=\"gk-input\"{$req}{$extra}>";

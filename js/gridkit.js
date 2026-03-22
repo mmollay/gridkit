@@ -2,6 +2,14 @@
 (function() {
     'use strict';
 
+    // i18n — load from window.GK_LANG (set by Lang::jsConfig()) or use defaults
+    const _lang = window.GK_LANG || {};
+    function _t(key, params) {
+        var text = _lang[key] || key;
+        if (params) { for (var k in params) { text = text.replace('{' + k + '}', params[k]); } }
+        return text;
+    }
+
     const GK = {
         // === MODAL ===
         modal: {
@@ -44,7 +52,7 @@
                         GK.form.bind(body);
                         GK.table.init(body);
                     })
-                    .catch(() => { body.classList.remove('gk-loading'); body.innerHTML = '<p style="color:var(--gk-danger)">Fehler beim Laden</p>'; });
+                    .catch(() => { body.classList.remove('gk-loading'); body.innerHTML = '<p style="color:var(--gk-danger)">' + _t('error_loading', {}) + '</p>'; });
             },
             close() {
                 if (!this.stack.length) return;
@@ -94,7 +102,7 @@
                         });
                     }
                 })
-                .catch(() => alert('Fehler beim Speichern'))
+                .catch(() => alert(_t('error_saving')))
                 .finally(() => { if (btn) { btn.disabled = false; btn.textContent = btn._origText; } });
             }
         },
@@ -197,7 +205,7 @@
                 function updateBar() {
                     if (!bulkBar) return;
                     const n = selected.size;
-                    bulkBar.querySelector('.gk-bulk-count').textContent = n + ' ausgewählt';
+                    bulkBar.querySelector('.gk-bulk-count').textContent = _t('selected', {n: n});
                     bulkBar.style.display = n > 0 ? 'flex' : 'none';
                     wrap.querySelectorAll('tbody tr[data-gk-row-id]').forEach(tr => {
                         tr.classList.toggle('gk-row-selected', selected.has(getRowId(tr)));
@@ -238,7 +246,7 @@
                     delBtn.addEventListener('click', function() {
                         if (!selected.size) return;
                         const ids = [...selected];
-                        GK.confirm(ids.length + ' Einträge wirklich löschen?', {title: 'Löschen', confirmText: 'Löschen', danger: true})
+                        GK.confirm(_t('confirm_delete'), {title: _t('confirm_ok'), confirmText: _t('confirm_ok'), danger: true})
                             .then(ok => {
                                 if (!ok) return;
                                 wrap.dispatchEvent(new CustomEvent('gk:bulkdelete', { bubbles: true, detail: { ids, tableId: wrap.dataset.gkTable } }));
@@ -569,9 +577,9 @@
         return new Promise(function(resolve) {
             var overlay = document.createElement('div');
             overlay.className = 'gk-confirm-overlay';
-            var title = options.title || 'Bestätigung';
-            var confirmText = options.confirmText || 'Bestätigen';
-            var cancelText = options.cancelText || 'Abbrechen';
+            var title = options.title || _t('confirm_title');
+            var confirmText = options.confirmText || _t('confirm_ok');
+            var cancelText = options.cancelText || _t('confirm_cancel');
             var confirmClass = options.danger ? 'gk-btn gk-btn-danger' : 'gk-btn gk-btn-primary';
             overlay.innerHTML = '<div class="gk-confirm-box">' +
                 '<div class="gk-confirm-header"><h3>' + title + '</h3></div>' +
@@ -675,18 +683,18 @@
 
         // Max Dateianzahl
         if (cfg.maxFiles > 0 && files.length > cfg.maxFiles) {
-            errors.push('Max. ' + cfg.maxFiles + ' Datei' + (cfg.maxFiles > 1 ? 'en' : '') + ' erlaubt — ' + files.length + ' ausgewählt');
+            errors.push(_t('max_files', {n: cfg.maxFiles, m: files.length}));
             files = files.slice(0, cfg.maxFiles);
         }
 
         files.forEach(function(f) {
             var ext = (f.name.split('.').pop() || '').toLowerCase();
             if (cfg.accept.length && !cfg.accept.includes(ext)) {
-                errors.push(f.name + ': Format nicht erlaubt (.'+ext+')');
+                errors.push(_t('format_not_allowed', {name: f.name, ext: ext}));
                 return;
             }
             if (cfg.maxSize > 0 && f.size > cfg.maxSize) {
-                errors.push(f.name + ': zu groß (' + GK._formatSize(f.size) + ', max. ' + zone.dataset.gkMaxSize + ')');
+                errors.push(f.name + ': too large (' + GK._formatSize(f.size) + ', max. ' + zone.dataset.gkMaxSize + ')');
                 return;
             }
             if (cfg.minSize > 0 && f.size < cfg.minSize) {
@@ -824,7 +832,7 @@
 
     GK.uqSetError = function(item, msg) {
         item.el.className = 'gk-uq-item gk-uq-error';
-        item.el.querySelector('.gk-uq-status').textContent = msg || 'Fehler';
+        item.el.querySelector('.gk-uq-status').textContent = msg || _t('error_upload');
         var rm = item.el.querySelector('.gk-uq-remove');
         if (rm) rm.style.display = '';
     };

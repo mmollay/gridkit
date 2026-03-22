@@ -79,7 +79,7 @@ class Auth {
 
         echo <<<HTML
 <!DOCTYPE html>
-<html lang=de>
+<html lang=<?= Lang::locale() ?>>
 <head>
     <meta charset=UTF-8>
     <meta name=viewport content=width=device-width, initial-scale=1.0>
@@ -187,7 +187,7 @@ class Auth {
                 <span class=material-icons>{$icon}</span>
             </div>
             <h1 class=gk-login-title>{$title}</h1>
-            <p class=gk-login-subtitle>Bitte melde dich an</p>
+            <p class=gk-login-subtitle><?= Lang::t('auth.subtitle') ?></p>
         </div>
 
         <form method=post action={$action}>
@@ -197,20 +197,20 @@ HTML;
         }
         echo <<<HTML
             <div class=gk-login-field>
-                <label for=gk-username>Benutzername</label>
+                <label for=gk-username><?= Lang::t('auth.username') ?></label>
                 <input type=text id=gk-username name=username
                        autocomplete=username autofocus required>
             </div>
             <div class=gk-login-field>
-                <label for=gk-password>Passwort</label>
+                <label for=gk-password><?= Lang::t('auth.password') ?></label>
                 <input type=password id=gk-password name=password
                        autocomplete=current-password required>
             </div>
             <label class=gk-login-remember>
                 <input type=checkbox name=remember value=1>
-                Angemeldet bleiben (30 Tage)
+                <?= Lang::t('auth.remember') ?>
             </label>
-            <button type=submit class=gk-login-btn>Anmelden</button>
+            <button type=submit class=gk-login-btn><?= Lang::t('auth.login') ?></button>
         </form>
         <p class=gk-login-footer>GRIDKit Auth</p>
     </div>

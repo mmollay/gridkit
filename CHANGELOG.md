@@ -7,6 +7,21 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-22 — Internationalization (i18n) & English Demo
+
+### Added
+- **Lang Component** (`GridKit\Lang`) — Built-in i18n support with `Lang::set()`, `Lang::t()`, `Lang::jsConfig()`
+- **Language Files** (`lang/en.php`, `lang/de.php`) — Translation files for all framework strings
+- **Language Switcher** in Demo — Toggle between English and German via header button
+- Auto-loading of language files in `autoload.php`
+
+### Changed
+- **Demo page** fully translated to English (default language)
+- All PHP components (Table, Form, Auth, Header, Sidebar) now use `Lang::t()` for UI strings
+- JavaScript strings in `gridkit.js` now use `GK_LANG` for i18n
+- **GRIDKIT_SKILL.md** updated with Lang component documentation
+- Default language changed from German to English
+
 ## [1.1.1] - 2026-03-22 — GitHub Release & Landing Page Fix
 
 ### Fixed

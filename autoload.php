@@ -5,3 +5,6 @@ spl_autoload_register(function (string $class): void {
     $file = __DIR__ . '/src/' . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
     if (file_exists($file)) require $file;
 });
+
+// Auto-load language files
+GridKit\Lang::loadDir(__DIR__ . '/lang');

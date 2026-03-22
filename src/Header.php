@@ -36,9 +36,9 @@ class Header
         return $this;
     }
 
-    public function search(string $placeholder = 'Suchen...', string $name = 'q'): self
+    public function search(string $placeholder = '', string $name = 'q'): self
     {
-        $this->searchOpts = ['placeholder' => $placeholder, 'name' => $name];
+        $this->searchOpts = ['placeholder' => $placeholder ?: Lang::t('header.search'), 'name' => $name];
         return $this;
     }
 

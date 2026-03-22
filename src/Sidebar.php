@@ -92,7 +92,7 @@ class Sidebar
         if ($this->brand !== '') {
             echo '<div class="gk-sidebar-brand">';
             if ($this->collapsePosition === 'top') {
-                echo '<button class="gk-sidebar-collapse-btn" onclick="window.GK&&GK.sidebar.collapse()" title="Ein-/Ausklappen">';
+                echo '<button class="gk-sidebar-collapse-btn" onclick="window.GK&&GK.sidebar.collapse()" title="' . $e(Lang::t('sidebar.toggle')) . '">';
                 echo '<span class="material-icons">menu</span>';
                 echo '</button>';
             }
@@ -139,9 +139,9 @@ class Sidebar
 
         // Collapse button (bottom)
         if ($this->collapsePosition === 'bottom') {
-            echo '<button class="gk-sidebar-collapse-btn gk-sidebar-collapse-bottom" onclick="window.GK&&GK.sidebar.collapse()" title="Ein-/Ausklappen">';
+            echo '<button class="gk-sidebar-collapse-btn gk-sidebar-collapse-bottom" onclick="window.GK&&GK.sidebar.collapse()" title="' . $e(Lang::t('sidebar.toggle')) . '">';
             echo '<span class="material-icons">chevron_left</span>';
-            echo '<span class="gk-sidebar-collapse-label">Einklappen</span>';
+            echo '<span class="gk-sidebar-collapse-label">' . $e(Lang::t('sidebar.collapse')) . '</span>';
             echo '</button>';
         }
 

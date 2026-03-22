@@ -240,14 +240,14 @@ class Table
         if ($this->showToolbar) {
         echo '<div class="gk-toolbar">';
         if ($this->searchCols) {
-            echo '<input type="text" class="gk-search" data-gk-search placeholder="Suchen…" value="' . $e($this->searchQuery) . '">';
+            echo '<input type="text" class="gk-search" data-gk-search placeholder="' . $e(Lang::t('table.search')) . '" value="' . $e($this->searchQuery) . '">';
         }
         if ($this->toolbarHtml !== '') {
             echo $this->toolbarHtml;
         }
         foreach ($this->filters as $col => $f) {
             echo '<select class="gk-filter" data-gk-filter="' . $e($col) . '">';
-            echo '<option value="">' . $e($f['placeholder'] ?? 'Alle') . '</option>';
+            echo '<option value="">' . $e($f['placeholder'] ?? Lang::t('table.filter_all')) . '</option>';
             foreach ($f['options'] ?? [] as $val => $label) {
                 echo '<option value="' . $e($val) . '">' . $e($label) . '</option>';
             }
@@ -270,12 +270,12 @@ class Table
         if ($this->selectable) {
             echo '<div class="gk-bulk-bar" style="display:none;">'
                . '<span class="material-icons" style="font-size:18px;">check_box</span>'
-               . '<span class="gk-bulk-count">0 ausgewählt</span>'
+               . '<span class="gk-bulk-count">0 ' . $e(Lang::t('table.selected', ['n' => ''])) . '</span>'
                . '<div class="gk-toolbar-spacer"></div>'
                . '<button type="button" data-gk-bulk-delete>'
-               .   '<span class="material-icons">delete</span> Löschen'
+               .   '<span class="material-icons">delete</span> ' . $e(Lang::t('table.delete'))
                . '</button>'
-               . '<button type="button" data-gk-bulk-cancel>Abbrechen</button>'
+               . '<button type="button" data-gk-bulk-cancel>' . $e(Lang::t('table.cancel')) . '</button>'
                . '</div>';
         }
 
@@ -296,7 +296,7 @@ class Table
         $tableClass = 'gk-table' . ($this->globalNowrap ? ' gk-table-nowrap' : '');
         echo '<table class="' . $tableClass . '"><thead><tr>';
         if ($this->selectable) {
-            echo '<th class="gk-cb-col"><input type="checkbox" data-gk-select-all title="Alle auswählen"></th>';
+            echo '<th class="gk-cb-col"><input type="checkbox" data-gk-select-all title="' . $e(Lang::t('table.select_all')) . '"></th>';
         }
         foreach ($this->columns as $key => $col) {
             $styles = [];
@@ -362,7 +362,7 @@ class Table
 
         if (!$this->rows) {
             $colspan = count($this->columns) + ($leftButtons ? 1 : 0) + ($rightButtons ? 1 : 0) + ($this->selectable ? 1 : 0);
-            echo "<tr><td colspan=\"{$colspan}\" class=\"gk-empty\">Keine Einträge gefunden</td></tr>";
+            echo "<tr><td colspan=\"{$colspan}\" class=\"gk-empty\">" . $e(Lang::t('table.empty')) . "</td></tr>";
         }
 
         echo '</tbody></table>';

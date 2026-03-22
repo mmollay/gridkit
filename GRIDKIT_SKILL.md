@@ -1,6 +1,6 @@
 # GRIDKit – Agent Skill
 
-> **Version:** 1.1.1 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.2.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 
 ## Purpose
 
@@ -39,6 +39,7 @@ require_once '/path/to/gridkit/autoload.php';
 | StatCards | `GridKit\StatCards` | KPI cards with trend indicators |
 | FilterChips | `GridKit\FilterChips` | Filter chip buttons |
 | YearFilter | `GridKit\YearFilter` | Year navigation filter |
+| Lang | `GridKit\Lang` | i18n / multilingual support |
 
 ## Page Skeleton
 
@@ -249,6 +250,38 @@ GK.toast('Message', 'success');  // success, error, warning, info
 // Confirm dialog
 GK.confirm('Are you sure?', () => { /* on confirm */ });
 ```
+
+## Internationalization (Lang)
+
+GRIDKit has built-in i18n support. Default language is English, German included.
+
+```php
+use GridKit\Lang;
+
+// Set locale (call before rendering any components)
+Lang::set('de');         // Switch to German
+Lang::set('en');         // Switch to English (default)
+
+// Translations auto-load from gridkit/lang/*.php
+// Custom translations:
+Lang::load('fr', [
+    'table.search'  => 'Rechercher…',
+    'table.empty'   => 'Aucune entrée trouvée',
+    'auth.login'    => 'Se connecter',
+]);
+```
+
+**For JavaScript strings**, output `Lang::jsConfig()` in your `<head>`:
+
+```php
+<head>
+    <?= Lang::jsConfig() ?>
+</head>
+```
+
+**Adding a new language:** Create `lang/fr.php` returning an array of translations. See `lang/en.php` for all available keys.
+
+**Translation keys** follow the pattern `component.key` (e.g. `table.search`, `form.select`, `auth.login`). JavaScript keys are prefixed with `js.` (e.g. `js.confirm_title`).
 
 ## Best Practices
 
