@@ -1,156 +1,140 @@
-# GridKit
+# GRIDKit
 
-Schlankes PHP-Framework für einheitliche Tabellen und Formulare. Null Abhängigkeiten.
+**Agent-ready PHP component framework for admin dashboards.** Zero dependencies, Material Design 3, AJAX-first.
 
-## Warum GridKit?
+[![Version](https://img.shields.io/badge/version-1.1.0-blue)](https://github.com/mmollay/gridkit/releases/tag/v1.1.0)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![PHP](https://img.shields.io/badge/PHP-8.2+-purple)](https://php.net)
 
-- **11 Komponenten, 1 CSS-File, 1 JS-File.** Null Abhängigkeiten.
-- **Kein jQuery, kein Bootstrap, kein Fomantic UI.**
-- **Themes** über CSS Custom Properties (M3-konform).
-- **Skeleton** für sofortigen Einstieg ohne Boilerplate-Aufwand.
+## Why GRIDKit?
 
-## Installation
+- **17+ components, 1 CSS file, 1 JS file.** Zero dependencies.
+- **Agent-first design** — feed the [Agent Skill](GRIDKIT_SKILL.md) to your AI and it generates complete CRUD apps.
+- **6 themes** with light & dark mode via CSS Custom Properties (M3-inspired).
+- **AJAX-first** — tables search, sort, filter, paginate without page reloads.
+- **No jQuery, no Bootstrap, no npm, no build process.** Clone and go.
+
+## Quick Start
 
 ```bash
-git clone git@github.com:mmollay/gridkit.git
+git clone https://github.com/mmollay/gridkit.git
 ```
 
-In deinem Projekt:
 ```php
 require_once '/path/to/gridkit/autoload.php';
 ```
 
-## Quick Start – Skeleton
-
-Das schnellste Fundament für ein neues Projekt:
+Use the skeleton as a starting point:
 
 ```bash
-cp /path/to/gridkit/skeleton.php mein-projekt/index.php
+cp gridkit/skeleton.php my-app/index.php
 ```
 
-`skeleton.php` enthält: Sidebar, Header (fixed), Theme-Switcher, Content-Bereich, Modal-Container, JS-Einbindung — alles korrekt verdrahtet. Nur Titel, Navigation und Inhalte anpassen.
+`skeleton.php` includes: Sidebar, Header (fixed), Theme Switcher, Content Area, Modal Container, JS — all wired up.
 
-## Quick Start – Komponenten
+## Agent Skill — Let AI Build For You
 
-### Tabelle
+The [`GRIDKIT_SKILL.md`](GRIDKIT_SKILL.md) file teaches any AI assistant (Claude, GPT, Gemini) how to use GRIDKit. Add it to your agent's project context:
+
+1. Download `GRIDKIT_SKILL.md` from the repository
+2. Add it to your AI agent's context or project knowledge
+3. Describe what you need: *"Create a user management dashboard"*
+4. The agent generates working GRIDKit PHP code — tables, forms, modals, all wired up
+
+## Example — CRUD Table in 12 Lines
 
 ```php
 use GridKit\Table;
 
-$table = new Table('articles');
-$table->query($db, "SELECT * FROM articles ORDER BY name")
-    ->search(['name', 'article_number'])
-    ->column('article_number', 'Artikelnr.', ['width' => '110px', 'sortable' => true])
-    ->column('name', 'Bezeichnung', ['sortable' => true])
-    ->column('net_price', 'Netto', ['format' => 'currency', 'align' => 'right'])
+$table = new Table('products');
+$table->query($db, "SELECT * FROM products ORDER BY name")
+    ->search(['name', 'sku'])
+    ->column('name', 'Product', ['sortable' => true])
+    ->column('sku', 'SKU', ['width' => '120px'])
+    ->column('price', 'Price', ['format' => 'currency', 'sortable' => true])
     ->column('is_active', 'Status', ['format' => 'label'])
-    ->button('edit', ['icon' => 'pencil', 'modal' => 'edit_form', 'params' => ['id' => 'article_id']])
-    ->modal('edit_form', 'Bearbeiten', 'form/edit.php', ['size' => 'medium'])
-    ->newButton('Neuer Artikel', ['modal' => 'edit_form'])
+    ->button('edit', ['icon' => 'edit', 'modal' => 'edit_product'])
+    ->modal('edit_product', 'Edit', 'forms/product.php', ['size' => 'medium'])
+    ->newButton('New Product', ['modal' => 'edit_product'])
     ->paginate(25)
     ->render();
 ```
 
-### Formular
+## Components (17+)
 
-```php
-use GridKit\Form;
+| Component | Description |
+|-----------|-------------|
+| **Table** | 6 variants, search, sort, pagination, multi-select, mobile card layout |
+| **Form** | 16-column grid, 15 field types, AJAX submit, validation |
+| **Modal** | Stackable dialogs, form-ready, 3 sizes |
+| **Sidebar** | Groups, badges, collapse, mobile overlay |
+| **Header** | Fixed, search, user dropdown, theme switcher |
+| **StatCards** | KPI display with trends and colors |
+| **Cards** | Responsive grid (auto-fill, 2/3/4 columns) |
+| **Segment** | Container variants (raised, muted, compact, padded) |
+| **Message** | Info/Success/Warning/Error with dismiss |
+| **Accordion** | Collapsible sections, single-open mode |
+| **Tabs** | Tab navigation with panels |
+| **Breadcrumb** | Path navigation with icons |
+| **Avatar** | 5 sizes, status dots, groups |
+| **Gallery** | Thumbnail grid, lazy loading, masonry |
+| **Lightbox** | Fullscreen preview, keyboard navigation |
+| **Buttons** | Filled/Outlined/Text/Tonal, FAB, 5 colors |
+| **Auth** | Session auth, bcrypt, remember-me, styled login |
 
-$form = new Form('my_form');
-$form->action('save/process.php')
-    ->ajax()
-    ->hidden('id', $data['id'] ?? '')
-    ->row()
-        ->field('name', 'Name', 'text', ['required' => true, 'width' => 8])
-        ->field('email', 'E-Mail', 'email', ['width' => 8])
-    ->endRow()
-    ->field('notes', 'Notizen', 'textarea', ['rows' => 3])
-    ->field('active', 'Aktiv', 'toggle')
-    ->submit('Speichern')
-    ->render();
-```
+## Formatters
 
-### Zusammenspiel
-
-1. Table rendert Button → öffnet Modal
-2. Modal lädt Form per AJAX
-3. Form submittet per AJAX → `{"ok": true}`
-4. Modal schließt → Table refresht automatisch
-
-## Formatter
-
-| Format | Ausgabe | Beispiel |
-|--------|---------|---------|
-| `currency` | `1.234,56 €` | `['format' => 'currency']` |
+| Format | Output | Example |
+|--------|--------|---------|
+| `currency` | `1,234.56 €` | `['format' => 'currency']` |
 | `percent` | `20%` | `['format' => 'percent']` |
 | `date` | `13.02.2026` | `['format' => 'date']` |
 | `datetime` | `13.02.2026 08:30` | `['format' => 'datetime']` |
 | `boolean` | ✓ / ✗ | `['format' => 'boolean']` |
-| `label` | Farbiges Label | `['format' => 'label']` |
-| `email` | Klickbarer Link | `['format' => 'email']` |
-
-### Label Auto-Mapping
-
-- **Grün:** aktiv, bezahlt, paid, ja, yes, 1, true, gesendet, delivered
-- **Orange:** offen, pending, entwurf, draft, warnung
-- **Rot:** storniert, cancelled, überfällig, overdue, fehler, error
-- **Grau:** inaktiv, 0, false, nein, no
-
-Eigenes Mapping: `['format' => 'label', 'labels' => ['custom' => 'blue']]`
+| `label` | Color-coded label | `['format' => 'label']` |
+| `email` | Clickable link | `['format' => 'email']` |
 
 ## Theming
 
-GridKit nutzt CSS Custom Properties. Theme wechseln = ein CSS-File einbinden:
-
-```html
-<link rel="stylesheet" href="gridkit/css/gridkit.css">
-<link rel="stylesheet" href="gridkit/css/themes/dark.css"> <!-- optional -->
-```
-
-Eigenes Theme erstellen – nur Variables überschreiben:
+6 built-in themes: **Indigo**, **Ocean**, **Forest**, **Rose**, **Amber**, **Slate** — each with light & dark mode.
 
 ```css
+/* Custom theme — just override variables */
 .gk-root {
     --gk-primary: #8b5cf6;
     --gk-bg: #1a1a2e;
-    --gk-text: #e5e7eb;
-    --gk-border: #374151;
 }
 ```
 
-## Anforderungen
-
-- PHP 8.3+
-- MySQLi (für DB-Queries)
-- Moderner Browser (CSS Custom Properties, Fetch API)
-
-## Struktur
+## Structure
 
 ```
 gridkit/
 ├── autoload.php           # PSR-4 Autoloader
-├── skeleton.php           # ⭐ Startpunkt für neue Projekte
-├── src/
-│   ├── Table.php          # Datentabellen
-│   ├── Form.php           # Formulare (inkl. Searchable/Multi/Ajax Select)
-│   ├── Modal.php          # Modal-Container
-│   ├── Header.php         # Seiten-Header (fixed, Breadcrumb, User-Menü)
-│   ├── Sidebar.php        # Navigations-Sidebar (collapsible)
-│   ├── Button.php         # Button-System (Filled/Outlined/Tonal/Text, FAB)
-│   ├── StatCards.php      # Kennzahlen-Cards
-│   ├── FilterChips.php    # Klickbare Filter-Chips
-│   ├── YearFilter.php     # Jahres-Navigation
-│   ├── Theme.php          # Theme-System (6 Themes, Dark/Light)
-│   └── Layout.php         # Layout-Modus (header-first / sidebar-first)
+├── skeleton.php           # Starting point for new projects
+├── GRIDKIT_SKILL.md       # Agent Skill for AI assistants
+├── src/                   # PHP components
 ├── css/
-│   ├── gridkit.css        # Core Styles
-│   └── themes.css         # Alle Themes + Dark Mode
+│   ├── gridkit.css        # Core styles
+│   └── themes.css         # All themes + dark mode
 ├── js/
-│   └── gridkit.js         # Vanilla JS
+│   └── gridkit.js         # Vanilla JS (event delegation)
 └── demo/
-    └── index.php          # Live Demo aller Komponenten
+    └── index.php          # Live demo of all components
 ```
 
-## Lizenz
+## Requirements
 
-MIT
+- PHP 8.2+
+- MySQLi (for DB queries)
+- Modern browser (CSS Custom Properties, Fetch API)
+
+## Links
+
+- **Live Demo:** [gridkit.ssi.at/demo](https://gridkit.ssi.at/demo/)
+- **Landing Page:** [gridkit.ssi.at](https://gridkit.ssi.at)
+- **Agent Skill:** [GRIDKIT_SKILL.md](GRIDKIT_SKILL.md)
+
+## License
+
+MIT — [Martin Mollay](https://github.com/mmollay)

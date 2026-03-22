@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gridkit.ssi.at/sitemap.xml
