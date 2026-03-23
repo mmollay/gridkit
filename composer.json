@@ -1,0 +1,43 @@
+{
+    "name": "mmollay/gridkit",
+    "description": "Agent-ready PHP component framework for admin dashboards. Zero dependencies, Material Design 3, AJAX-first.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "php",
+        "admin",
+        "dashboard",
+        "crud",
+        "framework",
+        "material-design",
+        "components",
+        "ai-agent",
+        "zero-dependency"
+    ],
+    "homepage": "https://gridkit.ssi.at",
+    "authors": [
+        {
+            "name": "Martin Mollay",
+            "email": "office@ssi.at",
+            "homepage": "https://github.com/mmollay"
+        }
+    ],
+    "require": {
+        "php": ">=8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "GridKit\\": "src/"
+        },
+        "files": [
+            "autoload.php"
+        ]
+    },
+    "support": {
+        "issues": "https://github.com/mmollay/gridkit/issues",
+        "source": "https://github.com/mmollay/gridkit"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
