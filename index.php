@@ -2,6 +2,132 @@
 $version = trim(file_get_contents(__DIR__ . '/VERSION'));
 $skillContent = file_get_contents(__DIR__ . '/GRIDKIT_SKILL.md');
 $canonicalUrl = 'https://gridkit.ssi.at';
+
+/**
+ * Simple Markdown → HTML renderer for skill preview
+ */
+function renderSkillMd(string $md): string {
+    $lines = explode("\n", $md);
+    $html = '';
+    $inCode = false;
+    $codeLang = '';
+    $codeBuffer = '';
+    $inTable = false;
+    $tableRows = [];
+    $inList = false;
+
+    $inline = function(string $text): string {
+        $text = htmlspecialchars($text);
+        $text = preg_replace('/`([^`]+)`/', '<code>$1</code>', $text);
+        $text = preg_replace('/\*\*([^*]+)\*\*/', '<strong>$1</strong>', $text);
+        $text = preg_replace('/\[([^\]]+)\]\(([^)]+)\)/', '<a href="$2" target="_blank" rel="noopener">$1</a>', $text);
+        return $text;
+    };
+
+    $flushTable = function() use (&$html, &$tableRows, &$inTable, $inline) {
+        if (!$tableRows) return;
+        $html .= '<div class="skill-table">';
+        $header = array_shift($tableRows);
+        // skip separator row
+        if (isset($tableRows[0]) && preg_match('/^[\s|:-]+$/', $tableRows[0])) {
+            array_shift($tableRows);
+        }
+        $headers = array_map('trim', array_filter(explode('|', $header)));
+        foreach ($tableRows as $row) {
+            $cells = array_map('trim', array_filter(explode('|', $row)));
+            if (count($cells) < 2) continue;
+            $html .= '<div class="skill-table-row">';
+            for ($i = 0; $i < count($headers); $i++) {
+                $val = $cells[$i] ?? '';
+                $html .= '<div class="skill-table-cell">';
+                if ($i === 0) $html .= '<span class="skill-table-label">' . $inline($val) . '</span>';
+                else $html .= '<span class="skill-table-value">' . $inline($val) . '</span>';
+                $html .= '</div>';
+            }
+            $html .= '</div>';
+        }
+        $html .= '</div>';
+        $tableRows = [];
+        $inTable = false;
+    };
+
+    $flushList = function() use (&$html, &$inList) {
+        if ($inList) { $html .= '</ul>'; $inList = false; }
+    };
+
+    foreach ($lines as $line) {
+        // Code blocks
+        if (preg_match('/^```(\w*)/', $line, $m)) {
+            if ($inCode) {
+                $html .= '<div class="skill-code"><div class="skill-code-lang">' . htmlspecialchars($codeLang) . '</div><pre>' . htmlspecialchars($codeBuffer) . '</pre></div>';
+                $inCode = false;
+                $codeBuffer = '';
+            } else {
+                $flushTable();
+                $flushList();
+                $inCode = true;
+                $codeLang = $m[1] ?: 'code';
+            }
+            continue;
+        }
+        if ($inCode) { $codeBuffer .= $line . "\n"; continue; }
+
+        $trimmed = trim($line);
+        if ($trimmed === '' || $trimmed === '---') {
+            $flushTable();
+            $flushList();
+            continue;
+        }
+
+        // Table
+        if (str_starts_with($trimmed, '|')) {
+            $flushList();
+            $inTable = true;
+            $tableRows[] = $trimmed;
+            continue;
+        } else if ($inTable) {
+            $flushTable();
+        }
+
+        // Headings
+        if (preg_match('/^(#{1,4})\s+(.+)/', $trimmed, $m)) {
+            $flushList();
+            $level = strlen($m[1]);
+            $tag = 'h' . min($level + 1, 5); // ## → h3, ### → h4
+            $html .= '<' . $tag . ' class="skill-heading">' . $inline($m[2]) . '</' . $tag . '>';
+            continue;
+        }
+
+        // Blockquote
+        if (str_starts_with($trimmed, '>')) {
+            $flushList();
+            $html .= '<div class="skill-meta">' . $inline(ltrim($trimmed, '> ')) . '</div>';
+            continue;
+        }
+
+        // List items
+        if (preg_match('/^[-*]\s+(.+)/', $trimmed, $m)) {
+            if (!$inList) { $html .= '<ul class="skill-list">'; $inList = true; }
+            $html .= '<li>' . $inline($m[1]) . '</li>';
+            continue;
+        }
+        // Numbered list
+        if (preg_match('/^\d+\.\s+(.+)/', $trimmed, $m)) {
+            if (!$inList) { $html .= '<ul class="skill-list skill-list-num">'; $inList = true; }
+            $html .= '<li>' . $inline($m[1]) . '</li>';
+            continue;
+        }
+
+        $flushList();
+        $html .= '<p class="skill-para">' . $inline($trimmed) . '</p>';
+    }
+
+    $flushTable();
+    $flushList();
+    return $html;
+}
+
+$skillHtml = renderSkillMd($skillContent);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -319,9 +445,86 @@ $canonicalUrl = 'https://gridkit.ssi.at';
         .skill-actions { display: flex; gap: 8px; }
         .skill-desc { color: var(--gk-text-secondary); margin-bottom: 24px; font-size: 15px; }
         .skill-preview {
-            background: var(--gk-code-bg); border-radius: 8px; padding: 20px;
-            font-family: 'JetBrains Mono', monospace; font-size: 12px;
-            color: #8b949e; max-height: 200px; overflow-y: auto; line-height: 1.6;
+            background: var(--gk-surface); border: 1px solid var(--gk-border);
+            border-radius: 12px; padding: 32px; max-height: 600px; overflow-y: auto;
+            line-height: 1.7; position: relative;
+        }
+        .skill-preview.collapsed { max-height: 320px; overflow: hidden; }
+        .skill-preview.collapsed::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+            background: linear-gradient(transparent, var(--gk-surface));
+            pointer-events: none;
+        }
+        .skill-toggle {
+            display: block; margin: 16px auto 0; padding: 8px 24px; border-radius: 8px;
+            background: var(--gk-surface-container); border: 1px solid var(--gk-border);
+            color: var(--gk-primary); font-size: 14px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .skill-toggle:hover { background: var(--gk-primary); color: #fff; }
+        .skill-heading { margin: 24px 0 12px; color: var(--gk-text); }
+        .skill-preview h2.skill-heading { font-size: 22px; font-weight: 700; border-bottom: 2px solid var(--gk-border); padding-bottom: 8px; }
+        .skill-preview h3.skill-heading { font-size: 18px; font-weight: 700; }
+        .skill-preview h4.skill-heading { font-size: 15px; font-weight: 600; color: var(--gk-text-secondary); }
+        .skill-preview h5.skill-heading { font-size: 14px; font-weight: 600; color: var(--gk-text-muted); }
+        .skill-meta {
+            font-size: 14px; color: var(--gk-text-secondary);
+            border-left: 3px solid var(--gk-primary); padding: 8px 16px; margin: 12px 0;
+            background: rgba(79,70,229,0.04); border-radius: 0 8px 8px 0;
+        }
+        .skill-meta code { background: rgba(79,70,229,0.1); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+        .skill-para { font-size: 14px; color: var(--gk-text-secondary); margin: 8px 0; }
+        .skill-para code, .skill-list code {
+            background: var(--gk-surface-container); padding: 2px 6px; border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--gk-primary-dark);
+        }
+        .skill-para a, .skill-list a { color: var(--gk-primary); text-decoration: none; }
+        .skill-para a:hover, .skill-list a:hover { text-decoration: underline; }
+        .skill-list {
+            list-style: none; margin: 8px 0; padding: 0;
+        }
+        .skill-list li {
+            position: relative; padding: 6px 0 6px 20px; font-size: 14px; color: var(--gk-text-secondary);
+        }
+        .skill-list li::before { content: '›'; position: absolute; left: 4px; color: var(--gk-primary); font-weight: 700; }
+        .skill-list-num { counter-reset: snum; }
+        .skill-list-num li { padding-left: 28px; }
+        .skill-list-num li::before {
+            counter-increment: snum; content: counter(snum) '.';
+            position: absolute; left: 4px; color: var(--gk-primary); font-weight: 600; font-size: 13px;
+        }
+        .skill-table { margin: 12px 0; border: 1px solid var(--gk-border); border-radius: 10px; overflow: hidden; }
+        .skill-table-row {
+            display: flex; gap: 0; border-bottom: 1px solid var(--gk-border);
+            font-size: 13px;
+        }
+        .skill-table-row:last-child { border-bottom: none; }
+        .skill-table-row:nth-child(even) { background: var(--gk-surface-dim); }
+        .skill-table-cell { padding: 10px 14px; flex: 1; }
+        .skill-table-cell:first-child { flex: 0 0 140px; }
+        .skill-table-label { font-weight: 600; color: var(--gk-text); }
+        .skill-table-label code { font-size: 12px; }
+        .skill-table-value { color: var(--gk-text-secondary); }
+        .skill-code {
+            margin: 12px 0; border-radius: 10px; overflow: hidden;
+            border: 1px solid var(--gk-border); background: var(--gk-code-bg);
+        }
+        .skill-code .skill-code-lang {
+            padding: 6px 14px; font-size: 11px; font-weight: 600;
+            color: #8b949e; background: rgba(0,0,0,0.2); text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;
+        }
+        .skill-code pre {
+            padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px;
+            line-height: 1.6; color: var(--gk-code-text); overflow-x: auto; margin: 0;
+        }
+        @media (prefers-color-scheme: dark) {
+            .skill-preview { background: #1e293b; border-color: #334155; }
+            .skill-preview.collapsed::after { background: linear-gradient(transparent, #1e293b); }
+            .skill-para code, .skill-list code { background: #334155; color: #818cf8; }
+            .skill-table { border-color: #334155; }
+            .skill-table-row { border-bottom-color: #334155; }
+            .skill-table-row:nth-child(even) { background: rgba(255,255,255,0.03); }
         }
 
         /* --- COMPONENTS PREVIEW --- */
@@ -540,7 +743,8 @@ $canonicalUrl = 'https://gridkit.ssi.at';
                 Add this file to your AI agent's project context. It contains complete documentation for all 12 components,
                 code patterns, JavaScript API reference, and common recipes.
             </p>
-            <div class="skill-preview" id="skill-preview"><?= htmlspecialchars(substr($skillContent, 0, 800)) ?>...</div>
+            <div class="skill-preview collapsed" id="skill-preview"><?= $skillHtml ?></div>
+            <button class="skill-toggle" id="skill-toggle" onclick="toggleSkill()">Show full document</button>
         </div>
     </div>
 </section>
@@ -838,6 +1042,13 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function toggleSkill() {
+    const preview = document.getElementById('skill-preview');
+    const btn = document.getElementById('skill-toggle');
+    preview.classList.toggle('collapsed');
+    btn.textContent = preview.classList.contains('collapsed') ? 'Show full document' : 'Collapse';
 }
 
 function copySkill() {

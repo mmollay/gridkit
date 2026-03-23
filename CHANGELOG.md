@@ -7,6 +7,16 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-03-23 — Formatted Skill Preview
+
+### Changed
+- Landing page Agent Skill preview now renders GRIDKIT_SKILL.md as formatted HTML instead of raw text
+- Built-in PHP Markdown renderer: headings, tables, code blocks, lists, blockquotes, inline formatting
+- Tables displayed as styled row-layout (not raw Markdown pipes)
+- Code blocks with language labels and monospace styling
+- Collapsible preview with "Show full document" toggle and fade-out gradient
+- Full Dark Mode support for skill preview
+
 ## [1.2.1] - 2026-03-22 — Complete JS i18n
 
 ### Fixed
