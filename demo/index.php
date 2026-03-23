@@ -74,6 +74,12 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-stat .lbl { font-size:13px; color:var(--gk-on-surface-variant, #6b7280); margin-top:4px; }
         .demo-intro { color:var(--gk-on-surface-variant, #6b7280); margin:0 0 16px; font-size:14px; line-height:1.6; }
         .demo-btn-row { display:flex; gap:8px; flex-wrap:wrap; }
+        .anatomy-layout { display:flex; gap:16px; align-items:stretch; }
+        .anatomy-mockup { flex:0 0 220px; }
+        @media (max-width: 768px) {
+            .anatomy-layout { flex-direction:column; }
+            .anatomy-mockup { display:none; }
+        }
     </style>
 <?= Lang::jsConfig() ?>
 </head>
@@ -1541,18 +1547,91 @@ GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
         </div>
     </div>
     <div class="demo-card">
-        <h3 style="margin:0 0 16px;font-size:15px;color:var(--gk-on-surface, #374151);">Anatomy</h3>
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;font-size:13px;">
-            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-primary);"><strong>Configuration</strong><br><span style="color:var(--gk-on-surface-variant)">Theme, layout mode, page title</span></div>
-            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">Theme::set('indigo', 'light') · Layout::mode('header-first')</div>
-            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-secondary);"><strong>Sidebar</strong><br><span style="color:var(--gk-on-surface-variant)">Brand, groups, navigation items</span></div>
-            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">->brand() · ->group() · ->item(label, url, icon, opts)</div>
-            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-tertiary);"><strong>Header</strong><br><span style="color:var(--gk-on-surface-variant)">Fixed, toggle, actions, user menu</span></div>
-            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">->title() · ->fixed() · ->action() · ->user(name, opts)</div>
-            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-error);"><strong>Content</strong><br><span style="color:var(--gk-on-surface-variant)">Sections via ?section=...</span></div>
-            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">&lt;main class="gk-main"&gt; · if/elseif-Blöcke</div>
-            <div style="background:var(--gk-surface-container);padding:12px 16px;border-radius:var(--gk-radius-sm);border-left:3px solid var(--gk-outline);"><strong>Footer</strong><br><span style="color:var(--gk-on-surface-variant)">Modal::container() + gridkit.js</span></div>
-            <div style="font-size:12px;color:var(--gk-on-surface-variant);padding:12px 0;">Modal::container() · &lt;script src="gridkit.js"&gt;</div>
+        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Anatomy of a GRIDKit Page</h3>
+        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant);">Every page follows this structure — from <code>skeleton.php</code> to production.</p>
+
+        <div class="anatomy-layout">
+            <!-- Visual page mockup -->
+            <div class="anatomy-mockup" style="border:2px solid var(--gk-outline-variant);border-radius:10px;overflow:hidden;font-size:11px;display:flex;flex-direction:column;">
+                <!-- Config bar -->
+                <div style="background:var(--gk-primary);color:#fff;padding:6px 10px;font-weight:600;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;display:flex;align-items:center;gap:6px;">
+                    <span class="material-icons" style="font-size:13px">settings</span> Config
+                </div>
+                <div style="display:flex;flex:1;">
+                    <!-- Sidebar mock -->
+                    <div style="width:56px;background:var(--gk-surface-dim);border-right:1px solid var(--gk-outline-variant);display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:6px;">
+                        <span class="material-icons" style="font-size:16px;color:var(--gk-primary)">widgets</span>
+                        <div style="width:24px;height:2px;background:var(--gk-outline-variant);border-radius:1px;margin:2px 0;"></div>
+                        <span class="material-icons" style="font-size:14px;color:var(--gk-on-surface-variant)">home</span>
+                        <span class="material-icons" style="font-size:14px;color:var(--gk-on-surface-variant)">people</span>
+                        <span class="material-icons" style="font-size:14px;color:var(--gk-on-surface-variant)">settings</span>
+                        <div style="flex:1"></div>
+                        <span style="font-size:9px;color:var(--gk-on-surface-variant);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:0.1em;">SIDEBAR</span>
+                    </div>
+                    <div style="flex:1;display:flex;flex-direction:column;">
+                        <!-- Header mock -->
+                        <div style="padding:8px 10px;border-bottom:1px solid var(--gk-outline-variant);display:flex;align-items:center;justify-content:space-between;background:var(--gk-surface);">
+                            <span style="font-weight:600;font-size:11px;color:var(--gk-on-surface)">Header</span>
+                            <div style="display:flex;gap:4px;align-items:center;">
+                                <span class="material-icons" style="font-size:13px;color:var(--gk-on-surface-variant)">search</span>
+                                <div style="width:16px;height:16px;border-radius:50%;background:var(--gk-primary-container)"></div>
+                            </div>
+                        </div>
+                        <!-- Content mock -->
+                        <div style="flex:1;padding:10px;background:var(--gk-surface-container);min-height:100px;">
+                            <div style="font-size:9px;font-weight:600;color:var(--gk-on-surface-variant);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Content</div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">
+                                <div style="background:var(--gk-surface);border-radius:3px;height:18px;"></div>
+                                <div style="background:var(--gk-surface);border-radius:3px;height:18px;"></div>
+                            </div>
+                            <div style="background:var(--gk-surface);border-radius:3px;height:40px;"></div>
+                        </div>
+                        <!-- Footer mock -->
+                        <div style="padding:6px 10px;border-top:1px solid var(--gk-outline-variant);background:var(--gk-surface);font-size:9px;color:var(--gk-on-surface-variant);text-align:center;">
+                            Footer · JS
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code reference -->
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:0;">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-primary);border-radius:8px;color:#fff;">
+                    <span class="material-icons" style="font-size:18px">settings</span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:600;font-size:13px;">Configuration</div>
+                        <code style="font-size:11px;opacity:0.85;word-break:break-all;">Theme::set('indigo') · Layout::bodyTag('gk-root')</code>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-surface-container);border-radius:8px;border:1px solid var(--gk-outline-variant);">
+                    <span class="material-icons" style="font-size:18px;color:var(--gk-secondary)">menu</span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:600;font-size:13px;color:var(--gk-on-surface);">Sidebar</div>
+                        <code style="font-size:11px;color:var(--gk-on-surface-variant);word-break:break-all;">->brand() · ->group() · ->item(label, url, icon)</code>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-surface-container);border-radius:8px;border:1px solid var(--gk-outline-variant);">
+                    <span class="material-icons" style="font-size:18px;color:var(--gk-tertiary, #7c3aed)">web</span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:600;font-size:13px;color:var(--gk-on-surface);">Header</div>
+                        <code style="font-size:11px;color:var(--gk-on-surface-variant);word-break:break-all;">->title() · ->fixed() · ->user(name, opts)</code>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-surface-container);border-radius:8px;border:1px solid var(--gk-outline-variant);flex:1;">
+                    <span class="material-icons" style="font-size:18px;color:var(--gk-error)">dashboard</span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:600;font-size:13px;color:var(--gk-on-surface);">Content</div>
+                        <code style="font-size:11px;color:var(--gk-on-surface-variant);word-break:break-all;">&lt;main class="gk-main"&gt; · Tables, Forms, Cards…</code>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-surface-container);border-radius:8px;border:1px solid var(--gk-outline-variant);">
+                    <span class="material-icons" style="font-size:18px;color:var(--gk-outline)">code</span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:600;font-size:13px;color:var(--gk-on-surface);">Footer</div>
+                        <code style="font-size:11px;color:var(--gk-on-surface-variant);word-break:break-all;">Modal::container() · &lt;script src="gridkit.js"&gt;</code>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

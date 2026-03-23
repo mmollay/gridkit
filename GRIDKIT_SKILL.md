@@ -1,6 +1,6 @@
 # GRIDKit – Agent Skill
 
-> **Version:** 1.2.2 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.2.3 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 
 ## Purpose
 

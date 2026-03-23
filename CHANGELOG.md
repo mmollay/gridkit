@@ -7,6 +7,14 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-03-23 — Demo Anatomy Redesign
+
+### Changed
+- Skeleton Anatomy section redesigned as visual page blueprint with mini wireframe mockup + API reference cards
+- Replaced flat 2-column grid with side-by-side layout: interactive mockup (left) + component cards with icons and code snippets (right)
+- Fixed remaining German string "if/elseif-Blöcke" → English
+- Added responsive fallback: mockup hidden on mobile, cards stack vertically
+
 ## [1.2.2] - 2026-03-23 — Formatted Skill Preview
 
 ### Changed
