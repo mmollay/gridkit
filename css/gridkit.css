@@ -2012,3 +2012,119 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
 .gk-dark .gk-avatar-group .gk-avatar {
     border-color: #161B22;
 }
+
+/* ===================================================================
+   TOOLTIP
+   Usage: <span data-gk-tooltip="Tooltip text">Hover me</span>
+   Position: data-gk-tooltip-pos="top|bottom|left|right" (default: top)
+   Rich: <span data-gk-tooltip-rich="#tipId">Hover</span>
+         <div id="tipId" class="gk-tooltip-content">HTML here</div>
+   =================================================================== */
+
+/* Base tooltip (CSS-only via ::after pseudo) */
+[data-gk-tooltip] {
+    position: relative;
+    cursor: default;
+}
+[data-gk-tooltip]::after {
+    content: attr(data-gk-tooltip);
+    position: absolute;
+    z-index: 600;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: nowrap;
+    color: var(--gk-on-inverse-surface, #fff);
+    background: var(--gk-inverse-surface, #1e293b);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .2s ease .3s, transform .2s ease .3s;
+}
+[data-gk-tooltip]:hover::after {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Positions */
+[data-gk-tooltip]::after,
+[data-gk-tooltip-pos="top"]::after {
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+}
+[data-gk-tooltip]:hover::after,
+[data-gk-tooltip-pos="top"]:hover::after {
+    transform: translateX(-50%) translateY(0);
+}
+
+[data-gk-tooltip-pos="bottom"]::after {
+    top: calc(100% + 6px);
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+}
+[data-gk-tooltip-pos="bottom"]:hover::after {
+    transform: translateX(-50%) translateY(0);
+}
+
+[data-gk-tooltip-pos="left"]::after {
+    right: calc(100% + 6px);
+    left: auto;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%) translateX(4px);
+}
+[data-gk-tooltip-pos="left"]:hover::after {
+    transform: translateY(-50%) translateX(0);
+}
+
+[data-gk-tooltip-pos="right"]::after {
+    left: calc(100% + 6px);
+    right: auto;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%) translateX(-4px);
+}
+[data-gk-tooltip-pos="right"]:hover::after {
+    transform: translateY(-50%) translateX(0);
+}
+
+/* Multiline tooltip */
+[data-gk-tooltip-wrap]::after {
+    white-space: normal;
+    max-width: 280px;
+    text-align: left;
+}
+
+/* Rich Tooltip (HTML content from hidden element) */
+.gk-tooltip-content {
+    display: none;
+    position: absolute;
+    z-index: 600;
+    padding: 12px 16px;
+    min-width: 200px;
+    max-width: 360px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--gk-on-surface, #334155);
+    background: var(--gk-surface-container-highest, #fff);
+    border: 1px solid var(--gk-outline-variant, rgba(0,0,0,.1));
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    pointer-events: auto;
+}
+.gk-tooltip-content.visible {
+    display: block;
+    animation: gk-tooltip-in .2s ease;
+}
+.gk-tooltip-content a { color: var(--gk-primary); text-decoration: underline; }
+.gk-tooltip-content a:hover { text-decoration: none; }
+
+@keyframes gk-tooltip-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}

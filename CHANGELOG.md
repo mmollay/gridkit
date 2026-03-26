@@ -7,6 +7,17 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-03-26 — Tooltip Component
+
+### Added
+- CSS-only tooltips via `data-gk-tooltip` attribute (no JS needed)
+- 4 positions: top (default), bottom, left, right via `data-gk-tooltip-pos`
+- Multiline tooltip support via `data-gk-tooltip-wrap` attribute
+- Rich tooltips with HTML content via `data-gk-tooltip-rich` (JS-powered)
+- Viewport-aware positioning for rich tooltips
+- Dark theme compatible (uses CSS custom properties)
+- Demo page section with interactive examples and usage guide
+
 ## [1.2.3] - 2026-03-23 — Demo Anatomy Redesign
 
 ### Changed

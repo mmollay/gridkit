@@ -1368,3 +1368,48 @@
     })();
 
 })();
+
+// === TOOLTIP (Rich) ===
+GK.tooltip = {
+    init() {
+        document.querySelectorAll("[data-gk-tooltip-rich]").forEach(el => {
+            const targetId = el.getAttribute("data-gk-tooltip-rich");
+            const tip = document.querySelector(targetId);
+            if (!tip) return;
+            tip.classList.add("gk-tooltip-content");
+            
+            el.addEventListener("mouseenter", () => {
+                const rect = el.getBoundingClientRect();
+                tip.style.position = "fixed";
+                tip.style.left = rect.left + "px";
+                tip.style.top = (rect.bottom + 6) + "px";
+                
+                // Keep within viewport
+                tip.classList.add("visible");
+                const tipRect = tip.getBoundingClientRect();
+                if (tipRect.right > window.innerWidth - 8) {
+                    tip.style.left = (window.innerWidth - tipRect.width - 8) + "px";
+                }
+                if (tipRect.bottom > window.innerHeight - 8) {
+                    tip.style.top = (rect.top - tipRect.height - 6) + "px";
+                }
+            });
+            
+            el.addEventListener("mouseleave", (e) => {
+                // Keep visible if mouse moves to tooltip itself
+                setTimeout(() => {
+                    if (!tip.matches(":hover") && !el.matches(":hover")) {
+                        tip.classList.remove("visible");
+                    }
+                }, 100);
+            });
+            
+            tip.addEventListener("mouseleave", () => {
+                if (!el.matches(":hover")) {
+                    tip.classList.remove("visible");
+                }
+            });
+        });
+    }
+};
+document.addEventListener("DOMContentLoaded", () => GK.tooltip.init());

@@ -200,3 +200,42 @@ Geschätzt: ~300-400 Zeilen JS.
 - File-Upload im Form
 
 Diese Features können in v1.1+ dazu, aber v1.0 muss FUNKTIONIEREN, schlank und fehlerfrei.
+
+## Tooltip
+
+CSS-only tooltips and rich HTML tooltips.
+
+### CSS-only Tooltip
+
+```html
+<!-- Simple tooltip (default: top) -->
+<span data-gk-tooltip="Hello!">Hover me</span>
+
+<!-- Position variants -->
+<span data-gk-tooltip="Info" data-gk-tooltip-pos="bottom">Bottom</span>
+<span data-gk-tooltip="Info" data-gk-tooltip-pos="left">Left</span>
+<span data-gk-tooltip="Info" data-gk-tooltip-pos="right">Right</span>
+
+<!-- Multiline (wrapping) -->
+<span data-gk-tooltip="Longer text that wraps" data-gk-tooltip-wrap>Hover</span>
+```
+
+- Pure CSS, no JavaScript needed
+- 300ms hover delay (via transition-delay)
+- Uses `::after` pseudo-element
+- Dark theme compatible via CSS custom properties
+
+### Rich Tooltip (HTML content)
+
+```html
+<span data-gk-tooltip-rich="#tipId">Hover for details</span>
+<div id="tipId">
+    <strong>Title</strong>
+    <p>Any HTML content, links, etc.</p>
+</div>
+```
+
+- JavaScript-powered (GK.tooltip.init)
+- Viewport-aware positioning (flips if clipped)
+- Stays open when hovering the tooltip itself
+- Supports links, images, interactive content

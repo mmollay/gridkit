@@ -96,6 +96,7 @@ $sidebar->brand('', 'widgets')
     ->item('Navigation', '#navigation', 'filter_list')
     ->item('Feedback', '#feedback', 'notifications')
     ->item('UI', '#ui', 'palette')
+    ->item('Tooltip', '#tooltip', 'chat_bubble')
     ->group('Examples')
     ->item('Examples', '#examples', 'rocket_launch')
     ->group('Info')
@@ -1655,6 +1656,18 @@ Auth::renderLogin([...]);    // Login page</div>
     </div>
 </div>
 
+<!-- ===== TOOLTIP ===== --><div class="demo-section" data-section="tooltip">    <h2>Tooltip</h2>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">CSS-only Tooltips</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Pure CSS tooltips via <code>data-gk-tooltip</code> attribute. No JavaScript needed.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="Tooltip on top" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Top (default)</span>            <span data-gk-tooltip="Tooltip on bottom" data-gk-tooltip-pos="bottom" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Bottom</span>            <span data-gk-tooltip="Tooltip on left" data-gk-tooltip-pos="left" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Left</span>            <span data-gk-tooltip="Tooltip on right" data-gk-tooltip-pos="right" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Right</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Multiline Tooltip</h3>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="This is a longer tooltip text that wraps to multiple lines for better readability" data-gk-tooltip-wrap style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Hover for multiline</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Rich Tooltip (HTML content)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Rich tooltips use <code>data-gk-tooltip-rich</code> pointing to a hidden element. Supports links, formatting, and stays open on hover.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip-rich="#richTip1" style="padding:8px 16px;background:var(--gk-primary);color:#fff;border-radius:6px;cursor:pointer">Hover for details</span>            <div id="richTip1">                <strong>GridKit Tooltip</strong>                <p style="margin:8px 0 4px;font-size:12px;color:var(--gk-on-surface-variant)">Rich tooltips support full HTML content including links, images, and interactive elements.</p>                <a href="#" style="font-size:12px">Learn more &rarr;</a>            </div>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Tooltip on Buttons</h3>        <div style="display:flex;gap:16px;align-items:center;justify-content:center;padding:40px 0">            <button class="gk-btn gk-btn-filled gk-btn-primary" data-gk-tooltip="Save your changes"><span class="material-icons" style="font-size:18px">save</span> Save</button>            <button class="gk-btn gk-btn-outlined gk-btn-error" data-gk-tooltip="Delete this item" data-gk-tooltip-pos="bottom"><span class="material-icons" style="font-size:18px">delete</span> Delete</button>            <button class="gk-btn gk-btn-tonal gk-btn-neutral" data-gk-tooltip="Print document" data-gk-tooltip-pos="right"><span class="material-icons" style="font-size:18px">print</span></button>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 12px;font-size:15px">Usage</h3>        <pre style="background:var(--gk-surface-container);padding:16px;border-radius:8px;font-size:12px;line-height:1.6;overflow-x:auto">&lt;!-- Simple tooltip (CSS-only) --&gt;
+&lt;span data-gk-tooltip="Hello!"&gt;Hover me&lt;/span&gt;
+
+&lt;!-- Position: top (default), bottom, left, right --&gt;
+&lt;span data-gk-tooltip="Bottom" data-gk-tooltip-pos="bottom"&gt;...&lt;/span&gt;
+
+&lt;!-- Multiline --&gt;
+&lt;span data-gk-tooltip="Long text here" data-gk-tooltip-wrap&gt;...&lt;/span&gt;
+
+&lt;!-- Rich tooltip (HTML content) --&gt;
+&lt;span data-gk-tooltip-rich="#myTip"&gt;Hover&lt;/span&gt;
+&lt;div id="myTip"&gt;HTML content here&lt;/div&gt;</pre>    </div></div>
 <!-- ===== CHANGELOG ===== -->
 <div class="demo-section" data-section="changelog">
     <h2>Changelog</h2>
