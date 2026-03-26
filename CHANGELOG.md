@@ -5,6 +5,17 @@ Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
 
+## [1.3.1] - 2026-03-26 — Header + Select-Dropdown Fixes
+
+### Fixed
+- Header: auto-height (56px min) statt feste 64px — Title+Breadcrumb passen immer
+- Header-Title: flex-column, text-overflow:ellipsis für lange Breadcrumbs
+- Breadcrumb im Header: kompakt (12px, kein Margin)
+- Select-Dropdown z-index 500 (statt 100) — überlappt Cards/Modals korrekt
+- Select-Search Wrapper: position:relative garantiert
+
+---
+
 ## [Unreleased]
 
 ## [1.3.0] - 2026-03-26 — Tooltip Component
