@@ -325,6 +325,7 @@
                         case 'datetime': return val ? e(new Date(val).toLocaleString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})) : '';
                         case 'boolean': return parseInt(val) ? '<span class="gk-bool gk-bool-yes">✓</span>' : '<span class="gk-bool gk-bool-no">–</span>';
                         case 'email': return val ? '<a href="mailto:' + e(val) + '">' + e(val) + '</a>' : '';
+                        case 'html': return String(val || '');
                         case 'label': return renderLabel(val, col.labels || {});
                         default: return e(val);
                     }
@@ -382,6 +383,10 @@
                 const renderBtnGroup = (btns, row) => {
                     let h = '';
                     for (const [bname, bopts] of Object.entries(btns)) {
+                        // showIf: skip button if row field is falsy
+                        if (bopts.showIf && !row[bopts.showIf]) continue;
+                        // hideIf: skip button if row field is truthy
+                        if (bopts.hideIf && row[bopts.hideIf]) continue;
                         const hasText = !!bopts.text;
                         let cls = hasText ? 'gk-btn gk-btn-icon-text' : 'gk-btn gk-btn-icon';
                         if (bopts['class']) cls += ' gk-btn-' + bopts['class'];

@@ -752,7 +752,7 @@ a.gk-stat-card:hover { box-shadow: var(--gk-shadow-lg); }
     top: 0;
     left: 0;
     right: 0;
-    z-index: 200;
+    z-index: 1100;
 }
 [data-gk-layout="header-first"] .gk-sidebar,
 .gk-layout-header-first .gk-sidebar {

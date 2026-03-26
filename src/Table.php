@@ -398,6 +398,16 @@ class Table
     private function renderButtons(array $buttons, array $row, \Closure $e): void
     {
         foreach ($buttons as $bname => $bopts) {
+            // showIf: Button nur anzeigen wenn Row-Feld truthy ist
+            if (isset($bopts["showIf"])) {
+                $field = $bopts["showIf"];
+                if (empty($row[$field])) continue;
+            }
+            // hideIf: Button verstecken wenn Row-Feld truthy ist
+            if (isset($bopts["hideIf"])) {
+                $field = $bopts["hideIf"];
+                if (!empty($row[$field])) continue;
+            }
             $params = [];
             foreach ($bopts['params'] ?? [] as $pkey => $pcol) {
                 $params[$pkey] = $row[$pcol] ?? '';
