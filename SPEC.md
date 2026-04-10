@@ -71,6 +71,27 @@ $form->action('save/process_article.php')
     ->render();
 ```
 
+#### Form Density
+
+Add `gk-form-compact` to a form or wrapper for reduced spacing. All elements (inputs, selects, toggles, checkboxes) scale proportionally.
+
+```html
+<!-- Compact form -->
+<form class="gk-form-compact">
+  <div class="gk-field">
+    <label class="gk-label-text">Name</label>
+    <input type="text" class="gk-input">
+  </div>
+</form>
+```
+
+| Property | Normal | Compact |
+|----------|--------|---------|
+| Input height | 44px | 34px |
+| Toggle | 48×28 | 38×22 |
+| Checkbox | 20×20 | 16×16 |
+| Field margin | 20px | 10px |
+
 ### Zusammenspiel Table ↔ Form
 
 1. Table rendert Button mit `data-modal="edit_form"` und `data-params='{"id":123}'`

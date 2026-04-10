@@ -4,10 +4,21 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
-## [1.4.11] - 2026-04-10 — Form Compact Density
+## [1.4.13] - 2026-04-10 — Form Compact: alle Elemente + Demo
 
 ### Added
-- **Form Compact Mode**: Neue CSS-Klasse `.gk-form-compact` für kompaktere Formulare. Reduziert Input-Höhe (44px→34px), Padding, Margins und Font-Sizes. Anwendung: `<form class="gk-form-compact">` oder als Wrapper-Klasse auf beliebigem Container.
+- **Form Compact — vollständig**: `.gk-form-compact` skaliert jetzt alle Formular-Elemente:
+  - Inputs: 44px → 34px, Padding/Font reduziert
+  - Selects: Höhe 34px, kompakteres Arrow-Positioning
+  - Toggles: 48×28px → 38×22px
+  - Checkboxen: 20×20px → 16×16px
+  - Searchable Selects: Display + Options kompakter
+  - Field-Inline: Gap 12px → 8px
+- **Demo**: Side-by-side Vergleich Normal vs Compact unter gridkit.ssi.at/demo/#form
+- **Doku**: SPEC.md, GRIDKIT_SKILL.md mit Form Density Tabellen
+
+### Changed
+- **Input Borders** (global): 1.5px #d0d7de → 1px #dde1e6 (zartere Linien)
 
 ---
 ## [1.4.1] - 2026-03-31 — Table renderStatic Button-Fix + Icons

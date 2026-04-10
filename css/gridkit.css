@@ -1383,6 +1383,10 @@ select.gk-input {
 .gk-form-compact .gk-input:focus {
   padding: 5.75px 9.75px;
 }
+.gk-form-compact select.gk-input {
+  padding-right: 32px;
+  background-position: right 10px center;
+}
 .gk-form-compact textarea.gk-input {
   height: auto;
   min-height: 56px;
@@ -1394,6 +1398,61 @@ select.gk-input {
 .gk-form-compact .gk-field-hint {
   font-size: 11px;
   margin-top: 2px;
+}
+.gk-form-compact .gk-toggle {
+  width: 38px;
+  height: 22px;
+}
+.gk-form-compact .gk-toggle-slider {
+  border-radius: 11px;
+}
+.gk-form-compact .gk-toggle-slider::before {
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  top: 3px;
+}
+.gk-form-compact .gk-toggle input:checked + .gk-toggle-slider::before {
+  transform: translateX(16px);
+}
+.gk-form-compact .gk-checkbox-custom {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+.gk-form-compact .gk-checkbox-custom::after {
+  width: 4px;
+  height: 8px;
+  border-width: 0 1.5px 1.5px 0;
+}
+.gk-form-compact .gk-checkbox-wrap {
+  gap: 6px;
+  font-size: 13px;
+}
+.gk-form-compact .gk-field-inline {
+  gap: 8px;
+}
+.gk-form-compact .gk-select-display {
+  padding: 6px 10px;
+  height: 34px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+.gk-form-compact .gk-select-display.open {
+  padding: 5.75px 9.75px;
+}
+.gk-form-compact .gk-select-arrow {
+  font-size: 16px;
+}
+.gk-form-compact .gk-select-option {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.gk-form-compact .gk-select-search-input {
+  padding: 6px 10px;
+}
+.gk-form-compact .gk-select-search-input input {
+  font-size: 13px;
 }
 .gk-field-error {
   color: var(--gk-danger);

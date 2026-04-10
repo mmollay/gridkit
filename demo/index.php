@@ -614,6 +614,107 @@ $form->row()
     </div>
 </div>
 
+    <!-- Form Density -->
+    <div class="demo-card">
+        <h3 style="margin:0 0 16px;font-size:15px;color:var(--gk-on-surface);">Form Density</h3>
+        <p style="font-size:13px;color:var(--gk-on-surface-variant);margin:0 0 16px;">
+            Wrap any form in <code>.gk-form-compact</code> for reduced spacing. All elements — inputs, selects, toggles, checkboxes — scale down proportionally.
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+            <!-- Normal -->
+            <div>
+                <div style="font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--gk-on-surface-variant);margin-bottom:12px;">Normal (default)</div>
+                <div style="border:1px solid var(--gk-outline-variant);border-radius:12px;padding:20px;">
+                    <div class="gk-field">
+                        <label class="gk-label-text">Firmenname</label>
+                        <input type="text" class="gk-input" value="SSI GmbH">
+                    </div>
+                    <div class="gk-field">
+                        <label class="gk-label-text">Kategorie</label>
+                        <select class="gk-input">
+                            <option>Technologie</option>
+                            <option>Handel</option>
+                            <option>Dienstleistung</option>
+                        </select>
+                    </div>
+                    <div class="gk-field">
+                        <label class="gk-label-text">Beschreibung</label>
+                        <textarea class="gk-input" rows="2">Kurzbeschreibung...</textarea>
+                    </div>
+                    <div class="gk-field">
+                        <div class="gk-field-inline">
+                            <label class="gk-label-text" style="margin-bottom:0;">Aktiv</label>
+                            <label class="gk-toggle"><input type="checkbox" checked><span class="gk-toggle-slider"></span></label>
+                        </div>
+                    </div>
+                    <div class="gk-field">
+                        <label class="gk-checkbox-wrap">
+                            <input type="checkbox" checked>
+                            <span class="gk-checkbox-custom"></span>
+                            <span class="gk-checkbox-text">AGB akzeptiert</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compact -->
+            <div>
+                <div style="font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--gk-on-surface-variant);margin-bottom:12px;">Compact <code style="font-size:11px;">.gk-form-compact</code></div>
+                <div class="gk-form-compact" style="border:1px solid var(--gk-outline-variant);border-radius:12px;padding:20px;">
+                    <div class="gk-field">
+                        <label class="gk-label-text">Firmenname</label>
+                        <input type="text" class="gk-input" value="SSI GmbH">
+                    </div>
+                    <div class="gk-field">
+                        <label class="gk-label-text">Kategorie</label>
+                        <select class="gk-input">
+                            <option>Technologie</option>
+                            <option>Handel</option>
+                            <option>Dienstleistung</option>
+                        </select>
+                    </div>
+                    <div class="gk-field">
+                        <label class="gk-label-text">Beschreibung</label>
+                        <textarea class="gk-input" rows="2">Kurzbeschreibung...</textarea>
+                    </div>
+                    <div class="gk-field">
+                        <div class="gk-field-inline">
+                            <label class="gk-label-text" style="margin-bottom:0;">Aktiv</label>
+                            <label class="gk-toggle"><input type="checkbox" checked><span class="gk-toggle-slider"></span></label>
+                        </div>
+                    </div>
+                    <div class="gk-field">
+                        <label class="gk-checkbox-wrap">
+                            <input type="checkbox" checked>
+                            <span class="gk-checkbox-custom"></span>
+                            <span class="gk-checkbox-text">AGB akzeptiert</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="demo-code">
+        <pre>&lt;!-- Normal (default) --&gt;
+&lt;form&gt;
+  &lt;div class="gk-field"&gt;...&lt;/div&gt;
+&lt;/form&gt;
+
+&lt;!-- Compact --&gt;
+&lt;form class="gk-form-compact"&gt;
+  &lt;div class="gk-field"&gt;...&lt;/div&gt;
+&lt;/form&gt;
+
+&lt;!-- Also works as wrapper --&gt;
+&lt;div class="gk-form-compact"&gt;
+  &lt;div class="gk-card"&gt;
+    &lt;div class="gk-field"&gt;...&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+    </div>
+</div>
+
 <!-- ===== CARDS (merged: cards + statcards) ===== -->
 <div class="demo-section" data-section="cards">
     <h2>Cards</h2>
