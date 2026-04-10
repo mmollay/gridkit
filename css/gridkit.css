@@ -1448,6 +1448,16 @@ select.gk-input {
   padding: 6px 10px;
   font-size: 13px;
 }
+.gk-form-compact .gk-ajax-select .gk-select-display {
+  height: 34px;
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  border-width: 1px;
+}
+.gk-form-compact .gk-ajax-search-input {
+  font-size: 13px;
+}
 .gk-form-compact .gk-select-search-input {
   padding: 6px 10px;
 }
@@ -4642,7 +4652,7 @@ a.gk-stat-card:hover {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border: 1.5px solid var(--gk-outline-variant, #cbd5e1);
+  border: 1px solid #dde1e6;
   border-radius: 8px;
   background: var(--gk-surface-container-lowest, #fff);
   cursor: pointer;
@@ -4818,7 +4828,7 @@ a.gk-stat-card:hover {
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  border: 1.5px solid var(--gk-outline-variant, #cbd5e1);
+  border: 1px solid #dde1e6;
   border-radius: 8px;
   background: var(--gk-surface-container-lowest, #fff);
   height: 44px;
