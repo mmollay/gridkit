@@ -154,7 +154,7 @@ a:hover {
   background: #fff;
   border: 1px solid #d0d7de;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: clip;
 }
 .gk-toolbar {
   display: flex;
@@ -2620,7 +2620,7 @@ a.gk-stat-card:hover {
   border-radius: 4px;
   white-space: nowrap;
   pointer-events: none;
-  z-index: 100;
+  z-index: 9999;
   animation: gk-tooltip-in 0.15s ease;
 }
 .gk-btn[title]:hover::before {
@@ -2632,7 +2632,7 @@ a.gk-stat-card:hover {
   border: 4px solid transparent;
   border-top-color: #1e293b;
   pointer-events: none;
-  z-index: 100;
+  z-index: 9999;
   animation: gk-tooltip-in 0.15s ease;
 }
 @keyframes gk-tooltip-in {
