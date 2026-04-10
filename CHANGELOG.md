@@ -4,6 +4,19 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.4.11] - 2026-04-10 — Form Compact Density
+
+### Added
+- **Form Compact Mode**: Neue CSS-Klasse `.gk-form-compact` für kompaktere Formulare. Reduziert Input-Höhe (44px→34px), Padding, Margins und Font-Sizes. Anwendung: `<form class="gk-form-compact">` oder als Wrapper-Klasse auf beliebigem Container.
+
+---
+## [1.4.1] - 2026-03-31 — Table renderStatic Button-Fix + Icons
+
+### Fixed
+- **Table renderBtnGroup JS**: Buttons nach renderStatic (Suche/Sort) hatten nur `gk-btn gk-btn-icon` — fehlten `gk-btn-text`, `gk-btn-neutral`, `gk-btn-sm`. Jetzt identisch mit PHP-Renderer (variant=text, color=neutral, size=sm per Default).
+- **iconSvg()**: Nur 3 Icons bekannt — unbekannte Icons wurden als roher Text gerendert. Jetzt erweitert: `add`, `visibility`, `download`, `upload`, `copy`, `email`, `search`, `settings`, `open_in_new`, `auto_awesome`, `login`, `print`. Unbekannte Icons fallen auf Material Icons `<span class="material-icons">` zurück statt Text.
+
+---
 
 ## [1.3.1] - 2026-03-26 — Header + Select-Dropdown Fixes
 
