@@ -32,6 +32,7 @@ class Table
     private bool $selectable = false;
     private string $selectKey = 'id';
     private ?int $loadTimeMs = null;
+    private array $footerCells = [];
 
     public function __construct(string $id)
     {
@@ -125,6 +126,16 @@ class Table
     public function loadTime(int $ms): static
     {
         $this->loadTimeMs = $ms;
+        return $this;
+    }
+
+    /**
+     * Setzt Fußzeilen-Zellen für die Tabelle.
+     * Jede Zelle ist ein String oder ['text' => '...', 'align' => 'right', 'colspan' => 2, 'bold' => true]
+     */
+    public function footer(array $cells): static
+    {
+        $this->footerCells = $cells;
         return $this;
     }
 
@@ -372,7 +383,48 @@ class Table
             echo "<tr><td colspan=\"{$colspan}\" class=\"gk-empty\">" . $e(Lang::t('table.empty')) . "</td></tr>";
         }
 
-        echo '</tbody></table>';
+        echo '</tbody>';
+
+        // Fußzeile: benutzerdefinierte Zellen oder Ladezeit
+        if ($this->footerCells || $this->loadTimeMs !== null) {
+            $totalCols = count($this->columns) + ($leftButtons ? 1 : 0) + ($rightButtons ? 1 : 0) + ($this->selectable ? 1 : 0);
+            echo '<tfoot><tr class="gk-table-footer">';
+
+            if ($this->footerCells) {
+                $usedCols = 0;
+                foreach ($this->footerCells as $cell) {
+                    if (is_string($cell)) {
+                        $cell = ['text' => $cell];
+                    }
+                    $colspan = (int) ($cell['colspan'] ?? 1);
+                    $align = $cell['align'] ?? 'left';
+                    $bold = !empty($cell['bold']);
+                    $style = 'text-align:' . $align . ';';
+                    if ($bold) $style .= 'font-weight:600;';
+                    if ($align === 'right') $style .= 'color:var(--gk-primary);';
+                    echo '<td colspan="' . $colspan . '" style="' . $style . '">' . ($cell['text'] ?? '') . '</td>';
+                    $usedCols += $colspan;
+                }
+                // Restliche Spalten + Ladezeit
+                $remaining = $totalCols - $usedCols;
+                if ($remaining > 0 && $this->loadTimeMs !== null) {
+                    $timeDisplay = $this->loadTimeMs < 1000 ? $this->loadTimeMs . ' ms' : number_format($this->loadTimeMs / 1000, 2, ',', '.') . ' s';
+                    echo '<td colspan="' . $remaining . '" class="gk-table-meta">' . $timeDisplay . '</td>';
+                } elseif ($remaining > 0) {
+                    echo '<td colspan="' . $remaining . '"></td>';
+                }
+            } else {
+                // Nur Ladezeit
+                $timeDisplay = $this->loadTimeMs < 1000 ? $this->loadTimeMs . ' ms' : number_format($this->loadTimeMs / 1000, 2, ',', '.') . ' s';
+                echo '<td colspan="' . $totalCols . '" class="gk-table-meta">'
+                    . $e((string) $this->totalRows) . ' Einträge · ' . $timeDisplay
+                    . '</td>';
+            }
+
+            echo '</tr></tfoot>';
+        }
+
+        echo '</table>';
 
         // Pagination
         if ($this->perPage > 0 && $this->totalRows > $this->perPage) {
@@ -399,16 +451,6 @@ class Table
                 'disabled' => $this->currentPage >= $pages,
             ]);
             echo '</div>';
-        }
-
-        // Ladezeit dezent anzeigen
-        if ($this->loadTimeMs !== null) {
-            $display = $this->loadTimeMs < 1000
-                ? $this->loadTimeMs . ' ms'
-                : number_format($this->loadTimeMs / 1000, 2, ',', '.') . ' s';
-            echo '<div class="gk-table-meta">'
-                . $e((string) $this->totalRows) . ' Einträge · ' . $display
-                . '</div>';
         }
     }
 

@@ -822,12 +822,18 @@ a:hover {
 }
 
 /* === PAGINATION === */
-.gk-table-meta {
-  padding: 6px var(--gk-spacing);
-  font-size: 11px;
+.gk-table-footer td {
+  padding: 8px 12px;
+  font-size: 12px;
   color: var(--gk-on-surface-variant);
-  opacity: 0.6;
+  border-top: 1px solid var(--gk-border);
+  background: var(--gk-surface-variant, rgba(0,0,0,.02));
+}
+td.gk-table-meta {
+  font-size: 11px;
+  opacity: 0.5;
   text-align: right;
+  font-weight: 400;
 }
 .gk-pagination {
   display: flex;
