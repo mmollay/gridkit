@@ -31,6 +31,7 @@ class Table
     private string $mobileMode = 'card';
     private bool $selectable = false;
     private string $selectKey = 'id';
+    private ?int $loadTimeMs = null;
 
     public function __construct(string $id)
     {
@@ -118,6 +119,12 @@ class Table
     public function variant(string $variant): static
     {
         $this->variant = $variant;
+        return $this;
+    }
+
+    public function loadTime(int $ms): static
+    {
+        $this->loadTimeMs = $ms;
         return $this;
     }
 
@@ -393,6 +400,16 @@ class Table
             ]);
             echo '</div>';
         }
+
+        // Ladezeit dezent anzeigen
+        if ($this->loadTimeMs !== null) {
+            $display = $this->loadTimeMs < 1000
+                ? $this->loadTimeMs . ' ms'
+                : number_format($this->loadTimeMs / 1000, 2, ',', '.') . ' s';
+            echo '<div class="gk-table-meta">'
+                . $e((string) $this->totalRows) . ' Einträge · ' . $display
+                . '</div>';
+        }
     }
 
     private function renderButtons(array $buttons, array $row, \Closure $e): void
@@ -417,41 +434,68 @@ class Table
             $colorMap = ['danger' => 'danger', 'success' => 'success', 'warning' => 'warning', 'primary' => 'primary'];
             $color = $colorMap[$bopts['class'] ?? ''] ?? 'neutral';
 
-            $data = [
-                'gk-action' => $bname,
-                'gk-params' => json_encode($params),
-            ];
+            // Data attributes
+            $dataAttrs = ' data-gk-action="' . $e($bname) . '"'
+                       . " data-gk-params='" . $e(json_encode($params)) . "'";
             if (isset($bopts['modal'])) {
-                $data['gk-modal'] = $bopts['modal'];
+                $dataAttrs .= ' data-gk-modal="' . $e($bopts['modal']) . '"';
             }
-            if (!empty($bopts['title'])) {
-                $data['title'] = $bopts['title'];
-            }
+            $titleAttr = !empty($bopts['title']) ? ' title="' . $e($bopts['title']) . '"' : '';
 
-            $hasText = !empty($bopts['text']);
+            $hasText  = !empty($bopts['text']);
             $iconName = $bopts['icon'] ?? '';
-            // Map legacy icon names to Material Icons
-            $iconMap = ['pencil' => 'edit', 'trash' => 'delete', 'plus' => 'add', 'search' => 'search', 'eye' => 'visibility', 'download' => 'download', 'upload' => 'upload', 'copy' => 'content_copy', 'mail' => 'mail', 'print' => 'print'];
-            $iconName = $iconMap[$iconName] ?? $iconName;
+            $iconHtml = $iconName ? $this->iconSvg($iconName) : '';
 
-            if ($hasText && $iconName) {
-                echo Button::render($bopts['text'], [
-                    'icon' => $iconName,
-                    'variant' => 'text',
-                    'color' => $color,
-                    'title' => $bopts['title'] ?? '',
-                    'data' => $data,
-                ]);
-            } elseif ($iconName) {
-                echo Button::icon($iconName, [
-                    'variant' => 'text',
-                    'color' => $color,
-                    'title' => $bopts['title'] ?? '',
-                    'size' => 'sm',
-                    'data' => $data,
-                ]);
+            if ($hasText && $iconHtml) {
+                // Icon + Text button
+                $cls = 'gk-btn gk-btn-icon-text gk-btn-text gk-btn-' . $color;
+                echo '<button type="button" class="' . $cls . '"' . $titleAttr . $dataAttrs . '>'
+                   . $iconHtml . '<span>' . $e($bopts['text']) . '</span></button>';
+            } elseif ($iconHtml) {
+                // Icon-only button (sm) — same classes as JS renderBtnGroup
+                $cls = 'gk-btn gk-btn-icon-only gk-btn-text gk-btn-' . $color . ' gk-btn-sm';
+                echo '<button type="button" class="' . $cls . '"' . $titleAttr . $dataAttrs . '>'
+                   . $iconHtml . '</button>';
             }
         }
+    }
+
+    /** SVG icons for table buttons — mirrors JS GK.table.iconSvg() */
+    private function iconSvg(string $name): string
+    {
+        $s = 'viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"';
+        return match ($name) {
+            'pencil', 'edit'
+                => '<svg ' . $s . '><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
+            'trash', 'delete'
+                => '<svg ' . $s . '><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14Z"/></svg>',
+            'plus', 'add'
+                => '<svg ' . $s . '><path d="M12 5v14M5 12h14"/></svg>',
+            'eye', 'visibility'
+                => '<svg ' . $s . '><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+            'download'
+                => '<svg ' . $s . '><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>',
+            'upload'
+                => '<svg ' . $s . '><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>',
+            'copy', 'content_copy'
+                => '<svg ' . $s . '><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+            'mail', 'email'
+                => '<svg ' . $s . '><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+            'search'
+                => '<svg ' . $s . '><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+            'settings'
+                => '<svg ' . $s . '><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+            'open_in_new', 'external'
+                => '<svg ' . $s . '><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+            'auto_awesome', 'generate', 'wand'
+                => '<svg ' . $s . '><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4M19 17v4M3 5h4M17 19h4"/></svg>',
+            'login', 'impersonate'
+                => '<svg ' . $s . '><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10,17 15,12 10,7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>',
+            'print'
+                => '<svg ' . $s . '><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
+            default
+                => '<span class="material-icons" style="font-size:16px;">' . htmlspecialchars($name, ENT_QUOTES) . '</span>',
+        };
     }
 
     private function format(mixed $val, array $col): string

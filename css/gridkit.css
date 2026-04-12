@@ -822,6 +822,13 @@ a:hover {
 }
 
 /* === PAGINATION === */
+.gk-table-meta {
+  padding: 6px var(--gk-spacing);
+  font-size: 11px;
+  color: var(--gk-on-surface-variant);
+  opacity: 0.6;
+  text-align: right;
+}
 .gk-pagination {
   display: flex;
   gap: 4px;
