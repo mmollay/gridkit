@@ -7,6 +7,7 @@ class Form
 {
     private string $id;
     private string $action = '';
+    private string $method = 'post';
     private bool $isAjax = false;
     private array $fields = [];
     private bool $inRow = false;
@@ -21,6 +22,7 @@ class Form
     }
 
     public function action(string $url): static { $this->action = $url; return $this; }
+    public function method(string $method): static { $this->method = strtolower($method); return $this; }
     public function ajax(): static { $this->isAjax = true; return $this; }
     public function card(bool $wrap = true): static { $this->wrapCard = $wrap; return $this; }
     public function cancel(string $label, string $href): static { $this->cancelLabel = $label; $this->cancelHref = $href; return $this; }
@@ -55,7 +57,7 @@ class Form
     public function render(): void
     {
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
-        $attrs = 'class="gk-form" id="' . $e($this->id) . '"';
+        $attrs = 'class="gk-form" id="' . $e($this->id) . '" method="' . $e($this->method) . '"';
         if ($this->action) $attrs .= ' action="' . $e($this->action) . '"';
         if ($this->isAjax) $attrs .= ' data-gk-ajax';
 
@@ -366,6 +368,12 @@ class Form
                 $htmlType  = $type === 'datetime' ? 'datetime-local' : $type;
                 $clearable = !empty($f['clearable']);
                 $extra = '';
+                if (isset($f['min']))         $extra .= " min=\"{$e($f['min'])}\"";
+                if (isset($f['max']))         $extra .= " max=\"{$e($f['max'])}\"";
+                // Datumsfelder: max auf 4-stellige Jahre begrenzen (Browser erlaubt sonst 6+)
+                if (in_array($type, ['date', 'datetime'], true) && !isset($f['max'])) {
+                    $extra .= ' max="9999-12-31"';
+                }
                 if (isset($f['step']))        $extra .= " step=\"{$e($f['step'])}\"";
                 if (isset($f['placeholder'])) $extra .= " placeholder=\"{$e($f['placeholder'])}\"";
                 if ($clearable) {

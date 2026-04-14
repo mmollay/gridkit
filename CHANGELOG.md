@@ -4,6 +4,13 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.4.17] - 2026-04-15 — Form: Date-Felder max-Jahr begrenzen
+
+### Fixed
+- **Form date/datetime**: Automatisch `max="9999-12-31"` gesetzt, damit Browser kein 6-stelliges Jahr erlaubt
+- **Form**: `min` und `max` Attribute für alle Input-Typen unterstützt (text, number, date etc.)
+
+---
 ## [1.4.13] - 2026-04-10 — Form Compact: alle Elemente + Demo
 
 ### Added
