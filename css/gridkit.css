@@ -5357,3 +5357,38 @@ a.gk-stat-card:hover {
     transform: translateY(0);
   }
 }
+
+/* ── AJAX Navigation Progress ── */
+.gk-nav-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.gk-nav-progress.active {
+    opacity: 1;
+}
+.gk-nav-progress-bar {
+    height: 100%;
+    background: var(--gk-primary);
+    width: 0;
+    border-radius: 0 2px 2px 0;
+    animation: gk-nav-load 2s ease-in-out forwards;
+}
+.gk-nav-progress.done .gk-nav-progress-bar {
+    width: 100% !important;
+    animation: none;
+    transition: width 0.2s;
+}
+@keyframes gk-nav-load {
+    0% { width: 0; }
+    30% { width: 45%; }
+    60% { width: 70%; }
+    80% { width: 85%; }
+    100% { width: 95%; }
+}

@@ -1,6 +1,6 @@
 # GRIDKit – Agent Skill
 
-> **Version:** 1.4.13 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.5.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.ssi.at | **Source:** `/home/pawbot/projects/gridkit/` (= `/home/develop/gridkit/`)
 
 ## Purpose
@@ -262,6 +262,28 @@ GK.modal.close();
 // Table refresh (after save/delete in server-side mode)
 GK.table.refresh('table-id');
 ```
+
+### AJAX Navigation (SPA-lite)
+
+```php
+// Sidebar mit AJAX-Navigation aktivieren
+$sidebar->ajaxNav(true);
+```
+
+```html
+<!-- Content-Container markieren -->
+<div class="gk-with-sidebar" data-gk-content>
+  <!-- Dieser Bereich wird bei Navigation ersetzt -->
+</div>
+```
+
+Features:
+- Sidebar-Links laden Content per fetch() ohne Seiten-Reload
+- Ladebalken am oberen Bildschirmrand
+- Browser Zurück/Vorwärts funktioniert via pushState
+- Automatische Re-Initialisierung von Table, Tooltip etc.
+- Fallback auf normale Navigation bei Fehler
+- Externe Links und Ctrl/Cmd+Click werden nicht abgefangen
 
 ## CSS Classes Reference
 

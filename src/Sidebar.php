@@ -14,6 +14,7 @@ class Sidebar
     private string $currentGroup = '';
     private string $collapsePosition = 'bottom';
     private bool $headerOffset = false;
+    private bool $ajaxNavEnabled = false;
 
     public function __construct(string $id = 'main')
     {
@@ -38,6 +39,13 @@ class Sidebar
     public function headerOffset(bool $enabled = true): self
     {
         $this->headerOffset = $enabled;
+        return $this;
+    }
+
+    /** Enable AJAX navigation — sidebar links load content via fetch() without full-page reload */
+    public function ajaxNav(bool $enabled = true): self
+    {
+        $this->ajaxNavEnabled = $enabled;
         return $this;
     }
 
@@ -86,7 +94,8 @@ class Sidebar
         echo '<div class="gk-sidebar-overlay" data-gk-sidebar-overlay onclick="GK.sidebar.close()"></div>';
         $sidebarCls = 'gk-sidebar';
         if ($this->headerOffset) $sidebarCls .= ' gk-sidebar-with-header';
-        echo '<aside class="' . $sidebarCls . '" data-gk-sidebar="' . $e($this->id) . '">';
+        $ajaxAttr = $this->ajaxNavEnabled ? ' data-gk-ajax-nav' : '';
+        echo '<aside class="' . $sidebarCls . '" data-gk-sidebar="' . $e($this->id) . '"' . $ajaxAttr . '>';
 
         // Brand
         if ($this->brand !== '') {

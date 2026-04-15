@@ -4,6 +4,18 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.5.0] - 2026-04-15 — AJAX Sidebar Navigation (SPA-lite)
+
+### Added
+- **AJAX Navigation**: Sidebar-Links laden Content per fetch() ohne Full-Page-Reload
+  - Opt-in: `$sidebar->ajaxNav(true)` + `data-gk-content` auf Content-Container
+  - Ladebalken (Progress-Bar) am oberen Bildschirmrand
+  - Browser Zurück/Vorwärts via pushState/popstate
+  - Automatische Re-Initialisierung von GRIDKit-Komponenten
+  - Fallback auf normale Navigation bei Fehler
+- Sidebar.php: Neue Methode `ajaxNav(bool $enabled)`
+
+---
 ## [1.4.17] - 2026-04-15 — Form: Date-Felder max-Jahr begrenzen
 
 ### Fixed
