@@ -1007,35 +1007,9 @@
       if (bestMatch) bestMatch.classList.add('active');
     },
 
-    createProgress: function () {
-      var bar = document.createElement('div');
-      bar.className = 'gk-nav-progress';
-      bar.innerHTML = '<div class="gk-nav-progress-bar"></div>';
-      document.body.appendChild(bar);
-      this.progressEl = bar;
-    },
-
-    showProgress: function () {
-      if (!this.progressEl) this.createProgress();
-      // Bar resetten für frische Animation
-      var bar = this.progressEl.querySelector('.gk-nav-progress-bar');
-      if (bar) {
-        var fresh = document.createElement('div');
-        fresh.className = 'gk-nav-progress-bar';
-        bar.replaceWith(fresh);
-      }
-      this.progressEl.classList.remove('done');
-      this.progressEl.classList.add('active');
-    },
-
-    hideProgress: function () {
-      if (!this.progressEl) return;
-      var el = this.progressEl;
-      el.classList.add('done');
-      setTimeout(function () {
-        el.classList.remove('active', 'done');
-      }, 400);
-    }
+    createProgress: function () {},
+    showProgress: function () {},
+    hideProgress: function () {}
   };
 
   // Confirm dialog (replaces window.confirm)
