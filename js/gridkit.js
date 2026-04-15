@@ -935,56 +935,57 @@
           return res.text();
         })
         .then(function (html) {
-          if (html === null) return;
+          if (html === null) { self.hideProgress(); return; }
 
-          var parser = new DOMParser();
-          var doc = parser.parseFromString(html, 'text/html');
-          var newContent = doc.querySelector(self.contentSelector);
-
-          if (!newContent) { self.hideProgress(); location.href = url; return; }
-
-          content.innerHTML = newContent.innerHTML;
-
-          // Execute scripts in new content (errors must not break progress)
-          content.querySelectorAll('script').forEach(function (oldScript) {
-            try {
-              var newScript = document.createElement('script');
-              if (oldScript.src) {
-                newScript.src = oldScript.src;
-              } else {
-                newScript.textContent = oldScript.textContent;
-              }
-              oldScript.replaceWith(newScript);
-            } catch (e) {
-              console.warn('GK.navigate: script error', e);
-            }
-          });
-
-          // Update title
-          var newTitle = doc.querySelector('title');
-          if (newTitle) document.title = newTitle.textContent;
-
-          // Update URL
-          if (pushState) history.pushState({ gkNav: true }, '', url);
-
-          // Update active sidebar item
-          self.updateActive(url);
-
-          // Scroll to top
-          window.scrollTo(0, 0);
-
-          // Re-initialize GRIDKit components
           try {
-            if (typeof GK.table !== 'undefined' && GK.table.init) GK.table.init();
-            if (typeof GK.tooltip !== 'undefined' && GK.tooltip.init) GK.tooltip.init();
-          } catch (e) {}
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newContent = doc.querySelector(self.contentSelector);
+
+            if (!newContent) { self.hideProgress(); location.href = url; return; }
+
+            content.innerHTML = newContent.innerHTML;
+
+            // Execute scripts in new content
+            content.querySelectorAll('script').forEach(function (oldScript) {
+              try {
+                var newScript = document.createElement('script');
+                if (oldScript.src) {
+                  newScript.src = oldScript.src;
+                } else {
+                  newScript.textContent = oldScript.textContent;
+                }
+                oldScript.replaceWith(newScript);
+              } catch (e) {}
+            });
+
+            // Update title
+            var newTitle = doc.querySelector('title');
+            if (newTitle) document.title = newTitle.textContent;
+
+            // Update URL
+            if (pushState) history.pushState({ gkNav: true }, '', url);
+
+            // Update active sidebar item
+            self.updateActive(url);
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+
+            // Re-initialize GRIDKit components
+            try {
+              if (typeof GK.table !== 'undefined' && GK.table.init) GK.table.init();
+              if (typeof GK.tooltip !== 'undefined' && GK.tooltip.init) GK.tooltip.init();
+            } catch (e) {}
+          } catch (err) {
+            console.warn('GK.navigate: render error', err);
+          }
 
           self.hideProgress();
         })
         .catch(function (err) {
           console.warn('GK.navigate: fetch failed, falling back', err);
           self.hideProgress();
-          location.href = url;
         });
     },
 
