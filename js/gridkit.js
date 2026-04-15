@@ -931,7 +931,7 @@
 
       fetch(url, { headers: { 'X-GK-Ajax': '1' } })
         .then(function (res) {
-          if (!res.ok) { location.href = url; return null; }
+          if (!res.ok) { self.hideProgress(); location.href = url; return null; }
           return res.text();
         })
         .then(function (html) {
@@ -941,19 +941,23 @@
           var doc = parser.parseFromString(html, 'text/html');
           var newContent = doc.querySelector(self.contentSelector);
 
-          if (!newContent) { location.href = url; return; }
+          if (!newContent) { self.hideProgress(); location.href = url; return; }
 
           content.innerHTML = newContent.innerHTML;
 
-          // Execute scripts in new content
+          // Execute scripts in new content (errors must not break progress)
           content.querySelectorAll('script').forEach(function (oldScript) {
-            var newScript = document.createElement('script');
-            if (oldScript.src) {
-              newScript.src = oldScript.src;
-            } else {
-              newScript.textContent = oldScript.textContent;
+            try {
+              var newScript = document.createElement('script');
+              if (oldScript.src) {
+                newScript.src = oldScript.src;
+              } else {
+                newScript.textContent = oldScript.textContent;
+              }
+              oldScript.replaceWith(newScript);
+            } catch (e) {
+              console.warn('GK.navigate: script error', e);
             }
-            oldScript.replaceWith(newScript);
           });
 
           // Update title
@@ -970,13 +974,16 @@
           window.scrollTo(0, 0);
 
           // Re-initialize GRIDKit components
-          if (typeof GK.table !== 'undefined' && GK.table.init) GK.table.init();
-          if (typeof GK.tooltip !== 'undefined' && GK.tooltip.init) GK.tooltip.init();
+          try {
+            if (typeof GK.table !== 'undefined' && GK.table.init) GK.table.init();
+            if (typeof GK.tooltip !== 'undefined' && GK.tooltip.init) GK.tooltip.init();
+          } catch (e) {}
 
           self.hideProgress();
         })
         .catch(function (err) {
           console.warn('GK.navigate: fetch failed, falling back', err);
+          self.hideProgress();
           location.href = url;
         });
     },
@@ -1010,7 +1017,16 @@
     },
 
     showProgress: function () {
-      if (this.progressEl) this.progressEl.classList.add('active');
+      if (!this.progressEl) return;
+      // Bar resetten: Element entfernen + neu erstellen für frische Animation
+      var bar = this.progressEl.querySelector('.gk-nav-progress-bar');
+      if (bar) {
+        var fresh = document.createElement('div');
+        fresh.className = 'gk-nav-progress-bar';
+        bar.replaceWith(fresh);
+      }
+      this.progressEl.classList.remove('done');
+      this.progressEl.classList.add('active');
     },
 
     hideProgress: function () {
