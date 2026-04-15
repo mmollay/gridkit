@@ -927,64 +927,48 @@
 
       this.showProgress();
 
-      fetch(url, { headers: { 'X-GK-Ajax': '1' } })
-        .then(function (res) {
-          if (!res.ok) { self.hideProgress(); location.href = url; return null; }
-          return res.text();
-        })
-        .then(function (html) {
-          if (html === null) { self.hideProgress(); return; }
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.setRequestHeader('X-GK-Ajax', '1');
+      xhr.onload = function () {
+        var res = { ok: xhr.status >= 200 && xhr.status < 400, text: function () { return xhr.responseText; } };
+        if (!res.ok) { self.hideProgress(); location.href = url; return; }
+        var html = xhr.responseText;
+        self._render(html, url, content, pushState);
+      };
+      xhr.onerror = function () { self.hideProgress(); };
+      xhr.send();
+    },
 
+    _render: function (html, url, content, pushState) {
+      var self = this;
+      if (!html) { self.hideProgress(); return; }
+      try {
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(html, 'text/html');
+        var newContent = doc.querySelector(self.contentSelector);
+        if (!newContent) { self.hideProgress(); location.href = url; return; }
+        content.innerHTML = newContent.innerHTML;
+        content.querySelectorAll('script').forEach(function (oldScript) {
           try {
-            var parser = new DOMParser();
-            var doc = parser.parseFromString(html, 'text/html');
-            var newContent = doc.querySelector(self.contentSelector);
-
-            if (!newContent) { self.hideProgress(); location.href = url; return; }
-
-            content.innerHTML = newContent.innerHTML;
-
-            // Execute scripts in new content
-            content.querySelectorAll('script').forEach(function (oldScript) {
-              try {
-                var newScript = document.createElement('script');
-                if (oldScript.src) {
-                  newScript.src = oldScript.src;
-                } else {
-                  newScript.textContent = oldScript.textContent;
-                }
-                oldScript.replaceWith(newScript);
-              } catch (e) {}
-            });
-
-            // Update title
-            var newTitle = doc.querySelector('title');
-            if (newTitle) document.title = newTitle.textContent;
-
-            // Update URL
-            if (pushState) history.pushState({ gkNav: true }, '', url);
-
-            // Update active sidebar item
-            self.updateActive(url);
-
-            // Scroll to top
-            window.scrollTo(0, 0);
-
-            // Re-initialize GRIDKit components
-            try {
-              if (typeof GK.table !== 'undefined' && GK.table.init) GK.table.init();
-              if (typeof GK.tooltip !== 'undefined' && GK.tooltip.init) GK.tooltip.init();
-            } catch (e) {}
-          } catch (err) {
-            console.warn('GK.navigate: render error', err);
-          }
-
-          self.hideProgress();
-        })
-        .catch(function (err) {
-          console.warn('GK.navigate: fetch failed, falling back', err);
-          self.hideProgress();
+            var newScript = document.createElement('script');
+            if (oldScript.src) { newScript.src = oldScript.src; } else { newScript.textContent = oldScript.textContent; }
+            oldScript.replaceWith(newScript);
+          } catch (e) {}
         });
+        var newTitle = doc.querySelector('title');
+        if (newTitle) document.title = newTitle.textContent;
+        if (pushState) history.pushState({ gkNav: true }, '', url);
+        self.updateActive(url);
+        window.scrollTo(0, 0);
+        try {
+          if (typeof GK.table !== 'undefined' && GK.table.init) GK.table.init();
+          if (typeof GK.tooltip !== 'undefined' && GK.tooltip.init) GK.tooltip.init();
+        } catch (e) {}
+      } catch (err) {
+        console.warn('GK.navigate: render error', err);
+      }
+      self.hideProgress();
     },
 
     updateActive: function (url) {
