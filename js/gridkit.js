@@ -899,25 +899,25 @@
 
       var self = this;
       sidebar.querySelectorAll('.gk-sidebar-nav a[href]').forEach(function (link) {
-        link.addEventListener('click', function (e) {
-          self.handleClick(e, link);
-        });
+        var href = link.getAttribute('href');
+        // Nur interne Links abfangen
+        if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
+        if (href.startsWith('http') && !href.startsWith(location.origin)) return;
+        if (link.target === '_blank') return;
+
+        // onclick statt addEventListener — preventDefault SOFORT
+        link.onclick = function (e) {
+          if (e.ctrlKey || e.metaKey || e.shiftKey) return true;
+          e.preventDefault();
+          e.stopPropagation();
+          self.load(href, true);
+          return false;
+        };
       });
 
       window.addEventListener('popstate', function () {
         self.load(location.href, false);
       });
-    },
-
-    handleClick: function (e, link) {
-      var href = link.getAttribute('href');
-      if (!href || href.startsWith('#')) return;
-      if (href.startsWith('http') && !href.startsWith(location.origin)) return;
-      if (link.target === '_blank') return;
-      if (e.ctrlKey || e.metaKey || e.shiftKey) return;
-
-      e.preventDefault();
-      this.load(href, true);
     },
 
     load: function (url, pushState) {
