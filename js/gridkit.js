@@ -893,7 +893,7 @@
     contentSelector: '[data-gk-content]',
     progressEl: null,
 
-    init() {
+    init: function () {
       var sidebar = document.querySelector('[data-gk-ajax-nav]');
       if (!sidebar) return;
 
