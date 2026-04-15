@@ -897,8 +897,6 @@
       var sidebar = document.querySelector('[data-gk-ajax-nav]');
       if (!sidebar) return;
 
-      this.createProgress();
-
       var self = this;
       sidebar.querySelectorAll('.gk-sidebar-nav a[href]').forEach(function (link) {
         link.addEventListener('click', function (e) {
@@ -1018,8 +1016,8 @@
     },
 
     showProgress: function () {
-      if (!this.progressEl) return;
-      // Bar resetten: Element entfernen + neu erstellen für frische Animation
+      if (!this.progressEl) this.createProgress();
+      // Bar resetten für frische Animation
       var bar = this.progressEl.querySelector('.gk-nav-progress-bar');
       if (bar) {
         var fresh = document.createElement('div');

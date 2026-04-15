@@ -5378,6 +5378,8 @@ a.gk-stat-card:hover {
     background: var(--gk-primary);
     width: 0;
     border-radius: 0 2px 2px 0;
+}
+.gk-nav-progress.active .gk-nav-progress-bar {
     animation: gk-nav-load 2s ease-in-out forwards;
 }
 .gk-nav-progress.done .gk-nav-progress-bar {
