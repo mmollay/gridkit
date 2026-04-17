@@ -95,11 +95,11 @@ class YearFilter
         if ($this->mode === 'dropdown') {
             $selectId = $e($this->id) . '-select';
             echo '<select id="' . $selectId . '" class="' . $e($this->selectClass) . '" data-gk-years="' . $e($this->id) . '" onchange="(function(s){';
-            echo 'var u=new URL(s.dataset.base,window.location.origin);';
+            echo 'var u=new window.URL(s.dataset.base,window.location.origin);';
             echo 'var pres=JSON.parse(s.dataset.preserve||\'{}\');';
             echo 'Object.keys(pres).forEach(function(k){u.searchParams.set(k,pres[k]);});';
             echo 'u.searchParams.set(s.dataset.param,s.value);';
-            echo 'window.location=u.toString();';
+            echo 'window.location.href=u.toString();';
             echo '})(this)"';
             echo ' data-base="' . $e($base) . '"';
             echo ' data-param="' . $e($this->paramName) . '"';

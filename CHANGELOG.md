@@ -4,6 +4,12 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.7.1] - 2026-04-17 — YearFilter: Fix `URL is not a constructor`
+
+### Fixed
+- **YearFilter Dropdown**: `new URL(...)` → `new window.URL(...)` und `window.location.href` statt `window.location`. Behebt `Uncaught TypeError: URL is not a constructor` auf Seiten, die irgendwo ein Element mit `id="URL"` oder `name="URL"` haben (z.B. `/faktura/invoices`) — "named access on Window" überschattet sonst den globalen `URL`-Konstruktor.
+
+---
 ## [1.7.0] - 2026-04-17 — YearFilter: Toolbar-tauglich + „Alle"-Option
 
 ### Added
