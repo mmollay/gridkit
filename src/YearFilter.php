@@ -12,6 +12,7 @@ class YearFilter
     private int $currentYear;
     private string $baseUrl = '';
     private array $preserveParams = [];
+    private string $mode = 'chips'; // 'chips' | 'dropdown'
 
     public function __construct(string $id = 'year-filter', string $paramName = 'year')
     {
@@ -44,6 +45,12 @@ class YearFilter
         return $this;
     }
 
+    public function mode(string $mode): static
+    {
+        $this->mode = $mode === 'dropdown' ? 'dropdown' : 'chips';
+        return $this;
+    }
+
     public function current(): int
     {
         return $this->currentYear;
@@ -55,6 +62,37 @@ class YearFilter
 
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
+        $params = [];
+        foreach ($this->preserveParams as $p) {
+            if (isset($_GET[$p]) && $_GET[$p] !== '') {
+                $params[$p] = $_GET[$p];
+            }
+        }
+        $base = $this->baseUrl ?: strtok($_SERVER['REQUEST_URI'] ?? '', '?');
+
+        if ($this->mode === 'dropdown') {
+            $selectId = $e($this->id) . '-select';
+            echo '<div class="gk-year-filter gk-year-filter-dropdown" data-gk-years="' . $e($this->id) . '">';
+            echo '<select id="' . $selectId . '" class="gk-filter" onchange="(function(s){';
+            echo 'var u=new URL(s.dataset.base,window.location.origin);';
+            echo 'var pres=JSON.parse(s.dataset.preserve||\'{}\');';
+            echo 'Object.keys(pres).forEach(function(k){u.searchParams.set(k,pres[k]);});';
+            echo 'u.searchParams.set(s.dataset.param,s.value);';
+            echo 'window.location=u.toString();';
+            echo '})(this)"';
+            echo ' data-base="' . $e($base) . '"';
+            echo ' data-param="' . $e($this->paramName) . '"';
+            echo ' data-preserve="' . $e(json_encode((object)$params, JSON_UNESCAPED_SLASHES)) . '">';
+            foreach ($this->years as $year) {
+                $year = (int)$year;
+                $sel = $year === $this->currentYear ? ' selected' : '';
+                echo '<option value="' . $year . '"' . $sel . '>' . $year . '</option>';
+            }
+            echo '</select>';
+            echo '</div>';
+            return;
+        }
+
         echo '<div class="gk-year-filter" data-gk-years="' . $e($this->id) . '">';
         foreach ($this->years as $year) {
             $year = (int)$year;
@@ -62,14 +100,8 @@ class YearFilter
             $cls = 'gk-chip gk-chip-sm';
             if ($isActive) $cls .= ' gk-chip-active';
 
-            $params = [];
-            foreach ($this->preserveParams as $p) {
-                if (isset($_GET[$p]) && $_GET[$p] !== '') {
-                    $params[$p] = $_GET[$p];
-                }
-            }
             $params[$this->paramName] = $year;
-            $url = ($this->baseUrl ?: strtok($_SERVER['REQUEST_URI'] ?? '', '?')) . '?' . http_build_query($params);
+            $url = $base . '?' . http_build_query($params);
 
             echo '<a href="' . $e($url) . '" class="' . $cls . '">' . $year . '</a>';
         }

@@ -4,6 +4,24 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.6.0] - 2026-04-17 — YearFilter: Dropdown-Modus
+
+### Added
+- **YearFilter `mode('dropdown')`**: Zeigt die Jahre als `<select>`-Dropdown statt als Chip-Liste — nützlich wenn der verfügbare Zeitraum groß ist (z.B. 17 Jahre Firmenhistorie) und die Chip-Leiste zu lang würde.
+- Default bleibt `mode('chips')` — bestehende Verwendungen ändern sich nicht.
+- Kombinierbar mit `->range($from, $to)` um auch Jahre ohne Daten anzubieten.
+
+### Example
+```php
+(new YearFilter('cust-year-filter', 'year'))
+    ->baseUrl('/faktura/customers')
+    ->range(2010, (int)date('Y'))
+    ->preserve(['quarter', 'month', 'show', 'q'])
+    ->mode('dropdown')
+    ->render();
+```
+
+---
 ## [1.5.0] - 2026-04-15 — AJAX Sidebar Navigation (SPA-lite)
 
 ### Added
