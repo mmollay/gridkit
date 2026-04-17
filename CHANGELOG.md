@@ -4,6 +4,31 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.7.0] - 2026-04-17 — YearFilter: Toolbar-tauglich + „Alle"-Option
+
+### Added
+- **`allOption(string $label = 'Alle Jahre', int $value = 0)`**: Fügt eine „Alle"-Option am Anfang des Dropdowns ein. Der Controller muss den übergebenen Wert (default `0`) als „kein Filter" interpretieren.
+- **`selectClass(string $class)`**: Legt die CSS-Klasse des `<select>` fest (default `gk-filter`).
+
+### Changed
+- **`mode('dropdown')` rendert jetzt nur das `<select>`** — ohne umgebenden `<div class="gk-year-filter-dropdown">`. Dadurch lässt sich das Dropdown direkt in eine bestehende `.gk-toolbar` (z.B. via `Table::toolbarHtml()`) einspeisen, ohne Layout-Bruch.
+
+### Example
+```php
+ob_start();
+(new YearFilter('cust-year', 'year'))
+    ->baseUrl('/faktura/customers')
+    ->range(2010, (int)date('Y'))
+    ->preserve(['quarter', 'month', 'q'])
+    ->mode('dropdown')
+    ->allOption('Alle Jahre')
+    ->render();
+$toolbarHtml = ob_get_clean();
+
+(new Table('customers'))->setData($rows)->toolbarHtml($toolbarHtml)->render();
+```
+
+---
 ## [1.6.0] - 2026-04-17 — YearFilter: Dropdown-Modus
 
 ### Added

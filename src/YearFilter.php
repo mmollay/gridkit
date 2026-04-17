@@ -13,6 +13,8 @@ class YearFilter
     private string $baseUrl = '';
     private array $preserveParams = [];
     private string $mode = 'chips'; // 'chips' | 'dropdown'
+    private ?array $allOption = null; // ['label' => 'Alle Jahre', 'value' => 0]
+    private string $selectClass = 'gk-filter';
 
     public function __construct(string $id = 'year-filter', string $paramName = 'year')
     {
@@ -51,6 +53,26 @@ class YearFilter
         return $this;
     }
 
+    /**
+     * Fügt eine "Alle"-Option am Anfang des Dropdowns ein.
+     * Der Controller muss den $value-Wert (default 0) als "kein Filter" interpretieren.
+     */
+    public function allOption(string $label = 'Alle Jahre', int $value = 0): static
+    {
+        $this->allOption = ['label' => $label, 'value' => $value];
+        return $this;
+    }
+
+    /**
+     * Setzt eine abweichende CSS-Klasse für das <select>. Nützlich, um das Dropdown
+     * in eine bestehende Toolbar (z.B. .gk-toolbar > .gk-filter) zu integrieren.
+     */
+    public function selectClass(string $class): static
+    {
+        $this->selectClass = $class;
+        return $this;
+    }
+
     public function current(): int
     {
         return $this->currentYear;
@@ -72,8 +94,7 @@ class YearFilter
 
         if ($this->mode === 'dropdown') {
             $selectId = $e($this->id) . '-select';
-            echo '<div class="gk-year-filter gk-year-filter-dropdown" data-gk-years="' . $e($this->id) . '">';
-            echo '<select id="' . $selectId . '" class="gk-filter" onchange="(function(s){';
+            echo '<select id="' . $selectId . '" class="' . $e($this->selectClass) . '" data-gk-years="' . $e($this->id) . '" onchange="(function(s){';
             echo 'var u=new URL(s.dataset.base,window.location.origin);';
             echo 'var pres=JSON.parse(s.dataset.preserve||\'{}\');';
             echo 'Object.keys(pres).forEach(function(k){u.searchParams.set(k,pres[k]);});';
@@ -83,13 +104,17 @@ class YearFilter
             echo ' data-base="' . $e($base) . '"';
             echo ' data-param="' . $e($this->paramName) . '"';
             echo ' data-preserve="' . $e(json_encode((object)$params, JSON_UNESCAPED_SLASHES)) . '">';
+            if ($this->allOption !== null) {
+                $allVal = (int)$this->allOption['value'];
+                $sel = $allVal === $this->currentYear ? ' selected' : '';
+                echo '<option value="' . $allVal . '"' . $sel . '>' . $e($this->allOption['label']) . '</option>';
+            }
             foreach ($this->years as $year) {
                 $year = (int)$year;
                 $sel = $year === $this->currentYear ? ' selected' : '';
                 echo '<option value="' . $year . '"' . $sel . '>' . $year . '</option>';
             }
             echo '</select>';
-            echo '</div>';
             return;
         }
 
