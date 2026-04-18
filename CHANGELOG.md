@@ -4,6 +4,17 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.8.0] - 2026-04-17 — Table: Tabular-Nums für Währung/Zahlen
+
+### Added / Changed
+- **Table**: Spalten mit `format: 'currency'` oder `format: 'number'` bekommen automatisch:
+  - `font-variant-numeric: tabular-nums` → gleichbreite Ziffern, Euro-Zeichen stehen zeilenübergreifend untereinander
+  - `text-align: right` (wenn nicht anders gesetzt)
+  - `white-space: nowrap` (wenn nicht explizit gesetzt)
+  
+  Damit sehen Beträge in Tabellen sofort typografisch korrekt aus, ohne dass jede View einzeln CSS setzen muss.
+
+---
 ## [1.7.1] - 2026-04-17 — YearFilter: Fix `URL is not a constructor`
 
 ### Fixed

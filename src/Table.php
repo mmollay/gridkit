@@ -364,6 +364,12 @@ class Table
                 if (isset($col['minWidth'])) $tdStyles[] = 'min-width:' . $e($col['minWidth']);
                 if (isset($col['maxWidth'])) $tdStyles[] = 'max-width:' . $e($col['maxWidth']);
                 if (!empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
+                // Währungs- und Zahlenspalten: monospaced Ziffern, damit € untereinander stehen
+                if (($col['format'] ?? '') === 'currency' || ($col['format'] ?? '') === 'number') {
+                    $tdStyles[] = 'font-variant-numeric:tabular-nums';
+                    if (!isset($col['align'])) $tdStyles[] = 'text-align:right';
+                    if (empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
+                }
                 $tdStyle = $tdStyles ? ' style="' . implode(';', $tdStyles) . '"' : '';
                 $tdClass = !empty($col['hideOnMobile']) ? ' class="gk-hide-mobile"' : '';
                 $dataLabel = ' data-label="' . $e($col['label']) . '"';
