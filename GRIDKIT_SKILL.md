@@ -1,6 +1,6 @@
 # GRIDKit – Agent Skill
 
-> **Version:** 1.5.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.9.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.ssi.at | **Source:** `/home/pawbot/projects/gridkit/` (= `/home/develop/gridkit/`)
 
 ## Purpose
@@ -42,6 +42,7 @@ You are building or maintaining a web application using **GRIDKit**, a lightweig
 | FilterChips | `GridKit\FilterChips` | URL-based filter chip buttons |
 | YearFilter | `GridKit\YearFilter` | Year navigation filter |
 | Lang | `GridKit\Lang` | i18n / multilingual support |
+| liveTable (JS) | `GK.liveTable` | AJAX tables (search/filter/sort/pagination live, no reload) |
 
 ## Page Skeleton (SSI Panel context)
 
@@ -262,6 +263,37 @@ GK.modal.close();
 // Table refresh (after save/delete in server-side mode)
 GK.table.refresh('table-id');
 ```
+
+### Live Tables (`GK.liveTable`) — seit 1.9.0
+
+AJAX-gefilterte Tabellen: Search + Filter + Sort + Pagination ohne Full-Page-Reload.
+Cursor bleibt beim Tippen, URL wird via `history.replaceState` synchron gehalten.
+
+```html
+<!-- Inputs: beliebig ausserhalb des Containers -->
+<input data-gk-live-input="my-tbl" name="q" placeholder="Suche">
+<select data-gk-live-input="my-tbl" name="status">...</select>
+
+<!-- Container: wird AJAX-getauscht -->
+<div id="my-tbl" data-gk-live-table="/my-list">
+    <!-- Tabelle, Sort-Header (<a>), Paginierung — alles live -->
+</div>
+```
+
+**Controller-Seite**: bei `X-Requested-With: XMLHttpRequest` oder `?partial=1` nur den Container-Inhalt ohne Layout rendern. Beispiel PHP:
+
+```php
+if ($request->isAjax() || $request->get('partial') === '1') {
+    return $this->view('my-list-partial', $data);
+}
+return $this->view('my-list', $data);
+```
+
+Features:
+- **Debounce 250 ms** für XHR-fetch, URL-Sync aber sofort.
+- **Link-Interceptor**: `<a href>` innerhalb des Containers die auf denselben Endpoint zeigen → AJAX-Reload (Sort-Header, Pagination).
+- **`patchNavSelects()`**: überschreibt `onchange` von `<select data-gk-years>` sodass sie `window.location.search` als Basis nehmen. Behält aktuelle Suche beim Jahr-Wechsel.
+- Event `gk-live-reloaded` wird nach jedem Swap auf dem Container gefeuert — an Eigen-Code für Re-Init binden.
 
 ### AJAX Navigation (SPA-lite)
 
