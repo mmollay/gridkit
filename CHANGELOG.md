@@ -4,6 +4,31 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.9.0] - 2026-04-24 — GK.liveTable: AJAX-gefilterte Tabellen
+
+### Added
+- **Neues Modul `GK.liveTable`** (in `js/gridkit.js`): zentrale Komponente für Live-Such-/Filter-/Sort-/Paginierungs-Tabellen ohne Full-Page-Reload.
+  - Container: `<div id="..." data-gk-live-table="/endpoint">...</div>`
+  - Inputs (außerhalb des Containers): `<input data-gk-live-input="container-id" name="q">`
+  - Beim Tippen: 250 ms Debounce → XHR mit `X-Requested-With: XMLHttpRequest` + `?partial=1` → Container-`innerHTML` wird getauscht, Cursor bleibt.
+  - URL wird sofort (ohne Debounce) via `history.replaceState` aktualisiert — andere Navigations-Elemente (YearFilter, Sort-Links) sehen den aktuellen Zustand.
+  - Link-Interceptor im Container: interne `<a href>` die auf denselben Endpoint zeigen (Sort-Header, Pagination) laufen automatisch als AJAX-Reload.
+  - `patchNavSelects()`: überschreibt `onchange` von `<select data-gk-years>` sodass sie `window.location.search` als Basis nehmen statt Server-gerendertes `data-preserve` (behält aktuelle Suche beim Jahr-Wechsel).
+- Controller-Seite muss bei AJAX-Request nur den Container-Inhalt ohne Layout rendern.
+
+### Usage-Beispiel
+
+```html
+<!-- Filter bleiben stehen, Cursor im Input verloren? Nein. -->
+<input data-gk-live-input="my-tbl" name="q" placeholder="Suche">
+<select data-gk-live-input="my-tbl" name="status">...</select>
+
+<div id="my-tbl" data-gk-live-table="/my-list">
+    <!-- Tabelle, Sort-Header, Paginierung — alles live swappable -->
+</div>
+```
+
+---
 ## [1.8.0] - 2026-04-17 — Table: Tabular-Nums für Währung/Zahlen
 
 ### Added / Changed

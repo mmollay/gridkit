@@ -1382,6 +1382,140 @@
   // gk-richtext wird nun via CKEditor5 initialisiert (siehe Form.php)
   GK.initRichtext = function () {};
 
+  // === LIVE TABLE ===
+  //
+  // AJAX-gefilterte Tabellen-Views. Search + Filter + Sort + Pagination ohne
+  // Full-Page-Reload. Cursor bleibt beim Tippen, URL wird via replaceState
+  // synchron gehalten.
+  //
+  // Usage (Beispiel):
+  //   <div id="my-tbl" data-gk-live-table="/invoices">
+  //     <!-- Tabelle, Sort-Header, Pagination — alles AJAX-swappable -->
+  //   </div>
+  //   <input data-gk-live-input="my-tbl" name="q">
+  //   <select data-gk-live-input="my-tbl" name="status">...</select>
+  //
+  // Controller muss bei X-Requested-With: XMLHttpRequest oder ?partial=1 nur
+  // den Container-Inhalt liefern (kein Layout).
+  //
+  GK.liveTable = {
+    init: function (root) {
+      var r = root || document;
+      r.querySelectorAll("[data-gk-live-table]").forEach(function (c) {
+        GK.liveTable.bind(c);
+      });
+      r.querySelectorAll("[data-gk-live-input]").forEach(function (inp) {
+        GK.liveTable.bindInput(inp);
+      });
+      GK.liveTable.patchNavSelects(r);
+    },
+    bind: function (container) {
+      if (container._gkLiveBound) return;
+      container._gkLiveBound = true;
+      container.addEventListener("click", function (e) {
+        var a = e.target.closest("a[href]");
+        if (!a) return;
+        var href = a.getAttribute("href");
+        if (!href || href.startsWith("#") || href.startsWith("javascript:")) return;
+        if (a.target === "_blank" || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        var baseUrl = container.dataset.gkLiveTable;
+        if (!baseUrl) return;
+        var urlObj;
+        try { urlObj = new URL(href, window.location.origin); } catch (_) { return; }
+        var basePath = new URL(baseUrl, window.location.origin).pathname;
+        if (urlObj.pathname !== basePath) return;
+        e.preventDefault();
+        e.stopPropagation();
+        GK.liveTable.loadUrl(container, urlObj);
+      });
+    },
+    loadUrl: function (container, urlObj) {
+      var fetchParams = new URLSearchParams(urlObj.searchParams);
+      fetchParams.set("partial", "1");
+      var displayParams = new URLSearchParams(urlObj.searchParams);
+      displayParams.delete("partial");
+      var displayUrl = urlObj.pathname + (displayParams.toString() ? "?" + displayParams.toString() : "");
+      container.classList.add("gk-live-loading");
+      fetch(urlObj.pathname + "?" + fetchParams.toString(), { headers: { "X-Requested-With": "XMLHttpRequest" } })
+        .then(function (r) { return r.text(); })
+        .then(function (html) {
+          container.innerHTML = html;
+          window.history.replaceState(null, "", displayUrl);
+          container.dispatchEvent(new CustomEvent("gk-live-reloaded", { bubbles: true }));
+          GK.liveTable.init(container);
+        })
+        .catch(function () {})
+        .finally(function () { container.classList.remove("gk-live-loading"); });
+    },
+    bindInput: function (input) {
+      if (input._gkLiveBound) return;
+      input._gkLiveBound = true;
+      var containerId = input.dataset.gkLiveInput;
+      var container = document.getElementById(containerId);
+      if (!container) return;
+      var evName = input.tagName === "INPUT" && input.type !== "checkbox" ? "input" : "change";
+      var timer = null;
+      input.addEventListener(evName, function () {
+        GK.liveTable.syncUrl(container);
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(function () { GK.liveTable.reload(container); }, 250);
+      });
+    },
+    syncUrl: function (container) {
+      var baseUrl = container.dataset.gkLiveTable || window.location.pathname;
+      var params = GK.liveTable.collectParams(container);
+      var displayUrl = baseUrl + (params.toString() ? "?" + params.toString() : "");
+      window.history.replaceState(null, "", displayUrl);
+    },
+    patchNavSelects: function (root) {
+      var r = root || document;
+      r.querySelectorAll("select[data-gk-years]").forEach(function (sel) {
+        if (sel._gkLivePatched) return;
+        sel._gkLivePatched = true;
+        var base = sel.dataset.base || window.location.pathname;
+        var param = sel.dataset.param || "year";
+        sel.onchange = function () {
+          var u = new URL(base, window.location.origin);
+          var cur = new URLSearchParams(window.location.search);
+          cur.forEach(function (v, k) { if (v !== "") u.searchParams.set(k, v); });
+          u.searchParams.set(param, sel.value);
+          window.location.href = u.toString();
+        };
+      });
+    },
+    collectParams: function (container) {
+      var params = new URLSearchParams(window.location.search);
+      document.querySelectorAll('[data-gk-live-input="' + container.id + '"]').forEach(function (inp) {
+        var name = inp.name || inp.dataset.gkName;
+        if (!name) return;
+        var val = inp.type === "checkbox" ? (inp.checked ? "1" : "") : inp.value.trim();
+        if (val === "" || val === "0") params.delete(name);
+        else params.set(name, val);
+      });
+      return params;
+    },
+    reload: function (container) {
+      var baseUrl = container.dataset.gkLiveTable;
+      var params = GK.liveTable.collectParams(container);
+      params.set("partial", "1");
+      var fetchUrl = baseUrl + "?" + params.toString();
+      var displayUrl = baseUrl + "?" + new URLSearchParams(
+        Array.from(params.entries()).filter(function (pair) { return pair[0] !== "partial"; })
+      ).toString();
+      container.classList.add("gk-live-loading");
+      fetch(fetchUrl, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+        .then(function (r) { return r.text(); })
+        .then(function (html) {
+          container.innerHTML = html;
+          window.history.replaceState(null, "", displayUrl);
+          container.dispatchEvent(new CustomEvent("gk-live-reloaded", { bubbles: true }));
+          GK.liveTable.init(container);
+        })
+        .catch(function () {})
+        .finally(function () { container.classList.remove("gk-live-loading"); });
+    },
+  };
+
   // Extend init
   var _origInit = GK.init;
   GK.init = function () {
@@ -1392,6 +1526,7 @@
     if (GK.selectSearch) GK.selectSearch.init();
     if (GK.multiSelect) GK.multiSelect.init();
     if (GK.ajaxSelect) GK.ajaxSelect.init();
+    if (GK.liveTable) GK.liveTable.init();
   };
 
   // Dropdown toggle (Header user menu etc.)
