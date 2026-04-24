@@ -154,7 +154,15 @@ a:hover {
   background: #fff;
   border: 1px solid #d0d7de;
   border-radius: 12px;
-  overflow: clip;
+  /* overflow: visible, damit Dropdowns (gk-select-search, Status-Filter etc.)
+     aus der Toolbar ueber den Tabellen-Rand hinaus rendern koennen. Abgerundete
+     Ecken ueber gk-table-scroll (falls horizontal gescrollt wird). */
+  overflow: visible;
+}
+/* Wenn horizontal gescrollt werden muss: innerhalb eines gk-table-scroll-Containers */
+.gk-table-scroll {
+  overflow-x: auto;
+  border-radius: inherit;
 }
 .gk-toolbar {
   display: flex;

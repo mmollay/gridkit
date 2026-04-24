@@ -4,6 +4,13 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.9.3] - 2026-04-24 — Table-Wrap overflow:visible (Dropdown-Fix)
+
+### Fixed
+- `.gk-table-wrap { overflow: clip }` → `overflow: visible`. Dropdowns innerhalb der Toolbar (gk-select-search, gk-filter-selects) wurden vom Wrap beschnitten wenn sie nach unten über die Tabellen-Grenze hinausragten (v.a. bei kurzen Tabellen). Jetzt rendern sie korrekt drüber.
+- Für horizontales Scrollen bei breiten Tabellen steht `.gk-table-scroll`-Container bereit (`overflow-x:auto`, `border-radius:inherit`).
+
+---
 ## [1.9.2] - 2026-04-24 — GK.liveTable: Event-Detection für Non-Text-Inputs
 
 ### Fixed
