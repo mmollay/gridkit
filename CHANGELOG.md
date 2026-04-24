@@ -4,6 +4,14 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.9.1] - 2026-04-24 — GK.liveTable: Session-Persistenz
+
+### Added
+- **Session-Persistenz**: Filterzustand pro Live-Container wird im `sessionStorage` gespeichert (Key `gkLive:<container-id>`). Beim „frischen" Aufruf derselben Seite (leere URL-Query, z.B. per Sidebar-Klick) wird der gespeicherte Zustand automatisch restauriert — Tabelle lädt gefiltert/sortiert wie der User es zuletzt hatte.
+- Nur für die aktuelle Browser-Session (bei Neustart/Tab-Close alles zurück).
+- Neue API-Methoden: `GK.liveTable.saveSession(container)`, `GK.liveTable.restoreSession(container)`.
+
+---
 ## [1.9.0] - 2026-04-24 — GK.liveTable: AJAX-gefilterte Tabellen
 
 ### Added

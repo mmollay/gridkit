@@ -1403,11 +1403,33 @@
       var r = root || document;
       r.querySelectorAll("[data-gk-live-table]").forEach(function (c) {
         GK.liveTable.bind(c);
+        GK.liveTable.restoreSession(c);
       });
       r.querySelectorAll("[data-gk-live-input]").forEach(function (inp) {
         GK.liveTable.bindInput(inp);
       });
       GK.liveTable.patchNavSelects(r);
+    },
+    // Session-Persistenz: wenn URL keine Filter hat (Sidebar-Klick), restauriere
+    // den gespeicherten Stand der aktuellen Session.
+    restoreSession: function (container) {
+      if (container._gkLiveRestored) return;
+      container._gkLiveRestored = true;
+      try {
+        var saved = sessionStorage.getItem("gkLive:" + container.id);
+        if (!saved) return;
+        if (window.location.search && window.location.search.length > 1) return;
+        var baseUrl = container.dataset.gkLiveTable || window.location.pathname;
+        var restored = baseUrl + (saved.charAt(0) === "?" ? saved : "?" + saved);
+        var urlObj = new URL(restored, window.location.origin);
+        if (urlObj.search) {
+          window.history.replaceState(null, "", restored);
+          GK.liveTable.loadUrl(container, urlObj);
+        }
+      } catch (e) {}
+    },
+    saveSession: function (container) {
+      try { sessionStorage.setItem("gkLive:" + container.id, window.location.search); } catch (e) {}
     },
     bind: function (container) {
       if (container._gkLiveBound) return;
@@ -1441,6 +1463,7 @@
         .then(function (html) {
           container.innerHTML = html;
           window.history.replaceState(null, "", displayUrl);
+          GK.liveTable.saveSession(container);
           container.dispatchEvent(new CustomEvent("gk-live-reloaded", { bubbles: true }));
           GK.liveTable.init(container);
         })
@@ -1466,6 +1489,7 @@
       var params = GK.liveTable.collectParams(container);
       var displayUrl = baseUrl + (params.toString() ? "?" + params.toString() : "");
       window.history.replaceState(null, "", displayUrl);
+      GK.liveTable.saveSession(container);
     },
     patchNavSelects: function (root) {
       var r = root || document;
@@ -1508,6 +1532,7 @@
         .then(function (html) {
           container.innerHTML = html;
           window.history.replaceState(null, "", displayUrl);
+          GK.liveTable.saveSession(container);
           container.dispatchEvent(new CustomEvent("gk-live-reloaded", { bubbles: true }));
           GK.liveTable.init(container);
         })
