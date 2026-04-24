@@ -1517,6 +1517,8 @@
         if (val === "" || val === "0") params.delete(name);
         else params.set(name, val);
       });
+      // Filterwechsel → zurück auf Seite 1
+      params.delete("page");
       return params;
     },
     reload: function (container) {
