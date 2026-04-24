@@ -1476,7 +1476,8 @@
       var containerId = input.dataset.gkLiveInput;
       var container = document.getElementById(containerId);
       if (!container) return;
-      var evName = input.tagName === "INPUT" && input.type !== "checkbox" ? "input" : "change";
+      var textLike = ["text", "search", "url", "email", "tel", "password"];
+      var evName = input.tagName === "INPUT" && textLike.indexOf(input.type) >= 0 ? "input" : "change";
       var timer = null;
       input.addEventListener(evName, function () {
         GK.liveTable.syncUrl(container);
