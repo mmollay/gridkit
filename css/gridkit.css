@@ -175,6 +175,39 @@ a:hover {
 .gk-toolbar-spacer {
   flex: 1;
 }
+/* Zwei-Zeilen-Toolbar: Suche allein in Zeile 1, alle Filter in Zeile 2.
+   Verwendung:
+     <div class="gk-toolbar gk-toolbar-stacked">
+       <div class="gk-toolbar-row gk-toolbar-row-search">
+         <input class="gk-search">
+       </div>
+       <div class="gk-toolbar-row gk-toolbar-row-filters">
+         <select class="gk-filter">…</select>
+         …
+         <div class="gk-toolbar-spacer"></div>
+         <button class="gk-btn-text">Reset</button>
+       </div>
+     </div>
+*/
+.gk-toolbar.gk-toolbar-stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.gk-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.gk-toolbar-row-search .gk-search {
+  flex: 1 1 auto;
+  min-width: 240px;
+}
+.gk-toolbar-row-filters > .gk-filter,
+.gk-toolbar-row-filters > .gk-select-search {
+  flex: 0 0 auto;
+}
 /* Toolbar-Buttons immer pill — konsistent mit der Suchleiste */
 .gk-toolbar .gk-btn-filled,
 .gk-toolbar .gk-btn-outlined,
