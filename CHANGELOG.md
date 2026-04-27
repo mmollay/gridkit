@@ -4,6 +4,28 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.10.0] - 2026-04-26 — TableHeader-Komponente
+
+### Added
+- **`GridKit\TableHeader`** — neue Komponente für einheitliche Filter-/Such-Leisten über Tabellen. Strukturiert in drei feste Sektionen:
+  1. Status-Zeile (volle Breite, typisch FilterChips „Alle / Offen / Bezahlt")
+  2. Toolbar (Suche + Filter-Dropdowns inline, optional Reset-Button)
+  3. Erweitert (collapsible `<details>` für Datums-/Beträge-/Detail-Filter)
+- Inhalte werden via Closures übergeben → Aufruf in der View bleibt kompakt:
+  ```php
+  TableHeader::make('exp')
+    ->status(fn() => $statusChips->render())
+    ->search('q', $q, 'Suche…', ['live' => 'exp-live'])
+    ->filter(fn() => $yearFilter->render())
+    ->filter('<select class="gk-filter">…</select>')
+    ->advanced(fn() => $renderDateRange())
+    ->reset('/faktura/expenses')
+    ->render();
+  ```
+- CSS-Klassen: `.gk-tableheader`, `.gk-tableheader-status`, `.gk-tableheader-toolbar`, `.gk-tableheader-advanced`, `.gk-tableheader-spacer`. Konsistente Paddings/Borders, nutzt vorhandene `gk-search`/`gk-filter`/`gk-chip`-Styles.
+- Ziel: Schluss mit „jede Tabellen-Seite eigene Filter-Anordnung". Ab jetzt eine Convention für alle Tabellen.
+
+---
 ## [1.9.3] - 2026-04-24 — Table-Wrap overflow:visible (Dropdown-Fix)
 
 ### Fixed

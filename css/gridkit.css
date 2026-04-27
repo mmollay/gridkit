@@ -217,6 +217,68 @@ a:hover {
 .gk-toolbar .gk-search {
   margin-right: 4px;
 }
+
+/* ── GridKit\TableHeader — einheitliche Filter-/Such-Leiste ── */
+.gk-tableheader {
+  display: flex;
+  flex-direction: column;
+}
+.gk-tableheader-status {
+  padding: 12px 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.gk-tableheader-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gk-border);
+}
+.gk-tableheader-toolbar .gk-search {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+.gk-tableheader-toolbar .gk-filter,
+.gk-tableheader-toolbar select.gk-filter,
+.gk-tableheader-toolbar input.gk-filter {
+  flex: 0 0 auto;
+}
+.gk-tableheader-spacer {
+  flex: 1;
+}
+.gk-tableheader-advanced {
+  border-bottom: 1px solid var(--gk-border);
+}
+.gk-tableheader-advanced > summary {
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: var(--gk-primary, #5a4eff);
+  font-weight: 500;
+  padding: 8px 16px;
+  list-style: none;
+}
+.gk-tableheader-advanced > summary::before {
+  content: '+ ';
+  font-weight: 600;
+}
+.gk-tableheader-advanced[open] > summary::before {
+  content: '− ';
+}
+.gk-tableheader-advanced > summary::-webkit-details-marker {
+  display: none;
+}
+.gk-tableheader-advanced-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 12px;
+}
 .gk-search {
   padding: 8px 12px 8px 36px;
   border: 1.5px solid var(--gk-border);
