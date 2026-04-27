@@ -7,6 +7,7 @@ use GridKit\StatCards;
 use GridKit\Sidebar;
 use GridKit\FilterChips;
 use GridKit\YearFilter;
+use GridKit\TableHeader;
 use GridKit\Header;
 use GridKit\Button;
 use GridKit\Theme;
@@ -1159,6 +1160,49 @@ $chips->chip('', 'All', ['count' => 152])
     </div>
     <div class="demo-code"><pre>$years = new YearFilter('year-nav', 'year');
 $years->range(2022, 2026)->render();</pre></div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>TableHeader <span style="font-size:11px;background:var(--gk-success);color:#fff;padding:2px 6px;border-radius:4px;vertical-align:middle;">v1.10</span></h3>
+    <p class="demo-intro">One unified filter/search bar for all tables. Three fixed sections: Status row · Toolbar · Advanced (collapsible). Stops every page from looking different.</p>
+    <div class="demo-pair">
+    <div class="demo-card" style="padding:0;overflow:hidden;border-radius:8px;">
+        <?php
+        TableHeader::make('th-demo')
+            ->status(function() {
+                $st = new FilterChips('th-status', 'status');
+                $st->chip('', 'All')
+                   ->chip('open', 'Open', ['count' => 12, 'color' => 'orange'])
+                   ->chip('paid', 'Paid', ['count' => 47, 'color' => 'green'])
+                   ->render();
+            })
+            ->search('q', '', 'Search invoices, customer…', ['live' => 'th-live'])
+            ->filter(function() {
+                $yf = new YearFilter('th-year', 'year');
+                $yf->range(2022, 2026)->mode('dropdown')->allOption('All years')->render();
+            })
+            ->filter('<select class="gk-filter"><option>All payment methods</option><option>Bank</option><option>Cash</option></select>')
+            ->advanced(function() {
+                echo '<input type="date" class="gk-filter" title="From">';
+                echo '<span style="color:var(--gk-text-muted);font-size:12px;">–</span>';
+                echo '<input type="date" class="gk-filter" title="To">';
+                echo '<input type="number" class="gk-filter" placeholder="€ from" style="max-width:110px;">';
+                echo '<span style="color:var(--gk-text-muted);font-size:12px;">–</span>';
+                echo '<input type="number" class="gk-filter" placeholder="€ to" style="max-width:110px;">';
+            }, 'Date & amount range')
+            ->reset('?')
+            ->render();
+        ?>
+    </div>
+    <div class="demo-code"><pre>TableHeader::make('exp')
+    -&gt;status(fn() =&gt; $statusChips-&gt;render())
+    -&gt;search('q', $q, 'Search…', ['live' =&gt; 'exp-live'])
+    -&gt;filter(fn() =&gt; $yearFilter-&gt;render())
+    -&gt;filter('&lt;select class="gk-filter"&gt;…&lt;/select&gt;')
+    -&gt;advanced(fn() =&gt; renderDateRange())
+    -&gt;reset('/faktura/expenses')
+    -&gt;render();</pre></div>
     </div>
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">

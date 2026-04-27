@@ -41,6 +41,7 @@ You are building or maintaining a web application using **GRIDKit**, a lightweig
 | StatCards | `GridKit\StatCards` | KPI cards with icon, color, format |
 | FilterChips | `GridKit\FilterChips` | URL-based filter chip buttons |
 | YearFilter | `GridKit\YearFilter` | Year navigation filter |
+| TableHeader | `GridKit\TableHeader` | **Unified filter/search bar above tables — Status / Toolbar / Advanced (since v1.10.0)** |
 | Lang | `GridKit\Lang` | i18n / multilingual support |
 | liveTable (JS) | `GK.liveTable` | AJAX tables (search/filter/sort/pagination live, no reload) |
 
@@ -141,6 +142,37 @@ $yf->baseUrl('/my-page')
 
 $currentYear = $yf->current();  // int — use for DB queries
 ```
+
+### TableHeader (since v1.10.0) — **Required for every table page**
+
+The single source of truth for filter/search bars above tables. Three fixed sections in this exact order:
+
+1. **Status row** (full-width, typically `FilterChips` like „All / Open / Paid")
+2. **Toolbar** (search + filter dropdowns inline, optional reset button)
+3. **Advanced** (collapsible `<details>` for date / amount / detail filters)
+
+```php
+TableHeader::make('exp')
+    ->status(fn() => $statusChips->render())                  // closure
+    ->search('q', $q, 'Search…', ['live' => 'exp-live'])      // built-in
+    ->filter(fn() => $yearFilter->render())                    // closure
+    ->filter('<select class="gk-filter">…</select>')           // raw HTML
+    ->advanced(fn() => renderDateRange(), 'Date & amount')     // optional collapsible
+    ->reset('/faktura/expenses')                               // optional reset btn
+    ->render();
+```
+
+API:
+- `make($id)` static factory
+- `status(\Closure $renderer)`: top row, full width
+- `search(string $name, string $value = '', string $placeholder = '…', array $opts = ['live' => '…', 'id' => '…'])`
+- `filter($contentOrClosure)`: any number of toolbar slots — Closure (echo'd) or raw HTML string
+- `advanced(\Closure $renderer, string $summary = 'Erweiterte Filter', bool $open = false)`
+- `reset(string $baseUrl, string $label = 'Filter zurücksetzen')`
+
+CSS classes (all auto-applied): `gk-tableheader`, `gk-tableheader-status`, `gk-tableheader-toolbar`, `gk-tableheader-advanced`, `gk-tableheader-spacer`.
+
+**Do NOT** build your own filter row with raw `gk-toolbar` / `gk-toolbar-stacked` if `TableHeader` fits — every table page must use this for visual consistency.
 
 ### StatCards
 
