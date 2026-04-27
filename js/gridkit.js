@@ -302,6 +302,27 @@
           updateBar();
         });
 
+        // Click anywhere on the row toggles the checkbox — schneller als nur die kleine Checkbox treffen.
+        // Ausnahmen: Klicks auf Buttons, Links, Inputs, oder explicit interaktive Elemente sollen nicht selectieren.
+        wrap.addEventListener("click", function (e) {
+          if (e.target.closest("a, button, input, select, textarea, label, [data-gk-action], .ssi-clickable-row, .nl-act-icon, .gk-btn")) {
+            return; // Originalverhalten beibehalten
+          }
+          const tr = e.target.closest("tbody tr[data-gk-row-id]");
+          if (!tr) return;
+          const cb = tr.querySelector("td.gk-cb-col input[type=checkbox]");
+          if (!cb || cb.disabled) return;
+          // Ignorier Klick wenn schon Text-Selektion läuft (Drag-Auswahl)
+          const sel = window.getSelection && window.getSelection();
+          if (sel && sel.toString().length > 0 && !e.target.closest("td.gk-cb-col")) return;
+
+          // Toggle
+          cb.checked = !cb.checked;
+          if (cb.checked) selected.add(getRowId(tr));
+          else selected.delete(getRowId(tr));
+          updateBar();
+        });
+
         // Select-all checkbox
         const selAll = wrap.querySelector("[data-gk-select-all]");
         if (selAll) {

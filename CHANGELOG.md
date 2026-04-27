@@ -4,6 +4,15 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.10.1] - 2026-04-27 — Selectable: Row-Click toggelt Checkbox
+
+### Improved
+- In `data-gk-selectable`-Tabellen togglet jetzt ein Klick **irgendwo in der Zeile** die Checkbox — nicht mehr nur die kleine Checkbox treffen. Beschleunigt Multi-Select erheblich.
+- Klicks auf interaktive Elemente (Buttons, Links, Inputs, Action-Icons, `.ssi-clickable-row`, `[data-gk-action]`) bleiben unberührt — kein Konflikt mit Edit-/Delete-/Detail-Modals.
+- Drag-Text-Auswahl wird respektiert (kein Toggle wenn User Text markiert).
+- Hover-Highlight + `cursor: pointer` auf selectable-Tabellen-Zeilen zeigen die Klickbarkeit.
+
+---
 ## [1.10.0] - 2026-04-26 — TableHeader-Komponente
 
 ### Added

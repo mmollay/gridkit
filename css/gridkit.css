@@ -424,6 +424,13 @@ a:hover {
 .gk-table tr.gk-row-selected {
   background: color-mix(in srgb, var(--gk-primary) 6%, transparent);
 }
+/* Selectable-Tabelle: Cursor & Hover zeigt dass Zeile klickbar ist */
+.gk-table-wrap[data-gk-selectable] tbody tr[data-gk-row-id] {
+  cursor: pointer;
+}
+.gk-table-wrap[data-gk-selectable] tbody tr[data-gk-row-id]:hover {
+  background: color-mix(in srgb, var(--gk-primary) 4%, transparent);
+}
 .gk-bulk-bar {
   display: flex;
   align-items: center;
