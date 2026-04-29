@@ -302,21 +302,22 @@
           updateBar();
         });
 
-        // Click anywhere on the row toggles the checkbox — schneller als nur die kleine Checkbox treffen.
-        // Ausnahmen: Klicks auf Buttons, Links, Inputs, oder explicit interaktive Elemente sollen nicht selectieren.
+        // Klick AUF die Checkbox-Spalte (auch daneben in derselben Zelle) togglet
+        // die Auswahl. Klicks auf andere Spalten machen NICHTS — sonst wird der
+        // User durch ungewollt aufpoppende Bulk-Action-Bars verwirrt (z.B. wenn
+        // er nur eine Tracking-Zelle ansehen will).
         wrap.addEventListener("click", function (e) {
-          if (e.target.closest("a, button, input, select, textarea, label, [data-gk-action], .ssi-clickable-row, .nl-act-icon, .gk-btn")) {
-            return; // Originalverhalten beibehalten
-          }
-          const tr = e.target.closest("tbody tr[data-gk-row-id]");
+          const cell = e.target.closest("td.gk-cb-col");
+          if (!cell) return;
+          // Nicht doppelt feuern wenn nativ schon die Checkbox getoggelt wurde
+          if (e.target.matches('input[type=checkbox]')) return;
+          const tr = cell.closest("tbody tr[data-gk-row-id]");
           if (!tr) return;
-          const cb = tr.querySelector("td.gk-cb-col input[type=checkbox]");
+          const cb = cell.querySelector("input[type=checkbox]");
           if (!cb || cb.disabled) return;
-          // Ignorier Klick wenn schon Text-Selektion läuft (Drag-Auswahl)
-          const sel = window.getSelection && window.getSelection();
-          if (sel && sel.toString().length > 0 && !e.target.closest("td.gk-cb-col")) return;
+          // Klicks auf <label>, die die Checkbox nativ togglen, ignorieren
+          if (e.target.closest("label")) return;
 
-          // Toggle
           cb.checked = !cb.checked;
           if (cb.checked) selected.add(getRowId(tr));
           else selected.delete(getRowId(tr));

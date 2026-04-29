@@ -4,6 +4,23 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.10.2] - 2026-04-29 — Selectable: nur Checkbox-Zelle togglet (Scope-Revert v1.10.1)
+
+### Changed
+v1.10.1 hatte den Klick-Bereich auf die ganze Zeile ausgeweitet. In der Praxis
+ist das verwirrend: ein Klick auf eine Daten-Zelle (z.B. „Tracking" in Newsletter,
+oder Beschreibung in Banking) lässt die Bulk-Action-Bar mit „Löschen" aufpoppen,
+obwohl der User nur eine Zelle ansehen wollte.
+
+Jetzt: **nur Klicks INNERHALB der Checkbox-Spalte (`td.gk-cb-col`)** togglen
+die Auswahl. Die Spalte selbst füllt den Klick-Bereich (volle Zellen-Höhe
+dank `<label>`-Wrapper im Anwender-Markup), das reicht für schnelles
+Multi-Select ohne Pixel-Treffsicherheit.
+
+CSS: Pointer-Cursor + Hover-Background nur noch auf `td.gk-cb-col`, nicht
+mehr auf der ganzen Zeile.
+
+---
 ## [1.10.1] - 2026-04-27 — Selectable: Row-Click toggelt Checkbox
 
 ### Improved

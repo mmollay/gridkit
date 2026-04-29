@@ -424,12 +424,11 @@ a:hover {
 .gk-table tr.gk-row-selected {
   background: color-mix(in srgb, var(--gk-primary) 6%, transparent);
 }
-/* Selectable-Tabelle: Cursor & Hover zeigt dass Zeile klickbar ist */
-.gk-table-wrap[data-gk-selectable] tbody tr[data-gk-row-id] {
+/* Selectable-Tabelle: nur die Checkbox-Zelle bekommt Pointer-Cursor.
+   (Bis v1.10.1 war's die ganze Zeile — verwirrt aber, weil dann jeder
+   ungewollte Klick die Bulk-Action-Bar aufpoppen lässt.) */
+.gk-table-wrap[data-gk-selectable] tbody tr[data-gk-row-id] td.gk-cb-col {
   cursor: pointer;
-}
-.gk-table-wrap[data-gk-selectable] tbody tr[data-gk-row-id]:hover {
-  background: color-mix(in srgb, var(--gk-primary) 4%, transparent);
 }
 .gk-bulk-bar {
   display: flex;
