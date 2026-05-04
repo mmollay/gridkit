@@ -1539,8 +1539,12 @@ select.gk-input {
   min-height: 56px;
 }
 .gk-form-compact .gk-section-title {
-  font-size: 13px;
-  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--gk-primary, #6366f1);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 .gk-form-compact .gk-field-hint {
   font-size: 11px;
@@ -2795,11 +2799,12 @@ a.gk-stat-card:hover {
 
 /* === CARD === */
 .gk-card {
-  background: #fff;
-  border: 1px solid #d0d7de;
+  background: var(--gk-surface, #fff);
+  border: 1px solid var(--gk-outline-variant, #d0d7de);
   border-radius: 12px;
   padding: 20px 24px;
   margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 .gk-card-title {
   margin: 0 0 16px;

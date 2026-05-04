@@ -4,6 +4,19 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.11.1] - 2026-05-04 — gk-card Shadow + gk-section-title Kontrast
+
+### Changed — gk-card: Subtiler Shadow für bessere Tiefenwirkung
+`gk-card` nutzt jetzt `var(--gk-surface)` und `var(--gk-outline-variant)` statt
+hardcodierter Farben. Dazu ein neuer subtiler Box-Shadow (`0 1px 4px rgba(0,0,0,0.07)`),
+damit Cards auf dem Seiten-Hintergrund klar erkennbar sind.
+
+### Changed — gk-form-compact .gk-section-title: Primärfarbe + Uppercase
+Section-Titles im Compact-Formular-Modus sind jetzt 11px / Uppercase / Primärfarbe —
+analog zu `.gk-card-title`. Damit sind Abschnittsgrenzen auch ohne Trennlinie sofort
+erkennbar.
+
+---
 ## [1.11.0] - 2026-05-04 — YearFilter respektiert allOption + neue gk-sort-icon-Klasse
 
 ### Fixed — YearFilter: allOption als Default wenn URL-Param fehlt
