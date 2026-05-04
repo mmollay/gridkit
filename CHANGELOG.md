@@ -4,6 +4,35 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.11.0] - 2026-05-04 — YearFilter respektiert allOption + neue gk-sort-icon-Klasse
+
+### Fixed — YearFilter: allOption als Default wenn URL-Param fehlt
+Bisher hat der YearFilter beim Aufruf ohne `?year=`-Parameter immer das
+**aktuelle Jahr** im Dropdown vorausgewählt — auch wenn `allOption('Alle Jahre')`
+gesetzt war. Das war inkonsistent: der Controller filterte „alle Jahre",
+aber das Dropdown zeigte das aktuelle Jahr als selektiert.
+
+Jetzt: ohne URL-Param + mit `allOption()` → Default ist **allOption-Wert**
+(typisch 0 = „Alle Jahre"). Ohne `allOption()` → weiterhin das aktuelle Jahr.
+
+### Added — `.gk-sort-icon` + `.gk-sort-link` für eigene Sort-Header
+Wer eigene Sort-Spalten via `material-icons` rendert (z.B. `unfold_more`,
+`arrow_upward`), bekam bisher die Default-Material-Icons-Größe von 24px
+in den Tabellenkopf — viel zu groß. Neue Klassen:
+
+- `.gk-sort-icon` — material-icons-Inline (14px, opacity 0.4, hover 0.7)
+- `.gk-sort-link` — flex-Container für Label + Icon (kein Underline, color inherit)
+- `.gk-sort-icon.is-active` — primary-Farbe + opacity 0.85 für aktive Sortierung
+
+Markup-Beispiel:
+```html
+<a href="?sort=date&dir=asc" class="gk-sort-link">
+  Datum
+  <span class="material-icons gk-sort-icon is-active">arrow_upward</span>
+</a>
+```
+
+---
 ## [1.10.2] - 2026-04-29 — Selectable: nur Checkbox-Zelle togglet (Scope-Revert v1.10.1)
 
 ### Changed

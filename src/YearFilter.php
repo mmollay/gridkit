@@ -20,7 +20,13 @@ class YearFilter
     {
         $this->id = $id;
         $this->paramName = $paramName;
-        $this->currentYear = (int)($_GET[$paramName] ?? date('Y'));
+        // Wenn URL-Param gesetzt: nimm den. Sonst:
+        // - currentYear = 0 als „nicht entschieden". Wird in render() finalisiert,
+        //   abhängig davon ob allOption gesetzt ist (dann 0 = „Alle Jahre"-Default)
+        //   oder nicht (dann date('Y') = aktuelles Jahr).
+        $this->currentYear = isset($_GET[$paramName]) && $_GET[$paramName] !== ''
+            ? (int)$_GET[$paramName]
+            : -1;
     }
 
     public function years(array $years): static
@@ -75,12 +81,29 @@ class YearFilter
 
     public function current(): int
     {
+        return $this->resolveYear();
+    }
+
+    /**
+     * currentYear finalisieren: -1 bedeutet „URL-Param war nicht gesetzt".
+     * Mit allOption → Default = allOption-Wert (typisch 0 = „Alle Jahre").
+     * Ohne allOption → Default = aktuelles Jahr.
+     */
+    private function resolveYear(): int
+    {
+        if ($this->currentYear === -1) {
+            $this->currentYear = $this->allOption !== null
+                ? (int)$this->allOption['value']
+                : (int)date('Y');
+        }
         return $this->currentYear;
     }
 
     public function render(): void
     {
         if (empty($this->years)) return;
+
+        $this->resolveYear();
 
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
