@@ -1434,6 +1434,8 @@
     },
     // Session-Persistenz: wenn URL keine Filter hat (Sidebar-Klick), restauriere
     // den gespeicherten Stand der aktuellen Session.
+    // WICHTIG: Voller Redirect statt AJAX, damit alle äußeren Elemente (Dropdowns,
+    // Pagination) korrekt vom PHP gerendert werden.
     restoreSession: function (container) {
       if (container._gkLiveRestored) return;
       container._gkLiveRestored = true;
@@ -1445,8 +1447,7 @@
         var restored = baseUrl + (saved.charAt(0) === "?" ? saved : "?" + saved);
         var urlObj = new URL(restored, window.location.origin);
         if (urlObj.search) {
-          window.history.replaceState(null, "", restored);
-          GK.liveTable.loadUrl(container, urlObj);
+          window.location.replace(restored);
         }
       } catch (e) {}
     },
@@ -1456,6 +1457,10 @@
     bind: function (container) {
       if (container._gkLiveBound) return;
       container._gkLiveBound = true;
+      // Session sofort speichern wenn URL-Filter vorhanden (z.B. direkter Link)
+      if (window.location.search && window.location.search.length > 1) {
+        GK.liveTable.saveSession(container);
+      }
       container.addEventListener("click", function (e) {
         var a = e.target.closest("a[href]");
         if (!a) return;

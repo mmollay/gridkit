@@ -4,6 +4,20 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.11.2] - 2026-05-12 — liveTable.restoreSession: Redirect statt AJAX + saveSession on bind
+
+### Fixed — restoreSession: voller Redirect statt AJAX
+`liveTable.restoreSession` verwendete bisher AJAX (`loadUrl`), was nur den `#inv-live`-Container
+aktualisierte. Dropdowns und Filter-Elemente außerhalb (YearFilter, Month-Select, Pagination)
+zeigten dadurch den falschen Stand ("Alle Jahre", "Alle Monate"). Fix: `window.location.replace()`
+erzwingt einen vollen PHP-Render, der alle Elemente korrekt befüllt.
+
+### Fixed — bind: Session sofort speichern bei URL-Parametern
+Beim direkten Aufruf einer gefilterten URL (z.B. `?year=2025&q=kraus&month=5`) wurde die Session
+erst nach einer Benutzeraktion gespeichert. Jetzt speichert `bind()` die Session sofort beim
+Laden, wenn URL-Parameter vorhanden sind.
+
+---
 ## [1.11.1] - 2026-05-04 — gk-card Shadow + gk-section-title Kontrast
 
 ### Changed — gk-card: Subtiler Shadow für bessere Tiefenwirkung
