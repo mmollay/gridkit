@@ -4,6 +4,17 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.11.3] - 2026-05-12 — ajaxSelect: Tastatur-Navigation (Pfeiltasten + Enter)
+
+### Added — ajaxSelect: Tastatur-Navigation
+`GK.ajaxSelect` unterstützt jetzt vollständige Tastatur-Bedienung im Ergebnis-Dropdown:
+- **ArrowDown / ArrowUp**: Eintrag markieren (visuelles Highlight)
+- **Enter**: Markierten Eintrag auswählen
+- **Escape**: Dropdown schließen
+- `selectOption()` als gemeinsame Funktion für Klick und Tastatur
+- `activeIdx` wird bei Schließen/Löschen zurückgesetzt
+
+---
 ## [1.11.2] - 2026-05-12 — liveTable.restoreSession: Redirect statt AJAX + saveSession on bind
 
 ### Fixed — restoreSession: voller Redirect statt AJAX
