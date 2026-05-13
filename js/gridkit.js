@@ -754,6 +754,18 @@
                 ch.remove();
             });
             toolbar.insertAdjacentHTML("afterend", html);
+            // Out-of-band updates: <template data-gk-replace="css-selector">
+            // Ersetzt Elemente AUSSERHALB des Containers (z.B. StatCards).
+            wrap.querySelectorAll("template[data-gk-replace]").forEach(function(tpl) {
+              var sel = tpl.getAttribute("data-gk-replace");
+              var target = document.querySelector(sel);
+              if (target && tpl.content) {
+                var div = document.createElement("div");
+                div.appendChild(tpl.content.cloneNode(true));
+                target.outerHTML = div.innerHTML;
+              }
+              tpl.remove();
+            });
             window.history.replaceState(null, "", url);
           });
       },

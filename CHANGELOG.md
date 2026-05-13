@@ -4,6 +4,22 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.11.4] - 2026-05-13 — liveTable: Out-of-Band Updates via `<template data-gk-replace>`
+
+### Added — liveTable Out-of-Band Replacement
+Nach jedem AJAX-Swap verarbeitet `liveTable` jetzt `<template data-gk-replace="css-selector">`
+Elemente in der Serverantwort: Der Inhalt des Templates ersetzt das per Selektor gefundene
+Element **außerhalb** des liveTable-Containers. Damit können z.B. StatCards automatisch
+aktualisiert werden, wenn ein Filter geändert wird.
+
+**Verwendung im Partial:**
+```html
+<template data-gk-replace="[data-gk-stats=my-cards]">
+  <?php (new StatCards('my-cards'))->card(...)->render(); ?>
+</template>
+```
+
+---
 ## [1.11.3] - 2026-05-12 — ajaxSelect: Tastatur-Navigation (Pfeiltasten + Enter)
 
 ### Added — ajaxSelect: Tastatur-Navigation
