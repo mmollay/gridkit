@@ -4,6 +4,16 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.11.5] - 2026-05-13 — gk-table-wrap: Abgerundete Ecken ohne Toolbar
+
+### Fixed — Tabellenecken bei direktem table-Kind
+Wenn eine `gk-table` direkt (ohne vorherige Toolbar) in `gk-table-wrap` liegt,
+hatten `thead th` und letzte `tbody td` eckige Ecken (overflow:visible verhindert Clip).
+CSS-Selektoren für `:first-child`/`:last-child` setzen jetzt `border-radius` direkt
+auf die entsprechenden Zellen — kompatibel mit TableHeader (da dort die Toolbar
+das erste Kind ist, greifen die `> .gk-table`-Selektoren nicht).
+
+---
 ## [1.11.4] - 2026-05-13 — liveTable: Out-of-Band Updates via `<template data-gk-replace>`
 
 ### Added — liveTable Out-of-Band Replacement

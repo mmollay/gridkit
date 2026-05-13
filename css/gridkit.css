@@ -361,6 +361,19 @@ a:hover {
 .gk-table tbody tr:last-child td {
   border-bottom: none;
 }
+/* Abgerundete Ecken wenn Tabelle direkt in gk-table-wrap (ohne vorherige Toolbar) */
+.gk-table-wrap > .gk-table thead tr:first-child th:first-child {
+  border-radius: 11px 0 0 0;
+}
+.gk-table-wrap > .gk-table thead tr:first-child th:last-child {
+  border-radius: 0 11px 0 0;
+}
+.gk-table-wrap > .gk-table tbody tr:last-child td:first-child {
+  border-radius: 0 0 0 11px;
+}
+.gk-table-wrap > .gk-table tbody tr:last-child td:last-child {
+  border-radius: 0 0 11px 0;
+}
 
 /* Nowrap */
 .gk-table td.gk-nowrap,
