@@ -4,6 +4,18 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.12.0] - 2026-05-14 — Select::searchable() — searchable Dropdown als One-Liner
+
+### Added
+- **`GridKit\Select::searchable($name, $options, $opts)`** — neuer PHP-Helper rendert ein gk-select-search Dropdown aus einem flachen Options-Array. Ersetzt das ~25-zeilige HTML-Boilerplate.
+- Optionen: `selected`, `placeholder`, `searchPlaceholder`, `id`, `class`, `required`
+- Options-Format: `['val' => 'label', ...]` ODER `[['value' => x, 'label' => y], ...]`
+- Beispiel: `<?= Select::searchable('account_id', $accountOpts, ['placeholder' => '— Konto wählen —', 'selected' => $current]) ?>`
+
+### Warum
+Lange Selects mit nativem `<select>` sind im Faktura-Modul + überall sonst nicht durchsuchbar. Nutzer wollen tippen, nicht scrollen. Bisher musste jedes System den HTML-Block kopieren — jetzt One-Liner.
+
+---
 ## [1.11.5] - 2026-05-13 — gk-table-wrap: Abgerundete Ecken ohne Toolbar
 
 ### Fixed — Tabellenecken bei direktem table-Kind
