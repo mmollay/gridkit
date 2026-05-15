@@ -4,6 +4,23 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.13.1] - 2026-05-15 — SortLink: konfigurierbare URL-Parameter-Namen
+
+### Added
+- `SortLink::header($key, $label, $opts)` akzeptiert jetzt `sort_param` und
+  `dir_param`-Optionen — Default bleibt `sort` und `dir`, lässt sich aber
+  überschreiben wenn der Param-Name kollidiert.
+- `SortLink::context()` akzeptiert ein 5. Argument `$opts` für dieselben
+  Overrides.
+
+**Use-Case:** Banking-Automatik im Panel benutzt `?dir=income/expense` für
+einen Direction-Filter — Sort braucht dort `sdir` statt `dir`:
+
+```php
+$sl = SortLink::context($base, $sort, $sdir, $preserve, ['dir_param' => 'sdir']);
+```
+
+---
 ## [1.13.0] - 2026-05-15 — SortLink — server-seitige Sort-Header für Tabellen
 
 ### Added

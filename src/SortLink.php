@@ -47,6 +47,11 @@ class SortLink
         $baseUrl     = (string)($opts['base_url'] ?? '');
         $preserve    = (array)($opts['preserve'] ?? []);
         $extraClass  = (string)($opts['extra_class'] ?? '');
+        // URL-Parameter-Namen (Default 'sort' und 'dir'). Override wenn z.B. 'dir'
+        // schon für anderen Zweck belegt ist (z.B. Banking-Automatik:
+        // dir=income/expense für Richtungs-Filter, daher sort_dir_param='sdir').
+        $sortParam   = (string)($opts['sort_param'] ?? 'sort');
+        $dirParam    = (string)($opts['dir_param']  ?? 'dir');
 
         // Filter-Params säubern (leere/0-Werte weglassen)
         $params = [];
@@ -58,8 +63,8 @@ class SortLink
         $isActive = $currentSort === $key;
         // Toggle: wenn schon aktiv und asc → desc, sonst asc
         $nextDir  = ($isActive && $currentDir === 'asc') ? 'desc' : 'asc';
-        $params['sort'] = $key;
-        $params['dir']  = $nextDir;
+        $params[$sortParam] = $key;
+        $params[$dirParam]  = $nextDir;
 
         $iconName = $isActive
             ? ($currentDir === 'asc' ? 'arrow_upward' : 'arrow_downward')
@@ -84,16 +89,18 @@ class SortLink
         string $baseUrl,
         ?string $currentSort,
         ?string $currentDir,
-        array $preserve = []
+        array $preserve = [],
+        array $opts = []
     ): \Closure {
-        return function (string $key, string $label, string $extraClass = '') use ($baseUrl, $currentSort, $currentDir, $preserve): string {
-            return self::header($key, $label, [
+        // $opts kann sort_param + dir_param überschreiben (z.B. dir_param='sdir').
+        return function (string $key, string $label, string $extraClass = '') use ($baseUrl, $currentSort, $currentDir, $preserve, $opts): string {
+            return self::header($key, $label, array_merge($opts, [
                 'current_sort' => $currentSort,
                 'current_dir'  => $currentDir,
                 'base_url'     => $baseUrl,
                 'preserve'     => $preserve,
                 'extra_class'  => $extraClass,
-            ]);
+            ]));
         };
     }
 }
