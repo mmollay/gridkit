@@ -4,6 +4,35 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.13.0] - 2026-05-15 — SortLink — server-seitige Sort-Header für Tabellen
+
+### Added
+- **`GridKit\SortLink::header($key, $label, $opts)`** — rendert einen sortierbaren
+  `<a class="gk-sort-link">` mit Material-Icon (`gk-sort-icon`), toggelt
+  `sort` + `dir` URL-Parameter und erhält alle Filter (`preserve`-Array).
+- **`SortLink::context($baseUrl, $currentSort, $currentDir, $preserve)`** — Closure-
+  Helper für mehrere Spalten in einer Tabelle. Bindet den Context einmal,
+  pro Spalte nur noch `$sl('key', 'Label')`.
+
+### Hintergrund
+Vor v1.13.0 hatten viele Faktura-Listen (`expenses`, `accounts`, `banking-*`)
+**keine sortierbaren Spalten** — User konnten nicht nach Datum/Betrag/Name
+sortieren. Die existierende Sortier-Logik war in 4 Views als `$sortLink`-
+Closure dupliziert. SortLink konsolidiert das.
+
+**Beispiel:**
+```php
+$sl = GridKit\SortLink::context('/faktura/expenses', $sort, $dir, [
+    'q' => $q, 'year' => $year, 'status' => $status,
+]);
+echo $sl('expense_date',  'Datum');
+echo $sl('gross_amount', 'Brutto', 'gk-text-right');
+```
+
+CSS-Styles für `.gk-sort-link` und `.gk-sort-icon.is-active` sind bereits
+seit v1.11.0 in `gridkit.css`.
+
+---
 ## [1.12.0] - 2026-05-14 — Select::searchable() — searchable Dropdown als One-Liner
 
 ### Added
