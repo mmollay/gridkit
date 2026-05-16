@@ -4,6 +4,57 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.14.0] - 2026-05-16 — Utility-Klassen für Spacing, Layout, Typography, Farben
+
+### Added — Tailwind-ähnliche Utility-Klassen (additiv, keine Breaking-Changes)
+
+Motivation: Audit der Consumer-Projekte (SSI Panel) ergab > 2 800 Inline-Style-
+Vorkommen in Views. Statt jeder Komponente eine eigene Mini-Style-Suppe zu
+geben, bekommt GRIDKit jetzt einen kompakten Utility-Layer. Ziel: 70–80 % der
+heutigen Inline-Styles werden durch Klassen ersetzbar.
+
+**Spacing-Skala (MD3 8px-Grid mit halben Schritten):**
+- `0`=0, `1`=4px, `2`=8px, `3`=12px, `4`=16px, `5`=20px, `6`=24px
+
+**Neue Klassen (~120):**
+
+| Kategorie | Klassen |
+|---|---|
+| Display | `gk-hidden`, `gk-block`, `gk-inline`, `gk-inline-block` |
+| Flex | `gk-flex`, `gk-inline-flex`, `gk-flex-col`, `gk-flex-wrap`, `gk-flex-1`, `gk-flex-center`, `gk-flex-between` |
+| Items / Justify | `gk-items-{start,center,end,baseline}`, `gk-justify-{start,center,end,between}` |
+| Gap | `gk-gap-{xs,sm,md,lg,xl,2xl}` (4/6/8/12/16/20 px) |
+| Margin | `gk-m-{0..6}`, `gk-mt-{0..6}`, `gk-mb-{0..6}`, `gk-ml-{0..4,auto}`, `gk-mr-{0..4,auto}`, `gk-mx-auto` |
+| Padding | `gk-p-{0..6}`, `gk-px-{0..6}`, `gk-py-{0..6}` |
+| Font-Size | `gk-fs-{xs,sm,md,base,lg,xl,2xl}` (11/12/13/14/16/18/20 px) |
+| Font-Weight | `gk-fw-{normal,medium,semibold,bold}` (400/500/600/700) |
+| Text-Align | `gk-text-{left,center}` (`gk-text-right` existierte bereits) |
+| Text-Color | `gk-text-{primary,success,danger,warning,on-surface}` (`gk-text-muted` existierte) |
+| Background | `gk-bg-{surface,muted,primary-soft,success-soft,danger-soft,warning-soft}` |
+| Border-Radius | `gk-rounded-{none,sm,md,lg,xl,full}` (0/6/8/10/14/999 px) |
+| Width/Height | `gk-w-{full,auto}`, `gk-h-{full,auto}` |
+| Misc | `gk-clickable`, `gk-not-clickable`, `gk-overflow-{x,y}-auto`, `gk-font-mono`, `gk-no-decoration`, `gk-truncate`, `gk-break-word` |
+
+### Usage
+
+```html
+<!-- Vorher: Inline-Styles -->
+<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gk-text-muted)">
+  <span>Label</span><span>Value</span>
+</div>
+
+<!-- Nachher: Utility-Klassen -->
+<div class="gk-flex-center gk-gap-md gk-fs-md gk-text-muted">
+  <span>Label</span><span>Value</span>
+</div>
+```
+
+### Migration
+
+- Additive Klassen — bestehender Code laeuft unveraendert weiter.
+- Consumer-Projekte koennen schrittweise migrieren (Audit-Score messen).
+
+---
 ## [1.13.1] - 2026-05-15 — SortLink: konfigurierbare URL-Parameter-Namen
 
 ### Added

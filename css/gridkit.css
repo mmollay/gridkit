@@ -5512,3 +5512,171 @@ a.gk-stat-card:hover {
 
 /* ── AJAX Navigation Progress ── */
 /* AJAX Navigation: kein visueller Progress-Indikator — Navigation ist schnell genug */
+
+
+/* ════════════════════════════════════════════════════════════════════════
+ * UTILITIES (v1.14.0) — Hilfsklassen für Layout, Spacing, Typography, Farben.
+ *
+ * Spacing-Skala: 0=0 · 1=4 · 2=8 · 3=12 · 4=16 · 5=20 · 6=24 (MD3 8-Grid).
+ * Ziel: Inline-Styles in Consumer-Projekten (Panel etc.) eliminierbar machen.
+ * Alle Regeln additiv — keine Breaking-Changes.
+ * ════════════════════════════════════════════════════════════════════════ */
+
+/* — Display — */
+.gk-hidden        { display: none !important; }
+.gk-block         { display: block; }
+.gk-inline        { display: inline; }
+.gk-inline-block  { display: inline-block; }
+
+/* — Flex — */
+.gk-flex          { display: flex; }
+.gk-inline-flex   { display: inline-flex; }
+.gk-flex-col      { display: flex; flex-direction: column; }
+.gk-flex-wrap     { flex-wrap: wrap; }
+.gk-flex-1        { flex: 1; }
+.gk-items-start   { align-items: flex-start; }
+.gk-items-center  { align-items: center; }
+.gk-items-end     { align-items: flex-end; }
+.gk-items-baseline{ align-items: baseline; }
+.gk-justify-start { justify-content: flex-start; }
+.gk-justify-center{ justify-content: center; }
+.gk-justify-end   { justify-content: flex-end; }
+.gk-justify-between{ justify-content: space-between; }
+
+/* Komposit-Shortcuts (häufigste Kombinationen) */
+.gk-flex-center   { display: flex; align-items: center; }
+.gk-flex-between  { display: flex; align-items: center; justify-content: space-between; }
+
+/* — Gap — */
+.gk-gap-xs        { gap: 4px; }
+.gk-gap-sm        { gap: 6px; }
+.gk-gap-md        { gap: 8px; }
+.gk-gap-lg        { gap: 12px; }
+.gk-gap-xl        { gap: 16px; }
+.gk-gap-2xl       { gap: 20px; }
+
+/* — Margin (Skala 0/1/2/3/4/5/6 = 0/4/8/12/16/20/24) — */
+.gk-m-0  { margin: 0; }
+.gk-m-1  { margin: 4px; }
+.gk-m-2  { margin: 8px; }
+.gk-m-3  { margin: 12px; }
+.gk-m-4  { margin: 16px; }
+.gk-m-5  { margin: 20px; }
+.gk-m-6  { margin: 24px; }
+
+.gk-mt-0 { margin-top: 0; }
+.gk-mt-1 { margin-top: 4px; }
+.gk-mt-2 { margin-top: 8px; }
+.gk-mt-3 { margin-top: 12px; }
+.gk-mt-4 { margin-top: 16px; }
+.gk-mt-5 { margin-top: 20px; }
+.gk-mt-6 { margin-top: 24px; }
+
+.gk-mb-0 { margin-bottom: 0; }
+.gk-mb-1 { margin-bottom: 4px; }
+.gk-mb-2 { margin-bottom: 8px; }
+.gk-mb-3 { margin-bottom: 12px; }
+.gk-mb-4 { margin-bottom: 16px; }
+.gk-mb-5 { margin-bottom: 20px; }
+.gk-mb-6 { margin-bottom: 24px; }
+
+.gk-ml-0 { margin-left: 0; }
+.gk-ml-1 { margin-left: 4px; }
+.gk-ml-2 { margin-left: 8px; }
+.gk-ml-3 { margin-left: 12px; }
+.gk-ml-4 { margin-left: 16px; }
+.gk-ml-auto { margin-left: auto; }
+
+.gk-mr-0 { margin-right: 0; }
+.gk-mr-1 { margin-right: 4px; }
+.gk-mr-2 { margin-right: 8px; }
+.gk-mr-3 { margin-right: 12px; }
+.gk-mr-4 { margin-right: 16px; }
+.gk-mr-auto { margin-right: auto; }
+
+.gk-mx-auto { margin-left: auto; margin-right: auto; }
+
+/* — Padding (Skala 0/1/2/3/4/5/6) — */
+.gk-p-0  { padding: 0; }
+.gk-p-1  { padding: 4px; }
+.gk-p-2  { padding: 8px; }
+.gk-p-3  { padding: 12px; }
+.gk-p-4  { padding: 16px; }
+.gk-p-5  { padding: 20px; }
+.gk-p-6  { padding: 24px; }
+
+.gk-px-0 { padding-left: 0; padding-right: 0; }
+.gk-px-1 { padding-left: 4px; padding-right: 4px; }
+.gk-px-2 { padding-left: 8px; padding-right: 8px; }
+.gk-px-3 { padding-left: 12px; padding-right: 12px; }
+.gk-px-4 { padding-left: 16px; padding-right: 16px; }
+.gk-px-5 { padding-left: 20px; padding-right: 20px; }
+.gk-px-6 { padding-left: 24px; padding-right: 24px; }
+
+.gk-py-0 { padding-top: 0; padding-bottom: 0; }
+.gk-py-1 { padding-top: 4px; padding-bottom: 4px; }
+.gk-py-2 { padding-top: 8px; padding-bottom: 8px; }
+.gk-py-3 { padding-top: 12px; padding-bottom: 12px; }
+.gk-py-4 { padding-top: 16px; padding-bottom: 16px; }
+.gk-py-5 { padding-top: 20px; padding-bottom: 20px; }
+.gk-py-6 { padding-top: 24px; padding-bottom: 24px; }
+
+/* — Font-Size — */
+.gk-fs-xs   { font-size: 11px; }
+.gk-fs-sm   { font-size: 12px; }
+.gk-fs-md   { font-size: 13px; }
+.gk-fs-base { font-size: 14px; }
+.gk-fs-lg   { font-size: 16px; }
+.gk-fs-xl   { font-size: 18px; }
+.gk-fs-2xl  { font-size: 20px; }
+
+/* — Font-Weight — */
+.gk-fw-normal   { font-weight: 400; }
+.gk-fw-medium   { font-weight: 500; }
+.gk-fw-semibold { font-weight: 600; }
+.gk-fw-bold     { font-weight: 700; }
+
+/* — Text-Align — */
+.gk-text-left   { text-align: left; }
+.gk-text-center { text-align: center; }
+/* .gk-text-right existiert bereits weiter oben — nicht erneut definieren */
+
+/* — Text-Color (semantic) — */
+.gk-text-primary { color: var(--gk-primary, #6366f1); }
+.gk-text-success { color: var(--gk-success, #10b981); }
+.gk-text-danger  { color: var(--gk-danger,  #ef4444); }
+.gk-text-warning { color: var(--gk-warning, #f59e0b); }
+.gk-text-on-surface { color: var(--gk-on-surface, #1e293b); }
+/* .gk-text-muted existiert bereits */
+
+/* — Background (subtile Container-Hintergründe) — */
+.gk-bg-surface      { background: var(--gk-surface, #fff); }
+.gk-bg-muted        { background: var(--gk-bg-muted, var(--gk-surface-container-low, #f8fafc)); }
+.gk-bg-danger-soft  { background: rgba(239, 68, 68, 0.08); }
+.gk-bg-success-soft { background: rgba(16, 185, 129, 0.08); }
+.gk-bg-warning-soft { background: rgba(245, 158, 11, 0.10); }
+.gk-bg-primary-soft { background: rgba(99, 102, 241, 0.08); }
+
+/* — Border-Radius — */
+.gk-rounded-none { border-radius: 0; }
+.gk-rounded-sm   { border-radius: 6px; }
+.gk-rounded-md   { border-radius: 8px; }
+.gk-rounded-lg   { border-radius: 10px; }
+.gk-rounded-xl   { border-radius: 14px; }
+.gk-rounded-full { border-radius: 999px; }
+
+/* — Width / Height — */
+.gk-w-full { width: 100%; }
+.gk-w-auto { width: auto; }
+.gk-h-full { height: 100%; }
+.gk-h-auto { height: auto; }
+
+/* — Misc — */
+.gk-clickable      { cursor: pointer; }
+.gk-not-clickable  { cursor: default; }
+.gk-overflow-x-auto{ overflow-x: auto; }
+.gk-overflow-y-auto{ overflow-y: auto; }
+.gk-font-mono      { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+.gk-no-decoration  { text-decoration: none; }
+.gk-truncate       { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gk-break-word     { overflow-wrap: anywhere; word-break: break-word; }
