@@ -2060,6 +2060,125 @@
       });
   });
 
+  // ════════════════════════════════════════════════════════════════════
+  // GK.belegModal — Globaler PDF-/Beleg-Vorschau-Modal (since v1.15.0)
+  // ════════════════════════════════════════════════════════════════════
+  GK.belegModal = {
+    _el: function () { return document.getElementById("gk-beleg-modal"); },
+
+    /**
+     * Öffnet den Modal mit der gegebenen URL.
+     *
+     * @param {string} url
+     * @param {object} [opts]
+     * @param {string} [opts.title]            Header-Titel (default: "Beleg")
+     * @param {boolean}[opts.autoPrint]        Druckt das iframe sobald geladen
+     * @param {number} [opts.unlinkExpenseId]  Zeigt „Verknüpfung trennen"-Button
+     * @param {function}[opts.onUnlink]        Callback nach erfolgreicher Trennung
+     */
+    open: function (url, opts) {
+      if (!url) return;
+      opts = opts || {};
+      var overlay = this._el();
+      if (!overlay) {
+        console.warn("GK.belegModal: container not found. Did you call BelegModal::container()?");
+        // Fallback: direkt im Browser öffnen
+        window.open(url, "_blank");
+        return;
+      }
+      var q = function (sel) { return overlay.querySelector(sel); };
+      var titleEl = q("[data-gk-beleg-title]");
+      var frame   = q("[data-gk-beleg-frame]");
+      var openBtn = q("[data-gk-beleg-open]");
+      var dlBtn   = q("[data-gk-beleg-download]");
+      var mobBtn  = q("[data-gk-beleg-mobile-open]");
+      var unlink  = q("[data-gk-beleg-unlink]");
+
+      if (titleEl) titleEl.textContent = opts.title || "Beleg";
+      if (openBtn) openBtn.href = url;
+      if (dlBtn)   dlBtn.href   = url;
+      if (mobBtn)  mobBtn.href  = url;
+
+      // Unlink-Button: nur sichtbar wenn unlinkExpenseId gesetzt
+      if (unlink) {
+        if (opts.unlinkExpenseId) {
+          unlink.classList.remove("gk-hidden");
+          unlink.onclick = function () {
+            if (!confirm("Beleg-Verknüpfung wirklich trennen?")) return;
+            fetch("/faktura/api/beleg/unlink", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: "expense_id=" + opts.unlinkExpenseId
+            }).then(function (r) { return r.json(); }).then(function (d) {
+              if (d.ok) {
+                GK.belegModal.close();
+                (opts.onUnlink || function () { location.reload(); })();
+              } else if (window.GK && GK.toast) {
+                GK.toast.error(d.error || "Fehler");
+              } else {
+                alert(d.error || "Fehler");
+              }
+            });
+          };
+        } else {
+          unlink.classList.add("gk-hidden");
+          unlink.onclick = null;
+        }
+      }
+
+      // iframe nur auf Desktop laden — Mobile zeigt Call-to-Action
+      var isMobile = window.matchMedia("(max-width: 768px)").matches;
+      if (frame) {
+        frame.src = isMobile ? "about:blank" : url;
+        if (opts.autoPrint && !isMobile) {
+          frame.onload = function () {
+            try { frame.contentWindow.print(); } catch (e) { console.warn(e); }
+          };
+        } else if (frame.onload) {
+          frame.onload = null;
+        }
+      }
+
+      overlay.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+    },
+
+    close: function () {
+      var overlay = this._el();
+      if (!overlay) return;
+      var frame = overlay.querySelector("[data-gk-beleg-frame]");
+      overlay.classList.remove("is-open");
+      if (frame) frame.src = "about:blank";
+      document.body.style.overflow = "";
+    },
+
+    _init: function () {
+      var overlay = this._el();
+      if (!overlay) return;
+      var self = this;
+      // Click outside to close
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay) self.close();
+      });
+      // Close button(s)
+      overlay.querySelectorAll("[data-gk-beleg-close]").forEach(function (btn) {
+        btn.addEventListener("click", function () { self.close(); });
+      });
+      // ESC
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && overlay.classList.contains("is-open")) self.close();
+      });
+    }
+  };
+
+  // Backwards-compat aliases (Panel verwendet bisher openBelegModal/closeBelegModal)
+  window.openBelegModal  = function (url, title, opts) {
+    opts = opts || {};
+    if (title) opts.title = title;
+    GK.belegModal.open(url, opts);
+  };
+  window.closeBelegModal = function () { GK.belegModal.close(); };
+
   window.GridKit = GK;
   window.GK = GK;
 
@@ -2068,6 +2187,7 @@
       GK.init();
       GK.theme.restore();
       GK.layout.restore();
+      GK.belegModal._init();
     });
   } else {
     GK.init();

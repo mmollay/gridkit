@@ -4,6 +4,59 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.15.0] - 2026-05-16 — BelegModal: globaler PDF-/Dokument-Vorschau-Modal
+
+### Added — `GridKit\BelegModal` Komponente
+
+Neuer Modal für PDF-/Beleg-Vorschauen mit iframe + Mobile-Fallback.
+Ersetzt das Pattern, `window.open(pdfUrl, '_blank')` zu nutzen — eliminiert
+zerstreute „neuer Tab"-Aufrufe zugunsten einer konsistenten Inline-Vorschau.
+
+**PHP-API:**
+```php
+// Einmal pro Page (typischerweise im Layout vor </body>):
+\GridKit\BelegModal::container();
+```
+
+**JS-API:**
+```javascript
+GK.belegModal.open(url);
+GK.belegModal.open(url, { title: 'Rechnung 123' });
+GK.belegModal.open(url, { autoPrint: true });            // druckt iframe sobald geladen
+GK.belegModal.open(url, {
+    unlinkExpenseId: 456,                                 // zeigt „Verknüpfung trennen"-Button
+    onUnlink: function() { location.reload(); }           //   POST an /faktura/api/beleg/unlink
+});
+GK.belegModal.close();
+```
+
+**Verhalten:**
+- Desktop: iframe lädt URL inline (Browser-PDF-Viewer).
+- Mobile (≤ 768px): iframe versteckt, „PDF öffnen"-Button öffnet nativen Viewer.
+- ESC schliesst, Click-outside schliesst.
+- Optional `autoPrint`: druckt das iframe nach load (für Print-Workflows).
+- Optional `unlinkExpenseId`: blendet „Verknüpfung trennen"-Button ein, ruft
+  `/faktura/api/beleg/unlink` (faktura-spezifisch, aber konfigurierbar via
+  Callback).
+- Falls Container fehlt: Console-Warning + Fallback auf `window.open(url)`.
+
+**Markup:** Alle Selektoren via `data-gk-beleg-*` Attribute, keine festen IDs
+ausser dem Container (`#gk-beleg-modal`). Wiederholte Aufrufe arbeiten am
+gleichen Container — keine doppelten Overlays.
+
+**Migration aus „eigenem Beleg-Modal":**
+- `openBelegModal(url, title, opts)` und `closeBelegModal()` sind als
+  `window.*`-Aliases auf `GK.belegModal.*` verfügbar — bestehender Code
+  funktioniert unverändert.
+- Wer das alte Partial `_partials/beleg-modal.php` (SSI Panel) selbst includiert
+  hat, ersetzt es durch `\GridKit\BelegModal::container()`.
+
+### Sync zu PawBot Dashboard etc.
+
+`src/BelegModal.php`, CSS-Block in `gridkit.css`, JS-Block in `gridkit.js` —
+alle drei via normalem rsync mitnehmen. Keine PawBot-spezifische Anpassung.
+
+---
 ## [1.14.0] - 2026-05-16 — Utility-Klassen für Spacing, Layout, Typography, Farben
 
 ### Added — Tailwind-ähnliche Utility-Klassen (additiv, keine Breaking-Changes)

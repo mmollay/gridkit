@@ -44,6 +44,7 @@ You are building or maintaining a web application using **GRIDKit**, a lightweig
 | TableHeader | `GridKit\TableHeader` | **Unified filter/search bar above tables — Status / Toolbar / Advanced (since v1.10.0)** |
 | Lang | `GridKit\Lang` | i18n / multilingual support |
 | liveTable (JS) | `GK.liveTable` | AJAX tables (search/filter/sort/pagination live, no reload) |
+| BelegModal | `GridKit\BelegModal` | PDF / document preview modal with iframe + mobile fallback (since v1.15.0) |
 
 ## Page Skeleton (SSI Panel context)
 
@@ -375,6 +376,32 @@ Features:
 | `gk-section-title` | Section heading style |
 | `gk-page-header` | Page title + action area |
 | `gk-empty` | Empty state (centered, padded) |
+
+### BelegModal (since v1.15.0)
+
+Globaler PDF-/Dokument-Vorschau-Modal mit `<iframe>`. Eliminiert `window.open()` für PDF-Previews.
+
+```php
+// Einmal pro Page (im Layout, vor </body>):
+\GridKit\BelegModal::container();
+```
+
+```javascript
+// JS-API überall:
+GK.belegModal.open('/path/to/file.pdf');
+GK.belegModal.open(url, { title: 'Rechnung 123' });
+GK.belegModal.open(url, { autoPrint: true });             // druckt iframe nach load
+GK.belegModal.open(url, {
+    unlinkExpenseId: 456,                                  // zeigt "Verknüpfung trennen"-Btn
+    onUnlink: function() { location.reload(); }
+});
+GK.belegModal.close();
+```
+
+- **Desktop**: iframe lädt URL inline (Browser-PDF-Viewer).
+- **Mobile (≤ 768px)**: iframe versteckt, „PDF öffnen"-Button öffnet nativen Viewer.
+- **ESC** schliesst, Click-outside schliesst.
+- Falls Container fehlt: Fallback auf `window.open(url)` mit Console-Warning.
 
 ## Utility Classes (since v1.14.0)
 
