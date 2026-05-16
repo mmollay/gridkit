@@ -5737,3 +5737,33 @@ a.gk-stat-card:hover {
         border-radius: 0;
     }
 }
+
+
+/* ════════════════════════════════════════════════════════════════════════
+ * ActionGroup (v1.16.0) — Container für Action-Buttons in Tabellen-Spalten
+ * + gk-btn-xs für Mini-Buttons + gk-btn-pill für Badge-shaped Buttons
+ * ════════════════════════════════════════════════════════════════════════ */
+
+/* Action-Buttons-Container: kompakte flex-row, kein Umbruch */
+.gk-action-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+}
+
+/* Extra-kleine Button-Größe (kompakter als gk-btn-sm) */
+.gk-btn-xs {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 6px;
+    gap: 3px;
+}
+.gk-btn-xs .material-icons { font-size: 14px; }
+.gk-btn-icon-only.gk-btn-xs { padding: 4px; width: 26px; height: 26px; }
+.gk-btn-icon-only.gk-btn-xs .material-icons { font-size: 16px; }
+
+/* Pill-shaped (Badge-Style) — runde Ecken statt rechteckig */
+.gk-btn-pill { border-radius: 999px; }
+.gk-btn-pill.gk-btn-xs { padding: 2px 10px; }
+.gk-btn-pill.gk-btn-sm { padding: 3px 12px; }

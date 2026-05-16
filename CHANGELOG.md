@@ -4,6 +4,59 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.16.0] - 2026-05-16 — ActionGroup + gk-btn-xs + gk-btn-pill
+
+### Added — Action-Spalten-Komponente für Tabellen
+
+Wiederkehrendes Pattern in Consumer-Projekten (SSI Panel):
+Tabellen haben eine „Aktionen"-Spalte mit 2–4 kleinen Buttons (Edit, Löschen,
+Verbuchen, Mahnen, …). Jedes Projekt hat eigene `.xx-btn-icon`, `.xx-btn-match`,
+`.xx-btn-paid-sm` Custom-Klassen erfunden. GRIDKit liefert das jetzt zentral.
+
+**Neue CSS-Klassen:**
+- `.gk-action-group` — `inline-flex; gap:4px; flex-wrap:nowrap` Container
+- `.gk-btn-xs` — extra-kleine Buttons (padding 3px 8px, font 11px, radius 6px).
+  Icon-only-Variante: 26×26 px
+- `.gk-btn-pill` — `border-radius:999px` Modifier (Badge-/Pill-Style)
+
+**Neue PHP-Klasse `GridKit\ActionGroup`:**
+```php
+\GridKit\ActionGroup::render([
+    ['icon' => 'edit',   'onclick' => "edit($id)",  'title' => 'Bearbeiten'],
+    ['icon' => 'delete', 'onclick' => "del($id)",   'title' => 'Löschen',
+     'color' => 'danger'],
+    ['icon' => 'send',   'label' => 'Mahnen',       'color' => 'warning',
+     'variant' => 'filled', 'pill' => true,
+     'showIf' => $isOverdue, 'onclick' => "remind($id)"],
+]);
+```
+
+Item-Optionen: `icon`, `label`, `href`, `onclick`, `title`, `variant` (default:
+`text` wenn nur Icon, sonst `outlined`), `color` (default: `neutral`), `size`
+(default: `xs`), `pill`, `disabled`, `showIf` (falsy → wird übersprungen),
+`class`.
+
+Vorteile gegenüber Eigenbau:
+- Konsistente Größen, Abstände, Hover-States über alle Tabellen.
+- `showIf` macht conditional rendering deklarativ.
+- Pill-Modifier (für „Stufe 1/2/3"-Mahn-Badges etc.) ist nur eine Option,
+  nicht eine eigene Klasse.
+
+### Migration
+
+Consumer-Projekte mit eigenen `*-btn-*` Klassen (z.B. SSI Panel `.ssi-btn-match`,
+`.ssi-btn-paid-sm`, `.ssi-btn-remind`) können diese 1:1 durch `gk-btn`-Kombinationen
+ersetzen:
+
+| Eigenbau | GRIDKit |
+|---|---|
+| `.ssi-btn-match` (filled green mini) | `gk-btn gk-btn-xs gk-btn-filled gk-btn-success gk-btn-icon-only` |
+| `.ssi-btn-paid-sm` (outlined green) | `gk-btn gk-btn-xs gk-btn-outlined gk-btn-success gk-btn-icon-only` |
+| `.ssi-btn-remind` (filled warning) | `gk-btn gk-btn-sm gk-btn-filled gk-btn-warning` |
+| `.ssi-btn-remind-badge` (pill) | `gk-btn gk-btn-xs gk-btn-filled gk-btn-warning gk-btn-pill` |
+| `<div style="flex…">` Container | `<div class="gk-action-group">` |
+
+---
 ## [1.15.0] - 2026-05-16 — BelegModal: globaler PDF-/Dokument-Vorschau-Modal
 
 ### Added — `GridKit\BelegModal` Komponente

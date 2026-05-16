@@ -45,6 +45,7 @@ You are building or maintaining a web application using **GRIDKit**, a lightweig
 | Lang | `GridKit\Lang` | i18n / multilingual support |
 | liveTable (JS) | `GK.liveTable` | AJAX tables (search/filter/sort/pagination live, no reload) |
 | BelegModal | `GridKit\BelegModal` | PDF / document preview modal with iframe + mobile fallback (since v1.15.0) |
+| ActionGroup | `GridKit\ActionGroup` | Container für Action-Buttons in Tabellen-Spalten (since v1.16.0) |
 
 ## Page Skeleton (SSI Panel context)
 
@@ -402,6 +403,37 @@ GK.belegModal.close();
 - **Mobile (≤ 768px)**: iframe versteckt, „PDF öffnen"-Button öffnet nativen Viewer.
 - **ESC** schliesst, Click-outside schliesst.
 - Falls Container fehlt: Fallback auf `window.open(url)` mit Console-Warning.
+
+### ActionGroup (since v1.16.0)
+
+Container für Action-Buttons in Tabellen-Spalten — vereinheitlicht das wiederkehrende
+„flex-row mit Mini-Buttons"-Pattern. Eliminiert eigene `.xx-btn-icon`/`.xx-btn-match` Klassen.
+
+```php
+// PHP-API (deklarativ):
+\GridKit\ActionGroup::render([
+    ['icon' => 'edit',   'onclick' => "edit($id)",  'title' => 'Bearbeiten'],
+    ['icon' => 'delete', 'onclick' => "del($id)",   'title' => 'Löschen', 'color' => 'danger'],
+    ['icon' => 'send',   'label' => 'Mahnen',       'color' => 'warning', 'variant' => 'filled',
+     'pill' => true, 'onclick' => "remind($id)", 'showIf' => $isOverdue],
+]);
+```
+
+```html
+<!-- Oder rohes HTML (für JS-generierten Inhalt): -->
+<div class="gk-action-group">
+    <button class="gk-btn gk-btn-xs gk-btn-text gk-btn-neutral gk-btn-icon-only">…</button>
+    <button class="gk-btn gk-btn-xs gk-btn-filled gk-btn-warning gk-btn-pill">…</button>
+</div>
+```
+
+Neue CSS-Klassen:
+- `.gk-action-group` — `inline-flex; gap:4px; flex-wrap:nowrap` Container
+- `.gk-btn-xs` — kleiner als `gk-btn-sm` (padding 3px 8px, font 11px). Icon-only: 26×26 px
+- `.gk-btn-pill` — `border-radius:999px` (Badge-Stil)
+
+Action-Item-Optionen: `icon`, `label`, `href`, `onclick`, `title`, `variant`, `color`, `size`,
+`pill`, `disabled`, `showIf`, `class`.
 
 ## Utility Classes (since v1.14.0)
 
