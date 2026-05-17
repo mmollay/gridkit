@@ -4,6 +4,15 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.17.2] - 2026-05-17 — Toolbar-gk-select-search wirklich 34px
+
+### Fixed
+
+rc344+rc345+v1.17.1: padding und min-height waren richtig, aber das
+generische `.gk-select-display { height: 44px; }` hat trotzdem 44px
+erzwungen. Jetzt mit explizitem `height: 34px` ueberschrieben.
+
+---
 ## [1.17.1] - 2026-05-17 — gk-select-search in Toolbar passt zu gk-search/gk-filter
 
 ### Fixed
