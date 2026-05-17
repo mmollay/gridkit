@@ -508,8 +508,14 @@ class Table
         }
     }
 
-    /** SVG icons for table buttons — mirrors JS GK.table.iconSvg() */
+    /** SVG icons for table buttons — delegiert seit v1.17.0 an GridKit\Icon */
     private function iconSvg(string $name): string
+    {
+        return Icon::svg($name, 16, true);
+    }
+
+    /** @deprecated nur als Backup behalten falls Icon::svg in Zukunft Unterschied macht */
+    private function iconSvgLegacy(string $name): string
     {
         $s = 'viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"';
         return match ($name) {

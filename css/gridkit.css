@@ -3413,11 +3413,12 @@ a.gk-stat-card:hover {
   font-size: 12px;
 }
 
-/* Compact */
+/* Compact — seit v1.17.0 Hybrid: lesbare 14px Schrift, kompakteres Vertical-Padding.
+   War vorher 6px 12px / 13px — auf User-Wunsch (Panel) auf 8px 12px / 14px gehoben. */
 .gk-table-compact th,
 .gk-table-compact td {
-  padding: 6px 12px;
-  font-size: 13px;
+  padding: 8px 12px;
+  font-size: 14px;
 }
 .gk-table-very-compact th,
 .gk-table-very-compact td {

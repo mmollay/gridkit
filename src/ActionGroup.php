@@ -51,7 +51,7 @@ class ActionGroup
     {
         $hasLabel = !empty($a['label']);
         $hasIcon  = !empty($a['icon']);
-        $size     = $a['size']    ?? 'xs';
+        $size     = $a['size']    ?? 'sm'; // v1.17.0: default sm (= 26x26 mit 16px-SVG-Icon, wie Table::button)
         $variant  = $a['variant'] ?? (!$hasLabel ? 'text' : 'outlined');
         $color    = $a['color']   ?? 'neutral';
 

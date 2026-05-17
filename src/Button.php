@@ -59,11 +59,19 @@ class Button
 
         $cls = implode(' ', $classes);
 
-        // Build icon HTML
+        // Build icon HTML.
+        // Seit v1.17.0: Default rendert SVG-Outline (via Icon::svg) wenn verfügbar.
+        // Opt-out: ['iconStyle' => 'material'] erzwingt die alte Material-Icons-Font.
         $iconHtml = '';
         if ($icon !== '') {
-            $iconSize = match($size) { 'sm' => '16', 'lg' => '22', default => '18' };
-            $iconHtml = '<span class="material-icons" style="font-size:' . $iconSize . 'px">' . $e($icon) . '</span>';
+            $iconSize  = match($size) { 'xs' => 14, 'sm' => 16, 'lg' => 22, default => 18 };
+            $iconStyle = $opts['iconStyle'] ?? 'auto';
+            $useSvg    = $iconStyle === 'svg' || ($iconStyle === 'auto' && Icon::has($icon));
+            if ($useSvg) {
+                $iconHtml = Icon::svg($icon, $iconSize, true);
+            } else {
+                $iconHtml = '<span class="material-icons" style="font-size:' . $iconSize . 'px">' . $e($icon) . '</span>';
+            }
         }
 
         // Loading spinner

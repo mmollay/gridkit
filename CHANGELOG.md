@@ -4,6 +4,54 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.17.0] - 2026-05-17 — Outline-SVG-Icons + einheitlicher Tabellen-Stil
+
+### Added — `GridKit\Icon::svg($name, $size)` zentrales Outline-Icon-Set
+
+Bisher rendete `Table::button('edit', …)` Outline-SVG, aber
+`Button::icon('edit', …)` Material-Icons-Font (gefüllte Glyphen). Resultat:
+Edit-Stift und Delete-Mülleimer sahen je nach Aufruf-Weg unterschiedlich aus.
+
+Neue Klasse `GridKit\Icon` zentralisiert das SVG-Mapping (~22 Icons inkl.
+edit, delete, add, check, close, eye, download, upload, copy, mail, search,
+settings, open_in_new, auto_awesome, login, print, arrow_back, send,
+lock_open, attach_file, link_off, refresh).
+
+### Changed — `Button::render/icon` rendert SVG-Outline (default)
+
+`Button::render('label', ['icon' => 'edit'])` und `Button::icon('edit')`
+rendern jetzt **Outline-SVG** wenn das Icon im `Icon::svg`-Mapping ist —
+sonst Fallback auf Material-Icons-Font.
+
+**Opt-out:** `['iconStyle' => 'material']` erzwingt das alte Verhalten.
+
+Damit sieht z.B. der Edit-Button in einer Faktura/Invoices-Tabelle (über
+`ActionGroup` / `Button::icon`) jetzt identisch aus wie in einer
+Articles-Tabelle (über `Table::button`).
+
+### Changed — `.gk-table-compact` auf Hybrid-Look
+
+`.gk-table-compact th, .gk-table-compact td` neu:
+- `padding: 8px 12px` (vorher 6px 12px)
+- `font-size: 14px` (vorher 13px)
+
+Lesbare Schrift wie articles, aber kompakteres Vertical-Padding. User-Wunsch
+für Panel-Tabellen.
+
+### Changed — `ActionGroup` Default-Size auf `sm`
+
+`ActionGroup::render([['icon' => 'edit', ...]])` rendert Buttons jetzt mit
+`size: 'sm'` (= 26×26 mit 16px-Icon) statt `xs` (= 26×26 mit 14px-Icon).
+Damit haben Action-Spalten überall die gleiche Button-Größe wie
+`Table::button()` in articles. Opt-in zum alten Verhalten: `'size' => 'xs'`.
+
+### Migration
+
+- Tabellen mit `gk-table-compact` werden sichtbar geräumiger (lesbarer)
+- Edit/Delete-Icons in `Button::icon` / `ActionGroup` werden zu Outlines
+- Wer Material-Icons explizit will: `['iconStyle' => 'material']`
+
+---
 ## [1.16.0] - 2026-05-16 — ActionGroup + gk-btn-xs + gk-btn-pill
 
 ### Added — Action-Spalten-Komponente für Tabellen
