@@ -4,6 +4,29 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.17.1] - 2026-05-17 — gk-select-search in Toolbar passt zu gk-search/gk-filter
+
+### Fixed
+
+`.gk-select-search` rendete in einer `.gk-toolbar` mit 44px Höhe waehrend
+`gk-search` (34px) und `gk-filter` (32px) deutlich niedriger sind — User-
+Beschwerde: "Felder haben unterschiedliche Höhen".
+
+Neu in gridkit.css:
+
+```css
+.gk-toolbar .gk-select-search .gk-select-display {
+  padding: 6px 12px;
+  min-height: 34px;
+  line-height: 1.4;
+  border-radius: var(--gk-radius-sm);
+}
+.gk-toolbar .gk-select-search .gk-select-arrow { font-size: 18px; }
+```
+
+Nur innerhalb von Toolbars — Form-Felder bleiben unveraendert 44px.
+
+---
 ## [1.17.0] - 2026-05-17 — Outline-SVG-Icons + einheitlicher Tabellen-Stil
 
 ### Added — `GridKit\Icon::svg($name, $size)` zentrales Outline-Icon-Set

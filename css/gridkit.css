@@ -217,6 +217,16 @@ a:hover {
 .gk-toolbar .gk-search {
   margin-right: 4px;
 }
+/* gk-select-search in einer Toolbar an gk-search / gk-filter angleichen (sonst 44px statt ~34px) */
+.gk-toolbar .gk-select-search .gk-select-display {
+  padding: 6px 12px;
+  min-height: 34px;
+  line-height: 1.4;
+  border-radius: var(--gk-radius-sm);
+}
+.gk-toolbar .gk-select-search .gk-select-arrow {
+  font-size: 18px;
+}
 
 /* ── GridKit\TableHeader — einheitliche Filter-/Such-Leiste ── */
 .gk-tableheader {
