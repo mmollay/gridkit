@@ -2193,6 +2193,7 @@
     GK.init();
     GK.theme.restore();
     GK.layout.restore();
+    GK.belegModal._init();
   }
 
   // === ACCORDION ===

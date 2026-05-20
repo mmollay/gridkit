@@ -4,6 +4,20 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.17.3] - 2026-05-18 — BelegModal-Close-Button funktioniert wieder
+
+### Fixed
+
+`GK.belegModal._init()` wurde nur im `if (readyState === "loading")`-Zweig
+aufgerufen — nicht im `else`. Mit `<script defer>` im `<head>` (Standard
+Panel-Setup) ist der Status beim Script-Run aber bereits `"interactive"`,
+also lief immer der else-Zweig. Resultat: Close-Button (X), Click-Outside
+und ESC am PDF-Modal hatten keine Handler — der Modal liess sich nicht
+schliessen, nur ueber Hard-Reload.
+
+Fix: `_init()` auch im else-Zweig aufrufen. Bug existiert seit v1.15.0.
+
+---
 ## [1.17.2] - 2026-05-17 — Toolbar-gk-select-search wirklich 34px
 
 ### Fixed
