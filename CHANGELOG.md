@@ -4,6 +4,20 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.17.4] - 2026-05-30 — BelegModal-Close nach AJAX-Navigation
+
+### Fixed
+
+Der BelegModal-Container liegt innerhalb `[data-gk-content]` und wird bei
+AJAX-Navigation per `innerHTML`-Swap neu gerendert — dabei ging der
+Event-Listener des Schließen-Buttons verloren (Download / „In neuem Tab"
+funktionierten weiter, da reine `<a href>`). Behoben:
+- `GK.navigate()` ruft nach dem Content-Swap nun `GK.belegModal._init()` auf.
+- `_init()` ist jetzt idempotent: Close-Button via `onclick` (kein Stapeln),
+  Click-outside einmalig über `dataset.gkBelegBound`, ESC global nur einmal
+  gebunden (`_escBound`). Mehrfaches `_init` nach jedem Swap ist damit sicher.
+
+---
 ## [1.17.3] - 2026-05-18 — BelegModal-Close-Button funktioniert wieder
 
 ### Fixed

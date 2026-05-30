@@ -1005,6 +1005,9 @@
         try {
           if (typeof GK.table !== 'undefined' && GK.table.init) GK.table.init();
           if (typeof GK.tooltip !== 'undefined' && GK.tooltip.init) GK.tooltip.init();
+          // BelegModal liegt innerhalb [data-gk-content] und wird beim Swap neu
+          // gerendert → Close-Button verliert seinen Listener. Neu binden.
+          if (typeof GK.belegModal !== 'undefined' && GK.belegModal._init) GK.belegModal._init();
         } catch (e) {}
       } catch (err) {
         console.warn('GK.navigate: render error', err);
@@ -2156,18 +2159,27 @@
       var overlay = this._el();
       if (!overlay) return;
       var self = this;
-      // Click outside to close
-      overlay.addEventListener("click", function (e) {
-        if (e.target === overlay) self.close();
-      });
-      // Close button(s)
+      // Idempotent: mehrfaches _init (z.B. nach AJAX-Nav) darf Listener nicht stapeln.
+      if (!overlay.dataset.gkBelegBound) {
+        overlay.dataset.gkBelegBound = "1";
+        // Click outside to close
+        overlay.addEventListener("click", function (e) {
+          if (e.target === overlay) self.close();
+        });
+      }
+      // Close button(s): per Swap neu gerendert → onclick (überschreibt sich selbst,
+      // kein Stapeln) statt addEventListener.
       overlay.querySelectorAll("[data-gk-beleg-close]").forEach(function (btn) {
-        btn.addEventListener("click", function () { self.close(); });
+        btn.onclick = function () { self.close(); };
       });
-      // ESC
-      document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape" && overlay.classList.contains("is-open")) self.close();
-      });
+      // ESC nur einmal global binden
+      if (!GK.belegModal._escBound) {
+        GK.belegModal._escBound = true;
+        document.addEventListener("keydown", function (e) {
+          var ov = GK.belegModal._el();
+          if (e.key === "Escape" && ov && ov.classList.contains("is-open")) GK.belegModal.close();
+        });
+      }
     }
   };
 
