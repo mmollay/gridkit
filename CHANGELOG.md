@@ -4,6 +4,17 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.17.5] - 2026-05-30 — Modal-Close-Button: größeres Hit-Target, saubere Ausrichtung
+
+### Changed
+
+`.gk-modal-close` war mit `padding:4px 8px` sehr knapp und klebte optisch an der
+Header-Kante. Jetzt: 36×36px quadratisches Hit-Target (Touch-freundlich), vertikal
+zentriert, optisch an die Header-Innenkante ausgerichtet (negativer Rand), Fokus-Ring
+für Tastaturbedienung, und `.material-icons`-Glyph wird sauber zentriert. Gilt
+GridKit-weit für alle `gk-modal-close`-Buttons.
+
+---
 ## [1.17.4] - 2026-05-30 — BelegModal-Close nach AJAX-Navigation
 
 ### Fixed

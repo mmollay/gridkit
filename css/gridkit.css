@@ -2126,18 +2126,32 @@ select.gk-input {
 .gk-modal-close {
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 22px;
   cursor: pointer;
   color: var(--gk-text-muted, #94a3b8);
-  padding: 4px 8px;
+  /* Quadratisches Hit-Target, vertikal zentriert; negativer Rand richtet das
+     Icon optisch an der Header-Innenkante aus, ohne dass es „an der Kante klebt". */
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin: -4px -8px -4px 8px;
   line-height: 1;
-  border-radius: 6px;
-  transition: all 0.15s;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
 }
 .gk-modal-close:hover {
   color: var(--gk-text, #0f172a);
   background: var(--gk-bg-muted, #f1f5f9);
 }
+.gk-modal-close:focus-visible {
+  outline: 2px solid var(--gk-primary, #4f46e5);
+  outline-offset: 1px;
+}
+/* Material-Icon als Close-Glyph (statt &times;) sauber zentrieren */
+.gk-modal-close .material-icons { font-size: 20px; }
 .gk-modal-body {
   padding: 24px;
   overflow-y: auto;
