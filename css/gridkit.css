@@ -412,6 +412,9 @@ a:hover {
   content: "↓";
   opacity: 0.7;
 }
+/* Header mit Material-Icon-Indikator (gk-sort-icon) — den Text-Pfeil ::after
+   unterdruecken, sonst doppelter Indikator. Vereinheitlicht GK.table mit SortLink. */
+.gk-sortable-mi::after { content: none !important; }
 
 /* Inline-Sort-Icon für eigene Sort-Header (z.B. via material-icons).
    Nutzung: <a class="gk-sort-link"><span class="material-icons gk-sort-icon">unfold_more</span></a>

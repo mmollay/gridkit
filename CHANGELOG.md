@@ -4,6 +4,47 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.19.0] - 2026-06-01 — Auswahl-Checkboxen im Client-Modus (renderStatic)
+
+### GK.table: data-gk-selectable funktioniert jetzt auch mit data-gk-static
+
+Bisher rendert `renderStatic()` (Client-Daten via `<script data-gk-data>`) keine
+Auswahl-Spalte — Multi-Select/Bulk-Bar gab es nur bei server-gerenderten Tabellen
+(Table.php). Neu:
+
+- `renderStatic` erzeugt bei `data-gk-selectable` eine `gk-cb-col`-Checkbox-Spalte
+  (Header mit `data-gk-select-all`) und `tr[data-gk-row-id]` je Zeile. Das Zeilen-ID-
+  Feld kommt aus `data.rowId` (Default `"id"`).
+- Die Auswahl wird am Container gehalten (`wrap._gkSelected`) und nach jedem
+  Re-Render (Sort/Suche/Filter) wiederhergestellt; `wrap._gkUpdateBar()` spiegelt
+  Checkbox-/Highlight-/Bulk-Bar-Zustand.
+- Select-all-Handler delegiert auf den Container (überlebt das Neu-Rendern der thead).
+
+Additiv und rückwärtskompatibel — server-gerenderte selektierbare Tabellen unverändert.
+Ermöglicht voll client-seitige, sortier-/such-/auswählbare Tabellen (z.B. Detail-Modals).
+
+---
+## [1.18.0] - 2026-05-31 — Live-Suche Self-Modus (data-gk-live-self)
+
+### GK.liveTable: Self-Modus für Listen ohne Partial-Endpoint
+
+Neues additives Attribut `data-gk-live-self` am `data-gk-live-table`-Container.
+Eine Liste wird damit live durchsuchbar (AJAX, kein Voll-Reload, Cursor bleibt im
+Suchfeld), OHNE dass der Controller einen eigenen Partial-Zweig braucht: Die
+Antwort ist die ganze Seite, GK schneidet per DOMParser den gleichnamigen
+Container heraus und tauscht nur dessen Inhalt. Der Such-Input liegt außerhalb des
+Containers (via `data-gk-live-input`), wird also nie ersetzt → Fokus/Cursor bleibt.
+
+```html
+<input data-gk-live-input="my-tbl" name="q">          <!-- außerhalb! -->
+<div id="my-tbl" data-gk-live-table="/liste" data-gk-live-self>…Tabelle…</div>
+```
+
+- Bestehende `data-gk-live-table`-Seiten (Partial-Endpoint) bleiben unverändert —
+  Self-Modus ist rein opt-in über das zusätzliche Attribut.
+- Neuer Helfer `GK.liveTable.applyHtml()` kapselt das Container-Extrahieren.
+
+---
 ## [1.17.5] - 2026-05-30 — Modal-Close-Button: größeres Hit-Target, saubere Ausrichtung
 
 ### Changed

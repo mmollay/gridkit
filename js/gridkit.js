@@ -267,7 +267,9 @@
       },
 
       initSelectable(wrap) {
-        const selected = new Set();
+        // Set am wrap halten, damit renderStatic (Client-Modus) die Auswahl
+        // ueber Re-Renders (Sort/Suche/Filter) hinweg kennt und wiederherstellt.
+        const selected = wrap._gkSelected || (wrap._gkSelected = new Set());
         const bulkBar = wrap.querySelector(".gk-bulk-bar");
 
         function getRowId(row) {
@@ -289,6 +291,8 @@
           if (selAll) selAll.indeterminate = n > 0 && n < all.length;
           if (selAll) selAll.checked = n > 0 && n === all.length;
         }
+        // Fuer renderStatic erreichbar machen (Auswahl nach Re-Render spiegeln).
+        wrap._gkUpdateBar = updateBar;
 
         // Row checkboxes
         wrap.addEventListener("change", function (e) {
@@ -324,23 +328,23 @@
           updateBar();
         });
 
-        // Select-all checkbox
-        const selAll = wrap.querySelector("[data-gk-select-all]");
-        if (selAll) {
-          selAll.addEventListener("change", function () {
-            wrap.querySelectorAll("tbody tr[data-gk-row-id]").forEach((tr) => {
-              const cb = tr.querySelector("td.gk-cb-col input[type=checkbox]");
-              if (this.checked) {
-                selected.add(getRowId(tr));
-                if (cb) cb.checked = true;
-              } else {
-                selected.delete(getRowId(tr));
-                if (cb) cb.checked = false;
-              }
-            });
-            updateBar();
+        // Select-all checkbox — delegiert auf wrap, damit es das Re-Rendern
+        // der Tabelle durch renderStatic (neue thead-Checkbox) ueberlebt.
+        wrap.addEventListener("change", function (e) {
+          if (!e.target.matches("[data-gk-select-all]")) return;
+          const checked = e.target.checked;
+          wrap.querySelectorAll("tbody tr[data-gk-row-id]").forEach((tr) => {
+            const cb = tr.querySelector("td.gk-cb-col input[type=checkbox]");
+            if (checked) {
+              selected.add(getRowId(tr));
+              if (cb) cb.checked = true;
+            } else {
+              selected.delete(getRowId(tr));
+              if (cb) cb.checked = false;
+            }
           });
-        }
+          updateBar();
+        });
 
         // Bulk delete
         const delBtn =
@@ -529,33 +533,54 @@
         const sortCol = sort.col || "";
         const sortDir = sort.dir || "asc";
 
+        const selectable = wrap.hasAttribute("data-gk-selectable");
+        const rowIdField = data.rowId || "id";
+        const selSet = wrap._gkSelected || new Set();
+
         let html = '<table class="gk-table"><thead><tr>';
+        if (selectable)
+          html +=
+            '<th class="gk-cb-col"><input type="checkbox" data-gk-select-all></th>';
         for (const [key, col] of Object.entries(columns)) {
           const style = col.width ? ' style="width:' + e(col.width) + '"' : "";
           const sortable = col.sortable || false;
           let cls = "",
-            attrs = "";
+            attrs = "",
+            sortIcon = "";
           if (sortable) {
             const newDir =
               sortCol === key && sortDir === "asc" ? "desc" : "asc";
             attrs =
               ' data-gk-sort="' + e(key) + '" data-gk-dir="' + newDir + '"';
-            if (sortCol === key) {
-              cls =
-                ' class="gk-sortable gk-sorted-' +
-                sortDir +
-                (col.hideOnMobile ? " gk-hide-mobile" : "") +
-                '"';
-            } else {
-              cls =
-                ' class="gk-sortable' +
-                (col.hideOnMobile ? " gk-hide-mobile" : "") +
-                '"';
-            }
+            // gk-sortable-mi = Material-Icon-Indikator (einheitlich mit SortLink);
+            // unterdrueckt den ::after-Pfeil von .gk-sortable.
+            const base =
+              "gk-sortable gk-sortable-mi" +
+              (col.hideOnMobile ? " gk-hide-mobile" : "");
+            cls =
+              ' class="' +
+              base +
+              (sortCol === key ? " gk-sorted-" + sortDir : "") +
+              '"';
+            const iconName =
+              sortCol === key
+                ? sortDir === "asc"
+                  ? "arrow_upward"
+                  : "arrow_downward"
+                : "unfold_more";
+            const iconCls =
+              sortCol === key ? "gk-sort-icon is-active" : "gk-sort-icon";
+            sortIcon =
+              ' <span class="material-icons ' +
+              iconCls +
+              '">' +
+              iconName +
+              "</span>";
           } else if (col.hideOnMobile) {
             cls = ' class="gk-hide-mobile"';
           }
-          html += "<th" + cls + style + attrs + ">" + e(col.label) + "</th>";
+          html +=
+            "<th" + cls + style + attrs + ">" + e(col.label) + sortIcon + "</th>";
         }
         const allBtns = data.buttons || {};
         const leftBtns = Object.fromEntries(
@@ -626,7 +651,10 @@
 
         if (rows.length === 0) {
           const colspan =
-            colKeys.length + (hasLeft ? 1 : 0) + (hasRight ? 1 : 0);
+            colKeys.length +
+            (hasLeft ? 1 : 0) +
+            (hasRight ? 1 : 0) +
+            (selectable ? 1 : 0);
           html +=
             '<tr><td colspan="' +
             colspan +
@@ -635,7 +663,15 @@
             "</td></tr>";
         } else {
           rows.forEach((row) => {
-            html += "<tr>";
+            const rid = selectable ? String(row[rowIdField] ?? "") : "";
+            html += selectable
+              ? '<tr data-gk-row-id="' + e(rid) + '">'
+              : "<tr>";
+            if (selectable)
+              html +=
+                '<td class="gk-cb-col"><input type="checkbox"' +
+                (selSet.has(rid) ? " checked" : "") +
+                "></td>";
             if (hasLeft)
               html +=
                 '<td class="gk-actions gk-actions-left"><div class="gk-btn-group">' +
@@ -680,6 +716,9 @@
         } else {
           wrap.insertAdjacentHTML("afterbegin", html);
         }
+        // Auswahl nach dem Neuaufbau wieder spiegeln (Checkbox/Highlight/Bulk-Bar).
+        if (selectable && typeof wrap._gkUpdateBar === "function")
+          wrap._gkUpdateBar();
       },
 
       iconSvg(name) {
@@ -1493,6 +1532,21 @@
         GK.liveTable.loadUrl(container, urlObj);
       });
     },
+    // Self-Modus (data-gk-live-self): die Antwort ist die GANZE Seite (Controller
+    // ohne Partial-Zweig). Wir schneiden den gleichnamigen Container heraus und
+    // tauschen nur dessen Inhalt. So wird jede Liste live, ohne Partial/Controller-
+    // Umbau — der Such-Input liegt außerhalb des Containers und behält den Fokus.
+    applyHtml: function (container, html) {
+      if (container.hasAttribute("data-gk-live-self")) {
+        try {
+          var doc = new DOMParser().parseFromString(html, "text/html");
+          var fresh = container.id ? doc.getElementById(container.id) : null;
+          container.innerHTML = fresh ? fresh.innerHTML : html;
+          return;
+        } catch (e) {}
+      }
+      container.innerHTML = html;
+    },
     loadUrl: function (container, urlObj) {
       var fetchParams = new URLSearchParams(urlObj.searchParams);
       fetchParams.set("partial", "1");
@@ -1503,7 +1557,7 @@
       fetch(urlObj.pathname + "?" + fetchParams.toString(), { headers: { "X-Requested-With": "XMLHttpRequest" } })
         .then(function (r) { return r.text(); })
         .then(function (html) {
-          container.innerHTML = html;
+          GK.liveTable.applyHtml(container, html);
           window.history.replaceState(null, "", displayUrl);
           GK.liveTable.saveSession(container);
           container.dispatchEvent(new CustomEvent("gk-live-reloaded", { bubbles: true }));
@@ -1575,7 +1629,7 @@
       fetch(fetchUrl, { headers: { "X-Requested-With": "XMLHttpRequest" } })
         .then(function (r) { return r.text(); })
         .then(function (html) {
-          container.innerHTML = html;
+          GK.liveTable.applyHtml(container, html);
           window.history.replaceState(null, "", displayUrl);
           GK.liveTable.saveSession(container);
           container.dispatchEvent(new CustomEvent("gk-live-reloaded", { bubbles: true }));
