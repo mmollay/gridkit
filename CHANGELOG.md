@@ -4,6 +4,16 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.1] - 2026-06-03 — Tabellen-Unterecken runden zuverlässig
+### Fixed
+- Untere Tabellen-Ecken (`tbody`/`tfoot` letzte Zeile) nutzen jetzt einen
+  Nachfahren-Selektor statt `>` — die Rundung greift damit auch, wenn die Tabelle
+  in einem Zwischen-Container (z.B. Live-/AJAX-Wrapper) statt direkt im
+  `.gk-table-wrap` liegt.
+- Neu: `tfoot tr:last-child` (z.B. Summenzeile) bekommt die unteren Eck-Radien,
+  damit ein Summen-`tfoot` zum gerundeten `.gk-table-wrap` passt.
+
+---
 ## [1.22.0] - 2026-06-03 — GridKit\Pagination: EINE Server-Pagination
 
 Neue PHP-Komponente `GridKit\Pagination` rendert die gefensterte Server-Pagination

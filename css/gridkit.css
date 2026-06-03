@@ -445,10 +445,20 @@ a:hover {
 .gk-table-wrap > .gk-table thead tr:first-child th:last-child {
   border-radius: 0 11px 0 0;
 }
-.gk-table-wrap > .gk-table tbody tr:last-child td:first-child {
+/* Untere Ecken: Nachfahren-Selektor (nicht '>'), damit die Rundung auch greift,
+   wenn die Tabelle in einem Live-Container (z.B. #inv-live) statt direkt im
+   gk-table-wrap liegt. Die letzte Zeile ist immer der Karten-Boden. */
+.gk-table-wrap .gk-table tbody tr:last-child td:first-child {
   border-radius: 0 0 0 11px;
 }
-.gk-table-wrap > .gk-table tbody tr:last-child td:last-child {
+.gk-table-wrap .gk-table tbody tr:last-child td:last-child {
+  border-radius: 0 0 11px 0;
+}
+/* Ist eine tfoot-Zeile (z.B. Summenzeile) vorhanden, ist SIE die letzte Zeile. */
+.gk-table-wrap .gk-table tfoot tr:last-child td:first-child {
+  border-radius: 0 0 0 11px;
+}
+.gk-table-wrap .gk-table tfoot tr:last-child td:last-child {
   border-radius: 0 0 11px 0;
 }
 
