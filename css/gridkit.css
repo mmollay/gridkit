@@ -340,6 +340,23 @@ a:hover {
   padding: 4px 8px;
 }
 
+/* PageSize — Zeilen-pro-Seite-Dropdown */
+.gk-pagesize {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--gk-font-size-sm, 13px);
+  color: var(--gk-text-muted);
+  white-space: nowrap;
+}
+.gk-pagesize-text {
+  font-size: var(--gk-font-size-sm, 13px);
+}
+.gk-pagesize-select {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
 .gk-table {
   width: 100%;
   border-collapse: collapse;

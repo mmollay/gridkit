@@ -4,6 +4,30 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.20.0] - 2026-06-03 — PageSize: Zeilen-pro-Seite-Dropdown
+
+### Neue Komponente `GridKit\PageSize`
+
+Wiederverwendbares Dropdown zur Wahl der Zeilenanzahl pro Seite (25 / 50 / 100 / …) —
+für jede Tabelle einsetzbar, statt fester Seitengröße im Controller.
+
+- Zwei Modi:
+  - `live('<containerId>')`: rendert ein `<select data-gk-live-input>` — `GK.liveTable`
+    übernimmt Reload und Reset auf Seite 1 automatisch (collectParams löscht `page`).
+  - sonst (navigate): `onchange` navigiert per Voll-Reload und erhält andere Filter
+    (`preserve([...])`, `baseUrl(...)`).
+- `->resolve($default)` liest den Parameter im Controller gegen die Optionen-Whitelist.
+- CSS: `.gk-pagesize` / `.gk-pagesize-select` (kompakt, an `.gk-filter` angelehnt).
+
+```php
+// Live-Tabelle (AJAX):
+PageSize::make('per_page')->current($perPage)->live('exp-live')->render();
+// Klassische Seite:
+PageSize::make('per_page')->current($perPage)->baseUrl('/faktura/expenses')
+    ->preserve(['q','status'])->render();
+```
+
+---
 ## [1.19.0] - 2026-06-01 — Auswahl-Checkboxen im Client-Modus (renderStatic)
 
 ### GK.table: data-gk-selectable funktioniert jetzt auch mit data-gk-static
