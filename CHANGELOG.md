@@ -4,6 +4,20 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.21.0] - 2026-06-03 — Tabs + RowPager (Client-Pagination für bestehende Tabellen)
+
+### `GK.tabs` — einfache Tab-Navigation
+`<div data-gk-tabs>` mit `<div data-gk-tabpanel="key" data-gk-tab-title="…">`-Panels;
+Nav-Buttons werden automatisch erzeugt, erstes Panel aktiv. Kein JS-Aufruf nötig
+(Auto-Init via GK.init). CSS: `.gk-tabs-nav` / `.gk-tab`.
+
+### `GK.rowPager` — Pagination für bereits gerenderte Tabellen
+`<table data-gk-rows="25">` → Zeilen werden client-seitig seitenweise eingeblendet,
+gefensterter Pager (1 … aktuell±2 … letzte) mit Info „1–25 von N". Keine Server-/
+Daten-Änderung nötig — ideal für lange server-gerenderte Tabellen. CSS `.gk-rowpager`,
+wiederverwendbare `.gk-pg`-Button-Klassen.
+
+---
 ## [1.20.0] - 2026-06-03 — PageSize: Zeilen-pro-Seite-Dropdown
 
 ### Neue Komponente `GridKit\PageSize`

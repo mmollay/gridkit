@@ -1641,6 +1641,101 @@
   };
 
   // Extend init
+  // ── RowPager: client-seitige Pagination für bereits gerenderte Tabellen ──
+  // Markup: <table data-gk-rows="25"> … </table>  (Zeilen >25 → Pager erscheint).
+  // Keine Server-/Daten-Änderung nötig — blendet tbody-Zeilen seitenweise ein.
+  GK.rowPager = {
+    init(root) {
+      (root || document).querySelectorAll("table[data-gk-rows]").forEach(function (tbl) {
+        if (tbl._gkRowPager) return;
+        var per = parseInt(tbl.getAttribute("data-gk-rows"), 10) || 25;
+        var tbody = tbl.tBodies[0];
+        if (!tbody) return;
+        var rows = Array.prototype.filter.call(tbody.rows, function (r) {
+          return !r.hasAttribute("data-gk-rowpager-skip");
+        });
+        if (rows.length <= per) return;
+        tbl._gkRowPager = true;
+        var pages = Math.ceil(rows.length / per);
+        var page = 1;
+        var host = tbl.closest(".gk-table-wrap") || tbl;
+        var pager = document.createElement("div");
+        pager.className = "gk-rowpager";
+        host.parentNode.insertBefore(pager, host.nextSibling);
+        function render() {
+          var start = (page - 1) * per, end = start + per;
+          rows.forEach(function (r, i) { r.style.display = (i >= start && i < end) ? "" : "none"; });
+          pager.innerHTML = GK.rowPager._html(page, pages, rows.length, per);
+        }
+        pager.addEventListener("click", function (e) {
+          var b = e.target.closest("[data-gp]");
+          if (!b) return;
+          var v = b.getAttribute("data-gp");
+          if (v === "prev") page = Math.max(1, page - 1);
+          else if (v === "next") page = Math.min(pages, page + 1);
+          else page = Math.min(pages, Math.max(1, parseInt(v, 10)));
+          render();
+          host.scrollIntoView({ block: "nearest" });
+        });
+        render();
+      });
+    },
+    _html(page, pages, total, per) {
+      var win = 2, set = [1, pages];
+      for (var i = page - win; i <= page + win; i++) if (i >= 1 && i <= pages) set.push(i);
+      set = set.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
+      var from = (page - 1) * per + 1, to = Math.min(total, page * per);
+      var h = '<span class="gk-rowpager-info">' + from + "–" + to + " von " + total + "</span><span class=\"gk-rowpager-nav\">";
+      h += '<button class="gk-pg gk-pg-icon' + (page <= 1 ? " gk-pg-off" : "") + '" data-gp="prev"><span class="material-icons">chevron_left</span></button>';
+      var prev = 0;
+      set.forEach(function (p) {
+        if (prev && p - prev > 1) h += '<span class="gk-pg-gap">…</span>';
+        h += '<button class="gk-pg' + (p === page ? " gk-pg-active" : "") + '" data-gp="' + p + '">' + p + "</button>";
+        prev = p;
+      });
+      h += '<button class="gk-pg gk-pg-icon' + (page >= pages ? " gk-pg-off" : "") + '" data-gp="next"><span class="material-icons">chevron_right</span></button></span>';
+      return h;
+    },
+  };
+
+  // ── Tabs: <div data-gk-tabs> mit <div data-gk-tabpanel="key" data-gk-tab-title="…"> ──
+  // Nav-Buttons werden aus den Panels erzeugt; erstes Panel ist aktiv.
+  GK.tabs = {
+    init(root) {
+      (root || document).querySelectorAll("[data-gk-tabs]").forEach(function (wrap) {
+        if (wrap._gkTabs) return;
+        wrap._gkTabs = true;
+        var panels = Array.prototype.slice.call(wrap.querySelectorAll("[data-gk-tabpanel]"));
+        if (!panels.length) return;
+        var nav = document.createElement("div");
+        nav.className = "gk-tabs-nav";
+        panels.forEach(function (p, i) {
+          var key = p.getAttribute("data-gk-tabpanel");
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "gk-tab" + (i === 0 ? " gk-tab-active" : "");
+          b.setAttribute("data-gk-tab", key);
+          b.innerHTML = p.getAttribute("data-gk-tab-title") || key;
+          nav.appendChild(b);
+          p.style.display = i === 0 ? "" : "none";
+        });
+        wrap.insertBefore(nav, wrap.firstChild);
+        nav.addEventListener("click", function (e) {
+          var b = e.target.closest("[data-gk-tab]");
+          if (!b) return;
+          var key = b.getAttribute("data-gk-tab");
+          nav.querySelectorAll(".gk-tab").forEach(function (x) { x.classList.toggle("gk-tab-active", x === b); });
+          panels.forEach(function (p) { p.style.display = p.getAttribute("data-gk-tabpanel") === key ? "" : "none"; });
+        });
+      });
+    },
+  };
+
+  // RowPager nach Live-Tabellen-Reload neu anwenden (Container-Inhalt wurde getauscht).
+  document.addEventListener("gk-live-reloaded", function (e) {
+    if (GK.rowPager) GK.rowPager.init(e.target || document);
+  });
+
   var _origInit = GK.init;
   GK.init = function () {
     _origInit.call(GK);
@@ -1651,6 +1746,8 @@
     if (GK.multiSelect) GK.multiSelect.init();
     if (GK.ajaxSelect) GK.ajaxSelect.init();
     if (GK.liveTable) GK.liveTable.init();
+    if (GK.tabs) GK.tabs.init();
+    if (GK.rowPager) GK.rowPager.init();
   };
 
   // Dropdown toggle (Header user menu etc.)
