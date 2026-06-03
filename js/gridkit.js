@@ -1641,9 +1641,10 @@
   };
 
   // Extend init
-  // ── RowPager: client-seitige Pagination für bereits gerenderte Tabellen ──
+  // ── RowPager: client-seitige Pagination (+ optionale Suche) für gerenderte Tabellen ──
   // Markup: <table data-gk-rows="25"> … </table>  (Zeilen >25 → Pager erscheint).
-  // Keine Server-/Daten-Änderung nötig — blendet tbody-Zeilen seitenweise ein.
+  // Optional filter-fähig: data-gk-search="#such-input" → die Suche filtert die Zeilen
+  // (Volltext, case-insensitive) UND paginiert die Treffer. Ersetzt bespoke xxxFilter().
   GK.rowPager = {
     init(root) {
       (root || document).querySelectorAll("table[data-gk-rows]").forEach(function (tbl) {
@@ -1651,32 +1652,49 @@
         var per = parseInt(tbl.getAttribute("data-gk-rows"), 10) || 25;
         var tbody = tbl.tBodies[0];
         if (!tbody) return;
-        var rows = Array.prototype.filter.call(tbody.rows, function (r) {
+        var allRows = Array.prototype.filter.call(tbody.rows, function (r) {
           return !r.hasAttribute("data-gk-rowpager-skip");
         });
-        if (rows.length <= per) return;
+        var searchSel = tbl.getAttribute("data-gk-search");
+        var searchEl = searchSel ? document.querySelector(searchSel) : null;
+        if (!searchEl && allRows.length <= per) return; // nichts zu tun
         tbl._gkRowPager = true;
-        var pages = Math.ceil(rows.length / per);
-        var page = 1;
+        var page = 1, query = "";
         var host = tbl.closest(".gk-table-wrap") || tbl;
         var pager = document.createElement("div");
         pager.className = "gk-rowpager";
         host.parentNode.insertBefore(pager, host.nextSibling);
+        function active() {
+          if (!query) return allRows;
+          return allRows.filter(function (r) { return r.textContent.toLowerCase().indexOf(query) !== -1; });
+        }
         function render() {
+          var rows = active();
+          var pages = Math.max(1, Math.ceil(rows.length / per));
+          if (page > pages) page = pages;
           var start = (page - 1) * per, end = start + per;
-          rows.forEach(function (r, i) { r.style.display = (i >= start && i < end) ? "" : "none"; });
-          pager.innerHTML = GK.rowPager._html(page, pages, rows.length, per);
+          allRows.forEach(function (r) { r.style.display = "none"; });
+          rows.slice(start, end).forEach(function (r) { r.style.display = ""; });
+          pager.innerHTML = rows.length > per ? GK.rowPager._html(page, pages, rows.length, per) : "";
         }
         pager.addEventListener("click", function (e) {
           var b = e.target.closest("[data-gp]");
           if (!b) return;
           var v = b.getAttribute("data-gp");
+          var pages = Math.max(1, Math.ceil(active().length / per));
           if (v === "prev") page = Math.max(1, page - 1);
           else if (v === "next") page = Math.min(pages, page + 1);
           else page = Math.min(pages, Math.max(1, parseInt(v, 10)));
           render();
           host.scrollIntoView({ block: "nearest" });
         });
+        if (searchEl) {
+          searchEl.addEventListener("input", function () {
+            query = (this.value || "").toLowerCase().trim();
+            page = 1;
+            render();
+          });
+        }
         render();
       });
     },

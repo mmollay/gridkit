@@ -4,6 +4,13 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.21.1] - 2026-06-03 — RowPager filter-fähig
+
+`GK.rowPager` akzeptiert jetzt `data-gk-search="#input"`: die Suche filtert die
+Tabellen-Zeilen (Volltext) UND paginiert die Treffer — ersetzt bespoke
+client-seitige Filter (bkrFilter/filterRows/bkqFilter/aud-search) durch EIN Muster.
+
+---
 ## [1.21.0] - 2026-06-03 — Tabs + RowPager (Client-Pagination für bestehende Tabellen)
 
 ### `GK.tabs` — einfache Tab-Navigation
