@@ -4,6 +4,15 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.0] - 2026-06-03 — GridKit\Pagination: EINE Server-Pagination
+
+Neue PHP-Komponente `GridKit\Pagination` rendert die gefensterte Server-Pagination
+(« Erste · ‹ Zurück · 1 … aktuell±2 … letzte · Weiter › · Letzte » + Info) und nutzt
+dieselben CSS-Klassen wie der Client-`GK.rowPager` (`.gk-rowpager`/`.gk-pg`) — kein
+eigenes/inline CSS. Ersetzt alle bespoke Pager (.bl-pager/.ssi-pagination/.gk-page-btn/
+.gk-pagination). `Pagination::render([...])` oder `Pagination::fromPaginator($p, [...])`.
+
+---
 ## [1.21.1] - 2026-06-03 — RowPager filter-fähig
 
 `GK.rowPager` akzeptiert jetzt `data-gk-search="#input"`: die Suche filtert die
