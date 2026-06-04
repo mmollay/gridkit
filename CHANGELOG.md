@@ -4,6 +4,13 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.2] - 2026-06-03 — FilterChips: 'Alle' setzt Param explizit (leer)
+### Fixed
+- Der Chip mit leerem Wert ('Alle') rendert jetzt `?param=` statt der nackten URL.
+  Sonst wertete GK.liveTable.restoreSession den Klick als 'frischen Aufruf' und
+  sprang auf den zuletzt gemerkten Filter zurück (Bug: 'Alle' springt auf 'Vorschläge').
+
+---
 ## [1.22.1] - 2026-06-03 — Tabellen-Unterecken runden zuverlässig
 ### Fixed
 - Untere Tabellen-Ecken (`tbody`/`tfoot` letzte Zeile) nutzen jetzt einen
