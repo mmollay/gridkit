@@ -4,6 +4,19 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.3] - 2026-06-11
+
+### Added
+- **Modal: `gk-modal-footer`** — offizielle Aktionsleiste am Modal-Ende (Padding 16/24,
+  Border-Top, rechtsbündig). Bisher fehlte eine Footer-Komponente; Views nutzten
+  `gk-form-actions` direkt im Modal — die hat kein Seiten-/Bottom-Padding (für den
+  Einsatz IN Formularen gedacht), wodurch Buttons an der Modal-Kante klebten.
+
+### Fixed
+- Kompatibilitäts-Regel `.gk-modal > .gk-form-actions`: bestehende Modale mit
+  `gk-form-actions` als Footer bekommen automatisch korrektes Padding (kein
+  View-Umbau nötig).
+
 ## [1.22.2] - 2026-06-03 — FilterChips: 'Alle' setzt Param explizit (leer)
 ### Fixed
 - Der Chip mit leerem Wert ('Alle') rendert jetzt `?param=` statt der nackten URL.

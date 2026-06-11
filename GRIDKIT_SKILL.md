@@ -210,9 +210,15 @@ GK.modal.close();
                 onclick="document.getElementById('my-modal').style.display='none'">&times;</button>
         </div>
         <div class="gk-modal-body">Inhalt</div>
+        <div class="gk-modal-footer">   <!-- seit 1.22.3: Aktionsleiste mit eigenem Padding -->
+            <?= Button::render('Schließen', ['variant' => 'outlined', 'color' => 'neutral', 'onclick' => "..."]) ?>
+        </div>
     </div>
 </div>
 ```
+
+**Footer:** Aktions-Buttons am Modal-Ende gehören in `gk-modal-footer` (NICHT `gk-form-actions`
+direkt ins Modal — das hat kein Seiten-Padding; eine Kompat-Regel fängt Altfälle ab).
 
 ### Form (AJAX)
 

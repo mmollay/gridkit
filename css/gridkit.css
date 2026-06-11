@@ -2239,6 +2239,26 @@ select.gk-input {
 .gk-modal-body .gk-form {
   margin: 0;
 }
+/* Modal-Footer: Aktionsleiste am Modal-Ende (Schließen/Speichern). Eigenes
+   Padding, weil sie AUSSERHALB der gepolsterten gk-modal-body liegt. */
+.gk-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--gk-border, #e2e8f0);
+  background: #fff;
+  flex: 0 0 auto;
+}
+/* Kompatibilität: viele Views nutzen gk-form-actions direkt im Modal als Footer.
+   gk-form-actions hat kein Seiten-/Bottom-Padding (fuer den Einsatz IN Formularen
+   gedacht) — direkt im Modal klebten die Buttons an der Kante. */
+.gk-modal > .gk-form-actions {
+  margin-top: 0;
+  padding: 16px 24px;
+  background: #fff;
+}
 
 /* Loading spinner */
 .gk-loading::after {
