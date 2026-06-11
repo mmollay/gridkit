@@ -3825,10 +3825,34 @@ a.gk-stat-card:hover {
 }
 
 .gk-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 16px 20px;
   border-bottom: 1px solid var(--gk-outline-variant);
   font-weight: 600;
   font-size: 15px;
+}
+/* Icon + Überschrift in einer Linie: h3 erbt die Header-Typo (statt Browser-h3
+   mit eigenen Margins), Icons bekommen feste Größe. */
+.gk-card-header h3 {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  min-width: 0;
+}
+.gk-card-header > .material-icons {
+  font-size: 20px;
+  flex: 0 0 auto;
+  color: var(--gk-text-secondary, #64748b);
+}
+/* Aktionen (Buttons/Links) rechtsbündig im Card-Header */
+.gk-card-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
 }
 .gk-card-body {
   padding: 20px;

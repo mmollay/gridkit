@@ -4,6 +4,15 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.4] - 2026-06-11
+
+### Fixed
+- **Card-Header: Icon und Überschrift in einer Linie.** `.gk-card-header` ist jetzt
+  Flex (align-items center, gap 10px); `h3` darin erbt die Header-Typo statt
+  Browser-Defaults (eigene Margins/Größe), Material-Icons bekommen 20px/secondary.
+- **Neu: `.gk-card-actions`** — Aktions-Buttons rechtsbündig im Card-Header
+  (margin-left auto). Wurde in Views bereits verwendet, existierte aber nicht.
+
 ## [1.22.3] - 2026-06-11
 
 ### Added
