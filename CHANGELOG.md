@@ -4,6 +4,15 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.5] - 2026-06-12
+
+### Fixed
+- **`GK.liveTable.reload()` akzeptiert jetzt Element ODER ID-String.** Mehrere Views
+  riefen `reload('exp-live')` mit String auf → `container.dataset is undefined`
+  (z.B. beim Bar-Verbuchen einer Ausgabe). Strings werden per getElementById
+  aufgelöst; ohne auffindbaren Live-Container erfolgt ein sauberer Voll-Reload
+  statt eines JS-Fehlers.
+
 ## [1.22.4] - 2026-06-11
 
 ### Fixed

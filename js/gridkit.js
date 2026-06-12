@@ -1618,6 +1618,14 @@
       return params;
     },
     reload: function (container) {
+      // Robust: akzeptiert Element ODER ID-String. Mehrere Views riefen
+      // reload('exp-live') auf -> "container.dataset is undefined". Ohne
+      // gefundenen Live-Container fallback auf Voll-Reload statt JS-Fehler.
+      if (typeof container === "string") container = document.getElementById(container);
+      if (!container || !container.dataset || !container.dataset.gkLiveTable) {
+        window.location.reload();
+        return;
+      }
       var baseUrl = container.dataset.gkLiveTable;
       var params = GK.liveTable.collectParams(container);
       params.set("partial", "1");
