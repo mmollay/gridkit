@@ -472,24 +472,13 @@ a:hover {
   border-radius: 0 0 11px 0;
 }
 
-/* Liegt ein gk-table-wrap INNERHALB einer Karte, liefert die Karte bereits Radius
-   und Schatten. Der Wrap behält einen dezenten, ECKIGEN Rahmen — er erdet die
-   Tabelle, doppelt aber nicht die Rundung der Karte (das wirkte redundant) und
-   erzeugt keinen Eck-Schimmer mehr (kein Radius-Mismatch, da radius:0).
-   overflow bleibt unangetastet, damit Toolbar-Dropdowns weiter herausragen. */
+/* Liegt ein gk-table-wrap INNERHALB einer Karte, behält er sein RUNDES Aussehen
+   (Radius 12px) — einheitlich mit eigenständigen Tabellen. Nur Schatten weg (die
+   Karte liefert ihn bereits) und ein dezenter Rahmen. Der Eck-Schimmer, der das
+   früher zum Problem machte, ist seit der Hintergrund-auf-Zelle-Korrektur (v1.22.9)
+   weg. overflow bleibt unangetastet (Toolbar-Dropdowns). */
 .gk-card .gk-table-wrap {
-  border: 1px solid var(--gk-border, #e2e8f0);
-  border-radius: 0;
-  background: transparent;
   box-shadow: none;
-}
-.gk-card .gk-table-wrap .gk-table thead tr:first-child th:first-child,
-.gk-card .gk-table-wrap .gk-table thead tr:first-child th:last-child,
-.gk-card .gk-table-wrap .gk-table tbody tr:last-child td:first-child,
-.gk-card .gk-table-wrap .gk-table tbody tr:last-child td:last-child,
-.gk-card .gk-table-wrap .gk-table tfoot tr:last-child td:first-child,
-.gk-card .gk-table-wrap .gk-table tfoot tr:last-child td:last-child {
-  border-radius: 0;
 }
 
 /* Sektions-Titel ÜBER einer eigenständigen gk-table-wrap. Für Seiten mit mehreren

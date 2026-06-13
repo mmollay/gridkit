@@ -4,6 +4,17 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.10] - 2026-06-13
+
+### Changed
+- **Tabellen in Karten wieder mit RUNDEN Ecken** — einheitlich mit eigenständigen
+  Tabellen. 1.22.6/1.22.7 hatten in-Karte-Tabellen eckig gemacht (radius 0), um
+  Doppel-Rahmen/Eck-Schimmer zu vermeiden; seit dem Hintergrund-auf-Zelle-Fix
+  (1.22.9) ist der Schimmer weg, daher können in-Karte-Tabellen wieder rund sein.
+  Es bleibt nur `box-shadow:none` (die Karte liefert den Schatten). Damit haben ALLE
+  Tabellen systemweit dieselbe runde Optik.
+
+---
 ## [1.22.9] - 2026-06-13
 
 ### Fixed
