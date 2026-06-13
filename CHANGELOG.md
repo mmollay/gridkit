@@ -4,6 +4,20 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.9] - 2026-06-13
+
+### Fixed
+- **Graue letzte Zeile: runde Ecken fehlten.** Zebra-/Hover-Hintergrund lag auf der
+  Zeile (`tr`) — vom `border-radius` der Eck-Zellen NICHT beschnitten, daher ragte
+  eine graue letzte Zeile als eckiger Block über die runden Wrap-Ecken (nur bei
+  grauer letzter Zeile sichtbar). Hintergrund jetzt auf der Zelle (`td`).
+- **Lose Linie unter Summenzeilen (tfoot).** Die Trennlinie wurde nur bei der
+  letzten `tbody`-Zeile entfernt, nicht bei `tfoot` — so klebte eine 1px-Linie
+  knapp über dem runden Wrap-Rand. Jetzt wird die letzte SICHTBARE Zeile (tbody
+  ohne tfoot bzw. die tfoot-Zeile) linienfrei gestellt; bei tfoot bleibt die
+  tbody-Trennlinie als Abgrenzung zur Summe erhalten.
+
+---
 ## [1.22.8] - 2026-06-13
 
 ### Added

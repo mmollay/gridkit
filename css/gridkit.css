@@ -426,16 +426,26 @@ a:hover {
   user-select: none;
   white-space: nowrap;
 }
-.gk-table tbody tr:hover {
+/* Zebra-/Hover-Hintergrund auf die ZELLE (td), nicht die Zeile (tr): nur so
+   beschneidet der border-radius der Eck-Zellen den Hintergrund. Sonst ragt eine
+   graue letzte Zeile als eckiger Block über die runden Wrap-Ecken — sichtbar nur,
+   wenn die letzte Zeile grau ist (weiße fällt mit dem weißen Wrap zusammen). */
+.gk-table tbody tr:hover > td {
   background: #f6f8fa;
 }
-.gk-table tbody tr:nth-child(even) {
+.gk-table tbody tr:nth-child(even) > td {
   background: #f6f8fa;
 }
-.gk-table tbody tr:nth-child(even):hover {
+.gk-table tbody tr:nth-child(even):hover > td {
   background: #eaeef2;
 }
-.gk-table tbody tr:last-child td {
+/* Letzte SICHTBARE Zeile ohne Trennlinie. Mit tfoot ist die tfoot-Zeile die letzte
+   (die tbody-Zeile behält dann ihre Linie als Trenner vor der Summe); ohne tfoot
+   ist es die letzte tbody-Zeile. Sonst klebt eine 1px-Linie knapp über dem runden
+   Wrap-Rand ("lose Linie" unter der Summenzeile). */
+.gk-table tbody:last-child tr:last-child > td,
+.gk-table tfoot tr:last-child > td,
+.gk-table tfoot tr:last-child > th {
   border-bottom: none;
 }
 /* Abgerundete Ecken wenn Tabelle direkt in gk-table-wrap (ohne vorherige Toolbar) */
