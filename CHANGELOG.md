@@ -4,6 +4,18 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.11] - 2026-06-13
+
+### Added
+- **`gk-table-card`** — Titel + Tabelle als EINE geschlossene Karte. Wrappt eine
+  `gk-table-title` (Karten-Header) + eine `gk-table-wrap` (Tabelle bündig darin);
+  die Karte liefert Rahmen/Radius/Schatten, die Tabelle füllt sie randvoll (kein
+  Doppelrahmen, kein verschwendetes Padding, saubere Ecken via overflow-clip).
+  Für Multi-Tabellen-Seiten, deren Sektionen als zusammengehörige Karten
+  erscheinen sollen. (overflow:hidden → keine eigenen JS-Dropdowns darin; native
+  <select> unkritisch.)
+
+---
 ## [1.22.10] - 2026-06-13
 
 ### Changed

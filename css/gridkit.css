@@ -524,6 +524,37 @@ a:hover {
   margin-top: 18px;
 }
 
+/* ── gk-table-card: Titel + Tabelle als EINE geschlossene Karte ──
+   Wrappt eine gk-table-title (wird zum Karten-Header) + eine gk-table-wrap
+   (Tabelle bündig darin). Die Karte liefert Rahmen/Radius/Schatten — die Tabelle
+   füllt sie randvoll, kein Doppelrahmen, kein verschwendetes Padding, saubere
+   Ecken (overflow-clip). Für Seiten mit mehreren Tabellen, die als zusammen-
+   gehörige Karten erscheinen sollen.
+   Hinweis: overflow:hidden clippt eigene JS-Dropdowns (gk-select-search) — solche
+   Tabellen NICHT cardden. Native <select> sind unkritisch (OS-Popup). */
+.gk-table-card {
+  background: var(--gk-surface, #fff);
+  border: 1px solid var(--gk-outline-variant, #d0d7de);
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .07), 0 1px 2px rgba(0, 0, 0, .04);
+  overflow: hidden;
+}
+.gk-table-card > .gk-table-title {
+  margin: 0;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--gk-outline-variant, #eef0f3);
+}
+.gk-table-card .gk-table-wrap {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+/* Abstand zwischen gestapelten Karten */
+.gk-table-card + .gk-table-card {
+  margin-top: 16px;
+}
+
 /* Nowrap */
 .gk-table td.gk-nowrap,
 .gk-table th.gk-nowrap {
