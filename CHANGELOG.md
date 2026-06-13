@@ -4,6 +4,16 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.7] - 2026-06-13
+
+### Changed
+- **Tabelle in Karte: dezenter eckiger Rahmen statt gar keinem.** 1.22.6 entfernte
+  den Wrap-Rahmen komplett — die Tabelle wirkte dadurch etwas "verloren". Jetzt
+  behält der in einer Karte liegende `gk-table-wrap` einen leichten, ECKIGEN
+  Rahmen (radius 0): erdet die Tabelle, doppelt aber nicht die Karten-Rundung und
+  erzeugt weiterhin keinen Eck-Schimmer (kein Radius-Mismatch).
+
+---
 ## [1.22.6] - 2026-06-13
 
 ### Fixed

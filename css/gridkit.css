@@ -462,15 +462,13 @@ a:hover {
   border-radius: 0 0 11px 0;
 }
 
-/* Liegt ein gk-table-wrap INNERHALB einer Karte, liefert die Karte bereits
-   Rahmen, Radius und Schatten. Der Wrap ist dann nur Layout-/Scroll-Container —
-   ohne eigene Karten-Optik. Das verhindert zwei Artefakte:
-   (1) den doppelten Innenrahmen ("lose Linie am Tabellenrand") und
-   (2) den 1px-Schimmer an den gerundeten Ecken (Radius-Mismatch 11/12 px bei
-       overflow:visible), der nur auf grauem Header/Striping sichtbar wird.
+/* Liegt ein gk-table-wrap INNERHALB einer Karte, liefert die Karte bereits Radius
+   und Schatten. Der Wrap behält einen dezenten, ECKIGEN Rahmen — er erdet die
+   Tabelle, doppelt aber nicht die Rundung der Karte (das wirkte redundant) und
+   erzeugt keinen Eck-Schimmer mehr (kein Radius-Mismatch, da radius:0).
    overflow bleibt unangetastet, damit Toolbar-Dropdowns weiter herausragen. */
 .gk-card .gk-table-wrap {
-  border: none;
+  border: 1px solid var(--gk-border, #e2e8f0);
   border-radius: 0;
   background: transparent;
   box-shadow: none;
