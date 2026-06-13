@@ -4,6 +4,18 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.8] - 2026-06-13
+
+### Added
+- **`gk-table-title` — Sektions-Titel über einer eigenständigen Tabelle.** Für
+  Seiten mit mehreren Tabellen, die je eine Überschrift brauchen, ohne die Tabelle
+  in eine zweite `gk-card` zu packen (das doppelte den Rahmen und verschwendete
+  Padding). Flex-Titelzeile (Icon + h3 + Subtitle + rechtsbündige Aktionen via
+  `gk-table-title-actions`), randlos; die `gk-table-wrap` bleibt die geschlossene
+  Karte. `gk-table-section` als optionaler Abstandshalter zwischen gestapelten
+  Sektionen.
+
+---
 ## [1.22.7] - 2026-06-13
 
 ### Changed

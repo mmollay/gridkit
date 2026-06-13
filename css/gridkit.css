@@ -482,6 +482,49 @@ a:hover {
   border-radius: 0;
 }
 
+/* Sektions-Titel ÜBER einer eigenständigen gk-table-wrap. Für Seiten mit mehreren
+   Tabellen, die je eine Überschrift brauchen — OHNE die Tabelle in eine zweite
+   Karte zu packen (kein doppelter Rahmen, kein verschwendetes Padding). Die
+   gk-table-wrap bleibt die "geschlossene" Karte; der Titel sitzt randlos darüber. */
+.gk-table-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 0 2px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gk-text-primary, #1e293b);
+}
+.gk-table-title > .material-icons {
+  font-size: 20px;
+  flex: 0 0 auto;
+  color: var(--gk-text-secondary, #64748b);
+}
+.gk-table-title h3 {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  min-width: 0;
+}
+.gk-table-title small {
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--gk-text-secondary, #64748b);
+}
+/* rechtsbündige Aktionen/Links in der Titelzeile */
+.gk-table-title-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+/* Abstand zwischen gestapelten Tabellen-Sektionen */
+.gk-table-section + .gk-table-section,
+.gk-table-title:not(:first-child) {
+  margin-top: 18px;
+}
+
 /* Nowrap */
 .gk-table td.gk-nowrap,
 .gk-table th.gk-nowrap {
