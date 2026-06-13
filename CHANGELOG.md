@@ -4,6 +4,19 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.6] - 2026-06-13
+
+### Fixed
+- **Tabelle in einer Karte: doppelter Innenrahmen + Eck-Schimmer entfernt.** Liegt
+  ein `.gk-table-wrap` innerhalb einer `.gk-card`, liefert die Karte bereits
+  Rahmen/Radius/Schatten — der Wrap zog bisher einen zweiten, der wie eine lose
+  Linie am Tabellenrand wirkte. Zusätzlich entstand an den gerundeten Ecken ein
+  1px-Schimmer (Radius-Mismatch 11/12 px bei `overflow:visible`), der nur auf
+  grauem Tabellenkopf/Zebra-Streifen sichtbar war. In Karten ist der Wrap jetzt
+  ein reiner Layout-Container (kein eigener Rahmen/Radius/Schatten); `overflow`
+  bleibt unverändert, Toolbar-Dropdowns ragen weiterhin heraus.
+
+---
 ## [1.22.5] - 2026-06-12
 
 ### Fixed
