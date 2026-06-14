@@ -5933,7 +5933,10 @@ a.gk-stat-card:hover {
     display: none;
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.45);
-    z-index: 1000;
+    /* Ueber Standard-Modals (.gk-modal-overlay = 9999), damit die PDF-Vorschau
+       auch sichtbar ist, wenn sie AUS einem Modal heraus geoeffnet wird
+       (z.B. Konto-Detail im Jahresabschluss). Unter .gk-confirm-overlay (10001). */
+    z-index: 10000;
     align-items: stretch; justify-content: center;
 }
 .gk-beleg-modal-overlay.is-open { display: flex; }

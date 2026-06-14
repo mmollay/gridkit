@@ -4,6 +4,17 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.12] - 2026-06-14
+
+### Fixed
+- **BelegModal z-index** — `.gk-beleg-modal-overlay` lag bei `z-index: 1000`, also
+  UNTER Standard-Modals (`.gk-modal-overlay` = 9999). Wurde die PDF-/Beleg-Vorschau
+  aus einem offenen Modal heraus geöffnet (z.B. Konto-Detail), lud das PDF unsichtbar
+  HINTER dem Modal ("im Hintergrund geladen"). Jetzt `z-index: 10000` (über Modals,
+  unter `.gk-confirm-overlay` 10001 und `.gk-lightbox` 10002). Betrifft alle SSI-Systeme,
+  die BelegModal aus Modals heraus aufrufen.
+
+---
 ## [1.22.11] - 2026-06-13
 
 ### Added
