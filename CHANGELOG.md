@@ -4,6 +4,15 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.13] - 2026-06-15
+
+### Fixed
+- **Rowpager-Abstand** — `.gk-rowpager` (Client-Pagination via `data-gk-rows`) sitzt als
+  Geschwister unter `.gk-table-wrap` und hatte keinen horizontalen Innenabstand. Zähler
+  „1–15 von 33" und die Blätter-Pfeile klebten dadurch direkt am Karten-/Containerrand.
+  Jetzt `padding: 0 12px` (+ leicht angepasste vertikale Marge) für saubere Fußzeile.
+
+---
 ## [1.22.12] - 2026-06-14
 
 ### Fixed

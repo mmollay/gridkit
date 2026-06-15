@@ -388,7 +388,10 @@ a:hover {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  margin: 12px 0 4px;
+  /* Horizontaler Innenabstand, damit Zähler "1–15 von 33" und Pfeile nicht direkt am
+     Container-/Kartenrand kleben (der Pager sitzt als Geschwister unter .gk-table-wrap). */
+  margin: 10px 0 6px;
+  padding: 0 12px;
 }
 .gk-rowpager-info { font-size: 13px; color: var(--gk-text-muted); }
 .gk-rowpager-nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
