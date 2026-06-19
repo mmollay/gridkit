@@ -4,6 +4,14 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.15] - 2026-06-19
+
+### Fixed
+- **BelegModal:** `.gk-beleg-modal-frame` bekommt `background:#fff`. HTML-Belege (z.B. PayPal-Quittungen)
+  haben oft einen schmalen, transparenten Body — dahinter schlug bisher der graue `--gk-surface-container`
+  durch. Weißer iframe-Hintergrund lässt HTML- wie PDF-Belege sauber auf Weiß erscheinen.
+
+---
 ## [1.22.14] - 2026-06-19
 
 ### Fixed
