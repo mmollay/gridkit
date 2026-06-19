@@ -1208,6 +1208,8 @@ td.gk-table-meta {
   border-radius: 9999px;
   font-size: var(--gk-font-size-sm);
   font-weight: 500;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 .gk-label-green {
   background: #dcfce7;

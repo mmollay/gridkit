@@ -4,6 +4,15 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.14] - 2026-06-19
+
+### Fixed
+- **Label-Umbruch** — `.gk-label` hatte kein `white-space`; lange Labels (z.B.
+  "Überfällig · 17 T.") brachen in schmalen Tabellenspalten zweizeilig um und verzerrten
+  die Zeilenhöhe. Jetzt `white-space: nowrap` + `vertical-align: middle` → saubere,
+  einzeilige Pills in allen SSI-Systemen.
+
+---
 ## [1.22.13] - 2026-06-15
 
 ### Fixed
