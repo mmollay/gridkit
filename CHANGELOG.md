@@ -4,6 +4,15 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.17] - 2026-07-22
+
+### Fixed
+- **Endlose Ladeleiste nach Anker-Klick** — ein Hash-Sprung feuert `popstate`; der
+  Handler lud daraufhin die ganze Seite per AJAX nach. Jetzt merkt sich `GK.navigate`
+  pathname+search (`_lastPath`) und ignoriert popstate-Ereignisse, die nur das
+  Fragment ändern. Folgefix zu 1.22.16.
+
+---
 ## [1.22.16] - 2026-07-22
 
 ### Fixed

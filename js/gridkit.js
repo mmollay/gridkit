@@ -993,7 +993,13 @@
         };
       });
 
+      // Reine Hash-Sprünge (Anker-Klicks, Vor/Zurück zwischen Ankern) ändern
+      // pathname+search NICHT — dann darf popstate keinen AJAX-Reload auslösen
+      // (sichtbar als endlose Ladeleiste nach jedem Anker-Klick).
+      this._lastPath = location.pathname + location.search;
       window.addEventListener('popstate', function () {
+        var cur = location.pathname + location.search;
+        if (cur === self._lastPath) return;
         self.load(location.href, false);
       });
     },
@@ -1044,6 +1050,7 @@
         var newTitle = doc.querySelector('title');
         if (newTitle) document.title = newTitle.textContent;
         if (pushState) history.pushState({ gkNav: true }, '', url);
+        self._lastPath = location.pathname + location.search;
         self.updateActive(url);
         // Ziel-Anker aus der URL respektieren (Seitenwechsel MIT Fragment) —
         // sonst landet man nach dem Content-Swap immer am Seitenanfang.
