@@ -977,6 +977,11 @@
         if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
         if (href.startsWith('http') && !href.startsWith(location.origin)) return;
         if (link.target === '_blank') return;
+        // Anker auf der AKTUELLEN Seite (z.B. /faktura/steuerberater#chat):
+        // nativ scrollen lassen — der AJAX-Loader würde die Seite nur neu rendern
+        // und das Fragment verwerfen ("Klick ohne Wirkung").
+        var hashPos = href.indexOf('#');
+        if (hashPos > -1 && (hashPos === 0 || href.slice(0, hashPos) === location.pathname)) return;
 
         // onclick statt addEventListener — preventDefault SOFORT
         link.onclick = function (e) {
@@ -1040,7 +1045,11 @@
         if (newTitle) document.title = newTitle.textContent;
         if (pushState) history.pushState({ gkNav: true }, '', url);
         self.updateActive(url);
-        window.scrollTo(0, 0);
+        // Ziel-Anker aus der URL respektieren (Seitenwechsel MIT Fragment) —
+        // sonst landet man nach dem Content-Swap immer am Seitenanfang.
+        var frag = (url.split('#')[1] || '');
+        var anchor = frag ? document.getElementById(frag) : null;
+        if (anchor) anchor.scrollIntoView(); else window.scrollTo(0, 0);
         try {
           if (typeof GK.table !== 'undefined' && GK.table.init) GK.table.init();
           if (typeof GK.tooltip !== 'undefined' && GK.tooltip.init) GK.tooltip.init();

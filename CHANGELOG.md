@@ -4,6 +4,16 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.22.16] - 2026-07-22
+
+### Fixed
+- **Sidebar-Anker-Links** — `GK.navigate` fing auch Nav-Links mit Fragment auf die
+  aktuelle Seite ab (z.B. `/faktura/steuerberater#chat`): AJAX-Reload statt Scroll,
+  Fragment verworfen → „Klick ohne Wirkung". Same-Page-Anker werden jetzt nativ
+  vom Browser gescrollt; bei Seitenwechseln MIT Fragment scrollt `_render` nach
+  dem Content-Swap zum Ziel-Anker statt an den Seitenanfang.
+
+---
 ## [1.22.15] - 2026-06-19
 
 ### Fixed
