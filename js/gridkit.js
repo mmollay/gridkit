@@ -2592,3 +2592,66 @@ GK.tooltip = {
   },
 };
 document.addEventListener("DOMContentLoaded", () => GK.tooltip.init());
+
+// === TOOLTIP (Global) — wertet native title-Attribute zu GK-Popups auf ===
+// Jedes Element mit title bekommt beim Hover ein gestyltes Popup (300 ms Delay,
+// über dem Element, am Viewport geclamped, \n = Zeilenumbruch). Der title wird
+// beim ersten Hover nach data-gk-tip verschoben (unterdrückt das Browser-Popup).
+// Opt-out: data-gk-tip-off am Element oder einem Vorfahren.
+GK.tip = {
+  el: null,
+  cur: null,
+  timer: null,
+  ensure() {
+    if (this.el) return this.el;
+    var d = document.createElement("div");
+    d.className = "gk-tip";
+    d.hidden = true;
+    document.body.appendChild(d);
+    this.el = d;
+    return d;
+  },
+  show(target) {
+    var text = target.getAttribute("data-gk-tip");
+    if (!text) return;
+    var d = this.ensure();
+    d.textContent = text;
+    d.hidden = false;
+    d.style.left = "0px";
+    d.style.top = "0px";
+    var r = target.getBoundingClientRect();
+    var tw = d.offsetWidth, th = d.offsetHeight;
+    var x = Math.min(Math.max(8, r.left + r.width / 2 - tw / 2), window.innerWidth - tw - 8);
+    var y = r.top - th - 8;
+    if (y < 4) y = r.bottom + 8;
+    d.style.left = x + "px";
+    d.style.top = y + "px";
+  },
+  hide() {
+    clearTimeout(this.timer);
+    this.timer = null;
+    this.cur = null;
+    if (this.el) this.el.hidden = true;
+  },
+  init() {
+    var self = this;
+    document.addEventListener("mouseover", function (e) {
+      var t = e.target && e.target.closest ? e.target.closest("[title], [data-gk-tip]") : null;
+      if (!t || self.cur === t) return;
+      if (t.closest("[data-gk-tip-off]")) return;
+      var title = t.getAttribute("title");
+      if (title) { t.setAttribute("data-gk-tip", title); t.removeAttribute("title"); }
+      if (!t.getAttribute("data-gk-tip")) return;
+      self.cur = t;
+      clearTimeout(self.timer);
+      self.timer = setTimeout(function () { if (self.cur === t) self.show(t); }, 300);
+    });
+    document.addEventListener("mouseout", function (e) {
+      if (self.cur && (!e.relatedTarget || !self.cur.contains(e.relatedTarget))) self.hide();
+    });
+    ["scroll", "click", "keydown"].forEach(function (ev) {
+      document.addEventListener(ev, function () { self.hide(); }, true);
+    });
+  },
+};
+document.addEventListener("DOMContentLoaded", () => GK.tip.init());

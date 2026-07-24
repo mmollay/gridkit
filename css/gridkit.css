@@ -2989,37 +2989,30 @@ a.gk-stat-card:hover {
 .gk-tooltip {
   position: relative;
 }
-.gk-btn[title] {
-  position: relative;
-}
-.gk-btn[title]:hover::after {
-  content: attr(title);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+/* CSS-only Button-Tooltips entfernt (v1.23.0): GK.tip übernimmt ALLE
+   title-Attribute panel-weit — einheitliches Popup, kein Doppel-Tooltip. */
+.gk-tip {
+  position: fixed;
+  z-index: 100050;
+  max-width: 360px;
   background: #1e293b;
   color: #fff;
   font-size: 12px;
   font-weight: 500;
-  padding: 4px 10px;
-  border-radius: 4px;
-  white-space: nowrap;
+  line-height: 1.45;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: pre-line;
   pointer-events: none;
-  z-index: 9999;
-  animation: gk-tooltip-in 0.15s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  animation: gk-tip-in 0.12s ease;
 }
-.gk-btn[title]:hover::before {
-  content: "";
-  position: absolute;
-  bottom: calc(100% + 2px);
-  left: 50%;
-  transform: translateX(-50%);
-  border: 4px solid transparent;
-  border-top-color: #1e293b;
-  pointer-events: none;
-  z-index: 9999;
-  animation: gk-tooltip-in 0.15s ease;
+.gk-tip[hidden] {
+  display: none;
+}
+@keyframes gk-tip-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @keyframes gk-tooltip-in {
   from {

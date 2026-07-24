@@ -4,6 +4,18 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.23.0] - 2026-07-24
+### Added
+- **GK.tip — globales Titel-Tooltip**: Alle `title`-Attribute werden beim Hover
+  automatisch zu gestylten GK-Popups aufgewertet (300 ms Delay, Position über dem
+  Element mit Viewport-Clamp, `\n` = Zeilenumbruch, Ausblenden bei Scroll/Klick/
+  Taste). Der `title` wandert beim ersten Hover nach `data-gk-tip` (unterdrückt
+  das native Browser-Popup). Opt-out per `data-gk-tip-off` am Element oder Vorfahren.
+### Changed
+- CSS-only Button-Tooltips (`.gk-btn[title]::after/::before`) entfernt — GK.tip
+  übernimmt einheitlich; kein Doppel-Tooltip mehr.
+
+---
 ## [1.22.17] - 2026-07-22
 
 ### Fixed
