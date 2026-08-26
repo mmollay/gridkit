@@ -152,19 +152,25 @@
    =================================================================== */
 @supports (color: oklch(0.6 0.15 277)) {
   /* Der Winkel je Theme. Mehr braucht ein Theme nicht. */
-  [data-gk-theme="indigo"] { --gk-hue: 277; }
-  [data-gk-theme="ocean"]  { --gk-hue: 237; }
-  [data-gk-theme="forest"] { --gk-hue: 163; }
-  [data-gk-theme="rose"]   { --gk-hue: 354; }
-  [data-gk-theme="amber"]  { --gk-hue:  58; }
+  [data-gk-theme="indigo"] { --gk-theme-hue: 277; }
+  [data-gk-theme="ocean"]  { --gk-theme-hue: 237; }
+  [data-gk-theme="forest"] { --gk-theme-hue: 163; }
+  [data-gk-theme="rose"]   { --gk-theme-hue: 354; }
+  [data-gk-theme="amber"]  { --gk-theme-hue:  58; }
   /* Slate ist die bewusste Ausnahme: gleiche Helligkeit, niedrige Buntheit —
      das neutrale Theme soll neutral bleiben. */
-  [data-gk-theme="slate"]  { --gk-hue: 257; --gk-theme-chroma: 0.04; }
+  [data-gk-theme="slate"]  { --gk-theme-hue: 257; --gk-theme-chroma: 0.04; }
 
   [data-gk-theme] {
-    /* Ueber den Fallback statt ueber eine Zuweisung: die Theme-Bloecke oben
-       haben dieselbe Spezifitaet wie dieser Block, eine direkte Zuweisung
-       wuerde sie je nach Reihenfolge ueberstimmen. */
+    /* Ueber Fallbacks statt ueber Zuweisungen: die Theme-Bloecke oben haben
+       dieselbe Spezifitaet wie dieser Block, eine direkte Zuweisung wuerde sie
+       je nach Reihenfolge ueberstimmen.
+       Der Rueckfallwinkel ist ueberlebenswichtig: ohne ihn kippt die gesamte
+       Primaerfarbe, sobald data-gk-theme leer oder unbekannt ist — dann greift
+       kein Theme-Block, --gk-hue fehlt, oklch() wird ungueltig und Buttons
+       stehen ohne Hintergrund da. Genau das passiert, wenn gridkit.js beim
+       Start ein leeres data-gk-theme schreibt. */
+    --gk-hue: var(--gk-theme-hue, 277);
     --gk-chroma: var(--gk-theme-chroma, 0.15);
     /* 0.55 statt 0.60: erst hier traegt weisser Text auf JEDER Themefarbe
        mindestens 4,3:1. Vorher reichte die Spanne von 2,77:1 (Ocean, ein echter
