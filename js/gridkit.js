@@ -940,9 +940,14 @@
         wrap.setAttribute("data-gk-loading", "");
         wrap.setAttribute("aria-busy", "true");
         // Ueberholende Anfragen: nur die letzte darf das Ergebnis schreiben.
+        // erledigt() ist einmalig — sonst wuerde der catch-Zweig nach einem
+        // erfolgreichen Rendern ein zweites Mal durchlaufen und den gerade
+        // eingesetzten Inhalt durch die Fehlermeldung ersetzen.
         const lauf = (wrap._gkLauf = (wrap._gkLauf || 0) + 1);
+        let erledigt = false;
         const fertig = () => {
-          if (wrap._gkLauf !== lauf) return false;
+          if (wrap._gkLauf !== lauf || erledigt) return false;
+          erledigt = true;
           wrap.removeAttribute("data-gk-loading");
           wrap.removeAttribute("aria-busy");
           return true;
@@ -950,8 +955,15 @@
 
         fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
           .then((r) => {
-            if (!r.ok) throw new Error("HTTP " + r.status);
+            if (!r.ok) {
+              const fehler = new Error("HTTP " + r.status);
+              fehler.gkTransport = true;
+              throw fehler;
+            }
             return r.text();
+          }, (netzFehler) => {
+            netzFehler.gkTransport = true;
+            throw netzFehler;
           })
           .then((html) => {
             if (!fertig()) return;
@@ -981,6 +993,16 @@
             window.history.replaceState(null, "", url);
           })
           .catch((err) => {
+            // Nur Transportfehler fuehren zur Fehlerdarstellung. Wirft der
+            // Renderpfad (history.replaceState wird von Safari nach etwa 100
+            // Aufrufen je 30 s gedrosselt, outerHTML kann ebenfalls werfen),
+            // sind die Daten laengst korrekt eingesetzt — sie dann durch
+            // "konnte nicht geladen werden" zu ersetzen waere schlicht falsch.
+            if (!err || !err.gkTransport) {
+              fertig();
+              if (window.console) console.error("GridKit: Fehler beim Einsetzen der Tabelle", err);
+              return;
+            }
             if (!fertig()) return;
             // Vorher ist ein fehlgeschlagener Request stumm geblieben: die
             // Tabelle zeigte weiter alte Daten, ohne dass jemand es merkte.

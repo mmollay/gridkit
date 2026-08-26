@@ -40,8 +40,20 @@ class Layout {
      */
     public static function asset(string $pfad): string
     {
+        // Der Aenderungszeitstempel der Datei ist der genauere Stempel als die
+        // Release-Version: er wechselt genau dann, wenn sich die Datei
+        // tatsaechlich aendert. Mit der blossen Version bleibt beim Entwickeln
+        // eine geaenderte Datei hinter dem alten Parameter haengen, und ein
+        // Hotfix an einer einzelnen Datei ginge ohne Versionssprung unter.
+        $wurzel = dirname(__DIR__);
+        $rest = preg_replace('#^.*?((?:css|js|vendor)/.*)$#', '$1', $pfad);
+        $datei = $wurzel . '/' . ltrim((string)$rest, '/');
+        $stempel = ($rest !== null && $rest !== $pfad && is_file($datei))
+            ? (string)filemtime($datei)
+            : self::version();
+
         $trenner = str_contains($pfad, '?') ? '&' : '?';
-        return htmlspecialchars($pfad . $trenner . 'v=' . self::version(), ENT_QUOTES, 'UTF-8');
+        return htmlspecialchars($pfad . $trenner . 'v=' . $stempel, ENT_QUOTES, 'UTF-8');
     }
 
     // Convenience: Body-Tag mit allen Attributen (Theme + Layout)

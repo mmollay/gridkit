@@ -654,10 +654,19 @@ class Table
         return $this;
     }
 
-    /** Ist die Ansicht gerade durch Suche oder Filter eingeschraenkt? */
+    /**
+     * Ist DIESE Ansicht gerade durch Suche oder Filter eingeschraenkt?
+     *
+     * gk_search ist ein seitenweiter Parameter. Ohne die Pruefung auf eigene
+     * Suchspalten wuerde auf einer Seite mit zwei Tabellen die Suche in der
+     * einen dazu fuehren, dass die andere "Keine Treffer" meldet und einen
+     * "Filter zuruecksetzen"-Knopf anbietet — obwohl sie gar nicht durchsucht
+     * wird. Gleiches gilt fuer Filter: nur die von dieser Tabelle deklarierten
+     * zaehlen.
+     */
     private function isFiltered(): bool
     {
-        if ($this->searchQuery !== '') return true;
+        if ($this->searchQuery !== '' && $this->searchCols) return true;
         foreach (array_keys($this->filters) as $col) {
             if (($_GET['gk_filter_' . $col] ?? '') !== '') return true;
         }
