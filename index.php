@@ -784,7 +784,7 @@ $skillHtml = renderSkillMd($skillContent);
             <div class="comp-card">
                 <span class="material-icons">table_chart</span>
                 <h4>Table</h4>
-                <p>Search, sort, paginate, AJAX reload, multi-select</p>
+                <p>Search, sort, paginate, groupBy, number columns</p>
             </div>
             <div class="comp-card">
                 <span class="material-icons">edit_note</span>

@@ -150,6 +150,8 @@
           .forEach((wrap) => this.bindTable(wrap));
       },
       bindTable(wrap) {
+        if (wrap._gkTableBound) return;
+        wrap._gkTableBound = true;
         const id = wrap.dataset.gkTable;
         const isStatic = wrap.hasAttribute("data-gk-static");
 
@@ -267,32 +269,66 @@
       },
 
       initSelectable(wrap) {
+        if (wrap._gkSelectableBound) return;
+        wrap._gkSelectableBound = true;
         // Set am wrap halten, damit renderStatic (Client-Modus) die Auswahl
         // ueber Re-Renders (Sort/Suche/Filter) hinweg kennt und wiederherstellt.
         const selected = wrap._gkSelected || (wrap._gkSelected = new Set());
         const bulkBar = wrap.querySelector(".gk-bulk-bar");
+        let lastRangeId = null;
+        let shiftHeld = false;
 
         function getRowId(row) {
           return row.dataset.gkRowId;
         }
 
+        function rowVisible(tr) {
+          return tr.style.display !== "none";
+        }
+
+        function selectableRows(onlyVisible) {
+          return [...wrap.querySelectorAll("tbody tr[data-gk-row-id]")].filter(
+            (tr) => !onlyVisible || rowVisible(tr),
+          );
+        }
+
         function updateBar() {
-          if (!bulkBar) return;
           const n = selected.size;
-          bulkBar.querySelector(".gk-bulk-count").textContent = _t("selected", {
-            n: n,
-          });
-          bulkBar.style.display = n > 0 ? "flex" : "none";
-          wrap.querySelectorAll("tbody tr[data-gk-row-id]").forEach((tr) => {
+          wrap.dispatchEvent(
+            new CustomEvent("gk:selectionchange", {
+              bubbles: true,
+              detail: {
+                ids: [...selected],
+                tableId: wrap.dataset.gkTable || "",
+                count: n,
+              },
+            }),
+          );
+          selectableRows(false).forEach((tr) => {
             tr.classList.toggle("gk-row-selected", selected.has(getRowId(tr)));
           });
-          const all = wrap.querySelectorAll("tbody tr[data-gk-row-id]");
+          const visible = selectableRows(true);
+          const visSel = visible.filter((tr) => selected.has(getRowId(tr))).length;
           const selAll = wrap.querySelector("[data-gk-select-all]");
-          if (selAll) selAll.indeterminate = n > 0 && n < all.length;
-          if (selAll) selAll.checked = n > 0 && n === all.length;
+          if (selAll) selAll.indeterminate = visSel > 0 && visSel < visible.length;
+          if (selAll) selAll.checked = visible.length > 0 && visSel === visible.length;
+          if (!bulkBar) return;
+          const countEl = bulkBar.querySelector(".gk-bulk-count");
+          if (countEl) {
+            countEl.textContent = _t("selected", { n: n });
+          }
+          bulkBar.style.display = n > 0 ? "flex" : "none";
         }
         // Fuer renderStatic erreichbar machen (Auswahl nach Re-Render spiegeln).
         wrap._gkUpdateBar = updateBar;
+
+        wrap.addEventListener(
+          "click",
+          function (e) {
+            shiftHeld = !!e.shiftKey;
+          },
+          true,
+        );
 
         // Row checkboxes
         wrap.addEventListener("change", function (e) {
@@ -301,8 +337,31 @@
           if (!e.target.closest("td.gk-cb-col")) return;
           const tr = e.target.closest("tr[data-gk-row-id]");
           if (!tr) return;
-          if (e.target.checked) selected.add(getRowId(tr));
-          else selected.delete(getRowId(tr));
+          const id = getRowId(tr);
+          if (shiftHeld && lastRangeId && lastRangeId !== id) {
+            const rows = selectableRows(true);
+            const ids = rows.map(getRowId);
+            const a = ids.indexOf(lastRangeId);
+            const b = ids.indexOf(id);
+            if (a >= 0 && b >= 0) {
+              const from = Math.min(a, b);
+              const to = Math.max(a, b);
+              const check = e.target.checked;
+              for (let i = from; i <= to; i++) {
+                const r = rows[i];
+                const cb = r.querySelector("td.gk-cb-col input[type=checkbox]");
+                if (check) selected.add(getRowId(r));
+                else selected.delete(getRowId(r));
+                if (cb) cb.checked = check;
+              }
+            }
+          } else if (e.target.checked) {
+            selected.add(id);
+          } else {
+            selected.delete(id);
+          }
+          lastRangeId = id;
+          shiftHeld = false;
           updateBar();
         });
 
@@ -333,7 +392,7 @@
         wrap.addEventListener("change", function (e) {
           if (!e.target.matches("[data-gk-select-all]")) return;
           const checked = e.target.checked;
-          wrap.querySelectorAll("tbody tr[data-gk-row-id]").forEach((tr) => {
+          selectableRows(true).forEach((tr) => {
             const cb = tr.querySelector("td.gk-cb-col input[type=checkbox]");
             if (checked) {
               selected.add(getRowId(tr));
@@ -378,9 +437,10 @@
             wrap
               .querySelectorAll("tbody input[type=checkbox]")
               .forEach((cb) => (cb.checked = false));
-            if (selAll) {
-              selAll.checked = false;
-              selAll.indeterminate = false;
+            const selAllBtn = wrap.querySelector("[data-gk-select-all]");
+            if (selAllBtn) {
+              selAllBtn.checked = false;
+              selAllBtn.indeterminate = false;
             }
             updateBar();
           });
@@ -478,6 +538,24 @@
               return String(val || "");
             case "label":
               return renderLabel(val, col.labels || {});
+            case "number": {
+              const blankZero = col.blankZero !== false;
+              const n = parseFloat(val);
+              if (
+                blankZero &&
+                (val === null || val === "" || val === undefined || n === 0)
+              ) {
+                return '<span class="gk-num gk-num-empty">—</span>';
+              }
+              const dec = col.decimals || 0;
+              const text = isNaN(n)
+                ? String(val)
+                : n.toLocaleString("de-DE", {
+                    minimumFractionDigits: dec,
+                    maximumFractionDigits: dec,
+                  });
+              return '<span class="gk-num">' + e(text) + "</span>";
+            }
             default:
               return e(val);
           }
@@ -634,6 +712,12 @@
               btnAttrs += ' data-gk-modal="' + e(bopts.modal) + '"';
             if (bopts.title) btnAttrs += ' title="' + e(bopts.title) + '"';
             btnAttrs += " data-gk-params='" + e(JSON.stringify(params)) + "'";
+            if (bopts.onclick) {
+              const oc = String(bopts.onclick).replace(/\{(\w+)\}/g, (_, k) =>
+                JSON.stringify(row[k] ?? null),
+              );
+              btnAttrs += " onclick='" + oc.replace(/'/g, "&#39;") + "'";
+            }
             const icon = bopts.icon ? GK.table.iconSvg(bopts.icon) : "";
             const text = hasText ? "<span>" + e(bopts.text) + "</span>" : "";
             h +=
@@ -662,7 +746,36 @@
             _t("no_entries") +
             "</td></tr>";
         } else {
+          const groupBy = data.groupBy || null;
+          const groupCounts = {};
+          if (groupBy && groupBy.column) {
+            rows.forEach((row) => {
+              const gk = String(row[groupBy.column] ?? "");
+              groupCounts[gk] = (groupCounts[gk] || 0) + 1;
+            });
+          }
+          const groupSpan =
+            colKeys.length +
+            (hasLeft ? 1 : 0) +
+            (hasRight ? 1 : 0) +
+            (selectable ? 1 : 0);
+          let lastGroup = null;
           rows.forEach((row) => {
+            if (groupBy && groupBy.column) {
+              const gk = String(row[groupBy.column] ?? "");
+              if (gk !== lastGroup) {
+                const gLabel = (groupBy.labels && groupBy.labels[gk]) || gk;
+                html +=
+                  '<tr class="gk-table-group"><td colspan="' +
+                  groupSpan +
+                  '"><span class="gk-table-group-name">' +
+                  e(gLabel) +
+                  '</span><span class="gk-table-group-n">' +
+                  (groupCounts[gk] || 0) +
+                  "</span></td></tr>";
+                lastGroup = gk;
+              }
+            }
             const rid = selectable ? String(row[rowIdField] ?? "") : "";
             html += selectable
               ? '<tr data-gk-row-id="' + e(rid) + '">'
@@ -682,7 +795,13 @@
               const align = col.align
                 ? ' style="text-align:' + e(col.align) + '"'
                 : "";
-              var hideCls = col.hideOnMobile ? ' class="gk-hide-mobile"' : "";
+              const tdCls = [];
+              if (col.hideOnMobile) tdCls.push("gk-hide-mobile");
+              if (col.format === "number" || col.format === "currency")
+                tdCls.push("gk-td-num");
+              const hideCls = tdCls.length
+                ? ' class="' + tdCls.join(" ") + '"'
+                : "";
               html +=
                 "<td" +
                 hideCls +
@@ -1495,12 +1614,50 @@
       var r = root || document;
       r.querySelectorAll("[data-gk-live-table]").forEach(function (c) {
         GK.liveTable.bind(c);
+        GK.liveTable.hoistPager(c);
         GK.liveTable.restoreSession(c);
       });
       r.querySelectorAll("[data-gk-live-input]").forEach(function (inp) {
         GK.liveTable.bindInput(inp);
       });
       GK.liveTable.patchNavSelects(r);
+      GK.liveTable.bindOutsidePager();
+    },
+    // Server-Pager gehört als Geschwister UNTER .gk-table-wrap (wie Rechnungen).
+    // Sitzt er noch im Live-Container (alte Views), hier rausheben.
+    hoistPager: function (container) {
+      if (!container || !container.querySelector) return;
+      var incoming = container.querySelector("[data-gk-pager]");
+      if (!incoming) return;
+      var key = incoming.getAttribute("data-gk-pager") || container.id || "";
+      var existing = null;
+      if (key) {
+        document.querySelectorAll("[data-gk-pager=\"" + key + "\"]").forEach(function (el) {
+          if (el !== incoming) existing = el;
+        });
+      }
+      var wrap = container.closest(".gk-table-wrap") || container;
+      if (existing) existing.replaceWith(incoming);
+      else wrap.after(incoming);
+    },
+    // Klicks auf den gehobenen Pager (ausserhalb des Live-Containers) per AJAX.
+    bindOutsidePager: function () {
+      if (document._gkLivePagerBound) return;
+      document._gkLivePagerBound = true;
+      document.addEventListener("click", function (e) {
+        var a = e.target.closest("[data-gk-live-pager] a.gk-pg[href]");
+        if (!a) return;
+        if (a.target === "_blank" || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        var nav = a.closest("[data-gk-live-pager]");
+        var id = nav && nav.getAttribute("data-gk-live-pager");
+        var container = id ? document.getElementById(id) : null;
+        if (!container || !container.dataset.gkLiveTable) return;
+        var urlObj;
+        try { urlObj = new URL(a.getAttribute("href"), window.location.origin); } catch (_) { return; }
+        e.preventDefault();
+        e.stopPropagation();
+        GK.liveTable.loadUrl(container, urlObj);
+      });
     },
     // Session-Persistenz: wenn URL keine Filter hat (Sidebar-Klick), restauriere
     // den gespeicherten Stand der aktuellen Session.
@@ -1574,6 +1731,7 @@
         .then(function (r) { return r.text(); })
         .then(function (html) {
           GK.liveTable.applyHtml(container, html);
+          GK.liveTable.hoistPager(container);
           window.history.replaceState(null, "", displayUrl);
           GK.liveTable.saveSession(container);
           container.dispatchEvent(new CustomEvent("gk-live-reloaded", { bubbles: true }));
@@ -1654,6 +1812,7 @@
         .then(function (r) { return r.text(); })
         .then(function (html) {
           GK.liveTable.applyHtml(container, html);
+          GK.liveTable.hoistPager(container);
           window.history.replaceState(null, "", displayUrl);
           GK.liveTable.saveSession(container);
           container.dispatchEvent(new CustomEvent("gk-live-reloaded", { bubbles: true }));
@@ -1776,6 +1935,7 @@
   // RowPager nach Live-Tabellen-Reload neu anwenden (Container-Inhalt wurde getauscht).
   document.addEventListener("gk-live-reloaded", function (e) {
     if (GK.rowPager) GK.rowPager.init(e.target || document);
+    if (GK.table) GK.table.init(e.target || document);
   });
 
   var _origInit = GK.init;
@@ -1818,11 +1978,36 @@
   };
 
   // Theme System
+  //
+  // Der localStorage gehoert dem BROWSER, nicht dem angemeldeten Benutzer. Ohne
+  // Namensraum erbt der naechste Benutzer am selben Rechner das Farbprofil des
+  // vorigen — gemeldet am 31.07.2026: Farbe bei einem Kunden umgestellt, danach
+  // beim Steuerberater angemeldet, und dort war sie ebenfalls gesetzt.
+  //
+  // Deshalb kann das Gastsystem einen Namensraum setzen:
+  //   GK.theme.init({ scope: 'u' + userId })
+  // Ohne Namensraum verhaelt sich alles wie bisher.
   GK.theme = {
+    // Namensraum kann auch vom Gastsystem vorgegeben werden — genau wie
+    // window.GK_LANG bei den Uebersetzungen. Das ist noetig, weil GRIDKit das
+    // Profil beim Laden selbst wiederherstellt, bevor eigener Code laufen kann.
+    scope: String(window.GK_THEME_SCOPE || ""),
+
+    init(options) {
+      this.scope = String((options && options.scope) || "");
+      this.restore();
+      return this;
+    },
+
+    /** Schluessel im Namensraum des Benutzers. */
+    _key(name) {
+      return this.scope ? name + ":" + this.scope : name;
+    },
+
     set(theme) {
       document.body.dataset.gkTheme = theme;
       try {
-        localStorage.setItem("gk-theme", theme);
+        localStorage.setItem(this._key("gk-theme"), theme);
       } catch (e) {}
       document.querySelectorAll("[data-gk-set-theme]").forEach((b) => {
         b.classList.toggle("gk-theme-active", b.dataset.gkSetTheme === theme);
@@ -1832,15 +2017,17 @@
       var mode = document.body.dataset.gkMode === "dark" ? "light" : "dark";
       document.body.dataset.gkMode = mode;
       try {
-        localStorage.setItem("gk-mode", mode);
+        localStorage.setItem(this._key("gk-mode"), mode);
       } catch (e) {}
     },
     restore() {
       try {
-        var theme = localStorage.getItem("gk-theme");
-        var mode = localStorage.getItem("gk-mode");
+        var theme = localStorage.getItem(this._key("gk-theme"));
+        var mode = localStorage.getItem(this._key("gk-mode"));
+        // Kein Erben mehr: Wer nichts gespeichert hat, bekommt die Voreinstellung.
+        document.body.dataset.gkTheme = theme || "";
+        document.body.dataset.gkMode = mode || "";
         if (theme) this.set(theme);
-        if (mode) document.body.dataset.gkMode = mode;
       } catch (e) {}
     },
   };
@@ -2385,6 +2572,12 @@
   window.closeBelegModal = function () { GK.belegModal.close(); };
 
   window.GridKit = GK;
+  // Übersetzen auch AUSSERHALB dieser Kapsel möglich machen. Komponenten, die
+  // unterhalb von })(); stehen (tooltip, search, …), erreichen das private _t
+  // sonst nicht — GK.search.init() starb daran mit "ReferenceError: _t is not
+  // defined" und registrierte keinen einzigen Horcher (gefunden 30.07.2026).
+  GK.t = _t;
+
   window.GK = GK;
 
   if (document.readyState === "loading") {
@@ -2655,3 +2848,225 @@ GK.tip = {
   },
 };
 document.addEventListener("DOMContentLoaded", () => GK.tip.init());
+
+// === SUCHE (GK.search) ==================================================
+// Systemweite Schnellsuche. GRIDKit liefert nur das Bedienelement — WAS
+// gefunden wird, bestimmt das jeweilige System über die konfigurierte Adresse.
+//
+//   GK.search.init({ url: '/api/suche', hotkey: 'ctrl+k', minLength: 2 })
+//
+// Antwort des Servers:
+//   { gruppen: [ { titel: 'Buchungen',
+//                  treffer: [ { titel, untertitel, betrag, url, icon } ] } ] }
+// _t liefert bei fehlender Übersetzung den SCHLÜSSEL zurück. Für interne Zwecke
+// ist das brauchbar, im Bedienelement nicht: Dort stand dann wörtlich
+// "search_error" statt einer Meldung (gemeldet 31.07.2026). Dieser Helfer nimmt
+// den Ersatztext, sobald keine echte Übersetzung vorliegt.
+function _tOderText(key, ersatz) {
+  var wert = GK.t(key);
+  return wert && wert !== key ? wert : ersatz;
+}
+
+GK.search = {
+  cfg: null,
+  overlay: null,
+  input: null,
+  liste: null,
+  treffer: [],
+  aktiv: -1,
+  timer: null,
+  controller: null,
+  zuletztFokus: null,
+
+  init(options) {
+    this.cfg = Object.assign(
+      {
+        url: "/api/suche",
+        hotkey: "ctrl+k",
+        minLength: 2,
+        placeholder: _tOderText("search_placeholder", "Suchen …"),
+        hint: _tOderText("search_hint", "Tippe, um zu suchen."),
+        empty: _tOderText("search_empty", "Nichts gefunden."),
+        error: _tOderText("search_error", "Suche nicht erreichbar."),
+      },
+      options || {},
+    );
+
+    var self = this;
+    var kombi = String(this.cfg.hotkey).toLowerCase();
+    document.addEventListener("keydown", function (e) {
+      var mod = kombi.indexOf("ctrl") >= 0 && (e.ctrlKey || e.metaKey);
+      var taste = kombi.split("+").pop();
+      if (mod && e.key.toLowerCase() === taste) {
+        e.preventDefault();
+        self.open();
+      }
+    });
+    // Auch ohne Tastatur bedienbar.
+    document.addEventListener("click", function (e) {
+      var ausloeser = e.target.closest && e.target.closest("[data-gk-search]");
+      if (ausloeser) {
+        e.preventDefault();
+        self.open();
+      }
+    });
+  },
+
+  open() {
+    if (this.overlay) return;
+    if (!this.cfg) this.init();
+    this.zuletztFokus = document.activeElement;
+
+    var ov = document.createElement("div");
+    ov.className = "gk-search-overlay";
+    ov.innerHTML =
+      '<div class="gk-search-box" role="combobox" aria-expanded="true" aria-haspopup="listbox">' +
+      '<input class="gk-search gk-search-feld" type="search" autocomplete="off" spellcheck="false"' +
+      ' aria-autocomplete="list" aria-controls="gk-search-liste"' +
+      ' placeholder="' + this.cfg.placeholder + '">' +
+      '<div class="gk-search-liste" id="gk-search-liste" role="listbox"></div>' +
+      "</div>";
+    document.body.appendChild(ov);
+
+    this.overlay = ov;
+    this.input = ov.querySelector(".gk-search-feld");
+    this.liste = ov.querySelector(".gk-search-liste");
+    this.zeigeHinweis(this.cfg.hint);
+
+    var self = this;
+    ov.addEventListener("click", function (e) { if (e.target === ov) self.close(); });
+    this.input.addEventListener("input", function () { self.entprellt(); });
+    this.input.addEventListener("keydown", function (e) { self.taste(e); });
+    setTimeout(function () { self.input.focus(); }, 20);
+  },
+
+  close() {
+    if (!this.overlay) return;
+    if (this.controller) { this.controller.abort(); this.controller = null; }
+    clearTimeout(this.timer);
+    this.overlay.remove();
+    this.overlay = this.input = this.liste = null;
+    this.treffer = [];
+    this.aktiv = -1;
+    if (this.zuletztFokus && this.zuletztFokus.focus) this.zuletztFokus.focus();
+  },
+
+  taste(e) {
+    if (e.key === "Escape") { e.preventDefault(); this.close(); return; }
+    if (e.key === "Tab") { e.preventDefault(); return; }   // Fokus bleibt gefangen
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!this.treffer.length) return;
+      this.aktiv += e.key === "ArrowDown" ? 1 : -1;
+      if (this.aktiv < 0) this.aktiv = this.treffer.length - 1;
+      if (this.aktiv >= this.treffer.length) this.aktiv = 0;
+      this.markiere();
+      return;
+    }
+    if (e.key === "Enter" && this.aktiv >= 0 && this.treffer[this.aktiv]) {
+      e.preventDefault();
+      var url = this.treffer[this.aktiv].url;
+      if (url) location.href = url;
+    }
+  },
+
+  entprellt() {
+    var self = this;
+    clearTimeout(this.timer);
+    var q = this.input.value.trim();
+    if (q.length < this.cfg.minLength) {
+      if (this.controller) { this.controller.abort(); this.controller = null; }
+      this.treffer = []; this.aktiv = -1;
+      this.zeigeHinweis(this.cfg.hint);
+      return;
+    }
+    this.timer = setTimeout(function () { self.suche(q); }, 200);
+  },
+
+  suche(q) {
+    var self = this;
+    // Laufende Abfrage abbrechen — sonst überholt eine alte Antwort die neue.
+    if (this.controller) this.controller.abort();
+    this.controller = new AbortController();
+    this.zeigeHinweis('<span class="gk-search-laedt"></span>');
+
+    fetch(this.cfg.url + (this.cfg.url.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q), {
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+      signal: this.controller.signal,
+    })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (d) { self.zeige(d.gruppen || [], q); })
+      .catch(function (err) {
+        if (err.name === "AbortError") return;
+        self.zeigeHinweis(self.cfg.error);
+      });
+  },
+
+  zeige(gruppen, q) {
+    this.treffer = [];
+    this.aktiv = -1;
+    var html = "";
+    var self = this;
+
+    gruppen.forEach(function (g) {
+      if (!g.treffer || !g.treffer.length) return;
+      html += '<div class="gk-search-gruppe">' + self.esc(g.titel || "") + "</div>";
+      g.treffer.forEach(function (t) {
+        var i = self.treffer.length;
+        self.treffer.push(t);
+        html +=
+          '<a class="gk-search-treffer" role="option" id="gk-t' + i + '"' +
+          ' data-i="' + i + '" href="' + self.esc(t.url || "#") + '">' +
+          (t.icon ? '<span class="material-icons gk-search-icon">' + self.esc(t.icon) + "</span>" : "") +
+          '<span class="gk-search-text"><span class="gk-search-titel">' +
+          self.hervor(t.titel || "", q) + "</span>" +
+          (t.untertitel ? '<span class="gk-search-unter">' + self.hervor(t.untertitel, q) + "</span>" : "") +
+          "</span>" +
+          (t.betrag ? '<span class="gk-search-betrag">' + self.esc(t.betrag) + "</span>" : "") +
+          "</a>";
+      });
+    });
+
+    if (!this.treffer.length) { this.zeigeHinweis(this.cfg.empty); return; }
+    this.liste.innerHTML = html;
+    this.liste.querySelectorAll(".gk-search-treffer").forEach(function (el) {
+      el.addEventListener("mouseenter", function () {
+        self.aktiv = parseInt(el.dataset.i, 10);
+        self.markiere();
+      });
+    });
+    this.aktiv = 0;
+    this.markiere();
+  },
+
+  markiere() {
+    var self = this;
+    this.liste.querySelectorAll(".gk-search-treffer").forEach(function (el, i) {
+      el.classList.toggle("ist-aktiv", i === self.aktiv);
+      if (i === self.aktiv) {
+        el.scrollIntoView({ block: "nearest" });
+        self.input.setAttribute("aria-activedescendant", el.id);
+      }
+    });
+  },
+
+  zeigeHinweis(text) {
+    this.treffer = [];
+    this.aktiv = -1;
+    if (this.liste) this.liste.innerHTML = '<div class="gk-search-hinweis">' + text + "</div>";
+  },
+
+  esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  },
+
+  /** Suchbegriff im Treffer hervorheben — auf dem escapten Text, nie auf dem rohen. */
+  hervor(text, q) {
+    var e = this.esc(text);
+    if (!q) return e;
+    var muster = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return e.replace(new RegExp("(" + muster + ")", "ig"), "<mark>$1</mark>");
+  },
+};

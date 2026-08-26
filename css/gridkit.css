@@ -162,7 +162,28 @@ a:hover {
 /* Wenn horizontal gescrollt werden muss: innerhalb eines gk-table-scroll-Containers */
 .gk-table-scroll {
   overflow-x: auto;
+  max-width: 100%;
   border-radius: inherit;
+}
+.gk-table-scroll > .gk-table {
+  width: 100%;
+}
+/* Zellen dürfen schmaler werden als ihr Inhalt — sonst sprengt eine lange
+   Zweitzeile (Betreff, Konto, Nr.) die ganze Tabelle. */
+.gk-table-scroll td {
+  overflow: hidden;
+  min-width: 0;
+}
+/* Zweitzeile in einer Zelle: kürzt mit Auslassungspunkten, weitet die Spalte nicht. */
+.gk-cell-sub {
+  display: block;
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--gk-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .gk-toolbar {
   display: flex;
@@ -393,7 +414,16 @@ a:hover {
   margin: 10px 0 6px;
   padding: 0 12px;
 }
-.gk-rowpager-info { font-size: 13px; color: var(--gk-text-muted); }
+.gk-rowpager-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--gk-text-muted);
+}
+.gk-rowpager-count { white-space: nowrap; }
+.gk-rowpager-info .gk-pagesize { color: inherit; }
 .gk-rowpager-nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .gk-pg {
   display: inline-flex; align-items: center; justify-content: center;
@@ -620,6 +650,55 @@ a:hover {
   color: var(--gk-text-muted);
   font-size: 14px;
 }
+
+/* Gruppenzeile in einer Tabelle (Table::groupBy) */
+.gk-table tbody tr.gk-table-group > td {
+  padding: 10px 12px 6px;
+  background: var(--gk-surface-variant, #f1f5f9);
+  border-bottom: 1px solid var(--gk-outline-variant, #e2e8f0);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+.gk-table tbody tr.gk-table-group:hover > td {
+  background: var(--gk-surface-variant, #f1f5f9);
+}
+.gk-table-group-name {
+  font-weight: 700;
+  color: var(--gk-on-surface, #0f172a);
+}
+.gk-table-group-n {
+  margin-left: 8px;
+  color: var(--gk-text-muted, #64748b);
+  font-weight: 500;
+}
+
+/* Zähl- und Kennungsspalten */
+.gk-td-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gk-num { font-weight: 600; }
+.gk-num-empty {
+  font-weight: 400;
+  color: var(--gk-text-muted, #cbd5e1);
+}
+.gk-code {
+  display: inline-block;
+  min-width: 3.2rem;
+  margin-right: 10px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+[data-gk-mode="dark"] .gk-table tbody tr.gk-table-group > td,
+.gk-dark .gk-table tbody tr.gk-table-group > td {
+  background: var(--gk-surface-container, #1e293b);
+}
+[data-gk-mode="dark"] .gk-num-empty,
+.gk-dark .gk-num-empty {
+  color: #475569;
+}
 .gk-actions {
   white-space: nowrap;
 }
@@ -651,7 +730,7 @@ a:hover {
 /* Selectable-Tabelle: nur die Checkbox-Zelle bekommt Pointer-Cursor.
    (Bis v1.10.1 war's die ganze Zeile — verwirrt aber, weil dann jeder
    ungewollte Klick die Bulk-Action-Bar aufpoppen lässt.) */
-.gk-table-wrap[data-gk-selectable] tbody tr[data-gk-row-id] td.gk-cb-col {
+[data-gk-selectable] tbody tr[data-gk-row-id] td.gk-cb-col {
   cursor: pointer;
 }
 .gk-bulk-bar {
@@ -2946,6 +3025,7 @@ a.gk-stat-card:hover {
 /* Sidebar: content offset */
 .gk-with-sidebar {
   margin-left: 260px;
+  min-width: 0; /* sonst sprengt eine breite Tabelle die Spalte bis zum Viewport-Rand */
   transition: margin-left 0.25s ease;
 }
 
@@ -6010,3 +6090,100 @@ a.gk-stat-card:hover {
 .gk-btn-pill { border-radius: 999px; }
 .gk-btn-pill.gk-btn-xs { padding: 2px 10px; }
 .gk-btn-pill.gk-btn-sm { padding: 3px 12px; }
+
+/* === SUCHE (GK.search) ===================================================
+   Systemweite Schnellsuche. Nutzt das vorhandene .gk-search-Feld weiter,
+   ergaenzt nur Overlay und Trefferliste. */
+.gk-search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 12vh 16px 16px;
+  animation: gk-search-auf 0.12s ease-out;
+}
+@keyframes gk-search-auf {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.gk-search-box {
+  width: 100%;
+  max-width: 620px;
+  background: var(--gk-surface);
+  border: 1px solid var(--gk-border);
+  border-radius: 14px;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.22);
+  overflow: hidden;
+}
+.gk-search-box .gk-search-feld {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--gk-border);
+  padding: 16px 18px 16px 46px;
+  font-size: 16px;
+  background-position: 18px center;
+  background-color: var(--gk-surface);
+  color: var(--gk-text);
+}
+.gk-search-box .gk-search-feld:focus { box-shadow: none; border-color: var(--gk-border); }
+.gk-search-liste { max-height: 58vh; overflow-y: auto; }
+.gk-search-gruppe {
+  padding: 10px 18px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gk-text-muted);
+}
+.gk-search-treffer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  text-decoration: none;
+  color: var(--gk-text);
+  border-left: 3px solid transparent;
+}
+.gk-search-treffer.ist-aktiv {
+  background: var(--gk-surface-container);
+  border-left-color: var(--gk-primary);
+}
+.gk-search-icon { font-size: 20px; color: var(--gk-text-muted); flex: none; }
+.gk-search-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.gk-search-titel { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gk-search-unter {
+  font-size: 12px;
+  color: var(--gk-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gk-search-betrag {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gk-search-treffer mark { background: #fef08a; color: inherit; border-radius: 3px; padding: 0 1px; }
+.gk-search-hinweis { padding: 22px 18px; text-align: center; color: var(--gk-text-muted); font-size: 13.5px; }
+.gk-search-laedt {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--gk-border);
+  border-top-color: var(--gk-primary);
+  border-radius: 50%;
+  animation: gk-search-dreh 0.7s linear infinite;
+}
+@keyframes gk-search-dreh { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .gk-search-overlay { animation: none; }
+  .gk-search-laedt { animation-duration: 2s; }
+}
+[data-theme="dark"] .gk-search-treffer mark { background: #854d0e; color: #fef9c3; }
+[data-theme="dark"] .gk-search-overlay { background: rgba(0, 0, 0, 0.6); }

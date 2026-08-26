@@ -4,6 +4,140 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.27.2] - 2026-08-23
+
+### Behoben
+- **`Button` reicht das `form`-Attribut durch.** Ein Submit-Button außerhalb
+  des Formulars (`'form' => 'form-id'`) war bisher stumm — die Option wurde
+  verworfen, der Klick hatte keinerlei Wirkung.
+
+## [1.27.1] - 2026-08-17
+
+### Behoben
+- **Tabellen-Zweitzeilen weiten die Spalte nicht mehr.** Neue Klasse `.gk-cell-sub`
+  (Betreff, Konto, Nummer) kürzt mit Auslassungspunkten. Zellen in
+  `.gk-table-scroll` dürfen schmaler werden als ihr Inhalt.
+
+## [1.27.0] - 2026-08-17
+
+### Neu
+- **`Pagination` sitzt unter der Tabelle**, nicht in der Karte: `data-gk-pager`
+  und optionales `live` / `pageSize`. PageSize (25/50/100) gehört in die
+  Pager-Leiste, nicht in den Tabellen-Fuß.
+- **`Pagination::build()` / `fromPaginatorHtml()`** — HTML für
+  `<template data-gk-replace="[data-gk-pager=ID]">`, damit der Pager nach
+  Live-Filter mitwechselt, obwohl er ausserhalb des Live-Containers steht.
+- **`GK.liveTable.hoistPager`** hebt einen Pager, der noch im Live-Container
+  steckt, hinter `.gk-table-wrap`. Klicks auf den gehobenen Pager laufen
+  weiter per AJAX (`data-gk-live-pager`).
+
+### Geändert
+- Eine Seite ohne Blättern gibt einen versteckten Platzhalter aus — ein
+  Live-Replace kann den vorherigen Pager so zuverlässig entfernen.
+
+## [1.26.1] - 2026-08-17
+
+### Behoben
+- **Content-Spalte neben der Sidebar** kann wieder schmaler werden als der
+  Inhalt (`min-width: 0`). Eine breite Tabelle (z. B. Revolut-Buchungen)
+  läuft nicht mehr bis an den Fensterrand.
+- Mehrfachauswahl-Cursor gilt für jedes `[data-gk-selectable]`, nicht nur
+  für `.gk-table-wrap`.
+
+## [1.26.0] - 2026-08-17
+
+### Neu
+- **`gk:selectionchange`** — nach jeder Änderung der Mehrfachauswahl
+  (`ids`, `tableId`, `count`). Seiten können eigene Bulk-Aktionen
+  (Umbuchen, Bestätigen …) an die GRIDKit-Auswahl hängen, ohne eigene
+  Checkbox-Logik.
+- **Shift-Klick** wählt den Bereich zwischen zwei Zeilen.
+- Nach `gk-live-reloaded` wird `GK.table.init` erneut aufgerufen, damit
+  eine per AJAX getauschte Tabelle wieder auswählbar ist.
+
+## [1.25.1] - 2026-08-17
+
+### Behoben
+- **Mehrfachauswahl: „Alle“ gilt nur für sichtbare Zeilen.** Filtert eine
+  Tabelle lokal (Suche/Status), wählt die Kopf-Checkbox nicht mehr die
+  ausgeblendeten Zeilen mit aus.
+
+## [1.25.0] - 2026-08-17
+
+### Neu
+- **`Table::groupBy($spalte, $labels)`** — Gruppenzeilen, sobald sich der
+  Wert ändert. Die Zeilen müssen nach dieser Spalte sortiert ankommen.
+- **Spaltenformat `number`** — ganze Zahlen, rechtsbündig, tabellarisch.
+  0 und leer werden zum Gedankenstrich (`blankZero` abschaltbar, `decimals`
+  für Nachkommastellen).
+- **Tabellen-Knopf `onclick`** — Roh-JS mit `{feld}` aus der Zeile,
+  z. B. `'onclick' => 'oeffnen({id})'`.
+
+## [1.24.3] - 2026-07-31
+
+### Behoben
+- **Farbprofil war browserweit statt benutzerbezogen.** `GK.theme` legte Farbe und
+  Hell/Dunkel unter den festen Schlüsseln `gk-theme`/`gk-mode` im localStorage ab.
+  Wer sich am selben Rechner als jemand anderes anmeldete, erbte die Einstellung
+  des vorigen Benutzers. Neu: `GK.theme.init({ scope: 'u42' })` legt einen
+  Namensraum an (`gk-theme:u42`). Ohne `scope` bleibt das Verhalten unverändert.
+  `restore()` setzt jetzt ausserdem zurück, wenn im Namensraum nichts gespeichert
+  ist — sonst bliebe die zuletzt gesetzte Farbe am `<body>` stehen.
+  Der Namensraum kann auch über `window.GK_THEME_SCOPE` gesetzt werden (wie
+  `window.GK_LANG`), weil GRIDKit das Profil beim Laden selbst wiederherstellt.
+
+## [1.24.2] - 2026-07-31
+
+### Behoben
+- **`GK.search` zeigte Schlüssel statt Text.** `_t()` gibt bei fehlender Übersetzung
+  den Schlüssel zurück, deshalb griff das Muster `_t(key) || "Ersatztext"` nie —
+  im Overlay stand wörtlich `search_error`. Neuer Helfer `_tOderText(key, ersatz)`
+  nimmt den Ersatztext, sobald keine echte Übersetzung vorliegt. Betrifft
+  Platzhalter, Hinweis, Leermeldung und Fehlermeldung.
+
+## [1.24.1] - 2026-07-30
+
+### Behoben
+- **`GK.search` startete nie.** `init()` brach mit `ReferenceError: _t is not defined`
+  ab: Die Komponente steht unterhalb der IIFE, das private `_t` ist dort nicht
+  erreichbar. Der Fehler trat vor dem Registrieren der Horcher auf — der Auslöser
+  mit `data-gk-search` und das Tastenkürzel blieben beide wirkungslos, ohne dass
+  im Bedienelement etwas darauf hindeutete.
+
+### Neu
+- **`GK.t(key, params)`** — die Übersetzungsfunktion ist jetzt öffentlich und damit
+  auch für Komponenten ausserhalb der Kapsel nutzbar (tooltip, search, künftige).
+
+## [1.24.0] - 2026-07-29
+
+### Neu
+- **Suche (`GK.search`)** — systemweite Schnellsuche als wiederverwendbares Bedienelement.
+  GRIDKit liefert nur das Bedienelement; WAS gefunden wird, bestimmt das jeweilige
+  System über die konfigurierte Adresse.
+
+  ```js
+  GK.search.init({ url: '/api/suche', hotkey: 'ctrl+k', minLength: 2 });
+  ```
+
+  Antwort des Servers:
+  ```json
+  { "gruppen": [ { "titel": "Buchungen",
+                   "treffer": [ { "titel": "…", "untertitel": "…",
+                                  "betrag": "8,86 €", "url": "/…", "icon": "receipt" } ] } ] }
+  ```
+
+  - Öffnet mit Strg+K / Cmd+K oder über ein Element mit `data-gk-search`
+  - Tastatur: Pfeiltasten wählen, Enter öffnet, Escape schließt, Tab bleibt gefangen
+  - Abfrage entprellt (200 ms); eine laufende Abfrage wird abgebrochen, damit keine
+    veraltete Antwort die neuere überholt
+  - Suchbegriff im Treffer hervorgehoben — die Hervorhebung arbeitet auf dem bereits
+    escapten Text, nie auf dem rohen
+  - Zustände: Hinweis, lädt, keine Treffer, Fehler
+  - Barrierefrei: `role="combobox"`/`listbox`, `aria-activedescendant`, Fokus kehrt
+    beim Schließen zum auslösenden Element zurück
+  - Nutzt die vorhandene `.gk-search`-CSS weiter statt ein zweites Eingabefeld zu erfinden
+  - Hell und dunkel; respektiert `prefers-reduced-motion`
+
 ## [1.23.0] - 2026-07-24
 ### Added
 - **GK.tip — globales Titel-Tooltip**: Alle `title`-Attribute werden beim Hover

@@ -22,6 +22,7 @@ class Button
      *   - class: string (additional classes)
      *   - title: string (tooltip)
      *   - onclick: string
+     *   - form: string (form-id für Submit-Buttons außerhalb des Formulars)
      *   - data: array of data-attributes ['action' => 'save']
      *   - iconPosition: 'left'|'right' (default: 'left')
      *   - loading: bool (shows spinner)
@@ -107,6 +108,10 @@ class Button
         if (!empty($opts['title'])) $extras .= ' title="' . $e($opts['title']) . '"';
         if (!empty($opts['onclick'])) $extras .= ' onclick="' . $e($opts['onclick']) . '"';
         if (!empty($opts['target'])) $extras .= ' target="' . $e($opts['target']) . '"';
+        // form: bindet einen Submit-Button an ein Formular, in dem er NICHT steckt
+        // (Standard-HTML-Attribut). Ohne das war jeder ausgelagerte Speichern-Knopf
+        // stumm — Klick ohne jede Wirkung (Panel-Benutzerseite, 23.08.2026).
+        if (!empty($opts['form'])) $extras .= ' form="' . $e($opts['form']) . '"';
 
         if ($href !== '' && !$disabled) {
             return '<a href="' . $e($href) . '" class="' . $cls . '"' . $extras . $dataAttrs . '>' . $inner . '</a>';

@@ -1237,6 +1237,37 @@ $years->range(2022, 2026)->render();</pre></div>
     </div>
 </div>
 
+<!-- ===== SUCHE ===== -->
+<div class="demo-section" data-section="suche">
+    <h2>Suche</h2>
+    <div class="demo-pair">
+    <div class="demo-card">
+        <p class="demo-intro">System-wide quick search. GridKit provides the widget only —
+           WHAT is searched is decided by your backend endpoint. Opens with
+           <kbd>Ctrl</kbd>+<kbd>K</kbd> (<kbd>Cmd</kbd>+<kbd>K</kbd> on Mac) or any element
+           carrying <code>data-gk-search</code>. Arrow keys select, Enter opens, Escape closes.</p>
+        <div class="demo-btn-row">
+            <button class="gk-btn gk-btn-primary" data-gk-search><span class="material-icons" style="font-size:16px">search</span> Open search</button>
+        </div>
+    </div>
+    <div class="demo-code"><pre>GK.search.init({
+  url: '/demo/api/quicksearch.php',
+  hotkey: 'ctrl+k',
+  minLength: 0
+});
+
+// Server response:
+{ "gruppen": [
+    { "titel": "Buchungen",
+      "treffer": [
+        { "titel": "Hetzner",
+          "untertitel": "07.07.2026",
+          "betrag": "64,80 &euro;",
+          "url": "/buchung/2",
+          "icon": "account_balance" } ] } ] }</pre></div>
+    </div>
+</div>
+
 <!-- ===== FEEDBACK (merged: toast + confirm + modal) ===== -->
 <div class="demo-section" data-section="feedback">
     <h2>Feedback & Dialogs</h2>
@@ -1925,6 +1956,8 @@ document.querySelectorAll('.gk-upload-zone[data-gk-upload]').forEach(function(zo
     if (btnSim) btnSim.addEventListener('click', function() { makeQueueItem('dokument_' + simCounter + '.pdf', false); });
     if (btnErr) btnErr.addEventListener('click', function() { makeQueueItem('fehler_' + simCounter + '.zip', true); });
 })();
+
+GK.search.init({ url: 'api/quicksearch.php', hotkey: 'ctrl+k', minLength: 0 });
 </script>
 </body>
 </html>

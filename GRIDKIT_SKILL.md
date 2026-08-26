@@ -1,6 +1,6 @@
 # GRIDKit – Agent Skill
 
-> **Version:** 1.9.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.27.1 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.ssi.at | **Source:** `/home/pawbot/projects/gridkit/` (= `/home/develop/gridkit/`)
 
 ## Purpose
@@ -43,6 +43,8 @@ You are building or maintaining a web application using **GRIDKit**, a lightweig
 | YearFilter | `GridKit\YearFilter` | Year navigation filter |
 | TableHeader | `GridKit\TableHeader` | **Unified filter/search bar above tables — Status / Toolbar / Advanced (since v1.10.0)** |
 | Lang | `GridKit\Lang` | i18n / multilingual support |
+| Pagination | `GridKit\Pagination` | Server-Pager unter der Tabelle (`.gk-rowpager`), optional PageSize |
+| PageSize | `GridKit\PageSize` | Zeilen-pro-Seite — in der Pager-Leiste, nicht im Tabellen-Fuß |
 | liveTable (JS) | `GK.liveTable` | AJAX tables (search/filter/sort/pagination live, no reload) |
 | BelegModal | `GridKit\BelegModal` | PDF / document preview modal with iframe + mobile fallback (since v1.15.0) |
 | ActionGroup | `GridKit\ActionGroup` | Container für Action-Buttons in Tabellen-Spalten (since v1.16.0) |
@@ -97,12 +99,24 @@ use GridKit\Button;
 
 **⚠️ Search rule:** `search()` searches the column keys you name. If a column contains HTML (badges, links), use a separate plain-text key for search and a `_display` key for rendering. Never put HTML in searchable columns.
 
-**Column formats:** `currency`, `percent`, `date`, `datetime`, `boolean`, `label`, `html`, `email`
+**Column formats:** `currency`, `percent`, `date`, `datetime`, `boolean`, `label`, `html`, `email`, `number`
+
+**Zweitzeile in einer Zelle** (Betreff, Konto, Nummer) — nie die Spalte weiten:
+
+```html
+<div class="gk-cell-sub" title="Volltext">Your receipt from Anthropic…</div>
+```
+
+**`groupBy($spalte, $labels)`:** Gruppenzeile, sobald sich der Wert ändert. Zeilen vorher nach dieser Spalte sortieren.
+
+**Knopf `onclick`:** `{feld}` wird durch den JSON-Wert der Zeile ersetzt (`'onclick' => 'oeffnen({id})'`).
 
 **Button colors:** `danger`, `success`, `warning`, `primary` (default: neutral)
 
 **`showIf`:** `->button('preview', ['icon' => 'open_in_new', 'params' => ['url' => 'url'], 'showIf' => 'has_preview'])`
 — button only renders if the row's `has_preview` value is truthy.
+
+**`->selectable('id')`:** Checkbox-Spalte, Kopf „alle“, Bulk-Leiste. Löschen feuert `gk:bulkdelete` mit `{ ids, tableId }` — die App löscht selbst. Jede Änderung feuert `gk:selectionchange` mit `{ ids, tableId, count }` (auch ohne Bulk-Leiste). Shift-Klick wählt den Bereich. Ohne `Table`-Klasse: `data-gk-table` + `data-gk-selectable`, Zeilen mit `data-gk-row-id` und `td.gk-cb-col`. Zeilen ohne `data-gk-row-id` sind nicht wählbar. „Alle“ gilt nur für sichtbare Zeilen. Nach Live-Reload (`gk-live-reloaded`) bindet GRIDKit die Tabelle neu.
 
 ### Button
 
@@ -303,6 +317,29 @@ GK.modal.close();
 // Table refresh (after save/delete in server-side mode)
 GK.table.refresh('table-id');
 ```
+
+### Pagination + PageSize (seit 1.22 / 1.27)
+
+Server-Pager **unterhalb** von `.gk-table-wrap`, nicht in der Karte und nicht
+im Live-Container. Gleiche Optik wie `GK.rowPager` (`.gk-rowpager` / `.gk-pg`).
+
+```php
+// Seite (erster Render) — Geschwister unter der Tabelle:
+Pagination::fromPaginator($items, [
+    'label'    => 'Ausgaben',
+    'live'     => 'exp-live',          // bindet AJAX-Klicks + Replace-Ziel
+    'pageSize' => ['current' => $perPage, 'live' => 'exp-live'],
+    'params'   => ['year' => $year, 'q' => $q ?: null],
+]);
+
+// Im Live-Partial (AJAX), damit Zähler/Seiten nach Filter mitwechseln:
+<template data-gk-replace="[data-gk-pager=exp-live]">
+<?php Pagination::fromPaginator($items, /* dieselben Optionen */); ?>
+</template>
+```
+
+Kleine Listen ohne Server-LIMIT: `data-gk-rows="25"` auf der Tabelle — der
+Client-`GK.rowPager` erzeugt dieselbe Leiste.
 
 ### Live Tables (`GK.liveTable`) — seit 1.9.0
 

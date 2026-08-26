@@ -33,6 +33,8 @@ class Table
     private string $selectKey = 'id';
     private ?int $loadTimeMs = null;
     private array $footerCells = [];
+    private string $groupCol = '';
+    private array $groupLabels = [];
 
     public function __construct(string $id)
     {
@@ -166,6 +168,20 @@ class Table
         return $this;
     }
 
+    /**
+     * Gruppenzeilen einfügen, sobald sich $column ändert.
+     * Die Zeilen müssen nach dieser Spalte sortiert ankommen — sonst
+     * wiederholt sich die Überschrift bei jedem Wechsel.
+     *
+     * @param array<string,string> $labels  Rohwert → Anzeigename
+     */
+    public function groupBy(string $column, array $labels = []): static
+    {
+        $this->groupCol = $column;
+        $this->groupLabels = $labels;
+        return $this;
+    }
+
     private function loadData(): void
     {
         if (!$this->db || !$this->baseQuery) return;
@@ -251,6 +267,10 @@ class Table
                 'rows' => $this->rows,
                 'columns' => $colConfig,
                 'buttons' => $this->buttons,
+                'groupBy' => $this->groupCol === '' ? null : [
+                    'column' => $this->groupCol,
+                    'labels' => $this->groupLabels,
+                ],
             ], JSON_UNESCAPED_UNICODE) . '</script>';
         }
 
@@ -344,7 +364,28 @@ class Table
         if ($rightButtons) echo '<th class="gk-actions-col"></th>';
         echo '</tr></thead><tbody>';
 
+        $groupCounts = [];
+        if ($this->groupCol !== '') {
+            foreach ($this->rows as $r) {
+                $gk = (string) ($r[$this->groupCol] ?? '');
+                $groupCounts[$gk] = ($groupCounts[$gk] ?? 0) + 1;
+            }
+        }
+        $groupSpan = count($this->columns) + ($leftButtons ? 1 : 0) + ($rightButtons ? 1 : 0) + ($this->selectable ? 1 : 0);
+        $lastGroup = null;
+
         foreach ($this->rows as $row) {
+            if ($this->groupCol !== '') {
+                $gk = (string) ($row[$this->groupCol] ?? '');
+                if ($gk !== $lastGroup) {
+                    $gLabel = $this->groupLabels[$gk] ?? $gk;
+                    echo '<tr class="gk-table-group"><td colspan="' . $groupSpan . '">'
+                       . '<span class="gk-table-group-name">' . $e($gLabel) . '</span>'
+                       . '<span class="gk-table-group-n">' . (int) ($groupCounts[$gk] ?? 0) . '</span>'
+                       . '</td></tr>';
+                    $lastGroup = $gk;
+                }
+            }
             $rowId = $this->selectable ? $e($row[$this->selectKey] ?? '') : '';
             $rowIdAttr = $this->selectable ? ' data-gk-row-id="' . $rowId . '"' : '';
             echo '<tr' . $rowIdAttr . '>';
@@ -359,19 +400,19 @@ class Table
             foreach ($this->columns as $key => $col) {
                 $val = $row[$key] ?? '';
                 $tdStyles = [];
+                $tdCls = [];
                 if (isset($col['align'])) $tdStyles[] = 'text-align:' . $e($col['align']);
                 if (isset($col['width']) && $col['width'] !== 'auto') $tdStyles[] = 'width:' . $e($col['width']);
                 if (isset($col['minWidth'])) $tdStyles[] = 'min-width:' . $e($col['minWidth']);
                 if (isset($col['maxWidth'])) $tdStyles[] = 'max-width:' . $e($col['maxWidth']);
                 if (!empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
-                // Währungs- und Zahlenspalten: monospaced Ziffern, damit € untereinander stehen
                 if (($col['format'] ?? '') === 'currency' || ($col['format'] ?? '') === 'number') {
-                    $tdStyles[] = 'font-variant-numeric:tabular-nums';
-                    if (!isset($col['align'])) $tdStyles[] = 'text-align:right';
+                    $tdCls[] = 'gk-td-num';
                     if (empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
                 }
+                if (!empty($col['hideOnMobile'])) $tdCls[] = 'gk-hide-mobile';
                 $tdStyle = $tdStyles ? ' style="' . implode(';', $tdStyles) . '"' : '';
-                $tdClass = !empty($col['hideOnMobile']) ? ' class="gk-hide-mobile"' : '';
+                $tdClass = $tdCls ? ' class="' . implode(' ', $tdCls) . '"' : '';
                 $dataLabel = ' data-label="' . $e($col['label']) . '"';
                 $formatted = $this->format($val, $col);
                 echo "<td{$tdClass}{$tdStyle}{$dataLabel}>{$formatted}</td>";
@@ -489,6 +530,13 @@ class Table
                 $dataAttrs .= ' data-gk-modal="' . $e($bopts['modal']) . '"';
             }
             $titleAttr = !empty($bopts['title']) ? ' title="' . $e($bopts['title']) . '"' : '';
+            $clickAttr = '';
+            if (!empty($bopts['onclick'])) {
+                $js = preg_replace_callback('/\{(\w+)\}/', static function ($m) use ($row) {
+                    return json_encode($row[$m[1]] ?? null, JSON_UNESCAPED_UNICODE);
+                }, (string) $bopts['onclick']);
+                $clickAttr = ' onclick="' . $e($js) . '"';
+            }
 
             $hasText  = !empty($bopts['text']);
             $iconName = $bopts['icon'] ?? '';
@@ -497,12 +545,12 @@ class Table
             if ($hasText && $iconHtml) {
                 // Icon + Text button
                 $cls = 'gk-btn gk-btn-icon-text gk-btn-text gk-btn-' . $color;
-                echo '<button type="button" class="' . $cls . '"' . $titleAttr . $dataAttrs . '>'
+                echo '<button type="button" class="' . $cls . '"' . $titleAttr . $clickAttr . $dataAttrs . '>'
                    . $iconHtml . '<span>' . $e($bopts['text']) . '</span></button>';
             } elseif ($iconHtml) {
                 // Icon-only button (sm) — same classes as JS renderBtnGroup
                 $cls = 'gk-btn gk-btn-icon-only gk-btn-text gk-btn-' . $color . ' gk-btn-sm';
-                echo '<button type="button" class="' . $cls . '"' . $titleAttr . $dataAttrs . '>'
+                echo '<button type="button" class="' . $cls . '"' . $titleAttr . $clickAttr . $dataAttrs . '>'
                    . $iconHtml . '</button>';
             }
         }
@@ -552,6 +600,21 @@ class Table
         };
     }
 
+    /** Ganze Zahlen; 0 und leer werden zum Gedankenstrich (Zählspalten). */
+    private function formatNumber(mixed $val, array $col): string
+    {
+        $leer = ($col['blankZero'] ?? true)
+            && ($val === null || $val === '' || (is_numeric($val) && (float) $val == 0.0));
+        if ($leer) {
+            return '<span class="gk-num gk-num-empty">—</span>';
+        }
+        $stellen = (int) ($col['decimals'] ?? 0);
+        $text = is_numeric($val)
+            ? number_format((float) $val, $stellen, ',', '.')
+            : (string) $val;
+        return '<span class="gk-num">' . htmlspecialchars($text, ENT_QUOTES, 'UTF-8') . '</span>';
+    }
+
     private function format(mixed $val, array $col): string
     {
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
@@ -567,6 +630,7 @@ class Table
             'email' => '<a href="mailto:' . $e($val) . '">' . $e($val) . '</a>',
             'label' => $this->renderLabel($val, $col['labels'] ?? []),
             'html' => (string)$val,
+            'number' => $this->formatNumber($val, $col),
             default => $e($val),
         };
     }
