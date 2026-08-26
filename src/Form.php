@@ -79,7 +79,10 @@ class Form
                 echo Button::render($this->cancelLabel, ['variant' => 'outlined', 'color' => 'neutral', 'href' => $this->cancelHref]);
             }
             if ($this->submitLabel) {
-                echo Button::render($this->submitLabel, ['variant' => 'filled', 'color' => 'success', 'type' => 'submit', 'icon' => 'save']);
+                // Hauptaktion in Primary. Gruen ist im System die Erfolgsrolle — die Farbe
+                // fuer "hat geklappt". Sie an den Absenden-Knopf zu haengen verbraucht sie:
+                // wenn alles gruen ist, bedeutet Gruen nichts mehr.
+                echo Button::render($this->submitLabel, ['variant' => 'filled', 'color' => 'primary', 'type' => 'submit', 'icon' => 'save']);
             }
             echo '</div>';
         }

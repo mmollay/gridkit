@@ -4,6 +4,94 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.28.0] - 2026-08-26
+
+Design-Sanierung in drei Etappen. Die M3-Rollenschicht war vollständig
+vorhanden, wurde aber an rund 480 Stellen von fest verdrahteten Farbwerten
+überstimmt. Diese Version schließt die Leitung an und ergänzt die vier
+Schichten, die dem System gefehlt haben: Typografie, Bewegung, Höhe, Fokus.
+
+Die PHP-Schnittstelle ändert sich nicht. Bestehende Klassennamen und die
+Alias-Tokens (`--gk-primary-500`, `--gk-neutral-*` …) bleiben.
+
+### Behoben
+
+- **Die sechs Themes hatten im Light Mode keine Wirkung.** Neun Komponenten
+  geprüft — gefüllte, umrandete, textbasierte und tonale Buttons, Tabellenkopf,
+  Rahmen, Suchfeld, Seitenleiste — keine einzige reagierte auf den Wechsel,
+  obwohl `--gk-primary` korrekt umsprang. Gemessen ändern sich beim Wechsel
+  indigo → forest jetzt 432 statt 107 Eigenschaften, an 234 statt 83 Elementen.
+- **Dark Mode: jede zweite Tabellenzeile war unlesbar.** Kontrast 1,16 : 1
+  gegen die von WCAG AA geforderten 4,5 : 1. Ursache war ein
+  Spezifitätsfehler — die Zebra-Fläche wurde auf `> td` gemalt, der
+  Dark-Mode-Patch auf `tr`, die Zelle lag darüber. Jetzt 13,20 : 1.
+- **Weißer Text auf der Primärfläche trug je nach Theme 2,77 : 1.** Ocean lag
+  damit klar unter der WCAG-Schwelle. Über alle sechs Themes lag die Spanne
+  bei 2,77 – 7,58 : 1, jetzt bei 4,35 – 5,26 : 1 (Dark Mode 7,57 – 7,79 : 1).
+- **Erfolgsmeldungen waren im Forest-Theme violett.** `--gk-success` war auf
+  `--gk-tertiary` verdrahtet, und Forest setzt Tertiary auf `#8b5cf6`.
+  Semantische Rollen folgen dem Theme-Akzent nicht mehr.
+- **Die Dark-Sidebar war in allen Themes gleich.** Sieben Regeln haben sie auf
+  `#010409` gezwungen und die themenspezifischen Werte aus `themes.css`
+  ausgehebelt.
+- **`transition: all` ist verschwunden** (13 Vorkommen). Es animiert auch
+  Breite, Höhe und Position — die häufigste Ursache für Layouts, die beim
+  Aufklappen zucken.
+- **Demo: Seitwärtsscrollen am Telefon.** `repeat(3, 1fr)` ohne `minmax(0, …)`
+  ließ die Tabelle ihre Grid-Spur auf 542 px aufblähen. Dokumentbreite bei
+  390 px Viewport: 1.690 px → 407 px. Dazu eine Schutzregel, damit eine
+  Tabelle fremde Spuren gar nicht erst aufweiten kann.
+
+### Neu
+
+- **Zustands-Rollen.** `--gk-primary-hover` und Geschwister leiten sich aus der
+  jeweiligen Rolle ab, statt fest zu stehen; dazu Zustandsflächen
+  (`--gk-state-hover`, `--gk-state-primary` …) und ein Fokusring als Token.
+  Rückfall-Literale für Browser ohne relative Farbsyntax.
+- **Rollenpaare für Warnung und Info** (`--gk-warning-container`,
+  `--gk-on-info-container` …), die bisher fehlten — deshalb mussten Labels und
+  Meldungen eigene Literale mitbringen.
+- **`--gk-warning-text` / `--gk-success-text`** — dieselbe Farbe, dunkler. Als
+  Schriftfarbe auf heller Fläche reißt `--gk-warning` den Kontrast ein
+  (`#f59e0b` auf Weiß = 2,15 : 1).
+- **Typo-Skala:** sieben Rollen von `--gk-text-display` bis
+  `--gk-text-overline`, dazu drei Zeilenhöhen.
+- **Eigene Icon-Skala** (`--gk-icon-xs` … `--gk-icon-2xl`). Material-Icons
+  werden über `font-size` dimensioniert, sind aber keine Schrift; vorher lagen
+  beide Skalen ununterscheidbar im selben Zahlenraum.
+- **Bewegungs-Tokens:** drei Dauern, zwei Kurven, zwei fertige Bündel
+  (`--gk-transition-state`, `--gk-transition-move`).
+- **Vier Höhenstufen** (`--gk-elev-1` … `-4`), jede zweilagig; im Dark Mode
+  tiefer, weil Schatten auf dunklem Grund kaum tragen.
+- **Ein Theme ist ein Farbwinkel.** `themes.css` leitet jedes Theme aus
+  `--gk-hue` ab; ein siebtes Theme kostet eine Zeile statt zwanzig. Die
+  Literale bleiben als `@supports`-Rückfall stehen.
+
+### Geändert
+
+Sichtbar, bitte vor dem Update ansehen:
+
+- **Die Theme-Farben verschieben sich.** Die Ableitung hält die Helligkeit bei
+  0,55 fest und variiert nur den Winkel. Rose und Amber werden dadurch ruhiger,
+  Ocean und Slate dunkler. Wer die alten Werte behalten will, entfernt den
+  `@supports`-Block am Ende von `themes.css`.
+- **Formularbeschriftungen stehen im Gemischtsatz**, 13 px statt 12 px
+  Versalien mit Sperrsatz.
+- **Der Absenden-Knopf ist Primary statt Grün.** Grün ist die Erfolgsrolle —
+  wenn alles grün ist, bedeutet Grün nichts mehr.
+- **`prefers-reduced-motion`** galt bisher für zwei Regeln der Suche und deckt
+  jetzt alles ab.
+- **Fokusringe sind sichtbar** statt bei 10 % Deckung erahnbar, und liegen
+  durchgehend auf `:focus-visible` statt auf `:focus`.
+
+### Offen
+
+- Der Dark-Mode-Block ist erst teilweise aufgeräumt: 14 von 120 Regeln waren
+  nachweislich wirkungslos und sind entfallen, 71 Farbliterale stehen dort noch.
+- Vier Schriftgrößen (10, 15, 17, 36 px) stehen weiter als Literal. Sie zu
+  vereinheitlichen würde Größen sichtbar verschieben.
+
+---
 ## [1.27.3] - 2026-08-26
 
 ### Behoben

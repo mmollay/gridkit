@@ -1,4 +1,19 @@
-/* GridKit Themes – M3 Color System */
+/* GridKit Themes – M3 Color System
+ *
+ * Aufbau dieser Datei:
+ *   1. Literal-Bloecke je Theme — der Rueckfall fuer Browser ohne oklch().
+ *   2. Ein @supports-Block am Ende, der jedes Theme aus EINEM Farbwinkel
+ *      ableitet. Dort ist ein Theme genau eine Zeile.
+ *
+ * Warum: Die Literale unten sind von Hand aus einer fremden Palette gepflueckt.
+ * In OKLCH gemessen streut ihre Helligkeit von 0,45 bis 0,69 und ihre Buntheit
+ * von 0,04 bis 0,21 — deshalb wirkt Amber leichter als Slate und Rose lauter
+ * als Forest. Die Ableitung haelt die Helligkeit fest und variiert nur den
+ * Winkel; die Buntheit laeuft gegen die sRGB-Grenze, was oklch() selbst regelt.
+ *
+ * error und warning stehen bewusst NICHT in den Theme-Bloecken: semantische
+ * Farben duerfen dem Akzent nicht folgen.
+ */
 
 /* === THEME: Indigo (Default) === */
 [data-gk-theme="indigo"] {
@@ -14,8 +29,6 @@
     --gk-on-primary-container: #0c4a6e;
     --gk-secondary: #64748b;
     --gk-tertiary: #14b8a6;
-    --gk-error: #ef4444;
-    --gk-warning: #f59e0b;
 }
 
 /* === THEME: Forest (Green) === */
@@ -27,8 +40,6 @@
     --gk-on-primary-container: #064e3b;
     --gk-secondary: #6b7280;
     --gk-tertiary: #8b5cf6;
-    --gk-error: #ef4444;
-    --gk-warning: #f59e0b;
 }
 
 /* === THEME: Rose (Pink-Purple) === */
@@ -40,8 +51,6 @@
     --gk-on-primary-container: #831843;
     --gk-secondary: #78716c;
     --gk-tertiary: #a855f7;
-    --gk-error: #ef4444;
-    --gk-warning: #f59e0b;
 }
 
 /* === THEME: Amber (Warm) === */
@@ -53,8 +62,6 @@
     --gk-on-primary-container: #78350f;
     --gk-secondary: #78716c;
     --gk-tertiary: #0ea5e9;
-    --gk-error: #ef4444;
-    --gk-warning: #ea580c;
 }
 
 /* === THEME: Slate (Neutral/Minimal) === */
@@ -66,8 +73,6 @@
     --gk-on-primary-container: #1e293b;
     --gk-secondary: #64748b;
     --gk-tertiary: #6366f1;
-    --gk-error: #ef4444;
-    --gk-warning: #f59e0b;
 }
 
 /* === Dark variants per theme === */
@@ -138,4 +143,63 @@
     --gk-on-surface-variant:        #94a3b8;
     --gk-outline:                   #475569;
     --gk-outline-variant:           rgba(255,255,255,0.08);
+}
+
+
+/* ===================================================================
+   ABLEITUNG — ein Theme ist ein Farbwinkel
+   Ueberschreibt die Literale oben, sobald der Browser oklch() kann.
+   =================================================================== */
+@supports (color: oklch(0.6 0.15 277)) {
+  /* Der Winkel je Theme. Mehr braucht ein Theme nicht. */
+  [data-gk-theme="indigo"] { --gk-hue: 277; }
+  [data-gk-theme="ocean"]  { --gk-hue: 237; }
+  [data-gk-theme="forest"] { --gk-hue: 163; }
+  [data-gk-theme="rose"]   { --gk-hue: 354; }
+  [data-gk-theme="amber"]  { --gk-hue:  58; }
+  /* Slate ist die bewusste Ausnahme: gleiche Helligkeit, niedrige Buntheit —
+     das neutrale Theme soll neutral bleiben. */
+  [data-gk-theme="slate"]  { --gk-hue: 257; --gk-theme-chroma: 0.04; }
+
+  [data-gk-theme] {
+    /* Ueber den Fallback statt ueber eine Zuweisung: die Theme-Bloecke oben
+       haben dieselbe Spezifitaet wie dieser Block, eine direkte Zuweisung
+       wuerde sie je nach Reihenfolge ueberstimmen. */
+    --gk-chroma: var(--gk-theme-chroma, 0.15);
+    /* 0.55 statt 0.60: erst hier traegt weisser Text auf JEDER Themefarbe
+       mindestens 4,3:1. Vorher reichte die Spanne von 2,77:1 (Ocean, ein echter
+       Verstoss) bis 7,58:1 (Slate) — je nach Theme ein anderes Ergebnis. */
+    --gk-l-primary: 0.55;
+
+    --gk-primary:              oklch(var(--gk-l-primary) var(--gk-chroma) var(--gk-hue));
+    --gk-on-primary:           #ffffff;
+    --gk-primary-container:    oklch(0.95 calc(var(--gk-chroma) * 0.28) var(--gk-hue));
+    --gk-on-primary-container: oklch(0.36 calc(var(--gk-chroma) * 0.75) var(--gk-hue));
+
+    /* Tertiaer ist die Akzentrolle — ein Drittel des Farbkreises weiter. */
+    --gk-tertiary:              oklch(var(--gk-l-primary) var(--gk-chroma) calc(var(--gk-hue) + 120));
+    --gk-on-tertiary:           #ffffff;
+    --gk-tertiary-container:    oklch(0.95 calc(var(--gk-chroma) * 0.28) calc(var(--gk-hue) + 120));
+    --gk-on-tertiary-container: oklch(0.36 calc(var(--gk-chroma) * 0.75) calc(var(--gk-hue) + 120));
+
+    --gk-sidebar-bg:     oklch(0.975 calc(var(--gk-chroma) * 0.16) var(--gk-hue));
+    --gk-sidebar-accent: var(--gk-primary);
+  }
+
+  /* Dark Mode: dieselbe Rechnung, gespiegelte Helligkeiten. */
+  [data-gk-theme][data-gk-mode="dark"],
+  [data-gk-theme].gk-dark {
+    --gk-primary:              oklch(0.80 calc(var(--gk-chroma) * 0.80) var(--gk-hue));
+    --gk-on-primary:           oklch(0.28 calc(var(--gk-chroma) * 0.70) var(--gk-hue));
+    --gk-primary-container:    oklch(0.38 calc(var(--gk-chroma) * 0.60) var(--gk-hue));
+    --gk-on-primary-container: oklch(0.92 calc(var(--gk-chroma) * 0.20) var(--gk-hue));
+
+    --gk-tertiary:              oklch(0.80 calc(var(--gk-chroma) * 0.80) calc(var(--gk-hue) + 120));
+    --gk-on-tertiary:           oklch(0.28 calc(var(--gk-chroma) * 0.70) calc(var(--gk-hue) + 120));
+    --gk-tertiary-container:    oklch(0.38 calc(var(--gk-chroma) * 0.60) calc(var(--gk-hue) + 120));
+    --gk-on-tertiary-container: oklch(0.92 calc(var(--gk-chroma) * 0.20) calc(var(--gk-hue) + 120));
+
+    --gk-sidebar-bg:     oklch(0.19 calc(var(--gk-chroma) * 0.35) var(--gk-hue));
+    --gk-sidebar-accent: oklch(0.80 calc(var(--gk-chroma) * 0.80) var(--gk-hue));
+  }
 }

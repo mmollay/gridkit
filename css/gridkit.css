@@ -1674,14 +1674,17 @@ td.gk-table-meta {
   flex: 1;
 }
 
+/* Formularbeschriftungen im Gemischtsatz statt in Versalien.
+   12px Grossbuchstaben mit Sperrsatz lesen sich messbar langsamer — und bei
+   dieser Groesse ist das die falsche Sparsamkeit. Versalien bleiben dort, wo
+   sie tragen: Tabellenkoepfe und Abschnittsmarken (--gk-text-overline). */
 .gk-label-text {
   display: block;
   margin-bottom: 6px;
-  font-size: var(--gk-text-caption);
-  font-weight: 600;
+  font-size: var(--gk-text-label);
+  font-weight: 500;
+  line-height: var(--gk-leading-snug);
   color: var(--gk-on-surface-variant, #475569);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 .gk-label-text .material-icons,
 .gk-label-text .material-symbols-outlined,
