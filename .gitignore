@@ -7,6 +7,14 @@
 # sources next to it are the working files and do belong in the repository.
 .design/gridkit-design-audit.html
 .playwright-mcp/
+# Screenshots and scratch files left in the repo root while auditing.
+# .playwright-mcp/ was already here; these were not, and a screenshot
+# once shipped inside the Composer package because of it.
+/skeleton-*.png
+/tableprobe.php
+/selprobe.php
+/jsprobe.php
+/_audit_*.php
 .design/verify/snapshots/
 .design/verify/hex-inventory.json
 .design/verify/offsets.json
