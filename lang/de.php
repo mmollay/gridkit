@@ -85,4 +85,20 @@ return [
     'js.remove'             => 'Entfernen',
     'js.uploading'          => 'Lädt…',
     'js.uploaded'           => 'Hochgeladen',
+
+    // Pagination, Seitengroesse, Select, Tabellenkopf, Jahresfilter
+    'format.decimal'           => ',',
+    'format.thousands'         => '.',
+    'pagination.entries'       => 'Einträge',
+    'pagination.page_of'       => 'Seite {page} von {total}',
+    'pagination.first'         => 'Erste Seite',
+    'pagination.prev'          => 'Zurück',
+    'pagination.next'          => 'Weiter',
+    'pagination.last'          => 'Letzte Seite',
+    'pagesize.label'           => 'Zeilen',
+    'select.placeholder'       => '— Wählen —',
+    'select.search'            => 'Suchen…',
+    'tableheader.advanced'     => 'Erweiterte Filter',
+    'tableheader.reset'        => 'Filter zurücksetzen',
+    'yearfilter.all'           => 'Alle Jahre',
 ];

@@ -8,7 +8,7 @@ namespace GridKit;
  * GridKit\TableHeader — a unified filter/search bar above tables.
  *
  * Structure (always in this order):
- *   1. Status row  (e.g. FilterChips "Alle / Offen / Bezahlt", full width)
+ *   1. Status row  (e.g. FilterChips "All / Open / Paid", full width)
  *   2. Toolbar     (search + filter dropdowns inline, optional reset button)
  *   3. Advanced    (collapsible <details>, e.g. date/amount filters)
  *
@@ -43,11 +43,11 @@ class TableHeader
 
     /** @var \Closure|null */
     private $advancedRenderer = null;
-    private string $advancedSummary = 'Erweiterte Filter';
+    private string $advancedSummary = '';
     private bool $advancedOpen = false;
 
     private ?string $resetUrl = null;
-    private string $resetLabel = 'Filter zurücksetzen';
+    private string $resetLabel = '';
 
     public function __construct(string $id)
     {
@@ -69,10 +69,10 @@ class TableHeader
     }
 
     /**
-     * Search input in the toolbar.
+     * Search input in the toolbar. An empty $placeholder uses the translated default.
      * @param array{live?:string,id?:string} $opts
      */
-    public function search(string $name, string $value = '', string $placeholder = 'Suche…', array $opts = []): self
+    public function search(string $name, string $value = '', string $placeholder = '', array $opts = []): self
     {
         $this->search = [
             'name'        => $name,
@@ -90,7 +90,7 @@ class TableHeader
     public function filter($content): self
     {
         if (!($content instanceof \Closure) && !is_string($content)) {
-            throw new \InvalidArgumentException('filter() erwartet Closure oder String.');
+            throw new \InvalidArgumentException('filter() expects a Closure or a string.');
         }
         $this->filters[] = $content;
         return $this;
@@ -99,7 +99,7 @@ class TableHeader
     /**
      * Advanced filters (collapsible <details>).
      */
-    public function advanced(\Closure $renderer, string $summary = 'Erweiterte Filter', bool $open = false): self
+    public function advanced(\Closure $renderer, string $summary = '', bool $open = false): self
     {
         $this->advancedRenderer = $renderer;
         $this->advancedSummary  = $summary;
@@ -110,7 +110,7 @@ class TableHeader
     /**
      * Reset button (points at baseUrl without any parameters — removes all filters).
      */
-    public function reset(string $baseUrl, string $label = 'Filter zurücksetzen'): self
+    public function reset(string $baseUrl, string $label = ''): self
     {
         $this->resetUrl   = $baseUrl;
         $this->resetLabel = $label;
@@ -142,7 +142,7 @@ class TableHeader
                     . ' id="' . $e($s['id']) . '"'
                     . ' name="' . $e($s['name']) . '"'
                     . ' class="gk-search"'
-                    . ' placeholder="' . $e($s['placeholder']) . '"'
+                    . ' placeholder="' . $e($s['placeholder'] !== '' ? $s['placeholder'] : Lang::t('table.search')) . '"'
                     . ' value="' . $e($s['value']) . '"'
                     . $liveAttr . '>';
             }
@@ -158,8 +158,9 @@ class TableHeader
             // Spacer + Reset
             if ($this->resetUrl !== null) {
                 echo '<div class="gk-tableheader-spacer"></div>';
-                echo '<a href="' . $e($this->resetUrl) . '" class="gk-btn gk-btn-text gk-btn-sm" title="' . $e($this->resetLabel) . '">';
-                echo '<span class="material-icons" style="font-size:16px;vertical-align:-3px;">close</span> Reset';
+                $resetText = $this->resetLabel !== '' ? $this->resetLabel : Lang::t('tableheader.reset');
+                echo '<a href="' . $e($this->resetUrl) . '" class="gk-btn gk-btn-text gk-btn-sm" title="' . $e($resetText) . '">';
+                echo '<span class="material-icons" style="font-size:16px;vertical-align:-3px;">close</span> ' . $e($resetText);
                 echo '</a>';
             }
 
@@ -170,7 +171,8 @@ class TableHeader
         if ($this->advancedRenderer) {
             $openAttr = $this->advancedOpen ? ' open' : '';
             echo '<details class="gk-tableheader-advanced"' . $openAttr . '>';
-            echo '<summary>' . $e($this->advancedSummary) . '</summary>';
+            $summaryText = $this->advancedSummary !== '' ? $this->advancedSummary : Lang::t('tableheader.advanced');
+            echo '<summary>' . $e($summaryText) . '</summary>';
             echo '<div class="gk-tableheader-advanced-body">';
             ($this->advancedRenderer)();
             echo '</div>';

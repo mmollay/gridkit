@@ -2,16 +2,20 @@
 # These paths belong in the repository but are of no use inside vendor/.
 # `composer require mmollay/gridkit` should pull the framework, not the demo
 # site, its screenshots or the design audit.
+# skeleton.php is deliberately NOT excluded: it is the shortest path from a
+# fresh `composer require` to a page that renders.
 /demo             export-ignore
 /docs             export-ignore
 /.design          export-ignore
 /.github          export-ignore
 /index.php        export-ignore
-/skeleton.php     export-ignore
 /sitemap.xml      export-ignore
 /robots.txt       export-ignore
 /favicon.ico      export-ignore
 /CONTRIBUTING.md  export-ignore
+/CODE_OF_CONDUCT.md export-ignore
+/SECURITY.md      export-ignore
+/tests            export-ignore
 /SPEC.md          export-ignore
 /.CLAUDE.md       export-ignore
 /.gitattributes   export-ignore
@@ -22,7 +26,10 @@
 # dependencies. It stays in the repository — a git clone and the demo keep
 # working — but it is not part of the Composer package. Projects that need the
 # rich-text field include CKEditor themselves.
-/vendor           export-ignore
+#
+# It lives under assets/, not vendor/: vendor/ belongs to Composer, and a
+# `composer install` inside a GridKit clone would write into the same directory.
+/assets           export-ignore
 
 # ── Line endings ─────────────────────────────────────────────────────────────
 * text=auto eol=lf

@@ -13,7 +13,7 @@ class YearFilter
     private string $baseUrl = '';
     private array $preserveParams = [];
     private string $mode = 'chips'; // 'chips' | 'dropdown'
-    private ?array $allOption = null; // ['label' => 'Alle Jahre', 'value' => 0]
+    private ?array $allOption = null; // ['label' => 'All years', 'value' => 0]
     private string $selectClass = 'gk-filter';
 
     public function __construct(string $id = 'year-filter', string $paramName = 'year')
@@ -63,9 +63,9 @@ class YearFilter
      * Inserts an "Alle" option at the start of the dropdown.
      * The controller has to interpret the $value argument (default 0) as "no filter".
      */
-    public function allOption(string $label = 'Alle Jahre', int $value = 0): static
+    public function allOption(string $label = '', int $value = 0): static
     {
-        $this->allOption = ['label' => $label, 'value' => $value];
+        $this->allOption = ['label' => $label !== '' ? $label : Lang::t('yearfilter.all'), 'value' => $value];
         return $this;
     }
 

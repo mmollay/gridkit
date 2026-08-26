@@ -67,8 +67,8 @@ but not required.
 
 **One thing the Composer package leaves out:** the bundled CKEditor 5 build that
 backs the rich-text form field. At 1.7 MB it would otherwise dominate every
-install of a framework that advertises zero dependencies. A git clone includes
-it and the demo uses it; if you need the rich-text field from a Composer
+install of a framework that advertises zero dependencies. A git clone includes it under
+`assets/ckeditor5/` and the demo uses it; if you need the rich-text field from a Composer
 install, include CKEditor yourself. Every other component works out of the box.
 
 ---
@@ -162,12 +162,29 @@ Honest boundaries, so you don't find out later:
 
 ---
 
+## Tests
+
+```bash
+git clone https://github.com/mmollay/gridkit.git
+cd gridkit && php tests/run.php
+```
+
+No Composer, no PHPUnit — the runner is sixty lines of plain PHP, because a
+test suite that needed a package manager would contradict the first line of this
+README. It renders every component and checks that the markup balances, that no
+value reaches the page unescaped, and that the English locale contains no German.
+
+CI runs it on PHP 8.2, 8.3 and 8.4, plus one job with `mbstring` switched off.
+
+---
+
 ## Documentation
 
 - **[Live demo](https://gridkit.ssi.at/demo/)** — every component, switchable themes
 - **[Agent skill](GRIDKIT_SKILL.md)** — the complete API in one file
 - **[Changelog](CHANGELOG.md)** — what changed and why
-- **[Contributing](CONTRIBUTING.md)**
+- **[Contributing](CONTRIBUTING.md)** — and the [Code of Conduct](CODE_OF_CONDUCT.md)
+- **[Security policy](SECURITY.md)** — how to report a vulnerability privately
 
 ## License
 

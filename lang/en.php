@@ -85,4 +85,20 @@ return [
     'js.remove'             => 'Remove',
     'js.uploading'          => 'Uploading…',
     'js.uploaded'           => 'Uploaded',
+
+    // Pagination, page size, select, table header, year filter
+    'format.decimal'           => '.',
+    'format.thousands'         => ',',
+    'pagination.entries'       => 'entries',
+    'pagination.page_of'       => 'Page {page} of {total}',
+    'pagination.first'         => 'First page',
+    'pagination.prev'          => 'Previous',
+    'pagination.next'          => 'Next',
+    'pagination.last'          => 'Last page',
+    'pagesize.label'           => 'Rows',
+    'select.placeholder'       => '— Select —',
+    'select.search'            => 'Search…',
+    'tableheader.advanced'     => 'Advanced filters',
+    'tableheader.reset'        => 'Reset filters',
+    'yearfilter.all'           => 'All years',
 ];

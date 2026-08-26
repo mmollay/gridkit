@@ -60,7 +60,7 @@ class FilterChips
             // ALWAYS set the param — even for the empty 'Alle' value. Otherwise the
             // 'Alle' chip points at the bare URL without a query; GK.liveTable.restoreSession
             // reads that as a 'fresh page load' and jumps back to the filter it last
-            // remembered (bug: 'Alle' jumps to 'Vorschläge'). With an explicit empty
+            // remembered (bug: 'All' jumps to 'Suggestions'). With an explicit empty
             // param (?param=) the URL carries a query string → no jumping back.
             $params[$this->paramName] = $val;
             $url = $this->baseUrl ?: strtok($_SERVER['REQUEST_URI'] ?? '', '?');

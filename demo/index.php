@@ -33,8 +33,8 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
     <link rel="stylesheet" href="<?= Layout::asset('../css/gridkit.css') ?>">
     <link rel="stylesheet" href="<?= Layout::asset('../css/themes.css') ?>">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="../vendor/ckeditor5/ckeditor5.css">
-    <script src="../vendor/ckeditor5/ckeditor5.umd.js"></script>
+    <link rel="stylesheet" href="../assets/ckeditor5/ckeditor5.css">
+    <script src="../assets/ckeditor5/ckeditor5.umd.js"></script>
     <style>
         body { margin:0; padding:0; background:var(--gk-surface-container, #f0f1f3); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:var(--gk-on-surface, #1f2937); }
         .demo-section { max-width:1100px; margin:24px auto; padding:0 24px; display:none; }
@@ -451,7 +451,7 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
 
     <div class="demo-card">
         <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">RichText Editor (CKEditor 5)</h3>
-        <p class="demo-intro">Local vendor bundle (<code>vendor/ckeditor5/</code>), no CDN. Initialization via <code>IntersectionObserver</code> — works in tabs and modals too.</p>
+        <p class="demo-intro">Local vendor bundle (<code>assets/ckeditor5/</code>), no CDN. Initialization via <code>IntersectionObserver</code> — works in tabs and modals too.</p>
         <?php
         $form5 = new Form('richtext_form');
         $form5->field('content_basic', 'Content (Basic)', 'richtext', ['preset' => 'basic'])

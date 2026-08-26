@@ -38,11 +38,14 @@ next update and split the codebase in two.
 | YearFilter | `GridKit\YearFilter` | Year navigation filter |
 | TableHeader | `GridKit\TableHeader` | **Unified filter/search bar above tables — Status / Toolbar / Advanced (since v1.10.0)** |
 | Lang | `GridKit\Lang` | i18n / multilingual support |
-| Pagination | `GridKit\Pagination` | Server-Pager unter der Tabelle (`.gk-rowpager`), optional PageSize |
-| PageSize | `GridKit\PageSize` | Zeilen-pro-Seite — in der Pager-Leiste, nicht im Tabellen-Fuß |
+| Pagination | `GridKit\Pagination` | Server-side pager below the table (`.gk-rowpager`), optional PageSize |
+| PageSize | `GridKit\PageSize` | Rows per page — lives in the pager bar, not in the table footer |
 | liveTable (JS) | `GK.liveTable` | AJAX tables (search/filter/sort/pagination live, no reload) |
 | BelegModal | `GridKit\BelegModal` | PDF / document preview modal with iframe + mobile fallback (since v1.15.0) |
-| ActionGroup | `GridKit\ActionGroup` | Container für Action-Buttons in Tabellen-Spalten (since v1.16.0) |
+| ActionGroup | `GridKit\ActionGroup` | Container for action buttons inside table columns (since v1.16.0) |
+| SortLink | `GridKit\SortLink` | Sortable column headers for hand-built tables (server-side sort) |
+| Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
+| Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback |
 
 ## Page Skeleton (SSI Panel context)
 
@@ -153,6 +156,35 @@ $yf->baseUrl('/my-page')
 
 $currentYear = $yf->current();  // int — use for DB queries
 ```
+
+### SortLink
+
+Sortable headers for tables you build by hand. `Table` already sorts its own
+columns — reach for `SortLink` when you are writing the `<table>` yourself.
+
+```php
+echo SortLink::header('invoice_date', 'Date', [
+    'current_sort' => $sort,          // the column currently sorted
+    'current_dir'  => $dir,           // 'asc' | 'desc'
+    'base_url'     => '/invoices',
+    'preserve'     => ['q' => $q, 'year' => $year],   // survives the sort click
+    'extra_class'  => 'gk-text-right',
+]);
+```
+
+Sharing one context across several columns is shorter:
+
+```php
+$sl = SortLink::context('/invoices', $sort, $dir, ['q' => $q, 'year' => $year]);
+
+echo $sl('invoice_date',  'Date');
+echo $sl('customer_name', 'Customer');
+echo $sl('gross_total',   'Total', 'gk-text-right');   // 3rd arg = extra class
+```
+
+`context()` returns a closure, so it is passed around like any other callable.
+It toggles `sort` and `dir` in the URL and re-encodes everything under
+`preserve`, which is what keeps an active filter alive across a sort.
 
 ### TableHeader (since v1.10.0) — **Required for every table page**
 
@@ -313,7 +345,7 @@ GK.modal.close();
 GK.table.refresh('table-id');
 ```
 
-### Pagination + PageSize (seit 1.22 / 1.27)
+### Pagination + PageSize (since 1.22 / 1.27)
 
 Server-Pager **unterhalb** von `.gk-table-wrap`, nicht in der Karte und nicht
 im Live-Container. Gleiche Optik wie `GK.rowPager` (`.gk-rowpager` / `.gk-pg`).
@@ -336,7 +368,7 @@ Pagination::fromPaginator($items, [
 Kleine Listen ohne Server-LIMIT: `data-gk-rows="25"` auf der Tabelle — der
 Client-`GK.rowPager` erzeugt dieselbe Leiste.
 
-### Live Tables (`GK.liveTable`) — seit 1.9.0
+### Live Tables (`GK.liveTable`) — since 1.9.0
 
 AJAX-gefilterte Tabellen: Search + Filter + Sort + Pagination ohne Full-Page-Reload.
 Cursor bleibt beim Tippen, URL wird via `history.replaceState` synchron gehalten.

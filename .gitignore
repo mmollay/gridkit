@@ -3,8 +3,8 @@
 .env
 *.mp3
 
-# Design-Audit: die eingebettete Leinwand ist ~2,5 MB Generat, die
-# .dc.html-Quellen daneben sind die Arbeitsdateien und gehoeren ins Repo.
+# Design audit: the embedded canvas is a ~2.5 MB generated file. The .dc.html
+# sources next to it are the working files and do belong in the repository.
 .design/gridkit-design-audit.html
 .playwright-mcp/
 .design/verify/snapshots/
@@ -12,5 +12,10 @@
 .design/verify/offsets.json
 .design/verify/token-*.json
 
-# Interne Betriebsanleitung — gehoert nicht ins oeffentliche Repository
+# Internal deployment notes — not for the public repository
 INTERNAL-DEPLOY.md
+
+# Composer output. GridKit has no PHP dependencies, but `composer install`
+# inside a clone still creates this — it is generated, never committed.
+/vendor/
+composer.lock

@@ -18,8 +18,8 @@ class Select
      * @param array  $options   Either ['value' => 'label', ...] OR list of ['value' => x, 'label' => y]
      * @param array  $opts      Options:
      *   - selected: mixed       Pre-selected value
-     *   - placeholder: string   Display label when nothing selected (default: '— Wählen —')
-     *   - searchPlaceholder: string  Placeholder for search input (default: 'Suchen…')
+     *   - placeholder: string   Display label when nothing selected (default: translated)
+     *   - searchPlaceholder: string  Placeholder for search input (default: translated)
      *   - id: string            HTML id (default: $name)
      *   - class: string         Extra CSS classes on wrapper
      *   - required: bool        Adds required attribute
@@ -28,8 +28,8 @@ class Select
     {
         $id          = $opts['id']                ?? $name;
         $selected    = $opts['selected']          ?? '';
-        $placeholder = $opts['placeholder']       ?? '— Wählen —';
-        $searchPh    = $opts['searchPlaceholder'] ?? 'Suchen…';
+        $placeholder = $opts['placeholder']       ?? Lang::t('select.placeholder');
+        $searchPh    = $opts['searchPlaceholder'] ?? Lang::t('select.search');
         $extraClass  = $opts['class']             ?? '';
         $required    = !empty($opts['required']);
 

@@ -13,7 +13,7 @@ namespace GridKit;
  *
  * Usage:
  *
- *   echo SortLink::header('invoice_date', 'Datum', [
+ *   echo SortLink::header('invoice_date', 'Date', [
  *       'current_sort' => $sort,      // currently sorted column
  *       'current_dir'  => $dir,       // 'asc' or 'desc'
  *       'base_url'     => '/faktura/invoices',
@@ -23,7 +23,7 @@ namespace GridKit;
  * Alternatively fluent style (when several columns share the same context):
  *
  *   $sl = SortLink::context('/faktura/invoices', $sort, $dir, ['q'=>$q,'year'=>$year]);
- *   echo $sl('invoice_date', 'Datum');
+ *   echo $sl('invoice_date', 'Date');
  *   echo $sl('customer_name', 'Kunde');
  *   echo $sl('gross_total', 'Brutto', 'gk-text-right');
  */

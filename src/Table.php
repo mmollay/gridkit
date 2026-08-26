@@ -460,7 +460,7 @@ class Table
                 // Remaining columns + load time
                 $remaining = $totalCols - $usedCols;
                 if ($remaining > 0 && $this->loadTimeMs !== null) {
-                    $timeDisplay = $this->loadTimeMs < 1000 ? $this->loadTimeMs . ' ms' : number_format($this->loadTimeMs / 1000, 2, ',', '.') . ' s';
+                    $timeDisplay = $this->loadTimeMs < 1000 ? $this->loadTimeMs . ' ms' : number_format($this->loadTimeMs / 1000, 2, Lang::t('format.decimal'), Lang::t('format.thousands')) . ' s';
                     echo '<td colspan="' . $remaining . '" class="gk-table-meta">' . $timeDisplay . '</td>';
                 } elseif ($remaining > 0) {
                     echo '<td colspan="' . $remaining . '"></td>';
@@ -469,7 +469,7 @@ class Table
                 // Load time only
                 $timeDisplay = $this->loadTimeMs < 1000 ? $this->loadTimeMs . ' ms' : number_format($this->loadTimeMs / 1000, 2, ',', '.') . ' s';
                 echo '<td colspan="' . $totalCols . '" class="gk-table-meta">'
-                    . $e((string) $this->totalRows) . ' Einträge · ' . $timeDisplay
+                    . $e((string) $this->totalRows) . ' ' . $e(Lang::t('pagination.entries')) . ' · ' . $timeDisplay
                     . '</td>';
             }
 

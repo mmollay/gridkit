@@ -22,6 +22,6 @@ If applicable, add screenshots.
 **Environment**
 - PHP version:
 - Browser:
-- GRIDKit version:
+- GridKit version:
 - Theme:
 - Light/Dark mode:

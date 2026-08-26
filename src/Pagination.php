@@ -11,8 +11,8 @@ namespace GridKit;
  * .gk-pagination …). Looks identical to the client-side GK.rowPager: it uses the same
  * CSS classes `.gk-rowpager` (wrapper) + `.gk-pg` (buttons) — no own or inline CSS.
  *
- * Rendering: « Erste · ‹ Zurück · 1 … current±2 … last · Weiter › · Letzte »
- * + the info „N Einträge · Seite X von Y" + an optional PageSize dropdown.
+ * Rendering: « First · ‹ Prev · 1 … current±2 … last · Next › · Last »
+ * + the info "N entries · Page X of Y" + an optional PageSize dropdown.
  *
  * Placement: as a sibling BELOW `.gk-table-wrap` (not inside the card, not inside
  * the live container). Live updates: in the partial
@@ -52,7 +52,7 @@ final class Pagination
         $pageParam = $o['pageParam'] ?? 'page';
         $params    = $o['params'] ?? [];
         $total     = $o['total'] ?? null;
-        $label     = $o['label'] ?? 'Einträge';
+        $label     = $o['label'] ?? Lang::t('pagination.entries');
 
         // Without paging and without a row-count selector: an empty placeholder, so
         // that a live replace reliably removes a pager that was visible before.
@@ -76,9 +76,9 @@ final class Pagination
         }
         if ($total !== null) {
             $inner .= '<span class="gk-rowpager-count">'
-                . number_format((int) $total, 0, ',', '.') . ' ' . $e($label);
+                . number_format((int) $total, 0, Lang::t('format.decimal'), Lang::t('format.thousands')) . ' ' . $e($label);
             if ($totalPages > 1) {
-                $inner .= ' · Seite ' . $page . ' von ' . $totalPages;
+                $inner .= ' · ' . $e(Lang::t('pagination.page_of', ['page' => $page, 'total' => $totalPages]));
             }
             $inner .= '</span>';
         }
@@ -99,16 +99,16 @@ final class Pagination
                     : '<span class="gk-pg gk-pg-icon gk-pg-off"><span class="material-icons">' . $name . '</span></span>';
 
             $inner .= '<div class="gk-rowpager-nav">';
-            $inner .= $icon('first_page', 1, 'Erste Seite', $page > 1);
-            $inner .= $icon('chevron_left', $page - 1, 'Zurück', $page > 1);
+            $inner .= $icon('first_page', 1, Lang::t('pagination.first'), $page > 1);
+            $inner .= $icon('chevron_left', $page - 1, Lang::t('pagination.prev'), $page > 1);
             $prev = 0;
             foreach ($set as $p) {
                 if ($prev && $p - $prev > 1) $inner .= '<span class="gk-pg-gap">…</span>';
                 $inner .= '<a class="gk-pg' . ($p === $page ? ' gk-pg-active' : '') . '" href="' . $url($p) . '">' . $p . '</a>';
                 $prev = $p;
             }
-            $inner .= $icon('chevron_right', $page + 1, 'Weiter', $page < $totalPages);
-            $inner .= $icon('last_page', $totalPages, 'Letzte Seite', $page < $totalPages);
+            $inner .= $icon('chevron_right', $page + 1, Lang::t('pagination.next'), $page < $totalPages);
+            $inner .= $icon('last_page', $totalPages, Lang::t('pagination.last'), $page < $totalPages);
             $inner .= '</div>';
         }
 

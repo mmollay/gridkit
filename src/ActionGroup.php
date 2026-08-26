@@ -8,7 +8,7 @@ namespace GridKit;
  *
  *   ActionGroup::render([
  *       ['icon' => 'edit',   'onclick' => "editRow($id)",   'title' => 'Bearbeiten'],
- *       ['icon' => 'delete', 'onclick' => "delRow($id)",    'title' => 'Löschen', 'color' => 'danger'],
+ *       ['icon' => 'delete', 'onclick' => "delRow($id)",    'title' => 'Delete', 'color' => 'danger'],
  *       ['icon' => 'send',   'label' => 'Mahnen',           'color' => 'warning', 'variant' => 'filled', 'pill' => true,
  *        'onclick' => "remind($id)", 'showIf' => $isOverdue],
  *   ]);

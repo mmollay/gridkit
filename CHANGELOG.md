@@ -7,6 +7,74 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.29.0] - 2026-08-26
+
+Making the repository something a stranger can actually rely on: a test suite,
+CI, and the last of the German that was hiding where a search for translation
+calls could not see it.
+
+### Fixed
+
+- **German shipped to English users through default parameter values.** PHP
+  requires default parameters to be constant, so `Lang::t()` cannot appear in a
+  signature. The workaround that had been used instead was to write the German
+  text as the default — which renders for every user regardless of locale.
+  Affected: `TableHeader::search()` (`'Suche…'`), `TableHeader::advanced()`
+  (`'Erweiterte Filter'`), `TableHeader::reset()` (`'Filter zurücksetzen'`),
+  `YearFilter::allOption()` (`'Alle Jahre'`), `PageSize::$label` (`'Zeilen'`),
+  `Select::searchable()` (`'— Wählen —'`, `'Suchen…'`), and seven strings in
+  `Pagination` (`'Einträge'`, `'Seite X von Y'`, and the five navigation
+  titles). Defaults are now empty and resolve through `Lang::t()` at render
+  time; an explicitly passed label still wins.
+- **Thousands separators were German for everyone.** `number_format($n, 0, ',',
+  '.')` was hardcoded in `Pagination` and `Table`, so an English page showed
+  `1.234.567`. Now driven by `format.decimal` / `format.thousands`.
+- **The reset button showed a translated tooltip over untranslated text** — the
+  visible word was a hardcoded English `Reset`, the `title` attribute the German
+  label. Both now come from the same key.
+- **`SortLink` was missing from `GRIDKIT_SKILL.md`.** The skill file is the
+  headline "agent-ready" feature; a component absent from it cannot be used by
+  an agent. `Select` and `Icon` were missing from the component index too.
+- **`composer.json` described `ext-mbstring` in German**, which Composer prints
+  to every user installing the package.
+
+### Added
+
+- **A test suite** — `php tests/run.php`, 715 assertions across four files. No
+  Composer and no PHPUnit: a suite that needed a package manager would
+  contradict the zero-dependency promise. The runner is about sixty lines.
+  - `lang` — catalogue parity, placeholder parity, and the check that matters:
+    every component rendered under `en` and failed on a German word. This is
+    what catches the default-parameter class of bug, which is invisible to a
+    grep for `Lang::t`.
+  - `render` — all 21 classes autoload and render, with every PHP notice,
+    warning and deprecation promoted to a failure. `display_errors` is off on
+    most production hosts, so a warning mid-render shows up as a silently
+    truncated page rather than an error.
+  - `escaping` — XSS payloads through cell data, column labels, search values,
+    select options, form fields, breadcrumbs, stat cards and pagination URLs.
+  - `package` — VERSION/changelog agreement, asset integrity, no remote
+    `@import`, no German left in a public signature.
+- **CI** (`.github/workflows/ci.yml`) — the suite on PHP 8.2, 8.3 and 8.4, plus
+  a job with `mbstring` disabled, because "runs without mbstring" had been a
+  claim in the README and nothing more. A second job asserts that `demo/`,
+  `assets/` and `docs/` stay out of the Composer package and that it stays
+  under 1.5 MB.
+- `SECURITY.md`, `CODE_OF_CONDUCT.md` and a pull request template.
+- `SortLink` reference section in `GRIDKIT_SKILL.md`.
+- 14 translation keys in both catalogues (85 each, in parity).
+
+### Changed
+
+- **CKEditor moved from `vendor/` to `assets/`.** `vendor/` belongs to Composer;
+  running `composer install` inside a GridKit clone wrote into the same
+  directory. `/vendor/` is now gitignored.
+- `skeleton.php` is no longer excluded from the Composer package — it is the
+  shortest path from `composer require` to a page that renders.
+- Documentation comments and the component index in `GRIDKIT_SKILL.md`
+  translated to English.
+
+---
 ## [1.28.0] - 2026-08-26
 
 A design overhaul in three stages. The M3 role layer was already complete, but

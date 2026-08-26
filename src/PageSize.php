@@ -30,7 +30,8 @@ final class PageSize
     private string $liveTarget = '';
     private string $baseUrl = '';
     private array $preserveParams = [];
-    private string $label = 'Zeilen';
+    /** Empty = fall back to the translated default at render time. */
+    private string $label = '';
     private string $selectClass = 'gk-filter gk-pagesize-select';
 
     public function __construct(string $paramName = 'per_page')
@@ -103,8 +104,9 @@ final class PageSize
         $selId = 'gk-pagesize-' . $e($this->paramName);
 
         echo '<label class="gk-pagesize" for="' . $selId . '">';
-        if ($this->label !== '') {
-            echo '<span class="gk-pagesize-text">' . $e($this->label) . '</span>';
+        $labelText = $this->label !== '' ? $this->label : Lang::t('pagesize.label');
+        if ($labelText !== '') {
+            echo '<span class="gk-pagesize-text">' . $e($labelText) . '</span>';
         }
 
         if ($this->liveTarget !== '') {
