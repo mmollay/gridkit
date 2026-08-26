@@ -7,6 +7,42 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.33.0] - 2026-08-26
+
+Running the agent skill's own 22 examples. It is the file GridKit is advertised
+on — one document that teaches an assistant the whole API — and nothing had
+ever executed the code in it.
+
+### Fixed
+
+- **`'color' => 'danger'` on a row button did nothing.** It appears in the
+  skill's own Table example, on the delete button. `Table` read `'class'` and
+  only `'class'`, so the button rendered grey. Every other component in GridKit
+  — `Button::render()`, `ActionGroup` items, `StatCards` — names this option
+  `color`; the row button was the odd one out. Both names work now.
+- **The skill's only example of the `use` statements sat inside an SSI Panel
+  view**, complete with `$this->layout('layouts/panel')` and `$this->start()`.
+  An assistant copying the one place the imports appear produced code that
+  needs a template engine which exists in a single private codebase — and the
+  list covered 5 of 21 classes. There is now a standalone **Page skeleton**
+  section: a complete page in plain PHP, the full import list, and a pointer to
+  `examples/invoices/`. The SSI Panel variant is kept, below, as what it is.
+- **Nine more German lines in the skill** — `Titel`, `Inhalt`, `Ausgaben`,
+  `Geschwister`, `seit`, and the AJAX navigation notes. The previous sweep
+  searched for umlauts, which none of these have.
+- The Table section put a runnable example and a MySQL-only one in the same
+  code fence, so neither could be checked on its own. Split, and the
+  placeholder `$addBtn` replaced with the call it stands for.
+
+### Added
+
+- **`tests/skill.test.php`** — every runnable example in `GRIDKIT_SKILL.md` is
+  executed in its own process, with each PHP diagnostic promoted to a failure.
+  14 run; the 8 that cannot are listed by name and reason rather than skipped
+  quietly. Verified against a deliberately broken example.
+- 849 assertions in total.
+
+---
 ## [1.32.0] - 2026-08-26
 
 Running the README's own example, and then using the table without a mouse.

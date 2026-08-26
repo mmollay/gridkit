@@ -677,9 +677,14 @@ class Table
                 $params['id'] = $row['id'];
             }
 
-            // Map legacy 'class' option to Button color
+            // Every other component in GridKit names this option `color` —
+            // Button::render(), ActionGroup items, StatCards. The row button
+            // read `class` and nothing else, so the `'color' => 'danger'` in
+            // the skill's own example produced a grey delete button. Both names
+            // work; `color` is the one to use.
             $colorMap = ['danger' => 'danger', 'success' => 'success', 'warning' => 'warning', 'primary' => 'primary'];
-            $color = $colorMap[$bopts['class'] ?? ''] ?? 'neutral';
+            $colorName = $bopts['color'] ?? $bopts['class'] ?? '';
+            $color = $colorMap[$colorName] ?? 'neutral';
 
             // `'confirm' => true` (or a message) asks before the button acts.
             // It was documented in the README and read by nothing at all, which

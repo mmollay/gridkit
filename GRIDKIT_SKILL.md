@@ -47,18 +47,63 @@ next update and split the codebase in two.
 | Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback |
 
-## Page Skeleton (SSI Panel context)
+## Page skeleton
 
-In SSI Panel, GRIDKit is loaded via the `layouts/panel` layout. Individual views just use components:
+Every class lives under the `GridKit\` namespace and is autoloaded by
+`autoload.php`. A complete page needs nothing beyond that — no template engine,
+no build step:
+
+```php
+<?php
+require_once __DIR__ . '/vendor/autoload.php';   // or '/path/to/gridkit/autoload.php'
+
+use GridKit\{Button, Form, Lang, Layout, Modal, Sidebar, StatCards, Table, Theme};
+
+Lang::set($_GET['lang'] ?? 'en');   // 'en' | 'de'
+Theme::set('indigo', 'light');      // indigo | ocean | forest | rose | amber | slate
+?>
+<!doctype html>
+<html <?= Theme::attributes() ?>>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="<?= Layout::asset('css/gridkit.css') ?>">
+<link rel="stylesheet" href="<?= Layout::asset('css/themes.css') ?>">
+<?= Lang::jsConfig() ?>
+</head>
+<?= Theme::bodyTag('gk-root') ?>
+
+<!-- components go here -->
+
+<?php Modal::container(); ?>
+<script src="<?= Layout::asset('js/gridkit.js') ?>"></script>
+</body>
+</html>
+```
+
+`skeleton.php` in the repository is this file, filled in. `Layout::asset()`
+appends the file's modification time so a changed stylesheet is not served from
+a stale cache.
+
+The other classes import the same way — the full list is in the table above,
+each one `GridKit\<Name>`:
+
+```php
+use GridKit\{ActionGroup, Auth, BelegModal, FilterChips, Header, Icon,
+              PageSize, Pagination, Select, SortLink, TableHeader, YearFilter};
+```
+
+A complete working application is in [`examples/invoices/`](examples/invoices/).
+
+### Inside SSI Panel
+
+In SSI Panel the layout loads GridKit, so a view only imports what it uses:
 
 ```php
 <?php
 $this->layout('layouts/panel');
-use GridKit\Table;
-use GridKit\Form;
-use GridKit\StatCards;
-use GridKit\FilterChips;
-use GridKit\Button;
+use GridKit\{Table, Form, StatCards, FilterChips, Button};
 ?>
 <?php $this->start('content') ?>
 <!-- Your components here -->
@@ -74,7 +119,8 @@ use GridKit\Button;
 (new Table('my-table'))
     ->setData($rows)                          // array of assoc arrays
     ->search(['name', 'email'])               // plain-text column keys only!
-    ->toolbarHtml('<div class="gk-toolbar-spacer"></div>' . $addBtn)
+    ->toolbarHtml('<div class="gk-toolbar-spacer"></div>'
+                  . Button::render('New', ['icon' => 'add', 'shape' => 'pill']))
     ->column('name',   'Name',   ['sortable' => true])
     ->column('email',  'Email',  ['sortable' => true])
     ->column('status', 'Status', ['format' => 'html'])  // HTML column: not searched
@@ -82,8 +128,12 @@ use GridKit\Button;
     ->button('delete', ['icon' => 'delete', 'params' => ['id' => 'id'], 'color' => 'danger'])
     ->paginate(25)
     ->render();
+```
 
-// Server-side (DB query)
+Server-side, straight from MySQL — GridKit builds the `LIKE`, the `WHERE` for
+every declared filter, the `ORDER BY`, the `COUNT` and the `LIMIT`:
+
+```php
 (new Table('users'))
     ->query($db, "SELECT id, name, email, role FROM users ORDER BY name")
     ->search(['name', 'email'])
@@ -329,19 +379,19 @@ CSS classes (all auto-applied): `gk-tableheader`, `gk-tableheader-status`, `gk-t
 <?php Modal::container(); ?>
 
 // JS API — dynamic modal:
-GK.modal.open('Titel', '<p>Beliebiges HTML</p>');
+GK.modal.open('Title', '<p>Any HTML</p>');
 GK.modal.close();
 
 // Static inline modal (for complex content):
 <div class="gk-modal-overlay" id="my-modal" style="display:none;">
     <div class="gk-modal gk-modal-small">   <!-- or gk-modal-large -->
         <div class="gk-modal-header">
-            <h3 class="gk-modal-title">Titel</h3>
+            <h3 class="gk-modal-title">Title</h3>
             <button class="gk-modal-close"
                 onclick="document.getElementById('my-modal').style.display='none'">&times;</button>
         </div>
-        <div class="gk-modal-body">Inhalt</div>
-        <div class="gk-modal-footer">   <!-- seit 1.22.3: Aktionsleiste mit eigenem Padding -->
+        <div class="gk-modal-body">Content</div>
+        <div class="gk-modal-footer">   <!-- since 1.22.3: action bar with its own padding -->
             <?= Button::render('Close', ['variant' => 'outlined', 'color' => 'neutral', 'onclick' => "..."]) ?>
         </div>
     </div>
@@ -429,7 +479,7 @@ GK.toast.warning('Achtung!');
 GK.toast.info('Information.');
 
 // Dynamic modal
-GK.modal.open('Titel', '<p>HTML-Inhalt</p>');
+GK.modal.open('Title', '<p>HTML content</p>');
 GK.modal.close();
 
 // Table refresh (after save/delete in server-side mode)
@@ -442,9 +492,9 @@ Server-side pager **below** `.gk-table-wrap`, not inside the card and not
 im Live-Container. Gleiche Optik wie `GK.rowPager` (`.gk-rowpager` / `.gk-pg`).
 
 ```php
-// Seite (erster Render) — Geschwister unter der Tabelle:
+// The page, on first render — a sibling below the table:
 Pagination::fromPaginator($items, [
-    'label'    => 'Ausgaben',
+    'label'    => 'Expenses',
     'live'     => 'exp-live',          // bindet AJAX-Klicks + Replace-Ziel
     'pageSize' => ['current' => $perPage, 'live' => 'exp-live'],
     'params'   => ['year' => $year, 'q' => $q ?: null],
@@ -486,7 +536,7 @@ return $this->view('my-list', $data);
 
 Features:
 - **250 ms debounce** before the fetch; the URL is synced immediately.
-- **Link-Interceptor**: `<a href>` innerhalb des Containers die auf denselben Endpoint zeigen → AJAX-Reload (Sort-Header, Pagination).
+- **Link interception**: an `<a href>` inside the container pointing at the same endpoint is followed over AJAX-Reload (Sort-Header, Pagination).
 - **`patchNavSelects()`**: overrides `onchange` on `<select data-gk-years>` so they build on `window.location.search`. Keeps the current search when the year changes.
 - The `gk-live-reloaded` event fires on the container after every swap — bind your own re-initialisation to it.
 
@@ -509,7 +559,7 @@ Features:
 - Ladebalken am oberen Bildschirmrand
 - Browser back/forward works through pushState
 - Automatische Re-Initialisierung von Table, Tooltip etc.
-- Fallback auf normale Navigation bei Fehler
+- Falls back to a normal page load on error
 - External links and Ctrl/Cmd-click are left alone
 
 ## CSS Classes Reference
