@@ -108,11 +108,19 @@ if (Table::isAjaxReload('invoices')) {
 <style>
   body { padding: 0; }
   .app { max-width: 1180px; margin: 0 auto; padding: 40px 24px 80px; }
+  @media (max-width: 560px) {
+    .app { padding: 24px 14px 60px; }
+    .app-head { align-items: flex-start; }
+  }
   .app-head { display: flex; flex-wrap: wrap; align-items: flex-end;
               justify-content: space-between; gap: 16px; margin-bottom: 8px; }
   .app-head h1 { margin: 0; font-size: var(--gk-text-headline, 26px); font-weight: 600; }
   .app-head p  { margin: 6px 0 0; color: var(--gk-on-surface-variant); font-size: 14px; }
-  .app-tools   { display: flex; align-items: center; gap: 8px; }
+  /* Wraps, or a phone scrolls sideways: the theme switcher alone is fourteen
+     swatches, and next to a language link and a button that says "Reset sample
+     data" it does not fit in 390 px. */
+  .app-tools   { display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+                 min-width: 0; }
   .stats       { margin: 28px 0 20px; }
   .flash { background: var(--gk-success-container, #d1fae5);
            color: var(--gk-on-surface); border-radius: var(--gk-radius, 10px);

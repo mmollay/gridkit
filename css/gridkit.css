@@ -3897,10 +3897,23 @@ a.gk-stat-card:hover {
   .gk-table-mobile-card td {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: baseline;
+    gap: 12px;
     padding: 6px 0;
     border: none;
     border-bottom: 1px solid var(--gk-outline-variant);
+    /* A column's declared width belongs to the table layout. Carried into a
+       card row it squeezes the label and the value into a strip — a column at
+       `'width' => '140px'` left "Invoice no." overlapping its own value on a
+       390 px screen. The competing declaration is inline, so !important is the
+       only way to reach it. */
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    text-align: left !important;
+  }
+  .gk-table-mobile-card td > * {
+    min-width: 0;
   }
   .gk-table-mobile-card td:last-child {
     border-bottom: none;
@@ -3911,7 +3924,9 @@ a.gk-stat-card:hover {
     font-size: var(--gk-text-caption);
     color: var(--gk-on-surface-variant);
     text-transform: uppercase;
-    flex: 0 0 40%;
+    /* Shrinks below 40% rather than pushing the value off the card. */
+    flex: 0 1 40%;
+    min-width: 0;
   }
   .gk-table-mobile-card td.gk-actions {
     justify-content: flex-end;
@@ -4260,8 +4275,16 @@ a.gk-stat-card:hover {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  .gk-table-wrap .gk-table {
+  /* 540px keeps the columns readable while the wrapper scrolls sideways —
+     which is the point of the scroll mode. In card mode the same rule made
+     every card 540px wide on a 390px phone, so the values sat off-screen and
+     the very layout it exists to avoid came back. */
+  .gk-table-wrap:not(.gk-table-mobile-card) .gk-table {
     min-width: 540px;
+  }
+  .gk-table-mobile-card .gk-table {
+    min-width: 0;
+    width: 100%;
   }
 
   /* Table: Touch-friendly padding */
@@ -4317,6 +4340,21 @@ a.gk-stat-card:hover {
   .gk-header-user-name {
     display: none;
   }
+
+    /* The header's children are flex-shrink: 0 by design, so whatever does not
+       fit is pushed off the screen rather than wrapped — silently, because
+       nothing scrolls to reveal it. On a 390px phone the six accent swatches
+       alone carried the New button and the mode toggle out of reach. */
+    .gk-header-right,
+    .gk-header-actions {
+      min-width: 0;
+      flex-shrink: 1;
+    }
+    /* The accent is a preference set once. The light/dark toggle beside it is
+       used daily, so that is the one that stays. */
+    .gk-theme-switcher .gk-theme-dot {
+      display: none;
+    }
 
   /* Cards Grid */
   .gk-cards {
@@ -4440,6 +4478,26 @@ a.gk-stat-card:hover {
   .gk-btn-group .gk-btn:last-child {
     border-radius: 0 0 var(--gk-radius-sm) var(--gk-radius-sm);
     border-bottom-width: 1.5px;
+  }
+
+  /* Row actions are icon-only and belong side by side. The stack above is
+     meant for segmented groups of labelled buttons; applied to a table row it
+     turned two icons into a 51px-tall column inside every card. */
+  .gk-actions .gk-btn-group,
+  .gk-action-group {
+    flex-direction: row;
+  }
+  .gk-actions .gk-btn-group .gk-btn {
+    border-radius: var(--gk-radius-sm);
+    border-bottom-width: 1.5px;
+  }
+
+  /* A finger is not a mouse pointer. Icon-only row buttons rendered at
+     26x25 px, well under every touch-target guideline. */
+  .gk-actions .gk-btn-icon-only,
+  .gk-action-group .gk-btn-icon-only {
+    min-width: 40px;
+    min-height: 40px;
   }
 }
 

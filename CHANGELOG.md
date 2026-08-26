@@ -7,6 +7,53 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.37.0] - 2026-08-26
+
+"A mobile layout you didn't have to think about" is the third line of the
+README. Nothing had ever opened a page at 390 px.
+
+### Fixed
+
+- **Every table card was 540 px wide on a 390 px screen.** Two rules collided.
+  `.gk-table-wrap .gk-table { min-width: 540px }` keeps columns readable while
+  the wrapper scrolls sideways — the point of the scroll mode — and it applied
+  to card mode as well, so the values sat off-screen behind a horizontal
+  scrollbar. The sideways scrolling that card mode exists to avoid was back.
+  The minimum now applies to `:not(.gk-table-mobile-card)`.
+- **Card cells kept the column widths meant for the table.** `Table` writes
+  `width`, `min-width` and `max-width` as inline styles on every `<td>`. As a
+  card row, a column declared `'width' => '140px'` squeezed its label and its
+  value into a strip — on the invoice example "Invoice no." overlapped
+  "INV-2026-001". Card mode resets all three; an inline style can only be
+  reached with `!important`, which is why it appears here.
+- **Row actions stacked into a column.** The generic mobile rule turns any
+  `.gk-btn-group` vertical, which suits a segmented group of labelled buttons.
+  On a table row it made two icons a 51 px tall column inside every card.
+- **Row action buttons were 26 × 25 px** — under every touch-target guideline.
+  At least 40 × 40 on touch layouts now.
+- **The header pushed its own controls off the screen.** `.gk-header > *` is
+  `flex-shrink: 0` by design, so whatever does not fit leaves the viewport
+  rather than wrapping — silently, because nothing scrolls to bring it back. On
+  a 390 px phone the New button, the theme switcher and the light/dark toggle
+  all sat beyond the right edge, at x = 512. The right-hand group may shrink
+  now, and the six accent swatches — a preference set once — step aside on
+  phones. The light/dark toggle, used daily, stays.
+- The invoice example's own toolbar could not wrap, so the page scrolled
+  sideways at 390 px. A showcase should not do that.
+
+### Verified
+
+At 390 × 844: no horizontal page scroll, the sidebar slides off and the burger
+brings it back, the table reads as one card per row with label and value on one
+line, actions sit side by side at 40 px, and every header control is inside the
+viewport.
+
+### Added
+
+- `tests/mobile.test.php` — each assertion stands for one of the defects above.
+  1013 assertions in total.
+
+---
 ## [1.36.0] - 2026-08-26
 
 The components that are neither `Table` nor `Form`, driven in a browser.
