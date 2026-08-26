@@ -105,7 +105,8 @@ install, include CKEditor yourself. Every other component works out of the box.
 
 A theme is one hue. Colours are derived in OKLCH from that single value, so
 every theme keeps the same lightness and the same contrast — white on the
-primary surface stays between 4.3:1 and 5.3:1 in all six.
+primary surface measures between 4.69:1 and 5.73:1 across all six, so every
+one of them clears WCAG AA rather than most of them.
 
 ![The six themes side by side, same components](docs/screenshots/themes.png)
 

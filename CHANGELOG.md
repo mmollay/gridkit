@@ -7,6 +7,68 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.38.0] - 2026-08-26
+
+"Themes, dark mode" is in the README's opening sentence. Nothing had ever
+measured either. A probe page carrying every component, driven through six
+themes in both modes, failed in **twelve of twelve** combinations.
+
+### Fixed
+
+- **The client threw away the theme the server set.** `GK.theme.restore()`
+  wrote `theme || ""` and `mode || ""`, so an empty `localStorage` — every first
+  visit, every private window, every user who had never picked a theme — blanked
+  both attributes. `Theme::set('indigo', 'dark')` in PHP was therefore ignored
+  for anyone who had not been to the site before: it opened in light mode. A
+  stored preference still wins; nothing stored now leaves the server's choice
+  alone. This is why the probe measured light-mode surfaces on a page that had
+  asked for dark.
+- **The active pagination button was white on white in dark mode**, 1.78–1.97:1
+  across every theme. `color: #fff` was hardcoded beside
+  `background: var(--gk-primary)` — and in dark mode the primary is the *light*
+  end of the scale. The role colour flips with the mode; the literal did not.
+  The same mistake sat in a second rule, in the dark-mode block itself.
+- **Filled `success`, `warning` and `danger` buttons failed in light mode** —
+  2.54:1, 2.15:1 and 3.67:1 with white text. The role colours are right for
+  pills, borders and icons and are unchanged; the buttons now take
+  `--gk-success-fill` (5.48:1), `--gk-warning-fill` (5.02:1) and
+  `--gk-danger-fill` (4.83:1).
+- **`--gk-outline` was being used as a text colour** by the breadcrumb separator
+  and the select arrow: 1.45:1 on white, 1.93:1 on the dark surface. It is a
+  1px-line colour. They take `--gk-on-surface-variant` now.
+- **The sidebar's muted text** measured 2.27:1 in light and 3.40:1 in dark —
+  group labels, the version and the collapse label all under half of what they
+  needed. Now 5.35:1 and 5.48:1.
+- **Text and outlined primary buttons** measured 3.97:1 in forest, 4.20:1 in
+  ocean and 4.41:1 in slate. `--gk-primary` is pinned so that white carries *on*
+  it; as text on white the same colour is the inverse case and needs its own
+  value, exactly as `--gk-warning-text` and `--gk-success-text` already did.
+  Added `--gk-primary-text`.
+
+### Changed
+
+- **`--gk-l-primary`: 0.55 → 0.53.** At 0.55, white on forest's accent measured
+  4.35:1 — under the 4.5:1 AA asks of body text, and "4.3:1" was documented in
+  the README as the floor. 0.53 clears it on all six with room: forest 4.69,
+  ocean 4.98, slate 5.28, indigo 5.51, amber 5.52, rose 5.73. The difference is
+  not visible side by side; the README's claim is now stronger and true.
+- `docs/screenshots/themes.png` retaken.
+
+### Verified
+
+Twelve of twelve theme/mode combinations pass, measured element by element:
+every text node's colour composited against its real backdrop through the
+ancestor chain, 4.5:1 for text and 3:1 for icons. The measurement itself needed
+two corrections along the way — `getComputedStyle` returns `oklch()` verbatim,
+which no `rgb()` regex matches, and colour transitions have to be switched off
+or you read a value mid-animation.
+
+### Added
+
+- `tests/contrast.test.php` — pins each value the measurement settled on.
+  1033 assertions in total.
+
+---
 ## [1.37.0] - 2026-08-26
 
 "A mobile layout you didn't have to think about" is the third line of the

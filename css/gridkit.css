@@ -73,6 +73,15 @@ a:hover {
   /* Warning and info had no role pair until now — without a container/on role,
      components (labels, messages, toasts) had to bring their own literals. */
   --gk-on-warning: #ffffff;
+
+  /* White text on the semantic colours themselves does not carry: measured
+     2.54:1 on success, 2.15:1 on warning and 3.67:1 on danger. --gk-primary
+     already solves this by pinning its lightness; these do the same with a
+     darker fill used only where a button is filled. The role colours above stay
+     as they are — they are right for pills, borders and icons. */
+  --gk-success-fill: #047857;   /* white: 5.48:1 */
+  --gk-warning-fill: #b45309;   /* white: 5.02:1 */
+  --gk-danger-fill:  #dc2626;   /* white: 4.83:1 */
   --gk-warning-container: #fef3c7;
   --gk-on-warning-container: #92400e;
   --gk-on-info: #ffffff;
@@ -106,6 +115,11 @@ a:hover {
      are the same color, only darker — and stay above the 3:1 threshold. */
   --gk-warning-text: #d97706;
   --gk-success-text: #059669;
+  /* --gk-primary is pinned at L 0.55 so that white carries on it. As text on a
+     white surface the same colour measured 3.97:1 in forest, 4.20:1 in ocean
+     and 4.41:1 in slate — under the 4.5:1 body text needs. Same idea as the two
+     roles above: one step darker, used only where the colour is the text. */
+  --gk-primary-text: #4f46e5;
 
   /* Focus ring — one promise, the same everywhere */
   --gk-focus-ring: 0 0 0 3px color-mix(in oklab, var(--gk-primary) 32%, transparent);
@@ -157,14 +171,17 @@ a:hover {
   /* Sidebar – light mode (dark = the dark mode block below) */
   --gk-sidebar-bg: #f1f5f9;
   --gk-sidebar-text: #374151;
-  --gk-sidebar-text-muted: #9ca3af;
+  /* #9ca3af measured 2.27:1 on the light sidebar — group labels, the version
+     and the collapse label all sat under half the required 4.5:1. */
+  --gk-sidebar-text-muted: #5b6472;
   --gk-sidebar-text-hover: #111827;
   --gk-sidebar-item-hover: rgba(0, 0, 0, 0.05);
   --gk-sidebar-item-active: rgba(0, 0, 0, 0.07);
   --gk-sidebar-border: rgba(0, 0, 0, 0.07);
   --gk-sidebar-brand-bg: transparent;
   --gk-sidebar-accent: var(--gk-primary);
-  --gk-sidebar-icon-muted: #94a3b8;
+  /* Was 2.37:1. Icons need 3:1, but these sit beside the labels above. */
+  --gk-sidebar-icon-muted: #5b6472;
 
   /* Elevation (M3 uses tonal elevation) */
   --gk-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
@@ -544,7 +561,10 @@ a:hover {
   cursor: pointer; text-decoration: none;
 }
 .gk-pg:hover { background: var(--gk-surface-variant, #f1f5f9); }
-.gk-pg-active { background: var(--gk-primary); border-color: var(--gk-primary); color: #fff; cursor: default; }
+/* color was a hardcoded #fff. In dark mode --gk-primary is the *light* end of
+   the scale (L 0.80), so white on white measured 1.8:1 across every theme. The
+   role colour flips with the mode; the literal did not. */
+.gk-pg-active { background: var(--gk-primary); border-color: var(--gk-primary); color: var(--gk-on-primary); cursor: default; }
 .gk-pg-icon { padding: 0; }
 .gk-pg-icon .material-icons { font-size: 18px; }
 .gk-pg-off { opacity: .4; pointer-events: none; }
@@ -997,9 +1017,9 @@ a:hover {
   box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-primary) 30%, transparent);
 }
 .gk-btn-filled.gk-btn-success {
-  background: var(--gk-success);
-  color: var(--gk-on-success);
-  border-color: var(--gk-success);
+  background: var(--gk-success-fill);
+  color: #ffffff;
+  border-color: var(--gk-success-fill);
 }
 .gk-btn-filled.gk-btn-success:hover {
   background: var(--gk-success-hover);
@@ -1007,18 +1027,18 @@ a:hover {
   box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-success) 30%, transparent);
 }
 .gk-btn-filled.gk-btn-warning {
-  background: var(--gk-warning);
-  color: var(--gk-on-warning);
-  border-color: var(--gk-warning);
+  background: var(--gk-warning-fill);
+  color: #ffffff;
+  border-color: var(--gk-warning-fill);
 }
 .gk-btn-filled.gk-btn-warning:hover {
   background: var(--gk-warning-hover);
   border-color: var(--gk-warning-hover);
 }
 .gk-btn-filled.gk-btn-danger {
-  background: var(--gk-error);
-  color: var(--gk-on-error);
-  border-color: var(--gk-error);
+  background: var(--gk-danger-fill);
+  color: #ffffff;
+  border-color: var(--gk-danger-fill);
 }
 .gk-btn-filled.gk-btn-danger:hover {
   background: var(--gk-error-hover);
@@ -1040,7 +1060,7 @@ a:hover {
   background: transparent;
 }
 .gk-btn-outlined.gk-btn-primary {
-  color: var(--gk-primary);
+  color: var(--gk-primary-text);
   border-color: var(--gk-primary);
 }
 .gk-btn-outlined.gk-btn-primary:hover {
@@ -1081,7 +1101,7 @@ a:hover {
   border-color: transparent;
 }
 .gk-btn-text.gk-btn-primary {
-  color: var(--gk-primary);
+  color: var(--gk-primary-text);
 }
 .gk-btn-text.gk-btn-primary:hover {
   background: var(--gk-state-primary);
@@ -1210,9 +1230,9 @@ a:hover {
 .gk-btn.gk-btn-success:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ) {
-  background: var(--gk-success);
-  color: var(--gk-on-success);
-  border-color: var(--gk-success);
+    background: var(--gk-success-fill);
+    color: #ffffff;
+    border-color: var(--gk-success-fill);
 }
 .gk-btn.gk-btn-success:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
@@ -1223,9 +1243,9 @@ a:hover {
 .gk-btn.gk-btn-warning:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ) {
-  background: var(--gk-warning);
-  color: var(--gk-on-warning);
-  border-color: var(--gk-warning);
+    background: var(--gk-warning-fill);
+    color: #ffffff;
+    border-color: var(--gk-warning-fill);
 }
 .gk-btn.gk-btn-warning:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
@@ -1236,9 +1256,9 @@ a:hover {
 .gk-btn.gk-btn-danger:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ) {
-  background: var(--gk-error);
-  color: var(--gk-on-error);
-  border-color: var(--gk-error);
+    background: var(--gk-danger-fill);
+    color: #ffffff;
+    border-color: var(--gk-danger-fill);
 }
 .gk-btn.gk-btn-danger:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
@@ -3580,7 +3600,7 @@ a.gk-stat-card:hover {
 }
 .gk-breadcrumb-sep {
   font-size: var(--gk-text-overline);
-  color: var(--gk-outline);
+  color: var(--gk-on-surface-variant);
   display: flex;
   align-items: center;
 }
@@ -4837,6 +4857,8 @@ a.gk-stat-card:hover {
   --gk-error-hover: #e8919c;
   --gk-warning-text: #fbbf24;
   --gk-success-text: #34d399;
+  /* On a dark surface the primary is already light (L 0.80) and reads well. */
+  --gk-primary-text: var(--gk-primary);
   --gk-neutral-50: #2d333b;
   --gk-neutral-100: #21262d;
   --gk-neutral-200: #161b22;
@@ -4846,13 +4868,17 @@ a.gk-stat-card:hover {
   /* Sidebar dark mode */
   --gk-sidebar-bg: #010409;
   --gk-sidebar-text: rgba(255, 255, 255, 0.7);
-  --gk-sidebar-text-muted: rgba(255, 255, 255, 0.38);
+  /* 0.38 measured 3.40:1 on the dark sidebar — under the 4.5:1 that group
+     labels, the version and the collapse label need. 0.55 reaches 5.48:1. */
+  --gk-sidebar-text-muted: rgba(255, 255, 255, 0.55);
   --gk-sidebar-text-hover: #ffffff;
   --gk-sidebar-item-hover: rgba(255, 255, 255, 0.09);
   --gk-sidebar-item-active: rgba(255, 255, 255, 0.1);
   --gk-sidebar-border: rgba(255, 255, 255, 0.06);
   --gk-sidebar-accent: #a5b4fc;
-  --gk-sidebar-icon-muted: rgba(255, 255, 255, 0.45);
+  /* Icons need 3:1, which 0.45 (4.17:1) already met — raised to match the
+     label beside them rather than sit a shade below it. */
+  --gk-sidebar-icon-muted: rgba(255, 255, 255, 0.55);
 
   color-scheme: dark;
 }
@@ -5143,7 +5169,9 @@ a.gk-stat-card:hover {
 [data-gk-mode="dark"] .gk-page-btn.gk-active,
 .gk-dark .gk-page-btn.gk-active {
   background: var(--gk-primary);
-  color: #fff;
+  /* The same trap as .gk-pg-active: in dark mode the primary is the light end
+     of the scale, so a literal white sat on white. */
+  color: var(--gk-on-primary);
 }
 
 /* Dark Mode: Select dropdowns */
@@ -5325,7 +5353,7 @@ a.gk-stat-card:hover {
 }
 .gk-select-arrow {
   font-size: var(--gk-icon-md);
-  color: var(--gk-outline);
+  color: var(--gk-on-surface-variant);
   transition: transform var(--gk-dur-2);
 }
 .gk-select-display.open .gk-select-arrow {
@@ -6343,6 +6371,7 @@ a.gk-stat-card:hover {
     /* Text roles: darkened further so the contrast holds on a light surface */
     --gk-warning-text: oklch(from var(--gk-warning) calc(l - 0.10) c h);
     --gk-success-text: oklch(from var(--gk-success) calc(l - 0.10) c h);
+    --gk-primary-text: oklch(from var(--gk-primary) calc(l - 0.07) c h);
   }
 }
 

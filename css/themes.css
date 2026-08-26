@@ -172,10 +172,13 @@
        writes an empty data-gk-theme at startup. */
     --gk-hue: var(--gk-theme-hue, 277);
     --gk-chroma: var(--gk-theme-chroma, 0.15);
-    /* 0.55 instead of 0.60: only here does white text carry at least 4.3:1 on
-       EVERY theme color. Before, the range ran from 2.77:1 (Ocean, a real
-       violation) up to 7.58:1 (Slate) — a different result per theme. */
-    --gk-l-primary: 0.55;
+    /* The one number that decides whether white text carries on every accent.
+       0.60 ran from 2.77:1 (ocean, a real violation) to 7.58:1 (slate).
+       0.55 pulled that to 4.35–5.27 — better, but forest still sat under the
+       4.5:1 that AA asks of body text, and "4.3:1" was documented as the floor.
+       0.53 clears it on all six with room to spare: forest 4.69, ocean 4.98,
+       slate 5.28, amber 5.52, indigo 5.51, rose 5.73. Measured, not estimated. */
+    --gk-l-primary: 0.53;
 
     --gk-primary:              oklch(var(--gk-l-primary) var(--gk-chroma) var(--gk-hue));
     --gk-on-primary:           #ffffff;

@@ -2169,10 +2169,21 @@
       try {
         var theme = localStorage.getItem(this._key("gk-theme"));
         var mode = localStorage.getItem(this._key("gk-mode"));
-        // No more inheriting: whoever has nothing stored gets the default.
-        document.body.dataset.gkTheme = theme || "";
-        document.body.dataset.gkMode = mode || "";
+
+        // A stored preference wins; nothing stored means the page keeps what
+        // the server rendered. Writing "" here discarded Theme::set() on every
+        // first visit, in every private window, and for every user who had
+        // never picked a theme — so a site set to dark mode in PHP opened in
+        // light mode for everyone who had not been there before.
         if (theme) this.set(theme);
+        if (mode) document.body.dataset.gkMode = mode;
+
+        // Mark the swatch matching whatever is actually in effect, which may
+        // be the server's choice rather than a stored one.
+        var active = document.body.dataset.gkTheme || "";
+        document.querySelectorAll("[data-gk-set-theme]").forEach(function (b) {
+          b.classList.toggle("gk-theme-active", b.dataset.gkSetTheme === active);
+        });
       } catch (e) {}
     },
   };
