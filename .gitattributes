@@ -5,6 +5,9 @@
 # skeleton.php is deliberately NOT excluded: it is the shortest path from a
 # fresh `composer require` to a page that renders.
 /demo             export-ignore
+# The example links a screenshot under docs/, which is excluded too — the copy
+# inside vendor/ would carry a broken image. Read it on GitHub, run it from a clone.
+/examples         export-ignore
 /docs             export-ignore
 /.design          export-ignore
 /.github          export-ignore
