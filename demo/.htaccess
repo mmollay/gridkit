@@ -1,0 +1,10 @@
+# The demo keeps its user file next to the code, which is convenient for a demo
+# and wrong for anything else — a bcrypt hash is not a secret you want served.
+# This server happens to block it; a clone somewhere else would not.
+#
+# In a real application the file belongs outside the document root entirely:
+#   Auth::setUsersFile('/etc/gridkit-users.conf');
+
+<FilesMatch "\.(conf|ini|log)$">
+    Require all denied
+</FilesMatch>

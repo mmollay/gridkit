@@ -107,4 +107,5 @@ return [
     'table.confirm_delete'     => 'Diesen Eintrag löschen?',
     'table.delete_note'        => 'Das lässt sich nicht rückgängig machen.',
     'form.cancel'              => 'Abbrechen',
+    'auth.failed'              => 'Falscher Benutzername oder Passwort.',
 ];

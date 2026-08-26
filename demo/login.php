@@ -1,25 +1,28 @@
 <?php
 /**
- * GRIDKit Auth Demo — Login Page
+ * GridKit Auth demo — the login page.
  *
- * Shows how to use Auth::renderLogin() and Auth::login()
+ * Shows Auth::renderLogin() and Auth::login() together.
  * Credentials: demo / demo
  */
 require_once __DIR__ . "/../autoload.php";
-use GridKit\{Theme, Auth};
+use GridKit\{Auth, Lang, Theme};
 
-// Demo-spezifisches Users-File (außerhalb Webroot in Prod!)
+Lang::set($_GET['lang'] ?? $_COOKIE['gk_lang'] ?? 'en');
+
+// The demo keeps its user file beside the code. In anything real it belongs
+// outside the document root — demo/.htaccess only papers over it here.
 Auth::setUsersFile(__DIR__ . "/demo-users.conf");
 
-// Theme übernehmen (aus Session/Cookie falls vorhanden)
+// Pick up the theme, from the session or cookie if one is set
 Theme::set("indigo", "dark");
 
-// Logout behandeln
+// Log out
 if (isset($_GET["logout"])) {
     Auth::logout("login.php");
 }
 
-// Login-Versuch
+// Login attempt
 $error = "";
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (Auth::login($_POST["username"] ?? "", $_POST["password"] ?? "")) {
@@ -27,12 +30,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         header("Location: " . $redirect);
         exit;
     }
-    $error = "Falscher Benutzername oder Passwort.";
+    $error = Lang::t('auth.failed');
 }
 
-// Login-Seite rendern
+// Render the login page
 Auth::renderLogin([
     "error"  => $error,
-    "title"  => "GRIDKit Demo",
+    "title"  => "GridKit Demo",
     "icon"   => "grid_view",
 ]);

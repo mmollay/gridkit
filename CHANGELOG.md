@@ -7,6 +7,61 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.35.0] - 2026-08-26
+
+`GridKit\Auth` — sessions, passwords and a remember-me cookie — had never been
+touched by a test. Three things were wrong at once, and two of them were
+security problems.
+
+### Security
+
+- **`renderLogin()` built its markup with unquoted attributes.**
+  `htmlspecialchars()` escapes quotes but it does not escape spaces, so any
+  value containing one broke out of its attribute and became new ones:
+
+  ```
+  <form method=post action=x onfocus=alert(1) autofocus>
+  ```
+
+  `renderLogin(['action' => $_SERVER['REQUEST_URI']])` is an ordinary thing to
+  write, and `REQUEST_URI` is whatever the visitor typed. `title` and `icon`
+  were injectable the same way. Every attribute is quoted now, and a test walks
+  the rendered document asserting it.
+
+- **An unknown username cost nothing to reject.** `verify()` returned before
+  hashing when no line matched, so a login attempt took ~234 ms against an
+  existing account and ~0 ms against one that did not exist. Every username on
+  the system was readable from outside with a stopwatch. A verification now
+  always runs, against a dummy hash of the same cost when the name is unknown —
+  measured afterwards at 236 ms against 227 ms, and what is left of that comes
+  from reading the file, not from the crypto.
+
+### Fixed
+
+- **Every label on the login form was invisible.** They sat in a heredoc as
+  `<?= Lang::t('auth.username') ?>`, and a heredoc does not evaluate PHP — so
+  those tags went to the browser as text. The `auth.*` translations existed all
+  along and were never reached. This also explains the demo's login page
+  answering **403**: the response contained literal `<?=` tags, which reads to a
+  web application firewall like leaked source. It answers 200 now.
+- `data-gk-layout` rendered as the literal string
+  `data-gk-layout= . Layout::getMode() . ` — the concatenation was inside the
+  quotes.
+- The stylesheet and script paths were hardcoded to `gridkit/css/...`, which
+  only worked for one directory layout. `cssPath` and `jsPath` are options now,
+  and so are `subtitle` and `footer`.
+- `demo/login.php` was German and keeps its user file beside the code. It is
+  English now, its message goes through `Lang::t()`, and `demo/.htaccess`
+  denies `*.conf` so a clone does not serve bcrypt hashes to anyone who asks.
+
+### Added
+
+- `tests/auth.test.php` — 56 assertions. Both security fixes were verified
+  against deliberately reintroduced regressions: the timing test fails at
+  "known 233.1 ms, unknown 0.1 ms", and the escaping test fails the moment a
+  quote is removed. 955 assertions in total.
+
+---
 ## [1.34.0] - 2026-08-26
 
 Every form field type, rendered and then actually used in a browser.

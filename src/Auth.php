@@ -67,26 +67,66 @@ class Auth {
         return password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
     }
 
-    /** Render a complete standalone login page */
-    public static function renderLogin(array $options = []): void {
-        $error  = htmlspecialchars($options['error']  ?? '');
-        $title  = htmlspecialchars($options['title']  ?? 'Login');
-        $icon   = htmlspecialchars($options['icon']   ?? 'lock');
-        $action = htmlspecialchars($options['action'] ?? '');
+    /**
+     * Render a complete standalone login page.
+     *
+     * Every attribute here is quoted. It used not to be, and
+     * `htmlspecialchars()` escapes quotes but not spaces — so a value
+     * containing a space broke out of an unquoted attribute and became new
+     * ones. `renderLogin(['action' => $_SERVER['REQUEST_URI']])` is an
+     * ordinary thing to write, and REQUEST_URI is whatever the visitor typed.
+     *
+     * The labels used to sit in a heredoc as `<?= Lang::t('auth.username') ?>`.
+     * A heredoc does not evaluate PHP, so those tags were sent to the browser
+     * verbatim and every label on the form was invisible.
+     *
+     * @param array{
+     *   error?: string, title?: string, subtitle?: string, icon?: string,
+     *   action?: string, cssPath?: string, jsPath?: string, footer?: string,
+     * } $options
+     */
+    public static function renderLogin(array $options = []): void
+    {
+        $e = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
 
-        $themeAttr  = class_exists('\GridKit\Theme')  ? Theme::attributes()              : '';
-        $layoutAttr = class_exists('\GridKit\Layout') ? 'data-gk-layout= . Layout::getMode() . ' : 'data-gk-layout=header-first';
+        $error    = $e((string) ($options['error']    ?? ''));
+        $title    = $e((string) ($options['title']    ?? Lang::t('auth.login')));
+        $subtitle = $e((string) ($options['subtitle'] ?? Lang::t('auth.subtitle')));
+        $icon     = $e((string) ($options['icon']     ?? 'lock'));
+        $action   = $e((string) ($options['action']   ?? ''));
+        $footer   = $e((string) ($options['footer']   ?? 'GridKit Auth'));
+
+        // Where the assets live is the caller's business — the old hardcoded
+        // `gridkit/css/…` only worked for one directory layout.
+        $cssPath = rtrim((string) ($options['cssPath'] ?? 'gridkit/css'), '/');
+        $jsPath  = rtrim((string) ($options['jsPath']  ?? 'gridkit/js'), '/');
+
+        $locale     = $e(Lang::locale());
+        $themeAttr  = class_exists(Theme::class)  ? Theme::attributes() : '';
+        $layoutAttr = 'data-gk-layout="'
+                    . $e(class_exists(Layout::class) ? Layout::getMode() : 'header-first')
+                    . '"';
+
+        $lUser     = $e(Lang::t('auth.username'));
+        $lPass     = $e(Lang::t('auth.password'));
+        $lRemember = $e(Lang::t('auth.remember'));
+        $lLogin    = $e(Lang::t('auth.login'));
+
+        $errorHtml = $error === '' ? '' :
+            '<div class="gk-login-error">'
+            . '<span class="material-icons" style="font-size:16px">error_outline</span>'
+            . $error . '</div>';
 
         echo <<<HTML
 <!DOCTYPE html>
-<html lang=<?= Lang::locale() ?>>
+<html lang="{$locale}">
 <head>
-    <meta charset=UTF-8>
-    <meta name=viewport content=width=device-width, initial-scale=1.0>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{$title}</title>
-    <link rel=stylesheet href=gridkit/css/gridkit.css>
-    <link rel=stylesheet href=gridkit/css/themes.css>
-    <link rel=stylesheet href=https://fonts.googleapis.com/icon?family=Material+Icons>
+    <link rel="stylesheet" href="{$cssPath}/gridkit.css">
+    <link rel="stylesheet" href="{$cssPath}/themes.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         html, body { height: 100%; margin: 0; }
         .gk-login-wrap {
@@ -105,14 +145,11 @@ class Auth {
             width: 100%;
             max-width: 380px;
         }
-        [data-gk-mode=dark] .gk-login-card {
+        [data-gk-mode="dark"] .gk-login-card {
             background: var(--gk-surface-container-high, #1e293b);
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
-        .gk-login-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
+        .gk-login-header { text-align: center; margin-bottom: 32px; }
         .gk-login-icon {
             width: 64px; height: 64px;
             border-radius: 16px;
@@ -132,8 +169,8 @@ class Auth {
             display: block; font-size: 13px; font-weight: 500;
             color: var(--gk-on-surface-variant, #4b5563); margin-bottom: 6px;
         }
-        .gk-login-field input[type=text],
-        .gk-login-field input[type=password] {
+        .gk-login-field input[type="text"],
+        .gk-login-field input[type="password"] {
             width: 100%; padding: 10px 14px;
             border: 1.5px solid var(--gk-outline-variant, #d1d5db);
             border-radius: 8px; font-size: 14px;
@@ -142,8 +179,12 @@ class Auth {
             outline: none; transition: border-color .15s; box-sizing: border-box;
         }
         .gk-login-field input:focus { border-color: var(--gk-primary, #6366f1); }
-        [data-gk-mode=dark] .gk-login-field input[type=text],
-        [data-gk-mode=dark] .gk-login-field input[type=password] {
+        .gk-login-field input:focus-visible {
+            outline: 2px solid var(--gk-primary, #6366f1);
+            outline-offset: 1px;
+        }
+        [data-gk-mode="dark"] .gk-login-field input[type="text"],
+        [data-gk-mode="dark"] .gk-login-field input[type="password"] {
             background: var(--gk-surface-container, #0f172a);
             border-color: var(--gk-outline-variant, #334155);
         }
@@ -152,7 +193,7 @@ class Auth {
             font-size: 13px; color: var(--gk-on-surface-variant, #6b7280);
             cursor: pointer; margin-bottom: 20px; user-select: none;
         }
-        .gk-login-remember input[type=checkbox] {
+        .gk-login-remember input[type="checkbox"] {
             width: 16px; height: 16px; accent-color: var(--gk-primary, #6366f1);
             cursor: pointer; flex-shrink: 0;
         }
@@ -169,7 +210,7 @@ class Auth {
             transition: background .15s, box-shadow .15s;
         }
         .gk-login-btn:hover {
-            background: var(--gk-primary-variant, #4f46e5);
+            background: var(--gk-primary-hover, #4f46e5);
             box-shadow: 0 2px 8px rgba(99,102,241,0.35);
         }
         .gk-login-footer {
@@ -178,45 +219,41 @@ class Auth {
         }
     </style>
 </head>
-<body {$layoutAttr} {$themeAttr} class=gk-root>
+<body {$layoutAttr} {$themeAttr} class="gk-root">
 
-<div class=gk-login-wrap>
-    <div class=gk-login-card>
-        <div class=gk-login-header>
-            <div class=gk-login-icon>
-                <span class=material-icons>{$icon}</span>
+<div class="gk-login-wrap">
+    <div class="gk-login-card">
+        <div class="gk-login-header">
+            <div class="gk-login-icon">
+                <span class="material-icons">{$icon}</span>
             </div>
-            <h1 class=gk-login-title>{$title}</h1>
-            <p class=gk-login-subtitle><?= Lang::t('auth.subtitle') ?></p>
+            <h1 class="gk-login-title">{$title}</h1>
+            <p class="gk-login-subtitle">{$subtitle}</p>
         </div>
 
-        <form method=post action={$action}>
-HTML;
-        if ($error) {
-            echo '<div class=gk-login-error><span class=material-icons style=font-size:16px>error_outline</span>' . $error . '</div>';
-        }
-        echo <<<HTML
-            <div class=gk-login-field>
-                <label for=gk-username><?= Lang::t('auth.username') ?></label>
-                <input type=text id=gk-username name=username
-                       autocomplete=username autofocus required>
+        <form method="post" action="{$action}">
+            {$errorHtml}
+            <div class="gk-login-field">
+                <label for="gk-username">{$lUser}</label>
+                <input type="text" id="gk-username" name="username"
+                       autocomplete="username" autofocus required>
             </div>
-            <div class=gk-login-field>
-                <label for=gk-password><?= Lang::t('auth.password') ?></label>
-                <input type=password id=gk-password name=password
-                       autocomplete=current-password required>
+            <div class="gk-login-field">
+                <label for="gk-password">{$lPass}</label>
+                <input type="password" id="gk-password" name="password"
+                       autocomplete="current-password" required>
             </div>
-            <label class=gk-login-remember>
-                <input type=checkbox name=remember value=1>
-                <?= Lang::t('auth.remember') ?>
+            <label class="gk-login-remember">
+                <input type="checkbox" name="remember" value="1">
+                {$lRemember}
             </label>
-            <button type=submit class=gk-login-btn><?= Lang::t('auth.login') ?></button>
+            <button type="submit" class="gk-login-btn">{$lLogin}</button>
         </form>
-        <p class=gk-login-footer>GRIDKit Auth</p>
+        <p class="gk-login-footer">{$footer}</p>
     </div>
 </div>
 
-<script src=gridkit/js/gridkit.js></script>
+<script src="{$jsPath}/gridkit.js"></script>
 </body>
 </html>
 HTML;
@@ -295,16 +332,36 @@ HTML;
 
     // ─── Intern ───────────────────────────────────────────────────────────────
 
+    /**
+     * A bcrypt hash at the same cost as a real one, of a value nobody knows.
+     *
+     * It exists so that an attempt against an unknown username costs the same
+     * as one against a known username. Returning early made the difference
+     * ~234 ms against ~0 ms — enough to enumerate every account on the system
+     * from outside, with nothing but a stopwatch.
+     */
+    private const DUMMY_HASH = '$2y$12$HIwMpLQ3OCG/g9/xtH2jn.35.n6oBQUHScsY/ALS8nOcF1pw2omXu';
+
     private static function verify(string $username, string $password): bool {
-        if (!file_exists(self::$usersFile)) return false;
-        foreach (file(self::$usersFile) as $line) {
-            $line = trim($line);
-            if (empty($line) || str_starts_with($line, '#')) continue;
-            $parts = explode(':', $line, 2);
-            if (count($parts) < 2) continue;
-            [$user, $hash] = $parts;
-            if ($user === $username && password_verify($password, trim($hash))) return true;
+        $hash = null;
+
+        if (file_exists(self::$usersFile)) {
+            foreach (file(self::$usersFile) as $line) {
+                $line = trim($line);
+                if ($line === '' || str_starts_with($line, '#')) continue;
+                $parts = explode(':', $line, 2);
+                if (count($parts) < 2) continue;
+                [$user, $stored] = $parts;
+                if ($user === $username) {
+                    $hash = trim($stored);
+                    break;
+                }
+            }
         }
-        return false;
+
+        // Always verify something, even when the name is unknown.
+        $matches = password_verify($password, $hash ?? self::DUMMY_HASH);
+
+        return $hash !== null && $matches;
     }
 }

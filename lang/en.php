@@ -107,4 +107,5 @@ return [
     'table.confirm_delete'     => 'Delete this entry?',
     'table.delete_note'        => 'This cannot be undone.',
     'form.cancel'              => 'Cancel',
+    'auth.failed'              => 'Wrong username or password.',
 ];
