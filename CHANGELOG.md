@@ -7,6 +7,62 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.40.0] - 2026-08-26
+
+The stylesheet — 6,765 lines, the last large file without a systematic pass.
+
+The method was to compare what the code *emits* against what the stylesheet
+*defines*, in both directions, and then to measure every button variant rather
+than the handful the earlier contrast probe happened to include.
+
+### Fixed
+
+- **`.gk-spin` never spun.** `Form.php` puts it on a Material Icons `sync`
+  glyph — for the AJAX select's loading line and the upload indicator. The
+  `@keyframes gk-spin` existed (twice, identically) and nothing ever applied
+  them to the class, so both "loading" icons sat perfectly still. A spinner that
+  does not move reads as a hang.
+- **A live table gave no sign it was working.** `GK.liveTable` adds
+  `.gk-live-loading` around its fetch and removes it after; the stylesheet had
+  no rule for it. Live tables now get the same loading bar and receding content
+  as the plain table.
+- **Text and outlined buttons in the semantic colours failed contrast** —
+  measured, not guessed: success 2.54:1, warning 3.19:1, danger 3.67:1 on white.
+  `--gk-warning-text` was introduced precisely to fix this and only reached
+  3.19:1; `--gk-success-text` was defined and **never used anywhere**. The
+  earlier contrast sweep missed all of this because its probe only carried
+  *filled* buttons. All three text roles are text-safe now (5.02, 5.48, 5.67:1)
+  and the outlined and text variants use them.
+- **The colour derivation ran in dark mode too**, where the role colours are
+  already the light end of the scale — darkening them by the same step landed
+  them mid-range, the worst place against a dark ground: 3.45–3.97:1. Dark mode
+  keeps its own literals now, which read at 7.6–8.8:1.
+- **Five themes set `--gk-secondary` without `--gk-on-secondary`.** In light
+  mode the base white paired with their grey by luck. In dark mode the base
+  block had already set a *dark* on-secondary to pair with its own *light*
+  secondary — so a themed dark page put dark text on mid grey at 2.73:1. Each
+  theme now sets both halves of the pair.
+- `@keyframes gk-spin` was defined twice, identically.
+
+### Verified
+
+240 combinations — 20 button variants across six themes and both modes — every
+one at or above 4.5:1, worst case 4.61:1.
+
+### Added
+
+- Five more checks in `tests/contrast.test.php`, including one that counts
+  `--gk-secondary` against `--gk-on-secondary` in `themes.css`, so a role can no
+  longer be overridden without its text colour. 1102 assertions in total.
+
+### Not changed
+
+Around twenty other places use a role colour directly as a text colour —
+validation hints, pill text, status icons. Most sit on tinted backgrounds where
+the role colour is right, and each needs looking at on its own; they are
+recorded here rather than swept.
+
+---
 ## [1.39.1] - 2026-08-26
 
 The landing page — the second thing a visitor sees.

@@ -113,8 +113,14 @@ a:hover {
      --gk-warning/--gk-success are surface colors; as a text color on a light
      surface they break the contrast (#f59e0b on white = 2.15:1). These roles
      are the same color, only darker — and stay above the 3:1 threshold. */
-  --gk-warning-text: #d97706;
-  --gk-success-text: #059669;
+  /* Text-safe variants of the semantic roles, for the one case the role colours
+     cannot cover: the colour *is* the text, on a plain surface. Measured on
+     white — the role colours themselves give 2.15:1 (warning), 2.54:1 (success)
+     and 3.67:1 (error), and the earlier one-step-darker values still only
+     reached 3.19:1 and 3.77:1. These clear 4.5:1. */
+  --gk-warning-text: #b45309;   /* 5.02:1 */
+  --gk-success-text: #047857;   /* 5.48:1 */
+  --gk-danger-text:  #c81e3a;   /* 5.67:1 */
   /* --gk-primary is pinned at L 0.55 so that white carries on it. As text on a
      white surface the same colour measured 3.97:1 in forest, 4.20:1 in ocean
      and 4.41:1 in slate — under the 4.5:1 body text needs. Same idea as the two
@@ -1067,7 +1073,7 @@ a:hover {
   background: var(--gk-state-primary);
 }
 .gk-btn-outlined.gk-btn-success {
-  color: var(--gk-success);
+  color: var(--gk-success-text);
   border-color: var(--gk-success);
 }
 .gk-btn-outlined.gk-btn-success:hover {
@@ -1081,7 +1087,7 @@ a:hover {
   background: var(--gk-state-warning);
 }
 .gk-btn-outlined.gk-btn-danger {
-  color: var(--gk-error);
+  color: var(--gk-danger-text);
   border-color: var(--gk-error);
 }
 .gk-btn-outlined.gk-btn-danger:hover {
@@ -1107,7 +1113,7 @@ a:hover {
   background: var(--gk-state-primary);
 }
 .gk-btn-text.gk-btn-success {
-  color: var(--gk-success);
+  color: var(--gk-success-text);
 }
 .gk-btn-text.gk-btn-success:hover {
   background: color-mix(in oklab, var(--gk-success) 8%, transparent);
@@ -1119,7 +1125,7 @@ a:hover {
   background: var(--gk-state-warning);
 }
 .gk-btn-text.gk-btn-danger {
-  color: var(--gk-error);
+  color: var(--gk-danger-text);
 }
 .gk-btn-text.gk-btn-danger:hover {
   background: var(--gk-state-error);
@@ -2584,11 +2590,6 @@ select.gk-input {
   border-top-color: var(--gk-primary);
   border-radius: 50%;
   animation: gk-spin 0.6s linear infinite;
-}
-@keyframes gk-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* === FILTER CHIPS === */
@@ -4857,6 +4858,7 @@ a.gk-stat-card:hover {
   --gk-error-hover: #e8919c;
   --gk-warning-text: #fbbf24;
   --gk-success-text: #34d399;
+  --gk-danger-text:  #fda4af;
   /* On a dark surface the primary is already light (L 0.80) and reads well. */
   --gk-primary-text: var(--gk-primary);
   --gk-neutral-50: #2d333b;
@@ -6369,10 +6371,27 @@ a.gk-stat-card:hover {
     --gk-error-hover: oklch(from var(--gk-error) calc(l - 0.06) c h);
     --gk-warning-hover: oklch(from var(--gk-warning) calc(l - 0.06) c h);
     /* Text roles: darkened further so the contrast holds on a light surface */
-    --gk-warning-text: oklch(from var(--gk-warning) calc(l - 0.10) c h);
-    --gk-success-text: oklch(from var(--gk-success) calc(l - 0.10) c h);
+    /* -0.10 was not enough: it moved warning from 2.15:1 to 3.19:1, still under
+       the 4.5:1 body text needs. */
+    --gk-warning-text: oklch(from var(--gk-warning) calc(l - 0.22) c h);
+    --gk-success-text: oklch(from var(--gk-success) calc(l - 0.22) c h);
+    --gk-danger-text:  oklch(from var(--gk-error)   calc(l - 0.18) c h);
     --gk-primary-text: oklch(from var(--gk-primary) calc(l - 0.07) c h);
   }
+
+    /* The text roles above are darkened for a LIGHT surface. In dark mode the
+       role colours are already the light end of the scale and read at 7.6–8.8:1
+       exactly as they are; darkening them by the same step landed them
+       mid-range, the worst place against a dark ground — measured at 3.45:1
+       for success, 3.92 for warning, 3.97 for danger. Later in source and at
+       equal specificity, so this wins. */
+    [data-gk-mode="dark"],
+    [data-gk-mode="dark"] .gk-root,
+    .gk-dark {
+      --gk-warning-text: #fbbf24;
+      --gk-success-text: #34d399;
+      --gk-danger-text:  #fda4af;
+    }
 }
 
 /* ===================================================================
@@ -6592,7 +6611,17 @@ a.gk-btn[aria-disabled="true"],
    far gave no visible feedback for it. The content simply jumped. The existing
    rows now stay in place and step back; a bar shows that work is happening.
    No jumping, no dead time. */
-.gk-table-wrap[data-gk-loading] {
+/* Form.php puts `gk-spin` on a Material Icons `sync` glyph — for the AJAX
+   select's loading line and the upload indicator. The keyframes below existed
+   and nothing ever applied them to this class, so both "loading" icons sat
+   perfectly still. The general prefers-reduced-motion block stops it. */
+.gk-spin {
+  display: inline-block;
+  animation: gk-spin 0.9s linear infinite;
+}
+
+.gk-table-wrap[data-gk-loading],
+.gk-live-loading {
   position: relative;
 }
 /* Track and bar live in ONE pseudo element as two background layers.
@@ -6601,7 +6630,11 @@ a.gk-btn[aria-disabled="true"],
    stick out of the card — a traveling bar would then paint past the card edge
    and trigger horizontal scrolling. Backgrounds, by contrast, are always
    clipped to the box. */
-.gk-table-wrap[data-gk-loading]::after {
+/* GK.liveTable adds .gk-live-loading around its fetch and removes it after.
+   Nothing styled it, so a live table gave no sign at all that it was working —
+   the rows simply sat there until new ones appeared. */
+.gk-table-wrap[data-gk-loading]::after,
+.gk-live-loading::after {
   content: "";
   position: absolute;
   left: 0;
@@ -6625,7 +6658,9 @@ a.gk-btn[aria-disabled="true"],
 }
 /* The toolbar stays operable — only the content waits. */
 .gk-table-wrap[data-gk-loading] .gk-table,
-.gk-table-wrap[data-gk-loading] .gk-rowpager {
+.gk-table-wrap[data-gk-loading] .gk-rowpager,
+.gk-live-loading .gk-table,
+.gk-live-loading .gk-rowpager {
   opacity: 0.45;
   pointer-events: none;
   transition: opacity var(--gk-dur-2) var(--gk-ease-out);

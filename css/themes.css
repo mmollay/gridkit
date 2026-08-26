@@ -28,6 +28,7 @@
     --gk-primary-container: #e0f2fe;
     --gk-on-primary-container: #0c4a6e;
     --gk-secondary: #64748b;
+    --gk-on-secondary: #ffffff;   /* white carries on this grey: 4.76–4.83:1 */
     --gk-tertiary: #14b8a6;
 }
 
@@ -39,6 +40,7 @@
     --gk-primary-container: #d1fae5;
     --gk-on-primary-container: #064e3b;
     --gk-secondary: #6b7280;
+    --gk-on-secondary: #ffffff;   /* white carries on this grey: 4.76–4.83:1 */
     --gk-tertiary: #8b5cf6;
 }
 
@@ -50,6 +52,7 @@
     --gk-primary-container: #fce7f3;
     --gk-on-primary-container: #831843;
     --gk-secondary: #78716c;
+    --gk-on-secondary: #ffffff;   /* white carries on this grey: 4.76–4.83:1 */
     --gk-tertiary: #a855f7;
 }
 
@@ -61,6 +64,7 @@
     --gk-primary-container: #fef3c7;
     --gk-on-primary-container: #78350f;
     --gk-secondary: #78716c;
+    --gk-on-secondary: #ffffff;   /* white carries on this grey: 4.76–4.83:1 */
     --gk-tertiary: #0ea5e9;
 }
 
@@ -72,6 +76,7 @@
     --gk-primary-container: #e2e8f0;
     --gk-on-primary-container: #1e293b;
     --gk-secondary: #64748b;
+    --gk-on-secondary: #ffffff;   /* white carries on this grey: 4.76–4.83:1 */
     --gk-tertiary: #6366f1;
 }
 

@@ -108,4 +108,63 @@ return [
         'a stored preference wins; nothing stored leaves the server\'s choice alone');
 },
 
+
+'the semantic roles have text-safe variants that are actually safe' => function (): void {
+    // --gk-warning-text was introduced to fix white-on-amber and measured
+    // 3.19:1 as text on white — better than the 2.15:1 it replaced, still under
+    // what body text needs. --gk-success-text was defined and never used at all,
+    // so outlined and text success buttons ran on --gk-success at 2.54:1.
+    T::contains(css(), '--gk-warning-text: #b45309', 'warning: 5.02:1 on white');
+    T::contains(css(), '--gk-success-text: #047857', 'success: 5.48:1');
+    T::ok((bool) preg_match('/--gk-danger-text:\s*#c81e3a/', css()), 'danger: 5.67:1');
+
+    foreach (['success', 'danger'] as $role) {
+        T::ok((bool) preg_match(
+            '/\.gk-btn-outlined\.gk-btn-' . $role . ' \{[^}]*color:\s*var\(--gk-' . $role . '-text\)/s', css()),
+            "outlined $role uses the text-safe value");
+        T::ok((bool) preg_match(
+            '/\.gk-btn-text\.gk-btn-' . $role . ' \{[^}]*color:\s*var\(--gk-' . $role . '-text\)/s', css()),
+            "text $role uses it too");
+    }
+},
+
+'the text roles are not darkened in dark mode' => function (): void {
+    // The derivation block applies to both modes. In dark the role colours are
+    // already the light end of the scale, so the same darkening step landed them
+    // mid-range — the worst place against a dark ground, 3.45–3.97:1.
+    T::ok((bool) preg_match(
+        '/\[data-gk-mode="dark"\][^{]*\{[^}]*--gk-success-text:\s*#34d399/s', css()),
+        'dark mode keeps its own literals');
+},
+
+'a theme that overrides a role also sets its text colour' => function (): void {
+    $themes = themesCss();
+
+    // Five themes set --gk-secondary to a mid grey and left --gk-on-secondary
+    // alone. In light mode the base white paired fine; in dark mode the base
+    // block had already set a *dark* on-secondary to pair with its own light
+    // secondary — so the theme's grey ended up carrying dark text at 2.73:1.
+    $secondaries = preg_match_all('/--gk-secondary:/', $themes);
+    $onSecondaries = preg_match_all('/--gk-on-secondary:/', $themes);
+    T::eq($onSecondaries, $secondaries,
+        'every --gk-secondary in themes.css is paired with an --gk-on-secondary');
+},
+
+'the spinner class actually spins' => function (): void {
+    // Form.php puts `gk-spin` on a Material Icons `sync` glyph for the AJAX
+    // select and the upload indicator. The keyframes existed; nothing applied
+    // them to the class, so both sat still.
+    T::ok((bool) preg_match('/\.gk-spin \{[^}]*animation:\s*gk-spin/s', css()),
+        'the class carries the animation');
+    T::contains(css(), '@keyframes gk-spin', 'and the keyframes exist');
+    T::eq(substr_count(css(), '@keyframes gk-spin {'), 1, 'defined once, not twice');
+},
+
+'a live table shows that it is loading' => function (): void {
+    // GK.liveTable adds .gk-live-loading around its fetch. Nothing styled it,
+    // so the rows simply sat there until new ones replaced them.
+    T::contains(css(), '.gk-live-loading::after', 'it gets the same bar as the plain table');
+    T::contains(css(), '.gk-live-loading .gk-table', 'and the same receding content');
+},
+
 ];
