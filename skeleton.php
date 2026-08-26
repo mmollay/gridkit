@@ -5,15 +5,82 @@
  * Copy it, change the parts marked below, and you have a working page.
  * Needs: autoload.php, css/gridkit.css, css/themes.css, js/gridkit.js
  *
- * This file sits in the GridKit directory, so the asset paths below are
- * relative to it. Copy it somewhere else and adjust them.
+ * Copied out of the GridKit directory this file used to die on its first line
+ * with an uncaught Error, because the require below was relative to itself.
+ * It now looks in the four places GridKit is normally installed and, when it
+ * finds none of them, says so in a sentence instead of a stack trace.
  */
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/autoload.php';
+// ─── Finding GridKit ─────────────────────────────────────────────────────────
+// Beside this file (a copy inside the checkout), one level up (an app directory
+// next to the checkout), a Composer install, or a sibling clone.
+$gkRoot = null;
+foreach ([
+    __DIR__,
+    __DIR__ . '/vendor/mmollay/gridkit',
+    __DIR__ . '/../gridkit',
+    dirname(__DIR__) . '/vendor/mmollay/gridkit',
+] as $candidate) {
+    if (is_file($candidate . '/autoload.php')) { $gkRoot = $candidate; break; }
+}
 
-use GridKit\{Button, Header, Lang, Layout, Sidebar, StatCards, Table, Theme};
+if ($gkRoot === null) {
+    http_response_code(500);
+    exit(
+        "GridKit was not found.\n\n"
+        . "This file needs GridKit's autoload.php. Point the require in "
+        . basename(__FILE__) . " at it:\n\n"
+        . "    require_once '/path/to/gridkit/autoload.php';\n\n"
+        . "and set \$gkAssets below to the URL your browser can reach the same "
+        . "directory at, e.g. 'vendor/mmollay/gridkit/'.\n"
+    );
+}
+
+require_once $gkRoot . '/autoload.php';
+
+// The URL prefix for css/ and js/. Empty means "beside this file", which is
+// right when the copy lives inside the checkout. Otherwise it is derived from
+// wherever autoload.php turned up, which covers the two common layouts — an
+// app directory beside the clone, and a Composer install. Both assume the
+// GridKit directory is reachable by the browser; if yours is not (vendor/
+// outside the document root is the usual case), copy or symlink its css/ and
+// js/ into your public root and set this to that path instead.
+$gkAssets = '';
+if (realpath($gkRoot) !== realpath(__DIR__)) {
+    foreach (['vendor/mmollay/gridkit', '../gridkit'] as $guess) {
+        if (realpath(__DIR__ . '/' . $guess) === realpath($gkRoot)) {
+            $gkAssets = $guess . '/';
+            break;
+        }
+    }
+}
+
+
+use GridKit\{Button, Form, Header, Lang, Layout, Sidebar, StatCards, Table, Theme};
+
+// ─── The product modal answers itself ────────────────────────────────────────
+// The table below opens a modal that fetches a URL. Pointing it at a file that
+// does not exist is worse than it sounds: PHP's built-in server — the one the
+// README tells you to run — falls back to the repo's index.php for any
+// unmatched path, so the modal filled with the GridKit landing page. Answering
+// it here keeps the skeleton one file, which is the point of a skeleton.
+if (isset($_GET['gk_form'])) {
+    Lang::set($_GET['lang'] ?? 'en');
+    (new Form('product_form'))
+        ->action('?gk_save=1')
+        ->field('sku',    'SKU',     'text',     ['required' => true, 'width' => 6])
+        ->field('name',   'Product', 'text',     ['required' => true, 'width' => 10])
+        ->field('price',  'Price',   'text',     ['width' => 6])
+        ->field('status', 'Status',  'select',   ['width' => 6, 'options' => [
+            'active'   => 'Active',
+            'inactive' => 'Inactive',
+        ]])
+        ->field('notes',  'Notes',   'textarea', ['width' => 16])
+        ->render();
+    exit;
+}
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 
@@ -38,8 +105,8 @@ Layout::mode('header-first');
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
 
     <!-- GridKit -->
-    <link rel="stylesheet" href="<?= Layout::asset('css/gridkit.css') ?>">
-    <link rel="stylesheet" href="<?= Layout::asset('css/themes.css') ?>">
+    <link rel="stylesheet" href="<?= Layout::asset($gkAssets . 'css/gridkit.css') ?>">
+    <link rel="stylesheet" href="<?= Layout::asset($gkAssets . 'css/themes.css') ?>">
 
     <!-- Material Icons — the sidebar, header and buttons use them -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -130,7 +197,7 @@ Layout::mode('header-first');
             ->button('edit',   ['icon' => 'edit',   'color' => 'primary'])
             ->button('delete', ['icon' => 'delete', 'color' => 'danger', 'confirm' => true])
             ->newButton('New product', ['icon' => 'add', 'modal' => 'product_form'])
-            ->modal('product_form', 'Edit product', 'forms/product.php', ['size' => 'medium'])
+            ->modal('product_form', 'Edit product', '?gk_form=1', ['size' => 'medium'])
             ->paginate(25)
             ->render();
         ?>
@@ -151,6 +218,6 @@ Layout::mode('header-first');
 
 </div><!-- /gk-with-sidebar -->
 
-<script src="<?= Layout::asset('js/gridkit.js') ?>"></script>
+<script src="<?= Layout::asset($gkAssets . 'js/gridkit.js') ?>"></script>
 </body>
 </html>

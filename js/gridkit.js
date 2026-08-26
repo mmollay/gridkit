@@ -2387,7 +2387,14 @@
           wrap._gkBound = true;
           var display = wrap.querySelector(".gk-multiselect-display");
           var dropdown = wrap.querySelector(".gk-select-dropdown");
-          var hidden = wrap.querySelector('input[type="hidden"]');
+          // Same as the searchable select: since 1.43.0 the value carrier is a
+          // real control, so a required field can actually be validated. Only
+          // one of the three lookups was updated — the other two then read
+          // null.value and threw, and because this runs inside GK.init the
+          // throw took every binder after it down with it.
+          var hidden =
+            wrap.querySelector("input.gk-select-value-input") ||
+            wrap.querySelector('input[type="hidden"]');
           var chipsContainer = wrap.querySelector(".gk-multiselect-chips");
           var searchInput = wrap.querySelector(".gk-multiselect-input");
           var optionsContainer = dropdown.querySelector(".gk-select-options");
@@ -2527,7 +2534,14 @@
           if (wrap._gkBound) return;
           wrap._gkBound = true;
           var input = wrap.querySelector(".gk-ajax-search-input");
-          var hidden = wrap.querySelector('input[type="hidden"]');
+          // Same as the searchable select: since 1.43.0 the value carrier is a
+          // real control, so a required field can actually be validated. Only
+          // one of the three lookups was updated — the other two then read
+          // null.value and threw, and because this runs inside GK.init the
+          // throw took every binder after it down with it.
+          var hidden =
+            wrap.querySelector("input.gk-select-value-input") ||
+            wrap.querySelector('input[type="hidden"]');
           var dropdown = wrap.querySelector(".gk-select-dropdown");
           var optionsContainer = dropdown.querySelector(".gk-select-options");
           var loading = dropdown.querySelector(".gk-select-loading");

@@ -7,6 +7,104 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.44.0] - 2026-08-27
+
+Round fifteen turned outward: the demo, the landing page, the worked example,
+and the first fifteen minutes of somebody who has never seen this repo. Five
+auditors, an adversarial verifier per finding. Fifteen findings, none refuted.
+
+The worst of them is that after fourteen rounds of fixing the inside of the
+library, **the front door was shut the whole time**.
+
+### Fixed — the install path in the README did not work
+
+- **`cp gridkit/skeleton.php my-app/index.php` ended in an uncaught Error on
+  the copied file's first line.** `require_once __DIR__ . '/autoload.php'` is
+  relative to the copy, so it looked for GridKit inside the new app directory.
+  Zero bytes of output, a stack trace in the log. The file's own header warned
+  about the *asset* paths, which merely 404, and said nothing about the require,
+  which is the line that kills it. The skeleton now looks in the four places
+  GridKit is normally installed — beside itself, one directory up, `vendor/`,
+  and a sibling clone — derives the asset prefix from whichever it found, and
+  when it finds none says so in a sentence naming the line to change.
+
+- **The skeleton's "New product" button opened a modal containing the GridKit
+  marketing landing page.** It fetched `forms/product.php`, which the repo does
+  not ship, and PHP's built-in server — the server the README tells you to run
+  — falls back to the root `index.php` for any unmatched path. 138 KB of
+  marketing copy inside a dialog headed "Edit product". The skeleton answers
+  its own modal now and stays one file, which is the point of a skeleton.
+
+- **`composer require` was offered with no way to reach the CSS or JS.**
+  `Layout::asset()` stamps the path it is handed; it does not resolve one. So
+  the documented call emitted `css/gridkit.css` while the files sat in
+  `vendor/mmollay/gridkit/css/`, and the page rendered unstyled with nothing to
+  go on. The README now says where they are and what to hand `asset()`.
+
+- **The landing page's "Get Started in 30 Seconds" copied the same broken
+  command**, and left out both the `mkdir` that `cp` needs and the server that
+  makes "open in browser" possible.
+
+Walked end to end from a fresh clone afterwards: page 200, stylesheet 200,
+script 200, modal 200, no errors. Before: 500, 404, 404, 500.
+
+### Fixed — the example lost money
+
+- **A German-formatted amount without cents was stored as a thousandth of
+  itself.** Typing `12.750` — twelve thousand seven hundred and fifty — saved
+  `12,75 €`, and the server answered `{"ok":true}`. The rule kept a lone dot as
+  a decimal point regardless of locale. Both separators present now means the
+  last one is the decimal point; a lone separator is only ambiguous in front of
+  exactly three digits, and that single case is decided by the language the
+  form was filled in. Fourteen cases across both locales, checked.
+
+### Fixed — my own regression from 1.43.0
+
+- **Multi-select and AJAX-select threw on every page load, and took the rest of
+  the library down with them.** 1.43.0 made the value carrier a real control so
+  a required field could be validated — and updated one of the three places
+  that look for it. The other two read `null.value`, and because this runs
+  inside `GK.init()` the uncaught TypeError aborted every binder after it.
+
+### Fixed — the demo taught things that are not true
+
+- **Three of the six format annotations named output the component never
+  produces.** `// Yes / No` is unreachable under any configuration; the boolean
+  format emits ✓ and –. The currency and date annotations quietly assumed
+  options the sample does not pass.
+- **A block headed `// Combinable:` showed two `variant()` calls.** `variant()`
+  is one slot: the second replaces the first, so `celled` was silently
+  discarded and the reader got a padded table.
+- **The AJAX-select demo requested `/demo/demo/api/search.php`** — a stray
+  prefix on a page that already lives in `/demo/`. The dropdown said
+  "Searching…" for ever.
+- **The search sample documented the German response contract**, which 1.39.0
+  replaced, in German, on the English page.
+- **The tooltip section forced 110 px of horizontal scroll at 390 px.**
+
+### Fixed — claims that were not true
+
+- The landing page put the theme contrast between 4.3:1 and 5.3:1; three of the
+  six themes fall outside that. The measured range is 4.69:1 to 5.73:1, which
+  is what README.md has said since 1.38.0.
+- `og:image` pointed at `/og-image.png`, which 404s, so every shared link
+  rendered without a preview. The file that exists is `docs/social-preview.png`.
+- The README described the invoice example as "about 300 lines". It is 673.
+- The example's empty state told visitors there were no invoices when a search
+  or filter had simply matched nothing — the table has its own wording for
+  that, and offers the way back.
+
+### Added
+
+- `tests/firstrun.test.php` — walks the documented install path instead of
+  trusting it: the skeleton runs where it lives, runs where the README says to
+  copy it, explains itself when GridKit is nowhere near, answers its own modal,
+  and the README's numbers match the files. Fifteen rounds of tests that called
+  the classes directly never once opened the front door.
+
+**1,595 assertions.**
+
+---
 ## [1.43.0] - 2026-08-27
 
 Round fourteen, and the first finding is the previous round's. Five auditors

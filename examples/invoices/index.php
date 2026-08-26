@@ -62,8 +62,16 @@ $table = (new Table('invoices'))
     ->modal('invoice_new',    t('new'),    'form.php',   ['size' => 'medium'])
     ->modal('invoice_delete', t('delete'), 'delete.php', ['size' => 'small'])
     ->newButton(t('new'), ['modal' => 'invoice_new'])
-    ->paginate(8)
-    ->emptyState(t('empty'), ['hint' => t('empty_hint'), 'icon' => 'receipt_long']);
+    ->paginate(8);
+
+// "No invoices yet" is only true when nothing is filtered. With a search or a
+// status filter in play the table has its own wording for "nothing matched",
+// and offers the way back — so the application's copy is confined to the
+// branch it actually describes.
+$isNarrowed = ($_GET['gk_search'] ?? '') !== '' || ($_GET['status'] ?? '') !== '';
+if (!$isNarrowed) {
+    $table->emptyState(t('empty'), ['hint' => t('empty_hint'), 'icon' => 'receipt_long']);
+}
 
 /** The cards above the table. Rendered twice: on the page, and into the
  *  out-of-band template below, so a reload keeps them in step with the list. */

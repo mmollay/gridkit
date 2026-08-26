@@ -159,7 +159,7 @@ $skillHtml = renderSkillMd($skillContent);
     <meta property="og:description" content="Zero-dependency PHP framework for admin dashboards. 16 components, built for AI agents. Open Source.">
     <meta property="og:url" content="<?= $canonicalUrl ?>">
     <meta property="og:site_name" content="GridKit">
-    <meta property="og:image" content="<?= $canonicalUrl ?>/og-image.png">
+    <meta property="og:image" content="<?= $canonicalUrl ?>/docs/social-preview.png">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
@@ -725,8 +725,9 @@ $skillHtml = renderSkillMd($skillContent);
             <h2>A Theme Is One Number</h2>
             <p style="max-width:640px; margin:12px auto 0;">
                 Colours are derived in OKLCH from a single hue, so every theme keeps the
-                same lightness and the same contrast — white on the primary surface stays
-                between 4.3:1 and 5.3:1 in all six.
+                same lightness and the same contrast — white on the primary surface measures
+                between 4.69:1 and 5.73:1 across all six, so every one of them clears
+                WCAG AA rather than most of them.
             </p>
         </div>
         <figure style="margin:0; border-radius:16px; overflow:hidden;
@@ -937,9 +938,10 @@ $skillHtml = renderSkillMd($skillContent);
 <span class="cmd">git clone https://github.com/mmollay/gridkit.git</span>
 
 <span class="cmt"># Copy the skeleton as your starting point</span>
-<span class="cmd">cp gridkit/skeleton.php my-app/index.php</span>
+<span class="cmd">mkdir -p my-app &amp;&amp; cp gridkit/skeleton.php my-app/index.php</span>
 
-<span class="cmt"># That's it. Open in browser.</span></pre>
+<span class="cmt"># That's it. Open my-app/ in the browser.</span>
+<span class="cmd">php -S localhost:8000</span></pre>
             </div>
         </div>
 

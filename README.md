@@ -61,7 +61,7 @@ The snippet above is a table. This is what it looks like around one:
 
 [`examples/invoices/`](examples/invoices/) is a working invoice manager — list,
 create, edit, delete, with search, filter, sort and paging answered by the
-server over AJAX. English and German. About 300 lines across five files, no
+server over AJAX. English and German. Around 670 lines across five files, no
 database, no build step.
 
 ```bash
@@ -79,15 +79,32 @@ Then open <http://localhost:8000/examples/invoices/>. [What each file does.](exa
 composer require mmollay/gridkit
 ```
 
+Composer puts GridKit under `vendor/mmollay/gridkit/`, and its `css/` and `js/`
+go with it. `Layout::asset()` stamps the path you hand it — it does not resolve
+one — so hand it a path the browser can reach:
+
+```php
+<link rel="stylesheet" href="<?= Layout::asset('vendor/mmollay/gridkit/css/gridkit.css') ?>">
+<link rel="stylesheet" href="<?= Layout::asset('vendor/mmollay/gridkit/css/themes.css') ?>">
+<script src="<?= Layout::asset('vendor/mmollay/gridkit/js/gridkit.js') ?>"></script>
+```
+
+If `vendor/` sits outside your document root, copy or symlink
+`vendor/mmollay/gridkit/{css,js}` into the public root and drop the prefix.
+
 Or clone it — GridKit has no build step, so a checkout is a working install:
 
 ```bash
 git clone https://github.com/mmollay/gridkit.git
-cp gridkit/skeleton.php my-app/index.php
+mkdir -p my-app && cp gridkit/skeleton.php my-app/index.php
+php -S localhost:8000
 ```
 
-`skeleton.php` is a working page: sidebar, fixed header, theme switcher,
-content area, modal container, assets wired up.
+Then open <http://localhost:8000/my-app/>. `skeleton.php` is a working page:
+sidebar, fixed header, theme switcher, content area, a table with a modal form,
+assets wired up. It looks for GridKit beside itself, one directory up, and in
+`vendor/` — so the copy above works without editing anything. If you put it
+somewhere none of those reach, it says so and tells you which line to change.
 
 **Requirements:** PHP 8.2+ and a browser with CSS Custom Properties.
 No npm, no Composer plugins, no compilation. `mbstring` is used when present

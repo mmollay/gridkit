@@ -391,9 +391,11 @@ $table->variant('minimal');     // Only separator, no border
 $table->variant('flat');        // Completely flat
 $table->variant('inverted');    // Dark table (also in Light Mode)
 
-// Combinable:
-$table->variant('striped')->size('compact');
-$table->variant('celled')->variant('padded');</pre></div>
+// A variant is one slot: a second call REPLACES the first, it does not add.
+$table->variant('celled')->variant('padded');   // celled is dropped — padded wins
+
+// Variant and size are separate slots, so those two do stack:
+$table->variant('striped')->size('sm');</pre></div>
 
     <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
     <p class="demo-intro">Resize the browser window to &lt;768px to see the mobile layout.</p>
@@ -598,7 +600,7 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
         <?php
         $formAjax = new Form('ajax_select_demo');
         $formAjax->field('customer_id', 'Customer', 'ajaxselect', [
-                'url' => 'demo/api/search.php', 'value' => '', 'displayValue' => '', 'placeholder' => 'Search customer...',
+                'url' => 'api/search.php'   /* page-relative: the demo already lives in /demo/ */, 'value' => '', 'displayValue' => '', 'placeholder' => 'Search customer...',
                 'labelField' => 'name', 'valueField' => 'id', 'subtextField' => 'city', 'minChars' => 2, 'searchParam' => 'q',
             ])->render();
         ?>
@@ -1307,10 +1309,10 @@ $years->range(2022, 2026)->render();</pre></div>
             ->searchable(false)->paginate(false)->render();
         ?>
     </div>
-    <div class="demo-code"><pre>->column('amount', 'Amount', ['format' => 'currency'])    // 1,234.56 EUR
+    <div class="demo-code"><pre>->column('amount', 'Amount', ['format' => 'currency'])    // €1,234.56  (follows the locale)
 ->column('tax', 'VAT', ['format' => 'percent'])           // 20%
-->column('date', 'Date', ['format' => 'date'])            // 02/13/2026
-->column('active', 'Active', ['format' => 'boolean'])     // Yes / No
+->column('date', 'Date', ['format' => 'date'])            // Feb 13, 2026  (follows the locale)
+->column('active', 'Active', ['format' => 'boolean'])     // ✓ / –
 ->column('status', 'Status', ['format' => 'label'])       // Colored label
 ->column('email', 'E-Mail', ['format' => 'email'])        // mailto: Link</pre></div>
     </div>
@@ -1335,14 +1337,15 @@ $years->range(2022, 2026)->render();</pre></div>
   minLength: 0
 });
 
-// Server response:
-{ "gruppen": [
-    { "titel": "Buchungen",
-      "treffer": [
-        { "titel": "Hetzner",
-          "untertitel": "07.07.2026",
-          "betrag": "64,80 &euro;",
-          "url": "/buchung/2",
+// Server response. The German key names — gruppen / titel / treffer /
+// untertitel / betrag — are still read as a fallback, but this is the shape:
+{ "groups": [
+    { "title": "Transactions",
+      "items": [
+        { "title": "Hetzner",
+          "subtitle": "Jul 7, 2026",
+          "amount": "&euro;64.80",
+          "url": "/transactions/2",
           "icon": "account_balance" } ] } ] }</pre></div>
     </div>
 </div>
@@ -1926,7 +1929,7 @@ Auth::renderLogin([...]);    // Login page</div>
     </div>
 </div>
 
-<!-- ===== TOOLTIP ===== --><div class="demo-section" data-section="tooltip">    <h2>Tooltip</h2>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">CSS-only Tooltips</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Pure CSS tooltips via <code>data-gk-tooltip</code> attribute. No JavaScript needed.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="Tooltip on top" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Top (default)</span>            <span data-gk-tooltip="Tooltip on bottom" data-gk-tooltip-pos="bottom" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Bottom</span>            <span data-gk-tooltip="Tooltip on left" data-gk-tooltip-pos="left" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Left</span>            <span data-gk-tooltip="Tooltip on right" data-gk-tooltip-pos="right" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Right</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Multiline Tooltip</h3>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="This is a longer tooltip text that wraps to multiple lines for better readability" data-gk-tooltip-wrap style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Hover for multiline</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Rich Tooltip (HTML content)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Rich tooltips use <code>data-gk-tooltip-rich</code> pointing to a hidden element. Supports links, formatting, and stays open on hover.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip-rich="#richTip1" style="padding:8px 16px;background:var(--gk-primary);color:#fff;border-radius:6px;cursor:pointer">Hover for details</span>            <div id="richTip1">                <strong>GridKit Tooltip</strong>                <p style="margin:8px 0 4px;font-size:12px;color:var(--gk-on-surface-variant)">Rich tooltips support full HTML content including links, images, and interactive elements.</p>                <a href="#" style="font-size:12px">Learn more &rarr;</a>            </div>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Tooltip on Buttons</h3>        <div style="display:flex;gap:16px;align-items:center;justify-content:center;padding:40px 0">            <button class="gk-btn gk-btn-filled gk-btn-primary" data-gk-tooltip="Save your changes"><span class="material-icons" style="font-size:18px" aria-hidden="true">save</span> Save</button>            <button class="gk-btn gk-btn-outlined gk-btn-error" data-gk-tooltip="Delete this item" data-gk-tooltip-pos="bottom"><span class="material-icons" style="font-size:18px" aria-hidden="true">delete</span> Delete</button>            <button class="gk-btn gk-btn-tonal gk-btn-neutral" data-gk-tooltip="Print document" data-gk-tooltip-pos="right"><span class="material-icons" style="font-size:18px" aria-hidden="true">print</span></button>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Global title tooltip (GK.tip, since v1.23.0)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Any element with a <code>title</code> attribute gets a GridKit popup — no markup needed. Opt out with <code>data-gk-tip-off</code>.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span title="Upgraded automatically — just use title" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Element with title</span>            <span title="First line&#10;Second line (\n breaks)" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Multiline</span>            <span data-gk-tip-off><span title="This one is the browser's own" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Opt-out</span></span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 12px;font-size:15px">Usage</h3>        <pre style="background:var(--gk-surface-container);padding:16px;border-radius:8px;font-size:12px;line-height:1.6;overflow-x:auto">&lt;!-- Simple tooltip (CSS-only) --&gt;
+<!-- ===== TOOLTIP ===== --><div class="demo-section" data-section="tooltip">    <h2>Tooltip</h2>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">CSS-only Tooltips</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Pure CSS tooltips via <code>data-gk-tooltip</code> attribute. No JavaScript needed.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="Tooltip on top" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Top (default)</span>            <span data-gk-tooltip="Tooltip on bottom" data-gk-tooltip-pos="bottom" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Bottom</span>            <span data-gk-tooltip="Tooltip on left" data-gk-tooltip-pos="left" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Left</span>            <span data-gk-tooltip="Tooltip on right" data-gk-tooltip-pos="right" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Right</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Multiline Tooltip</h3>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="This is a longer tooltip text that wraps to multiple lines for better readability" data-gk-tooltip-wrap style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Hover for multiline</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Rich Tooltip (HTML content)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Rich tooltips use <code>data-gk-tooltip-rich</code> pointing to a hidden element. Supports links, formatting, and stays open on hover.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip-rich="#richTip1" style="padding:8px 16px;background:var(--gk-primary);color:#fff;border-radius:6px;cursor:pointer">Hover for details</span>            <div id="richTip1">                <strong>GridKit Tooltip</strong>                <p style="margin:8px 0 4px;font-size:12px;color:var(--gk-on-surface-variant)">Rich tooltips support full HTML content including links, images, and interactive elements.</p>                <a href="#" style="font-size:12px">Learn more &rarr;</a>            </div>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Tooltip on Buttons</h3>        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center;padding:40px 0">            <button class="gk-btn gk-btn-filled gk-btn-primary" data-gk-tooltip="Save your changes"><span class="material-icons" style="font-size:18px" aria-hidden="true">save</span> Save</button>            <button class="gk-btn gk-btn-outlined gk-btn-error" data-gk-tooltip="Delete this item" data-gk-tooltip-pos="bottom"><span class="material-icons" style="font-size:18px" aria-hidden="true">delete</span> Delete</button>            <button class="gk-btn gk-btn-tonal gk-btn-neutral" data-gk-tooltip="Print document" data-gk-tooltip-pos="right"><span class="material-icons" style="font-size:18px" aria-hidden="true">print</span></button>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Global title tooltip (GK.tip, since v1.23.0)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Any element with a <code>title</code> attribute gets a GridKit popup — no markup needed. Opt out with <code>data-gk-tip-off</code>.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span title="Upgraded automatically — just use title" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Element with title</span>            <span title="First line&#10;Second line (\n breaks)" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Multiline</span>            <span data-gk-tip-off><span title="This one is the browser's own" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Opt-out</span></span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 12px;font-size:15px">Usage</h3>        <pre style="background:var(--gk-surface-container);padding:16px;border-radius:8px;font-size:12px;line-height:1.6;overflow-x:auto">&lt;!-- Simple tooltip (CSS-only) --&gt;
 &lt;span data-gk-tooltip="Hello!"&gt;Hover me&lt;/span&gt;
 
 &lt;!-- Position: top (default), bottom, left, right --&gt;
