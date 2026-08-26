@@ -165,7 +165,6 @@ if (Table::isAjaxReload('invoices')) {
 
 </div>
 
-<?php Modal::container(); ?>
 <script src="<?= Layout::asset('../../js/gridkit.js') ?>"></script>
 </body>
 </html>

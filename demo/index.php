@@ -202,7 +202,7 @@ echo $demoHeader->title($headerTitle, true)
         'menu' => [
             ['label' => 'Profile', 'href' => '#', 'icon' => 'person'],
             ['label' => 'Settings', 'href' => '#', 'icon' => 'settings'],
-            '---',
+            'divider',
             ['label' => 'Sign out', 'href' => 'login.php?logout=1', 'icon' => 'logout'],
         ],
     ])
@@ -626,10 +626,10 @@ $form->row()
 
     <h3>File Upload (extended)</h3>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;">
-        <div class="demo-card" style="text-align:center;"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">drag_indicator</span><strong>Drag &amp; Drop</strong><p class="demo-intro" style="margin:8px 0 0;">Select files via drag &amp; drop or click</p></div>
-        <div class="demo-card" style="text-align:center;"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">verified</span><strong>Validation</strong><p class="demo-intro" style="margin:8px 0 0;">Type, size (min/max), count and total size</p></div>
-        <div class="demo-card" style="text-align:center;"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">image</span><strong>Preview</strong><p class="demo-intro" style="margin:8px 0 0;">Image thumbnails directly in the upload zone</p></div>
-        <div class="demo-card" style="text-align:center;"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;">list_alt</span><strong>Queue UI</strong><p class="demo-intro" style="margin:8px 0 0;">Progress indicator, states, errors per file</p></div>
+        <div class="demo-card" style="text-align:center;"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;" aria-hidden="true">drag_indicator</span><strong>Drag &amp; Drop</strong><p class="demo-intro" style="margin:8px 0 0;">Select files via drag &amp; drop or click</p></div>
+        <div class="demo-card" style="text-align:center;"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;" aria-hidden="true">verified</span><strong>Validation</strong><p class="demo-intro" style="margin:8px 0 0;">Type, size (min/max), count and total size</p></div>
+        <div class="demo-card" style="text-align:center;"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;" aria-hidden="true">image</span><strong>Preview</strong><p class="demo-intro" style="margin:8px 0 0;">Image thumbnails directly in the upload zone</p></div>
+        <div class="demo-card" style="text-align:center;"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);display:block;margin-bottom:8px;" aria-hidden="true">list_alt</span><strong>Queue UI</strong><p class="demo-intro" style="margin:8px 0 0;">Progress indicator, states, errors per file</p></div>
     </div>
 
     <div class="demo-card">
@@ -654,8 +654,8 @@ $form->row()
         <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Queue states live</h3>
         <p class="demo-intro">Manually cycle queue items through states: pending → uploading → done / error.</p>
         <div class="demo-btn-row" style="margin-bottom:16px;">
-            <button class="gk-btn gk-btn-primary" id="btn-queue-sim"><span class="material-icons" style="font-size:16px;">add_circle</span> Simulate file</button>
-            <button class="gk-btn gk-btn-filled gk-btn-danger" id="btn-queue-err"><span class="material-icons" style="font-size:16px;">error_outline</span> Simulate error</button>
+            <button class="gk-btn gk-btn-primary" id="btn-queue-sim"><span class="material-icons" style="font-size:16px;" aria-hidden="true">add_circle</span> Simulate file</button>
+            <button class="gk-btn gk-btn-filled gk-btn-danger" id="btn-queue-err"><span class="material-icons" style="font-size:16px;" aria-hidden="true">error_outline</span> Simulate error</button>
         </div>
         <div id="queue-demo-list" style="display:flex;flex-direction:column;gap:8px;"></div>
     </div>
@@ -809,10 +809,10 @@ $form->row()
 
     <h3 style="margin: 32px 0 16px;">Fixed column count</h3>
     <div class="gk-cards gk-cards-4">
-        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);margin-bottom:8px;display:block">speed</span><strong>Performance</strong><div class="gk-card-meta" style="margin-top:4px">99.9% Uptime</div></div></div>
-        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-success);margin-bottom:8px;display:block">security</span><strong>Security</strong><div class="gk-card-meta" style="margin-top:4px">SSL & Firewall</div></div></div>
-        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-warning);margin-bottom:8px;display:block">support_agent</span><strong>Support</strong><div class="gk-card-meta" style="margin-top:4px">Available 24/7</div></div></div>
-        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-info);margin-bottom:8px;display:block">backup</span><strong>Backups</strong><div class="gk-card-meta" style="margin-top:4px">Daily automatic</div></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-primary);margin-bottom:8px;display:block" aria-hidden="true">speed</span><strong>Performance</strong><div class="gk-card-meta" style="margin-top:4px">99.9% Uptime</div></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-success);margin-bottom:8px;display:block" aria-hidden="true">security</span><strong>Security</strong><div class="gk-card-meta" style="margin-top:4px">SSL & Firewall</div></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-warning);margin-bottom:8px;display:block" aria-hidden="true">support_agent</span><strong>Support</strong><div class="gk-card-meta" style="margin-top:4px">Available 24/7</div></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:32px;color:var(--gk-info);margin-bottom:8px;display:block" aria-hidden="true">backup</span><strong>Backups</strong><div class="gk-card-meta" style="margin-top:4px">Daily automatic</div></div></div>
     </div>
 
     <h3 style="margin: 32px 0 16px;">2 columns</h3>
@@ -823,9 +823,9 @@ $form->row()
 
     <h3 style="margin: 32px 0 16px;">3 columns</h3>
     <div class="gk-cards gk-cards-3">
-        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:28px;color:var(--gk-primary);display:block;margin-bottom:6px">web</span><strong>Web</strong></div></div>
-        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:28px;color:var(--gk-success);display:block;margin-bottom:6px">phone_android</span><strong>Mobile</strong></div></div>
-        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:28px;color:var(--gk-warning);display:block;margin-bottom:6px">cloud</span><strong>Cloud</strong></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:28px;color:var(--gk-primary);display:block;margin-bottom:6px" aria-hidden="true">web</span><strong>Web</strong></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:28px;color:var(--gk-success);display:block;margin-bottom:6px" aria-hidden="true">phone_android</span><strong>Mobile</strong></div></div>
+        <div class="gk-card"><div class="gk-card-body" style="text-align:center"><span class="material-icons" style="font-size:28px;color:var(--gk-warning);display:block;margin-bottom:6px" aria-hidden="true">cloud</span><strong>Cloud</strong></div></div>
     </div>
 
     <div class="demo-code"><pre>.gk-cards          // Auto-Grid (min 280px)
@@ -888,19 +888,19 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
     <h3>Message</h3>
     <p class="demo-intro">Notices, warnings and status messages for users.</p>
 
-    <div class="gk-message"><span class="material-icons">info</span><div class="gk-message-content">A neutral message without a specific status.</div></div>
+    <div class="gk-message"><span class="material-icons" aria-hidden="true">info</span><div class="gk-message-content">A neutral message without a specific status.</div></div>
 
     <h3 style="margin: 32px 0 16px;">Types</h3>
-    <div class="gk-message gk-message-info"><span class="material-icons">info</span><div class="gk-message-content"><div class="gk-message-header">Information</div>Your changes are saved automatically.</div></div>
-    <div class="gk-message gk-message-success"><span class="material-icons">check_circle</span><div class="gk-message-content"><div class="gk-message-header">Success</div>The profile has been successfully updated.</div></div>
-    <div class="gk-message gk-message-warning"><span class="material-icons">warning</span><div class="gk-message-content"><div class="gk-message-header">Warning</div>Your SSL certificate expires in 7 days.</div></div>
-    <div class="gk-message gk-message-error"><span class="material-icons">error</span><div class="gk-message-content"><div class="gk-message-header">Error</div>Could not establish connection to the database.<ul class="gk-message-list"><li>Host unreachable</li><li>Timeout after 30 seconds</li></ul></div></div>
+    <div class="gk-message gk-message-info"><span class="material-icons" aria-hidden="true">info</span><div class="gk-message-content"><div class="gk-message-header">Information</div>Your changes are saved automatically.</div></div>
+    <div class="gk-message gk-message-success"><span class="material-icons" aria-hidden="true">check_circle</span><div class="gk-message-content"><div class="gk-message-header">Success</div>The profile has been successfully updated.</div></div>
+    <div class="gk-message gk-message-warning"><span class="material-icons" aria-hidden="true">warning</span><div class="gk-message-content"><div class="gk-message-header">Warning</div>Your SSL certificate expires in 7 days.</div></div>
+    <div class="gk-message gk-message-error"><span class="material-icons" aria-hidden="true">error</span><div class="gk-message-content"><div class="gk-message-header">Error</div>Could not establish connection to the database.<ul class="gk-message-list"><li>Host unreachable</li><li>Timeout after 30 seconds</li></ul></div></div>
 
     <h3 style="margin: 32px 0 16px;">Compact</h3>
-    <div class="gk-message gk-message-info gk-message-compact"><span class="material-icons">info</span><div class="gk-message-content">Compact message for less space.</div></div>
+    <div class="gk-message gk-message-info gk-message-compact"><span class="material-icons" aria-hidden="true">info</span><div class="gk-message-content">Compact message for less space.</div></div>
 
     <h3 style="margin: 32px 0 16px;">Dismissible</h3>
-    <div class="gk-message gk-message-warning" id="demo-dismiss-msg"><span class="material-icons">warning</span><div class="gk-message-content">This message can be closed.</div><button class="gk-message-dismiss" onclick="this.parentElement.style.display='none'"><span class="material-icons">close</span></button></div>
+    <div class="gk-message gk-message-warning" id="demo-dismiss-msg"><span class="material-icons" aria-hidden="true">warning</span><div class="gk-message-content">This message can be closed.</div><button class="gk-message-dismiss" onclick="this.parentElement.style.display='none'"><span class="material-icons" aria-hidden="true">close</span></button></div>
 
     <div class="demo-code"><pre>.gk-message / .gk-message-info / .gk-message-success
 .gk-message-warning / .gk-message-error / .gk-message-compact
@@ -918,7 +918,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
         <div class="gk-accordion-item open">
             <button class="gk-accordion-trigger">
                 <span>What is GridKit?</span>
-                <span class="material-icons">expand_more</span>
+                <span class="material-icons" aria-hidden="true">expand_more</span>
             </button>
             <div class="gk-accordion-content">
                 <div class="gk-accordion-body">GridKit is a lightweight PHP/CSS/JS framework for admin dashboards and internal tools. Zero dependencies, M3-inspired.</div>
@@ -927,7 +927,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
         <div class="gk-accordion-item">
             <button class="gk-accordion-trigger">
                 <span>What components are available?</span>
-                <span class="material-icons">expand_more</span>
+                <span class="material-icons" aria-hidden="true">expand_more</span>
             </button>
             <div class="gk-accordion-content">
                 <div class="gk-accordion-body">Table, Form, Modal, Cards, StatCards, Sidebar, Header, Tabs, Accordion, Breadcrumb, Toast, Confirm and more. All with Light &amp; Dark Mode.</div>
@@ -936,7 +936,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
         <div class="gk-accordion-item">
             <button class="gk-accordion-trigger">
                 <span>Do I need npm or build tools?</span>
-                <span class="material-icons">expand_more</span>
+                <span class="material-icons" aria-hidden="true">expand_more</span>
             </button>
             <div class="gk-accordion-content">
                 <div class="gk-accordion-body">No. GridKit has no dependencies &mdash; one CSS file, one JS file, done. Just include and get started.</div>
@@ -1058,12 +1058,12 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 
     <div class="gk-segment">
         <nav class="gk-breadcrumb">
-            <a href="#"><span class="material-icons">home</span></a>
-            <span class="gk-breadcrumb-sep"><span class="material-icons">chevron_right</span></span>
+            <a href="#"><span class="material-icons" aria-hidden="true">home</span></a>
+            <span class="gk-breadcrumb-sep"><span class="material-icons" aria-hidden="true">chevron_right</span></span>
             <a href="#">Products</a>
-            <span class="gk-breadcrumb-sep"><span class="material-icons">chevron_right</span></span>
+            <span class="gk-breadcrumb-sep"><span class="material-icons" aria-hidden="true">chevron_right</span></span>
             <a href="#">Hosting</a>
-            <span class="gk-breadcrumb-sep"><span class="material-icons">chevron_right</span></span>
+            <span class="gk-breadcrumb-sep"><span class="material-icons" aria-hidden="true">chevron_right</span></span>
             <span class="gk-breadcrumb-current">Managed Server</span>
         </nav>
         <p style="color:var(--gk-on-surface-variant);font-size:13px;margin:0">Page content here...</p>
@@ -1127,7 +1127,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
                 <div class="gk-accordion-item open">
                     <button class="gk-accordion-trigger">
                         <span>Webdesign Packages</span>
-                        <span class="material-icons">expand_more</span>
+                        <span class="material-icons" aria-hidden="true">expand_more</span>
                     </button>
                     <div class="gk-accordion-content">
                         <div class="gk-accordion-body">3 packages available: S (1,200 &euro;), M (2,400 &euro;), L (3,500 &euro;). All incl. responsive design and CMS.</div>
@@ -1136,7 +1136,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
                 <div class="gk-accordion-item">
                     <button class="gk-accordion-trigger">
                         <span>Hosting &amp; Server</span>
-                        <span class="material-icons">expand_more</span>
+                        <span class="material-icons" aria-hidden="true">expand_more</span>
                     </button>
                     <div class="gk-accordion-content">
                         <div class="gk-accordion-body">Managed hosting from 9.90 &euro;/month. SSD, backups, SSL included. 99.9% uptime guarantee.</div>
@@ -1146,7 +1146,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
         </div>
         <div class="gk-tab-panel" data-tab="combo-kunden">
             <div class="gk-message gk-message-info" style="margin-top:16px">
-                <span class="material-icons">info</span>
+                <span class="material-icons" aria-hidden="true">info</span>
                 <div class="gk-message-content">24 active customers, 3 open inquiries</div>
             </div>
             <div class="gk-cards gk-cards-3" style="margin-top:12px">
@@ -1171,7 +1171,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
     <div class="gk-segment">
         <div class="gk-segment-header">Server-Status</div>
         <div class="gk-message gk-message-success gk-message-compact" style="margin-bottom:16px">
-            <span class="material-icons">check_circle</span>
+            <span class="material-icons" aria-hidden="true">check_circle</span>
             <div class="gk-message-content">All 3 servers are online &mdash; last check 2 minutes ago.</div>
         </div>
         <table class="gk-table">
@@ -1326,7 +1326,7 @@ $years->range(2022, 2026)->render();</pre></div>
            <kbd>Ctrl</kbd>+<kbd>K</kbd> (<kbd>Cmd</kbd>+<kbd>K</kbd> on Mac) or any element
            carrying <code>data-gk-search</code>. Arrow keys select, Enter opens, Escape closes.</p>
         <div class="demo-btn-row">
-            <button class="gk-btn gk-btn-primary" data-gk-search><span class="material-icons" style="font-size:16px">search</span> Open search</button>
+            <button class="gk-btn gk-btn-primary" data-gk-search><span class="material-icons" style="font-size:16px" aria-hidden="true">search</span> Open search</button>
         </div>
     </div>
     <div class="demo-code"><pre>GK.search.init({
@@ -1356,10 +1356,10 @@ $years->range(2022, 2026)->render();</pre></div>
     <div class="demo-card">
         <p class="demo-intro">Toast notifications for success, error and info messages. Disappear after 3 seconds.</p>
         <div class="demo-btn-row">
-            <button class="gk-btn gk-btn-filled gk-btn-success" onclick="GK.toast.success('Successfully saved!')"><span class="material-icons" style="font-size:16px">check_circle</span> Success</button>
-            <button class="gk-btn gk-btn-filled gk-btn-danger" onclick="GK.toast.error('Error while saving!')"><span class="material-icons" style="font-size:16px">error</span> Error</button>
-            <button class="gk-btn gk-btn-filled gk-btn-warning" onclick="GK.toast.warning('Warning: Limit reached!')"><span class="material-icons" style="font-size:16px">warning</span> Warning</button>
-            <button class="gk-btn gk-btn-primary" onclick="GK.toast.info('3 new entries available')"><span class="material-icons" style="font-size:16px">info</span> Info</button>
+            <button class="gk-btn gk-btn-filled gk-btn-success" onclick="GK.toast.success('Successfully saved!')"><span class="material-icons" style="font-size:16px" aria-hidden="true">check_circle</span> Success</button>
+            <button class="gk-btn gk-btn-filled gk-btn-danger" onclick="GK.toast.error('Error while saving!')"><span class="material-icons" style="font-size:16px" aria-hidden="true">error</span> Error</button>
+            <button class="gk-btn gk-btn-filled gk-btn-warning" onclick="GK.toast.warning('Warning: Limit reached!')"><span class="material-icons" style="font-size:16px" aria-hidden="true">warning</span> Warning</button>
+            <button class="gk-btn gk-btn-primary" onclick="GK.toast.info('3 new entries available')"><span class="material-icons" style="font-size:16px" aria-hidden="true">info</span> Info</button>
         </div>
     </div>
     <div class="demo-code"><pre>GK.toast.success('Successfully saved!');
@@ -1375,8 +1375,8 @@ GK.toast.info('3 new entries');</pre></div>
     <div class="demo-card">
         <p class="demo-intro">Confirm dialogs as clean modals. Promise-based, with danger mode for destructive actions.</p>
         <div class="demo-btn-row">
-            <button class="gk-btn gk-btn-primary" onclick="GK.confirm('Send invoice to customer?', {title:'Send Invoice', confirmText:'Send'}).then(function(ok){ if(ok) GK.toast.success('Sent!'); })"><span class="material-icons" style="font-size:16px">send</span> Standard Confirm</button>
-            <button class="gk-btn gk-btn-danger" onclick="GK.confirm('Really permanently delete this entry?', {title:'Delete Entry', confirmText:'Delete', danger:true}).then(function(ok){ if(ok) GK.toast.success('Deleted!'); })"><span class="material-icons" style="font-size:16px">delete_forever</span> Danger Confirm</button>
+            <button class="gk-btn gk-btn-primary" onclick="GK.confirm('Send invoice to customer?', {title:'Send Invoice', confirmText:'Send'}).then(function(ok){ if(ok) GK.toast.success('Sent!'); })"><span class="material-icons" style="font-size:16px" aria-hidden="true">send</span> Standard Confirm</button>
+            <button class="gk-btn gk-btn-danger" onclick="GK.confirm('Really permanently delete this entry?', {title:'Delete Entry', confirmText:'Delete', danger:true}).then(function(ok){ if(ok) GK.toast.success('Deleted!'); })"><span class="material-icons" style="font-size:16px" aria-hidden="true">delete_forever</span> Danger Confirm</button>
         </div>
     </div>
     <div class="demo-code"><pre>GK.confirm('Send invoice?', {
@@ -1396,24 +1396,24 @@ GK.confirm('Really delete?', {
             <div class="demo-card">
                 <p class="demo-intro">Modals in four sizes. Loaded via AJAX, backdrop click and ESC close them.</p>
                 <div class="demo-btn-row">
-                    <button class="gk-btn" onclick="GK.modal.open('Small (420px)', 'demo/form/f_delete.php', {}, 'small')"><span class="material-icons" style="font-size:16px">crop_square</span> Small</button>
-                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Medium (640px)', 'demo/form/f_articles.php', {}, 'medium')"><span class="material-icons" style="font-size:16px">crop_din</span> Medium</button>
-                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Large (900px)', 'demo/form/f_articles.php', {}, 'large')"><span class="material-icons" style="font-size:16px">crop_free</span> Large</button>
-                    <button class="gk-btn gk-btn-filled gk-btn-neutral" onclick="GK.modal.open('Fullscreen Modal', 'demo/form/f_articles.php', {}, 'full')"><span class="material-icons" style="font-size:16px">fullscreen</span> Full</button>
+                    <button class="gk-btn" onclick="GK.modal.open('Small (420px)', 'demo/form/f_delete.php', {}, 'small')"><span class="material-icons" style="font-size:16px" aria-hidden="true">crop_square</span> Small</button>
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Medium (640px)', 'demo/form/f_articles.php', {}, 'medium')"><span class="material-icons" style="font-size:16px" aria-hidden="true">crop_din</span> Medium</button>
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Large (900px)', 'demo/form/f_articles.php', {}, 'large')"><span class="material-icons" style="font-size:16px" aria-hidden="true">crop_free</span> Large</button>
+                    <button class="gk-btn gk-btn-filled gk-btn-neutral" onclick="GK.modal.open('Fullscreen Modal', 'demo/form/f_articles.php', {}, 'full')"><span class="material-icons" style="font-size:16px" aria-hidden="true">fullscreen</span> Full</button>
                 </div>
             </div>
             <div class="demo-card">
                 <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Nesting: Modal with form</h3>
                 <p class="demo-intro">A modal loads a form via AJAX – the most common use case.</p>
                 <div class="demo-btn-row">
-                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Edit Article', 'demo/form/f_articles.php', {}, 'medium')"><span class="material-icons" style="font-size:16px">edit</span> Modal + Form</button>
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Edit Article', 'demo/form/f_articles.php', {}, 'medium')"><span class="material-icons" style="font-size:16px" aria-hidden="true">edit</span> Modal + Form</button>
                 </div>
             </div>
             <div class="demo-card">
                 <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Nesting: Modal with table + sub-modal</h3>
                 <p class="demo-intro">A large modal shows a customer list. Clicking "Edit" opens a second modal with the form.</p>
                 <div class="demo-btn-row">
-                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Customer Management', 'demo/form/f_table_modal.php', {}, 'large')"><span class="material-icons" style="font-size:16px">people</span> Modal + Table + Sub-Modal</button>
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Customer Management', 'demo/form/f_table_modal.php', {}, 'large')"><span class="material-icons" style="font-size:16px" aria-hidden="true">people</span> Modal + Table + Sub-Modal</button>
                 </div>
             </div>
         </div>
@@ -1634,7 +1634,7 @@ Button::icon('edit', ['title' => 'Edit']);
             <table class="gk-table">
                 <thead><tr><th>Name</th><th>E-Mail</th><th>Status</th></tr></thead>
                 <tbody>
-                    <tr><td colspan="3"><div class="gk-empty"><span class="material-icons" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.5">inbox</span>No entries found</div></td></tr>
+                    <tr><td colspan="3"><div class="gk-empty"><span class="material-icons" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.5" aria-hidden="true">inbox</span>No entries found</div></td></tr>
                 </tbody>
             </table>
         </div>
@@ -1763,7 +1763,7 @@ GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
         </p>
         <a class="gk-btn gk-btn-filled gk-btn-primary gk-btn-sm"
            href="../examples/invoices/?lang=<?= $lang ?>">
-            <span class="material-icons" style="font-size:16px;vertical-align:-3px;">open_in_new</span>
+            <span class="material-icons" style="font-size:16px;vertical-align:-3px;" aria-hidden="true">open_in_new</span>
             Open the example application
         </a>
     </div>
@@ -1826,16 +1826,16 @@ GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
             <div class="anatomy-mockup" style="border:2px solid var(--gk-outline-variant);border-radius:10px;overflow:hidden;font-size:11px;display:flex;flex-direction:column;">
                 <!-- Config bar -->
                 <div style="background:var(--gk-primary);color:#fff;padding:6px 10px;font-weight:600;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;display:flex;align-items:center;gap:6px;">
-                    <span class="material-icons" style="font-size:13px">settings</span> Config
+                    <span class="material-icons" style="font-size:13px" aria-hidden="true">settings</span> Config
                 </div>
                 <div style="display:flex;flex:1;">
                     <!-- Sidebar mock -->
                     <div style="width:56px;background:var(--gk-surface-dim);border-right:1px solid var(--gk-outline-variant);display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:6px;">
-                        <span class="material-icons" style="font-size:16px;color:var(--gk-primary)">widgets</span>
+                        <span class="material-icons" style="font-size:16px;color:var(--gk-primary)" aria-hidden="true">widgets</span>
                         <div style="width:24px;height:2px;background:var(--gk-outline-variant);border-radius:1px;margin:2px 0;"></div>
-                        <span class="material-icons" style="font-size:14px;color:var(--gk-on-surface-variant)">home</span>
-                        <span class="material-icons" style="font-size:14px;color:var(--gk-on-surface-variant)">people</span>
-                        <span class="material-icons" style="font-size:14px;color:var(--gk-on-surface-variant)">settings</span>
+                        <span class="material-icons" style="font-size:14px;color:var(--gk-on-surface-variant)" aria-hidden="true">home</span>
+                        <span class="material-icons" style="font-size:14px;color:var(--gk-on-surface-variant)" aria-hidden="true">people</span>
+                        <span class="material-icons" style="font-size:14px;color:var(--gk-on-surface-variant)" aria-hidden="true">settings</span>
                         <div style="flex:1"></div>
                         <span style="font-size:9px;color:var(--gk-on-surface-variant);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:0.1em;">SIDEBAR</span>
                     </div>
@@ -1844,7 +1844,7 @@ GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
                         <div style="padding:8px 10px;border-bottom:1px solid var(--gk-outline-variant);display:flex;align-items:center;justify-content:space-between;background:var(--gk-surface);">
                             <span style="font-weight:600;font-size:11px;color:var(--gk-on-surface)">Header</span>
                             <div style="display:flex;gap:4px;align-items:center;">
-                                <span class="material-icons" style="font-size:13px;color:var(--gk-on-surface-variant)">search</span>
+                                <span class="material-icons" style="font-size:13px;color:var(--gk-on-surface-variant)" aria-hidden="true">search</span>
                                 <div style="width:16px;height:16px;border-radius:50%;background:var(--gk-primary-container)"></div>
                             </div>
                         </div>
@@ -1868,38 +1868,38 @@ GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
             <!-- Code reference -->
             <div style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:0;">
                 <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-primary);border-radius:8px;color:#fff;">
-                    <span class="material-icons" style="font-size:18px">settings</span>
+                    <span class="material-icons" style="font-size:18px" aria-hidden="true">settings</span>
                     <div style="flex:1;min-width:0;">
                         <div style="font-weight:600;font-size:13px;">Configuration</div>
                         <code style="font-size:11px;opacity:0.85;word-break:break-all;">Theme::set('indigo') · Layout::bodyTag('gk-root')</code>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-surface-container);border-radius:8px;border:1px solid var(--gk-outline-variant);">
-                    <span class="material-icons" style="font-size:18px;color:var(--gk-secondary)">menu</span>
+                    <span class="material-icons" style="font-size:18px;color:var(--gk-secondary)" aria-hidden="true">menu</span>
                     <div style="flex:1;min-width:0;">
                         <div style="font-weight:600;font-size:13px;color:var(--gk-on-surface);">Sidebar</div>
                         <code style="font-size:11px;color:var(--gk-on-surface-variant);word-break:break-all;">->brand() · ->group() · ->item(label, url, icon)</code>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-surface-container);border-radius:8px;border:1px solid var(--gk-outline-variant);">
-                    <span class="material-icons" style="font-size:18px;color:var(--gk-tertiary, #7c3aed)">web</span>
+                    <span class="material-icons" style="font-size:18px;color:var(--gk-tertiary, #7c3aed)" aria-hidden="true">web</span>
                     <div style="flex:1;min-width:0;">
                         <div style="font-weight:600;font-size:13px;color:var(--gk-on-surface);">Header</div>
                         <code style="font-size:11px;color:var(--gk-on-surface-variant);word-break:break-all;">->title() · ->fixed() · ->user(name, opts)</code>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-surface-container);border-radius:8px;border:1px solid var(--gk-outline-variant);flex:1;">
-                    <span class="material-icons" style="font-size:18px;color:var(--gk-error)">dashboard</span>
+                    <span class="material-icons" style="font-size:18px;color:var(--gk-error)" aria-hidden="true">dashboard</span>
                     <div style="flex:1;min-width:0;">
                         <div style="font-weight:600;font-size:13px;color:var(--gk-on-surface);">Content</div>
                         <code style="font-size:11px;color:var(--gk-on-surface-variant);word-break:break-all;">&lt;main class="gk-main"&gt; · Tables, Forms, Cards…</code>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-surface-container);border-radius:8px;border:1px solid var(--gk-outline-variant);">
-                    <span class="material-icons" style="font-size:18px;color:var(--gk-outline)">code</span>
+                    <span class="material-icons" style="font-size:18px;color:var(--gk-outline)" aria-hidden="true">code</span>
                     <div style="flex:1;min-width:0;">
                         <div style="font-weight:600;font-size:13px;color:var(--gk-on-surface);">Footer</div>
-                        <code style="font-size:11px;color:var(--gk-on-surface-variant);word-break:break-all;">Modal::container() · &lt;script src="gridkit.js"&gt;</code>
+                        <code style="font-size:11px;color:var(--gk-on-surface-variant);word-break:break-all;">&lt;script src="gridkit.js"&gt;</code>
                     </div>
                 </div>
             </div>
@@ -1921,12 +1921,12 @@ Auth::renderLogin([...]);    // Login page</div>
     </div>
     <div class="demo-card" style="text-align:center">
         <p style="margin:0 0 12px;color:var(--gk-on-surface-variant)">Open the login page live demo:</p>
-        <a href="login.php" target="_blank" class="gk-btn gk-btn-filled gk-btn-primary"><span class="material-icons">lock_open</span> Open Login Demo</a>
+        <a href="login.php" target="_blank" class="gk-btn gk-btn-filled gk-btn-primary"><span class="material-icons" aria-hidden="true">lock_open</span> Open Login Demo</a>
         <p style="margin:12px 0 0;font-size:12px;color:var(--gk-on-surface-variant)">Credentials: <strong>demo</strong> / <strong>demo</strong></p>
     </div>
 </div>
 
-<!-- ===== TOOLTIP ===== --><div class="demo-section" data-section="tooltip">    <h2>Tooltip</h2>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">CSS-only Tooltips</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Pure CSS tooltips via <code>data-gk-tooltip</code> attribute. No JavaScript needed.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="Tooltip on top" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Top (default)</span>            <span data-gk-tooltip="Tooltip on bottom" data-gk-tooltip-pos="bottom" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Bottom</span>            <span data-gk-tooltip="Tooltip on left" data-gk-tooltip-pos="left" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Left</span>            <span data-gk-tooltip="Tooltip on right" data-gk-tooltip-pos="right" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Right</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Multiline Tooltip</h3>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="This is a longer tooltip text that wraps to multiple lines for better readability" data-gk-tooltip-wrap style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Hover for multiline</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Rich Tooltip (HTML content)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Rich tooltips use <code>data-gk-tooltip-rich</code> pointing to a hidden element. Supports links, formatting, and stays open on hover.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip-rich="#richTip1" style="padding:8px 16px;background:var(--gk-primary);color:#fff;border-radius:6px;cursor:pointer">Hover for details</span>            <div id="richTip1">                <strong>GridKit Tooltip</strong>                <p style="margin:8px 0 4px;font-size:12px;color:var(--gk-on-surface-variant)">Rich tooltips support full HTML content including links, images, and interactive elements.</p>                <a href="#" style="font-size:12px">Learn more &rarr;</a>            </div>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Tooltip on Buttons</h3>        <div style="display:flex;gap:16px;align-items:center;justify-content:center;padding:40px 0">            <button class="gk-btn gk-btn-filled gk-btn-primary" data-gk-tooltip="Save your changes"><span class="material-icons" style="font-size:18px">save</span> Save</button>            <button class="gk-btn gk-btn-outlined gk-btn-error" data-gk-tooltip="Delete this item" data-gk-tooltip-pos="bottom"><span class="material-icons" style="font-size:18px">delete</span> Delete</button>            <button class="gk-btn gk-btn-tonal gk-btn-neutral" data-gk-tooltip="Print document" data-gk-tooltip-pos="right"><span class="material-icons" style="font-size:18px">print</span></button>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Global title tooltip (GK.tip, since v1.23.0)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Any element with a <code>title</code> attribute gets a GridKit popup — no markup needed. Opt out with <code>data-gk-tip-off</code>.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span title="Upgraded automatically — just use title" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Element with title</span>            <span title="First line&#10;Second line (\n breaks)" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Multiline</span>            <span data-gk-tip-off><span title="This one is the browser's own" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Opt-out</span></span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 12px;font-size:15px">Usage</h3>        <pre style="background:var(--gk-surface-container);padding:16px;border-radius:8px;font-size:12px;line-height:1.6;overflow-x:auto">&lt;!-- Simple tooltip (CSS-only) --&gt;
+<!-- ===== TOOLTIP ===== --><div class="demo-section" data-section="tooltip">    <h2>Tooltip</h2>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">CSS-only Tooltips</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Pure CSS tooltips via <code>data-gk-tooltip</code> attribute. No JavaScript needed.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="Tooltip on top" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Top (default)</span>            <span data-gk-tooltip="Tooltip on bottom" data-gk-tooltip-pos="bottom" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Bottom</span>            <span data-gk-tooltip="Tooltip on left" data-gk-tooltip-pos="left" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Left</span>            <span data-gk-tooltip="Tooltip on right" data-gk-tooltip-pos="right" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Right</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Multiline Tooltip</h3>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="This is a longer tooltip text that wraps to multiple lines for better readability" data-gk-tooltip-wrap style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Hover for multiline</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Rich Tooltip (HTML content)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Rich tooltips use <code>data-gk-tooltip-rich</code> pointing to a hidden element. Supports links, formatting, and stays open on hover.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip-rich="#richTip1" style="padding:8px 16px;background:var(--gk-primary);color:#fff;border-radius:6px;cursor:pointer">Hover for details</span>            <div id="richTip1">                <strong>GridKit Tooltip</strong>                <p style="margin:8px 0 4px;font-size:12px;color:var(--gk-on-surface-variant)">Rich tooltips support full HTML content including links, images, and interactive elements.</p>                <a href="#" style="font-size:12px">Learn more &rarr;</a>            </div>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Tooltip on Buttons</h3>        <div style="display:flex;gap:16px;align-items:center;justify-content:center;padding:40px 0">            <button class="gk-btn gk-btn-filled gk-btn-primary" data-gk-tooltip="Save your changes"><span class="material-icons" style="font-size:18px" aria-hidden="true">save</span> Save</button>            <button class="gk-btn gk-btn-outlined gk-btn-error" data-gk-tooltip="Delete this item" data-gk-tooltip-pos="bottom"><span class="material-icons" style="font-size:18px" aria-hidden="true">delete</span> Delete</button>            <button class="gk-btn gk-btn-tonal gk-btn-neutral" data-gk-tooltip="Print document" data-gk-tooltip-pos="right"><span class="material-icons" style="font-size:18px" aria-hidden="true">print</span></button>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Global title tooltip (GK.tip, since v1.23.0)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Any element with a <code>title</code> attribute gets a GridKit popup — no markup needed. Opt out with <code>data-gk-tip-off</code>.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span title="Upgraded automatically — just use title" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Element with title</span>            <span title="First line&#10;Second line (\n breaks)" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Multiline</span>            <span data-gk-tip-off><span title="This one is the browser's own" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Opt-out</span></span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 12px;font-size:15px">Usage</h3>        <pre style="background:var(--gk-surface-container);padding:16px;border-radius:8px;font-size:12px;line-height:1.6;overflow-x:auto">&lt;!-- Simple tooltip (CSS-only) --&gt;
 &lt;span data-gk-tooltip="Hello!"&gt;Hover me&lt;/span&gt;
 
 &lt;!-- Position: top (default), bottom, left, right --&gt;
@@ -1972,7 +1972,6 @@ Auth::renderLogin([...]);    // Login page</div>
     ?>
 </div>
 
-<?php Modal::container(); ?>
 </div><!-- /gk-with-sidebar -->
 
 <script src="<?= Layout::asset('../js/gridkit.js') ?>"></script>
@@ -2030,7 +2029,7 @@ document.querySelectorAll('.gk-upload-zone[data-gk-upload]').forEach(function(zo
         var item = { file: fakeFile, el: null, id: 'qdemo-' + (++simCounter) };
         var el = document.createElement('div');
         el.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-surface-container);border-radius:6px;font-size:13px;';
-        el.innerHTML = '<span class="material-icons" style="font-size:18px;color:var(--gk-primary);">hourglass_empty</span>'
+        el.innerHTML = '<span class="material-icons" style="font-size:18px;color:var(--gk-primary);" aria-hidden="true">hourglass_empty</span>'
                      + '<span style="flex:1;">' + label + '</span>'
                      + '<span style="color:var(--gk-on-surface-variant);">' + (GK._formatSize ? GK._formatSize(fakeFile.size) : '') + '</span>';
         item.el = el;

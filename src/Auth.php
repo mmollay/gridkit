@@ -149,7 +149,7 @@ class Auth {
 
         $errorHtml = $error === '' ? '' :
             '<div class="gk-login-error">'
-            . '<span class="material-icons" style="font-size:16px">error_outline</span>'
+            . '<span class="material-icons" style="font-size:16px" aria-hidden="true">error_outline</span>'
             . $error . '</div>';
 
         echo <<<HTML
@@ -260,7 +260,7 @@ class Auth {
     <div class="gk-login-card">
         <div class="gk-login-header">
             <div class="gk-login-icon">
-                <span class="material-icons">{$icon}</span>
+                <span class="material-icons" aria-hidden="true">{$icon}</span>
             </div>
             <h1 class="gk-login-title">{$title}</h1>
             <p class="gk-login-subtitle">{$subtitle}</p>

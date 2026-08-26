@@ -45,10 +45,17 @@ class Layout {
         // With the bare version, a changed file stays stuck behind the old
         // parameter during development, and a hotfix to a single file would go
         // unnoticed without a version bump.
+        // The test used to be `$tail !== $path` — did preg_replace change
+        // anything? For '../css/gridkit.css' it does, so that spelling got the
+        // timestamp. For the bare 'css/gridkit.css' the capture equals the
+        // whole input, nothing changes, and the branch was skipped — which is
+        // exactly the form skeleton.php and GRIDKIT_SKILL.md tell you to use.
+        // So the one path everybody copies was the one that never got the
+        // precise stamp the comment above promises. Match instead of compare.
         $root = dirname(__DIR__);
-        $tail = preg_replace('#^.*?((?:css|js|vendor)/.*)$#', '$1', $path);
+        $tail = preg_match('#^(?:.*/)?((?:css|js|vendor)/.*)$#', $path, $m) ? $m[1] : null;
         $file = $root . '/' . ltrim((string)$tail, '/');
-        $stamp = ($tail !== null && $tail !== $path && is_file($file))
+        $stamp = ($tail !== null && is_file($file))
             ? (string)filemtime($file)
             : self::version();
 

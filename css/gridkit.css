@@ -371,7 +371,23 @@ a:hover {
   margin-right: 4px;
 }
 /* Align gk-select-search in a toolbar with gk-search / gk-filter (otherwise 44px instead of ~34px) */
-.gk-toolbar .gk-select-search .gk-select-display {
+.gk-toolbar .gk-select-search /* The value carrier of a searchable select. It used to be type="hidden",
+   which the HTML standard bars from constraint validation — so ['required']
+   was accepted, emitted, and silently did nothing: the form submitted empty.
+   It must stay a real, focusable control for the browser to anchor its
+   validation bubble, so it is hidden by opacity rather than display:none, and
+   readonly is deliberately absent (readonly also disables validation). */
+.gk-select-value-input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    border: 0;
+    pointer-events: none;
+}
+
+.gk-select-display {
   padding: 6px 12px;
   height: 34px;        /* override the generic height:44px from .gk-select-display */
   min-height: 34px;
@@ -2628,18 +2644,39 @@ select.gk-input {
 .gk-chip-active:hover {
   background: var(--gk-primary-hover);
 }
-.gk-chip-danger.gk-chip-active {
+/* Chip colours. FilterChips passes ['color' => x] straight through as
+   .gk-chip-x, so whatever the caller writes has to have a rule here. Three
+   existed; the demo ships green, orange, red and blue, and the skill document
+   teaches primary — all of which rendered as an unstyled chip. The literal
+   names are aliases of the semantic ones rather than a second palette. */
+.gk-chip-danger.gk-chip-active,
+.gk-chip-red.gk-chip-active {
   background: var(--gk-danger);
   border-color: var(--gk-danger);
+  color: var(--gk-on-primary, #fff);
 }
-.gk-chip-success.gk-chip-active {
+.gk-chip-success.gk-chip-active,
+.gk-chip-green.gk-chip-active {
   background: var(--gk-success);
   border-color: var(--gk-success);
+  color: var(--gk-on-primary, #fff);
 }
-.gk-chip-warning.gk-chip-active {
+.gk-chip-warning.gk-chip-active,
+.gk-chip-orange.gk-chip-active {
   background: var(--gk-warning);
   border-color: var(--gk-warning);
   color: #1f2937;
+}
+.gk-chip-primary.gk-chip-active,
+.gk-chip-blue.gk-chip-active {
+  background: var(--gk-primary);
+  border-color: var(--gk-primary);
+  color: var(--gk-on-primary, #fff);
+}
+.gk-chip-neutral.gk-chip-active {
+  background: var(--gk-surface-container-highest);
+  border-color: var(--gk-outline);
+  color: var(--gk-on-surface);
 }
 .gk-chip-sm {
   padding: 4px 10px;
@@ -2702,6 +2739,16 @@ a.gk-stat-card:hover {
 .gk-stat-highlight {
   color: var(--gk-danger);
 }
+
+/* Trend indicator on a KPI tile. --gk-success and --gk-error are both
+   redeclared for dark mode, so this needs no dark-mode block of its own. */
+.gk-stat-trend {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    margin-top: 2px;
+}
+.gk-stat-trend-up   { color: var(--gk-success-text, var(--gk-success)); }
+.gk-stat-trend-down { color: var(--gk-danger-text,  var(--gk-error)); }
 .gk-stat-icon {
   font-size: var(--gk-icon-2xl);
   color: var(--gk-primary);

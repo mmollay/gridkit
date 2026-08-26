@@ -48,34 +48,34 @@ class BelegModal
                 <button type="button" data-gk-beleg-unlink
                         class="gk-btn gk-btn-text gk-btn-danger gk-btn-sm gk-hidden"
                         title="{$t('doc.unlink_title')}">
-                    <span class="material-icons">link_off</span>
+                    <span class="material-icons" aria-hidden="true">link_off</span>
                     <span class="gk-beleg-btn-label">{$t('doc.unlink')}</span>
                 </button>
                 <a data-gk-beleg-download href="#" download target="_blank" rel="noopener"
                    class="gk-btn gk-btn-outlined gk-btn-neutral gk-btn-sm" title="{$t('doc.download_title')}">
-                    <span class="material-icons">download</span>
+                    <span class="material-icons" aria-hidden="true">download</span>
                     <span class="gk-beleg-btn-label">{$t('doc.download')}</span>
                 </a>
                 <a data-gk-beleg-open href="#" target="_blank" rel="noopener"
                    class="gk-btn gk-btn-outlined gk-btn-primary gk-btn-sm" title="{$t('doc.open_tab_title')}">
-                    <span class="material-icons">open_in_new</span>
+                    <span class="material-icons" aria-hidden="true">open_in_new</span>
                     <span class="gk-beleg-btn-label">{$t('doc.open_tab')}</span>
                 </a>
                 <button type="button" data-gk-beleg-close
                         class="gk-btn gk-btn-text gk-btn-neutral gk-btn-sm gk-beleg-modal-close-btn"
                         title="{$t('doc.close')}">
-                    <span class="material-icons">close</span>
+                    <span class="material-icons" aria-hidden="true">close</span>
                 </button>
             </div>
         </div>
         <div class="gk-modal-body gk-beleg-modal-body">
             <iframe data-gk-beleg-frame class="gk-beleg-modal-frame" src="about:blank" title="{$t('doc.preview')}"></iframe>
             <div class="gk-beleg-modal-mobile">
-                <span class="material-icons gk-beleg-mobile-icon">picture_as_pdf</span>
+                <span class="material-icons gk-beleg-mobile-icon" aria-hidden="true">picture_as_pdf</span>
                 <p>{$t('doc.mobile_hint')}</p>
                 <a data-gk-beleg-mobile-open href="#" target="_blank" rel="noopener"
                    class="gk-btn gk-btn-filled gk-btn-primary">
-                    <span class="material-icons">open_in_new</span>
+                    <span class="material-icons" aria-hidden="true">open_in_new</span>
                     <span>{$t('doc.open_pdf')}</span>
                 </a>
             </div>

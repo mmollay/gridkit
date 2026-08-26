@@ -90,6 +90,7 @@ class Sidebar
 
     public function render(): void
     {
+        $this->usedIds = [];
         $e = fn(string $s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
         echo '<div class="gk-sidebar-overlay" data-gk-sidebar-overlay onclick="GK.sidebar.close()"></div>';
         $sidebarCls = 'gk-sidebar';
@@ -101,12 +102,12 @@ class Sidebar
         if ($this->brand !== '') {
             echo '<div class="gk-sidebar-brand">';
             if ($this->collapsePosition === 'top') {
-                echo '<button class="gk-sidebar-collapse-btn" onclick="window.GK&&GK.sidebar.collapse()" title="' . $e(Lang::t('sidebar.toggle')) . '">';
-                echo '<span class="material-icons">menu</span>';
+                echo '<button class="gk-sidebar-collapse-btn" aria-label="' . $e(Lang::t('sidebar.collapse')) . '" onclick="window.GK&&GK.sidebar.collapse()" title="' . $e(Lang::t('sidebar.toggle')) . '">';
+                echo '<span class="material-icons" aria-hidden="true">menu</span>';
                 echo '</button>';
             }
             if ($this->brandIcon) {
-                echo '<span class="material-icons gk-sidebar-brand-icon">' . $e($this->brandIcon) . '</span>';
+                echo '<span class="material-icons gk-sidebar-brand-icon" aria-hidden="true">' . $e($this->brandIcon) . '</span>';
             }
             echo '<div class="gk-sidebar-brand-text">';
             echo '<span class="gk-sidebar-brand-title">' . $e($this->brand) . '</span>';
@@ -114,8 +115,13 @@ class Sidebar
                 echo '<span class="gk-sidebar-brand-version">' . $e($this->version) . '</span>';
             }
             echo '</div>';
-            echo '<button class="gk-sidebar-close-mobile" onclick="window.GK&&GK.sidebar.close()">';
-            echo '<span class="material-icons">close</span>';
+            // The glyph is hidden from the accessibility tree, as decoration
+            // should be — which leaves the button with nothing to be named by
+            // unless it says so itself. It read as "close" before, by accident
+            // of the ligature.
+            $closeLabel = $e(Lang::t('sidebar.close'));
+            echo '<button class="gk-sidebar-close-mobile" aria-label="' . $closeLabel . '" title="' . $closeLabel . '" onclick="window.GK&&GK.sidebar.close()">';
+            echo '<span class="material-icons" aria-hidden="true">close</span>';
             echo '</button>';
             echo '</div>';
         }
@@ -134,7 +140,12 @@ class Sidebar
 
         // Grouped items
         foreach ($this->groups as $label => $items) {
-            echo '<div class="gk-sidebar-group-label">' . $e($label) . '</div>';
+            // The label is an array key, so PHP casts a decimal string to int:
+            // ->group('2024') arrives here as the integer 2024, and under
+            // strict_types the escaper's string parameter makes that a fatal
+            // TypeError — mid-output, leaving <aside> and <nav> unclosed and
+            // the rest of the page unrendered. A year is an ordinary heading.
+            echo '<div class="gk-sidebar-group-label">' . $e((string) $label) . '</div>';
             foreach ($items as $item) {
                 if (isset($item['type']) && $item['type'] === 'divider') {
                     echo '<div class="gk-sidebar-divider"></div>';
@@ -148,14 +159,17 @@ class Sidebar
 
         // Collapse button (bottom)
         if ($this->collapsePosition === 'bottom') {
-            echo '<button class="gk-sidebar-collapse-btn gk-sidebar-collapse-bottom" onclick="window.GK&&GK.sidebar.collapse()" title="' . $e(Lang::t('sidebar.toggle')) . '">';
-            echo '<span class="material-icons">chevron_left</span>';
+            echo '<button class="gk-sidebar-collapse-btn gk-sidebar-collapse-bottom" aria-label="' . $e(Lang::t('sidebar.collapse')) . '" onclick="window.GK&&GK.sidebar.collapse()" title="' . $e(Lang::t('sidebar.toggle')) . '">';
+            echo '<span class="material-icons" aria-hidden="true">chevron_left</span>';
             echo '<span class="gk-sidebar-collapse-label">' . $e(Lang::t('sidebar.collapse')) . '</span>';
             echo '</button>';
         }
 
         echo '</aside>';
     }
+
+    /** Submenu ids handed out during the current render(), so none repeats. */
+    private array $usedIds = [];
 
     private function renderItem(array $item, \Closure $e): void
     {
@@ -167,15 +181,26 @@ class Sidebar
                 if ($child['active'] ?? false) { $childActive = true; break; }
             }
             $isOpen = $item['active'] || $childActive;
+            // The default id was md5(label). Two collapsible items sharing a
+            // label — "Monthly" under Sales and under Purchases — produced the
+            // same id twice, and since getElementById returns the first match,
+            // clicking the second toggle opened the first submenu. A suffix
+            // only appears from the second collision on, so existing pages
+            // with unique labels keep the ids they already had.
             $groupId = $item['id'] ?: 'gk-sub-' . md5($item['label']);
+            if ($item['id'] === '' || $item['id'] === null) {
+                $seen = $this->usedIds[$groupId] ?? 0;
+                $this->usedIds[$groupId] = $seen + 1;
+                if ($seen > 0) $groupId .= '-' . $seen;
+            }
 
             echo '<div class="gk-sidebar-group">';
             echo '<button class="gk-sidebar-item gk-sidebar-group-toggle' . ($isOpen ? ' active' : '') . '" data-gk-toggle="' . $e($groupId) . '" data-label="' . $e($item['label']) . '">';
             if ($item['icon'] !== '') {
-                echo '<span class="material-icons gk-sidebar-icon">' . $e($item['icon']) . '</span>';
+                echo '<span class="material-icons gk-sidebar-icon" aria-hidden="true">' . $e($item['icon']) . '</span>';
             }
             echo '<span class="gk-sidebar-label">' . $e($item['label']) . '</span>';
-            echo '<span class="material-icons gk-sidebar-chevron">expand_more</span>';
+            echo '<span class="material-icons gk-sidebar-chevron" aria-hidden="true">expand_more</span>';
             echo '</button>';
             echo '<div class="gk-sidebar-subitems' . ($isOpen ? '' : ' collapsed') . '" id="' . $e($groupId) . '">';
             foreach ($item['children'] as $child) {
@@ -183,7 +208,7 @@ class Sidebar
                 if ($child['active'] ?? false) $cls .= ' active';
                 echo '<a href="' . $e($child['href'] ?? '#') . '" class="' . $cls . '" data-label="' . $e($child['label'] ?? '') . '">';
                 if (!empty($child['icon'])) {
-                    echo '<span class="material-icons gk-sidebar-icon">' . $e($child['icon']) . '</span>';
+                    echo '<span class="material-icons gk-sidebar-icon" aria-hidden="true">' . $e($child['icon']) . '</span>';
                 }
                 echo '<span class="gk-sidebar-label">' . $e($child['label'] ?? '') . '</span>';
                 echo '</a>';
@@ -195,7 +220,7 @@ class Sidebar
             if ($item['active']) $cls .= ' active';
             echo '<a href="' . $e($item['href']) . '" class="' . $cls . '" data-label="' . $e($item['label']) . '">';
             if ($item['icon'] !== '') {
-                echo '<span class="material-icons gk-sidebar-icon">' . $e($item['icon']) . '</span>';
+                echo '<span class="material-icons gk-sidebar-icon" aria-hidden="true">' . $e($item['icon']) . '</span>';
             }
             echo '<span class="gk-sidebar-label">' . $e($item['label']) . '</span>';
             if ($item['badge'] !== null) {
@@ -208,8 +233,9 @@ class Sidebar
     /** Render the mobile toggle button (place in your header) */
     public static function toggleButton(): void
     {
-        echo '<button class="gk-sidebar-toggle" onclick="GK.sidebar.toggle()">';
-        echo '<span class="material-icons">menu</span>';
+        $openLabel = htmlspecialchars(Lang::t('sidebar.open'), ENT_QUOTES, 'UTF-8');
+        echo '<button class="gk-sidebar-toggle" aria-label="' . $openLabel . '" title="' . $openLabel . '" onclick="GK.sidebar.toggle()">';
+        echo '<span class="material-icons" aria-hidden="true">menu</span>';
         echo '</button>';
     }
 }

@@ -76,7 +76,7 @@ class SortLink
 
         return '<a href="' . htmlspecialchars($href, ENT_QUOTES, 'UTF-8') . '" class="' . $linkCls . '">'
             . htmlspecialchars($label, ENT_QUOTES, 'UTF-8')
-            . '<span class="material-icons ' . $iconCls . '">' . $iconName . '</span>'
+            . '<span class="material-icons ' . $iconCls . '" aria-hidden="true">' . $iconName . '</span>'
             . '</a>';
     }
 

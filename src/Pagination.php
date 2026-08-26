@@ -93,10 +93,15 @@ final class Pagination
             $set = array_values(array_unique($set));
             sort($set);
 
+            // aria-hidden on the glyph, aria-label on the link. Without the
+            // first, a screen reader reads the ligature — "first_page" — and
+            // without the second, hiding the glyph would leave the link with
+            // no name at all. title alone will not do: GK.tip removes it on
+            // the first hover.
             $icon = static fn(string $name, int $target, string $title, bool $on)
                 => $on
-                    ? '<a class="gk-pg gk-pg-icon" href="' . $url($target) . '" title="' . $e($title) . '"><span class="material-icons">' . $name . '</span></a>'
-                    : '<span class="gk-pg gk-pg-icon gk-pg-off"><span class="material-icons">' . $name . '</span></span>';
+                    ? '<a class="gk-pg gk-pg-icon" href="' . $url($target) . '" aria-label="' . $e($title) . '" title="' . $e($title) . '"><span class="material-icons" aria-hidden="true">' . $name . '</span></a>'
+                    : '<span class="gk-pg gk-pg-icon gk-pg-off" aria-hidden="true"><span class="material-icons" aria-hidden="true">' . $name . '</span></span>';
 
             $inner .= '<div class="gk-rowpager-nav">';
             $inner .= $icon('first_page', 1, Lang::t('pagination.first'), $page > 1);

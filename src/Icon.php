@@ -82,7 +82,7 @@ class Icon
 
         if ($svg !== '') return $svg;
         return $fallback
-            ? '<span class="material-icons" style="font-size:' . $size . 'px">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</span>'
+            ? '<span class="material-icons" style="font-size:' . $size . 'px" aria-hidden="true">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</span>'
             : '';
     }
 }

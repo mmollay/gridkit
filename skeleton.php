@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/autoload.php';
 
-use GridKit\{Button, Header, Lang, Layout, Modal, Sidebar, StatCards, Table, Theme};
+use GridKit\{Button, Header, Lang, Layout, Sidebar, StatCards, Table, Theme};
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 
@@ -148,8 +148,6 @@ Layout::mode('header-first');
 
     </main>
 
-    <!-- The modal container. Once per page, at the end. -->
-    <?php Modal::container(); ?>
 
 </div><!-- /gk-with-sidebar -->
 

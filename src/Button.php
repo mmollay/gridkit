@@ -71,7 +71,11 @@ class Button
             if ($useSvg) {
                 $iconHtml = Icon::svg($icon, $iconSize, true);
             } else {
-                $iconHtml = '<span class="material-icons" style="font-size:' . $iconSize . 'px">' . $e($icon) . '</span>';
+                // aria-hidden: the span contains the ligature ("delete"), not
+                // words meant for a person. Exposed, a screen reader reads the
+                // ligature and it sounds almost right, which is how this went
+                // unnoticed — and on a button with a real label it read both.
+                $iconHtml = '<span class="material-icons" style="font-size:' . $iconSize . 'px" aria-hidden="true">' . $e($icon) . '</span>';
             }
         }
 
@@ -105,6 +109,24 @@ class Button
         // Extra attributes
         $extras = '';
         if (!empty($opts['id'])) $extras .= ' id="' . $e($opts['id']) . '"';
+
+        // An icon-only button has no text to be named by. Until 1.42 it was
+        // emitted with nothing at all — a screen reader announced "button"
+        // and stopped. Explicit 'aria' wins; otherwise the title serves, and
+        // otherwise the icon name, humanised, which is at least the right
+        // word. title alone is not enough: GK.tip removes it on first hover.
+        if ($label === '' && $icon !== '') {
+            $name = $opts['aria'] ?? $opts['title'] ?? null;
+            if ($name === null) {
+                $key = 'action.' . $icon;
+                $t = Lang::t($key);
+                $name = $t !== $key ? $t : ucfirst(str_replace(['_', '-'], ' ', $icon));
+            }
+            $extras .= ' aria-label="' . $e((string) $name) . '"';
+        } elseif (!empty($opts['aria'])) {
+            $extras .= ' aria-label="' . $e((string) $opts['aria']) . '"';
+        }
+
         if (!empty($opts['title'])) $extras .= ' title="' . $e($opts['title']) . '"';
         if (!empty($opts['onclick'])) $extras .= ' onclick="' . $e($opts['onclick']) . '"';
         if (!empty($opts['target'])) $extras .= ' target="' . $e($opts['target']) . '"';

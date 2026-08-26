@@ -30,7 +30,10 @@
         ov.innerHTML =
           '<div class="gk-modal" data-gk-modal-container>' +
           '<div class="gk-modal-header"><h3 class="gk-modal-title" data-gk-modal-title-el></h3>' +
-          '<button class="gk-modal-close" data-gk-modal-close>&times;</button></div>' +
+          // A screen reader read this button as "multiplication sign".
+          '<button class="gk-modal-close" data-gk-modal-close aria-label="' +
+          _t("close") +
+          '"><span aria-hidden="true">&times;</span></button></div>' +
           '<div class="gk-modal-body" data-gk-modal-body></div></div>';
         ov.querySelector("[data-gk-modal-close]").addEventListener(
           "click",
@@ -780,6 +783,22 @@
             btnAttrs += ' data-gk-action="' + e(bname) + '"';
             if (bopts.modal)
               btnAttrs += ' data-gk-modal="' + e(bopts.modal) + '"';
+
+            // The same name the server-side renderer gives these buttons, so
+            // a static table and a live one sound identical. Icon-only means
+            // the whole content is an <svg>: with no aria-label the button
+            // announced as "button", and one of them deletes the row.
+            if (!hasText) {
+              var aria =
+                bopts.aria ||
+                bopts.title ||
+                _t("action_" + bname);
+              if (aria === "action_" + bname) {
+                aria = bname.replace(/[_-]+/g, " ");
+                aria = aria.charAt(0).toUpperCase() + aria.slice(1);
+              }
+              btnAttrs += ' aria-label="' + e(aria) + '"';
+            }
             if (bopts.title) btnAttrs += ' title="' + e(bopts.title) + '"';
             btnAttrs += " data-gk-params='" + e(JSON.stringify(params)) + "'";
             if (bopts.onclick) {
@@ -2235,23 +2254,61 @@
           var display = wrap.querySelector(".gk-select-display");
           var dropdown = wrap.querySelector(".gk-select-dropdown");
           var searchInput = dropdown.querySelector('input[type="text"]');
-          var hidden = wrap.querySelector('input[type="hidden"]');
+          // The value carrier stopped being type="hidden" in 1.42 so that a
+          // required select can actually be validated by the browser. Both
+          // spellings are accepted, so a page still holding an older cached
+          // copy of the markup keeps working.
+          var hidden =
+            wrap.querySelector("input.gk-select-value-input") ||
+            wrap.querySelector('input[type="hidden"]');
           var valueSpan = wrap.querySelector(".gk-select-value");
           var options = wrap.querySelectorAll(".gk-select-option");
 
+          // Open and close in one place, so the keyboard path and the mouse
+          // path cannot drift apart, and aria-expanded always tells the truth.
+          var setOpen = function (open) {
+            display.classList.toggle("open", open);
+            display.setAttribute("aria-expanded", open ? "true" : "false");
+            if (!open) return;
+            if (searchInput) searchInput.value = "";
+            options.forEach((o) => o.classList.remove("hidden"));
+            var empty = dropdown.querySelector(".gk-select-empty");
+            if (empty) empty.remove();
+            if (searchInput) setTimeout(() => searchInput.focus(), 50);
+          };
+
           display.addEventListener("click", function () {
             if (wrap.hasAttribute("data-disabled")) return;
-            display.classList.toggle("open");
-            if (display.classList.contains("open")) {
-              if (searchInput) {
-                searchInput.value = "";
-              }
-              options.forEach((o) => o.classList.remove("hidden"));
-              var empty = dropdown.querySelector(".gk-select-empty");
-              if (empty) empty.remove();
-              if (searchInput) setTimeout(() => searchInput.focus(), 50);
+            setOpen(!display.classList.contains("open"));
+          });
+
+          // The markup puts this div in the tab order with tabindex="0", which
+          // is a promise that it can be operated. Until 1.42 only a click was
+          // bound: you could Tab to the control and then no key did anything.
+          display.addEventListener("keydown", function (ev) {
+            if (wrap.hasAttribute("data-disabled")) return;
+            var k = ev.key;
+            if (k === "Enter" || k === " " || k === "Spacebar" || k === "ArrowDown") {
+              ev.preventDefault();
+              setOpen(true);
+            } else if (k === "Escape" && display.classList.contains("open")) {
+              ev.preventDefault();
+              setOpen(false);
+              display.focus();
             }
           });
+
+          // Escape from inside the search box returns to the control rather
+          // than leaving the list open behind you.
+          if (searchInput) {
+            searchInput.addEventListener("keydown", function (ev) {
+              if (ev.key === "Escape") {
+                ev.preventDefault();
+                setOpen(false);
+                display.focus();
+              }
+            });
+          }
 
           if (searchInput) {
             searchInput.addEventListener("input", function () {
@@ -2278,13 +2335,15 @@
               valueSpan.textContent = this.textContent;
               options.forEach((o) => o.classList.remove("selected"));
               this.classList.add("selected");
-              display.classList.remove("open");
+              setOpen(false);
               hidden.dispatchEvent(new Event("change", { bubbles: true }));
             });
           });
 
+          // Through setOpen as well, or a click elsewhere would close the list
+          // while aria-expanded went on saying "true".
           document.addEventListener("click", function (e) {
-            if (!wrap.contains(e.target)) display.classList.remove("open");
+            if (!wrap.contains(e.target) && display.classList.contains("open")) setOpen(false);
           });
         });
     },
@@ -3070,7 +3129,19 @@ GK.tip = {
       if (!t || self.cur === t) return;
       if (t.closest("[data-gk-tip-off]")) return;
       var title = t.getAttribute("title");
-      if (title) { t.setAttribute("data-gk-tip", title); t.removeAttribute("title"); }
+      if (title) {
+        t.setAttribute("data-gk-tip", title);
+        // For an icon-only control the title IS the accessible name. Taking it
+        // away to stop the browser drawing its own tooltip left the button
+        // nameless — a screen reader announced "button" and nothing else, and
+        // it happened on the first hover, so the markup looked correct in
+        // every static check. Hand the name to aria-label before removing it,
+        // unless the element already has a name of its own.
+        if (!t.getAttribute("aria-label") && !t.getAttribute("aria-labelledby")) {
+          t.setAttribute("aria-label", title);
+        }
+        t.removeAttribute("title");
+      }
       if (!t.getAttribute("data-gk-tip")) return;
       self.cur = t;
       clearTimeout(self.timer);

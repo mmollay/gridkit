@@ -169,11 +169,11 @@ class Form
                     echo "<input type=\"hidden\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\">";
                     echo '<div class="gk-select-display" tabindex="0">';
                     echo '<span class="gk-select-value">' . $e($displayValue) . '</span>';
-                    echo '<span class="material-icons gk-select-arrow">expand_more</span>';
+                    echo '<span class="material-icons gk-select-arrow" aria-hidden="true">expand_more</span>';
                     echo '</div>';
                     echo '<div class="gk-select-dropdown">';
                     if (count($options) > 6 || !empty($f['searchable'])) {
-                        echo '<div class="gk-select-search-input"><span class="material-icons">search</span>';
+                        echo '<div class="gk-select-search-input"><span class="material-icons" aria-hidden="true">search</span>';
                         echo "<input type=\"text\" placeholder=\"{$e($placeholder)}\" autocomplete=\"off\">";
                         echo '</div>';
                     }
@@ -212,12 +212,12 @@ class Form
                     echo "<input type=\"text\" class=\"gk-multiselect-input\" placeholder=\"{$e($placeholder)}\" autocomplete=\"off\">";
                 }
                 echo '</div>';
-                echo '<span class="material-icons gk-select-arrow">expand_more</span>';
+                echo '<span class="material-icons gk-select-arrow" aria-hidden="true">expand_more</span>';
                 echo '</div>';
                 echo '<div class="gk-select-dropdown"><div class="gk-select-options">';
                 foreach ($options as $k => $v) {
                     $sel = in_array((string)$k, array_map('strval', $selectedValues)) ? ' selected' : '';
-                    $check = $sel ? '<span class="material-icons" style="font-size:16px;">check</span> ' : '';
+                    $check = $sel ? '<span class="material-icons" style="font-size:16px;" aria-hidden="true">check</span> ' : '';
                     echo "<div class=\"gk-select-option{$sel}\" data-value=\"{$e($k)}\">{$check}{$e($v)}</div>";
                 }
                 echo '</div></div></div>';
@@ -235,13 +235,13 @@ class Form
                 echo "<div class=\"gk-ajax-select\" data-gk-ajax-select data-url=\"{$e($url)}\" data-label-field=\"{$e($labelField)}\" data-value-field=\"{$e($valueField)}\" data-subtext-field=\"{$e($subtextField)}\" data-min-chars=\"{$e($minChars)}\" data-search-param=\"{$e($searchParam)}\">";
                 echo "<input type=\"hidden\" name=\"{$e($name)}\" value=\"{$e($value)}\">";
                 echo '<div class="gk-select-display" tabindex="0">';
-                echo '<span class="material-icons gk-select-icon">search</span>';
+                echo '<span class="material-icons gk-select-icon" aria-hidden="true">search</span>';
                 $clearStyle = $value ? '' : ' style="display:none;"';
                 echo "<input type=\"text\" class=\"gk-ajax-search-input\" value=\"{$e($displayValue)}\" placeholder=\"{$e($placeholder)}\" autocomplete=\"off\">";
                 echo "<button type=\"button\" class=\"gk-ajax-clear\"{$clearStyle}>&times;</button>";
                 echo '</div>';
                 echo '<div class="gk-select-dropdown"><div class="gk-select-options"></div>';
-                echo '<div class="gk-select-loading" style="display:none;"><span class="material-icons gk-spin">sync</span> ' . $e(Lang::t('form.loading')) . '</div>';
+                echo '<div class="gk-select-loading" style="display:none;"><span class="material-icons gk-spin" aria-hidden="true">sync</span> ' . $e(Lang::t('form.loading')) . '</div>';
                 echo '</div></div>';
                 break;
 
@@ -310,12 +310,12 @@ class Form
                 echo "<div class=\"gk-upload-zone\"{$dataAttrs}>";
                 echo "<input type=\"file\" name=\"{$e($name)}[]\" id=\"{$e($name)}\" class=\"gk-upload-input\"{$acceptAttr}{$multiple}{$req}>";
                 echo "<div class=\"gk-upload-content gk-upload-idle\">";
-                echo "<span class=\"material-icons gk-upload-icon\">{$icon}</span>";
+                echo "<span class=\"material-icons gk-upload-icon\" aria-hidden=\"true\">{$icon}</span>";
                 echo "<span class=\"gk-upload-text\">{$label}</span>";
                 if ($hint) echo "<span class=\"gk-upload-hint\">{$e($hint)}</span>";
                 echo "</div>";
                 echo "<div class=\"gk-upload-progress\" style=\"display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none;\">";
-                echo "<span class=\"material-icons gk-spin\" style=\"font-size:32px;color:var(--gk-primary);\">sync</span>";
+                echo "<span class=\"material-icons gk-spin\" style=\"font-size:32px;color:var(--gk-primary);\" aria-hidden=\"true\">sync</span>";
                 echo "<span class=\"gk-upload-text gk-upload-progress-label\">" . $e(Lang::t('form.uploading')) . "</span>";
                 echo "</div>";
                 echo "</div>";
@@ -418,7 +418,12 @@ class Form
                     $hasVal = $value !== '' && $value !== null ? '' : ' style="display:none"';
                     echo "<div class=\"gk-input-clearable\">";
                     echo "<input type=\"{$e($htmlType)}\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\" class=\"gk-input\"{$req}{$extra} oninput=\"this.nextElementSibling.style.display=this.value?'':'none'\">";
-                    echo "<button type=\"button\" class=\"gk-input-clear\" title=\"" . $e(Lang::t('form.clear')) . "\"{$hasVal} onclick=\"this.previousElementSibling.value='';this.style.display='none';\"><span class=\"material-icons\">delete</span></button>";
+                    // The glyph is `delete`, but the button clears the field — a screen
+                    // reader announced "delete" for a control that deletes nothing.
+                    // aria-label carries the real name; title alone would not
+                    // survive GK.tip, which strips it on the first hover.
+                    $clearLabel = $e(Lang::t('form.clear'));
+                    echo "<button type=\"button\" class=\"gk-input-clear\" aria-label=\"{$clearLabel}\" title=\"{$clearLabel}\"{$hasVal} onclick=\"this.previousElementSibling.value='';this.style.display='none';\"><span class=\"material-icons\" aria-hidden=\"true\">delete</span></button>";
                     echo "</div>";
                 } else {
                     echo "<input type=\"{$e($htmlType)}\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\" class=\"gk-input\"{$req}{$extra}>";

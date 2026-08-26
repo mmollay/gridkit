@@ -596,7 +596,7 @@ $skillHtml = renderSkillMd($skillContent);
 <nav class="nav" role="navigation" aria-label="Main navigation">
     <div class="nav-inner">
         <a href="/" class="nav-brand">
-            <span class="material-icons" style="font-size:24px">widgets</span>
+            <span class="material-icons" style="font-size:24px" aria-hidden="true">widgets</span>
             GridKit <span>v<?= $version ?></span>
         </a>
         <div class="nav-links">
@@ -628,13 +628,13 @@ $skillHtml = renderSkillMd($skillContent);
     </p>
     <div class="hero-actions">
         <a href="https://github.com/mmollay/gridkit" class="btn btn-primary" target="_blank" rel="noopener">
-            <span class="material-icons">code</span> View on GitHub
+            <span class="material-icons" aria-hidden="true">code</span> View on GitHub
         </a>
         <a href="#agent" class="btn btn-secondary">
-            <span class="material-icons">smart_toy</span> Agent Skill
+            <span class="material-icons" aria-hidden="true">smart_toy</span> Agent Skill
         </a>
         <a href="/demo/" class="btn btn-secondary">
-            <span class="material-icons">visibility</span> Live Demo
+            <span class="material-icons" aria-hidden="true">visibility</span> Live Demo
         </a>
     </div>
     <div class="hero-stats">
@@ -685,32 +685,32 @@ $skillHtml = renderSkillMd($skillContent);
         </div>
         <div class="features-grid">
             <div class="feature-card">
-                <div class="feature-icon"><span class="material-icons">smart_toy</span></div>
+                <div class="feature-icon"><span class="material-icons" aria-hidden="true">smart_toy</span></div>
                 <h3>Agent-First Design</h3>
                 <p>Built with AI agents in mind. Feed the skill file to your AI assistant and it generates complete GridKit applications — tables, forms, modals, authentication.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><span class="material-icons">bolt</span></div>
+                <div class="feature-icon"><span class="material-icons" aria-hidden="true">bolt</span></div>
                 <h3>Zero Dependencies</h3>
                 <p>One CSS file. One JS file. No npm, no Composer, no build process. Clone and go. Works with any PHP 8.2+ project.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><span class="material-icons">palette</span></div>
+                <div class="feature-icon"><span class="material-icons" aria-hidden="true">palette</span></div>
                 <h3>Material Design 3</h3>
                 <p>6 complete themes (Indigo, Ocean, Forest, Rose, Amber, Slate) with light and dark mode. All via CSS Custom Properties.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><span class="material-icons">sync</span></div>
+                <div class="feature-icon"><span class="material-icons" aria-hidden="true">sync</span></div>
                 <h3>AJAX-First</h3>
                 <p>No page reloads. Tables search, sort, filter, paginate via AJAX. Forms submit and validate via AJAX. Everything stays fast.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><span class="material-icons">grid_view</span></div>
+                <div class="feature-icon"><span class="material-icons" aria-hidden="true">grid_view</span></div>
                 <h3>Fluent PHP API</h3>
                 <p>Declarative, chainable API. Define a complete data table with search, sorting, pagination, and modals in under 15 lines of PHP.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><span class="material-icons">phone_iphone</span></div>
+                <div class="feature-icon"><span class="material-icons" aria-hidden="true">phone_iphone</span></div>
                 <h3>Responsive by Default</h3>
                 <p>Every component is mobile-ready. Tables switch to card layout, sidebars become overlays, forms reflow to single column.</p>
             </div>
@@ -803,10 +803,10 @@ $skillHtml = renderSkillMd($skillContent);
                 <h3>GRIDKIT_SKILL.md</h3>
                 <div class="skill-actions">
                     <button class="btn btn-secondary" onclick="copySkill()" id="copy-btn" style="font-size:13px;padding:10px 20px;">
-                        <span class="material-icons" style="font-size:16px">content_copy</span> Copy Skill
+                        <span class="material-icons" style="font-size:16px" aria-hidden="true">content_copy</span> Copy Skill
                     </button>
                     <a href="https://github.com/mmollay/gridkit/blob/main/GRIDKIT_SKILL.md" class="btn btn-primary" target="_blank" rel="noopener" style="font-size:13px;padding:10px 20px;">
-                        <span class="material-icons" style="font-size:16px">download</span> View on GitHub
+                        <span class="material-icons" style="font-size:16px" aria-hidden="true">download</span> View on GitHub
                     </a>
                 </div>
             </div>
@@ -853,62 +853,62 @@ $skillHtml = renderSkillMd($skillContent);
 
         <div class="components-preview">
             <div class="comp-card">
-                <span class="material-icons">table_chart</span>
+                <span class="material-icons" aria-hidden="true">table_chart</span>
                 <h4>Table</h4>
                 <p>Search, sort, paginate, groupBy, number columns</p>
             </div>
             <div class="comp-card">
-                <span class="material-icons">edit_note</span>
+                <span class="material-icons" aria-hidden="true">edit_note</span>
                 <h4>Form</h4>
                 <p>16-column grid, 15 field types, AJAX submit</p>
             </div>
             <div class="comp-card">
-                <span class="material-icons">menu</span>
+                <span class="material-icons" aria-hidden="true">menu</span>
                 <h4>Sidebar</h4>
                 <p>Groups, badges, collapse, mobile overlay</p>
             </div>
             <div class="comp-card">
-                <span class="material-icons">web</span>
+                <span class="material-icons" aria-hidden="true">web</span>
                 <h4>Header</h4>
                 <p>Fixed, search, user menu, theme switcher</p>
             </div>
             <div class="comp-card">
-                <span class="material-icons">open_in_new</span>
+                <span class="material-icons" aria-hidden="true">open_in_new</span>
                 <h4>Modal</h4>
                 <p>Stackable dialogs, form-ready, sizes</p>
             </div>
             <div class="comp-card">
-                <span class="material-icons">analytics</span>
+                <span class="material-icons" aria-hidden="true">analytics</span>
                 <h4>StatCards</h4>
                 <p>KPI display with trends and colors</p>
             </div>
             <div class="comp-card">
-                <span class="material-icons">lock</span>
+                <span class="material-icons" aria-hidden="true">lock</span>
                 <h4>Auth</h4>
                 <p>Session auth, bcrypt, remember-me</p>
             </div>
             <div class="comp-card">
-                <span class="material-icons">palette</span>
+                <span class="material-icons" aria-hidden="true">palette</span>
                 <h4>Theme</h4>
                 <p>6 themes, light/dark mode</p>
             </div>
             <div class="comp-card">
-                <span class="material-icons">smart_button</span>
+                <span class="material-icons" aria-hidden="true">smart_button</span>
                 <h4>Button</h4>
                 <p>Filled, outlined, text, tonal, FAB</p>
             </div>
             <div class="comp-card">
-                <span class="material-icons">layers</span>
+                <span class="material-icons" aria-hidden="true">layers</span>
                 <h4>Layout</h4>
                 <p>Sidebar-first, header-first modes</p>
             </div>
             <div class="comp-card">
-                <span class="material-icons">filter_list</span>
+                <span class="material-icons" aria-hidden="true">filter_list</span>
                 <h4>FilterChips</h4>
                 <p>Clickable filter chip buttons</p>
             </div>
             <div class="comp-card">
-                <span class="material-icons">date_range</span>
+                <span class="material-icons" aria-hidden="true">date_range</span>
                 <h4>YearFilter</h4>
                 <p>Year navigation filter</p>
             </div>
@@ -945,10 +945,10 @@ $skillHtml = renderSkillMd($skillContent);
 
         <div style="text-align:center; margin-top:40px;">
             <a href="https://github.com/mmollay/gridkit" class="btn btn-primary" target="_blank" rel="noopener">
-                <span class="material-icons">code</span> Star on GitHub
+                <span class="material-icons" aria-hidden="true">code</span> Star on GitHub
             </a>
             <a href="/demo/" class="btn btn-secondary" style="margin-left:12px">
-                <span class="material-icons">visibility</span> Explore Components
+                <span class="material-icons" aria-hidden="true">visibility</span> Explore Components
             </a>
         </div>
     </div>
@@ -1129,9 +1129,9 @@ function copySkill() {
     const content = document.getElementById('skill-content').value;
     navigator.clipboard.writeText(content).then(() => {
         const btn = document.getElementById('copy-btn');
-        btn.innerHTML = '<span class="material-icons" style="font-size:16px">check</span> Copied!';
+        btn.innerHTML = '<span class="material-icons" style="font-size:16px" aria-hidden="true">check</span> Copied!';
         setTimeout(() => {
-            btn.innerHTML = '<span class="material-icons" style="font-size:16px">content_copy</span> Copy Skill';
+            btn.innerHTML = '<span class="material-icons" style="font-size:16px" aria-hidden="true">content_copy</span> Copy Skill';
         }, 2000);
     });
 }

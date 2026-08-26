@@ -59,10 +59,21 @@ class StatCards
             $valCls = 'gk-stat-value';
             if (isset($card['highlight']) && $card['highlight']) $valCls .= ' gk-stat-highlight';
             echo '<span class="' . $valCls . '">' . $e((string)$val) . '</span>';
+
+            // The trend indicator. README.md sells the whole component on it —
+            // "KPI tiles with trend" — the landing page shows the call, the
+            // changelog announced it, and render() never read the option: the
+            // string appeared nowhere in the output and no CSS rule existed.
+            // A leading minus reads as a fall, anything else as a rise.
+            if (isset($card['trend']) && (string) $card['trend'] !== '') {
+                $trend = (string) $card['trend'];
+                $dir   = str_starts_with(ltrim($trend), '-') ? 'down' : 'up';
+                echo '<span class="gk-stat-trend gk-stat-trend-' . $dir . '">' . $e($trend) . '</span>';
+            }
             echo '</div>';
 
             if (isset($card['icon'])) {
-                echo '<span class="gk-stat-icon material-icons">' . $e($card['icon']) . '</span>';
+                echo '<span class="gk-stat-icon material-icons" aria-hidden="true">' . $e($card['icon']) . '</span>';
             }
 
             echo isset($card['href']) ? '</a>' : '</div>';

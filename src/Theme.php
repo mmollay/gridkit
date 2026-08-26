@@ -30,12 +30,24 @@ class Theme {
         $html .= '<div class="gk-theme-colors">';
         foreach ($themes as $t) {
             $active = ($t === self::$theme) ? ' gk-theme-active' : '';
-            $html .= '<button class="gk-theme-dot' . $active . '" data-gk-set-theme="' . $t . '" style="background:' . $colors[$t] . '" title="' . ucfirst($t) . '"></button>';
+            // The dot is an empty <button> — a coloured circle and nothing
+            // else. title was its only name, and GK.tip removes title on the
+            // first hover, so it went silent the moment a pointer crossed it.
+            // aria-pressed says which one is on; the colour alone cannot.
+            $name = Lang::t('theme.choose', ['name' => ucfirst($t)]);
+            $html .= '<button class="gk-theme-dot' . $active . '" data-gk-set-theme="' . $t . '"'
+                   . ' style="background:' . $colors[$t] . '"'
+                   . ' aria-pressed="' . ($active !== '' ? 'true' : 'false') . '"'
+                   . ' aria-label="' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '"'
+                   . ' title="' . htmlspecialchars(ucfirst($t), ENT_QUOTES, 'UTF-8') . '"></button>';
         }
         $html .= '</div>';
-        $html .= '<button class="gk-mode-toggle" data-gk-toggle-mode title="Dark/Light Mode">';
-        $html .= '<span class="material-icons gk-mode-light">light_mode</span>';
-        $html .= '<span class="material-icons gk-mode-dark">dark_mode</span>';
+        // Both glyphs sit in the button at once and CSS shows one. Exposed,
+        // a screen reader read the pair as "light_modedark_mode".
+        $modeName = htmlspecialchars(Lang::t('theme.toggle_mode'), ENT_QUOTES, 'UTF-8');
+        $html .= '<button class="gk-mode-toggle" data-gk-toggle-mode aria-label="' . $modeName . '" title="' . $modeName . '">';
+        $html .= '<span class="material-icons gk-mode-light" aria-hidden="true">light_mode</span>';
+        $html .= '<span class="material-icons gk-mode-dark" aria-hidden="true">dark_mode</span>';
         $html .= '</button>';
         $html .= '</div>';
         return $html;

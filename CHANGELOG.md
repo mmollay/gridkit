@@ -7,6 +7,136 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.42.0] - 2026-08-27
+
+Two passes at once. The accessibility of what every component emits, measured
+in the tree a screen reader actually reads; and an audit of the classes that
+had never had a systematic one — five auditors, then an adversarial verifier
+per finding whose job was to refute it by running it. Thirteen findings
+survived that; two did not, and are not here.
+
+### Fixed — what a screen reader was told
+
+- **81 controls on the demo page had no accessible name at all**, 66 of them
+  icon-only buttons — including the delete button on every table row, which is
+  the example the README leads with. It announced as "button" and stopped.
+  Row buttons, icon buttons, the theme switcher, the pager and the form's clear
+  button now carry translated names, from a new `action.*` catalogue that
+  `Lang::jsConfig()` also hands to the client so a static table and a live one
+  sound identical.
+
+- **179 icon glyphs were read aloud as if they were labels.** A Material Icons
+  span contains the ligature — `delete`, `light_mode` — not words meant for a
+  person. The mode toggle announced as "light_modedark_mode". Every decorative
+  glyph the library emits is now `aria-hidden`, which is also what exposed the
+  buttons that had never had a real name: hiding the ligature made the gap
+  visible.
+
+- **`GK.tip` was removing the accessible name.** It moves every `title` into
+  `data-gk-tip` on the first hover and deleted the attribute — and for 55
+  controls across the demo and the example application, `title` was the only
+  name they had. They went silent as the pointer crossed them, which is why
+  nothing static ever caught it. The name is handed to `aria-label` first now.
+
+- **The clear button in a form was announced as "delete"** — its glyph is
+  `delete`, and it deletes nothing; it empties a text field.
+
+- **A column formatted as an address emitted `<a href="mailto:"></a>`** for
+  every row without one: a focusable, nameless link that opens a blank
+  composer. The date formats two lines above it have always guarded this.
+
+### Fixed — promises the classes did not keep
+
+- **`GK.modal.open(title, html)` is documented three times in
+  `GRIDKIT_SKILL.md`** — including as Common Pitfall #5, which taught the
+  failure as though it were the fix. The real signature is
+  `open(title, url, params, size)` and it POSTs the second argument: passing
+  markup requests it as a path, so the modal filled with the server's 404 page,
+  `<style>` and all. The demo had it right all along; only the file agents read
+  was wrong. Second round running that this file has taught a call that does
+  not work.
+
+- **`->group('2024')` killed the page.** Group labels are array keys, so PHP
+  casts a decimal string to `int`, and under `strict_types` the escaper's
+  string parameter made that a fatal `TypeError` — thrown mid-output, leaving
+  `<aside>` and `<nav>` unclosed and nothing after them rendered. Any year, id
+  or number used as a heading did it.
+
+- **A required searchable select submitted empty.** `['required' => true]` was
+  accepted, stored and emitted — onto an `<input type="hidden">`, which the
+  HTML standard bars from constraint validation. The attribute was inert. The
+  value carrier is a real control now, hidden by opacity rather than
+  `display:none` so the browser can still anchor its message, and deliberately
+  not `readonly`, which would disable validation just as effectively. Verified
+  in a browser: `willValidate` true, submission blocked, and valid once a
+  choice is made.
+
+- **The searchable select was in the tab order and answered no key.** The
+  markup gives the display `tabindex="0"` — a promise that it can be operated
+  — and only a click was ever bound. It also had no role and no name, so it
+  announced as an empty group. Enter, Space and ArrowDown open it, Escape
+  closes it and returns focus, and `aria-expanded` follows every path.
+
+- **The header user menu could not be opened by keyboard.** A plain `<div>`
+  with a click handler, and the only route to Profile, Settings and Sign out.
+
+- **`StatCards`' `trend` was never implemented.** README.md sells the component
+  on it — "KPI tiles with trend" — the landing page shows the call, the
+  changelog announced it in 2024, and `render()` never read the option. A test
+  passed `'trend' => '+8%'` and asserted only that the markup was non-empty.
+
+- **`Layout::asset()` gave the release version, never the file's timestamp, for
+  exactly the path form the docs teach.** The test was "did `preg_replace`
+  change the string?" — true for `../css/gridkit.css`, false for the bare
+  `css/gridkit.css` that `skeleton.php` and `GRIDKIT_SKILL.md` both use. So the
+  one spelling everybody copies was the one that never busted its own cache,
+  which is what the comment above it exists to prevent.
+
+- **Two submenus with the same label shared a DOM id.** The id was
+  `md5(label)`, so "Monthly" under Sales and under Purchases collided, and
+  since `getElementById` returns the first match, clicking the second toggle
+  opened the first submenu.
+
+- **`FilterChips`' `color` did nothing for six of the nine values in use.**
+  The class passes the value straight through as `.gk-chip-x`; three rules
+  existed. The demo ships green, orange, red and blue and the skill file
+  teaches primary — all of them rendered as an unstyled chip.
+
+- **An unrecognised string in a header menu became an empty link.** Anything
+  that was not exactly `'divider'` fell through to the anchor branch and
+  emitted `<a class="gk-dropdown-item" href="#"></a>` — a nameless tab stop in
+  the menu. The demo's own header had one.
+
+- **`Header::search()` and `YearFilter::mode('dropdown')` had no accessible
+  name** — a placeholder is not one, and the year select had nothing at all,
+  while every other filter in the library was fixed in 1.32.0.
+
+### Changed
+
+- **`Modal::container()` emits nothing.** It printed an empty hidden shell that
+  every layout was told to call once per page, and nothing ever read it:
+  `GK.modal.open()` builds its own overlay with `createElement`. It sat in the
+  DOM of every page for the life of the page, close button included — one a
+  screen reader announced as the multiplication sign. Kept as a no-op so
+  existing layouts keep working. `tests/render.test.php` had been asserting
+  that this markup was present, which is how it stayed.
+
+### Added
+
+- `tests/names.test.php` and `tests/contracts.test.php` — the general
+  questions, not the specific bugs. Does every control a component emits have
+  an accessible name? Is any control named by `title` alone, which `GK.tip`
+  will take away? Is any glyph exposed as a label? And for each documented
+  option: does the class read it?
+
+  `tests/a11y.test.php` has existed since 1.32.0 and checks exactly the
+  controls that round touched. It never asked the general question, which is
+  the same way the contrast pass in 1.38.0 measured only filled buttons. Both
+  files ask it now.
+
+**1,518 assertions.**
+
+---
 ## [1.41.0] - 2026-08-26
 
 The JavaScript — 3,233 lines, the last large file without a systematic pass.

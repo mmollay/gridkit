@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.41.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.42.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.ssi.at
 
 ## Purpose
@@ -407,8 +407,9 @@ CSS classes (all auto-applied): `gk-tableheader`, `gk-tableheader-status`, `gk-t
 // In layout (panel.php does this automatically):
 <?php Modal::container(); ?>
 
-// JS API — dynamic modal:
-GK.modal.open('Title', '<p>Any HTML</p>');
+// JS API — the body is FETCHED from a URL (POST, X-Requested-With: XMLHttpRequest).
+// The second argument is an address, never markup.
+GK.modal.open('Title', 'forms/edit.php', { id: 42 }, 'medium');   // params + size optional
 GK.modal.close();
 
 // Static inline modal (for complex content):
@@ -519,8 +520,8 @@ GK.toast.error('Something went wrong.');
 GK.toast.warning('Check this before continuing.');
 GK.toast.info('Nothing to do here yet.');
 
-// Dynamic modal
-GK.modal.open('Title', '<p>HTML content</p>');
+// Dynamic modal — the second argument is a URL whose response fills the body
+GK.modal.open('Title', 'forms/edit.php', { id: 42 }, 'medium');
 GK.modal.close();
 
 // Table refresh (after save/delete in server-side mode).
@@ -760,5 +761,8 @@ layout, typography, or semantic colors. **Spacing scale: 0/1/2/3/4/5/6 = 0/4/8/1
 2. **Missing `Lang::jsConfig()`** — "no_entries" shows as raw key. Must be in `<head>` before `gridkit.js`.
 3. **Wrong button classes** — Use `gk-btn-filled` not `gk-btn--filled` (no double dash).
 4. **Wrong toast API** — Use `GK.toast.success()` not `GK.toast()`.
-5. **Wrong modal API** — `GK.modal.open(title, html)` takes title + HTML string, not an ID.
+5. **Wrong modal API** — the signature is `GK.modal.open(title, url, params, size)`. It
+   POSTs to `url` and puts the response in the body. It does NOT take an HTML string: pass
+   markup and the browser requests it as a path, so the modal fills with the server's 404
+   page. For inline HTML use the static inline modal above.
 6. **Direct project edits** — Always change GridKit at its own source, never inside a consuming project.

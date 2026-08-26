@@ -89,8 +89,12 @@ class Header
         // Left
         $html .= '<div class="gk-header-left">';
         if ($this->sidebarToggle) {
-            $html .= '<button class="gk-header-menu-toggle" onclick="GK.sidebar.toggle()">';
-            $html .= '<span class="material-icons">menu</span>';
+            // The control that opens the navigation on a phone — where it is
+            // often the only way in. Its glyph is decoration; without a name
+            // of its own it announced as "button".
+            $menuLabel = htmlspecialchars(Lang::t('sidebar.open'), ENT_QUOTES, 'UTF-8');
+            $html .= '<button class="gk-header-menu-toggle" aria-label="' . $menuLabel . '" title="' . $menuLabel . '" aria-expanded="false" onclick="GK.sidebar.toggle()">';
+            $html .= '<span class="material-icons" aria-hidden="true">menu</span>';
             $html .= '</button>';
         }
         if ($this->title !== '' || !empty($this->breadcrumb)) {
@@ -105,7 +109,7 @@ class Header
                     if (is_int($key)) {
                         $parts[] = '<span class="gk-breadcrumb-current">' . $e($value) . '</span>';
                     } elseif ($key === 'home') {
-                        $parts[] = '<a href="' . $e($value) . '" title="Dashboard" style="display:inline-flex;align-items:center;"><span class="material-icons" style="font-size:16px;vertical-align:middle;">home</span></a>';
+                        $parts[] = '<a href="' . $e($value) . '" title="Dashboard" style="display:inline-flex;align-items:center;"><span class="material-icons" style="font-size:16px;vertical-align:middle;" aria-hidden="true">home</span></a>';
                     } else {
                         $parts[] = '<a href="' . $e($value) . '">' . $e($key) . '</a>';
                     }
@@ -121,8 +125,13 @@ class Header
         $html .= '<div class="gk-header-center">';
         if ($this->searchOpts !== null) {
             $html .= '<div class="gk-header-search">';
-            $html .= '<span class="material-icons">search</span>';
-            $html .= '<input type="text" name="' . $e($this->searchOpts['name']) . '" placeholder="' . $e($this->searchOpts['placeholder']) . '">';
+            $html .= '<span class="material-icons" aria-hidden="true">search</span>';
+            // A placeholder is not an accessible name: it is not reliably
+            // announced and it disappears the moment anything is typed. Table
+            // got this in 1.32.0; the header search kept the old shape.
+            $searchLabel = $e($this->searchOpts['placeholder']);
+            $html .= '<input type="text" name="' . $e($this->searchOpts['name'])
+                   . '" placeholder="' . $searchLabel . '" aria-label="' . $searchLabel . '">';
             $html .= '</div>';
         }
         $html .= '</div>';
@@ -136,7 +145,11 @@ class Header
             $u = $this->userOpts;
             $showThemeSwitcher = $u['theme_switcher'] ?? true;
 
-            $html .= '<div class="gk-header-user" data-gk-dropdown>';
+            // The trigger was a plain <div>: not in the tab order, announced
+            // as nothing, and the only way to Profile, Settings and Sign out.
+            // Same treatment 1.32.0 gave the sortable table headers.
+            $html .= '<div class="gk-header-user" data-gk-dropdown tabindex="0" role="button"'
+                   . ' aria-haspopup="true" aria-expanded="false">';
 
             // Avatar
             if (!empty($u['avatar'])) {
@@ -145,7 +158,7 @@ class Header
                 $html .= '<div class="gk-avatar gk-avatar-initials">' . $e(self::initials($u['name'])) . '</div>';
             }
             $html .= '<span class="gk-header-user-name">' . $e($u['name']) . '</span>';
-            $html .= '<span class="material-icons">expand_more</span>';
+            $html .= '<span class="material-icons" aria-hidden="true">expand_more</span>';
 
             // Dropdown menu
             $html .= '<div class="gk-dropdown-menu">';
@@ -153,15 +166,20 @@ class Header
             // Role label
             if (!empty($u['role'])) {
                 $html .= '<div class="gk-dropdown-item" style="pointer-events:none;opacity:.6">';
-                $html .= '<span class="material-icons">badge</span>' . $e($u['role']);
+                $html .= '<span class="material-icons" aria-hidden="true">badge</span>' . $e($u['role']);
                 $html .= '</div>';
                 $html .= '<div class="gk-dropdown-divider"></div>';
             }
 
             // User-defined menu items
             foreach (($u['menu'] ?? []) as $item) {
-                if ($item === 'divider') {
-                    $html .= '<div class="gk-dropdown-divider"></div>';
+                if (!is_array($item)) {
+                    // Only 'divider' means anything here. Any other scalar used
+                    // to fall through to the anchor branch and emit
+                    // <a class="gk-dropdown-item" href="#"></a> — an empty,
+                    // focusable, nameless link in the menu. A typo should be a
+                    // no-op, not a tab stop.
+                    if ($item === 'divider') $html .= '<div class="gk-dropdown-divider"></div>';
                     continue;
                 }
                 if (isset($item['html'])) {
@@ -172,7 +190,7 @@ class Header
                 $icon  = $item['icon']  ?? '';
                 $label = $item['label'] ?? '';
                 $html .= '<a class="gk-dropdown-item" href="' . $e($href) . '">';
-                if ($icon !== '') $html .= '<span class="material-icons">' . $e($icon) . '</span>';
+                if ($icon !== '') $html .= '<span class="material-icons" aria-hidden="true">' . $e($icon) . '</span>';
                 $html .= $e($label);
                 $html .= '</a>';
             }

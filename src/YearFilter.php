@@ -119,7 +119,7 @@ class YearFilter
 
         if ($this->mode === 'dropdown') {
             $selectId = $e($this->id) . '-select';
-            echo '<select id="' . $selectId . '" class="' . $e($this->selectClass) . '" data-gk-years="' . $e($this->id) . '" onchange="(function(s){';
+            echo '<select id="' . $selectId . '" aria-label="' . $e(Lang::t('yearfilter.label')) . '" class="' . $e($this->selectClass) . '" data-gk-years="' . $e($this->id) . '" onchange="(function(s){';
             echo 'var u=new window.URL(s.dataset.base,window.location.origin);';
             echo 'var pres=JSON.parse(s.dataset.preserve||\'{}\');';
             echo 'Object.keys(pres).forEach(function(k){u.searchParams.set(k,pres[k]);});';

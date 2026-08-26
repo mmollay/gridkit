@@ -96,7 +96,11 @@ return [
                               ->chip('', 'All')->chip('open', 'Open')->render(),
         'YearFilter'   => fn() => (new YearFilter())->range(2020, 2025)->allOption()->render(),
         'SortLink'     => fn() => print(SortLink::header('name', 'Name')),
-        'Modal'        => fn() => Modal::container(),
+        // Modal::container() is deliberately absent: since 1.42.0 it emits
+        // nothing. It used to print an empty hidden shell that nothing ever
+        // read — GK.modal.open() builds its own overlay — and this very list
+        // was what kept the dead markup in place, by asserting it was there.
+
         'BelegModal'   => fn() => BelegModal::container(),
         'Theme'        => fn() => print(Theme::switcher()),
         'Icon'         => fn() => print(Icon::svg('search', 20)),

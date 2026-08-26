@@ -430,11 +430,11 @@ class Table
 
         if ($this->selectable) {
             echo '<div class="gk-bulk-bar" style="display:none;">'
-               . '<span class="material-icons" style="font-size:18px;">check_box</span>'
+               . '<span class="material-icons" style="font-size:18px;" aria-hidden="true">check_box</span>'
                . '<span class="gk-bulk-count">0 ' . $e(Lang::t('table.selected', ['n' => ''])) . '</span>'
                . '<div class="gk-toolbar-spacer"></div>'
                . '<button type="button" data-gk-bulk-delete>'
-               .   '<span class="material-icons">delete</span> ' . $e(Lang::t('table.delete'))
+               .   '<span class="material-icons" aria-hidden="true">delete</span> ' . $e(Lang::t('table.delete'))
                . '</button>'
                . '<button type="button" data-gk-bulk-cancel>' . $e(Lang::t('table.cancel')) . '</button>'
                . '</div>';
@@ -706,6 +706,25 @@ class Table
             if (isset($bopts['modal'])) {
                 $dataAttrs .= ' data-gk-modal="' . $e($bopts['modal']) . '"';
             }
+            // The accessible name. A row button is usually icon-only, so its
+            // whole content is an <svg> — nothing a screen reader can read. It
+            // announced as "button", six times over on a three-row table, and
+            // one of those six deletes the record.
+            //
+            // title is not enough on its own: GK.tip moves it into
+            // data-gk-tip on the first hover and removes the attribute, so a
+            // control named only by its title goes silent as the pointer
+            // crosses it. aria-label is the name; title stays for the tooltip.
+            $actionName = $bopts['aria'] ?? $bopts['title'] ?? null;
+            if ($actionName === null) {
+                $key = 'action.' . $bname;
+                $translated = Lang::t($key);
+                // Lang::t returns the key when it knows nothing about it.
+                $actionName = $translated !== $key
+                    ? $translated
+                    : ucfirst(str_replace(['_', '-'], ' ', $bname));
+            }
+            $ariaAttr  = ' aria-label="' . $e($actionName) . '"';
             $titleAttr = !empty($bopts['title']) ? ' title="' . $e($bopts['title']) . '"' : '';
             $clickAttr = '';
             if (!empty($bopts['onclick'])) {
@@ -732,8 +751,12 @@ class Table
                    . $iconHtml . '<span>' . $e($bopts['text']) . '</span></button>';
             } elseif ($iconHtml) {
                 // Icon-only button (sm) — same classes as JS renderBtnGroup
+                // aria-label only here. The icon+text branch above is named by
+                // its visible text, and an aria-label would override that —
+                // which also breaks activating the control by speaking its
+                // visible name.
                 $cls = 'gk-btn gk-btn-icon-only gk-btn-text gk-btn-' . $color . ' gk-btn-sm';
-                echo '<button type="button" class="' . $cls . '"' . $titleAttr . $clickAttr . $dataAttrs . '>'
+                echo '<button type="button" class="' . $cls . '"' . $ariaAttr . $titleAttr . $clickAttr . $dataAttrs . '>'
                    . $iconHtml . '</button>';
             }
         }
@@ -779,7 +802,7 @@ class Table
             'print'
                 => '<svg ' . $s . '><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
             default
-                => '<span class="material-icons" style="font-size:16px;">' . htmlspecialchars($name, ENT_QUOTES) . '</span>',
+                => '<span class="material-icons" style="font-size:16px;" aria-hidden="true">' . htmlspecialchars($name, ENT_QUOTES) . '</span>',
         };
     }
 
@@ -820,7 +843,13 @@ class Table
                 ? $e(date($col['dateFormat'] ?? Lang::t('format.datetime'), strtotime($val)))
                 : '',
             'boolean' => (int)$val ? '<span class="gk-bool gk-bool-yes">✓</span>' : '<span class="gk-bool gk-bool-no">–</span>',
-            'email' => '<a href="mailto:' . $e($val) . '">' . $e($val) . '</a>',
+            // The empty guard the date formats two lines up already have. An
+            // empty address produced <a href="mailto:"></a> — a focusable link
+            // with no name that opens a blank composer, once per row without
+            // an address, all of them in the tab order.
+            'email' => ($val === null || $val === '')
+                ? ''
+                : '<a href="mailto:' . $e($val) . '">' . $e($val) . '</a>',
             'label' => $this->renderLabel($val, $col['labels'] ?? []),
             'html' => (string)$val,
             'number' => $this->formatNumber($val, $col),

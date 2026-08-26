@@ -86,6 +86,12 @@ class Lang
         foreach (self::$strings[self::$locale] ?? [] as $key => $val) {
             if (str_starts_with($key, 'js.')) {
                 $jsKeys[substr($key, 3)] = $val;
+            } elseif (str_starts_with($key, 'action.')) {
+                // The names for icon-only controls. The client renders the same
+                // row buttons the server does and has to name them the same
+                // way, so this one catalogue serves both rather than a second
+                // copy under js.* drifting away from the first.
+                $jsKeys['action_' . substr($key, 7)] = $val;
             }
         }
         $json = json_encode($jsKeys, JSON_UNESCAPED_UNICODE);

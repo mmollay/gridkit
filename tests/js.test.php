@@ -55,7 +55,9 @@ return [
     $en = require __DIR__ . '/../lang/en.php';
     $de = require __DIR__ . '/../lang/de.php';
 
-    preg_match_all('/\b_t(?:Or)?\(\s*"([a-z0-9_]+)"/', $js, $m);
+    // Only whole literal keys. `_t("action_" + name)` builds its key at run
+    // time from the action catalogue and cannot be checked here.
+    preg_match_all('/\b_t(?:Or)?\(\s*"([a-z0-9_]+)"\s*[,)]/', $js, $m);
     $keys = array_unique($m[1]);
     T::ok(count($keys) > 10, 'expected a good number of JS keys, found ' . count($keys));
 

@@ -70,7 +70,7 @@ class FilterChips
 
             echo '<a href="' . $e($url) . '" class="' . $cls . '">';
             if (isset($chip['icon'])) {
-                echo '<span class="gk-chip-icon material-icons">' . $e($chip['icon']) . '</span>';
+                echo '<span class="gk-chip-icon material-icons" aria-hidden="true">' . $e($chip['icon']) . '</span>';
             }
             if (isset($chip['count'])) {
                 echo $e($chip['label']) . ' <span class="gk-chip-count">' . $e((string)$chip['count']) . '</span>';
