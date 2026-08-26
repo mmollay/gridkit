@@ -639,11 +639,21 @@ class Table
     {
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
         $v = strtolower(trim((string)$val));
+        // Die Liste kannte bisher nur die deutschen Formen: 'active' und 'inactive'
+        // fielen beide auf 'gray' durch, womit die wichtigste Unterscheidung einer
+        // Statusspalte ohne Farbe blieb.
         $map = [
-            'green' => ['aktiv', 'bezahlt', 'paid', 'ja', 'yes', '1', 'true', 'gesendet', 'delivered'],
-            'orange' => ['offen', 'pending', 'entwurf', 'draft', 'warnung'],
-            'red' => ['storniert', 'cancelled', 'überfällig', 'overdue', 'fehler', 'error'],
-            'gray' => ['inaktiv', '0', 'false', 'nein', 'no'],
+            'green' => ['aktiv', 'active', 'bezahlt', 'paid', 'ja', 'yes', '1', 'true',
+                        'gesendet', 'delivered', 'erledigt', 'done', 'abgeschlossen',
+                        'completed', 'freigegeben', 'approved', 'online'],
+            'orange' => ['offen', 'open', 'pending', 'entwurf', 'draft', 'warnung',
+                         'warning', 'in bearbeitung', 'in progress', 'wartet', 'waiting',
+                         'geprüft', 'review'],
+            'red' => ['storniert', 'cancelled', 'canceled', 'überfällig', 'overdue',
+                      'fehler', 'error', 'failed', 'fehlgeschlagen', 'abgelehnt', 'rejected'],
+            'blue' => ['neu', 'new', 'info', 'geplant', 'scheduled'],
+            'gray' => ['inaktiv', 'inactive', 'deaktiviert', 'disabled', 'archiviert',
+                       'archived', 'gesperrt', 'blocked', '0', 'false', 'nein', 'no', 'offline'],
         ];
         $color = $custom[$v] ?? null;
         if (!$color) {

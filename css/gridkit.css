@@ -573,14 +573,19 @@ a:hover {
    beschneidet der border-radius der Eck-Zellen den Hintergrund. Sonst ragt eine
    graue letzte Zeile als eckiger Block über die runden Wrap-Ecken — sichtbar nur,
    wenn die letzte Zeile grau ist (weiße fällt mit dem weißen Wrap zusammen). */
-.gk-table tbody tr:hover > td {
-  background: var(--gk-surface-container-high);
-}
-.gk-table tbody tr:nth-child(even) > td {
+/* Ein Trennsystem statt drei. Vorher trennten Zebra-Flaeche, Zeilenlinie UND
+   Karten-Rahmen gleichzeitig — eines davon reicht. Die Haarlinie bleibt, die
+   Zebra-Flaeche entfaellt; wer sie braucht, nimmt .gk-table-striped.
+   Dadurch traegt die Hover-Flaeche allein und wird zum ersten Mal deutlich. */
+.gk-table tbody tr:hover > td,
+.gk-table tbody tr:focus-within > td {
   background: var(--gk-surface-container-low);
 }
-.gk-table tbody tr:nth-child(even):hover > td {
-  background: var(--gk-surface-container-high);
+/* Die angefasste Zeile bekommt eine Kante in Primary — dieselbe Sprache, mit
+   der die Seitenleiste ihren aktiven Eintrag markiert. */
+.gk-table tbody tr:hover > td:first-child,
+.gk-table tbody tr:focus-within > td:first-child {
+  box-shadow: inset 2px 0 0 var(--gk-primary);
 }
 /* Letzte SICHTBARE Zeile ohne Trennlinie. Mit tfoot ist die tfoot-Zeile die letzte
    (die tbody-Zeile behält dann ihre Linie als Trenner vor der Summe); ohne tfoot
@@ -2448,8 +2453,8 @@ select.gk-input {
   background: var(--gk-surface);
   border-radius: 16px;
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
+    var(--gk-elev-4),
+    0 0 0 1px var(--gk-outline-variant);
   width: 90%;
   max-height: 90vh;
   display: flex;
@@ -3689,7 +3694,7 @@ a.gk-stat-card:hover {
   margin-top: 8px;
   background: var(--gk-surface);
   border-radius: 12px;
-  box-shadow: var(--gk-elev-3);
+  box-shadow: var(--gk-elev-2);
   min-width: 200px;
   padding: 8px 0;
   z-index: 200;
@@ -5280,7 +5285,7 @@ a.gk-stat-card:hover {
   background: var(--gk-surface, #fff);
   border: 1px solid var(--gk-outline-variant);
   border-radius: 12px;
-  box-shadow: var(--gk-elev-3);
+  box-shadow: var(--gk-elev-2);
   z-index: 500;
   max-height: 300px;
   overflow: hidden;
@@ -6284,4 +6289,96 @@ a.gk-stat-card:hover {
     --gk-warning-text: oklch(from var(--gk-warning) calc(l - 0.10) c h);
     --gk-success-text: oklch(from var(--gk-success) calc(l - 0.10) c h);
   }
+}
+
+/* ===================================================================
+   VEREDELUNG — Tabelle, Status, Toolbar
+   Bewusst am Dateiende: diese Regeln verfeinern vorhandene Bauteile und
+   muessen ihnen deshalb im Kaskadenlauf nachstehen.
+   =================================================================== */
+
+/* ── Status-Pillen tragen wieder Bedeutung ──────────────────────────────
+   Der Punkt ist nicht Zierde: er unterscheidet die Zustaende auch dort,
+   wo Farbe allein nicht ankommt (Farbsehschwaeche, Graustufendruck). */
+.gk-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px 2px 7px;
+}
+.gk-label::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: currentColor;
+  flex: none;
+}
+.gk-label-green::before { background: var(--gk-success); }
+.gk-label-orange::before { background: var(--gk-warning); }
+.gk-label-red::before { background: var(--gk-error); }
+.gk-label-blue::before { background: var(--gk-info); }
+.gk-label-gray::before { background: var(--gk-outline); }
+/* Fuer Faelle, in denen das Label nur eine Auszeichnung ist, kein Zustand. */
+.gk-label-plain::before { display: none; }
+
+/* ── Zeilenaktionen ruhen, bis die Zeile gemeint ist ────────────────────
+   Loeschen ist die seltenste Handlung und die einzige unumkehrbare — und
+   war die einzige, die auf jeder Zeile Signalfarbe trug. Fuenfzehn rote
+   Papierkoerbe pro Bildschirm sind kein Hinweis, sondern Rauschen.
+   Nichts wird versteckt: die Symbole bleiben sichtbar, nur farblos. */
+.gk-table tbody td .gk-btn-icon-only,
+.gk-table tbody td.gk-actions .gk-btn {
+  opacity: 0.5;
+  filter: grayscale(1);
+  transition:
+    opacity var(--gk-dur-1) var(--gk-ease-out),
+    filter var(--gk-dur-1) var(--gk-ease-out);
+}
+.gk-table tbody tr:hover td .gk-btn-icon-only,
+.gk-table tbody tr:hover td.gk-actions .gk-btn,
+.gk-table tbody tr:focus-within td .gk-btn-icon-only,
+.gk-table tbody tr:focus-within td.gk-actions .gk-btn,
+.gk-table tbody td .gk-btn-icon-only:focus-visible,
+.gk-table tbody td.gk-actions .gk-btn:focus-visible {
+  opacity: 1;
+  filter: none;
+}
+
+/* ── Zahlen liest man nicht, man springt sie ab ─────────────────────────
+   Zahlenbreite hat .gk-td-num schon; es fehlte das Gewicht, mit dem die
+   Spalte als Block wahrnehmbar wird. */
+.gk-td-num {
+  font-weight: 500;
+}
+
+/* ── Die Karte traegt sich selbst ───────────────────────────────────────
+   Vorher ein harter Rahmen ohne Hoehe. Jetzt die erste Hoehenstufe, der
+   Rahmen tritt auf die Haarlinie zurueck. */
+.gk-table-wrap {
+  border-color: var(--gk-outline-variant);
+  box-shadow: var(--gk-elev-1);
+}
+[data-gk-mode="dark"] .gk-table-wrap,
+.gk-dark .gk-table-wrap {
+  box-shadow: none;
+}
+
+/* ── Toolbar wird leiser ────────────────────────────────────────────────
+   Das Suchfeld bekommt eine eigene Flaeche statt eines kraeftigen Rahmens
+   und tritt beim Fokus auf die Kartenflaeche hervor. */
+.gk-toolbar .gk-search,
+.gk-tableheader-toolbar .gk-search {
+  background-color: var(--gk-surface-container-low);
+  border-width: 1px;
+}
+.gk-toolbar .gk-search:focus-visible,
+.gk-tableheader-toolbar .gk-search:focus-visible {
+  background-color: var(--gk-surface);
+}
+/* Filter folgen der Pillenform der uebrigen Toolbar-Bedienelemente. */
+.gk-toolbar .gk-filter,
+.gk-tableheader-toolbar .gk-filter {
+  border-radius: 9999px;
+  padding-left: 14px;
 }

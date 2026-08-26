@@ -67,6 +67,32 @@ Alias-Tokens (`--gk-primary-500`, `--gk-neutral-*` …) bleiben.
   `--gk-hue` ab; ein siebtes Theme kostet eine Zeile statt zwanzig. Die
   Literale bleiben als `@supports`-Rückfall stehen.
 
+### Veredelt
+
+Der sichtbare Teil — die Tabelle aus Blatt 04 des Audits:
+
+- **Status-Pillen tragen wieder Bedeutung.** `Table::renderLabel()` kannte nur
+  die deutschen Formen: `active` und `inactive` fielen beide auf grau durch,
+  womit die wichtigste Unterscheidung einer Statusspalte ohne Farbe blieb. Die
+  Liste kennt jetzt beide Sprachen und mehr Zustände. Jede Pille bekommt einen
+  Punkt in der Signalfarbe — er unterscheidet die Zustände auch bei
+  Farbsehschwäche und im Graustufendruck. `.gk-label-plain` schaltet ihn ab.
+- **Zeilenaktionen ruhen, bis die Zeile gemeint ist.** Löschen ist die seltenste
+  Handlung und die einzige unumkehrbare — und war die einzige, die auf jeder
+  Zeile Signalfarbe trug. Die Symbole bleiben sichtbar, nur farblos, und
+  kommen bei Hover oder Tastaturfokus zurück.
+- **Ein Trennsystem statt drei.** Zebra-Fläche, Zeilenlinie und Kartenrahmen
+  haben gleichzeitig getrennt. Die Zebra-Fläche entfällt (`.gk-table-striped`
+  bringt sie zurück), dadurch trägt die Hover-Fläche allein und wird zum
+  ersten Mal deutlich. Die angefasste Zeile bekommt eine Kante in Primary.
+- **Beträge in halbfetter Zahlenbreite.** `.gk-td-num` hatte die Zahlenbreite
+  schon; es fehlte das Gewicht, mit dem die Spalte als Block lesbar wird.
+- **Die Karte trägt sich selbst** — erste Höhenstufe statt hartem Rahmen.
+- **Die Toolbar wird leiser.** Das Suchfeld bekommt eine eigene Fläche statt
+  eines kräftigen Rahmens, Filter folgen der Pillenform.
+- **Die Höhenstufen sind jetzt zugewiesen**, nicht nur definiert: Karte auf
+  `--gk-elev-1`, Dropdowns auf `-2`, Modal auf `-4`.
+
 ### Geändert
 
 Sichtbar, bitte vor dem Update ansehen:
@@ -81,11 +107,16 @@ Sichtbar, bitte vor dem Update ansehen:
   wenn alles grün ist, bedeutet Grün nichts mehr.
 - **`prefers-reduced-motion`** galt bisher für zwei Regeln der Suche und deckt
   jetzt alles ab.
+- **Tabellen haben standardmäßig keine Zebra-Streifen mehr.** `gk-table-striped`
+  bringt sie zurück.
 - **Fokusringe sind sichtbar** statt bei 10 % Deckung erahnbar, und liegen
   durchgehend auf `:focus-visible` statt auf `:focus`.
 
 ### Offen
 
+- Zweitrangige Zeilen (etwa der Status *inaktiv*) treten in der Textfarbe noch
+  nicht zurück — das setzt voraus, dass die Tabelle den Zustand einer Zeile
+  kennt, nicht nur den einer Zelle.
 - Der Dark-Mode-Block ist erst teilweise aufgeräumt: 14 von 120 Regeln waren
   nachweislich wirkungslos und sind entfallen, 71 Farbliterale stehen dort noch.
 - Vier Schriftgrößen (10, 15, 17, 36 px) stehen weiter als Literal. Sie zu
