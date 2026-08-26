@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: #f6f8fb; }
+    a { color: #4338ca; } a:hover { color: #312e81; }
+    .gk-mono { font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .gk-code { font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; font-size: 12px; background: #f1f5f9; border-radius: 4px; padding: 1px 5px; color: #334155; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; min-height: 2080px; background: #f6f8fb; font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #0f172a; padding: 68px 80px 76px; display: flex; flex-direction: column; gap: 44px;">
+
+  <!-- Kopf -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <span class="gk-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6366f1; font-weight: 500;">Blatt 02</span>
+      <span style="flex-grow: 1; height: 1px; background: #dbe2ea;"></span>
+      <span class="gk-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #94a3b8;">Elf Befunde · nach Schwere</span>
+    </div>
+    <h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 56px; line-height: 1.08; letter-spacing: -0.012em; color: #0f172a;">Was gemessen wurde</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.6; color: #475569; max-width: 860px; text-wrap: pretty;">Jeder Punkt ist im laufenden Demo-Build nachgeprüft — im Browser gemessen oder direkt in <span class="gk-code">css/gridkit.css</span> gezählt. Keine Schätzungen.</p>
+  </div>
+
+  <!-- Tabellenkopf -->
+  <div style="display: grid; grid-template-columns: 108px minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; padding-bottom: 12px; border-bottom: 2px solid #0f172a;">
+    <span class="gk-mono" style="font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #64748b;">Schwere</span>
+    <span class="gk-mono" style="font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #64748b;">Befund &amp; Messwert</span>
+    <span class="gk-mono" style="font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #64748b;">Vorgeschlagene Behebung</span>
+  </div>
+
+  <!-- Befundliste -->
+  <div style="display: flex; flex-direction: column;">
+
+    <!-- 01 -->
+    <div style="display: grid; grid-template-columns: 108px minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; padding: 26px 0; border-bottom: 1px solid #e2e8f0;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; align-self: flex-start; padding: 3px 9px; border-radius: 9999px; background: #ffe4e6; color: #9f1239; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Kritisch</span>
+        <span class="gk-mono" style="font-size: 11px; color: #cbd5e1;">01</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 17px; font-weight: 600; line-height: 1.35; color: #0f172a;">Die sechs Themes haben im Light Mode keine Wirkung</span>
+        <span style="font-size: 13.5px; line-height: 1.6; color: #64748b;">Neun Komponenten geprüft — Button (filled, outlined, text, tonal), Tabellenkopf, Rahmen, Suchfeld, Sidebar. Keine einzige ändert bei Theme-Wechsel ihre Farbe, obwohl <span class="gk-code">--gk-primary</span> korrekt auf <span class="gk-code">#059669</span> umspringt.</span>
+      </div>
+      <div style="font-size: 13.5px; line-height: 1.65; color: #334155;">Alle Farbliterale in Komponentenregeln durch die passende Rolle ersetzen: <span class="gk-code">var(--gk-primary)</span>, <span class="gk-code">var(--gk-on-primary)</span>, <span class="gk-code">var(--gk-outline-variant)</span>. Die Rollen existieren bereits vollständig.</div>
+    </div>
+
+    <!-- 02 -->
+    <div style="display: grid; grid-template-columns: 108px minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; padding: 26px 0; border-bottom: 1px solid #e2e8f0;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; align-self: flex-start; padding: 3px 9px; border-radius: 9999px; background: #ffe4e6; color: #9f1239; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Kritisch</span>
+        <span class="gk-mono" style="font-size: 11px; color: #cbd5e1;">02</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 17px; font-weight: 600; line-height: 1.35; color: #0f172a;">Dark Mode: jede zweite Tabellenzeile ist unlesbar</span>
+        <span style="font-size: 13.5px; line-height: 1.6; color: #64748b;">Kontrast 1,16&nbsp;:&nbsp;1 (WCAG&nbsp;AA verlangt 4,5&nbsp;:&nbsp;1). Ursache ist ein Spezifitätsfehler: Zeile&nbsp;469 malt die Zebra-Fläche auf <span class="gk-code">&gt; td</span>, der Dark-Mode-Patch in Zeile&nbsp;5575 auf <span class="gk-code">tr</span>. Die Zelle liegt darüber — der Patch greift nie.</span>
+      </div>
+      <div style="font-size: 13.5px; line-height: 1.65; color: #334155;">Beide Regeln auf dieselbe Ebene legen und die Fläche aus einer Rolle ziehen: <span class="gk-code">var(--gk-surface-container-low)</span>. Dann entfällt der Patch ersatzlos.</div>
+    </div>
+
+    <!-- 03 -->
+    <div style="display: grid; grid-template-columns: 108px minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; padding: 26px 0; border-bottom: 1px solid #e2e8f0;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; align-self: flex-start; padding: 3px 9px; border-radius: 9999px; background: #ffe4e6; color: #9f1239; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Kritisch</span>
+        <span class="gk-mono" style="font-size: 11px; color: #cbd5e1;">03</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 17px; font-weight: 600; line-height: 1.35; color: #0f172a;">Dark Mode ist ein Flickenteppich, keine Umschaltung</span>
+        <span style="font-size: 13.5px; line-height: 1.6; color: #64748b;">Der Token-Block oben ist vorbildlich — danach folgen 73 zusätzliche <span class="gk-code">[data-gk-mode="dark"]</span>-Selektoren über rund 450&nbsp;Zeilen, die einzelne Komponenten nachbessern. Jede neue Komponente braucht künftig wieder einen eigenen Patch.</span>
+      </div>
+      <div style="font-size: 13.5px; line-height: 1.65; color: #334155;">Sobald Befund&nbsp;01 erledigt ist, fallen die meisten Patches von selbst weg. Ziel: Dark Mode ist ausschließlich ein neuer Satz Token-Werte, kein zweites Stylesheet.</div>
+    </div>
+
+    <!-- 04 -->
+    <div style="display: grid; grid-template-columns: 108px minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; padding: 26px 0; border-bottom: 1px solid #e2e8f0;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; align-self: flex-start; padding: 3px 9px; border-radius: 9999px; background: #ffe4e6; color: #9f1239; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Kritisch</span>
+        <span class="gk-mono" style="font-size: 11px; color: #cbd5e1;">04</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 17px; font-weight: 600; line-height: 1.35; color: #0f172a;">Am Telefon scrollt die ganze Seite seitwärts</span>
+        <span style="font-size: 13.5px; line-height: 1.6; color: #64748b;">Bei 390&nbsp;px Viewport misst das Dokument 1.690&nbsp;px Breite. <strong style="color: #0f172a;">Nachtrag aus der Umsetzung:</strong> Die Ursache liegt nicht im Framework, sondern in der Demo-Seite — <span class="gk-code">repeat(3, 1fr)</span> ohne <span class="gk-code">minmax(0, …)</span>. Eine 1fr-Spur kann nicht unter die Min-Content-Breite ihres Inhalts schrumpfen, also bläht die Tabelle sie auf 542&nbsp;px auf. <span class="gk-code">.gk-table-wrap</span> fängt den Überlauf mobil bereits korrekt mit <span class="gk-code">overflow-x: auto</span> ab.</span>
+      </div>
+      <div style="font-size: 13.5px; line-height: 1.65; color: #334155;">In der Demo <span class="gk-code">minmax(0, 1fr)</span> setzen. Im Framework eine Schutzregel ergänzen, damit eine Tabelle fremde Spuren gar nicht erst aufweiten kann: <span class="gk-code">.gk-table-wrap { min-width: 0; max-width: 100% }</span>.</div>
+    </div>
+
+    <!-- 05 -->
+    <div style="display: grid; grid-template-columns: 108px minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; padding: 26px 0; border-bottom: 1px solid #e2e8f0;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; align-self: flex-start; padding: 3px 9px; border-radius: 9999px; background: #fef3c7; color: #92400e; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Hoch</span>
+        <span class="gk-mono" style="font-size: 11px; color: #cbd5e1;">05</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 17px; font-weight: 600; line-height: 1.35; color: #0f172a;">Keine Typo-Skala — sechzehn Größen aus dem Bauch</span>
+        <span style="font-size: 13.5px; line-height: 1.6; color: #64748b;">10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 28, 32, 36 und 56&nbsp;px, alle als Literale verstreut. Zwei Tokens existieren (<span class="gk-code">--gk-font-size</span>, <span class="gk-code">--gk-font-size-sm</span>), sie decken zwei der sechzehn ab.</span>
+      </div>
+      <div style="font-size: 13.5px; line-height: 1.65; color: #334155;">Sieben Stufen genügen für ein Admin-System. Dazu je eine feste Zeilenhöhe und ein Schriftgewicht — eine Rolle statt einer Zahl (siehe Blatt&nbsp;03).</div>
+    </div>
+
+    <!-- 06 -->
+    <div style="display: grid; grid-template-columns: 108px minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; padding: 26px 0; border-bottom: 1px solid #e2e8f0;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; align-self: flex-start; padding: 3px 9px; border-radius: 9999px; background: #fef3c7; color: #92400e; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Hoch</span>
+        <span class="gk-mono" style="font-size: 11px; color: #cbd5e1;">06</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 17px; font-weight: 600; line-height: 1.35; color: #0f172a;">Bewegung ohne Handschrift</span>
+        <span style="font-size: 13.5px; line-height: 1.6; color: #64748b;">Rund dreißig verschiedene <span class="gk-code">transition</span>-Deklarationen, fünf Dauern (0,1&nbsp;/&nbsp;0,15&nbsp;/&nbsp;0,2&nbsp;/&nbsp;0,25&nbsp;/&nbsp;0,3&nbsp;s), sechzehn davon ohne jede Angabe der Eigenschaft — <span class="gk-code">transition: all</span> animiert auch, was niemand animieren wollte.</span>
+      </div>
+      <div style="font-size: 13.5px; line-height: 1.65; color: #334155;">Drei Dauer-Tokens und zwei Kurven. Kein <span class="gk-code">all</span> mehr, sondern benannte Eigenschaften. Das ist der Unterschied zwischen „reagiert" und „wirkt teuer".</div>
+    </div>
+
+    <!-- 07 -->
+    <div style="display: grid; grid-template-columns: 108px minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; padding: 26px 0; border-bottom: 1px solid #e2e8f0;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; align-self: flex-start; padding: 3px 9px; border-radius: 9999px; background: #fef3c7; color: #92400e; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Hoch</span>
+        <span class="gk-mono" style="font-size: 11px; color: #cbd5e1;">07</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 17px; font-weight: 600; line-height: 1.35; color: #0f172a;">Achtunddreißig Literal-Schatten, zwei Tokens</span>
+        <span style="font-size: 13.5px; line-height: 1.6; color: #64748b;">45 <span class="gk-code">box-shadow</span>-Deklarationen, davon 38 als Literal in 28 verschiedenen Ausprägungen. Höhe wird nicht als Stufe gedacht, sondern jedes Mal neu erfunden. Deshalb wirken Karte, Modal, Dropdown und Toast wie aus vier verschiedenen Systemen.</span>
+      </div>
+      <div style="font-size: 13.5px; line-height: 1.65; color: #334155;">Vier Höhenstufen, jede als zweilagiger Schatten (enger Kontaktschatten plus weiche Streuung). Im Dark Mode ersetzt eine hellere Fläche den Schatten, statt Schwarz auf Schwarz zu legen.</div>
+    </div>
+
+    <!-- 08 -->
+    <div style="display: grid; grid-template-columns: 108px minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; padding: 26px 0; border-bottom: 1px solid #e2e8f0;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; align-self: flex-start; padding: 3px 9px; border-radius: 9999px; background: #fef3c7; color: #92400e; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Hoch</span>
+        <span class="gk-mono" style="font-size: 11px; color: #cbd5e1;">08</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 17px; font-weight: 600; line-height: 1.35; color: #0f172a;">Fokus ist nicht durchgehend geregelt</span>
+        <span style="font-size: 13.5px; line-height: 1.6; color: #64748b;">Zwei Regeln nutzen <span class="gk-code">:focus-visible</span>, sieben das blanke <span class="gk-code">:focus</span>. Wer mit der Maus klickt, sieht Ringe, die ihm nichts sagen; wer mit der Tastatur navigiert, bekommt je nach Komponente etwas anderes.</span>
+      </div>
+      <div style="font-size: 13.5px; line-height: 1.65; color: #334155;">Ein einziger Fokusring als Token, überall <span class="gk-code">:focus-visible</span>. Für ein Framework, das Verwaltungsoberflächen baut, ist das kein Detail, sondern eine Zusage.</div>
+    </div>
+
+    <!-- 09 -->
+    <div style="display: grid; grid-template-columns: 108px minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; padding: 26px 0; border-bottom: 1px solid #e2e8f0;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; align-self: flex-start; padding: 3px 9px; border-radius: 9999px; background: #e0e7ff; color: #3730a3; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Veredelung</span>
+        <span class="gk-mono" style="font-size: 11px; color: #cbd5e1;">09</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 17px; font-weight: 600; line-height: 1.35; color: #0f172a;">Formularbeschriftungen schreien</span>
+        <span style="font-size: 13.5px; line-height: 1.6; color: #64748b;">Jedes Feld trägt seine Beschriftung in 11&nbsp;px Versalien mit weitem Sperrsatz — <span class="gk-mono" style="font-size: 11px; letter-spacing: 0.05em;">ARTIKEL-NR.</span>. Versalien lesen sich langsamer, und bei 11&nbsp;px ist genau das die falsche Sparsamkeit.</span>
+      </div>
+      <div style="font-size: 13.5px; line-height: 1.65; color: #334155;">13&nbsp;px, Gemischtsatz, mittleres Gewicht. Versalien bleiben dort, wo sie tragen: Tabellenköpfe und Abschnittsmarken. Siehe Blatt&nbsp;04.</div>
+    </div>
+
+    <!-- 10 -->
+    <div style="display: grid; grid-template-columns: 108px minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; padding: 26px 0; border-bottom: 1px solid #e2e8f0;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; align-self: flex-start; padding: 3px 9px; border-radius: 9999px; background: #e0e7ff; color: #3730a3; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Veredelung</span>
+        <span class="gk-mono" style="font-size: 11px; color: #cbd5e1;">10</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 17px; font-weight: 600; line-height: 1.35; color: #0f172a;">Der Speichern-Button ist grün</span>
+        <span style="font-size: 13.5px; line-height: 1.6; color: #64748b;">Grün ist im System die Erfolgsrolle — die Farbe für „hat geklappt". Sie an die Hauptaktion zu hängen, verbraucht sie: Wenn alles grün ist, bedeutet Grün nichts mehr. Dieselbe Zurückhaltung fehlt den Status-Pillen, wo <em>aktiv</em> und <em>inaktiv</em> beide grau sind.</span>
+      </div>
+      <div style="font-size: 13.5px; line-height: 1.65; color: #334155;">Hauptaktion in Primary, genau eine pro Ansicht. Semantische Farben bleiben dem Zustand vorbehalten — und dann auch deutlich unterscheidbar.</div>
+    </div>
+
+    <!-- 11 -->
+    <div style="display: grid; grid-template-columns: 108px minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; padding: 26px 0;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; align-self: flex-start; padding: 3px 9px; border-radius: 9999px; background: #e0e7ff; color: #3730a3; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Veredelung</span>
+        <span class="gk-mono" style="font-size: 11px; color: #cbd5e1;">11</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 17px; font-weight: 600; line-height: 1.35; color: #0f172a;">Sechs Themes werden sechsmal von Hand gepflegt</span>
+        <span style="font-size: 13.5px; line-height: 1.6; color: #64748b;">Kein <span class="gk-code">oklch</span>, ein einziges <span class="gk-code">color-mix</span>, keine Container Queries. Jedes Theme listet Primary, Container, On-Container, Dark-Variante einzeln auf — sieben Werte, die aus einem folgen könnten.</span>
+      </div>
+      <div style="font-size: 13.5px; line-height: 1.65; color: #334155;">Ein Theme wird zu einer Zeile: der Farbwinkel. Helligkeit und Buntheit bleiben konstant, alles Übrige rechnet <span class="gk-code">oklch</span> aus. Ein siebtes Theme kostet dann eine Zeile statt zwanzig.</div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
