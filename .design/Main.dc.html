@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: #f6f8fb; }
+    a { color: #4338ca; } a:hover { color: #312e81; }
+    .gk-mono { font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; min-height: 1560px; background: #f6f8fb; font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #0f172a; padding: 68px 80px 72px; display: flex; flex-direction: column; gap: 56px;">
+
+  <!-- Kopfzeile -->
+  <div style="display: flex; align-items: center; gap: 18px;">
+    <span class="gk-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6366f1; font-weight: 500;">GridKit 1.27.3</span>
+    <span style="flex-grow: 1; height: 1px; background: #dbe2ea;"></span>
+    <span class="gk-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #94a3b8;">Design-Audit · 26. August 2026</span>
+  </div>
+
+  <!-- Aufmacher -->
+  <div style="display: flex; flex-direction: column; gap: 28px; max-width: 1120px;">
+    <h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 72px; line-height: 1.04; letter-spacing: -0.015em; color: #0f172a; text-wrap: pretty;">
+      Das Token-System ist fertig gebaut.<br>
+      Die Komponenten benutzen es nicht.
+    </h1>
+    <p style="margin: 0; font-size: 19px; line-height: 1.62; color: #475569; max-width: 820px; text-wrap: pretty;">
+      GridKit hat eine saubere M3-Farbrollen-Schicht — <span class="gk-mono" style="font-size: 16px; color: #0f172a;">--gk-primary</span>, Surface-Container-Stufen, sechs Themes, Dark Mode. Diese Schicht funktioniert. Darunter liegen aber 482 fest verdrahtete Hex-Werte, die sie überstimmen. Das Ergebnis ist im Browser messbar: im Light Mode sehen alle sechs Themes identisch aus, und im Dark Mode ist jede zweite Tabellenzeile unlesbar.
+    </p>
+  </div>
+
+  <!-- Messwerte -->
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px;">
+
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 26px 24px 24px; display: flex; flex-direction: column; gap: 10px;">
+      <span class="gk-mono" style="font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #f43f5e; font-weight: 500;">Kritisch</span>
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 54px; line-height: 1; color: #0f172a;">0<span style="font-size: 30px; color: #94a3b8;">/9</span></span>
+      <span style="font-size: 14px; font-weight: 600; line-height: 1.4; color: #0f172a;">Komponenten reagieren auf den Theme&#8209;Wechsel</span>
+      <span style="font-size: 12.5px; line-height: 1.5; color: #64748b;">Gemessen: Theme auf <em>forest</em> gesetzt, <span class="gk-mono" style="font-size: 11.5px;">--gk-primary</span> wird <span class="gk-mono" style="font-size: 11.5px;">#059669</span> — Button bleibt indigo.</span>
+    </div>
+
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 26px 24px 24px; display: flex; flex-direction: column; gap: 10px;">
+      <span class="gk-mono" style="font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #f43f5e; font-weight: 500;">Kritisch</span>
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 54px; line-height: 1; color: #0f172a;">1,16<span style="font-size: 30px; color: #94a3b8;">:1</span></span>
+      <span style="font-size: 14px; font-weight: 600; line-height: 1.4; color: #0f172a;">Kontrast der Zebra&#8209;Zeilen im Dark Mode</span>
+      <span style="font-size: 12.5px; line-height: 1.5; color: #64748b;">WCAG&nbsp;AA verlangt 4,5:1. Der Text ist praktisch unsichtbar — jede zweite Zeile.</span>
+    </div>
+
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 26px 24px 24px; display: flex; flex-direction: column; gap: 10px;">
+      <span class="gk-mono" style="font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #d97706; font-weight: 500;">Ursache</span>
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 54px; line-height: 1; color: #0f172a;">482</span>
+      <span style="font-size: 14px; font-weight: 600; line-height: 1.4; color: #0f172a;">fest verdrahtete Hex&#8209;Werte in gridkit.css</span>
+      <span style="font-size: 12.5px; line-height: 1.5; color: #64748b;">Dem stehen 455 <span class="gk-mono" style="font-size: 11.5px;">var(--gk-…)</span> gegenüber. Über die Hälfte der Farbentscheidungen umgeht das System.</span>
+    </div>
+
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 26px 24px 24px; display: flex; flex-direction: column; gap: 10px;">
+      <span class="gk-mono" style="font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #d97706; font-weight: 500;">Ursache</span>
+      <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 54px; line-height: 1; color: #0f172a;">16</span>
+      <span style="font-size: 14px; font-weight: 600; line-height: 1.4; color: #0f172a;">verschiedene Schriftgrößen, keine Skala</span>
+      <span style="font-size: 12.5px; line-height: 1.5; color: #64748b;">10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 28, 32, 36, 56&nbsp;px — als Literale verstreut.</span>
+    </div>
+
+  </div>
+
+  <!-- Der Kern-Befund -->
+  <div style="display: flex; flex-direction: column; gap: 24px;">
+    <div style="display: flex; align-items: baseline; gap: 16px;">
+      <h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 34px; line-height: 1.15; color: #0f172a;">Der Kern-Befund in vier Zeilen</h2>
+      <span style="flex-grow: 1; height: 1px; background: #dbe2ea;"></span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;">
+
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; background: #fef2f4;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span style="font-size: 12.5px; font-weight: 600; letter-spacing: 0.02em; color: #9f1239;">Heute · gridkit.css Zeile 877</span>
+        </div>
+        <div class="gk-mono" style="padding: 20px; font-size: 13px; line-height: 1.85; color: #0f172a; white-space: pre-line;">.gk-btn-filled.gk-btn-primary {
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
+}</div>
+        <div style="padding: 0 20px 20px; font-size: 13px; line-height: 1.6; color: #64748b;">Der Wert ist eine Kopie von <span class="gk-mono" style="font-size: 12px;">--gk-primary</span> — aber eben eine Kopie. Theme-Wechsel erreichen sie nie.</div>
+      </div>
+
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; background: #ecfdf5;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <span style="font-size: 12.5px; font-weight: 600; letter-spacing: 0.02em; color: #065f46;">Veredelt · eine Regel für alle sechs Themes</span>
+        </div>
+        <div class="gk-mono" style="padding: 20px; font-size: 13px; line-height: 1.85; color: #0f172a; white-space: pre-line;">.gk-btn-filled.gk-btn-primary {
+  background: var(--gk-primary);
+  color: var(--gk-on-primary);
+  border-color: var(--gk-primary);
+}</div>
+        <div style="padding: 0 20px 20px; font-size: 13px; line-height: 1.6; color: #64748b;">Dieselbe Regel gilt dann auch im Dark Mode. Die 73 Dark-Mode-Patches darunter werden überflüssig.</div>
+      </div>
+
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 14px; background: #ffffff; border: 1px solid #e2e8f0; border-left: 3px solid #6366f1; border-radius: 12px; padding: 20px 24px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      <p style="margin: 0; font-size: 15px; line-height: 1.65; color: #334155; max-width: 1080px;">
+        Das ist die gute Nachricht dieses Audits: Es fehlt kein Konzept. Das Konzept steht und ist gut — es wird nur an rund 480&nbsp;Stellen nicht angewendet. Der teuerste Teil einer Design-System-Sanierung, die Entscheidung, was die Tokens <em>sein</em> sollen, ist hier bereits getan.
+      </p>
+    </div>
+  </div>
+
+  <!-- Wegweiser -->
+  <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 4px;">
+    <span class="gk-mono" style="font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #94a3b8;">Weiter auf dieser Leinwand</span>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px;">
+      <div style="border-top: 2px solid #0f172a; padding-top: 12px; display: flex; flex-direction: column; gap: 5px;">
+        <span style="font-size: 14px; font-weight: 600; color: #0f172a;">Befunde</span>
+        <span style="font-size: 12.5px; line-height: 1.5; color: #64748b;">Elf gemessene Punkte, nach Schwere sortiert</span>
+      </div>
+      <div style="border-top: 2px solid #0f172a; padding-top: 12px; display: flex; flex-direction: column; gap: 5px;">
+        <span style="font-size: 14px; font-weight: 600; color: #0f172a;">Tokens</span>
+        <span style="font-size: 12.5px; line-height: 1.5; color: #64748b;">Die vorgeschlagene Token-Schicht im Detail</span>
+      </div>
+      <div style="border-top: 2px solid #0f172a; padding-top: 12px; display: flex; flex-direction: column; gap: 5px;">
+        <span style="font-size: 14px; font-weight: 600; color: #0f172a;">Tabelle</span>
+        <span style="font-size: 12.5px; line-height: 1.5; color: #64748b;">Heute und veredelt, direkt nebeneinander</span>
+      </div>
+      <div style="border-top: 2px solid #0f172a; padding-top: 12px; display: flex; flex-direction: column; gap: 5px;">
+        <span style="font-size: 14px; font-weight: 600; color: #0f172a;">Themes</span>
+        <span style="font-size: 12.5px; line-height: 1.5; color: #64748b;">Was die sechs Themes heute zeigen — und was danach</span>
+      </div>
+      <div style="border-top: 2px solid #0f172a; padding-top: 12px; display: flex; flex-direction: column; gap: 5px;">
+        <span style="font-size: 14px; font-weight: 600; color: #0f172a;">Fahrplan</span>
+        <span style="font-size: 12.5px; line-height: 1.5; color: #64748b;">Drei Etappen, nach Wirkung pro Aufwand</span>
+      </div>
+      <div style="border-top: 2px solid #009869; padding-top: 12px; display: flex; flex-direction: column; gap: 5px;">
+        <span style="font-size: 14px; font-weight: 600; color: #0f172a;">Ergebnis</span>
+        <span style="font-size: 12.5px; line-height: 1.5; color: #64748b;">Was danach gemessen wurde</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

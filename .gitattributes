@@ -1,0 +1,30 @@
+# ── Composer package contents ────────────────────────────────────────────────
+# These paths belong in the repository but are of no use inside vendor/.
+# `composer require mmollay/gridkit` should pull the framework, not the demo
+# site, its screenshots or the design audit.
+/demo             export-ignore
+/docs             export-ignore
+/.design          export-ignore
+/.github          export-ignore
+/index.php        export-ignore
+/skeleton.php     export-ignore
+/sitemap.xml      export-ignore
+/robots.txt       export-ignore
+/favicon.ico      export-ignore
+/CONTRIBUTING.md  export-ignore
+/SPEC.md          export-ignore
+/.CLAUDE.md       export-ignore
+/.gitattributes   export-ignore
+/.gitignore       export-ignore
+
+# CKEditor 5 is bundled for the rich-text field, which is optional. At 1.7 MB it
+# would otherwise dominate every install of a framework that advertises zero
+# dependencies. It stays in the repository — a git clone and the demo keep
+# working — but it is not part of the Composer package. Projects that need the
+# rich-text field include CKEditor themselves.
+/vendor           export-ignore
+
+# ── Line endings ─────────────────────────────────────────────────────────────
+* text=auto eol=lf
+*.png binary
+*.ico binary

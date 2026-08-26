@@ -1,0 +1,254 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: #f6f8fb; }
+    a { color: #4338ca; } a:hover { color: #312e81; }
+    .gk-mono { font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .gk-ui { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  </style>
+</helmet>
+
+<div style="width: 1560px; min-height: 1120px; background: #f6f8fb; font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #0f172a; padding: 68px 72px 76px; display: flex; flex-direction: column; gap: 44px;">
+
+  <!-- Kopf -->
+  <div style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <span class="gk-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6366f1; font-weight: 500;">Blatt 04</span>
+      <span style="flex-grow: 1; height: 1px; background: #dbe2ea;"></span>
+      <span class="gk-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #94a3b8;">Die Tabelle · heute und veredelt</span>
+    </div>
+    <h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 56px; line-height: 1.08; letter-spacing: -0.012em; color: #0f172a;">Dieselbe Tabelle, acht Entscheidungen später</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.6; color: #475569; max-width: 900px; text-wrap: pretty;">Links die Tabelle aus dem laufenden Demo-Build, Werte 1:1 übernommen. Rechts dieselben Daten, dieselbe Dichte, dieselbe Breite — verändert wurde nur, woher die Werte kommen und was Farbe bedeuten darf.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; align-items: start;">
+
+    <!-- ══════════ HEUTE ══════════ -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 9999px; background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Heute</span>
+        <span style="font-size: 13px; color: #94a3b8;">v1.27.3, unverändert</span>
+      </div>
+
+      <div class="gk-ui" style="background: #ffffff; border: 1px solid #d0d7de; border-radius: 12px; overflow: hidden; font-size: 14px; color: #0f172a;">
+        <!-- Toolbar -->
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 16px; border-bottom: 1px solid #e2e8f0;">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1.5px solid #e2e8f0; border-radius: 9999px; min-width: 190px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <span style="color: #94a3b8; font-size: 14px;">Suche…</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 20px; padding: 7px 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <span style="font-size: 14px; color: #0f172a;">Alle Status</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <span style="flex-grow: 1;"></span>
+          <div style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1.5px solid #6366f1; border-radius: 9999px; background: #6366f1; color: #ffffff; font-size: 14px; font-weight: 500;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            Neuer Artikel
+          </div>
+        </div>
+        <!-- Kopfzeile -->
+        <div style="display: grid; grid-template-columns: 108px minmax(0, 1fr) 96px 96px 74px; background: #f6f8fa; border-bottom: 1px solid #d8dee4;">
+          <span style="padding: 12px 16px; font-size: 11px; font-weight: 600; color: #57606a; text-transform: uppercase; letter-spacing: 0.05em;">Artikel-Nr.</span>
+          <span style="padding: 12px 16px; font-size: 11px; font-weight: 600; color: #57606a; text-transform: uppercase; letter-spacing: 0.05em;">Bezeichnung</span>
+          <span style="padding: 12px 16px; font-size: 11px; font-weight: 600; color: #57606a; text-transform: uppercase; letter-spacing: 0.05em; text-align: right;">Netto</span>
+          <span style="padding: 12px 16px; font-size: 11px; font-weight: 600; color: #57606a; text-transform: uppercase; letter-spacing: 0.05em;">Status</span>
+          <span style="padding: 12px 16px;"></span>
+        </div>
+        <!-- Zeile 1 -->
+        <div style="display: grid; grid-template-columns: 108px minmax(0, 1fr) 96px 96px 74px; border-bottom: 1px solid #d8dee4; align-items: center;">
+          <span style="padding: 12px 16px;">ART-001</span>
+          <span style="padding: 12px 16px;">Webdesign Paket S</span>
+          <span style="padding: 12px 16px; text-align: right; font-variant-numeric: tabular-nums;">1.200,00</span>
+          <span style="padding: 12px 16px;"><span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; background: #f3f4f6; color: #6b7280; font-size: 12px; font-weight: 500;">aktiv</span></span>
+          <span style="padding: 12px 16px; display: flex; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </span>
+        </div>
+        <!-- Zeile 2 (zebra) -->
+        <div style="display: grid; grid-template-columns: 108px minmax(0, 1fr) 96px 96px 74px; border-bottom: 1px solid #d8dee4; align-items: center; background: #f6f8fa;">
+          <span style="padding: 12px 16px;">ART-002</span>
+          <span style="padding: 12px 16px;">Hosting Standard</span>
+          <span style="padding: 12px 16px; text-align: right; font-variant-numeric: tabular-nums;">9,90</span>
+          <span style="padding: 12px 16px;"><span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; background: #f3f4f6; color: #6b7280; font-size: 12px; font-weight: 500;">aktiv</span></span>
+          <span style="padding: 12px 16px; display: flex; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </span>
+        </div>
+        <!-- Zeile 3 -->
+        <div style="display: grid; grid-template-columns: 108px minmax(0, 1fr) 96px 96px 74px; border-bottom: 1px solid #d8dee4; align-items: center;">
+          <span style="padding: 12px 16px;">ART-003</span>
+          <span style="padding: 12px 16px;">SEO Beratung</span>
+          <span style="padding: 12px 16px; text-align: right; font-variant-numeric: tabular-nums;">95,00</span>
+          <span style="padding: 12px 16px;"><span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; background: #f3f4f6; color: #6b7280; font-size: 12px; font-weight: 500;">inaktiv</span></span>
+          <span style="padding: 12px 16px; display: flex; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </span>
+        </div>
+        <!-- Zeile 4 (zebra) -->
+        <div style="display: grid; grid-template-columns: 108px minmax(0, 1fr) 96px 96px 74px; border-bottom: 1px solid #d8dee4; align-items: center; background: #f6f8fa;">
+          <span style="padding: 12px 16px;">ART-004</span>
+          <span style="padding: 12px 16px;">Logo Design</span>
+          <span style="padding: 12px 16px; text-align: right; font-variant-numeric: tabular-nums;">450,00</span>
+          <span style="padding: 12px 16px;"><span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; background: #fef3c7; color: #92400e; font-size: 12px; font-weight: 500;">Entwurf</span></span>
+          <span style="padding: 12px 16px; display: flex; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </span>
+        </div>
+        <!-- Zeile 5 -->
+        <div style="display: grid; grid-template-columns: 108px minmax(0, 1fr) 96px 96px 74px; align-items: center;">
+          <span style="padding: 12px 16px;">ART-005</span>
+          <span style="padding: 12px 16px;">Newsletter Setup</span>
+          <span style="padding: 12px 16px; text-align: right; font-variant-numeric: tabular-nums;">350,00</span>
+          <span style="padding: 12px 16px;"><span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; background: #f3f4f6; color: #6b7280; font-size: 12px; font-weight: 500;">aktiv</span></span>
+          <span style="padding: 12px 16px; display: flex; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 9px; padding-top: 4px;">
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <span style="color: #f43f5e; font-size: 13px; line-height: 1.55; flex-shrink: 0;">◆</span>
+          <span style="font-size: 13px; line-height: 1.55; color: #475569;"><strong style="color: #0f172a;">Aktiv und inaktiv sind beide grau.</strong> Die wichtigste Unterscheidung der Tabelle trägt keine Farbe — obwohl fünf Pillenfarben im System vorhanden sind.</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <span style="color: #f43f5e; font-size: 13px; line-height: 1.55; flex-shrink: 0;">◆</span>
+          <span style="font-size: 13px; line-height: 1.55; color: #475569;"><strong style="color: #0f172a;">Fünfzehn rote Papierkörbe pro Bildschirm.</strong> Löschen ist die seltenste Handlung und die einzige unumkehrbare — und die einzige, die durchgehend Signalfarbe trägt.</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <span style="color: #f43f5e; font-size: 13px; line-height: 1.55; flex-shrink: 0;">◆</span>
+          <span style="font-size: 13px; line-height: 1.55; color: #475569;"><strong style="color: #0f172a;">Zebra plus Trennlinie plus Rahmen.</strong> Drei Systeme, um Zeilen zu trennen. Eines würde reichen — und die Zebra-Fläche ist genau die, die im Dark Mode zerbricht.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ VEREDELT ══════════ -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 9999px; background: #e0e7ff; color: #3730a3; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;">Veredelt</span>
+        <span style="font-size: 13px; color: #94a3b8;">gleiche Dichte, gleiche Breite</span>
+      </div>
+
+      <div class="gk-ui" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; font-size: 14px; color: #0f172a; box-shadow: 0 1px 2px rgba(15,23,42,0.06), 0 1px 3px rgba(15,23,42,0.10);">
+        <!-- Toolbar -->
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid #eef2f6;">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid #e2e8f0; border-radius: 9999px; min-width: 190px; background: #f8fafc;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <span style="color: #94a3b8; font-size: 14px;">Suche…</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 20px; padding: 7px 12px; border: 1px solid #e2e8f0; border-radius: 9999px;">
+            <span style="font-size: 14px; color: #334155;">Alle Status</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <span style="flex-grow: 1;"></span>
+          <div style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1.5px solid #6b74d8; border-radius: 9999px; background: #6b74d8; color: #ffffff; font-size: 14px; font-weight: 500;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            Neuer Artikel
+          </div>
+        </div>
+        <!-- Kopfzeile -->
+        <div style="display: grid; grid-template-columns: 108px minmax(0, 1fr) 96px 96px 74px; border-bottom: 1px solid #e2e8f0;">
+          <span style="padding: 11px 16px; font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.06em;">Artikel-Nr.</span>
+          <span style="padding: 11px 16px; font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.06em;">Bezeichnung</span>
+          <span style="padding: 11px 16px; font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.06em; text-align: right;">Netto</span>
+          <span style="padding: 11px 16px; font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.06em;">Status</span>
+          <span style="padding: 11px 16px;"></span>
+        </div>
+        <!-- Zeile 1 -->
+        <div style="display: grid; grid-template-columns: 108px minmax(0, 1fr) 96px 96px 74px; border-bottom: 1px solid #f1f5f9; align-items: center;">
+          <span style="padding: 12px 16px; font-variant-numeric: tabular-nums; color: #475569;">ART-001</span>
+          <span style="padding: 12px 16px;">Webdesign Paket S</span>
+          <span style="padding: 12px 16px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500;">1.200,00</span>
+          <span style="padding: 12px 16px;"><span style="display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 7px; border-radius: 9999px; background: #d6f8e6; color: #004931; font-size: 12px; font-weight: 500;"><span style="width: 5px; height: 5px; border-radius: 9999px; background: #009869;"></span>aktiv</span></span>
+          <span style="padding: 12px 16px; display: flex; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </span>
+        </div>
+        <!-- Zeile 2 — HOVER -->
+        <div style="display: grid; grid-template-columns: 108px minmax(0, 1fr) 96px 96px 74px; border-bottom: 1px solid #f1f5f9; align-items: center; background: #f6f8fc; box-shadow: inset 2px 0 0 #6b74d8;">
+          <span style="padding: 12px 16px; font-variant-numeric: tabular-nums; color: #475569;">ART-002</span>
+          <span style="padding: 12px 16px;">Hosting Standard</span>
+          <span style="padding: 12px 16px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500;">9,90</span>
+          <span style="padding: 12px 16px;"><span style="display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 7px; border-radius: 9999px; background: #d6f8e6; color: #004931; font-size: 12px; font-weight: 500;"><span style="width: 5px; height: 5px; border-radius: 9999px; background: #009869;"></span>aktiv</span></span>
+          <span style="padding: 12px 16px; display: flex; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </span>
+        </div>
+        <!-- Zeile 3 -->
+        <div style="display: grid; grid-template-columns: 108px minmax(0, 1fr) 96px 96px 74px; border-bottom: 1px solid #f1f5f9; align-items: center;">
+          <span style="padding: 12px 16px; font-variant-numeric: tabular-nums; color: #475569;">ART-003</span>
+          <span style="padding: 12px 16px; color: #64748b;">SEO Beratung</span>
+          <span style="padding: 12px 16px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; color: #64748b;">95,00</span>
+          <span style="padding: 12px 16px;"><span style="display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 7px; border-radius: 9999px; background: #f1f5f9; color: #475569; font-size: 12px; font-weight: 500;"><span style="width: 5px; height: 5px; border-radius: 9999px; background: #94a3b8;"></span>inaktiv</span></span>
+          <span style="padding: 12px 16px; display: flex; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </span>
+        </div>
+        <!-- Zeile 4 -->
+        <div style="display: grid; grid-template-columns: 108px minmax(0, 1fr) 96px 96px 74px; border-bottom: 1px solid #f1f5f9; align-items: center;">
+          <span style="padding: 12px 16px; font-variant-numeric: tabular-nums; color: #475569;">ART-004</span>
+          <span style="padding: 12px 16px;">Logo Design</span>
+          <span style="padding: 12px 16px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500;">450,00</span>
+          <span style="padding: 12px 16px;"><span style="display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 7px; border-radius: 9999px; background: #ffeadb; color: #5e2f00; font-size: 12px; font-weight: 500;"><span style="width: 5px; height: 5px; border-radius: 9999px; background: #be6600;"></span>Entwurf</span></span>
+          <span style="padding: 12px 16px; display: flex; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </span>
+        </div>
+        <!-- Zeile 5 -->
+        <div style="display: grid; grid-template-columns: 108px minmax(0, 1fr) 96px 96px 74px; align-items: center;">
+          <span style="padding: 12px 16px; font-variant-numeric: tabular-nums; color: #475569;">ART-005</span>
+          <span style="padding: 12px 16px;">Newsletter Setup</span>
+          <span style="padding: 12px 16px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500;">350,00</span>
+          <span style="padding: 12px 16px;"><span style="display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 7px; border-radius: 9999px; background: #d6f8e6; color: #004931; font-size: 12px; font-weight: 500;"><span style="width: 5px; height: 5px; border-radius: 9999px; background: #009869;"></span>aktiv</span></span>
+          <span style="padding: 12px 16px; display: flex; gap: 10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 9px; padding-top: 4px;">
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <span style="color: #009869; font-size: 13px; line-height: 1.55; flex-shrink: 0;">◆</span>
+          <span style="font-size: 13px; line-height: 1.55; color: #475569;"><strong style="color: #0f172a;">Status trägt wieder Bedeutung.</strong> Grün, grau, bernstein — jeweils mit Punkt, damit die Unterscheidung auch ohne Farbsehen trägt.</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <span style="color: #009869; font-size: 13px; line-height: 1.55; flex-shrink: 0;">◆</span>
+          <span style="font-size: 13px; line-height: 1.55; color: #475569;"><strong style="color: #0f172a;">Zeilenaktionen ruhen, bis die Zeile gemeint ist.</strong> Grau im Ruhezustand, farbig erst bei Hover oder Tastaturfokus — die Tabelle wird still, ohne etwas zu verstecken.</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <span style="color: #009869; font-size: 13px; line-height: 1.55; flex-shrink: 0;">◆</span>
+          <span style="font-size: 13px; line-height: 1.55; color: #475569;"><strong style="color: #0f172a;">Ein Trennsystem statt drei.</strong> Haarlinie in <span class="gk-mono" style="font-size: 12px;">--gk-outline-variant</span>, keine Zebra-Fläche. Die aktive Zeile bekommt eine Kante in Primary — dieselbe Sprache wie die Seitenleiste.</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <span style="color: #009869; font-size: 13px; line-height: 1.55; flex-shrink: 0;">◆</span>
+          <span style="font-size: 13px; line-height: 1.55; color: #475569;"><strong style="color: #0f172a;">Beträge in Zahlenbreite und halbfett.</strong> Der Blick springt die Spalte hinunter, statt sie zu lesen. Zweitrangige Zeilen — hier <em>inaktiv</em> — treten in der Textfarbe zurück.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

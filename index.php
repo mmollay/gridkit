@@ -1,5 +1,17 @@
 <?php
 $version = trim(file_get_contents(__DIR__ . '/VERSION'));
+
+/**
+ * Path with a cache stamp. This page deliberately does not load the framework
+ * (it is pure marketing), which is why there is a small local version of
+ * GridKit\Layout::asset() here. The modification timestamp changes exactly when
+ * the file changes — the release version does not.
+ */
+$asset = static function (string $path) use ($version): string {
+    $file = __DIR__ . '/' . ltrim($path, '/');
+    $stamp = is_file($file) ? (string) filemtime($file) : $version;
+    return htmlspecialchars($path . '?v=' . $stamp, ENT_QUOTES, 'UTF-8');
+};
 $skillContent = file_get_contents(__DIR__ . '/GRIDKIT_SKILL.md');
 $canonicalUrl = 'https://gridkit.ssi.at';
 
@@ -618,7 +630,7 @@ $skillHtml = renderSkillMd($skillContent);
     </div>
     <div class="hero-stats">
         <div>
-            <div class="hero-stat-num">12</div>
+            <div class="hero-stat-num">16</div>
             <div class="hero-stat-label">Components</div>
         </div>
         <div>
@@ -635,6 +647,25 @@ $skillHtml = renderSkillMd($skillContent);
         </div>
     </div>
 </header>
+
+<!-- Product shot: a UI library has to show what it looks like -->
+<section class="section" id="screenshot" style="padding-top:0">
+    <div class="container">
+        <figure style="margin:0; border-radius:16px; overflow:hidden;
+                       box-shadow:0 2px 6px rgba(15,23,42,.08), 0 24px 60px rgba(15,23,42,.14);
+                       border:1px solid rgba(15,23,42,.08);">
+            <img src="<?= $asset('docs/screenshots/tabelle-hell.png') ?>"
+                 alt="A GridKit table: search, filter, status pills, row actions"
+                 width="2800" height="1760"
+                 style="display:block; width:100%; height:auto;">
+        </figure>
+        <p style="text-align:center; margin:18px auto 0; max-width:620px;
+                  font-size:15px; color:var(--gk-on-surface-variant, #64748b);">
+            Search, sort, filter and paging run over AJAX. Themes, dark mode and the
+            mobile layout come with it — none of it written by hand.
+        </p>
+    </div>
+</section>
 
 <!-- Features -->
 <section class="section section-alt" id="features">
@@ -673,6 +704,37 @@ $skillHtml = renderSkillMd($skillContent);
                 <div class="feature-icon"><span class="material-icons">phone_iphone</span></div>
                 <h3>Responsive by Default</h3>
                 <p>Every component is mobile-ready. Tables switch to card layout, sidebars become overlays, forms reflow to single column.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Themes: the proof instead of the claim -->
+<section class="section" id="themes">
+    <div class="container">
+        <div class="section-head" style="text-align:center; margin-bottom:36px;">
+            <h2>A Theme Is One Number</h2>
+            <p style="max-width:640px; margin:12px auto 0;">
+                Colours are derived in OKLCH from a single hue, so every theme keeps the
+                same lightness and the same contrast — white on the primary surface stays
+                between 4.3:1 and 5.3:1 in all six.
+            </p>
+        </div>
+        <figure style="margin:0; border-radius:16px; overflow:hidden;
+                       box-shadow:0 2px 6px rgba(15,23,42,.07), 0 18px 44px rgba(15,23,42,.11);
+                       border:1px solid rgba(15,23,42,.07);">
+            <img src="<?= $asset('docs/screenshots/themes.png') ?>"
+                 alt="The six GridKit themes side by side, same components"
+                 width="2800" height="1120"
+                 style="display:block; width:100%; height:auto;">
+        </figure>
+        <div class="code-block" style="margin-top:28px;">
+            <div class="code-header">
+                <span class="code-lang">CSS &middot; a complete seventh theme</span>
+                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+            </div>
+            <div class="code-body">
+<pre><span class="sel">[data-gk-theme="mint"]</span> { <span class="prop">--gk-theme-hue</span>: <span class="val">175</span>; }</pre>
             </div>
         </div>
     </div>
@@ -753,7 +815,7 @@ $skillHtml = renderSkillMd($skillContent);
 <section class="section section-alt" id="components">
     <div class="container">
         <div class="section-header">
-            <h2>12 Production-Ready Components</h2>
+            <h2>Sixteen Components, One API</h2>
             <p>Each component follows the same fluent PHP API. Chainable, declarative, zero boilerplate.</p>
         </div>
 
@@ -850,7 +912,7 @@ $skillHtml = renderSkillMd($skillContent);
     <div class="container">
         <div class="section-header">
             <h2>Get Started in 30 Seconds</h2>
-            <p>Clone, include, build. No configuration, no package managers, no build tools.</p>
+            <p>Composer or a plain checkout — there is no build step either way.</p>
         </div>
 
         <div class="code-block">
@@ -859,7 +921,10 @@ $skillHtml = renderSkillMd($skillContent);
                 <button class="code-copy" onclick="copyCode(this)">Copy</button>
             </div>
             <div class="code-body">
-<pre><span class="cmt"># Clone GRIDKit</span>
+<pre><span class="cmt"># Composer</span>
+<span class="cmd">composer require mmollay/gridkit</span>
+
+<span class="cmt"># or clone — a checkout is a working install, there is nothing to build</span>
 <span class="cmd">git clone https://github.com/mmollay/gridkit.git</span>
 
 <span class="cmt"># Copy the skeleton as your starting point</span>

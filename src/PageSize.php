@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace GridKit;
 
 /**
- * PageSize — Dropdown zur Wahl der Zeilenanzahl pro Seite (25 / 50 / 100 / …).
+ * PageSize — dropdown for choosing the number of rows per page (25 / 50 / 100 / …).
  *
- * Zwei Modi:
- *  - live(<containerId>): rendert ein <select data-gk-live-input> — GK.liveTable
- *    übernimmt Reload + Reset auf Seite 1 automatisch (collectParams löscht "page").
- *  - sonst (navigate): onchange navigiert per Voll-Reload und erhält andere Filter.
+ * Two modes:
+ *  - live(<containerId>): renders a <select data-gk-live-input> — GK.liveTable
+ *    handles reload + reset to page 1 automatically (collectParams drops "page").
+ *  - otherwise (navigate): onchange navigates via a full reload, keeping other filters.
  *
- * Der Controller muss den Parameter (default "per_page") lesen, gegen eine
- * Whitelist prüfen und als LIMIT verwenden.
+ * The controller has to read the parameter (default "per_page"), check it against
+ * a whitelist and use it as the LIMIT.
  *
- * Beispiel (live):
+ * Example (live):
  *   PageSize::make('per_page')->current($perPage)->live('exp-live')->render();
  *
- * Beispiel (navigate):
+ * Example (navigate):
  *   PageSize::make('per_page')->current($perPage)->baseUrl('/faktura/expenses')
  *       ->preserve(['q','status'])->render();
  */
@@ -56,7 +56,7 @@ final class PageSize
         return $this;
     }
 
-    /** Live-Modus: an einen data-gk-live-table-Container binden. */
+    /** Live mode: bind to a data-gk-live-table container. */
     public function live(string $containerId): static
     {
         $this->liveTarget = $containerId;
@@ -88,8 +88,8 @@ final class PageSize
     }
 
     /**
-     * Liest den gewählten Wert aus $_GET gegen die Optionen-Whitelist.
-     * Fällt auf $default zurück, wenn nicht gesetzt/ungültig. Im Controller nutzbar.
+     * Reads the chosen value from $_GET, checked against the options whitelist.
+     * Falls back to $default when unset or invalid. Usable inside the controller.
      */
     public function resolve(int $default = 25): int
     {
@@ -108,12 +108,12 @@ final class PageSize
         }
 
         if ($this->liveTarget !== '') {
-            // Live-Modus: GK.liveTable bindet das Select automatisch.
+            // Live mode: GK.liveTable binds the select automatically.
             echo '<select id="' . $selId . '" class="' . $e($this->selectClass) . '"'
                 . ' name="' . $e($this->paramName) . '"'
                 . ' data-gk-live-input="' . $e($this->liveTarget) . '">';
         } else {
-            // Navigate-Modus: onchange erhält andere Filter und lädt voll neu.
+            // Navigate mode: onchange keeps the other filters and reloads fully.
             $params = [];
             foreach ($this->preserveParams as $p) {
                 if (isset($_GET[$p]) && $_GET[$p] !== '') $params[$p] = $_GET[$p];

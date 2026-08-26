@@ -1,0 +1,428 @@
+[
+ {
+  "gruppe": "Labels-Meldungen",
+  "geprueft": 40,
+  "einwaende": [
+   {
+    "zeile": 1361,
+    "schwere": "hinweis",
+    "problem": "Klasse \"A\" behauptet, obwohl --gk-on-warning-container im Light Mode auf #92400e aufloest, nicht auf das Literal #fde68a (token-table light=#92400e, dark=#fde68a). Die Definition im Auftrag bindet Klasse A ausdruecklich an \"Theme indigo, Light Mode\". Der Vorschlag klassifiziert hier gegen den Dark-Wert. Fehlerart (c). Die CSS-Ersetzung selbst ist korrekt, da die Regel nur im Dark Mode greift — nur das Etikett ist falsch.",
+    "vorschlag": "Auf klasse \"B\" umstellen (altWert #fde68a light-Referenz #92400e) oder ein Feld \"kontext\":\"dark\" ergaenzen und die A/B-Definition fuer modus-gebundene Regeln explizit machen. Sonst schlaegt jede maschinelle Pruefung \"A ⇒ light-Wert identisch\" fehl."
+   },
+   {
+    "zeile": 1378,
+    "schwere": "hinweis",
+    "problem": "Gleiche Fehlerart (c): Klasse \"A\" fuer --gk-info-container, dessen Light-Wert #dbeafe ist, nicht das Literal #1e40af. Nur der Dark-Wert trifft.",
+    "vorschlag": "Wie 1361: klasse \"B\" oder explizite Dark-Kontext-Kennzeichnung."
+   },
+   {
+    "zeile": 1379,
+    "schwere": "hinweis",
+    "problem": "Gleiche Fehlerart (c): Klasse \"A\" fuer --gk-on-info-container, Light-Wert #1e40af, Literal #bfdbfe. Nur der Dark-Wert trifft.",
+    "vorschlag": "Wie 1361: klasse \"B\" oder explizite Dark-Kontext-Kennzeichnung."
+   },
+   {
+    "zeile": 1372,
+    "schwere": "hinweis",
+    "problem": "Die angegebenen Dark-Werte (#243044 / #94a3b8 fuer 1373) gelten nur fuer den Selektorpfad [data-gk-mode=\"dark\"]. css/themes.css:128 definiert den globalen Dark-Surface-Block AUSSCHLIESSLICH unter [data-gk-mode=\"dark\"] — .gk-dark fehlt dort. Die betroffene Regel adressiert aber beide Pfade ([data-gk-mode=\"dark\"] .gk-label-gray, .gk-dark .gk-label-gray). Ueber .gk-dark greift nur gridkit.css:4639-4640, dort ist --gk-surface-container-high #21262d und --gk-on-surface-variant #8b949e. Die token-table-Spalte \"dark\" bildet also nur einen der beiden Pfade ab.",
+    "vorschlag": "Keine Aenderung an der Ersetzung noetig (beide Pfade bleiben lesbar: #243044/#94a3b8 = 5.2:1, #21262d/#8b949e = 4.8:1), aber die Wertangaben in der Begruendung entsprechend relativieren. Separat pruefenswert: den Dark-Block in themes.css:128 auf \"[data-gk-mode=\"dark\"], .gk-dark\" erweitern, damit beide Pfade dieselben Werte liefern."
+   },
+   {
+    "zeile": 1343,
+    "schwere": "hinweis",
+    "problem": "Klasse B mit Verschiebung #f3f4f6 -> #eaeef2, obwohl eine naeher liegende Rolle existiert: --gk-surface-container light = #f1f5f9 (Delta 2/1/3) statt --gk-surface-container-high #eaeef2 (Delta 9/6/4). Regel 6 bezeichnet surface-container-high ausdruecklich als \"Hover-Flaeche\", nicht als Label-Flaeche. Der Vorschlag greift also zur dunkleren Rolle, ohne zu begruenden, warum die wertnaehere verworfen wurde. Der Auftrag verlangt \"Bevorzuge A\".",
+    "vorschlag": "--gk-surface-container pruefen (waere nahezu wertgleich). Gegenargument bewusst benennen, falls beibehalten: --gk-surface-container ist zugleich der Seitenhintergrund, ein Label-Pill wuerde darauf verschwinden. Dann ist surface-container-high vertretbar, gehoert aber als Trade-off in die Begruendung."
+   },
+   {
+    "zeile": 3976,
+    "schwere": "hinweis",
+    "problem": "border-color bekommt dieselbe Rolle wie das darunterliegende background (beide --gk-info-container, #dbeafe). Der Rahmen wird damit im Light Mode unsichtbar. Vorher war er bewusst kraeftiger als die Flaeche (rgba 0.25 gegen rgba 0.08) und gab dem Banner eine Kante. Die Basisregel .gk-message (3939) setzt border: 1px solid var(--gk-outline-variant) — die Variante hebt diese Kante nun vollstaendig auf. Das ist keine Farbwert-Migration mehr, sondern ein Design-Wechsel.",
+    "vorschlag": "Entweder --gk-outline-variant fuer die Rahmen der Varianten stehen lassen (dann ganz aus der Gruppe nehmen, die Basisregel liefert sie bereits) oder bewusst als \"Rahmen entfaellt\" dokumentieren. Der zitierte Praezedenzfall .gk-chip-active (4802-4804) existiert zwar, liegt aber im DARK-MODE-Abschnitt und traegt die Light-Mode-Entscheidung nicht."
+   },
+   {
+    "zeile": 3981,
+    "schwere": "hinweis",
+    "problem": "Gleiches Muster wie 3976: border-color und background beide --gk-success-container (#d1fae5) — Kante des Erfolgs-Banners verschwindet im Light Mode.",
+    "vorschlag": "Siehe 3976."
+   },
+   {
+    "zeile": 3986,
+    "schwere": "hinweis",
+    "problem": "Gleiches Muster wie 3976: border-color und background beide --gk-warning-container (#fef3c7) — Kante des Warn-Banners verschwindet im Light Mode.",
+    "vorschlag": "Siehe 3976."
+   },
+   {
+    "zeile": 3991,
+    "schwere": "hinweis",
+    "problem": "Gleiches Muster wie 3976: border-color und background beide --gk-error-container (#ffe4e6) — Kante des Fehler-Banners verschwindet im Light Mode.",
+    "vorschlag": "Siehe 3976."
+   },
+   {
+    "zeile": 3975,
+    "schwere": "hinweis",
+    "problem": "Die Begruendung ist sachlich falsch: \"Der 8%-Schleier ist im Dark Mode praktisch unsichtbar; der Container-Token ist modusfaehig\". Der Dark Mode wird fuer .gk-message-info/-success/-warning/-error bereits vollstaendig vom DARK-MODE-Abschnitt ueberschrieben (gridkit.css 4832-4855: background rgba(...,0.12), border-color rgba(...,0.2), color). Diese Regeln haben hoehere Spezifitaet und gewinnen. Die Umstellung wirkt also ausschliesslich im Light Mode. Folge: Light springt vom 8%-Schleier auf eine Volltonflaeche, Dark bleibt beim 12%-Schleier — Light und Dark divergieren nach der Aenderung staerker als vorher. Betrifft analog 3980, 3985, 3990.",
+    "vorschlag": "Begruendung korrigieren und die B-Verschiebung allein auf ihren Light-Mode-Effekt stuetzen. Zusaetzlich mit der Gruppe abstimmen, die 4832-4855 bearbeitet, damit Light und Dark dieselbe Formsprache bekommen (beide Container-Rolle oder beide Schleier)."
+   },
+   {
+    "zeile": 3995,
+    "schwere": "hinweis",
+    "problem": "Die Ersetzung selbst (--gk-info, klasse A, wertgleich) ist korrekt, aber in Kombination mit der kraeftigeren Flaeche aus 3975 sinkt der Icon-Kontrast: #0ea5e9 auf #dbeafe ergibt ca. 2.3:1 statt bisher ca. 2.6:1 auf dem 8%-Schleier. Analog 3998 (#10b981 auf #d1fae5: ca. 2.3:1) und 4001 (#f59e0b auf #fef3c7: ca. 1.9:1, der schlechteste Wert). WCAG verlangt 3:1 fuer Nicht-Text-Grafik. Der Wert war vorher schon niedrig, wird durch die Flaechenaenderung aber schlechter, nicht besser.",
+    "vorschlag": "Kein Blocker (die Bedeutung traegt der Text, der mit den on-*-container-Rollen sauber kontrastiert). Falls die Container-Flaechen kommen, das Ikon-Mapping in einem zweiten Schritt pruefen — z.B. --gk-on-warning-container fuer das Warn-Icon, wo 1.9:1 klar zu wenig ist."
+   },
+   {
+    "zeile": 3291,
+    "schwere": "hinweis",
+    "problem": "Scope: 3291, 3313, 3321 und 3322 liegen laut hex-inventory.json in der Sektion \"CONFIRM DIALOG\", nicht in \"LABELS\" oder \"MESSAGE\". Wenn die Gruppenaufteilung nach Sektionen erfolgt, beansprucht diese Gruppe vier Zeilen einer fremden Sektion — bei paralleler Bearbeitung droht ein doppelter Patch auf dieselben Zeilen.",
+    "vorschlag": "Zuordnung mit dem Orchestrator klaeren: entweder die vier Zeilen an die Dialog-Gruppe abgeben oder verbindlich hier fuehren. Inhaltlich sind alle vier korrekt (je klasse A, Light-Werte identisch: #ffffff, #475569, #e2e8f0, #f6f8fa) — nur die Zustaendigkeit ist offen."
+   }
+  ]
+ },
+ {
+  "einwaende": [
+   {
+    "zeile": 1640,
+    "schwere": "hinweis",
+    "problem": "Kontrast-Regression im Light Mode: --gk-outline (#94a3b8) auf der Feldflaeche #ffffff ergibt 2.56:1, heute liefert #6e7781 4.55:1. Der Platzhalter faellt damit von knapp ueber der WCAG-AA-Schwelle (4.5:1 fuer Text) auf gut die Haelfte. Regel 7 erlaubt --gk-outline zwar ausdruecklich, aber die Begruendung nennt das 'etwas heller/schwaecher' — gemessen halbiert sich der Kontrast. Laut Auftrag gehoert eine Verschiebung dieser Groesse unter 'offen' und nicht unter klasse B. Dark Mode ist nicht betroffen (Override Zeile 5710-5713 setzt #484f58).",
+    "vorschlag": "Fall unter 'offen' fuehren und menschlich entscheiden lassen. Wenn ein Token gesetzt werden muss: --gk-on-surface-variant (#475569, 7.58:1) ist die M3-konforme Rolle fuer Placeholder/Supporting Text — dann ist der Platzhalter allerdings so dunkel wie das Label (Zeile 1609). --gk-outline nur uebernehmen, wenn der Kontrastverlust bewusst akzeptiert wird."
+   },
+   {
+    "zeile": 2271,
+    "schwere": "hinweis",
+    "problem": "Die Begruendung behauptet 'der Text darauf bleibt --gk-primary mit ausreichendem Kontrast'. Das ist nachmessbar falsch: .gk-uq-status ist 11px (Zeile 2242), #6366f1 auf dem neuen #e0e0ff ergibt 3.46:1 — unter AA (4.5:1) und schlechter als heute (#6366f1 auf #eef2ff = 3.99:1). Im Forest-Theme sind es 3.32:1 (#059669 auf #d1fae5). Die Aenderung verschlechtert also genau die Lesbarkeit, die als 'ausreichend' deklariert wird.",
+    "vorschlag": "Zeile 2272 (color: var(--gk-primary);) mit in die Aenderung aufnehmen: color: var(--gk-on-primary-container); ergibt 11.59:1 in Light und ist die zum Container gehoerende Rolle (Regel 1). Das ist zwar eine var-Zeile ohne Literal, aber ohne sie bleibt das Rollenpaar gebrochen. Alternativ die Begruendung korrigieren und den Kontrastverlust offen ausweisen."
+   },
+   {
+    "zeile": 2271,
+    "schwere": "hinweis",
+    "problem": "Theme-Kollision (Pruefpunkt h): --gk-primary-container ist im Forest-Theme #d1fae5 — exakt derselbe Wert wie --gk-success-container, das durch die Aenderung in Zeile 2278 fuer den 'done'-Chip verwendet wird. Im Forest-Theme werden 'uploading' und 'done' damit flaechengleich; die Zustaende sind nur noch am Textton (#059669 vs #064e3b) unterscheidbar. In Ocean bleiben sie getrennt (#e0f2fe vs #d1fae5), in Indigo ebenfalls.",
+    "vorschlag": "Fuer den laufenden Upload --gk-info-container (Light #dbeafe, Dark #1e40af, folgtTheme false) mit --gk-on-info-container pruefen (Regel 5: Info/neutral). Damit bleiben pending/uploading/done/error in allen sechs Themes unterscheidbar. Wenn --gk-primary-container bleiben soll, die Forest-Kollision im Eintrag ausweisen."
+   },
+   {
+    "zeile": 2117,
+    "schwere": "hinweis",
+    "problem": "Die gestrichelte Linie ist die einzige Affordanz der Drop-Zone. --gk-outline-variant (#e2e8f0) auf weisser Karte ergibt 1.23:1, heute liefert #d0d7de 1.45:1 — die Zone wird also schwerer erkennbar, nicht nur 'etwas heller'. Regel 8 ordnet --gk-outline-variant der Haarlinie/Trennlinie zu; ein 2px-Rahmen, der eine interaktive Zielflaeche markiert, ist eher die 'kraeftige Linie' (--gk-outline). Die Begruendung 'durch 2px gestrichelt bleibt sie trotz hellerem Ton sichtbar' ist eine Behauptung ohne Messwert.",
+    "vorschlag": "border: 2px dashed var(--gk-outline); (#94a3b8, 2.56:1) — semantisch die Rolle fuer kraeftige Linien, Verschiebung gegenueber #d0d7de zwar groesser, aber in die richtige Richtung. Dark Mode ist in beiden Faellen unkritisch, da Zeile 4967-4971 border-color ohnehin ueberschreibt."
+   },
+   {
+    "zeile": 1626,
+    "schwere": "hinweis",
+    "problem": "Abweichung von einer expliziten Zuordnungsregel: Regel 8 nennt 'kraeftige Linie, Eingabefeldrahmen -> --gk-outline'. Der Vorschlag setzt stattdessen --gk-outline-variant und begruendet das mit der Hover-Staffelung. Die Abweichung ist verteidigbar (mit --gk-outline im Ruhezustand waere die Hover-Regel in Zeile 1643 ein No-op, und .gk-color-wrap Zeile 1701 nutzt bereits --gk-outline-variant als Ruherahmen), aber sie ist eine bewusste Regelabweichung und wird als solche nicht ausgewiesen. Nebenbei: der Rahmen wird von 1.31:1 auf 1.23:1 schwaecher.",
+    "vorschlag": "Zuordnung beibehalten, aber in der Begruendung offenlegen, dass Regel 8 zugunsten der Hover-Staffelung ueberstimmt wurde — sonst liest ein Nachpruefer den Eintrag als Regelverstoss. Alternativ konsistent: Ruhe --gk-outline-variant, Hover --gk-outline (so wie vorgeschlagen) auch fuer .gk-color-wrap dokumentieren."
+   },
+   {
+    "zeile": 1800,
+    "schwere": "hinweis",
+    "problem": "Luecke: In den Sektionen FORM, COLOR PICKER, CHECKBOX, RADIO, RANGE, FILE UPLOAD, UPLOAD QUEUE und RICHTEXT enthaelt das Inventar genau 26 Treffer. Der Vorschlag deckt 25 ab; Zeile 1800 (.gk-toggle-slider::before, 'background: #fff;', der Toggle-Knopf) fehlt vollstaendig — weder zugeordnet noch unter 'offen' gefuehrt. Das ist nicht nebensaechlich, weil Zeile 1787 die Spur unter genau diesem Knopf aendert (#cbd5e1 -> #d8dee4): Knopf-zu-Spur-Kontrast sinkt von 1.48:1 auf 1.36:1.",
+    "vorschlag": "Zeile 1800 aufnehmen — entweder unter 'offen' (der Knopf liegt im Off-Zustand auf einer neutralen Flaeche und im On-Zustand auf --gk-primary, --gk-on-primary waere im Off-Zustand im Dark Mode #2e2e8a und damit unsichtbar) oder als klasse A mit --gk-surface (Light #ffffff). Auf keinen Fall stillschweigend weglassen."
+   },
+   {
+    "zeile": 2128,
+    "schwere": "hinweis",
+    "problem": "Das Gruppenziel ('Themes wirken im Light Mode') wird nicht erreicht, weil im selben Bereich 12 verbotene Legacy-Skalen ohne Farbliteral stehen und deshalb nicht im hex-inventory auftauchen: 1972 und 2035 (--gk-neutral-400), 2074 und 2325 (--gk-neutral-200), 2128 und 2132 (--gk-primary-50), 2151/2163/2346 (--gk-neutral-400), 2308 (--gk-neutral-50), 2329 (--gk-primary-100), 2330 (--gk-primary-700). Konkreter Theme-Bruch: Zeile 2127/2131 setzen border-color auf var(--gk-primary), Zeile 2128/2132 aber background auf var(--gk-primary-50) (fix #eef2ff, folgtTheme false) — im Forest-Theme bekommt die Drop-Zone beim Hover einen gruenen Rahmen auf indigo-getoenter Flaeche. Ausserdem folgt --gk-neutral-400 (1972, Checkbox-Rahmen) nicht einmal dem Modus.",
+    "vorschlag": "Diese Zeilen als eigene Liste an den Orchestrator zurueckmelden (z.B. 2128/2132 -> var(--gk-state-primary) oder var(--gk-primary-container), 1972/2035 -> var(--gk-outline), 2074/2325 -> var(--gk-surface-container-highest), 2308 -> var(--gk-surface-container-low)). Der Inventarlauf sollte um var(--gk-<legacy-skala>) ohne Literal erweitert werden, sonst bleibt die Gruppe nach dem Patch weiterhin theme-fest."
+   },
+   {
+    "zeile": 1825,
+    "schwere": "hinweis",
+    "problem": "Nach der Aenderung haben Label (Zeile 1609, --gk-on-surface-variant) und Feldhinweis (Zeile 1825) exakt denselben Farbwert #475569. Heute ist der Hinweis mit #64748b bewusst schwaecher als das Label — die farbliche Hierarchie zwischen Label und Hilfstext geht verloren. Die Begruendung nennt die Verschiebung 'klein', gemessen steigt der Kontrast aber von 4.76:1 auf 7.58:1, der Hinweis wird also deutlich praesenter als vorgesehen.",
+    "vorschlag": "Entweder akzeptieren und explizit vermerken (Hierarchie traegt dann nur noch ueber Schriftgroesse 12px vs. uppercase/600 des Labels), oder den Fall unter 'offen' fuehren. Dark Mode ist ohnehin durch Zeile 5012-5015 (#8b949e) abgedeckt, die Aenderung wirkt also nur in Light."
+   },
+   {
+    "zeile": 1630,
+    "schwere": "hinweis",
+    "problem": "Rollen-Inkonsistenz innerhalb derselben Gruppe: die Feldflaeche von .gk-input wird --gk-surface, die optisch identische Feldflaeche von .gk-color-wrap (Zeile 1704) bleibt --gk-surface-container-lowest. In Light faellt das nicht auf (beide #ffffff), im Dark Mode divergieren die Tokens aber deutlich (#1e293b vs #0a1120, themes.css Zeile 128-142). Heute wird das nur dadurch verdeckt, dass Zeile 5704-5709 die .gk-input-Flaeche hart auf #0d1117 setzt — genau dieser Override soll im Zuge der Token-Migration entfallen. Dann stehen zwei verschieden helle Feldflaechen nebeneinander.",
+    "vorschlag": "Fuer beide dieselbe Rolle waehlen, konsistent --gk-surface-container-lowest (Regel 6, hoechste Ebene / Feldflaeche) — in Light ebenfalls exakt #ffffff, also weiterhin klasse A, aber im Dark Mode zukunftssicher gleich."
+   }
+  ],
+  "geprueft": 25,
+  "gruppe": "Formular"
+ },
+ {
+  "gruppe": "Karten-Medien",
+  "geprueft": 13,
+  "einwaende": [
+   {
+    "zeile": 4439,
+    "schwere": "hinweis",
+    "problem": "Dark-Mode-Regression (Kriterium g). --gk-outline invertiert zwischen den Modi: light #94a3b8, dark #475569 (css/themes.css:139) bzw. #484f58 (css/gridkit.css:4676). Der Offline-Punkt sitzt im Dark Mode auf dem Ring [data-gk-mode=\"dark\"] .gk-avatar-status { border-color: #161b22 } (css/gridkit.css:5743) bzw. auf --gk-surface dark (#1e293b/#0d1117). Kontrast faellt damit von heute ca. 6,9:1 (hartes #94a3b8) auf ca. 2,0-2,1:1. Die drei Geschwister-Punkte bleiben nach der Aenderung hell (--gk-success dark #34d399, --gk-error dark #fda4af, --gk-warning dark #fbbf24), der Offline-Punkt allein wird deutlich dunkler als bisher. Nicht 'nahezu gleich hell', deshalb kein blocker, aber eine sichtbare Verschlechterung, die die Begruendung ('folgt dabei dem Dark Mode') als Vorteil verkauft.",
+    "vorschlag": "Entweder Eintrag nach 'offen' verschieben und Entscheidung der Gesamtreview ueberlassen, oder bewusst --gk-on-surface-variant nehmen (light #475569, dark #94a3b8 — im Dark Mode gut sichtbar, dafuer klasse B mit Verschiebung #94a3b8 -> #475569 im Light Mode, Offline-Punkt wird dort kraeftiger). Falls --gk-outline bleibt: klasse A nur fuer Light Mode behaupten und die Dark-Verschiebung #94a3b8 -> #475569 in der Begruendung explizit nennen."
+   },
+   {
+    "zeile": 4391,
+    "schwere": "hinweis",
+    "problem": "Die Begruendung nennt die Verschiebung #4338ca -> #1a1a6b 'minimal'. Das ist geschoent: die Helligkeit sinkt von L*~36 auf L*~17, die Initialen werden auf dem hellen Container sichtbar dunkler (nahezu Navy). Tokenwahl und M3-Paarung mit Zeile 4390 sind korrekt und die einzige richtige Rolle, aber klasse B ist hier eine echte optische Aenderung, keine Rundungsdifferenz.",
+    "vorschlag": "Eintrag beibehalten, aber die Begruendung ehrlich formulieren: 'deutliche Abdunklung der Initialen (L* 36 -> 17), bewusst in Kauf genommen, weil --gk-on-primary-container die einzige korrekte Gegenrolle zu --gk-primary-container aus Zeile 4390 ist und in allen Themes mitlaeuft'. So sieht der visuelle Abnahmelauf, dass hier eine sichtbare Aenderung erwartet wird."
+   },
+   {
+    "zeile": 3148,
+    "schwere": "hinweis",
+    "problem": "Buchhaltungsfehler bei der Klassifizierung (Kriterium c). klasse 'A' ist definiert als 'Token loest auf exakt denselben Farbwert auf wie das Literal'. Das Literal dieser Zeile ist laut hex-inventory.json #d0d7de, der Light-Wert von --gk-outline-variant laut token-table.json #e2e8f0 — die weichen ab. Sachlich ist der Eintrag richtig (der Fallback ist tot, weil --gk-outline-variant in css/gridkit.css:48 auf :root definiert ist, gerendert bleibt #e2e8f0), aber wer die Liste maschinell gegen literal==tokenLight prueft, bekommt hier einen Fehltreffer.",
+    "vorschlag": "Eintrag inhaltlich unveraendert lassen, aber altWert als '#d0d7de (toter Fallback) / gerendert #e2e8f0' auszeichnen oder eine eigene Markierung wie 'A (toter Fallback)' verwenden, damit die A-Behauptung nachpruefbar bleibt. Gleiches Muster betrifft nur diese Zeile — bei 3147, 3158, 3164, 4433, 4461 stimmt das Literal mit dem Token-Light-Wert ueberein."
+   }
+  ]
+ },
+ {
+  "gruppe": "Buttons-A",
+  "geprueft": 52,
+  "einwaende": [
+   {
+    "zeile": 930,
+    "schwere": "blocker",
+    "problem": "Theme-Bruch (h) + faktischer Verstoss gegen das --gk-tertiary-Verbot (e). --gk-success-hover ist laut token-table.json in ALLEN vier Themes wertidentisch mit --gk-tertiary-hover: light/forest/ocean/dark stimmen Zeichen fuer Zeichen ueberein. In Forest loest der Token auf oklch(from #8b5cf6 calc(l - 0.06) c h) = #7a48e1 auf, also VIOLETT, waehrend --gk-success selbst in Forest gruen bleibt (#10b981). Ergebnis: der gruene Erfolgs-Button wird beim Hover violett. Der Vorschlag erkennt das im Kommentar an, liefert die Ersetzung aber trotzdem aus - das ist genau der Fall, den Verbot e ausschliesst. Zweiter, unabhaengiger Defekt derselben Ersetzung im Dark Mode: --gk-success dark = #34d399 (oklch L 0.7729), --gk-success-hover dark = oklch(from #6ee7b7 calc(l - 0.06) c h) = #59d3a4 (L 0.7850). Der Hover wird also HELLER als der Ruhezustand, waehrend Primary/Warning/Error dort korrekt dunkler werden - die Hover-Richtung kehrt sich nur bei Success um.",
+    "vorschlag": "neuText stattdessen: \"  background: oklch(from var(--gk-success) calc(l - 0.06) c h);\" - im Light Mode exakt derselbe Wert wie der vorgeschlagene Token (#00a66f, also unveraendert klasse B gegen #059669), aber in Forest gruen und im Dark Mode korrekt dunkler (aus #34d399 statt aus #6ee7b7). Das ist dieselbe Ableitungstechnik, die der Vorschlag in Zeile 959/960 fuer --gk-secondary schon verwendet, weil dort ebenfalls kein Hover-Token existiert. Alternativ den Fall nach \"offen\" schieben, bis --gk-success-hover in der Rollenschicht von --gk-tertiary-hover auf --gk-success zurueckgefuehrt ist."
+   },
+   {
+    "zeile": 931,
+    "schwere": "blocker",
+    "problem": "Identisch zu Zeile 930: border-color: var(--gk-success-hover) wird in Forest violett (#7a48e1) und kehrt im Dark Mode die Hover-Richtung um. Da Flaeche und Rahmen deckungsgleich sind, verdoppelt sich der Fehler nur.",
+    "vorschlag": "neuText stattdessen: \"  border-color: oklch(from var(--gk-success) calc(l - 0.06) c h);\" - gleiche Begruendung und gleicher Light-Wert wie bei Zeile 930."
+   },
+   {
+    "zeile": 982,
+    "schwere": "blocker",
+    "problem": "Zu grosse B-Verschiebung fuer eine Schriftfarbe. #d97706 (oklch L 0.6658) -> --gk-warning #f59e0b (L 0.7686) ist mit dL 0.103 die groesste Verschiebung im gesamten Vorschlag, und sie ueberschreitet eine harte Grenze: der Kontrast des Button-Labels gegen die Flaeche faellt von 3.19:1 auf 2.15:1 (.gk-btn-outlined hat background: transparent, gerechnet gegen Weiss; auf --gk-surface-container ist es noch etwas schlechter). 3.19:1 erfuellte wenigstens die 3:1-Schwelle fuer grossen Text und UI-Komponenten, 2.15:1 erfuellt gar nichts mehr. Die Begruendung des Vorschlags (\"erfuellte AA fuer Fliesstext ohnehin nicht\") verdeckt genau diesen Schwellenwechsel. Nach der Zuordnungsregel gilt: \"Wenn die Verschiebung gross waere oder du unsicher bist, trage den Fall stattdessen unter offen ein\" - klasse B ist hier nicht gedeckt.",
+    "vorschlag": "Primaer: Fall nach \"offen\" verschieben, nicht als B ausliefern. Falls zwingend tokenisiert werden soll, ist die themetreue und kontrasterhaltende Variante \"  color: oklch(from var(--gk-warning) calc(l - 0.10) c h);\" = #d37e00 im Light Mode, Kontrast 3.11:1 (praktisch der Kontrast des Literals), in Forest/Ocean weiter Bernstein, im Dark Mode aus #fbbf24 abgeleitet."
+   },
+   {
+    "zeile": 1021,
+    "schwere": "blocker",
+    "problem": "Derselbe Fehler wie Zeile 982, hier fuer .gk-btn-text.gk-btn-warning. Der Text-Button hat ueberhaupt keinen Rahmen und keine Flaeche - das Label ist das gesamte Bedienelement. Ein Sturz von 3.19:1 auf 2.15:1 macht die Schaltflaeche im Light Mode praktisch unlesbar. Der Verweis auf den Dark-Mode-Gewinn (#fbbf24) traegt nicht, weil der Dark Mode ohnehin separat behandelt wird und Light Mode das erklaerte Ziel dieser Runde ist.",
+    "vorschlag": "Wie Zeile 982: nach \"offen\", oder \"  color: oklch(from var(--gk-warning) calc(l - 0.10) c h);\" (= #d37e00, 3.11:1). Beide Warn-Label-Zeilen 982 und 1021 muessen dieselbe Entscheidung bekommen."
+   },
+   {
+    "zeile": 983,
+    "schwere": "hinweis",
+    "problem": "Folgt der Entscheidung aus Zeile 982 und darf nicht getrennt davon angewendet werden. Als --gk-warning (#f59e0b) faellt der Rahmen auf 2.15:1 gegen Weiss - und weil .gk-btn-outlined background: transparent setzt, ist dieser Rahmen die einzige sichtbare Begrenzung der Schaltflaeche, also eine UI-Komponentengrenze mit 3:1-Anforderung. Bisher lag sie mit #d97706 bei 3.19:1 knapp darueber.",
+    "vorschlag": "Gemeinsam mit 982 entscheiden: entweder beide nach \"offen\", oder beide auf \"oklch(from var(--gk-warning) calc(l - 0.10) c h)\". Rahmen und Label duerfen nicht auseinanderlaufen."
+   },
+   {
+    "zeile": 932,
+    "schwere": "hinweis",
+    "problem": "Inkonsistenz innerhalb derselben Regel: der Schatten wird aus --gk-success abgeleitet, die Flaeche daneben (930) und der Rahmen (931) aus --gk-success-hover. Im Forest-Theme ergaebe das eine violette Flaeche (#7a48e1) mit gruenem Schatten (#10b981 bei Alpha 0.3). Die Ersetzung selbst ist wertgleich und richtig - der Widerspruch entsteht allein durch 930/931.",
+    "vorschlag": "Keine Aenderung an dieser Zeile noetig. Sie wird automatisch stimmig, sobald 930/931 auf die aus --gk-success abgeleitete Hover-Stufe umgestellt sind."
+   },
+   {
+    "zeile": 959,
+    "schwere": "hinweis",
+    "problem": "Der Befund des Vorschlags stimmt - ich habe die Tokenliste geprueft, ein --gk-secondary-hover existiert tatsaechlich nicht (vorhanden sind nur --gk-primary-hover, --gk-success-hover, --gk-tertiary-hover, --gk-warning-hover, --gk-error-hover, --gk-danger-hover, --gk-bg-hover, --gk-sidebar-text-hover, --gk-sidebar-item-hover). Die Inline-Ableitung ist damit vertretbar, hinterlaesst aber die einzigen beiden Inline-Relativfarben der Komponentenschicht (959/960); jede spaetere Aenderung der Hover-Formel muesste hier von Hand nachgezogen werden.",
+    "vorschlag": "Sauberer: in der Rollenschicht --gk-secondary-hover: oklch(from var(--gk-secondary) calc(l - 0.06) c h) je Theme ergaenzen (analog zu allen anderen *-hover-Token) und in 959/960 var(--gk-secondary-hover) verwenden. Der gerenderte Wert bleibt identisch (#474f59 im Light Mode), die Ersetzung bleibt klasse B gegen #334155."
+   },
+   {
+    "zeile": 997,
+    "schwere": "hinweis",
+    "problem": "Groesste reine Light-Mode-Verschiebung des Vorschlags: #d1d5db (oklch L 0.8717) -> --gk-outline #94a3b8 (L 0.7107), dL 0.161. Der Rahmen des neutralen Outlined-Buttons wird deutlich dunkler - das sollte einmal visuell abgenommen werden. Die Rollenwahl selbst ist aber belegt und nicht zu beanstanden: der Dark-Mode-Block setzt fuer exakt denselben Selektor bereits border-color: var(--gk-outline) (Zeile 5557) und color: var(--gk-on-surface-variant) (Zeile 5556), also genau die beiden Rollen, die der Vorschlag fuer 996/997 waehlt.",
+    "vorschlag": "Anwenden, aber zwei Dinge notieren: (1) nach Anwendung von 996/997 ist der Dark-Mode-Override in Zeile 5554-5558 wortgleich redundant und kann in der separaten Dark-Mode-Runde entfallen; (2) Bestandsbefund, nicht durch diese Ersetzung verursacht: --gk-outline dark (#475569) auf --gk-surface dark (#1e293b) ergibt nur 1.93:1, der Rahmen ist im Dark Mode also kaum sichtbar."
+   },
+   {
+    "zeile": 1033,
+    "schwere": "hinweis",
+    "problem": "Deckungsluecke am Gruppenende: der Vorschlag endet bei Zeile 1030, mitten im Text-Button-Block. .gk-btn-text.gk-btn-neutral (1033 color: #6b7280, 1036 background: #f3f4f6, 1037 color: #374151) bleibt literal, waehrend alle Geschwister-Varianten desselben Blocks tokenisiert werden. Zeile 1036 traegt exakt dasselbe Literal wie das bereits behandelte 1000, Zeile 1037 exakt dasselbe wie 996.",
+    "vorschlag": "Beim Zuschnitt der Nachbargruppe sicherstellen, dass 1036 dieselbe Zuordnung wie 1000 bekommt (--gk-state-hover) und 1037 dieselbe wie 996 (--gk-on-surface-variant); fuer 1033 bietet sich --gk-on-surface-variant nicht an (#6b7280 vs #475569 waere eine zweite Verschiebung im selben Bauteil) - eher als eigener Fall pruefen. Kein Fehler im vorliegenden Vorschlag, nur eine Uebergabestelle, an der die beiden Gruppen auseinanderlaufen koennen."
+   }
+  ]
+ },
+ {
+  "gruppe": "Navigation",
+  "geprueft": 24,
+  "einwaende": [
+   {
+    "zeile": 2887,
+    "schwere": "hinweis",
+    "problem": "Die Begruendung behauptet, --gk-sidebar-accent sei \"in allen Themes und Modi identisch\" zu --gk-primary. Das ist falsch: css/themes.css:117-124 setzt fuer slate im Dark Mode --gk-primary: #94a3b8, aber --gk-sidebar-accent: #7dd3fc. Der Badge wechselt dort also von Blaugrau auf Himmelblau. Zusaetzlich entsteht ein Rollenbruch mit Zeile 2888: Text --gk-on-primary sitzt dann auf einer Flaeche, die nicht mehr Primary ist (Kontrast bleibt mit 8,8:1 unkritisch, die Paarung ist aber nicht mehr das M3-Rollenpaar). Klasse A stimmt fuer indigo/light (#6366f1 = #6366f1), die Verallgemeinerung nicht.",
+    "vorschlag": "Entweder neuText auf \"  background: var(--gk-primary);\" aendern — reine Fallback-Entfernung, echtes A in jedem Theme und Modus, und das Paar --gk-primary/--gk-on-primary aus Zeile 2888 bleibt geschlossen. Oder --gk-sidebar-accent bewusst behalten, dann aber die Begruendung korrigieren und die slate-Dark-Abweichung benennen."
+   },
+   {
+    "zeile": 3355,
+    "schwere": "hinweis",
+    "problem": "Drei Begruendungen behaupten, das Literal habe bisher den Dark-Mode-Wert blockiert. Das trifft nicht zu, weil ueberall spezifischere Dark-Regeln bereits gewinnen: .gk-header wird in 4724-4728 mit background: var(--gk-surface) ueberschrieben (0,2,0 schlaegt 0,1,0), .gk-sidebar color in 2654-2656 mit rgba(255,255,255,0.78) — nicht dem Tokenwert 0.7 wie bei Zeile 2651 behauptet — und .gk-dropdown-menu in 4951-4955 mit #2d333b, nicht #1e293b wie bei Zeile 3628 behauptet. Die Ersetzungen selbst sind korrekt und wertgleich, wirken aber ausschliesslich im Light Mode.",
+    "vorschlag": "Ersetzungen fuer 3355, 2651 und 3628 unveraendert anwenden, aber die Dark-Mode-Argumentation streichen. Wer den Dark Mode wirklich an die Rollen haengen will, muss die Blocks 4724-4728 / 2654-2656 / 4951-4955 anfassen — die liegen in der separat behandelten DARK-MODE-Zone bzw. sind eigene Dark-Selektoren."
+   },
+   {
+    "zeile": 2650,
+    "schwere": "hinweis",
+    "problem": "Nach der Ersetzung ist die Regel [data-gk-theme] .gk-sidebar (2649-2653) inhaltlich exakt identisch mit der Basisregel .gk-sidebar (2681-2698: background var(--gk-sidebar-bg), color var(--gk-sidebar-text), border-right 1px solid var(--gk-sidebar-border)) — ein toter Spezifitaets-Klon. Der Kommentar in Zeile 2648 (\"Sidebar Hintergrund direkt gesetzt (hohe Spezifitaet, zuverlaessiger als var()-Kette)\") wird dadurch sachlich falsch und bleibt stehen. Die Begruendung nennt ausserdem \"ab Zeile 2658\" fuer die Dark-Regeln; die erste ist 2654 (color), erst 2658 setzt background.",
+    "vorschlag": "Ersetzung anwenden (sie ist richtig und der eigentliche Fix), aber als Folgeaufgabe den gesamten Block 2648-2653 ersatzlos loeschen — das faellt aus dem mechanischen zeile/altText/neuText-Vertrag heraus und muss separat beauftragt werden. Zeilennummer in der Begruendung auf 2654/2658 korrigieren."
+   },
+   {
+    "zeile": 2912,
+    "schwere": "hinweis",
+    "problem": "Klasse B ist hier nicht durch die Vorgabe gedeckt: die Regel lautet \"Bevorzuge A. Waehle B nur, wenn keine Rolle den Wert exakt trifft\" — --gk-surface-container trifft #f1f5f9 exakt, A waere also verfuegbar (nur Fallback entfernen). Die angegebene Begruendung traegt zudem nicht: .gk-sidebar-toggle hat im Ruhezustand background: none (Zeile 2903) und sitzt laut Sidebar.php:208 im Header, muss sich also gar nicht von der Header-Suchpille (3539) absetzen.",
+    "vorschlag": "B beibehalten ist vertretbar, aber mit dem richtigen Grund: im Dark Mode ist --gk-surface-container (#1e293b) identisch mit dem Header-Hintergrund --gk-surface (#1e293b), der Hover waere unsichtbar; --gk-surface-container-high (#243044) loest genau das. Dieselbe korrigierte Begruendung gilt fuer 3576. Alternativ neuText \"  background: var(--gk-surface-container);\" als saubere Klasse A."
+   },
+   {
+    "zeile": 3882,
+    "schwere": "hinweis",
+    "problem": "Die Zeilen 3882 und 3883 liegen laut hex-inventory.json im Abschnitt SEGMENT (3880-3934), nicht in einem Navigationsabschnitt (PAGINATION, SIDEBAR, HEADER, BREADCRUMB). .gk-segment ist ein generischer Inhaltscontainer. Wenn eine andere Gruppe (Layout/Container) dieselben Zeilen beansprucht, entstehen zwei konkurrierende Patches auf identische altTexte — der zweite schlaegt fehl oder ueberschreibt.",
+    "vorschlag": "Vor dem Anwenden die Gruppenzuordnung fuer 3882/3883 klaeren und die beiden Eintraege aus der Navigation-Gruppe herausnehmen, falls SEGMENT anderswo bearbeitet wird. Inhaltlich sind beide Ersetzungen korrekt (reine Fallback-Entfernung, Effektivwert unveraendert)."
+   },
+   {
+    "zeile": 2542,
+    "schwere": "hinweis",
+    "problem": "Luecke in der Gruppe: aus dem Abschnitt FILTER CHIPS wurde Zeile 2525 uebernommen, aber \"  color: #1f2937;\" in .gk-chip-warning.gk-chip-active (Zeile 2542, background: var(--gk-warning) in 2540) fehlt. Es ist der einzige nicht abgedeckte Nicht-Dark-Treffer in allen beanspruchten Abschnitten. Der naive Regel-4-Griff waere hier ein Fehler: --gk-on-warning hat im Light Mode #ffffff, das ergibt auf --gk-warning #f59e0b nur 2,15:1 statt der heutigen 6,83:1.",
+    "vorschlag": "Zeile 2542 nicht ueber --gk-on-warning ersetzen, sondern unter \"offen\" auffuehren mit dem Befund, dass --gk-on-warning im Light Mode auf #ffffff steht und damit die Textrolle fuer die Warning-Flaeche kontrastseitig defekt ist. Erst wenn --gk-on-warning (light) auf einen dunklen Wert korrigiert wird, ist \"  color: var(--gk-on-warning);\" anwendbar."
+   }
+  ]
+ },
+ {
+  "gruppe": "Tabelle",
+  "geprueft": 45,
+  "einwaende": [
+   {
+    "zeile": 469,
+    "schwere": "hinweis",
+    "problem": "Klasse A stimmt nur im Light Mode. --gk-bg ist laut css/gridkit.css:61 im Light ein reiner Alias auf --gk-surface (beide #ffffff), im Dark Mode aber eigenstaendig auf #0d1117 gesetzt (css/gridkit.css:4691), waehrend --gk-surface im Dark #1e293b ist (css/themes.css:130, token-table dark). Die Begruendung 'der gerenderte Wert bleibt gleich' ist fuer den Dark Mode falsch: die Pager-Buttons werden dort sichtbar heller als der Seitengrund. Fuer .gk-pg existiert kein Dark-Override, die Aenderung schlaegt also voll durch.",
+    "vorschlag": "Entweder als bewusste Dark-Verschiebung (#0d1117 -> #1e293b) ausweisen, oder --gk-surface-container-lowest pruefen (light #ffffff = wertgleich, dark #0a1120 = nahe am heutigen Wert)."
+   },
+   {
+    "zeile": 507,
+    "schwere": "hinweis",
+    "problem": "Die A-Begruendungen zu 504/507/510 ('Gerenderter Wert unveraendert') gelten nur im Light Mode. Die Dark-Overrides fuer Zebra und Hover (css/gridkit.css:5618-5628) treffen das <tr>, die Basisregeln hier aber '> td' — undurchsichtige td-Hintergruende uebermalen den tr-Hintergrund. Heute rendern Zebra-/Hover-Zellen im Dark Mode daher #f6f8fa bzw. #eaeef2 (fast weiss) unter weisser Schrift (var(--gk-on-surface) aus Zeile 5616). Die Umstellung behebt diesen bestehenden Dark-Bug (neu #172033 / #243044) — das ist eine echte, undokumentierte Dark-Aenderung, kein Null-Diff.",
+    "vorschlag": "Klasse A als 'light-wertgleich' kennzeichnen und die Dark-Wirkung bei 504/507/510 explizit als beabsichtigte Korrektur nennen; die verbliebenen Dark-Literale in 5618-5628 (tr-Ebene) im Nachgang mitziehen, sonst stehen zwei Quellen fuer denselben Zustand."
+   },
+   {
+    "zeile": 721,
+    "schwere": "hinweis",
+    "problem": "Groesste Verschiebung des ganzen Stapels, als 'klein' deklariert: heute rendert --gk-text-muted #475569 (Kontrast auf Weiss 7,5:1), neu --gk-outline #94a3b8 (2,5:1) — unter der 3:1-Grenze. Die Vorgabe verlangt bei grosser Verschiebung den Eintrag unter 'offen'. Die Formulierung '#94a3b8 liegt dazwischen' vergleicht mit dem toten Fallback #cbd5e1, nicht mit dem tatsaechlich gerenderten Wert.",
+    "vorschlag": "Als 'offen' fuehren oder die Kontraktentscheidung explizit machen (Leerwert bewusst unter 3:1). Alternative mit kleinerer Verschiebung: bei --gk-on-surface-variant bleiben (wertgleich, Klasse A) und die Abschwaechung ueber opacity/Content loesen."
+   },
+   {
+    "zeile": 737,
+    "schwere": "hinweis",
+    "problem": "Nach der Umstellung von 721 auf var(--gk-outline) sagt die Dark-Sonderregel 735-738 exakt dasselbe wie die Basisregel — sie wird zu totem Code. Zusaetzlich gilt die A-Behauptung nur fuer den Attribut-Pfad: die Regel trifft auch '.gk-dark', und ueber diesen Pfad greift css/themes.css nicht, dort ist --gk-outline #484f58 (css/gridkit.css:4676) statt #475569.",
+    "vorschlag": "Aenderung so belassen, aber vermerken, dass 735-738 danach entfallen kann; die Wertgleichheit auf den [data-gk-mode=\"dark\"]-Pfad einschraenken."
+   },
+   {
+    "zeile": 3780,
+    "schwere": "hinweis",
+    "problem": "Die Kausal-Begruendung ist nicht haltbar. '.gk-table-selectable tbody tr:hover' setzt den Schleier auf das <tr>; sobald die Tabelle auch .gk-table traegt, uebermalt '.gk-table tbody tr:hover > td' (Zeile 503/504, undurchsichtig) den tr-Hintergrund vollstaendig. Der Primary-Hover ist damit heute wie kuenftig unsichtbar — er ist also nicht die Ursache fuer indigo-Hover in Forest/Ocean. Der Dark-Gegenpart bleibt ausserdem hart indigo (Zeile 5675: rgba(99, 102, 241, 0.12)).",
+    "vorschlag": "Token-Wahl beibehalten (Legacy-Skala muss weg), aber Begruendung korrigieren und vermerken: damit der Zustandsschleier wirkt, muesste er auf '> td' liegen oder die td-Hover-Regel fuer .gk-table-selectable ausgenommen werden."
+   },
+   {
+    "zeile": 395,
+    "schwere": "hinweis",
+    "problem": "Fehlerart i: neuText aendert mehr als den Farbwert. Der Fokusring am Filter-Select wird von 2px auf 3px verbreitert (+50 %) und von 15 % auf 12 % Deckkraft gesenkt, weil der Token die vollstaendige box-shadow-Angabe mitbringt. Regel 10 deckt das, es ist aber eine sichtbare Formaenderung, die als solche gefuehrt werden sollte (bei 367 bleibt die Geometrie identisch, dort ist es unkritisch).",
+    "vorschlag": "Eintrag als bewusste Geometrie-Angleichung kennzeichnen (2px -> 3px), damit der Reviewer den optischen Unterschied erwartet; Alternative waere ein eigener 2px-Token, den es nicht gibt."
+   },
+   {
+    "zeile": 607,
+    "schwere": "hinweis",
+    "problem": "Betrifft alle Fallback-Streichungen (329, 606, 607, 615, 695, 704, 733, 850, 853, 3723, 3787): die Rollen sind nicht auf :root definiert, sondern auf '.gk-root, [data-gk-theme]' (css/gridkit.css:13-14). Ohne diesen Wrapper ist die Variable undefiniert — bei 'border: 1px solid var(--gk-outline-variant)' faellt dann die gesamte Kurzschreibweise aus (border-style: none, also gar kein Rahmen) statt wie heute auf das Literal zurueckzufallen. Die pauschale Aussage 'Gerenderter Wert unveraendert' gilt nur im gk-root-Kontext.",
+    "vorschlag": "Risiko ist gering (Layout::bodyTag('gk-root') setzt den Wrapper, skeleton.php:50, src/Auth.php:181) — aber einmal als Voraussetzung dokumentieren; alternativ die Rollen zusaetzlich auf :root spiegeln, bevor Fallbacks flaechig entfallen."
+   },
+   {
+    "zeile": 3796,
+    "schwere": "hinweis",
+    "problem": "Unvollstaendige Abdeckung: die Gruppe hat laut hex-inventory.json 49 Treffer in den Abschnitten TABLE/TABLE SIZES/TABLE VARIANTS/TABLE MOBILE, der Vorschlag deckt 45 ab. Die vier Zeilen von .gk-table-inverted (3796 #1e293b, 3797 #e2e8f0, 3800 #0f172a, 3801 #94a3b8) fehlen kommentarlos und stehen auch nicht unter 'offen'. Nebenbefund aus dem Snapshot base-indigo_light: 3800/3801 wirken ohnehin nicht — '.gk-table thead th' (0,1,2) schlaegt '.gk-table-inverted th' (0,1,1), der inverted-Kopf rendert rgb(246,248,250)/rgb(87,96,106).",
+    "vorschlag": "Die vier Zeilen als 'offen' aufnehmen mit Begruendung (inverted ist absichtlich eine feste dunkle Flaeche im Light Mode) und den Spezifitaetsfehler bei 3800/3801 separat melden."
+   },
+   {
+    "zeile": 473,
+    "schwere": "hinweis",
+    "problem": "Inventarluecke innerhalb der Gruppe: inventory.mjs erfasst keine einzeiligen Regeln mit '{' (Regex '^\\s*([a-z-]+)\\s*:'), deshalb fehlen 439, 472 und 473 im Inventar und damit im Vorschlag. Zeile 473 '.gk-pg-active { background: var(--gk-primary); border-color: var(--gk-primary); color: #fff; ... }' ist genau der Fall aus Regel 12 (Weiss auf Primary) und im Dark Mode bereits defekt: #fff auf --gk-primary #a5b4fc ergibt ca. 2,0:1. Zeile 472 '.gk-pg:hover' nutzt das nirgends definierte --gk-surface-variant und rendert dadurch in beiden Modi #f1f5f9 — im Dark Mode weisse Schrift auf fast weisser Flaeche, direkt neben der hier geaenderten Zeile 469.",
+    "vorschlag": "473 auf 'color: var(--gk-on-primary);' und 472 auf eine echte Hover-Flaechenrolle (--gk-surface-container-high) nachziehen; zusaetzlich inventory.mjs um einzeilige Regeln erweitern, sonst fehlen solche Zeilen in jeder Gruppe."
+   }
+  ]
+ },
+ {
+  "einwaende": [
+   {
+    "zeile": 5850,
+    "schwere": "hinweis",
+    "problem": "Die Begruendung stuetzt sich auf eine falsche Tatsache: --gk-on-surface ist NICHT in :root definiert. Definitionsort ist css/gridkit.css:13-14 \".gk-root,\\n[data-gk-theme] {\" (Zeile 45: --gk-on-surface: #0f172a), also auf <body class=\"gk-root\" data-gk-theme=...> (skeleton.php:50, src/Auth.php:181, src/Theme.php:15). Der Fallback #334155 ist damit nur so lange tot, wie die Seite gk-root/data-gk-theme setzt; ohne das wird \"color: var(--gk-on-surface)\" invalid-at-computed-value-time und der Text erbt die Elternfarbe statt #334155. Dass diese Schlussweise unsicher ist, belegt dieselbe Gruppe zwei Zeilen weiter: 5773/5774 nutzen var(--gk-on-inverse-surface, #fff) bzw. var(--gk-inverse-surface, #1e293b), und beide Tokens sind in css/ NIRGENDS definiert — dort ist der Fallback der wirksame Wert. Zusaetzlich kollidiert die Klasse \"A\" mit der vorgegebenen Definition (\"loest auf exakt denselben Farbwert auf wie das Literal\"): Literal #334155 vs. Token-Light #0f172a weichen ab; wertneutral ist nur der gerenderte Zustand, nicht der Vergleich Literal/Token. Ein mechanischer Pruefer, der Literal gegen token-table.json haelt, meldet hier zu Recht Fehlerart (c). Sachlich richtig ist die Analyse ansonsten: .gk-tooltip-content wird von js/gridkit.js:2751 nur klassifiziert und auf position:fixed gesetzt, NICHT nach document.body verschoben, bleibt also im gk-root-Teilbaum — im Projektkontext bricht nichts.",
+    "vorschlag": "Eintrag streichen. Er entfernt nur einen Fallback, aendert keinen gerenderten Farbwert und bringt dem Ziel (Themes wirken im Light Mode) nichts, kostet aber das Sicherheitsnetz fuer Einbindungen ohne gk-root. Falls er bleiben soll: Klasse als \"A (wertneutral: Fallback-Entfernung, Literal != Token-Wert)\" kennzeichnen und die Begruendung von \":root\" auf \".gk-root, [data-gk-theme]\" korrigieren."
+   },
+   {
+    "zeile": 5851,
+    "schwere": "hinweis",
+    "problem": "Gleicher Fehler wie 5850: --gk-surface-container-highest steht in css/gridkit.css:44 innerhalb von \".gk-root, [data-gk-theme]\", nicht in :root. Ohne gk-root/data-gk-theme faellt \"background: var(--gk-surface-container-highest)\" auf transparent zurueck (Flaeche weg, Tooltip-Text auf Seitenhintergrund) statt auf #fff — hier ist der Effekt einer fehlenden Definition schwerer als bei color, weil background nicht erbt. Klasse \"A\" kollidiert wieder mit der Definition: Literal #fff vs. Token-Light #d8dee4. Korrekt ist dagegen der Warnhinweis, #fff hier nicht auf --gk-surface umzubiegen, und die Dark-Werte stimmen mit token-table.json (#2d3a52 / #e2e8f0) — Quelle ist css/themes.css:136-137, nicht der Dark-Block in gridkit.css:4673-4674 (#2d333b / #e6edf3); lesbar bleibt es in beiden Faellen.",
+    "vorschlag": "Eintrag streichen (kein sichtbarer Effekt, kein Theme-Gewinn, Sicherheitsnetz verloren) oder Klasse/Begruendung wie bei 5850 korrigieren. Wenn die Fallback-Bereinigung als Politik gewollt ist, dann konsistent in derselben Regel: Zeile 5852 \"border: 1px solid var(--gk-outline-variant, rgba(0, 0, 0, 0.1));\" traegt denselben toten Fallback und fehlt im Vorschlag."
+   },
+   {
+    "zeile": 5773,
+    "schwere": "hinweis",
+    "problem": "Abdeckungsluecke der Gruppe: Der Abschnitt \"CKEDITOR5 in GridKit\" (css/gridkit.css:5524-6255) hat 29 Inventar-Treffer, der Vorschlag deckt 3 ab. Uebergangen ist ausgerechnet der einzige Fall, der das Ziel (Themes wirken im Light Mode) real blockiert: 5773 \"  color: var(--gk-on-inverse-surface, #fff);\" und 5774 \"  background: var(--gk-inverse-surface, #1e293b);\" in [data-gk-tooltip]::after. Beide Tokens existieren in css/gridkit.css, css/themes.css und css/themes/default.css NICHT und fehlen in token-table.json — die Literale sind also wirksam, und dieser Tooltip folgt weder Theme noch Modus. Ebenfalls unbehandelt und nicht als \"offen\" ausgewiesen: 6148 \"background: rgba(15, 23, 42, 0.45);\" (Such-Overlay-Scrim; es gibt keine Scrim-Rolle im Token-Satz) und 6165 (Schatten). Die Zeilen 5603-5747 sind [data-gk-mode=\"dark\"]-Overrides und duerfen als Dark-Faelle zurueckgestellt werden, auch wenn sie formal nicht im Abschnitt \"DARK MODE\" (4638-5095) liegen.",
+    "vorschlag": "5773/5774 in die Gruppe aufnehmen — entweder unter \"offen\" (Rolle --gk-inverse-surface/--gk-on-inverse-surface fehlt und muesste erst in .gk-root definiert werden) oder mit einer existierenden Rolle belegen. 6148 und 6165 ebenfalls explizit als \"offen\" fuehren (keine Scrim-Rolle vorhanden), damit die Gruppe nachvollziehbar vollstaendig ist statt still unvollstaendig."
+   }
+  ],
+  "geprueft": 3,
+  "gruppe": "CKEditor"
+ },
+ {
+  "gruppe": "Overlays-Auswahl",
+  "geprueft": 26,
+  "einwaende": [
+   {
+    "zeile": 5187,
+    "schwere": "hinweis",
+    "problem": "Regelkonflikt und gruppenuebergreifende Inkonsistenz. Regel 8 nennt woertlich \"kraeftige Linie, Eingabefeldrahmen -> --gk-outline\"; .gk-select-display IST ein Eingabefeld, der Vorschlag waehlt aber --gk-outline-variant. Das Hover-Argument (5198 nutzt --gk-outline) ist stichhaltig, ABER: .gk-input traegt in Zeile 1626 exakt dasselbe Literal (border: 1px solid #dde1e6) und exakt dieselbe Hover-Eskalation auf var(--gk-outline, #94a3b8) in Zeile 1642. Wenn die FORM-Gruppe dort Regel 8 woertlich befolgt und auf --gk-outline (#94a3b8) mappt, haben Textfeld und Select im selben Formular sichtbar unterschiedlich starke Rahmen (#94a3b8 vs #e2e8f0) — ein grober optischer Bruch. Klassifizierung B ist korrekt (#dde1e6 != #e2e8f0), die Rollenwahl ist es nur, wenn sie mit 1626 abgestimmt wird.",
+    "vorschlag": "Zuordnung beibehalten, aber verbindlich mit der Zuordnung fuer css/gridkit.css:1626 (.gk-input) koppeln: entweder beide #dde1e6 -> --gk-outline-variant (Hover-Eskalation bleibt erhalten, empfohlen) oder beide -> --gk-outline. Falls die Abstimmung nicht moeglich ist, den Fall unter \"offen\" fuehren statt einseitig zu entscheiden."
+   },
+   {
+    "zeile": 5363,
+    "schwere": "hinweis",
+    "problem": "Die Begruendung \"Identische Situation wie Zeile 5187 ... Gleiche Zuordnung haelt beide Select-Varianten deckungsgleich\" ist im Dark Mode nachweislich falsch. Der Dark-Override [data-gk-mode=\"dark\"] .gk-select-display (Zeile 5035-5040, border-color: rgba(255,255,255,0.15)) hat Spezifitaet (0,2,0) — genau wie .gk-ajax-select .gk-select-display (Zeile 5358) — steht aber FRUEHER in der Datei. Damit gewinnt die Ajax-Regel und der Dark-Override greift fuer den Ajax-Select NICHT (Gegenprobe: es gibt laut grep keine weitere Dark-Regel fuer .gk-ajax-select). Folge nach der Ersetzung: Zeile 5187 bekommt im Dark Mode rgba(255,255,255,0.15) (aus dem Override), Zeile 5363 dagegen --gk-outline-variant dark = rgba(255,255,255,0.08), also einen etwa halb so starken Rahmen auf #0a1120. Die beiden Varianten sind gerade NICHT deckungsgleich.",
+    "vorschlag": "Ersetzung ist trotzdem vertretbar (sie behebt den heutigen Dark-Bug: helles #dde1e6 auf fast schwarzem Feld, und entspricht dem Ist-Verhalten von .gk-multiselect-display in Zeile 5294). Aber die Begruendung korrigieren — die Gleichheit gilt nur im Light Mode — und den Dark-Angleich als separaten Punkt fuer die DARK-MODE-Sektion vormerken (Ajax-Select fehlt dort ein Override)."
+   },
+   {
+    "zeile": 2440,
+    "schwere": "hinweis",
+    "problem": "Die Begruendung fuer die B-Verschiebung stuetzt sich auf eine falsche Tatsachenbehauptung. Behauptet wird, --gk-surface-container (wertgleich #f1f5f9) sei unbrauchbar, weil sie \"im Dark Mode identisch zur Modal-Flaeche ist und den Hover unsichtbar machen wuerde\". Das kann nicht eintreten: [data-gk-mode=\"dark\"] .gk-modal-close:hover (Zeile 5730-5734) setzt background: #21262d mit hoeherer Spezifitaet, der Light-Wert dieser Zeile erreicht den Dark Mode also nie. Zusaetzlich ist die Modal-Flaeche im Dark Mode #161b22 (Zeile 4735), nicht --gk-surface (#1e293b) — die Kollision, die begruendet wird, gibt es doppelt nicht. Damit traegt die B-Verschiebung (#f1f5f9 -> #eaeef2) nur noch Regel 6, obwohl eine exakt wertgleiche A-Zuordnung existiert und die Aufgabe A ausdruecklich bevorzugt.",
+    "vorschlag": "Entweder auf die A-Variante wechseln: neuText \"  background: var(--gk-surface-container);\" (Light #f1f5f9 = heutiger Wert von --gk-bg-muted, klasse A) — oder bei --gk-surface-container-high bleiben und die Begruendung ausschliesslich auf Regel 6 (Hover-Flaeche) stuetzen, ohne das widerlegte Dark-Mode-Argument."
+   },
+   {
+    "zeile": 5262,
+    "schwere": "hinweis",
+    "problem": "Gleicher Fehler wie 2440: Die B-Verschiebung wird damit begruendet, dass --gk-surface-container \"im Dark Mode mit der Dropdown-Flaeche (--gk-surface = #1e293b) zusammenfaellt, der Hover waere unsichtbar\". Beides ist widerlegt: (1) [data-gk-mode=\"dark\"] .gk-select-option:hover (Zeile 5031-5034) setzt background: #21262d mit hoeherer Spezifitaet — der Light-Wert dieser Zeile erreicht den Dark Mode nie; (2) die Dropdown-Flaeche ist im Dark Mode #2d333b (Zeile 5027), nicht --gk-surface. Die wertgleiche A-Zuordnung --gk-surface-container (#f1f5f9, exakt der heute aufgeloeste Wert) ist damit ohne Nachteil moeglich.",
+    "vorschlag": "Entweder A waehlen: neuText \"  background: var(--gk-surface-container);\" (klasse A, Wert unveraendert) — oder --gk-surface-container-high beibehalten und allein mit Regel 6 begruenden. Wichtig ist, dass 2440 und 5262 dieselbe Entscheidung bekommen, da beide denselben Hover-Fall abbilden."
+   },
+   {
+    "zeile": 2465,
+    "schwere": "hinweis",
+    "problem": "Dark-Mode-Naht im Modal. Fuer .gk-modal (Zeile 4735), .gk-modal-header (Zeile 5723) und .gk-modal-body (Zeile 5728) existieren Dark-Overrides auf #161b22 — fuer .gk-modal-footer gibt es KEINEN (per grep: nur die Treffer 1814, 2458, 2471, 4320/4323, kein Dark-Eintrag). Nach der Ersetzung loest der Footer im Dark Mode auf --gk-surface = #1e293b auf, waehrend Body und Header bei #161b22 bleiben: sichtbar zweifarbiges Modal mit heller Fusskante. Kein Lesbarkeitsbruch (Flaeche gegen Flaeche, nicht Flaeche gegen Text) und immer noch besser als das heutige #fff, aber eine neue Inkonsistenz, die die Begruendung \"teilt die Modal-Flaeche\" gerade nicht einloest.",
+    "vorschlag": "Ersetzung anwenden (der Light-Fall ist korrekt und wertgleich), aber als Folgearbeit fuer die DARK-MODE-Sektion vormerken: dort .gk-modal-footer und .gk-modal > .gk-form-actions auf denselben Wert wie .gk-modal-body ziehen. Die DARK-MODE-Sektion ist in dieser Gruppe tabu, deshalb hier nur als Uebergabepunkt."
+   },
+   {
+    "zeile": 2474,
+    "schwere": "hinweis",
+    "problem": "Identisch zu 2465: .gk-modal > .gk-form-actions hat keinen Dark-Override. Nach der Ersetzung ergibt sich im Dark Mode --gk-surface = #1e293b gegen die auf #161b22 fixierte Modal-/Body-Flaeche (Zeilen 4735/5728) — dieselbe helle Fusskante. Da diese Regel laut Kommentar (Zeile 2468-2470) der Kompatibilitaets-Ersatz fuer den Modal-Footer ist, muessen 2465 und 2474 zwingend gleich behandelt werden.",
+    "vorschlag": "Wie 2465: Ersetzung anwenden und den Dark-Angleich gemeinsam mit .gk-modal-footer an die DARK-MODE-Sektion uebergeben."
+   }
+  ]
+ },
+ {
+  "gruppe": "Buttons-B",
+  "geprueft": 45,
+  "einwaende": [
+   {
+    "zeile": 1132,
+    "schwere": "blocker",
+    "problem": "Dark Mode bricht im @supports-Rueckfallpfad — betrifft 1132/1133 und gleichermassen 1145/1146, 1158/1159, 1171/1172. Die gefuellten Buttons haben KEINE Dark-Mode-Ueberschreibung (anders als die Tonal-Buttons in 4886-4930), also greifen diese Zeilen im Dark Mode direkt. Die Ruhezustaende sind unkritisch, weil --gk-primary/--gk-on-primary usw. im Dark-Block 4638ff. gedreht werden. Die Hover-Tokens werden dort aber NICHT gedreht: --gk-primary-hover (Z.87), --gk-error-hover (89), --gk-warning-hover (90), --gk-success-hover (92) behalten im Dark Mode ihre Light-Literale, und der @supports-Block ab 6246 ersetzt sie nur in Browsern MIT relativer Farbsyntax. Ohne sie steht im Dark Mode auf dem Hover: bg #4f46e5 + color var(--gk-on-primary)=#2e2e8a -> Kontrast 1.78:1 (heute #4f46e5+#fff = 6.29:1). Ebenso #059669+#064e3b = 2.58, #d97706+#78350f = 2.85, #e11d48+#6b1028 = 2.58. Flaeche und Text werden nahezu gleich dunkel — Beschriftung praktisch unsichtbar. Die Begruendung zu 1132 (\"In Browsern ohne relative Farbsyntax exakt wertgleich\") betrachtet nur die Flaeche und uebersieht, dass der zugehoerige Text in 1126 gleichzeitig von #fff auf var(--gk-on-primary) wechselt.",
+    "vorschlag": "Die vier Zeilenpaare koennen so bleiben, ABER der Rueckfall muss modusfaehig werden: im Dark-Block [data-gk-mode=\"dark\"], .gk-dark (ab 4638) zusaetzlich --gk-primary-hover: #8f9ffa; --gk-success-hover: #10c48a; --gk-warning-hover: #f5b13c; --gk-error-hover: #fb8fa0; setzen (jeweils die l-0.06-Variante der Dark-Rolle), damit der Nicht-@supports-Pfad dieselbe Richtung faehrt wie der @supports-Pfad. Alternativ die vier Hover-Zeilen dieser Gruppe zurueckstellen, bis die Token-Schicht das nachzieht. Ungeprueft anwenden waere ein Lesbarkeitsbruch."
+   },
+   {
+    "zeile": 1177,
+    "schwere": "hinweis",
+    "problem": "--gk-secondary ist die beste verfuegbare Rolle, hat aber zwei Nebenwirkungen, die die Begruendung nicht nennt. (1) Im Dark Mode ist --gk-secondary #ccc2dc (M3-Baseline, deutlich violettstichig) — ein als \"neutral\" bezeichneter Button wird in allen sechs Themes lavendel; kein Theme ueberschreibt --gk-secondary im Dark-Block. (2) Hierarchieverlust: der gefuellte Neutral-Button (#ccc2dc) und der gefuellte Primary-Button (--gk-primary dark #a5b4fc) haben zueinander nur Kontrast 1.17:1 — beide pastellhell, praktisch gleich prominent. Heute steht dort #475569 (dunkles Slate) gegen #6366f1, also klar unterscheidbar. Lesbarkeit bleibt in beiden Faellen intakt (#ccc2dc/#332d41 = 7.74:1), deshalb kein blocker.",
+    "vorschlag": "Beibehalten, aber bewusst entscheiden. Wer den Neutralton neutral halten will, ueberschreibt --gk-secondary im Dark-Block auf einen slate-Wert (z.B. #94a3b8 oder #64748b) statt der M3-Lavendel-Baseline — eine Aenderung in der Rollenschicht, nicht in dieser Gruppe."
+   },
+   {
+    "zeile": 1184,
+    "schwere": "hinweis",
+    "problem": "Der Hover-Schritt schrumpft, im Dark Mode fast auf null. Gemessen in oklab-L: heute #475569 -> #334155 = dL 0.074. Neu im Light: #57606a -> #49525e = dL 0.050. Neu im Dark: #ccc2dc -> color-mix(in oklab, #e6edf3 18%, #ccc2dc) = #d1cae0 = dL 0.021, weil --gk-on-surface (dark #e6edf3) und --gk-secondary (dark #ccc2dc) bereits fast gleich hell sind. Die 18-%-Mischung ist damit im Dark Mode kaum wahrnehmbares Hover-Feedback. Ausserdem bricht die Konstruktion aus dem Haus-Muster aus: alle anderen Hover-Stufen dieser Gruppe sind oklch(l - 0.06).",
+    "vorschlag": "Statt der Zustandsschicht dieselbe Ableitung wie bei --gk-primary-hover verwenden: \"  background: oklch(from var(--gk-secondary) calc(l - 0.06) c h);\" bzw. in 1185 \"  border-color: oklch(from var(--gk-secondary) calc(l - 0.06) c h);\". Das liefert in beiden Modi exakt dL 0.06 (Light #57606a -> ca. #49525e, Dark #ccc2dc -> #b9afc9), folgt weiter dem theme-abhaengigen --gk-secondary und nutzt kein Literal. Achtung: gleicher @supports-Vorbehalt wie beim Blocker — ohne relative Farbsyntax faellt die Deklaration ganz aus und der Button zeigt gar keinen Hover mehr; dann waere die vorgeschlagene color-mix-Variante vorzuziehen."
+   },
+   {
+    "zeile": 1074,
+    "schwere": "hinweis",
+    "problem": "Rollenwahl inkonsistent zu den vier Geschwisterregeln. Alle anderen Tonal-Varianten (1042, 1050, 1058, 1066) bekommen ein *-container/on-*-container-Paar; der neutrale Tonal-Button bekommt stattdessen --gk-surface-container + --gk-on-surface. Es gibt fuer genau diesen Fall ein passendes Paar: --gk-secondary-container (#eaeef2, gridkit.css:23) / --gk-on-secondary-container (#24292f, :24). Dazu kommt: --gk-surface-container ist laut Regel 6 die Rolle des Seitenhintergrunds — der Tonal-Neutral-Button traegt damit exakt die Flaeche, auf der er liegt, und verschwindet auf einer Standardseite. Kein blocker, weil klasse A wertgleich ist und das Literal #f1f5f9 heute schon dasselbe Problem hat, und weil der Dark-Block (4922-4930) diese Regel ohnehin ueberschreibt.",
+    "vorschlag": "Erwaegen: 1074 \"  background: var(--gk-secondary-container);\" (klasse B, #f1f5f9 -> #eaeef2) und 1075 \"  color: var(--gk-on-secondary-container);\" (klasse B, #334155 -> #24292f). Dann waere 1079 als Hover eine Stufe darunter zu waehlen, da --gk-surface-container-high ebenfalls #eaeef2 ist und mit der neuen Ruheflaeche kollidieren wuerde. Wenn Wertgleichheit hoeher gewichtet wird als Rollenkonsistenz, kann der Vorschlag unveraendert bleiben."
+   },
+   {
+    "zeile": 1042,
+    "schwere": "hinweis",
+    "problem": "Theme-Kollision durch die Container-Rollen: In forest ist --gk-primary-container #d1fae5 — identisch mit --gk-success-container (#d1fae5, folgt keinem Theme). Der Tonal-Primary- und der Tonal-Success-Button (1050) werden dort pixelgleich, inklusive Textfarbe (#064e3b = --gk-on-primary-container forest = --gk-on-success-container). Dasselbe in amber: --gk-primary-container #fef3c7 = --gk-warning-container #fef3c7 (1058), Text #78350f vs #92400e. Semantisch verschiedene Varianten werden ununterscheidbar. Das ist eine Folge der Theme-Definitionen in css/themes.css (Z.27, 52), nicht ein Fehler der Zuordnung — die Regeln 1/2/4 lassen keine andere Wahl.",
+    "vorschlag": "Zuordnung so lassen und die Kollision an die Theme-Ebene melden: forest/amber sollten fuer --gk-primary-container einen Ton waehlen, der nicht auf --gk-success-container bzw. --gk-warning-container faellt (z.B. forest #bbf7d0 statt #d1fae5). Kein Eingriff in dieser Gruppe."
+   }
+  ]
+ }
+]

@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace GridKit;
 
 /**
- * GridKit\TableHeader — einheitliche Filter-/Such-Leiste über Tabellen.
+ * GridKit\TableHeader — a unified filter/search bar above tables.
  *
- * Struktur (immer in dieser Reihenfolge):
- *   1. Status-Zeile  (z.B. FilterChips „Alle / Offen / Bezahlt", volle Breite)
- *   2. Toolbar       (Suche + Filter-Dropdowns inline, optional Reset-Button)
- *   3. Erweitert     (collapsible <details>, z.B. Datums-/Beträge-Filter)
+ * Structure (always in this order):
+ *   1. Status row  (e.g. FilterChips "Alle / Offen / Bezahlt", full width)
+ *   2. Toolbar     (search + filter dropdowns inline, optional reset button)
+ *   3. Advanced    (collapsible <details>, e.g. date/amount filters)
  *
- * Jede Sektion ist optional. Inhalte werden via Closures übergeben — die
- * jeweilige Render-Funktion (z.B. einer FilterChips-Instanz) wird zur
- * Render-Zeit aufgerufen. Das hält den Aufruf in der View kompakt:
+ * Every section is optional. Content is handed in as closures — the
+ * respective render function (e.g. of a FilterChips instance) is invoked at
+ * render time. That keeps the call site in the view compact:
  *
  *   TableHeader::make('exp')
  *     ->status(fn() => (new FilterChips('exp-status','paid'))->...->render())
@@ -60,7 +60,7 @@ class TableHeader
     }
 
     /**
-     * Status-Zeile (volle Breite, oben) — typisch FilterChips.
+     * Status row (full width, at the top) — typically FilterChips.
      */
     public function status(\Closure $renderer): self
     {
@@ -69,7 +69,7 @@ class TableHeader
     }
 
     /**
-     * Such-Eingabe in der Toolbar.
+     * Search input in the toolbar.
      * @param array{live?:string,id?:string} $opts
      */
     public function search(string $name, string $value = '', string $placeholder = 'Suche…', array $opts = []): self
@@ -85,7 +85,7 @@ class TableHeader
     }
 
     /**
-     * Filter-Slot in der Toolbar — Closure (echo'd) oder roher HTML-String.
+     * Filter slot in the toolbar — closure (echo'd) or raw HTML string.
      */
     public function filter($content): self
     {
@@ -97,7 +97,7 @@ class TableHeader
     }
 
     /**
-     * Erweiterte Filter (collapsible <details>).
+     * Advanced filters (collapsible <details>).
      */
     public function advanced(\Closure $renderer, string $summary = 'Erweiterte Filter', bool $open = false): self
     {
@@ -108,7 +108,7 @@ class TableHeader
     }
 
     /**
-     * Reset-Button (löst zur baseUrl ohne Parameter — entfernt alle Filter).
+     * Reset button (points at baseUrl without any parameters — removes all filters).
      */
     public function reset(string $baseUrl, string $label = 'Filter zurücksetzen'): self
     {
@@ -123,14 +123,14 @@ class TableHeader
 
         echo '<div class="gk-tableheader" data-gk-tableheader="' . $e($this->id) . '">';
 
-        // 1. Status-Zeile
+        // 1. Status row
         if ($this->statusRenderer) {
             echo '<div class="gk-tableheader-status">';
             ($this->statusRenderer)();
             echo '</div>';
         }
 
-        // 2. Toolbar (Suche + Filter)
+        // 2. Toolbar (search + filters)
         $hasToolbar = $this->search !== null || !empty($this->filters) || $this->resetUrl !== null;
         if ($hasToolbar) {
             echo '<div class="gk-tableheader-toolbar">';
@@ -166,7 +166,7 @@ class TableHeader
             echo '</div>';
         }
 
-        // 3. Erweiterte Filter
+        // 3. Advanced filters
         if ($this->advancedRenderer) {
             $openAttr = $this->advancedOpen ? ' open' : '';
             echo '<details class="gk-tableheader-advanced"' . $openAttr . '>';

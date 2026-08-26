@@ -1,0 +1,299 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: #f6f8fb; }
+    a { color: #4338ca; } a:hover { color: #312e81; }
+    .gk-mono { font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .gk-code { font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; font-size: 12px; background: #f1f5f9; border-radius: 4px; padding: 1px 5px; color: #334155; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; min-height: 2260px; background: #f6f8fb; font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #0f172a; padding: 68px 80px 76px; display: flex; flex-direction: column; gap: 56px;">
+
+  <!-- Kopf -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <span class="gk-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6366f1; font-weight: 500;">Blatt 03</span>
+      <span style="flex-grow: 1; height: 1px; background: #dbe2ea;"></span>
+      <span class="gk-mono" style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #94a3b8;">Die vorgeschlagene Token-Schicht</span>
+    </div>
+    <h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 56px; line-height: 1.08; letter-spacing: -0.012em; color: #0f172a;">Weniger Werte, mehr Regeln</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.6; color: #475569; max-width: 880px; text-wrap: pretty;">Ein Design-System wird nicht dadurch edel, dass es mehr Werte hat, sondern dadurch, dass jede Entscheidung nur einmal getroffen wird. Vier Schichten fehlen GridKit heute vollständig: eine Farbregel, eine Typo-Skala, eine Bewegungs-Handschrift und eine Höhenordnung.</p>
+  </div>
+
+  <!-- 1 FARBE -->
+  <div style="display: flex; flex-direction: column; gap: 26px;">
+    <div style="display: flex; align-items: baseline; gap: 16px;">
+      <span class="gk-mono" style="font-size: 12px; color: #cbd5e1;">01</span>
+      <h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 34px; line-height: 1.15; color: #0f172a;">Farbe — ein Theme ist ein Winkel</h2>
+      <span style="flex-grow: 1; height: 1px; background: #dbe2ea;"></span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 32px; align-items: start;">
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <p style="margin: 0; font-size: 14.5px; line-height: 1.65; color: #475569;">Die sechs Themes sind heute von Hand aus einer Tailwind-Palette gepflückt. In OKLCH gemessen streut ihre Helligkeit von 0,45 bis 0,69 und ihre Buntheit von 0,04 bis 0,21 — deshalb wirkt <em>Amber</em> viel leichter als <em>Slate</em> und <em>Rose</em> lauter als <em>Forest</em>. Es ist kein Satz, sondern eine Sammlung.</p>
+        <p style="margin: 0; font-size: 14.5px; line-height: 1.65; color: #475569;">Der Vorschlag hält Helligkeit fest und variiert nur den Farbwinkel. Die Buntheit läuft dabei gegen die sRGB-Grenze — Cyan und Grün können bei dieser Helligkeit nicht so bunt werden wie Indigo. Genau das erledigt <span class="gk-code">oklch()</span> im Browser von selbst, wenn man den Wunschwert notiert.</p>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+          <div class="gk-mono" style="font-size: 12.5px; line-height: 1.9; color: #0f172a; white-space: pre-line;">--gk-hue: 277;   /* das ganze Theme */
+
+--gk-primary:
+  oklch(0.60 0.15 var(--gk-hue));
+--gk-primary-container:
+  oklch(0.95 0.04 var(--gk-hue));
+--gk-on-primary-container:
+  oklch(0.36 0.11 var(--gk-hue));</div>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #64748b;">Ein siebtes Theme kostet danach eine Zeile statt zwanzig — und kann nicht mehr aus der Reihe fallen.</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: grid; grid-template-columns: 78px 1fr 1fr; gap: 12px; align-items: center;">
+          <span class="gk-mono" style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8;">Theme</span>
+          <span class="gk-mono" style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8;">Heute · L / C gemessen</span>
+          <span class="gk-mono" style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8;">Abgeleitet · L 0,60 fest</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 78px 1fr 1fr; gap: 12px; align-items: center;">
+          <span style="font-size: 13.5px; font-weight: 600; color: #0f172a;">Indigo</span>
+          <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #6366f1; flex-shrink: 0;"></span>
+            <span class="gk-mono" style="font-size: 11.5px; color: #64748b;">L .585 · C .204</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #6b74d8; flex-shrink: 0;"></span>
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #eaedff; flex-shrink: 0;"></span>
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #303476; flex-shrink: 0;"></span>
+            <span class="gk-mono" style="font-size: 11.5px; color: #64748b;">277°</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 78px 1fr 1fr; gap: 12px; align-items: center;">
+          <span style="font-size: 13.5px; font-weight: 600; color: #0f172a;">Ocean</span>
+          <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #0ea5e9; flex-shrink: 0;"></span>
+            <span class="gk-mono" style="font-size: 11.5px; color: #64748b;">L .685 · C .148</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #008ac4; flex-shrink: 0;"></span>
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #def2ff; flex-shrink: 0;"></span>
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #004261; flex-shrink: 0;"></span>
+            <span class="gk-mono" style="font-size: 11.5px; color: #64748b;">237°</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 78px 1fr 1fr; gap: 12px; align-items: center;">
+          <span style="font-size: 13.5px; font-weight: 600; color: #0f172a;">Forest</span>
+          <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #059669; flex-shrink: 0;"></span>
+            <span class="gk-mono" style="font-size: 11.5px; color: #64748b;">L .596 · C .127</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #009869; flex-shrink: 0;"></span>
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #d6f8e6; flex-shrink: 0;"></span>
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #004931; flex-shrink: 0;"></span>
+            <span class="gk-mono" style="font-size: 11.5px; color: #64748b;">163°</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 78px 1fr 1fr; gap: 12px; align-items: center;">
+          <span style="font-size: 13.5px; font-weight: 600; color: #0f172a;">Rose</span>
+          <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #ec4899; flex-shrink: 0;"></span>
+            <span class="gk-mono" style="font-size: 11.5px; color: #64748b;">L .656 · C .212</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #c25486; flex-shrink: 0;"></span>
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #ffe7f0; flex-shrink: 0;"></span>
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #671d41; flex-shrink: 0;"></span>
+            <span class="gk-mono" style="font-size: 11.5px; color: #64748b;">354°</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 78px 1fr 1fr; gap: 12px; align-items: center;">
+          <span style="font-size: 13.5px; font-weight: 600; color: #0f172a;">Amber</span>
+          <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #d97706; flex-shrink: 0;"></span>
+            <span class="gk-mono" style="font-size: 11.5px; color: #64748b;">L .666 · C .157</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #be6600; flex-shrink: 0;"></span>
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #ffeadb; flex-shrink: 0;"></span>
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #5e2f00; flex-shrink: 0;"></span>
+            <span class="gk-mono" style="font-size: 11.5px; color: #64748b;">58°</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 78px 1fr 1fr; gap: 12px; align-items: center;">
+          <span style="font-size: 13.5px; font-weight: 600; color: #0f172a;">Slate</span>
+          <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #475569; flex-shrink: 0;"></span>
+            <span class="gk-mono" style="font-size: 11.5px; color: #64748b;">L .446 · C .037</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #718198; flex-shrink: 0;"></span>
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #eaeff6; flex-shrink: 0;"></span>
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: #333e4d; flex-shrink: 0;"></span>
+            <span class="gk-mono" style="font-size: 11.5px; color: #64748b;">257° · C .04</span>
+          </div>
+        </div>
+
+        <p style="margin: 4px 0 0; font-size: 12.5px; line-height: 1.55; color: #64748b;">Slate ist die bewusste Ausnahme: gleiche Helligkeit, aber niedrige Buntheit — das neutrale Theme soll neutral bleiben.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 TYPOGRAFIE -->
+  <div style="display: flex; flex-direction: column; gap: 26px;">
+    <div style="display: flex; align-items: baseline; gap: 16px;">
+      <span class="gk-mono" style="font-size: 12px; color: #cbd5e1;">02</span>
+      <h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 34px; line-height: 1.15; color: #0f172a;">Typografie — sieben Rollen statt sechzehn Zahlen</h2>
+      <span style="flex-grow: 1; height: 1px; background: #dbe2ea;"></span>
+    </div>
+
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+      <div style="display: grid; grid-template-columns: 190px 116px minmax(0, 1fr) 240px; gap: 24px; padding: 13px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+        <span class="gk-mono" style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #64748b;">Token</span>
+        <span class="gk-mono" style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #64748b;">Größe / Höhe</span>
+        <span class="gk-mono" style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #64748b;">Musterzeile</span>
+        <span class="gk-mono" style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #64748b;">Einsatz</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 190px 116px minmax(0, 1fr) 240px; gap: 24px; padding: 16px 24px; border-bottom: 1px solid #eef2f6; align-items: center;">
+        <span class="gk-mono" style="font-size: 12px; color: #4338ca;">--gk-text-display</span>
+        <span class="gk-mono" style="font-size: 12px; color: #64748b;">32 / 1,15 / 600</span>
+        <span style="font-size: 32px; line-height: 1.15; font-weight: 600; letter-spacing: -0.015em; color: #0f172a;">Rechnungen</span>
+        <span style="font-size: 13px; line-height: 1.5; color: #64748b;">Seitentitel, genau einer je Ansicht</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 190px 116px minmax(0, 1fr) 240px; gap: 24px; padding: 16px 24px; border-bottom: 1px solid #eef2f6; align-items: center;">
+        <span class="gk-mono" style="font-size: 12px; color: #4338ca;">--gk-text-title</span>
+        <span class="gk-mono" style="font-size: 12px; color: #64748b;">20 / 1,30 / 600</span>
+        <span style="font-size: 20px; line-height: 1.3; font-weight: 600; color: #0f172a;">Offene Posten</span>
+        <span style="font-size: 13px; line-height: 1.5; color: #64748b;">Abschnitt innerhalb der Seite</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 190px 116px minmax(0, 1fr) 240px; gap: 24px; padding: 16px 24px; border-bottom: 1px solid #eef2f6; align-items: center;">
+        <span class="gk-mono" style="font-size: 12px; color: #4338ca;">--gk-text-subtitle</span>
+        <span class="gk-mono" style="font-size: 12px; color: #64748b;">16 / 1,40 / 600</span>
+        <span style="font-size: 16px; line-height: 1.4; font-weight: 600; color: #0f172a;">Zahlungsziel überschritten</span>
+        <span style="font-size: 13px; line-height: 1.5; color: #64748b;">Kartenkopf, Modal-Titel</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 190px 116px minmax(0, 1fr) 240px; gap: 24px; padding: 16px 24px; border-bottom: 1px solid #eef2f6; align-items: center;">
+        <span class="gk-mono" style="font-size: 12px; color: #4338ca;">--gk-text-body</span>
+        <span class="gk-mono" style="font-size: 12px; color: #64748b;">14 / 1,55 / 400</span>
+        <span style="font-size: 14px; line-height: 1.55; font-weight: 400; color: #0f172a;">Der Betrag wird am 30. fällig.</span>
+        <span style="font-size: 13px; line-height: 1.5; color: #64748b;">Fließtext, Tabellenzellen — die Grundgröße</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 190px 116px minmax(0, 1fr) 240px; gap: 24px; padding: 16px 24px; border-bottom: 1px solid #eef2f6; align-items: center;">
+        <span class="gk-mono" style="font-size: 12px; color: #4338ca;">--gk-text-label</span>
+        <span class="gk-mono" style="font-size: 12px; color: #64748b;">13 / 1,40 / 500</span>
+        <span style="font-size: 13px; line-height: 1.4; font-weight: 500; color: #0f172a;">Rechnungsempfänger</span>
+        <span style="font-size: 13px; line-height: 1.5; color: #64748b;">Formularbeschriftung, Schaltflächen</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 190px 116px minmax(0, 1fr) 240px; gap: 24px; padding: 16px 24px; border-bottom: 1px solid #eef2f6; align-items: center;">
+        <span class="gk-mono" style="font-size: 12px; color: #4338ca;">--gk-text-caption</span>
+        <span class="gk-mono" style="font-size: 12px; color: #64748b;">12 / 1,45 / 400</span>
+        <span style="font-size: 12px; line-height: 1.45; font-weight: 400; color: #475569;">Zuletzt geändert vor 3 Tagen</span>
+        <span style="font-size: 13px; line-height: 1.5; color: #64748b;">Hilfstext, Zweitzeile in der Zelle</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 190px 116px minmax(0, 1fr) 240px; gap: 24px; padding: 16px 24px; align-items: center;">
+        <span class="gk-mono" style="font-size: 12px; color: #4338ca;">--gk-text-overline</span>
+        <span class="gk-mono" style="font-size: 12px; color: #64748b;">11 / 1,30 / 600</span>
+        <span style="font-size: 11px; line-height: 1.3; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #475569;">Artikel-Nr.</span>
+        <span style="font-size: 13px; line-height: 1.5; color: #64748b;">Tabellenkopf, Abschnittsmarke — <em>nur hier</em></span>
+      </div>
+    </div>
+    <p style="margin: 0; font-size: 13.5px; line-height: 1.6; color: #64748b; max-width: 900px;">Jede Rolle bringt Größe, Zeilenhöhe und Gewicht mit. Das ist der eigentliche Gewinn: Heute steht an 38&nbsp;Stellen <span class="gk-code">font-size: 14px</span> ohne zugehörige Zeilenhöhe — die entsteht dann zufällig aus dem Kontext.</p>
+  </div>
+
+  <!-- 3 BEWEGUNG + 4 HÖHE + 5 FOKUS -->
+  <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px;">
+
+    <div style="display: flex; flex-direction: column; gap: 22px;">
+      <div style="display: flex; align-items: baseline; gap: 16px;">
+        <span class="gk-mono" style="font-size: 12px; color: #cbd5e1;">03</span>
+        <h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 30px; line-height: 1.15; color: #0f172a;">Bewegung</h2>
+        <span style="flex-grow: 1; height: 1px; background: #dbe2ea;"></span>
+      </div>
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px 24px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <div style="display: flex; align-items: baseline; gap: 10px;"><span class="gk-mono" style="font-size: 12.5px; color: #4338ca;">--gk-dur-1</span><span class="gk-mono" style="font-size: 12.5px; color: #0f172a;">120ms</span></div>
+          <span style="font-size: 13px; line-height: 1.5; color: #64748b;">Zustand am Ort: Hover, Fokus, Auswahl</span>
+        </div>
+        <span style="height: 1px; background: #eef2f6;"></span>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <div style="display: flex; align-items: baseline; gap: 10px;"><span class="gk-mono" style="font-size: 12.5px; color: #4338ca;">--gk-dur-2</span><span class="gk-mono" style="font-size: 12.5px; color: #0f172a;">200ms</span></div>
+          <span style="font-size: 13px; line-height: 1.5; color: #64748b;">Erscheinen und Verschwinden: Dropdown, Tooltip, Toast</span>
+        </div>
+        <span style="height: 1px; background: #eef2f6;"></span>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <div style="display: flex; align-items: baseline; gap: 10px;"><span class="gk-mono" style="font-size: 12.5px; color: #4338ca;">--gk-dur-3</span><span class="gk-mono" style="font-size: 12.5px; color: #0f172a;">320ms</span></div>
+          <span style="font-size: 13px; line-height: 1.5; color: #64748b;">Bewegung im Raum: Modal, Schublade, Seitenleiste</span>
+        </div>
+        <span style="height: 1px; background: #eef2f6;"></span>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <span class="gk-mono" style="font-size: 12.5px; color: #4338ca;">--gk-ease-out</span>
+          <span class="gk-mono" style="font-size: 12px; color: #0f172a;">cubic-bezier(0.2, 0, 0, 1)</span>
+          <span style="font-size: 13px; line-height: 1.5; color: #64748b;">Alles, was hereinkommt. Schnell ansetzen, weich ankommen.</span>
+        </div>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: 12px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 16px 18px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span style="font-size: 13px; line-height: 1.6; color: #78350f;">Und: <span class="gk-mono" style="font-size: 12px;">transition: all</span> verschwindet. Es animiert auch Breite, Höhe und Position — die häufigste Ursache für Layouts, die beim Aufklappen zucken.</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 22px;">
+      <div style="display: flex; align-items: baseline; gap: 16px;">
+        <span class="gk-mono" style="font-size: 12px; color: #cbd5e1;">04</span>
+        <h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 30px; line-height: 1.15; color: #0f172a;">Höhe &amp; Fokus</h2>
+        <span style="flex-grow: 1; height: 1px; background: #dbe2ea;"></span>
+      </div>
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 26px 24px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <span style="width: 100%; height: 54px; border-radius: 10px; background: #ffffff; border: 1px solid #e2e8f0;"></span>
+            <span class="gk-mono" style="font-size: 11px; color: #4338ca;">e0</span>
+            <span style="font-size: 11.5px; line-height: 1.4; color: #64748b; text-align: center;">flach</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <span style="width: 100%; height: 54px; border-radius: 10px; background: #ffffff; box-shadow: 0 1px 2px rgba(15,23,42,0.06), 0 1px 3px rgba(15,23,42,0.10);"></span>
+            <span class="gk-mono" style="font-size: 11px; color: #4338ca;">e1</span>
+            <span style="font-size: 11.5px; line-height: 1.4; color: #64748b; text-align: center;">Karte</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <span style="width: 100%; height: 54px; border-radius: 10px; background: #ffffff; box-shadow: 0 2px 4px rgba(15,23,42,0.06), 0 4px 12px rgba(15,23,42,0.08);"></span>
+            <span class="gk-mono" style="font-size: 11px; color: #4338ca;">e2</span>
+            <span style="font-size: 11.5px; line-height: 1.4; color: #64748b; text-align: center;">Dropdown</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <span style="width: 100%; height: 54px; border-radius: 10px; background: #ffffff; box-shadow: 0 4px 8px rgba(15,23,42,0.08), 0 16px 32px rgba(15,23,42,0.12);"></span>
+            <span class="gk-mono" style="font-size: 11px; color: #4338ca;">e3</span>
+            <span style="font-size: 11.5px; line-height: 1.4; color: #64748b; text-align: center;">Modal</span>
+          </div>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #64748b;">Jede Stufe ist zweilagig: ein enger Kontaktschatten für die Kante, eine weiche Streuung für die Distanz. Ein einlagiger Schatten sieht immer aufgeklebt aus. Im Dark Mode übernimmt eine hellere Fläche die Rolle des Schattens — Schwarz auf Schwarz trägt nicht.</p>
+        <span style="height: 1px; background: #eef2f6;"></span>
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <button style="font-family: inherit; display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; border: 1.5px solid #6366f1; background: #6366f1; color: #ffffff; font-size: 13px; font-weight: 500; cursor: pointer; outline: 2px solid #6366f1; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(99,102,241,0.18);">Fokussiert</button>
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <span class="gk-mono" style="font-size: 12px; color: #4338ca;">--gk-focus-ring</span>
+            <span style="font-size: 13px; line-height: 1.5; color: #64748b;">Ein Ring, überall gleich, nur bei <span class="gk-code">:focus-visible</span>.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

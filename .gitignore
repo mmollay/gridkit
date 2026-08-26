@@ -2,3 +2,15 @@
 *.log
 .env
 *.mp3
+
+# Design-Audit: die eingebettete Leinwand ist ~2,5 MB Generat, die
+# .dc.html-Quellen daneben sind die Arbeitsdateien und gehoeren ins Repo.
+.design/gridkit-design-audit.html
+.playwright-mcp/
+.design/verify/snapshots/
+.design/verify/hex-inventory.json
+.design/verify/offsets.json
+.design/verify/token-*.json
+
+# Interne Betriebsanleitung — gehoert nicht ins oeffentliche Repository
+INTERNAL-DEPLOY.md

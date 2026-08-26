@@ -1,0 +1,3005 @@
+[
+ {
+  "gruppe": "Formular",
+  "aenderungen": [
+   {
+    "zeile": 1609,
+    "altText": "  color: var(--gk-on-surface-variant, #475569);",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "A",
+    "altWert": "#475569",
+    "neuWert": "#475569",
+    "begruendung": "Rolle ist bereits korrekt (Label = sekundaerer Text). Das Literal ist nur ein toter Fallback, da der Token in :root definiert ist — Entfernen aendert den gerenderten Wert nicht."
+   },
+   {
+    "zeile": 1626,
+    "altText": "  border: 1px solid #dde1e6;",
+    "neuText": "  border: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "B",
+    "altWert": "#dde1e6",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Eingabefeldrahmen im Ruhezustand ist heute eine helle Haarlinie (#dde1e6), also --gk-outline-variant und nicht --gk-outline. Passt zur Staffelung: Hover (Zeile 1643) hebt bereits auf --gk-outline an. Verschiebung minimal (~7 RGB-Stufen heller)."
+   },
+   {
+    "zeile": 1630,
+    "altText": "  background: #fff;",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#ffffff",
+    "neuWert": "#ffffff",
+    "begruendung": "Weiss bedeutet hier Feldflaeche eines outlined Textfelds auf der Karte -> --gk-surface (Light exakt #ffffff). Dark Mode ueberschreibt .gk-input background ohnehin separat (Zeile 5706), daher kein Modus-Risiko."
+   },
+   {
+    "zeile": 1640,
+    "altText": "  color: #6e7781;",
+    "neuText": "  color: var(--gk-outline);",
+    "token": "--gk-outline",
+    "klasse": "B",
+    "altWert": "#6e7781",
+    "neuWert": "#94a3b8",
+    "begruendung": "Platzhaltertext -> laut Regel 7 --gk-outline. Der Platzhalter wird dadurch etwas heller/schwaecher als heute, bleibt aber die vorgesehene Rolle; Dark Mode hat eine eigene Regel (Zeile 5712)."
+   },
+   {
+    "zeile": 1643,
+    "altText": "  border-color: var(--gk-outline, #94a3b8);",
+    "neuText": "  border-color: var(--gk-outline);",
+    "token": "--gk-outline",
+    "klasse": "A",
+    "altWert": "#94a3b8",
+    "neuWert": "#94a3b8",
+    "begruendung": "Rolle bereits korrekt (kraeftigere Linie im Hover). Literal ist toter Fallback, Entfernen ist wertgleich."
+   },
+   {
+    "zeile": 1649,
+    "altText": "  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);",
+    "neuText": "  box-shadow: var(--gk-focus-ring-soft);",
+    "token": "--gk-focus-ring-soft",
+    "klasse": "B",
+    "altWert": "0 0 0 2px rgba(99, 102, 241, 0.1)",
+    "neuWert": "0 0 0 3px color-mix(in oklab, #6366f1 12%, transparent)",
+    "begruendung": "Dezenter Fokusring des Eingabefelds. Der Token enthaelt die komplette box-shadow-Angabe; Ring waechst von 2px auf 3px und von 10% auf 12% Deckung. Die Markenfarbe folgt damit dem Theme (heute fest Indigo)."
+   },
+   {
+    "zeile": 1701,
+    "altText": "  border: 1.5px solid var(--gk-outline-variant, #cbd5e1);",
+    "neuText": "  border: 1.5px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Rolle bereits korrekt. Der Token ist definiert, also rendert heute schon #e2e8f0 und nicht der Fallback #cbd5e1 — das Entfernen des Literals aendert nichts."
+   },
+   {
+    "zeile": 1704,
+    "altText": "  background: var(--gk-surface-container-lowest, #fff);",
+    "neuText": "  background: var(--gk-surface-container-lowest);",
+    "token": "--gk-surface-container-lowest",
+    "klasse": "A",
+    "altWert": "#ffffff",
+    "neuWert": "#ffffff",
+    "begruendung": "Rolle bereits korrekt (Feldflaeche). Literal ist toter Fallback."
+   },
+   {
+    "zeile": 1709,
+    "altText": "  border-color: var(--gk-outline, #94a3b8);",
+    "neuText": "  border-color: var(--gk-outline);",
+    "token": "--gk-outline",
+    "klasse": "A",
+    "altWert": "#94a3b8",
+    "neuWert": "#94a3b8",
+    "begruendung": "Rolle bereits korrekt (Hover-Rahmen kraeftiger). Literal ist toter Fallback."
+   },
+   {
+    "zeile": 1719,
+    "altText": "  border-right: 1.5px solid var(--gk-outline-variant, #cbd5e1);",
+    "neuText": "  border-right: 1.5px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Trennlinie zwischen Swatch und Hex-Feld, gleiche Rolle wie der Aussenrahmen des Wraps. Literal ist toter Fallback."
+   },
+   {
+    "zeile": 1787,
+    "altText": "  background: var(--gk-neutral-300, #cbd5e1);",
+    "neuText": "  background: var(--gk-surface-container-highest);",
+    "token": "--gk-surface-container-highest",
+    "klasse": "B",
+    "altWert": "#cbd5e1",
+    "neuWert": "#d8dee4",
+    "begruendung": "--gk-neutral-300 ist eine verbotene Legacy-Skala (folgt weder Theme noch Modus). Die ausgeschaltete Toggle-Spur ist eine kraeftig abgesetzte neutrale Flaeche -> --gk-surface-container-highest. Verschiebung klein (etwas heller); Dark Mode setzt die Spur ohnehin separat (Zeile 5008)."
+   },
+   {
+    "zeile": 1825,
+    "altText": "  color: var(--gk-text-secondary, #64748b);",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "B",
+    "altWert": "#64748b",
+    "neuWert": "#475569",
+    "begruendung": "--gk-text-secondary ist nirgends definiert, es rendert also tatsaechlich das Literal #64748b. Feldhinweis = gedaempfter Sekundaertext -> --gk-on-surface-variant. Verschiebung klein (etwas dunkler, bessere Lesbarkeit); Dark Mode hat eine eigene Regel (Zeile 5014)."
+   },
+   {
+    "zeile": 1862,
+    "altText": "  color: var(--gk-primary, #6366f1);",
+    "neuText": "  color: var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Rolle bereits korrekt (Akzentfarbe der Sektionsueberschrift). Literal ist toter Fallback."
+   },
+   {
+    "zeile": 1948,
+    "altText": "  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);",
+    "neuText": "  box-shadow: 0 0 0 3px var(--gk-state-error);",
+    "token": "--gk-state-error",
+    "klasse": "B",
+    "altWert": "rgba(244, 63, 94, 0.1)",
+    "neuWert": "color-mix(in oklab, #f43f5e 8%, transparent)",
+    "begruendung": "Fehler-Fokusring. Es gibt keinen fertigen Fehler-Fokusring-Token, daher Geometrie (3px) beibehalten und nur der Schleier auf die Rolle --gk-state-error umgestellt. Farbton in Light identisch (#f43f5e), Deckung 10% -> 8%; folgt dadurch der Fehlerrolle des Themes."
+   },
+   {
+    "zeile": 1986,
+    "altText": "  border: solid #fff;",
+    "neuText": "  border: solid var(--gk-on-primary);",
+    "token": "--gk-on-primary",
+    "klasse": "A",
+    "altWert": "#ffffff",
+    "neuWert": "#ffffff",
+    "begruendung": "Das Haekchen ist nur im Zustand :checked sichtbar und liegt dann auf --gk-primary (Zeile 1993) -> --gk-on-primary. Light exakt #ffffff, und im Dark Mode ergibt sich mit hellem Primary automatisch der richtige Kontrast."
+   },
+   {
+    "zeile": 2090,
+    "altText": "  box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.15);",
+    "neuText": "  box-shadow: 0 0 0 6px var(--gk-state-primary);",
+    "token": "--gk-state-primary",
+    "klasse": "B",
+    "altWert": "rgba(99, 102, 241, 0.15)",
+    "neuWert": "color-mix(in oklab, #6366f1 8%, transparent)",
+    "begruendung": "Hover-Halo des Slider-Thumbs ist ein Zustandsschleier in Markenfarbe -> --gk-state-primary. Radius 6px bleibt erhalten, nur die Deckung sinkt von 15% auf 8%; dafuer folgt der Halo dem Theme (Forest/Ocean statt fix Indigo)."
+   },
+   {
+    "zeile": 2117,
+    "altText": "  border: 2px dashed #d0d7de;",
+    "neuText": "  border: 2px dashed var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "B",
+    "altWert": "#d0d7de",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Ruhezustand der Drop-Zone ist eine neutrale Container-Linie; durch 2px gestrichelt bleibt sie trotz hellerem Ton sichtbar. Hover/Dragover setzen den Rahmen ohnehin auf --gk-primary. --gk-outline waere mit #94a3b8 eine deutlich groessere Verschiebung."
+   },
+   {
+    "zeile": 2264,
+    "altText": "  background: var(--gk-neutral-100, #f1f5f9);",
+    "neuText": "  background: var(--gk-surface-container);",
+    "token": "--gk-surface-container",
+    "klasse": "A",
+    "altWert": "#f1f5f9",
+    "neuWert": "#f1f5f9",
+    "begruendung": "--gk-neutral-100 ist verbotene Legacy-Skala. Der Pending-Status-Chip ist eine neutrale, leicht abgesetzte Flaeche -> --gk-surface-container, in Light wertgleich #f1f5f9, folgt aber dem Modus."
+   },
+   {
+    "zeile": 2271,
+    "altText": "  background: var(--gk-primary-50, #eef2ff);",
+    "neuText": "  background: var(--gk-primary-container);",
+    "token": "--gk-primary-container",
+    "klasse": "B",
+    "altWert": "#eef2ff",
+    "neuWert": "#e0e0ff",
+    "begruendung": "--gk-primary-50 ist verbotene Legacy-Skala und folgt dem Theme nicht. Weiche Markenvariante fuer den Upload-laeuft-Chip -> --gk-primary-container. Verschiebung klein (leicht saettiger); der Text darauf bleibt --gk-primary mit ausreichendem Kontrast."
+   },
+   {
+    "zeile": 2275,
+    "altText": "  border-color: #16a34a;",
+    "neuText": "  border-color: var(--gk-success);",
+    "token": "--gk-success",
+    "klasse": "B",
+    "altWert": "#16a34a",
+    "neuWert": "#10b981",
+    "begruendung": "Abgeschlossener Upload = Erfolg -> --gk-success (echte Rolle ohne Zahl, nicht --gk-tertiary). Kleiner Farbtonwechsel von Gruen nach Emerald, damit alle Erfolgszustaende von GridKit denselben Ton verwenden."
+   },
+   {
+    "zeile": 2278,
+    "altText": "  background: #dcfce7;",
+    "neuText": "  background: var(--gk-success-container);",
+    "token": "--gk-success-container",
+    "klasse": "B",
+    "altWert": "#dcfce7",
+    "neuWert": "#d1fae5",
+    "begruendung": "Weiche Erfolgsflaeche des Status-Chips -> --gk-success-container. Verschiebung minimal, dafuer im Dark Mode korrekt invertiert."
+   },
+   {
+    "zeile": 2279,
+    "altText": "  color: #166534;",
+    "neuText": "  color: var(--gk-on-success-container);",
+    "token": "--gk-on-success-container",
+    "klasse": "B",
+    "altWert": "#166534",
+    "neuWert": "#064e3b",
+    "begruendung": "Text auf der weichen Erfolgsflaeche -> --gk-on-success-container, passend zum Container in Zeile 2278. Etwas dunkler, Kontrast steigt."
+   },
+   {
+    "zeile": 2285,
+    "altText": "  background: #fee2e2;",
+    "neuText": "  background: var(--gk-error-container);",
+    "token": "--gk-error-container",
+    "klasse": "B",
+    "altWert": "#fee2e2",
+    "neuWert": "#ffe4e6",
+    "begruendung": "Weiche Fehlerflaeche des Status-Chips -> --gk-error-container. Verschiebung minimal (Rot -> Rose, passend zur Fehlerrolle #f43f5e)."
+   },
+   {
+    "zeile": 2286,
+    "altText": "  color: #991b1b;",
+    "neuText": "  color: var(--gk-on-error-container);",
+    "token": "--gk-on-error-container",
+    "klasse": "B",
+    "altWert": "#991b1b",
+    "neuWert": "#881337",
+    "begruendung": "Text auf der weichen Fehlerflaeche -> --gk-on-error-container, passend zum Container in Zeile 2285."
+   },
+   {
+    "zeile": 2301,
+    "altText": "  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);",
+    "neuText": "  box-shadow: var(--gk-focus-ring-soft);",
+    "token": "--gk-focus-ring-soft",
+    "klasse": "B",
+    "altWert": "0 0 0 3px rgba(99, 102, 241, 0.1)",
+    "neuWert": "0 0 0 3px color-mix(in oklab, #6366f1 12%, transparent)",
+    "begruendung": "Dezenter Fokusring des Richtext-Rahmens. Geometrie identisch (3px), nur die Deckung steigt von 10% auf 12%; die Farbe folgt jetzt dem Theme statt fix Indigo."
+   }
+  ],
+  "offen": [
+   {
+    "zeile": 1800,
+    "problem": ".gk-toggle-slider::before { background: #fff; } — der Toggle-Knopf. Semantisch waere --gk-on-primary richtig (im Zustand :checked liegt der Knopf auf --gk-primary, Zeile 1808), und in Light waere das mit #ffffff wertgleich. Im ausgeschalteten Zustand liegt derselbe Knopf aber auf einer neutralen Spur, und der Dark Mode ueberschreibt nur die Spur (Zeile 5008: rgba(255,255,255,0.15)), nicht den Knopf: mit --gk-on-primary wuerde der Knopf im Dark Mode zu #2e2e8a und auf der hellen Spur praktisch verschwinden. Keine vorhandene Rolle bleibt in beiden Modi hell. Vorschlag zur Entscheidung: entweder Literal #fff belassen, oder --gk-on-primary setzen UND im Abschnitt DARK MODE eine eigene Regel fuer .gk-toggle-slider::before ergaenzen (Knopf hell, im checked-Zustand dunkel)."
+   }
+  ]
+ },
+ {
+  "gruppe": "Tabelle",
+  "aenderungen": [
+   {
+    "zeile": 191,
+    "altText": "  background: #fff;",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Wrapper der Tabelle ist eine Karten-/Panelflaeche (Regel 6). --gk-surface loest im Light Mode exakt auf #ffffff auf."
+   },
+   {
+    "zeile": 192,
+    "altText": "  border: 1px solid #d0d7de;",
+    "neuText": "  border: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "B",
+    "altWert": "#d0d7de",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Standardrahmen des Wrappers = Haarlinie (Regel 8). Keine Rolle trifft #d0d7de exakt; die Verschiebung auf #e2e8f0 ist minimal (eine Stufe heller) und vereinheitlicht den Wrapper-Rahmen mit allen anderen Tabellenrahmen (607, 3723)."
+   },
+   {
+    "zeile": 329,
+    "altText": "  color: var(--gk-primary, #5a4eff);",
+    "neuText": "  color: var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Rolle ist bereits korrekt; nur das tote Fallback-Literal #5a4eff faellt weg. --gk-primary ist global definiert, der Fallback greift nie — der gerenderte Wert bleibt identisch."
+   },
+   {
+    "zeile": 367,
+    "altText": "  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);",
+    "neuText": "  box-shadow: var(--gk-focus-ring-soft);",
+    "token": "--gk-focus-ring-soft",
+    "klasse": "B",
+    "altWert": "rgba(99, 102, 241, 0.1)",
+    "neuWert": "color-mix(in oklab, #6366f1 12%, transparent)",
+    "begruendung": "Dezenter Fokusring auf dem Suchfeld (Regel 10). Geometrie identisch (0 0 0 3px); nur die Deckkraft steigt von 10% auf 12% — praktisch unsichtbar, dafuer folgt der Ring jetzt dem Theme (Forest gruen, Ocean blau)."
+   },
+   {
+    "zeile": 395,
+    "altText": "  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);",
+    "neuText": "  box-shadow: var(--gk-focus-ring-soft);",
+    "token": "--gk-focus-ring-soft",
+    "klasse": "B",
+    "altWert": "0 0 0 2px rgba(99, 102, 241, 0.15)",
+    "neuWert": "0 0 0 3px color-mix(in oklab, #6366f1 12%, transparent)",
+    "begruendung": "Dezenter Fokusring am Filter-Select (Regel 10). Der Token bringt die vollstaendige box-shadow-Angabe mit, daher 3px statt 2px und 12% statt 15% — der Ring wird dadurch identisch zu dem am Suchfeld (367) und folgt dem Theme."
+   },
+   {
+    "zeile": 469,
+    "altText": "  background: var(--gk-bg, #fff); color: var(--gk-text); font-size: 13px; font-weight: 600;",
+    "neuText": "  background: var(--gk-surface); color: var(--gk-text); font-size: 13px; font-weight: 600;",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#ffffff",
+    "neuWert": "#ffffff",
+    "begruendung": "Pagination-Button ist eine Flaeche auf Kartenebene (Regel 6). --gk-bg und --gk-surface loesen im Light Mode beide auf #ffffff auf, der gerenderte Wert bleibt gleich; das Fallback-Literal #fff entfaellt. Die uebrigen Deklarationen der Zeile bleiben unveraendert."
+   },
+   {
+    "zeile": 487,
+    "altText": "  border-bottom: 1px solid #d8dee4;",
+    "neuText": "  border-bottom: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "B",
+    "altWert": "#d8dee4",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Zeilentrenner der Tabelle = Haarlinie (Regel 8). #d8dee4 wird von keiner Linienrolle exakt getroffen (--gk-surface-container-highest traefe den Wert, ist aber eine Flaechenrolle). Die Verschiebung auf #e2e8f0 ist eine Stufe heller und vereinheitlicht alle Trennlinien der Tabelle."
+   },
+   {
+    "zeile": 490,
+    "altText": "  background: #f6f8fa;",
+    "neuText": "  background: var(--gk-surface-container-low);",
+    "token": "--gk-surface-container-low",
+    "klasse": "A",
+    "altWert": "#f6f8fa",
+    "neuWert": "#f6f8fa",
+    "begruendung": "Kopfzeilenflaeche = leicht abgesetzte Flaeche (Regel 6). --gk-surface-container-low loest im Light Mode exakt auf #f6f8fa auf."
+   },
+   {
+    "zeile": 493,
+    "altText": "  color: #57606a;",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "B",
+    "altWert": "#57606a",
+    "neuWert": "#475569",
+    "begruendung": "Kopfzeilentext ist gedaempfter Sekundaertext (Regel 7). Keine Textrolle trifft #57606a exakt; #475569 ist minimal dunkler/kuehler und gleicht den Kopftext mit allen anderen Sekundaertexten der Gruppe an (571, 582, 3698)."
+   },
+   {
+    "zeile": 504,
+    "altText": "  background: #f6f8fa;",
+    "neuText": "  background: var(--gk-surface-container-high);",
+    "token": "--gk-surface-container-high",
+    "klasse": "B",
+    "altWert": "#f6f8fa",
+    "neuWert": "#eaeef2",
+    "begruendung": "Zeilen-Hover = Hover-Flaeche (Regel 6 nennt dafuer explizit --gk-surface-container-high). Bisher war der Hover auf normalen Zeilen (#f6f8fa) schwaecher als auf Zebra-Zeilen (#eaeef2, Zeile 510); mit dieser Rolle ist der Hover-Zustand ueberall identisch und deutlich, unabhaengig von der Zebra-Position."
+   },
+   {
+    "zeile": 507,
+    "altText": "  background: #f6f8fa;",
+    "neuText": "  background: var(--gk-surface-container-low);",
+    "token": "--gk-surface-container-low",
+    "klasse": "A",
+    "altWert": "#f6f8fa",
+    "neuWert": "#f6f8fa",
+    "begruendung": "Zebra-Flaeche = leicht abgesetzte Flaeche (Regel 6). --gk-surface-container-low loest im Light Mode exakt auf #f6f8fa auf; Zebra kommt damit aus einer Flaechenrolle statt aus einem Literal."
+   },
+   {
+    "zeile": 510,
+    "altText": "  background: #eaeef2;",
+    "neuText": "  background: var(--gk-surface-container-high);",
+    "token": "--gk-surface-container-high",
+    "klasse": "A",
+    "altWert": "#eaeef2",
+    "neuWert": "#eaeef2",
+    "begruendung": "Hover auf der Zebra-Zeile = Hover-Flaeche (Regel 6). --gk-surface-container-high loest im Light Mode exakt auf #eaeef2 auf und ist nun identisch mit dem Hover normaler Zeilen (504)."
+   },
+   {
+    "zeile": 566,
+    "altText": "  color: var(--gk-text-primary, #1e293b);",
+    "neuText": "  color: var(--gk-on-surface);",
+    "token": "--gk-on-surface",
+    "klasse": "B",
+    "altWert": "#1e293b",
+    "neuWert": "#0f172a",
+    "begruendung": "Tabellentitel ist Primaertext (Regel 7). --gk-text-primary ist NICHT definiert, also rendert heute tatsaechlich das Fallback #1e293b. Die Verschiebung auf #0f172a ist eine Nuance dunkler und bindet den Titel an die echte Textrolle."
+   },
+   {
+    "zeile": 571,
+    "altText": "  color: var(--gk-text-secondary, #64748b);",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "B",
+    "altWert": "#64748b",
+    "neuWert": "#475569",
+    "begruendung": "Titel-Icon ist gedaempfte Sekundaerfarbe (Regel 7). --gk-text-secondary ist NICHT definiert, es rendert heute das Fallback #64748b. Die Verschiebung auf #475569 ist klein und gleicht das Icon mit dem uebrigen Sekundaertext ab."
+   },
+   {
+    "zeile": 582,
+    "altText": "  color: var(--gk-text-secondary, #64748b);",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "B",
+    "altWert": "#64748b",
+    "neuWert": "#475569",
+    "begruendung": "Zusatztext im Titel ist Sekundaertext (Regel 7). --gk-text-secondary ist NICHT definiert, es rendert heute das Fallback #64748b; #475569 ist die semantisch richtige Rolle, Verschiebung minimal."
+   },
+   {
+    "zeile": 606,
+    "altText": "  background: var(--gk-surface, #fff);",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#ffffff",
+    "neuWert": "#ffffff",
+    "begruendung": "Rolle ist bereits korrekt (Kartenflaeche, Regel 6); nur das tote Fallback-Literal #fff faellt weg. Gerenderter Wert unveraendert."
+   },
+   {
+    "zeile": 607,
+    "altText": "  border: 1px solid var(--gk-outline-variant, #d0d7de);",
+    "neuText": "  border: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Rolle ist bereits korrekt (Kartenrahmen, Regel 8); nur das tote Fallback-Literal #d0d7de faellt weg. Gerenderter Wert unveraendert."
+   },
+   {
+    "zeile": 615,
+    "altText": "  border-bottom: 1px solid var(--gk-outline-variant, #eef0f3);",
+    "neuText": "  border-bottom: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Rolle ist bereits korrekt (Trennlinie unter dem Kartenkopf, Regel 8); nur das tote Fallback-Literal #eef0f3 faellt weg. Gerenderter Wert unveraendert."
+   },
+   {
+    "zeile": 694,
+    "altText": "  background: var(--gk-surface-variant, #f1f5f9);",
+    "neuText": "  background: var(--gk-surface-container);",
+    "token": "--gk-surface-container",
+    "klasse": "A",
+    "altWert": "#f1f5f9",
+    "neuWert": "#f1f5f9",
+    "begruendung": "--gk-surface-variant ist NICHT definiert, es rendert heute das Fallback #f1f5f9. --gk-surface-container ist die abgesetzte Flaechenrolle (Regel 6) und loest im Light Mode exakt auf #f1f5f9 auf."
+   },
+   {
+    "zeile": 695,
+    "altText": "  border-bottom: 1px solid var(--gk-outline-variant, #e2e8f0);",
+    "neuText": "  border-bottom: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Rolle ist bereits korrekt (Trennlinie unter der Gruppenzeile, Regel 8); nur das redundante Fallback-Literal faellt weg. Gerenderter Wert unveraendert."
+   },
+   {
+    "zeile": 700,
+    "altText": "  background: var(--gk-surface-variant, #f1f5f9);",
+    "neuText": "  background: var(--gk-surface-container);",
+    "token": "--gk-surface-container",
+    "klasse": "A",
+    "altWert": "#f1f5f9",
+    "neuWert": "#f1f5f9",
+    "begruendung": "--gk-surface-variant ist NICHT definiert, es rendert heute das Fallback #f1f5f9. Die Gruppenzeile behaelt beim Hover bewusst ihre Flaeche — identischer Token wie Zeile 694, Wert exakt gleich."
+   },
+   {
+    "zeile": 704,
+    "altText": "  color: var(--gk-on-surface, #0f172a);",
+    "neuText": "  color: var(--gk-on-surface);",
+    "token": "--gk-on-surface",
+    "klasse": "A",
+    "altWert": "#0f172a",
+    "neuWert": "#0f172a",
+    "begruendung": "Rolle ist bereits korrekt (Primaertext, Regel 7); nur das tote Fallback-Literal faellt weg. Gerenderter Wert unveraendert."
+   },
+   {
+    "zeile": 708,
+    "altText": "  color: var(--gk-text-muted, #64748b);",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "A",
+    "altWert": "#475569",
+    "neuWert": "#475569",
+    "begruendung": "Gruppen-Zaehler ist gedaempfter Sekundaertext (Regel 7). --gk-text-muted ist definiert und loest auf #475569 auf — genau der Light-Wert von --gk-on-surface-variant. Wertgleich, nur auf die M3-Rolle umgestellt; das Fallback-Literal #64748b entfaellt."
+   },
+   {
+    "zeile": 721,
+    "altText": "  color: var(--gk-text-muted, #cbd5e1);",
+    "neuText": "  color: var(--gk-outline);",
+    "token": "--gk-outline",
+    "klasse": "B",
+    "altWert": "#475569",
+    "neuWert": "#94a3b8",
+    "begruendung": "Leerer Zahlwert ist ein Platzhalter, also schwacher Text (Regel 7). Heute rendert --gk-text-muted #475569 — zu kraeftig fuer einen Leerwert; das Fallback-Literal #cbd5e1 zeigt die urspruengliche Absicht (sehr schwach). --gk-outline (#94a3b8) liegt dazwischen und ist die richtige Rolle; ausserdem deckt sich das im Dark Mode exakt mit der bestehenden Sonderregel in Zeile 737."
+   },
+   {
+    "zeile": 733,
+    "altText": "  background: var(--gk-surface-container, #1e293b);",
+    "neuText": "  background: var(--gk-surface-container);",
+    "token": "--gk-surface-container",
+    "klasse": "A",
+    "altWert": "#1e293b (Dark)",
+    "neuWert": "#1e293b (Dark)",
+    "begruendung": "Zeile liegt im Abschnitt TABLE (nicht im Abschnitt DARK MODE), daher zustaendig. Rolle ist bereits korrekt; nur das tote Fallback-Literal faellt weg — --gk-surface-container ist global definiert und loest im Dark Mode ohnehin auf #1e293b auf. Gerenderter Wert unveraendert."
+   },
+   {
+    "zeile": 737,
+    "altText": "  color: #475569;",
+    "neuText": "  color: var(--gk-outline);",
+    "token": "--gk-outline",
+    "klasse": "A",
+    "altWert": "#475569",
+    "neuWert": "#475569",
+    "begruendung": "Zeile liegt im Abschnitt TABLE (nicht im Abschnitt DARK MODE), daher zustaendig. Schwacher Platzhaltertext (Regel 7). Die Regel greift nur im Dark Mode, und dort loest --gk-outline exakt auf #475569 auf — wertgleich. Passt zur Umstellung von Zeile 721 auf dieselbe Rolle."
+   },
+   {
+    "zeile": 778,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-primary);",
+    "token": "--gk-on-primary",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Die Bulk-Bar hat background: var(--gk-primary); #fff ist hier also Text auf Primary (Regel 12). --gk-on-primary loest im Light Mode auf #ffffff auf und bleibt lesbar, wenn ein Theme die Primaerfarbe wechselt."
+   },
+   {
+    "zeile": 792,
+    "altText": "  background: #ef4444;",
+    "neuText": "  background: var(--gk-error);",
+    "token": "--gk-error",
+    "klasse": "B",
+    "altWert": "#ef4444",
+    "neuWert": "#f43f5e",
+    "begruendung": "Loeschen-Button in der Bulk-Bar (Regel 3). #ef4444 ist der Forest-/Ocean-Wert von --gk-error, im Standardtheme indigo loest die Rolle auf #f43f5e auf — dieselbe Rotfamilie, minimal roséstichiger, und ab jetzt themekonsistent."
+   },
+   {
+    "zeile": 793,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-error);",
+    "token": "--gk-on-error",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Text auf der Error-Flaeche des Loeschen-Buttons (Regel 12). --gk-on-error loest im Light Mode auf #ffffff auf."
+   },
+   {
+    "zeile": 806,
+    "altText": "  background: #dc2626;",
+    "neuText": "  background: var(--gk-error-hover);",
+    "token": "--gk-error-hover",
+    "klasse": "B",
+    "altWert": "#dc2626",
+    "neuWert": "oklch(from #f43f5e calc(l - 0.06) c h)",
+    "begruendung": "Hover-Stufe des Loeschen-Buttons (Regel 3). Die Rolle leitet die Abdunklung automatisch aus --gk-error ab, bleibt damit zur Flaeche in Zeile 792 konsistent und folgt dem Theme; der Helligkeitsabstand entspricht dem bisherigen Sprung #ef4444 -> #dc2626."
+   },
+   {
+    "zeile": 813,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-primary);",
+    "token": "--gk-on-primary",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Der Abbrechen-Button liegt mit rgba(255,255,255,0.15) auf der Primary-Flaeche der Bulk-Bar, sein Text ist also Text auf Primary (Regel 12). --gk-on-primary loest im Light Mode auf #ffffff auf."
+   },
+   {
+    "zeile": 850,
+    "altText": "  border: 1px solid var(--gk-outline-variant, #e5e7eb);",
+    "neuText": "  border: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Rolle ist bereits korrekt (Standardrahmen der Button-Gruppe, Regel 8); nur das tote Fallback-Literal #e5e7eb faellt weg. Gerenderter Wert unveraendert."
+   },
+   {
+    "zeile": 853,
+    "altText": "  border-right: 1px solid var(--gk-outline-variant, #e5e7eb);",
+    "neuText": "  border-right: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Rolle ist bereits korrekt (Trennlinie zwischen Gruppen-Buttons, Regel 8); nur das tote Fallback-Literal #e5e7eb faellt weg. Gerenderter Wert unveraendert."
+   },
+   {
+    "zeile": 3690,
+    "altText": "  border: 1px solid var(--gk-border, #e2e8f0);",
+    "neuText": "  border: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Zellgitter der bordered-Variante = Haarlinie (Regel 8). --gk-border loest im Light Mode auf #e2e8f0 auf, exakt der Light-Wert von --gk-outline-variant — wertgleich, nur auf die M3-Rolle umgestellt; das Fallback-Literal entfaellt."
+   },
+   {
+    "zeile": 3693,
+    "altText": "  background: var(--gk-bg-muted, #f8fafc);",
+    "neuText": "  background: var(--gk-surface-container-low);",
+    "token": "--gk-surface-container-low",
+    "klasse": "B",
+    "altWert": "#f1f5f9",
+    "neuWert": "#f6f8fa",
+    "begruendung": "Zebra-Flaeche der striped-Variante (Regel 6). Heute rendert --gk-bg-muted #f1f5f9; die Verschiebung auf #f6f8fa ist eine halbe Stufe heller und macht die striped-Variante wertgleich mit der Basis-Zebra der Tabelle (Zeile 507) — Zebra kommt damit einheitlich aus einer Flaechenrolle."
+   },
+   {
+    "zeile": 3698,
+    "altText": "  color: var(--gk-text-muted, #94a3b8);",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "A",
+    "altWert": "#475569",
+    "neuWert": "#475569",
+    "begruendung": "Kopfzeilentext der minimal-Variante ist Sekundaertext (Regel 7). --gk-text-muted loest auf #475569 auf — exakt der Light-Wert von --gk-on-surface-variant. Wertgleich, nur auf die M3-Rolle umgestellt; deckt sich jetzt mit dem Standard-Tabellenkopf (Zeile 493)."
+   },
+   {
+    "zeile": 3701,
+    "altText": "  border-bottom: 1px solid var(--gk-border, #f1f5f9);",
+    "neuText": "  border-bottom: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Zeilentrenner der minimal-Variante = Haarlinie (Regel 8). --gk-border loest auf #e2e8f0 auf, exakt der Light-Wert von --gk-outline-variant — wertgleich; das irrefuehrende Fallback-Literal #f1f5f9 entfaellt."
+   },
+   {
+    "zeile": 3713,
+    "altText": "  border-bottom: 2px solid var(--gk-border, #e2e8f0);",
+    "neuText": "  border-bottom: 2px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Kopfabschluss der flat-Variante. Die Betonung liefert hier bereits die Staerke (2px), nicht die Farbe — daher bleibt es die Haarlinienrolle (Regel 8) und nicht --gk-outline, das mit #94a3b8 eine deutlich sichtbare Verdunklung waere. --gk-border loest ohnehin auf #e2e8f0 auf: wertgleich."
+   },
+   {
+    "zeile": 3716,
+    "altText": "  border-bottom: 1px solid var(--gk-border, #f1f5f9);",
+    "neuText": "  border-bottom: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Zeilentrenner der flat-Variante = Haarlinie (Regel 8). --gk-border loest auf #e2e8f0 auf, exakt der Light-Wert von --gk-outline-variant — wertgleich; das irrefuehrende Fallback-Literal #f1f5f9 entfaellt."
+   },
+   {
+    "zeile": 3723,
+    "altText": "  border: 1px solid var(--gk-outline-variant, #d0d7de);",
+    "neuText": "  border: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Rolle ist bereits korrekt (Vollgitter der celled-Variante, Regel 8); nur das tote Fallback-Literal #d0d7de faellt weg. Gerenderter Wert unveraendert."
+   },
+   {
+    "zeile": 3780,
+    "altText": "  background: var(--gk-primary-50, #eef2ff);",
+    "neuText": "  background: var(--gk-state-primary);",
+    "token": "--gk-state-primary",
+    "klasse": "B",
+    "altWert": "#eef2ff",
+    "neuWert": "color-mix(in oklab, #6366f1 8%, transparent)",
+    "begruendung": "Hover-Schleier auf klickbaren Zeilen mit Markenfarbe (Regel 9). --gk-primary-50 ist eine verbotene Legacy-Skala und folgt dem Theme nicht — genau die Ursache dafuer, dass Forest/Ocean im Light Mode indigo hovern. Der Zustandstoken liegt mit 8% Deckkraft optisch praktisch auf dem bisherigen #eef2ff, folgt aber dem Theme."
+   },
+   {
+    "zeile": 3787,
+    "altText": "  background: var(--gk-surface-container, #f6f8fa);",
+    "neuText": "  background: var(--gk-surface-container);",
+    "token": "--gk-surface-container",
+    "klasse": "A",
+    "altWert": "#f1f5f9",
+    "neuWert": "#f1f5f9",
+    "begruendung": "Rolle ist bereits korrekt (Labelspalte als abgesetzte Flaeche, Regel 6); nur das tote Fallback-Literal #f6f8fa faellt weg. Gerenderter Wert unveraendert."
+   },
+   {
+    "zeile": 3827,
+    "altText": "    background: #fff;",
+    "neuText": "    background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Im Mobile-Card-Modus wird jede Zeile zu einer eigenen Karte (Regel 6/12: Kartenflaeche). --gk-surface loest im Light Mode exakt auf #ffffff auf."
+   },
+   {
+    "zeile": 3839,
+    "altText": "    border-bottom: 1px solid var(--gk-border, #f1f5f9);",
+    "neuText": "    border-bottom: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Trennlinie zwischen den Feldern einer Mobile-Card = Haarlinie (Regel 8). --gk-border loest auf #e2e8f0 auf, exakt der Light-Wert von --gk-outline-variant — wertgleich; das irrefuehrende Fallback-Literal entfaellt."
+   },
+   {
+    "zeile": 3848,
+    "altText": "    color: var(--gk-text-muted, #94a3b8);",
+    "neuText": "    color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "A",
+    "altWert": "#475569",
+    "neuWert": "#475569",
+    "begruendung": "Das data-label vor jedem Feld ersetzt die Kopfzeile und ist damit Sekundaertext (Regel 7). --gk-text-muted loest auf #475569 auf — exakt der Light-Wert von --gk-on-surface-variant; wertgleich und konsistent mit dem Desktop-Tabellenkopf (Zeile 493)."
+   }
+  ],
+  "offen": [
+   {
+    "zeile": 3796,
+    "problem": ".gk-table-inverted — Flaeche. Die Variante ist laut Kommentar bewusst eine \"Dunkle Tabelle im Light Mode\", also eine absichtliche Invertierung gegen Theme und Modus. Jede Light-Flaechenrolle (--gk-surface #ffffff, --gk-surface-container #f1f5f9) wuerde die Invertierung zerstoeren; --gk-surface traefe #1e293b nur im Dark Mode, waere im Light Mode aber weiss. Es gibt keine \"inverse-surface\"-Rolle im Token-Satz. Vorschlag zur Entscheidung: entweder Literal bewusst stehen lassen (Variante ist per Definition themeunabhaengig) oder ein neues Rollenpaar --gk-inverse-surface / --gk-on-inverse-surface einfuehren."
+   },
+   {
+    "zeile": 3797,
+    "problem": ".gk-table-inverted — Textfarbe #e2e8f0 auf der dunklen Flaeche. Gleicher Fall wie Zeile 3796: --gk-on-surface waere im Light Mode #0f172a (dunkel auf dunkel, unlesbar). Braucht ein --gk-on-inverse-surface oder bleibt Literal."
+   },
+   {
+    "zeile": 3800,
+    "problem": ".gk-table-inverted th — Kopfzeilenflaeche #0f172a, noch dunkler als der Tabellenkoerper. Gleicher Fall: keine Light-Flaechenrolle trifft das, ohne die Invertierung zu zerstoeren. Braucht eine inverse Containerrolle oder bleibt Literal."
+   },
+   {
+    "zeile": 3801,
+    "problem": ".gk-table-inverted th — Kopfzeilentext #94a3b8 auf dunklem Grund. Zwar identisch mit dem Light-Wert von --gk-outline, aber die Bedeutung ist \"gedaempfter Text auf inverser Flaeche\", nicht \"schwache Linie/Platzhalter\"; die Rolle wuerde im Dark Mode auf #475569 kippen und den Kopftext auf dem weiterhin dunklen Grund unlesbar machen. Braucht ein --gk-on-inverse-surface-variant oder bleibt Literal."
+   }
+  ]
+ },
+ {
+  "gruppe": "Navigation",
+  "aenderungen": [
+   {
+    "zeile": 1314,
+    "altText": "  background: var(--gk-primary-50, #eef2ff);",
+    "neuText": "  background: var(--gk-primary-container);",
+    "token": "--gk-primary-container",
+    "klasse": "B",
+    "altWert": "#eef2ff",
+    "neuWert": "#e0e0ff",
+    "begruendung": "Aktive Seitenzahl ist eine weiche Markenflaeche. --gk-primary-50 ist eine Legacy-Skala und folgt dem Theme nicht (in allen sechs Themes #eef2ff). --gk-primary-container folgt dem Theme (forest #d1fae5, ocean #e0f2fe, rose #fce7f3, amber #fef3c7, slate #e2e8f0). Verschiebung im Light Mode nur #eef2ff -> #e0e0ff, gleiche Helligkeitsstufe."
+   },
+   {
+    "zeile": 1315,
+    "altText": "  color: var(--gk-primary-700, #4338ca);",
+    "neuText": "  color: var(--gk-on-primary-container);",
+    "token": "--gk-on-primary-container",
+    "klasse": "B",
+    "altWert": "#4338ca",
+    "neuWert": "#1a1a6b",
+    "begruendung": "Text auf der Primary-Container-Flaeche aus Zeile 1314; gehoert zwingend zum selben Rollenpaar. --gk-primary-700 ist Legacy und bleibt in jedem Theme indigo. --gk-on-primary-container folgt dem Theme. Der Light-Wert ist etwas dunkler (#4338ca -> #1a1a6b), Kontrast wird dadurch besser, nicht schlechter."
+   },
+   {
+    "zeile": 2525,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-primary);",
+    "token": "--gk-on-primary",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Chip-Text liegt auf background: var(--gk-primary) (Zeile 2524). Regel 12: Text auf Primary -> --gk-on-primary. Light-Wert #ffffff, in allen sechs Themes #fff — wertgleich, aber ab jetzt themefaehig (Dark Mode: #2e2e8a)."
+   },
+   {
+    "zeile": 2650,
+    "altText": "  background: #f4f5f7;",
+    "neuText": "  background: var(--gk-sidebar-bg);",
+    "token": "--gk-sidebar-bg",
+    "klasse": "B",
+    "altWert": "#f4f5f7",
+    "neuWert": "#eef2ff",
+    "begruendung": "Kernursache der Gruppe: [data-gk-theme] .gk-sidebar (Spezifitaet 0,2,0) ueberschreibt das spaetere .gk-sidebar { background: var(--gk-sidebar-bg) } (0,1,0) und zwingt die Seitenleiste im Light Mode auf ein festes Grau. css/themes.css definiert --gk-sidebar-bg pro Theme (indigo #eef2ff, ocean #f0f9ff, forest #f0fdf4, rose #fdf2f8, amber #fffbeb, slate #f8fafc). Dark Mode bleibt unveraehrt, weil die [data-gk-mode=\"dark\"]-Regeln ab Zeile 2658 gleiche Spezifitaet und spaetere Quellposition haben."
+   },
+   {
+    "zeile": 2651,
+    "altText": "  color: #374151;",
+    "neuText": "  color: var(--gk-sidebar-text);",
+    "token": "--gk-sidebar-text",
+    "klasse": "A",
+    "altWert": "#374151",
+    "neuWert": "#374151",
+    "begruendung": "Regel 11: innerhalb der Seitenleiste die Sidebar-Rollen. --gk-sidebar-text ist in gridkit.css:151 exakt #374151 — wertgleich, loest aber die Blockade gegen den Dark-Mode-Wert rgba(255,255,255,0.7)."
+   },
+   {
+    "zeile": 2652,
+    "altText": "  border-right: 1px solid #e2e8f0;",
+    "neuText": "  border-right: 1px solid var(--gk-sidebar-border);",
+    "token": "--gk-sidebar-border",
+    "klasse": "B",
+    "altWert": "#e2e8f0",
+    "neuWert": "rgba(0, 0, 0, 0.07)",
+    "begruendung": "Regel 11: eigene Sidebar-Linienrolle (gridkit.css:156). Die Verschiebung ist minimal — rgba(0,0,0,0.07) auf den hellen Sidebar-Toenen ergibt praktisch dieselbe Haarlinie, passt sich aber der jeweiligen Theme-Flaeche an statt fix blaugrau zu bleiben."
+   },
+   {
+    "zeile": 2709,
+    "altText": "  color: var(--gk-sidebar-accent, #818cf8);",
+    "neuText": "  color: var(--gk-sidebar-accent);",
+    "token": "--gk-sidebar-accent",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Nur der tote Fallback wird entfernt: --gk-sidebar-accent ist in gridkit.css:158 als var(--gk-primary) immer definiert, der Literalwert #818cf8 (Legacy primary-400) greift nie. Effektivwert unveraendert."
+   },
+   {
+    "zeile": 2887,
+    "altText": "  background: var(--gk-primary, #6366f1);",
+    "neuText": "  background: var(--gk-sidebar-accent);",
+    "token": "--gk-sidebar-accent",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Das Badge steht im Seitenleisten-Item (Sidebar.php:202), Regel 11 verlangt hier die Sidebar-Rolle. --gk-sidebar-accent = var(--gk-primary), also in allen Themes und Modi identisch zum bisherigen Effektivwert; zugleich faellt der Literal-Fallback #6366f1 weg."
+   },
+   {
+    "zeile": 2888,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-primary);",
+    "token": "--gk-on-primary",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Badge-Text auf der Akzentflaeche aus Zeile 2887. Regel 12: Text auf Primary -> --gk-on-primary; Light-Wert #ffffff, wertgleich. Eine eigene Sidebar-Rolle fuer Text-auf-Akzent existiert nicht."
+   },
+   {
+    "zeile": 2908,
+    "altText": "  color: var(--gk-text-muted, #64748b);",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "A",
+    "altWert": "#475569",
+    "neuWert": "#475569",
+    "begruendung": "Der Toggle wird laut Sidebar.php:208 (\"place in your header\") im Header gerendert, nicht in der Seitenleiste — also allgemeine Textrolle, Regel 7 (gedaempft). --gk-text-muted und --gk-on-surface-variant sind im Light Mode beide #475569; der Literal-Fallback #64748b greift nie."
+   },
+   {
+    "zeile": 2912,
+    "altText": "  background: var(--gk-surface-container, #f1f5f9);",
+    "neuText": "  background: var(--gk-surface-container-high);",
+    "token": "--gk-surface-container-high",
+    "klasse": "B",
+    "altWert": "#f1f5f9",
+    "neuWert": "#eaeef2",
+    "begruendung": "Regel 6 weist Hover-Flaechen ausdruecklich --gk-surface-container-high zu. Kleine Verschiebung um eine Stufe (#f1f5f9 -> #eaeef2); ohne sie ist der Hover von benachbarten Ruheflaechen, die ebenfalls --gk-surface-container nutzen (z. B. Header-Suche Zeile 3539), nicht unterscheidbar. Gleiche Wahl wie bei 3576/3608/3649, damit alle Header-Hover konsistent sind."
+   },
+   {
+    "zeile": 3355,
+    "altText": "  background: #fff;",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Regel 6/12: der Header ist eine Panel-Flaeche, kein Text-auf-Farbe. --gk-surface ist im Light Mode #ffffff — wertgleich; das harte #fff blockierte bisher den Dark-Mode-Wert #1e293b."
+   },
+   {
+    "zeile": 3356,
+    "altText": "  border-bottom: 1px solid var(--gk-border, #e2e8f0);",
+    "neuText": "  border-bottom: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Regel 8: Haarlinie -> --gk-outline-variant. Light-Wert identisch zu --gk-border (#e2e8f0), der Literal-Fallback entfaellt."
+   },
+   {
+    "zeile": 3539,
+    "altText": "  background: var(--gk-bg-muted, #f1f5f9);",
+    "neuText": "  background: var(--gk-surface-container);",
+    "token": "--gk-surface-container",
+    "klasse": "A",
+    "altWert": "#f1f5f9",
+    "neuWert": "#f1f5f9",
+    "begruendung": "Ruhende, leicht abgesetzte Pill-Flaeche der Header-Suche. Regel 6 -> --gk-surface-container, Light-Wert #f1f5f9 exakt wie der bisherige Effektivwert von --gk-bg-muted; Literal-Fallback entfaellt."
+   },
+   {
+    "zeile": 3554,
+    "altText": "  color: var(--gk-text-muted, #94a3b8);",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "A",
+    "altWert": "#475569",
+    "neuWert": "#475569",
+    "begruendung": "Gedaempftes Icon in der Suchpille, Regel 7. Effektivwert war bereits #475569 (--gk-text-muted); der Literal-Fallback #94a3b8 greift nie. Wertgleich, deshalb A statt der optisch helleren Alternative --gk-outline."
+   },
+   {
+    "zeile": 3576,
+    "altText": "  background: var(--gk-bg-muted, #f1f5f9);",
+    "neuText": "  background: var(--gk-surface-container-high);",
+    "token": "--gk-surface-container-high",
+    "klasse": "B",
+    "altWert": "#f1f5f9",
+    "neuWert": "#eaeef2",
+    "begruendung": "Hover-Flaeche des Mobile-Menue-Toggles. Regel 6 weist Hover ausdruecklich --gk-surface-container-high zu; Verschiebung um eine Stufe (#f1f5f9 -> #eaeef2), damit der Hover sich von ruhenden Container-Flaechen im Header abhebt."
+   },
+   {
+    "zeile": 3590,
+    "altText": "  background: var(--gk-primary, #6366f1);",
+    "neuText": "  background: var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Avatar-Initialen auf Markenflaeche — Rolle ist bereits richtig, nur der tote Literal-Fallback wird entfernt. Effektivwert unveraendert."
+   },
+   {
+    "zeile": 3591,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-primary);",
+    "token": "--gk-on-primary",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Text auf der Primary-Flaeche aus Zeile 3590, Regel 12. Light-Wert #ffffff — wertgleich, folgt aber ab jetzt Theme und Modus."
+   },
+   {
+    "zeile": 3608,
+    "altText": "  background: var(--gk-bg-muted, #f1f5f9);",
+    "neuText": "  background: var(--gk-surface-container-high);",
+    "token": "--gk-surface-container-high",
+    "klasse": "B",
+    "altWert": "#f1f5f9",
+    "neuWert": "#eaeef2",
+    "begruendung": "Hover-Flaeche des User-Menues im Header. Regel 6 (Hover-Flaeche); dieselbe Stufe wie 2912/3576/3649, damit alle Header-Hover identisch reagieren."
+   },
+   {
+    "zeile": 3628,
+    "altText": "  background: #fff;",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Dropdown-Popover, hoechste Ebene. Regel 6 erlaubt --gk-surface-container-lowest oder --gk-surface; --gk-surface passt zum Header (Zeile 3355) und bleibt im Dark Mode mit #1e293b lesbar ueber dem Seitenhintergrund, waehrend --gk-surface-container-lowest dort auf #0a1120 faellt. Light-Wert #ffffff — wertgleich."
+   },
+   {
+    "zeile": 3649,
+    "altText": "  background: var(--gk-bg-muted, #f1f5f9);",
+    "neuText": "  background: var(--gk-surface-container-high);",
+    "token": "--gk-surface-container-high",
+    "klasse": "B",
+    "altWert": "#f1f5f9",
+    "neuWert": "#eaeef2",
+    "begruendung": "Hover eines Dropdown-Eintrags. Regel 6 (Hover-Flaeche). Die Stufe ueber --gk-surface-container ist hier zusaetzlich noetig, weil die Menueflaeche selbst --gk-surface ist und der Hover sich klar absetzen muss."
+   },
+   {
+    "zeile": 3657,
+    "altText": "  background: var(--gk-border, #e2e8f0);",
+    "neuText": "  background: var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "1px-Trenner im Dropdown, Regel 8 (Haarlinie). Light-Wert identisch zu --gk-border; Literal-Fallback entfaellt."
+   },
+   {
+    "zeile": 3882,
+    "altText": "  background: var(--gk-surface, #fff);",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#ffffff",
+    "neuWert": "#ffffff",
+    "begruendung": "Rolle ist bereits korrekt (Panel-Flaeche, Regel 6); nur der tote Literal-Fallback #fff wird entfernt. Effektivwert unveraendert."
+   },
+   {
+    "zeile": 3883,
+    "altText": "  border: 1px solid var(--gk-outline-variant, #d0d7de);",
+    "neuText": "  border: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Rolle ist bereits korrekt (Regel 8); der Literal-Fallback #d0d7de greift nie, da --gk-outline-variant immer definiert ist. Effektivwert unveraendert."
+   }
+  ],
+  "offen": [
+   {
+    "zeile": 2542,
+    "problem": ".gk-chip-warning.gk-chip-active { color: #1f2937 } — Regel 4 wuerde --gk-on-warning verlangen, dessen Light-Wert ist aber #ffffff. Weiss auf --gk-warning (#f59e0b) ergibt nur ~2:1 Kontrast, das heutige #1f2937 dagegen ~7:1. Das waere keine kleine Verschiebung, sondern eine Barrierefreiheits-Regression. --gk-on-warning-container (#92400e) ist semantisch fuer Text auf --gk-warning-container gedacht, nicht auf der vollen Warnflaeche. Zudem ist --gk-warning themeunabhaengig (ausser amber: #ea580c), das Literal blockiert also kein Theming im Light Mode. Empfehlung: entweder --gk-on-warning im Light Mode auf einen dunklen Ton korrigieren und danach ersetzen, oder die Zeile bewusst so lassen."
+   },
+   {
+    "zeile": 2659,
+    "problem": "[data-gk-mode=\"dark\"] .gk-sidebar { background: #010409 } — Dark-Mode-Deklaration, liegt aber im Abschnitt SIDEBAR statt in \"DARK MODE\". --gk-sidebar-bg hat im Dark Mode #0d1225 (themes.css setzt pro Theme #071a2d/#071a12/#1a0818/#1a0d06/#0d1424), ein Ersatz wuerde die Dark-Optik spuerbar aendern. Gehoert in die separate Dark-Mode-Runde."
+   },
+   {
+    "zeile": 2663,
+    "problem": "[data-gk-theme=\"indigo\"][data-gk-mode=\"dark\"] .gk-sidebar { background: #010409 } — Dark-Mode-Deklaration ausserhalb des Abschnitts \"DARK MODE\"; ausserdem redundant, da Zeile 2659 denselben Wert bereits fuer alle Themes setzt. Gehoert in die separate Dark-Mode-Runde (dort am besten ersatzlos streichen)."
+   },
+   {
+    "zeile": 2666,
+    "problem": "[data-gk-theme=\"ocean\"][data-gk-mode=\"dark\"] .gk-sidebar { background: #010409 } — Dark-Mode-Deklaration ausserhalb des Abschnitts \"DARK MODE\"; redundant zu Zeile 2659. Gehoert in die separate Dark-Mode-Runde."
+   },
+   {
+    "zeile": 2669,
+    "problem": "[data-gk-theme=\"forest\"][data-gk-mode=\"dark\"] .gk-sidebar { background: #010409 } — Dark-Mode-Deklaration ausserhalb des Abschnitts \"DARK MODE\"; redundant zu Zeile 2659. Gehoert in die separate Dark-Mode-Runde."
+   },
+   {
+    "zeile": 2672,
+    "problem": "[data-gk-theme=\"rose\"][data-gk-mode=\"dark\"] .gk-sidebar { background: #010409 } — Dark-Mode-Deklaration ausserhalb des Abschnitts \"DARK MODE\"; redundant zu Zeile 2659. Gehoert in die separate Dark-Mode-Runde."
+   },
+   {
+    "zeile": 2675,
+    "problem": "[data-gk-theme=\"amber\"][data-gk-mode=\"dark\"] .gk-sidebar { background: #010409 } — Dark-Mode-Deklaration ausserhalb des Abschnitts \"DARK MODE\"; redundant zu Zeile 2659. Gehoert in die separate Dark-Mode-Runde."
+   },
+   {
+    "zeile": 2678,
+    "problem": "[data-gk-theme=\"slate\"][data-gk-mode=\"dark\"] .gk-sidebar { background: #010409 } — Dark-Mode-Deklaration ausserhalb des Abschnitts \"DARK MODE\"; redundant zu Zeile 2659. Gehoert in die separate Dark-Mode-Runde."
+   },
+   {
+    "zeile": 3379,
+    "problem": "Nicht im Inventar (nur Hex wird erfasst), aber derselbe Defekt wie Zeile 3355: .gk-header-sticky { background: rgba(255, 255, 255, 0.85) } ist hart hell und ueberschreibt im Dark Mode die Header-Flaeche. Sauber waere color-mix(in oklab, var(--gk-surface) 85%, transparent). Bitte in die Inventar-Regel aufnehmen oder separat beauftragen."
+   }
+  ]
+ },
+ {
+  "gruppe": "Labels-Meldungen",
+  "aenderungen": [
+   {
+    "zeile": 1331,
+    "altText": "  background: #dcfce7;",
+    "neuText": "  background: var(--gk-success-container);",
+    "token": "--gk-success-container",
+    "klasse": "B",
+    "altWert": "#dcfce7",
+    "neuWert": "#d1fae5",
+    "begruendung": "Parallele Label-Palette gk-label-green auf die Erfolgs-Container-Rolle zurueckgefuehrt. Verschiebung minimal (beide sehr helles Mintgruen), dafuer modus- und themefaehig."
+   },
+   {
+    "zeile": 1332,
+    "altText": "  color: #166534;",
+    "neuText": "  color: var(--gk-on-success-container);",
+    "token": "--gk-on-success-container",
+    "klasse": "B",
+    "altWert": "#166534",
+    "neuWert": "#064e3b",
+    "begruendung": "Text auf Erfolgs-Container. Neuer Wert ist etwas dunkler/kuehler, Kontrast auf #d1fae5 steigt."
+   },
+   {
+    "zeile": 1335,
+    "altText": "  background: #fef3c7;",
+    "neuText": "  background: var(--gk-warning-container);",
+    "token": "--gk-warning-container",
+    "klasse": "A",
+    "altWert": "#fef3c7",
+    "neuWert": "#fef3c7",
+    "begruendung": "gk-label-orange = Warnung. Der Token loest im Light Mode exakt auf das Literal auf."
+   },
+   {
+    "zeile": 1336,
+    "altText": "  color: #92400e;",
+    "neuText": "  color: var(--gk-on-warning-container);",
+    "token": "--gk-on-warning-container",
+    "klasse": "A",
+    "altWert": "#92400e",
+    "neuWert": "#92400e",
+    "begruendung": "Text auf Warnungs-Container. Wertgleich im Light Mode."
+   },
+   {
+    "zeile": 1339,
+    "altText": "  background: #fee2e2;",
+    "neuText": "  background: var(--gk-error-container);",
+    "token": "--gk-error-container",
+    "klasse": "B",
+    "altWert": "#fee2e2",
+    "neuWert": "#ffe4e6",
+    "begruendung": "gk-label-red = Fehler. Verschiebung sehr klein (Rot-Rose statt Rot-Neutral), gleiche Helligkeit."
+   },
+   {
+    "zeile": 1340,
+    "altText": "  color: #991b1b;",
+    "neuText": "  color: var(--gk-on-error-container);",
+    "token": "--gk-on-error-container",
+    "klasse": "B",
+    "altWert": "#991b1b",
+    "neuWert": "#881337",
+    "begruendung": "Text auf Fehler-Container. Kleine Verschiebung ins Rose-Dunkelrot, passend zur Container-Flaeche."
+   },
+   {
+    "zeile": 1343,
+    "altText": "  background: #f3f4f6;",
+    "neuText": "  background: var(--gk-surface-container-high);",
+    "token": "--gk-surface-container-high",
+    "klasse": "B",
+    "altWert": "#f3f4f6",
+    "neuWert": "#eaeef2",
+    "begruendung": "gk-label-gray ist ein neutrales Label ohne Semantik -> abgesetzte Neutralflaeche. Minimal dunkler und leicht kuehler."
+   },
+   {
+    "zeile": 1344,
+    "altText": "  color: #6b7280;",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "B",
+    "altWert": "#6b7280",
+    "neuWert": "#475569",
+    "begruendung": "Gedaempfter Text auf Neutralflaeche. Neuer Wert ist dunkler, verbessert den Kontrast auf #eaeef2."
+   },
+   {
+    "zeile": 1347,
+    "altText": "  background: #dbeafe;",
+    "neuText": "  background: var(--gk-info-container);",
+    "token": "--gk-info-container",
+    "klasse": "A",
+    "altWert": "#dbeafe",
+    "neuWert": "#dbeafe",
+    "begruendung": "gk-label-blue = Info. Der Token loest im Light Mode exakt auf das Literal auf."
+   },
+   {
+    "zeile": 1348,
+    "altText": "  color: #1e40af;",
+    "neuText": "  color: var(--gk-on-info-container);",
+    "token": "--gk-on-info-container",
+    "klasse": "A",
+    "altWert": "#1e40af",
+    "neuWert": "#1e40af",
+    "begruendung": "Text auf Info-Container. Wertgleich im Light Mode."
+   },
+   {
+    "zeile": 1354,
+    "altText": "  background: #166534;",
+    "neuText": "  background: var(--gk-success-container);",
+    "token": "--gk-success-container",
+    "klasse": "B",
+    "altWert": "#166534",
+    "neuWert": "#065f46",
+    "begruendung": "Dark-Mode-Override innerhalb der LABELS-Sektion (nicht Abschnitt DARK MODE). Der Token folgt dem Modus, daher gilt hier der Dark-Wert: #166534 -> #065f46. Nach der Umstellung ist die Override wertgleich zur Basisregel, nur font-weight 600 bleibt wirksam."
+   },
+   {
+    "zeile": 1355,
+    "altText": "  color: #bbf7d0;",
+    "neuText": "  color: var(--gk-on-success-container);",
+    "token": "--gk-on-success-container",
+    "klasse": "B",
+    "altWert": "#bbf7d0",
+    "neuWert": "#d1fae5",
+    "begruendung": "Dark-Mode-Override in LABELS. Vergleich im Dark Mode (nur dort greift die Regel): #bbf7d0 -> #d1fae5, minimal heller/kuehler."
+   },
+   {
+    "zeile": 1360,
+    "altText": "  background: #92400e;",
+    "neuText": "  background: var(--gk-warning-container);",
+    "token": "--gk-warning-container",
+    "klasse": "B",
+    "altWert": "#92400e",
+    "neuWert": "#78350f",
+    "begruendung": "Dark-Mode-Override in LABELS. Dark-Wert des Tokens ist etwas dunkler: #92400e -> #78350f."
+   },
+   {
+    "zeile": 1361,
+    "altText": "  color: #fde68a;",
+    "neuText": "  color: var(--gk-on-warning-container);",
+    "token": "--gk-on-warning-container",
+    "klasse": "A",
+    "altWert": "#fde68a",
+    "neuWert": "#fde68a",
+    "begruendung": "Dark-Mode-Override in LABELS. Der Dark-Wert des Tokens trifft das Literal exakt."
+   },
+   {
+    "zeile": 1366,
+    "altText": "  background: #991b1b;",
+    "neuText": "  background: var(--gk-error-container);",
+    "token": "--gk-error-container",
+    "klasse": "B",
+    "altWert": "#991b1b",
+    "neuWert": "#881337",
+    "begruendung": "Dark-Mode-Override in LABELS. Dark-Wert: #991b1b -> #881337, kleine Verschiebung ins Rose."
+   },
+   {
+    "zeile": 1367,
+    "altText": "  color: #fecaca;",
+    "neuText": "  color: var(--gk-on-error-container);",
+    "token": "--gk-on-error-container",
+    "klasse": "B",
+    "altWert": "#fecaca",
+    "neuWert": "#ffe4e6",
+    "begruendung": "Dark-Mode-Override in LABELS. Dark-Wert: #fecaca -> #ffe4e6, minimal heller."
+   },
+   {
+    "zeile": 1372,
+    "altText": "  background: #374151;",
+    "neuText": "  background: var(--gk-surface-container-high);",
+    "token": "--gk-surface-container-high",
+    "klasse": "B",
+    "altWert": "#374151",
+    "neuWert": "#243044",
+    "begruendung": "Dark-Mode-Override in LABELS. Neutrales Label -> abgesetzte Neutralflaeche. Dark-Wert: #374151 -> #243044, etwas dunkler."
+   },
+   {
+    "zeile": 1373,
+    "altText": "  color: #d1d5db;",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "B",
+    "altWert": "#d1d5db",
+    "neuWert": "#94a3b8",
+    "begruendung": "Dark-Mode-Override in LABELS. Gedaempfter Text: #d1d5db -> #94a3b8, etwas gedaempfter."
+   },
+   {
+    "zeile": 1378,
+    "altText": "  background: #1e40af;",
+    "neuText": "  background: var(--gk-info-container);",
+    "token": "--gk-info-container",
+    "klasse": "A",
+    "altWert": "#1e40af",
+    "neuWert": "#1e40af",
+    "begruendung": "Dark-Mode-Override in LABELS. Der Dark-Wert des Tokens trifft das Literal exakt."
+   },
+   {
+    "zeile": 1379,
+    "altText": "  color: #bfdbfe;",
+    "neuText": "  color: var(--gk-on-info-container);",
+    "token": "--gk-on-info-container",
+    "klasse": "A",
+    "altWert": "#bfdbfe",
+    "neuWert": "#bfdbfe",
+    "begruendung": "Dark-Mode-Override in LABELS. Der Dark-Wert des Tokens trifft das Literal exakt."
+   },
+   {
+    "zeile": 3291,
+    "altText": "  background: var(--gk-bg, #fff);",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#ffffff",
+    "neuWert": "#ffffff",
+    "begruendung": "Confirm-Box ist die hoechste Ebene (Modal) -> Kartenflaeche. --gk-bg light = #ffffff, --gk-surface light = #ffffff. Der Literal-Fallback #fff entfaellt, da --gk-surface immer definiert ist."
+   },
+   {
+    "zeile": 3313,
+    "altText": "  color: var(--gk-text-muted, #6b7280);",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "A",
+    "altWert": "#475569",
+    "neuWert": "#475569",
+    "begruendung": "Dialogtext gedaempft. --gk-text-muted loest light auf #475569 auf, identisch mit --gk-on-surface-variant. Der Fallback #6b7280 greift nie und entfaellt."
+   },
+   {
+    "zeile": 3321,
+    "altText": "  border-top: 1px solid var(--gk-border, #e5e7eb);",
+    "neuText": "  border-top: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Haarlinie zwischen Body und Footer. --gk-border light = #e2e8f0 = --gk-outline-variant light. Fallback-Literal #e5e7eb entfaellt."
+   },
+   {
+    "zeile": 3322,
+    "altText": "  background: var(--gk-bg-subtle, #f9fafb);",
+    "neuText": "  background: var(--gk-surface-container-low);",
+    "token": "--gk-surface-container-low",
+    "klasse": "A",
+    "altWert": "#f6f8fa",
+    "neuWert": "#f6f8fa",
+    "begruendung": "Footerleiste leicht abgesetzt. --gk-bg-subtle light = #f6f8fa = --gk-surface-container-low light. Fallback-Literal #f9fafb entfaellt."
+   },
+   {
+    "zeile": 3975,
+    "altText": "  background: rgba(14, 165, 233, 0.08);",
+    "neuText": "  background: var(--gk-info-container);",
+    "token": "--gk-info-container",
+    "klasse": "B",
+    "altWert": "rgba(14, 165, 233, 0.08) (auf Weiss ca. #ecf8fd)",
+    "neuWert": "#dbeafe",
+    "begruendung": "Message-Banner ist eine weiche Semantikflaeche -> Container-Rolle. Der 8%-Schleier ist im Dark Mode praktisch unsichtbar; der Container-Token ist modusfaehig. Verschiebung: etwas kraeftigeres Hellblau, gleiche Farbfamilie."
+   },
+   {
+    "zeile": 3976,
+    "altText": "  border-color: rgba(14, 165, 233, 0.25);",
+    "neuText": "  border-color: var(--gk-info-container);",
+    "token": "--gk-info-container",
+    "klasse": "B",
+    "altWert": "rgba(14, 165, 233, 0.25) (auf Weiss ca. #c3e8fa)",
+    "neuWert": "#dbeafe",
+    "begruendung": "Rahmen des Info-Banners auf dieselbe Container-Rolle (etablierte Praxis in dieser Datei, vgl. .gk-chip-active Zeile 4802-4804). Verschiebung minimal: #c3e8fa -> #dbeafe."
+   },
+   {
+    "zeile": 3977,
+    "altText": "  color: #0284c7;",
+    "neuText": "  color: var(--gk-on-info-container);",
+    "token": "--gk-on-info-container",
+    "klasse": "B",
+    "altWert": "#0284c7",
+    "neuWert": "#1e40af",
+    "begruendung": "Text auf Info-Container. Verschiebung von Sky-Blau nach Indigo-Blau, beide dunkelblau; Kontrast auf #dbeafe steigt deutlich."
+   },
+   {
+    "zeile": 3980,
+    "altText": "  background: rgba(16, 185, 129, 0.08);",
+    "neuText": "  background: var(--gk-success-container);",
+    "token": "--gk-success-container",
+    "klasse": "B",
+    "altWert": "rgba(16, 185, 129, 0.08) (auf Weiss ca. #ecf9f5)",
+    "neuWert": "#d1fae5",
+    "begruendung": "Erfolgs-Banner -> Erfolgs-Container (nicht tertiary, das im Forest-Theme violett wird). Verschiebung: etwas kraeftigeres Mintgruen."
+   },
+   {
+    "zeile": 3981,
+    "altText": "  border-color: rgba(16, 185, 129, 0.25);",
+    "neuText": "  border-color: var(--gk-success-container);",
+    "token": "--gk-success-container",
+    "klasse": "B",
+    "altWert": "rgba(16, 185, 129, 0.25) (auf Weiss ca. #c3eee0)",
+    "neuWert": "#d1fae5",
+    "begruendung": "Rahmen auf dieselbe Container-Rolle. Verschiebung minimal: #c3eee0 -> #d1fae5."
+   },
+   {
+    "zeile": 3982,
+    "altText": "  color: #059669;",
+    "neuText": "  color: var(--gk-on-success-container);",
+    "token": "--gk-on-success-container",
+    "klasse": "B",
+    "altWert": "#059669",
+    "neuWert": "#064e3b",
+    "begruendung": "Text auf Erfolgs-Container. Deutlich dunkleres Gruen, notwendig fuer lesbaren Kontrast auf #d1fae5."
+   },
+   {
+    "zeile": 3985,
+    "altText": "  background: rgba(245, 158, 11, 0.08);",
+    "neuText": "  background: var(--gk-warning-container);",
+    "token": "--gk-warning-container",
+    "klasse": "B",
+    "altWert": "rgba(245, 158, 11, 0.08) (auf Weiss ca. #fef7ec)",
+    "neuWert": "#fef3c7",
+    "begruendung": "Warn-Banner -> Warnungs-Container. Verschiebung: leicht kraeftigeres Bernstein, gleiche Farbfamilie."
+   },
+   {
+    "zeile": 3986,
+    "altText": "  border-color: rgba(245, 158, 11, 0.25);",
+    "neuText": "  border-color: var(--gk-warning-container);",
+    "token": "--gk-warning-container",
+    "klasse": "B",
+    "altWert": "rgba(245, 158, 11, 0.25) (auf Weiss ca. #fce7c2)",
+    "neuWert": "#fef3c7",
+    "begruendung": "Rahmen auf dieselbe Container-Rolle. Verschiebung minimal: #fce7c2 -> #fef3c7."
+   },
+   {
+    "zeile": 3987,
+    "altText": "  color: #b45309;",
+    "neuText": "  color: var(--gk-on-warning-container);",
+    "token": "--gk-on-warning-container",
+    "klasse": "B",
+    "altWert": "#b45309",
+    "neuWert": "#92400e",
+    "begruendung": "Text auf Warnungs-Container. Sehr kleine Verschiebung, beide dunkles Bernstein/Braun."
+   },
+   {
+    "zeile": 3990,
+    "altText": "  background: rgba(244, 63, 94, 0.08);",
+    "neuText": "  background: var(--gk-error-container);",
+    "token": "--gk-error-container",
+    "klasse": "B",
+    "altWert": "rgba(244, 63, 94, 0.08) (auf Weiss ca. #fef0f2)",
+    "neuWert": "#ffe4e6",
+    "begruendung": "Fehler-Banner -> Fehler-Container. Verschiebung: leicht kraeftigeres Rose, gleiche Farbfamilie."
+   },
+   {
+    "zeile": 3991,
+    "altText": "  border-color: rgba(244, 63, 94, 0.25);",
+    "neuText": "  border-color: var(--gk-error-container);",
+    "token": "--gk-error-container",
+    "klasse": "B",
+    "altWert": "rgba(244, 63, 94, 0.25) (auf Weiss ca. #fccfd7)",
+    "neuWert": "#ffe4e6",
+    "begruendung": "Rahmen auf dieselbe Container-Rolle. Verschiebung minimal: #fccfd7 -> #ffe4e6."
+   },
+   {
+    "zeile": 3992,
+    "altText": "  color: #be123c;",
+    "neuText": "  color: var(--gk-on-error-container);",
+    "token": "--gk-on-error-container",
+    "klasse": "B",
+    "altWert": "#be123c",
+    "neuWert": "#881337",
+    "begruendung": "Text auf Fehler-Container. Kleine Verschiebung ins dunklere Rose-Rot, Kontrast auf #ffe4e6 steigt."
+   },
+   {
+    "zeile": 3995,
+    "altText": "  color: #0ea5e9;",
+    "neuText": "  color: var(--gk-info);",
+    "token": "--gk-info",
+    "klasse": "A",
+    "altWert": "#0ea5e9",
+    "neuWert": "#0ea5e9",
+    "begruendung": "Icon in der Info-Meldung, bewusst kraeftiger als der Text. --gk-info loest im Light Mode exakt auf das Literal auf."
+   },
+   {
+    "zeile": 3998,
+    "altText": "  color: #10b981;",
+    "neuText": "  color: var(--gk-success);",
+    "token": "--gk-success",
+    "klasse": "A",
+    "altWert": "#10b981",
+    "neuWert": "#10b981",
+    "begruendung": "Icon in der Erfolgs-Meldung. --gk-success (echte Rolle, ohne Zahl) loest im Light Mode exakt auf das Literal auf. Bewusst nicht --gk-tertiary, das im Forest-Theme violett wird."
+   },
+   {
+    "zeile": 4001,
+    "altText": "  color: #f59e0b;",
+    "neuText": "  color: var(--gk-warning);",
+    "token": "--gk-warning",
+    "klasse": "A",
+    "altWert": "#f59e0b",
+    "neuWert": "#f59e0b",
+    "begruendung": "Icon in der Warn-Meldung. --gk-warning loest im Light Mode exakt auf das Literal auf."
+   },
+   {
+    "zeile": 4004,
+    "altText": "  color: #f43f5e;",
+    "neuText": "  color: var(--gk-error);",
+    "token": "--gk-error",
+    "klasse": "A",
+    "altWert": "#f43f5e",
+    "neuWert": "#f43f5e",
+    "begruendung": "Icon in der Fehler-Meldung. --gk-error loest im Light Mode exakt auf das Literal auf und folgt zusaetzlich dem Theme (Forest/Ocean #ef4444)."
+   }
+  ],
+  "offen": [
+   {
+    "zeile": 3214,
+    "problem": ".gk-toast-info background: #1e293b — Der Toast ist als M3-Snackbar auf inverse-surface angelegt (dunkle Flaeche, helle Schrift, in JEDEM Modus). GridKit hat keine inverse-surface-Rolle (--gk-inverse-surface / --gk-on-inverse-surface fehlen in der Token-Tabelle). --gk-info-container waere semantisch richtig, wuerde den Toast im Light Mode aber von #1e293b auf #dbeafe kippen — eine grosse, gestalterische Verschiebung, keine Token-Kartierung. Empfehlung: erst inverse-surface-Rollen einfuehren, dann geschlossen umstellen. Zusatzbefund: die Dark-Regel [data-gk-mode=\"dark\"] .gk-toast (Zeile 4768-4771) hat hoehere Spezifitaet als .gk-toast-info und uebersteuert im Dark Mode alle vier Varianten mit #2d333b — die Semantikfarben gehen dort heute schon verloren."
+   },
+   {
+    "zeile": 3215,
+    "problem": ".gk-toast-info color: #f1f5f9 — Heller Text auf inverse-surface. Gehoert zur selben Entscheidung wie Zeile 3214; ohne --gk-on-inverse-surface gibt es keine passende Rolle. --gk-on-info-container (#1e40af light) waere nur zusammen mit einem hellen Toast-Hintergrund sinnvoll."
+   },
+   {
+    "zeile": 3218,
+    "problem": ".gk-toast-success background: #065f46 — Das Literal ist exakt der DARK-Wert von --gk-success-container. Der Toast nutzt also heute die Dark-Container-Palette fest verdrahtet. var(--gk-success-container) waere im Dark Mode identisch, wuerde den Toast im Light Mode aber auf #d1fae5 aufhellen. Grosse Verschiebung — gehoert zur Toast-Grundsatzentscheidung (siehe Zeile 3214)."
+   },
+   {
+    "zeile": 3219,
+    "problem": ".gk-toast-success color: #d1fae5 — Exakt der DARK-Wert von --gk-on-success-container. Umstellung auf var(--gk-on-success-container) ergaebe im Light Mode #064e3b (dunkler Text) und funktioniert nur gemeinsam mit Zeile 3218."
+   },
+   {
+    "zeile": 3222,
+    "problem": ".gk-toast-error background: #881337 — Exakt der DARK-Wert von --gk-error-container. Gleiche Lage wie Zeile 3218: var(--gk-error-container) waere im Dark Mode wertgleich, im Light Mode aber #ffe4e6 statt #881337."
+   },
+   {
+    "zeile": 3223,
+    "problem": ".gk-toast-error color: #ffe4e6 — Exakt der DARK-Wert von --gk-on-error-container. Nur gemeinsam mit Zeile 3222 umstellbar."
+   },
+   {
+    "zeile": 3226,
+    "problem": ".gk-toast-warning background: #78350f — Exakt der DARK-Wert von --gk-warning-container. var(--gk-warning-container) waere im Dark Mode wertgleich, im Light Mode aber #fef3c7 statt #78350f."
+   },
+   {
+    "zeile": 3227,
+    "problem": ".gk-toast-warning color: #fef3c7 — Entspricht dem LIGHT-Wert von --gk-warning-container, nicht dem Dark-Wert von --gk-on-warning-container (#fde68a). Die Toast-Palette ist hier bereits in sich inkonsistent. Nur gemeinsam mit Zeile 3226 und der Grundsatzentscheidung zu inverse-surface aufloesbar."
+   }
+  ]
+ },
+ {
+  "gruppe": "Buttons-A",
+  "aenderungen": [
+   {
+    "zeile": 883,
+    "altText": "  outline: 2px solid var(--gk-primary, #6366f1);",
+    "neuText": "  outline: 2px solid var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Fokus-Outline traegt bereits die Rolle; das Literal ist nur Fallback und haelt den Indigo-Wert fest. Rolle loest im Light Mode auf denselben Wert auf. --gk-focus-ring scheidet aus, weil der Token eine vollstaendige box-shadow-Angabe enthaelt und hier outline steht."
+   },
+   {
+    "zeile": 915,
+    "altText": "  background: #6366f1;",
+    "neuText": "  background: var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Filled-Primary-Flaeche = Markenrolle. --gk-primary light = #6366f1, wertgleich, folgt jetzt Theme und Modus."
+   },
+   {
+    "zeile": 916,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-primary);",
+    "token": "--gk-on-primary",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Text auf Primary-Flaeche = On-Rolle (Regel 12). Light-Wert #ffffff ist identisch mit #fff; im Dark Mode kippt der Text korrekt auf #2e2e8a."
+   },
+   {
+    "zeile": 917,
+    "altText": "  border-color: #6366f1;",
+    "neuText": "  border-color: var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Rahmen deckungsgleich mit der Flaeche, gleiche Rolle. Wertgleich."
+   },
+   {
+    "zeile": 920,
+    "altText": "  background: #4f46e5;",
+    "neuText": "  background: var(--gk-primary-hover);",
+    "token": "--gk-primary-hover",
+    "klasse": "B",
+    "altWert": "#4f46e5",
+    "neuWert": "oklch(from #6366f1 calc(l - 0.06) c h) = ca. #5452dc",
+    "begruendung": "Hover-Stufe der Filled-Variante = *-hover-Token. Der Token verdunkelt die Rolle um 0.06 L statt fest auf primary-600 zu springen; die Verschiebung ist klein (L 0.5106 -> 0.5254, gleiche Hue 277) und dafuer themetreu."
+   },
+   {
+    "zeile": 921,
+    "altText": "  border-color: #4f46e5;",
+    "neuText": "  border-color: var(--gk-primary-hover);",
+    "token": "--gk-primary-hover",
+    "klasse": "B",
+    "altWert": "#4f46e5",
+    "neuWert": "oklch(from #6366f1 calc(l - 0.06) c h) = ca. #5452dc",
+    "begruendung": "Rahmen folgt der Hover-Flaeche, gleiche Rolle, gleiche kleine Verschiebung wie Zeile 920."
+   },
+   {
+    "zeile": 922,
+    "altText": "  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);",
+    "neuText": "  box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-primary) 30%, transparent);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "rgba(99, 102, 241, 0.3)",
+    "neuWert": "color-mix(in oklab, #6366f1 30%, transparent) = #6366f1 bei Alpha 0.3",
+    "begruendung": "rgba(99,102,241) ist exakt #6366f1. color-mix gegen transparent liefert dieselbe Farbe mit Alpha 0.3 (premultiplied), also wertgleich, aber aus der Rolle abgeleitet und damit theme- und modusfaehig."
+   },
+   {
+    "zeile": 925,
+    "altText": "  background: #10b981;",
+    "neuText": "  background: var(--gk-success);",
+    "token": "--gk-success",
+    "klasse": "A",
+    "altWert": "#10b981",
+    "neuWert": "#10b981",
+    "begruendung": "Erfolgs-Flaeche = Erfolgsrolle (Regel 2). --gk-success light = #10b981, wertgleich. --gk-tertiary waere verboten (Forest = Violett)."
+   },
+   {
+    "zeile": 926,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-success);",
+    "token": "--gk-on-success",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Text auf Success-Flaeche = On-Rolle. Light identisch, Dark kippt korrekt auf #064e3b."
+   },
+   {
+    "zeile": 927,
+    "altText": "  border-color: #10b981;",
+    "neuText": "  border-color: var(--gk-success);",
+    "token": "--gk-success",
+    "klasse": "A",
+    "altWert": "#10b981",
+    "neuWert": "#10b981",
+    "begruendung": "Rahmen deckungsgleich mit der Flaeche, gleiche Rolle. Wertgleich."
+   },
+   {
+    "zeile": 930,
+    "altText": "  background: #059669;",
+    "neuText": "  background: var(--gk-success-hover);",
+    "token": "--gk-success-hover",
+    "klasse": "B",
+    "altWert": "#059669",
+    "neuWert": "oklch(from #10b981 calc(l - 0.06) c h) = ca. #00a66f",
+    "begruendung": "Hover-Stufe = *-hover-Token laut Regel 2. Verschiebung im Light Mode klein (L 0.5960 -> 0.6359, Hue 162.5 konstant). ACHTUNG fuer die Token-Ebene: --gk-success-hover ist derzeit wertidentisch mit --gk-tertiary-hover und traegt in Forest #8b5cf6 (Violett), waehrend --gk-success selbst in allen Themes gruen bleibt. Die Ersetzung hier ist regelkonform, der Token selbst gehoert aber in der Rollenschicht auf --gk-success zurueckgefuehrt."
+   },
+   {
+    "zeile": 931,
+    "altText": "  border-color: #059669;",
+    "neuText": "  border-color: var(--gk-success-hover);",
+    "token": "--gk-success-hover",
+    "klasse": "B",
+    "altWert": "#059669",
+    "neuWert": "oklch(from #10b981 calc(l - 0.06) c h) = ca. #00a66f",
+    "begruendung": "Rahmen folgt der Hover-Flaeche. Gleicher Hinweis wie Zeile 930: --gk-success-hover wird in Forest auf Violett aufgeloest (Token-Defekt, nicht Zuordnungsfehler)."
+   },
+   {
+    "zeile": 932,
+    "altText": "  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);",
+    "neuText": "  box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-success) 30%, transparent);",
+    "token": "--gk-success",
+    "klasse": "A",
+    "altWert": "rgba(16, 185, 129, 0.3)",
+    "neuWert": "color-mix(in oklab, #10b981 30%, transparent) = #10b981 bei Alpha 0.3",
+    "begruendung": "rgba(16,185,129) ist exakt #10b981; color-mix gegen transparent ist wertgleich und leitet den Schatten aus der Erfolgsrolle ab."
+   },
+   {
+    "zeile": 935,
+    "altText": "  background: #f59e0b;",
+    "neuText": "  background: var(--gk-warning);",
+    "token": "--gk-warning",
+    "klasse": "A",
+    "altWert": "#f59e0b",
+    "neuWert": "#f59e0b",
+    "begruendung": "Warn-Flaeche = Warnrolle (Regel 4). --gk-warning light = #f59e0b, wertgleich."
+   },
+   {
+    "zeile": 936,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-warning);",
+    "token": "--gk-on-warning",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Text auf Warning-Flaeche = On-Rolle. Light identisch, Dark kippt auf #78350f."
+   },
+   {
+    "zeile": 937,
+    "altText": "  border-color: #f59e0b;",
+    "neuText": "  border-color: var(--gk-warning);",
+    "token": "--gk-warning",
+    "klasse": "A",
+    "altWert": "#f59e0b",
+    "neuWert": "#f59e0b",
+    "begruendung": "Rahmen deckungsgleich mit der Flaeche, gleiche Rolle. Wertgleich."
+   },
+   {
+    "zeile": 940,
+    "altText": "  background: #d97706;",
+    "neuText": "  background: var(--gk-warning-hover);",
+    "token": "--gk-warning-hover",
+    "klasse": "B",
+    "altWert": "#d97706",
+    "neuWert": "oklch(from #f59e0b calc(l - 0.06) c h) = ca. #e18b00",
+    "begruendung": "Hover-Stufe = *-hover-Token. Der Token verdunkelt nur die Helligkeit, waehrend warning-600 zusaetzlich die Hue dreht (70 -> 58); die Verschiebung bleibt im gleichen Bernstein-Bereich und ist als Hover-Stufe klar erkennbar."
+   },
+   {
+    "zeile": 941,
+    "altText": "  border-color: #d97706;",
+    "neuText": "  border-color: var(--gk-warning-hover);",
+    "token": "--gk-warning-hover",
+    "klasse": "B",
+    "altWert": "#d97706",
+    "neuWert": "oklch(from #f59e0b calc(l - 0.06) c h) = ca. #e18b00",
+    "begruendung": "Rahmen folgt der Hover-Flaeche, gleiche Rolle, gleiche Verschiebung wie Zeile 940."
+   },
+   {
+    "zeile": 944,
+    "altText": "  background: #f43f5e;",
+    "neuText": "  background: var(--gk-error);",
+    "token": "--gk-error",
+    "klasse": "A",
+    "altWert": "#f43f5e",
+    "neuWert": "#f43f5e",
+    "begruendung": "Danger-Flaeche = Fehlerrolle (Regel 3). --gk-error light = #f43f5e, wertgleich; --gk-danger-* waere Legacy und verboten."
+   },
+   {
+    "zeile": 945,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-error);",
+    "token": "--gk-on-error",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Text auf Error-Flaeche = On-Rolle (Regel 12). Light identisch, Dark kippt auf #6b1028."
+   },
+   {
+    "zeile": 946,
+    "altText": "  border-color: #f43f5e;",
+    "neuText": "  border-color: var(--gk-error);",
+    "token": "--gk-error",
+    "klasse": "A",
+    "altWert": "#f43f5e",
+    "neuWert": "#f43f5e",
+    "begruendung": "Rahmen deckungsgleich mit der Flaeche, gleiche Rolle. Wertgleich."
+   },
+   {
+    "zeile": 949,
+    "altText": "  background: #e11d48;",
+    "neuText": "  background: var(--gk-error-hover);",
+    "token": "--gk-error-hover",
+    "klasse": "B",
+    "altWert": "#e11d48",
+    "neuWert": "oklch(from #f43f5e calc(l - 0.06) c h) = ca. #de254d",
+    "begruendung": "Hover-Stufe = *-hover-Token. Verschiebung minimal (L 0.5858 -> 0.5850 bei leicht geringerer Chroma, Hue 16-18), praktisch derselbe Rotton."
+   },
+   {
+    "zeile": 950,
+    "altText": "  border-color: #e11d48;",
+    "neuText": "  border-color: var(--gk-error-hover);",
+    "token": "--gk-error-hover",
+    "klasse": "B",
+    "altWert": "#e11d48",
+    "neuWert": "oklch(from #f43f5e calc(l - 0.06) c h) = ca. #de254d",
+    "begruendung": "Rahmen folgt der Hover-Flaeche, gleiche Rolle, gleiche minimale Verschiebung wie Zeile 949."
+   },
+   {
+    "zeile": 951,
+    "altText": "  box-shadow: 0 1px 3px rgba(244, 63, 94, 0.3);",
+    "neuText": "  box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-error) 30%, transparent);",
+    "token": "--gk-error",
+    "klasse": "A",
+    "altWert": "rgba(244, 63, 94, 0.3)",
+    "neuWert": "color-mix(in oklab, #f43f5e 30%, transparent) = #f43f5e bei Alpha 0.3",
+    "begruendung": "rgba(244,63,94) ist exakt #f43f5e; color-mix gegen transparent ist wertgleich und leitet den Schatten aus der Fehlerrolle ab."
+   },
+   {
+    "zeile": 954,
+    "altText": "  background: #475569;",
+    "neuText": "  background: var(--gk-secondary);",
+    "token": "--gk-secondary",
+    "klasse": "B",
+    "altWert": "#475569",
+    "neuWert": "#57606a",
+    "begruendung": "Neutraler Filled-Button = M3-Sekundaerrolle; es gibt keine Rolle mit exakt #475569, die als Flaeche taugt (--gk-on-surface-variant ist eine Textrolle und wuerde im Dark Mode zu #94a3b8 als Flaeche entarten). Verschiebung klein: beide dunkles Schiefergrau, L 0.4455 -> 0.4849. --gk-secondary folgt zudem Theme und Modus, im Dark Mode greift die korrekte Paarung mit --gk-on-secondary."
+   },
+   {
+    "zeile": 955,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-secondary);",
+    "token": "--gk-on-secondary",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Passende On-Rolle zur in Zeile 954 gesetzten Flaeche. Light-Wert #ffffff ist wertgleich zu #fff; im Dark Mode kippt der Text korrekt auf #332d41."
+   },
+   {
+    "zeile": 956,
+    "altText": "  border-color: #475569;",
+    "neuText": "  border-color: var(--gk-secondary);",
+    "token": "--gk-secondary",
+    "klasse": "B",
+    "altWert": "#475569",
+    "neuWert": "#57606a",
+    "begruendung": "Rahmen deckungsgleich mit der Flaeche, gleiche Rolle und gleiche kleine Verschiebung wie Zeile 954."
+   },
+   {
+    "zeile": 959,
+    "altText": "  background: #334155;",
+    "neuText": "  background: oklch(from var(--gk-secondary) calc(l - 0.06) c h);",
+    "token": "--gk-secondary",
+    "klasse": "B",
+    "altWert": "#334155",
+    "neuWert": "oklch(from #57606a calc(l - 0.06) c h) = ca. #474f59",
+    "begruendung": "Fuer die Sekundaerrolle existiert kein --gk-secondary-hover in der Tokenliste. Die Hover-Stufe wird deshalb mit exakt derselben Formel aus der Rolle abgeleitet, die die Tokenschicht fuer alle anderen *-hover-Token verwendet (l - 0.06). Verschiebung klein und in der gleichen Richtung wie bisher (dunkler als der Ruhezustand)."
+   },
+   {
+    "zeile": 960,
+    "altText": "  border-color: #334155;",
+    "neuText": "  border-color: oklch(from var(--gk-secondary) calc(l - 0.06) c h);",
+    "token": "--gk-secondary",
+    "klasse": "B",
+    "altWert": "#334155",
+    "neuWert": "oklch(from #57606a calc(l - 0.06) c h) = ca. #474f59",
+    "begruendung": "Rahmen folgt der Hover-Flaeche, gleiche Ableitung wie Zeile 959."
+   },
+   {
+    "zeile": 968,
+    "altText": "  color: #6366f1;",
+    "neuText": "  color: var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Outlined-Primary traegt die Markenfarbe als Schrift auf transparenter Flaeche. Wertgleich."
+   },
+   {
+    "zeile": 969,
+    "altText": "  border-color: #6366f1;",
+    "neuText": "  border-color: var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Farbiger Outlined-Rahmen traegt dieselbe Markenrolle wie die Schrift. Wertgleich."
+   },
+   {
+    "zeile": 972,
+    "altText": "  background: rgba(99, 102, 241, 0.08);",
+    "neuText": "  background: var(--gk-state-primary);",
+    "token": "--gk-state-primary",
+    "klasse": "A",
+    "altWert": "rgba(99, 102, 241, 0.08)",
+    "neuWert": "color-mix(in oklab, #6366f1 8%, transparent)",
+    "begruendung": "Lehrbuchfall aus Regel 9: Markenfarbe bei 8 Prozent als Zustandsschleier. Token loest im Light Mode auf exakt dieselbe Farbe bei Alpha 0.08 auf."
+   },
+   {
+    "zeile": 975,
+    "altText": "  color: #10b981;",
+    "neuText": "  color: var(--gk-success);",
+    "token": "--gk-success",
+    "klasse": "A",
+    "altWert": "#10b981",
+    "neuWert": "#10b981",
+    "begruendung": "Outlined-Success-Schrift = Erfolgsrolle. Wertgleich; --gk-tertiary verboten."
+   },
+   {
+    "zeile": 976,
+    "altText": "  border-color: #10b981;",
+    "neuText": "  border-color: var(--gk-success);",
+    "token": "--gk-success",
+    "klasse": "A",
+    "altWert": "#10b981",
+    "neuWert": "#10b981",
+    "begruendung": "Farbiger Rahmen traegt dieselbe Erfolgsrolle wie die Schrift. Wertgleich."
+   },
+   {
+    "zeile": 979,
+    "altText": "  background: rgba(16, 185, 129, 0.08);",
+    "neuText": "  background: color-mix(in oklab, var(--gk-success) 8%, transparent);",
+    "token": "--gk-success",
+    "klasse": "A",
+    "altWert": "rgba(16, 185, 129, 0.08)",
+    "neuWert": "color-mix(in oklab, #10b981 8%, transparent)",
+    "begruendung": "Zustandsschleier in Erfolgsfarbe. Es gibt kein --gk-state-success; --gk-state-tertiary haette zwar denselben Light-Wert, wird in Forest aber auf Violett umdefiniert und ist damit verboten. Ableitung aus --gk-success ist wertgleich und semantisch sauber."
+   },
+   {
+    "zeile": 982,
+    "altText": "  color: #d97706;",
+    "neuText": "  color: var(--gk-warning);",
+    "token": "--gk-warning",
+    "klasse": "B",
+    "altWert": "#d97706",
+    "neuWert": "#f59e0b",
+    "begruendung": "Outlined-Warning-Schrift = Warnrolle, konsistent zu Primary/Success/Danger, die alle die Basisrolle tragen. Verschiebung: heller und etwas gelber (L 0.6658 -> 0.7686); Kontrast auf Weiss sinkt von ca. 3.2:1 auf ca. 2.2:1 - das Literal erfuellte AA fuer Fliesstext ohnehin nicht. Gewinn: im Dark Mode greift jetzt #fbbf24 statt des dort matschigen #d97706."
+   },
+   {
+    "zeile": 983,
+    "altText": "  border-color: #d97706;",
+    "neuText": "  border-color: var(--gk-warning);",
+    "token": "--gk-warning",
+    "klasse": "B",
+    "altWert": "#d97706",
+    "neuWert": "#f59e0b",
+    "begruendung": "Rahmen traegt dieselbe Rolle wie die Schrift der Regel, analog zu Zeile 982."
+   },
+   {
+    "zeile": 986,
+    "altText": "  background: rgba(245, 158, 11, 0.08);",
+    "neuText": "  background: var(--gk-state-warning);",
+    "token": "--gk-state-warning",
+    "klasse": "A",
+    "altWert": "rgba(245, 158, 11, 0.08)",
+    "neuWert": "color-mix(in oklab, #f59e0b 8%, transparent)",
+    "begruendung": "Zustandsschleier in Warnfarbe bei 8 Prozent - exakt die Definition von --gk-state-warning. Wertgleich."
+   },
+   {
+    "zeile": 989,
+    "altText": "  color: #f43f5e;",
+    "neuText": "  color: var(--gk-error);",
+    "token": "--gk-error",
+    "klasse": "A",
+    "altWert": "#f43f5e",
+    "neuWert": "#f43f5e",
+    "begruendung": "Outlined-Danger-Schrift = Fehlerrolle. Wertgleich."
+   },
+   {
+    "zeile": 990,
+    "altText": "  border-color: #f43f5e;",
+    "neuText": "  border-color: var(--gk-error);",
+    "token": "--gk-error",
+    "klasse": "A",
+    "altWert": "#f43f5e",
+    "neuWert": "#f43f5e",
+    "begruendung": "Farbiger Rahmen traegt dieselbe Fehlerrolle wie die Schrift. Wertgleich."
+   },
+   {
+    "zeile": 993,
+    "altText": "  background: rgba(244, 63, 94, 0.08);",
+    "neuText": "  background: var(--gk-state-error);",
+    "token": "--gk-state-error",
+    "klasse": "A",
+    "altWert": "rgba(244, 63, 94, 0.08)",
+    "neuWert": "color-mix(in oklab, #f43f5e 8%, transparent)",
+    "begruendung": "Zustandsschleier in Fehlerfarbe bei 8 Prozent - exakt die Definition von --gk-state-error. Wertgleich."
+   },
+   {
+    "zeile": 996,
+    "altText": "  color: #374151;",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "B",
+    "altWert": "#374151",
+    "neuWert": "#475569",
+    "begruendung": "Label des neutralen Outlined-Buttons ist gedaempfter Text (Regel 7). Verschiebung klein (rgb 55,65,81 -> 71,85,105, beide dunkles Schiefergrau); --gk-on-surface waere mit #0f172a deutlich weiter entfernt. Legacy --gk-neutral-700 ist verboten."
+   },
+   {
+    "zeile": 997,
+    "altText": "  border-color: #d1d5db;",
+    "neuText": "  border-color: var(--gk-outline);",
+    "token": "--gk-outline",
+    "klasse": "B",
+    "altWert": "#d1d5db",
+    "neuWert": "#94a3b8",
+    "begruendung": "Sichtbarer 1.5px-Rahmen einer Outlined-Schaltflaeche ist die kraeftige Linie aus Regel 8 (M3: Outlined Button = outline). Der Rahmen wird spuerbar dunkler, bleibt damit aber konsistent zu den farbigen Outlined-Varianten, die ebenfalls die Vollton-Rolle tragen. --gk-outline-variant (#e2e8f0) laege wertlich naeher, ist aber die Haarlinie fuer Trenner."
+   },
+   {
+    "zeile": 1000,
+    "altText": "  background: #f3f4f6;",
+    "neuText": "  background: var(--gk-state-hover);",
+    "token": "--gk-state-hover",
+    "klasse": "B",
+    "altWert": "#f3f4f6",
+    "neuWert": "color-mix(in oklab, #0f172a 6%, transparent), auf Weiss gerendert ca. #f1f1f2",
+    "begruendung": "Neutraler Hover auf einer transparenten Flaeche gehoert als Schleier umgesetzt (Regel 9), nicht als deckende Flaeche: das Ergebnis auf Weiss ist mit ca. #f1f1f2 praktisch identisch zu #f3f4f6, funktioniert aber ueber jedem Untergrund und im Dark Mode."
+   },
+   {
+    "zeile": 1009,
+    "altText": "  color: #6366f1;",
+    "neuText": "  color: var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Text-Button in Markenfarbe = --gk-primary. Wertgleich."
+   },
+   {
+    "zeile": 1012,
+    "altText": "  background: rgba(99, 102, 241, 0.08);",
+    "neuText": "  background: var(--gk-state-primary);",
+    "token": "--gk-state-primary",
+    "klasse": "A",
+    "altWert": "rgba(99, 102, 241, 0.08)",
+    "neuWert": "color-mix(in oklab, #6366f1 8%, transparent)",
+    "begruendung": "Zustandsschleier in Markenfarbe bei 8 Prozent - exakt die Definition von --gk-state-primary. Wertgleich."
+   },
+   {
+    "zeile": 1015,
+    "altText": "  color: #10b981;",
+    "neuText": "  color: var(--gk-success);",
+    "token": "--gk-success",
+    "klasse": "A",
+    "altWert": "#10b981",
+    "neuWert": "#10b981",
+    "begruendung": "Text-Button in Erfolgsfarbe = --gk-success. Wertgleich; --gk-tertiary verboten."
+   },
+   {
+    "zeile": 1018,
+    "altText": "  background: rgba(16, 185, 129, 0.08);",
+    "neuText": "  background: color-mix(in oklab, var(--gk-success) 8%, transparent);",
+    "token": "--gk-success",
+    "klasse": "A",
+    "altWert": "rgba(16, 185, 129, 0.08)",
+    "neuWert": "color-mix(in oklab, #10b981 8%, transparent)",
+    "begruendung": "Wie Zeile 979: kein --gk-state-success vorhanden, --gk-state-tertiary wegen Forest-Violett verboten, daher wertgleiche Ableitung aus --gk-success."
+   },
+   {
+    "zeile": 1021,
+    "altText": "  color: #d97706;",
+    "neuText": "  color: var(--gk-warning);",
+    "token": "--gk-warning",
+    "klasse": "B",
+    "altWert": "#d97706",
+    "neuWert": "#f59e0b",
+    "begruendung": "Text-Button in Warnfarbe = --gk-warning, konsistent mit Zeile 982. Gleiche kleine Aufhellung, dafuer korrektes Verhalten im Dark Mode."
+   },
+   {
+    "zeile": 1024,
+    "altText": "  background: rgba(245, 158, 11, 0.08);",
+    "neuText": "  background: var(--gk-state-warning);",
+    "token": "--gk-state-warning",
+    "klasse": "A",
+    "altWert": "rgba(245, 158, 11, 0.08)",
+    "neuWert": "color-mix(in oklab, #f59e0b 8%, transparent)",
+    "begruendung": "Zustandsschleier in Warnfarbe bei 8 Prozent - exakt die Definition von --gk-state-warning. Wertgleich."
+   },
+   {
+    "zeile": 1027,
+    "altText": "  color: #f43f5e;",
+    "neuText": "  color: var(--gk-error);",
+    "token": "--gk-error",
+    "klasse": "A",
+    "altWert": "#f43f5e",
+    "neuWert": "#f43f5e",
+    "begruendung": "Text-Button in Fehlerfarbe = --gk-error. Wertgleich."
+   },
+   {
+    "zeile": 1030,
+    "altText": "  background: rgba(244, 63, 94, 0.08);",
+    "neuText": "  background: var(--gk-state-error);",
+    "token": "--gk-state-error",
+    "klasse": "A",
+    "altWert": "rgba(244, 63, 94, 0.08)",
+    "neuWert": "color-mix(in oklab, #f43f5e 8%, transparent)",
+    "begruendung": "Zustandsschleier in Fehlerfarbe bei 8 Prozent - exakt die Definition von --gk-state-error. Wertgleich."
+   }
+  ],
+  "offen": []
+ },
+ {
+  "aenderungen": [
+   {
+    "zeile": 3147,
+    "altText": "  background: var(--gk-surface, #fff);",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#ffffff",
+    "neuWert": "#ffffff",
+    "begruendung": "Kartenflaeche = --gk-surface, die Rolle steht bereits da. Das Literal #fff ist nur ein toter Fallback (--gk-surface ist in :root definiert) und wird entfernt; gerenderter Wert bleibt #ffffff."
+   },
+   {
+    "zeile": 3148,
+    "altText": "  border: 1px solid var(--gk-outline-variant, #d0d7de);",
+    "neuText": "  border: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Standardrahmen der Karte = --gk-outline-variant, Rolle bereits gesetzt. Der Fallback #d0d7de greift nie (Token in :root definiert) und passt nicht mehr zum Rollenwert; Entfernen aendert den gerenderten Wert nicht (#e2e8f0)."
+   },
+   {
+    "zeile": 3158,
+    "altText": "  color: var(--gk-primary, #6366f1);",
+    "neuText": "  color: var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Kartentitel in Markenfarbe = --gk-primary, Rolle bereits gesetzt. Toter Fallback #6366f1 entfernt; identisch zum Light-Wert der Rolle."
+   },
+   {
+    "zeile": 3164,
+    "altText": "  border: 1px solid var(--gk-outline-variant, #e2e8f0);",
+    "neuText": "  border: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Haarlinie der flachen Karte = --gk-outline-variant, Rolle bereits gesetzt. Toter Fallback #e2e8f0 entfernt; identisch zum Light-Wert der Rolle."
+   },
+   {
+    "zeile": 4055,
+    "altText": "  color: var(--gk-text-secondary, #64748b);",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "B",
+    "altWert": "#64748b",
+    "neuWert": "#475569",
+    "begruendung": "--gk-text-secondary ist nirgends definiert, der Fallback #64748b ist also der aktive Wert und folgt weder Theme noch Modus. Icon im Card-Header ist gedaempfte Sekundaerinformation -> --gk-on-surface-variant. Gleiche Regelgruppe nutzt diese Rolle bereits (.gk-card-footer Z.4072, .gk-card-meta Z.4081), die Verschiebung #64748b -> #475569 ist klein und macht das Icon konsistent zum uebrigen Sekundaertext."
+   },
+   {
+    "zeile": 4390,
+    "altText": "  background: var(--gk-primary-100, #e0e7ff);",
+    "neuText": "  background: var(--gk-primary-container);",
+    "token": "--gk-primary-container",
+    "klasse": "B",
+    "altWert": "#e0e7ff",
+    "neuWert": "#e0e0ff",
+    "begruendung": "--gk-primary-100 ist Legacy-Skala (folgtTheme=false) und blockt die Themes. Weiche Markenflaeche fuer Initialen-Avatar -> --gk-primary-container. Kein dekorativer Farbfaecher, sondern der eine Default-Avatar-Hintergrund. Verschiebung #e0e7ff -> #e0e0ff ist minimal, dafuer folgt der Avatar Forest/Ocean."
+   },
+   {
+    "zeile": 4391,
+    "altText": "  color: var(--gk-primary-700, #4338ca);",
+    "neuText": "  color: var(--gk-on-primary-container);",
+    "token": "--gk-on-primary-container",
+    "klasse": "B",
+    "altWert": "#4338ca",
+    "neuWert": "#1a1a6b",
+    "begruendung": "--gk-primary-700 ist Legacy-Skala (folgtTheme=false). Initialen stehen auf --gk-primary-container, korrekte M3-Paarung ist daher --gk-on-primary-container. Verschiebung #4338ca -> #1a1a6b bleibt im gleichen Indigo-Farbton, erhoeht nur den Kontrast, und folgt in Forest/Ocean der jeweiligen Themefarbe."
+   },
+   {
+    "zeile": 4433,
+    "altText": "  border: 2px solid var(--gk-surface, #fff);",
+    "neuText": "  border: 2px solid var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#ffffff",
+    "neuWert": "#ffffff",
+    "begruendung": "Der Ring um den Statuspunkt soll die darunterliegende Kartenflaeche aufnehmen = --gk-surface, Rolle bereits gesetzt. Toter Fallback #fff entfernt; gerenderter Wert unveraendert."
+   },
+   {
+    "zeile": 4436,
+    "altText": "  background: #10b981;",
+    "neuText": "  background: var(--gk-success);",
+    "token": "--gk-success",
+    "klasse": "A",
+    "altWert": "#10b981",
+    "neuWert": "#10b981",
+    "begruendung": "Status 'online' ist semantisch Erfolg -> --gk-success (Light exakt #10b981). Nicht --gk-tertiary, da Forest diese auf Violett umdefiniert."
+   },
+   {
+    "zeile": 4439,
+    "altText": "  background: #94a3b8;",
+    "neuText": "  background: var(--gk-outline);",
+    "token": "--gk-outline",
+    "klasse": "A",
+    "altWert": "#94a3b8",
+    "neuWert": "#94a3b8",
+    "begruendung": "Status 'offline' ist bewusst neutral/schwach, keine Statusfarbe -> --gk-outline (Light exakt #94a3b8), folgt dabei dem Dark Mode."
+   },
+   {
+    "zeile": 4442,
+    "altText": "  background: #f43f5e;",
+    "neuText": "  background: var(--gk-error);",
+    "token": "--gk-error",
+    "klasse": "A",
+    "altWert": "#f43f5e",
+    "neuWert": "#f43f5e",
+    "begruendung": "Status 'busy' ist die Rot-/Gefahrenrolle -> --gk-error (Light exakt #f43f5e)."
+   },
+   {
+    "zeile": 4445,
+    "altText": "  background: #f59e0b;",
+    "neuText": "  background: var(--gk-warning);",
+    "token": "--gk-warning",
+    "klasse": "A",
+    "altWert": "#f59e0b",
+    "neuWert": "#f59e0b",
+    "begruendung": "Status 'away' ist die Warnrolle -> --gk-warning (Light exakt #f59e0b)."
+   },
+   {
+    "zeile": 4461,
+    "altText": "  border: 2px solid var(--gk-surface, #fff);",
+    "neuText": "  border: 2px solid var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#ffffff",
+    "neuWert": "#ffffff",
+    "begruendung": "Trennring der gestapelten Avatare nimmt die Kartenflaeche auf = --gk-surface, Rolle bereits gesetzt. Toter Fallback #fff entfernt; gerenderter Wert unveraendert."
+   }
+  ],
+  "gruppe": "Karten-Medien",
+  "offen": [
+   {
+    "zeile": 4518,
+    "problem": ".gk-gallery-overlay { color: #fff; } — Das Weiss steht auf einem fest schwarzen Scrim (Z.4512: linear-gradient(transparent 50%, rgba(0,0,0,0.6))), der weder Theme noch Modus folgt. Keine der Rollen passt: --gk-on-primary/--gk-on-surface u.a. werden im Dark Mode dunkel (--gk-on-primary dark = #2e2e8a) und wuerden auf dem schwarzen Verlauf unlesbar. Empfehlung: entweder #fff belassen oder zusammen mit dem Scrim ein eigenes Rollenpaar (z.B. --gk-scrim / --gk-on-scrim) einfuehren — ausserhalb dieses Mappings."
+   },
+   {
+    "zeile": 4578,
+    "problem": ".gk-lightbox-close { color: #fff; } — Icon auf dem permanent dunklen Lightbox-Overlay (Z.4555: rgba(0,0,0,0.92)) bzw. auf rgba(255,255,255,0.1)-Button. Der Kontext ist in allen Themes und beiden Modi schwarz, also gibt es keine theme-folgende Rolle, die hier richtig waere; jede --gk-on-*-Rolle kippt im Dark Mode ins Dunkle. Braucht ein eigenes Overlay-Rollenpaar, sonst #fff belassen."
+   },
+   {
+    "zeile": 4598,
+    "problem": ".gk-lightbox-nav { color: #fff; } — identischer Fall wie Z.4578: Navigationspfeile auf dem fest schwarzen Lightbox-Overlay. Keine passende theme-/modusfolgende Rolle vorhanden; #fff belassen oder gemeinsam mit .gk-lightbox-close/.gk-lightbox-caption/.gk-lightbox-counter ueber neue Scrim-Rollen loesen."
+   }
+  ]
+ },
+ {
+  "gruppe": "Buttons-B",
+  "aenderungen": [
+   {
+    "zeile": 1033,
+    "altText": "  color: #6b7280;",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "B",
+    "altWert": "#6b7280",
+    "neuWert": "#475569",
+    "begruendung": "Text-Variante neutral: die Rolle ist die TEXTfarbe, gedaempfter Sekundaertext (Regel 7). Kleine Verschiebung von Grau-500 auf die Rolle."
+   },
+   {
+    "zeile": 1036,
+    "altText": "  background: #f3f4f6;",
+    "neuText": "  background: var(--gk-state-hover);",
+    "token": "--gk-state-hover",
+    "klasse": "B",
+    "altWert": "#f3f4f6",
+    "neuWert": "color-mix(in oklab, #0f172a 6%, transparent) = #f1f1f2 ueber Weiss",
+    "begruendung": "Hover-Flaeche eines Text-Buttons ohne eigene Flaeche ist ein neutraler Zustandsschleier (Regel 9). Wert praktisch identisch (#f3f4f6 vs #f1f1f2), zusaetzlich transparent und damit auf jeder Unterlage korrekt."
+   },
+   {
+    "zeile": 1037,
+    "altText": "  color: #374151;",
+    "neuText": "  color: var(--gk-on-surface);",
+    "token": "--gk-on-surface",
+    "klasse": "B",
+    "altWert": "#374151",
+    "neuWert": "#0f172a",
+    "begruendung": "Beim Hover verstaerkt sich die Textfarbe auf primaeren Text (Regel 7). Gleiche Richtung, etwas kraeftiger."
+   },
+   {
+    "zeile": 1042,
+    "altText": "  background: #eef2ff;",
+    "neuText": "  background: var(--gk-primary-container);",
+    "token": "--gk-primary-container",
+    "klasse": "B",
+    "altWert": "#eef2ff",
+    "neuWert": "#e0e0ff",
+    "begruendung": "Tonal = weiche Markenflaeche -> Container-Rolle (Regel 1, Gruppenvorgabe). Folgt dem Theme (Forest #d1fae5, Ocean #e0f2fe); minimal saettiger als das Literal."
+   },
+   {
+    "zeile": 1043,
+    "altText": "  color: #4338ca;",
+    "neuText": "  color: var(--gk-on-primary-container);",
+    "token": "--gk-on-primary-container",
+    "klasse": "B",
+    "altWert": "#4338ca",
+    "neuWert": "#1a1a6b",
+    "begruendung": "Text auf primary-container ist per Definition on-primary-container. Etwas dunkler als das Literal, dadurch besserer Kontrast; folgt dem Theme."
+   },
+   {
+    "zeile": 1047,
+    "altText": "  background: #e0e7ff;",
+    "neuText": "  background: color-mix(in oklab, var(--gk-on-primary-container) 8%, var(--gk-primary-container));",
+    "token": "--gk-primary-container + --gk-on-primary-container",
+    "klasse": "B",
+    "altWert": "#e0e7ff",
+    "neuWert": "#cecff3",
+    "begruendung": "Es gibt keine *-container-hover-Rolle. M3-Zustandsschicht: on-container 8% ueber container — dunkelt in beiden Modi in die richtige Richtung und folgt dem Theme. Ein reiner --gk-state-*-Schleier waere heller als die Ruheflaeche und damit falschherum. Enthaelt kein Literal, nutzt nur erlaubte Rollen."
+   },
+   {
+    "zeile": 1050,
+    "altText": "  background: #ecfdf5;",
+    "neuText": "  background: var(--gk-success-container);",
+    "token": "--gk-success-container",
+    "klasse": "B",
+    "altWert": "#ecfdf5",
+    "neuWert": "#d1fae5",
+    "begruendung": "Tonal Erfolg -> success-container (Regel 2). Nicht --gk-tertiary-container, das wird von Forest auf Violett gezogen."
+   },
+   {
+    "zeile": 1051,
+    "altText": "  color: #047857;",
+    "neuText": "  color: var(--gk-on-success-container);",
+    "token": "--gk-on-success-container",
+    "klasse": "B",
+    "altWert": "#047857",
+    "neuWert": "#064e3b",
+    "begruendung": "Text auf success-container. Etwas dunkler, gleiche Buntheit."
+   },
+   {
+    "zeile": 1055,
+    "altText": "  background: #d1fae5;",
+    "neuText": "  background: color-mix(in oklab, var(--gk-on-success-container) 8%, var(--gk-success-container));",
+    "token": "--gk-success-container + --gk-on-success-container",
+    "klasse": "B",
+    "altWert": "#d1fae5",
+    "neuWert": "#c1ebd6",
+    "begruendung": "Hover-Stufe der tonalen Erfolgsflaeche als M3-Zustandsschicht; ohne sie bliebe der Hover ein festes Literal, waehrend die Ruheflaeche der Rolle folgt."
+   },
+   {
+    "zeile": 1058,
+    "altText": "  background: rgba(245, 158, 11, 0.1);",
+    "neuText": "  background: var(--gk-warning-container);",
+    "token": "--gk-warning-container",
+    "klasse": "B",
+    "altWert": "rgba(245, 158, 11, 0.1) = #fef5e7 ueber Weiss",
+    "neuWert": "#fef3c7",
+    "begruendung": "Tonal Warnung -> warning-container (Regel 4). Der Schleier wird zur echten Container-Flaeche; Wert nahezu gleich, aber blickdicht und unabhaengig von der Unterlage."
+   },
+   {
+    "zeile": 1059,
+    "altText": "  color: #b45309;",
+    "neuText": "  color: var(--gk-on-warning-container);",
+    "token": "--gk-on-warning-container",
+    "klasse": "B",
+    "altWert": "#b45309",
+    "neuWert": "#92400e",
+    "begruendung": "Text auf warning-container. Etwas dunkler, dadurch mehr Kontrast."
+   },
+   {
+    "zeile": 1063,
+    "altText": "  background: rgba(245, 158, 11, 0.18);",
+    "neuText": "  background: color-mix(in oklab, var(--gk-on-warning-container) 8%, var(--gk-warning-container));",
+    "token": "--gk-warning-container + --gk-on-warning-container",
+    "klasse": "B",
+    "altWert": "rgba(245, 158, 11, 0.18) = #fdeed3 ueber Weiss",
+    "neuWert": "#f6e4b8",
+    "begruendung": "Hover-Stufe der tonalen Warnflaeche als M3-Zustandsschicht ueber der Container-Rolle."
+   },
+   {
+    "zeile": 1066,
+    "altText": "  background: #fff1f2;",
+    "neuText": "  background: var(--gk-error-container);",
+    "token": "--gk-error-container",
+    "klasse": "B",
+    "altWert": "#fff1f2",
+    "neuWert": "#ffe4e6",
+    "begruendung": "Tonal Gefahr/Loeschen -> error-container (Regel 3)."
+   },
+   {
+    "zeile": 1067,
+    "altText": "  color: #be123c;",
+    "neuText": "  color: var(--gk-on-error-container);",
+    "token": "--gk-on-error-container",
+    "klasse": "B",
+    "altWert": "#be123c",
+    "neuWert": "#881337",
+    "begruendung": "Text auf error-container. Dunkler, kontraststaerker."
+   },
+   {
+    "zeile": 1071,
+    "altText": "  background: #ffe4e6;",
+    "neuText": "  background: color-mix(in oklab, var(--gk-on-error-container) 8%, var(--gk-error-container));",
+    "token": "--gk-error-container + --gk-on-error-container",
+    "klasse": "B",
+    "altWert": "#ffe4e6",
+    "neuWert": "#f7d4d7",
+    "begruendung": "Hover-Stufe der tonalen Fehlerflaeche als M3-Zustandsschicht; das Literal #ffe4e6 ist bereits der Ruhewert der Container-Rolle und taugt daher nicht mehr als Hover."
+   },
+   {
+    "zeile": 1074,
+    "altText": "  background: #f1f5f9;",
+    "neuText": "  background: var(--gk-surface-container);",
+    "token": "--gk-surface-container",
+    "klasse": "A",
+    "altWert": "#f1f5f9",
+    "neuWert": "#f1f5f9",
+    "begruendung": "Tonal neutral hat keine Buntflaeche: abgesetzte Flaeche der Surface-Skala (Regel 6). Wertgleich."
+   },
+   {
+    "zeile": 1075,
+    "altText": "  color: #334155;",
+    "neuText": "  color: var(--gk-on-surface);",
+    "token": "--gk-on-surface",
+    "klasse": "B",
+    "altWert": "#334155",
+    "neuWert": "#0f172a",
+    "begruendung": "Buttonbeschriftung auf neutraler Flaeche = primaerer Text (Regel 7). Passt als on-Rolle zu --gk-surface-container."
+   },
+   {
+    "zeile": 1079,
+    "altText": "  background: #e2e8f0;",
+    "neuText": "  background: var(--gk-surface-container-high);",
+    "token": "--gk-surface-container-high",
+    "klasse": "B",
+    "altWert": "#e2e8f0",
+    "neuWert": "#eaeef2",
+    "begruendung": "Hover-Flaeche eine Stufe hoeher in der Surface-Skala (Regel 6). Verschiebung minimal."
+   },
+   {
+    "zeile": 1109,
+    "altText": "  background: #f43f5e;",
+    "neuText": "  background: var(--gk-error);",
+    "token": "--gk-error",
+    "klasse": "A",
+    "altWert": "#f43f5e",
+    "neuWert": "#f43f5e",
+    "begruendung": "Zaehl-Badge am Button ist eine Achtungs-/Fehlerflaeche (Regel 3). Light-Wert identisch."
+   },
+   {
+    "zeile": 1110,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-error);",
+    "token": "--gk-on-error",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Weiss auf Error-Flaeche = on-error (Regel 12). Wertgleich, im Dark Mode korrekt mitgedreht."
+   },
+   {
+    "zeile": 1125,
+    "altText": "  background: #6366f1;",
+    "neuText": "  background: var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Gefuellter Primaerbutton = Markenflaeche (Regel 1). Wertgleich, folgt jetzt dem Theme."
+   },
+   {
+    "zeile": 1126,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-primary);",
+    "token": "--gk-on-primary",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Weiss auf Primary -> on-primary (Regel 12). Wertgleich."
+   },
+   {
+    "zeile": 1127,
+    "altText": "  border-color: #6366f1;",
+    "neuText": "  border-color: var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1",
+    "neuWert": "#6366f1",
+    "begruendung": "Rahmen des gefuellten Buttons ist die Flaechenfarbe selbst. Wertgleich."
+   },
+   {
+    "zeile": 1132,
+    "altText": "  background: #4f46e5;",
+    "neuText": "  background: var(--gk-primary-hover);",
+    "token": "--gk-primary-hover",
+    "klasse": "B",
+    "altWert": "#4f46e5",
+    "neuWert": "oklch(from #6366f1 calc(l - 0.06) c h) = #5452dc (Rueckfall-Literal des Tokens ist exakt #4f46e5)",
+    "begruendung": "Hover-Stufe der Markenfarbe (Regel 1). In Browsern ohne relative Farbsyntax exakt wertgleich, sonst minimal heller/bunter."
+   },
+   {
+    "zeile": 1133,
+    "altText": "  border-color: #4f46e5;",
+    "neuText": "  border-color: var(--gk-primary-hover);",
+    "token": "--gk-primary-hover",
+    "klasse": "B",
+    "altWert": "#4f46e5",
+    "neuWert": "oklch(from #6366f1 calc(l - 0.06) c h) = #5452dc",
+    "begruendung": "Rahmen folgt der Hover-Flaeche."
+   },
+   {
+    "zeile": 1138,
+    "altText": "  background: #10b981;",
+    "neuText": "  background: var(--gk-success);",
+    "token": "--gk-success",
+    "klasse": "A",
+    "altWert": "#10b981",
+    "neuWert": "#10b981",
+    "begruendung": "Gefuellter Erfolgsbutton (Regel 2). --gk-success ohne Zahl ist die echte Rolle und bleibt in allen Themes gruen; --gk-tertiary waere in Forest violett."
+   },
+   {
+    "zeile": 1139,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-success);",
+    "token": "--gk-on-success",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Weiss auf Success -> on-success (Regel 12). Wertgleich."
+   },
+   {
+    "zeile": 1140,
+    "altText": "  border-color: #10b981;",
+    "neuText": "  border-color: var(--gk-success);",
+    "token": "--gk-success",
+    "klasse": "A",
+    "altWert": "#10b981",
+    "neuWert": "#10b981",
+    "begruendung": "Rahmen = Flaechenfarbe. Wertgleich."
+   },
+   {
+    "zeile": 1145,
+    "altText": "  background: #059669;",
+    "neuText": "  background: var(--gk-success-hover);",
+    "token": "--gk-success-hover",
+    "klasse": "B",
+    "altWert": "#059669",
+    "neuWert": "oklch(from #10b981 calc(l - 0.06) c h) = #00a66f (Rueckfall-Literal des Tokens ist exakt #059669)",
+    "begruendung": "Hover-Stufe Erfolg (Regel 2). Hinweis: die token-table fuehrt fuer --gk-success-hover unter forest #8b5cf6; im aktuellen CSS (Zeile 6250) leitet sich der Token aus var(--gk-success) ab, und kein Theme ueberschreibt --gk-success — die Ableitung bleibt also in allen sechs Themes gruen. Der Tabelleneintrag ist veraltet."
+   },
+   {
+    "zeile": 1146,
+    "altText": "  border-color: #059669;",
+    "neuText": "  border-color: var(--gk-success-hover);",
+    "token": "--gk-success-hover",
+    "klasse": "B",
+    "altWert": "#059669",
+    "neuWert": "oklch(from #10b981 calc(l - 0.06) c h) = #00a66f",
+    "begruendung": "Rahmen folgt der Hover-Flaeche."
+   },
+   {
+    "zeile": 1151,
+    "altText": "  background: #f59e0b;",
+    "neuText": "  background: var(--gk-warning);",
+    "token": "--gk-warning",
+    "klasse": "A",
+    "altWert": "#f59e0b",
+    "neuWert": "#f59e0b",
+    "begruendung": "Gefuellter Warnbutton (Regel 4). Wertgleich."
+   },
+   {
+    "zeile": 1152,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-warning);",
+    "token": "--gk-on-warning",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Weiss auf Warning -> on-warning (Regel 12). Wertgleich."
+   },
+   {
+    "zeile": 1153,
+    "altText": "  border-color: #f59e0b;",
+    "neuText": "  border-color: var(--gk-warning);",
+    "token": "--gk-warning",
+    "klasse": "A",
+    "altWert": "#f59e0b",
+    "neuWert": "#f59e0b",
+    "begruendung": "Rahmen = Flaechenfarbe. Wertgleich."
+   },
+   {
+    "zeile": 1158,
+    "altText": "  background: #d97706;",
+    "neuText": "  background: var(--gk-warning-hover);",
+    "token": "--gk-warning-hover",
+    "klasse": "B",
+    "altWert": "#d97706",
+    "neuWert": "oklch(from #f59e0b calc(l - 0.06) c h) = #e18b00 (Rueckfall-Literal des Tokens ist exakt #d97706)",
+    "begruendung": "Hover-Stufe Warnung (Regel 4). Im Amber-Theme wird --gk-warning auf #ea580c gesetzt, der Hover folgt dann korrekt mit."
+   },
+   {
+    "zeile": 1159,
+    "altText": "  border-color: #d97706;",
+    "neuText": "  border-color: var(--gk-warning-hover);",
+    "token": "--gk-warning-hover",
+    "klasse": "B",
+    "altWert": "#d97706",
+    "neuWert": "oklch(from #f59e0b calc(l - 0.06) c h) = #e18b00",
+    "begruendung": "Rahmen folgt der Hover-Flaeche."
+   },
+   {
+    "zeile": 1164,
+    "altText": "  background: #f43f5e;",
+    "neuText": "  background: var(--gk-error);",
+    "token": "--gk-error",
+    "klasse": "A",
+    "altWert": "#f43f5e",
+    "neuWert": "#f43f5e",
+    "begruendung": "Gefuellter Gefahr-/Loeschbutton (Regel 3). Wertgleich, folgt jetzt dem Theme (Forest/Ocean/Rose/Amber #ef4444)."
+   },
+   {
+    "zeile": 1165,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-error);",
+    "token": "--gk-on-error",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Weiss auf Error -> on-error (Regel 12). Wertgleich."
+   },
+   {
+    "zeile": 1166,
+    "altText": "  border-color: #f43f5e;",
+    "neuText": "  border-color: var(--gk-error);",
+    "token": "--gk-error",
+    "klasse": "A",
+    "altWert": "#f43f5e",
+    "neuWert": "#f43f5e",
+    "begruendung": "Rahmen = Flaechenfarbe. Wertgleich."
+   },
+   {
+    "zeile": 1171,
+    "altText": "  background: #e11d48;",
+    "neuText": "  background: var(--gk-error-hover);",
+    "token": "--gk-error-hover",
+    "klasse": "B",
+    "altWert": "#e11d48",
+    "neuWert": "oklch(from #f43f5e calc(l - 0.06) c h) = #de254d (Rueckfall-Literal des Tokens ist exakt #e11d48)",
+    "begruendung": "Hover-Stufe Fehler (Regel 3). Ohne relative Farbsyntax exakt wertgleich."
+   },
+   {
+    "zeile": 1172,
+    "altText": "  border-color: #e11d48;",
+    "neuText": "  border-color: var(--gk-error-hover);",
+    "token": "--gk-error-hover",
+    "klasse": "B",
+    "altWert": "#e11d48",
+    "neuWert": "oklch(from #f43f5e calc(l - 0.06) c h) = #de254d",
+    "begruendung": "Rahmen folgt der Hover-Flaeche."
+   },
+   {
+    "zeile": 1177,
+    "altText": "  background: #475569;",
+    "neuText": "  background: var(--gk-secondary);",
+    "token": "--gk-secondary",
+    "klasse": "B",
+    "altWert": "#475569",
+    "neuWert": "#57606a",
+    "begruendung": "Gefuellter neutraler Button = M3-Sekundaerrolle (echte Rolle, folgtTheme: Forest #6b7280, Ocean #64748b). Die wertgleiche Alternative --gk-on-surface-variant ist eine Textrolle und als Flaeche semantisch falsch. Verschiebung klein."
+   },
+   {
+    "zeile": 1178,
+    "altText": "  color: #fff;",
+    "neuText": "  color: var(--gk-on-secondary);",
+    "token": "--gk-on-secondary",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Weiss auf Secondary -> on-secondary (Regel 12). Wertgleich und im Dark Mode als Paar kontrastsicher."
+   },
+   {
+    "zeile": 1179,
+    "altText": "  border-color: #475569;",
+    "neuText": "  border-color: var(--gk-secondary);",
+    "token": "--gk-secondary",
+    "klasse": "B",
+    "altWert": "#475569",
+    "neuWert": "#57606a",
+    "begruendung": "Rahmen = Flaechenfarbe des gefuellten Buttons."
+   },
+   {
+    "zeile": 1184,
+    "altText": "  background: #334155;",
+    "neuText": "  background: color-mix(in oklab, var(--gk-on-surface) 18%, var(--gk-secondary));",
+    "token": "--gk-secondary + --gk-on-surface",
+    "klasse": "B",
+    "altWert": "#334155",
+    "neuWert": "#49525e",
+    "begruendung": "Es gibt kein --gk-secondary-hover. Zustandsschicht aus on-surface ueber der Sekundaerrolle: im Light Mode dunkler, im Dark Mode heller — in beiden Modi die richtige Hover-Richtung, und sie folgt dem theme-abhaengigen --gk-secondary. Kein Literal, nur erlaubte Rollen. Relativ zur neuen Ruheflaeche (#57606a) bleibt der Hover-Schritt so gross wie vorher."
+   },
+   {
+    "zeile": 1185,
+    "altText": "  border-color: #334155;",
+    "neuText": "  border-color: color-mix(in oklab, var(--gk-on-surface) 18%, var(--gk-secondary));",
+    "token": "--gk-secondary + --gk-on-surface",
+    "klasse": "B",
+    "altWert": "#334155",
+    "neuWert": "#49525e",
+    "begruendung": "Rahmen folgt der Hover-Flaeche des neutralen Buttons."
+   }
+  ],
+  "offen": []
+ },
+ {
+  "gruppe": "Overlays-Auswahl",
+  "aenderungen": [
+   {
+    "zeile": 2371,
+    "altText": "  background: #fff;",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Modal ist die hoechste Ebene (Overlay-Flaeche) -> Regel 6/12: Kartenflaeche = --gk-surface. Light-Wert identisch."
+   },
+   {
+    "zeile": 2410,
+    "altText": "  border-bottom: 1px solid var(--gk-border, #e2e8f0);",
+    "neuText": "  border-bottom: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0 (var(--gk-border))",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Haarlinie zwischen Header und Body -> Regel 8 Standardrahmen. --gk-border ist Legacy-Alias mit exakt demselben Light-Wert; Fallback-Literal entfaellt."
+   },
+   {
+    "zeile": 2411,
+    "altText": "  background: #fff;",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Modal-Header liegt auf derselben Overlay-Flaeche wie das Modal -> --gk-surface. Light-Wert identisch."
+   },
+   {
+    "zeile": 2417,
+    "altText": "  color: var(--gk-text, #0f172a);",
+    "neuText": "  color: var(--gk-on-surface);",
+    "token": "--gk-on-surface",
+    "klasse": "A",
+    "altWert": "#0f172a (var(--gk-text))",
+    "neuWert": "#0f172a",
+    "begruendung": "Modal-Titel ist Primaertext auf Surface -> Regel 7. --gk-text ist Legacy-Alias mit identischem Light-Wert."
+   },
+   {
+    "zeile": 2424,
+    "altText": "  color: var(--gk-text-muted, #94a3b8);",
+    "neuText": "  color: var(--gk-on-surface-variant);",
+    "token": "--gk-on-surface-variant",
+    "klasse": "A",
+    "altWert": "#475569 (var(--gk-text-muted); Fallback-Literal #94a3b8 greift nie, da Token gesetzt)",
+    "neuWert": "#475569",
+    "begruendung": "Close-Icon ist gedaempfter Sekundaertext -> Regel 7. Aufgeloester Wert bleibt exakt gleich; nur das tote Fallback-Literal verschwindet."
+   },
+   {
+    "zeile": 2439,
+    "altText": "  color: var(--gk-text, #0f172a);",
+    "neuText": "  color: var(--gk-on-surface);",
+    "token": "--gk-on-surface",
+    "klasse": "A",
+    "altWert": "#0f172a (var(--gk-text))",
+    "neuWert": "#0f172a",
+    "begruendung": "Close-Icon im Hover wird zu Primaertext -> Regel 7. Legacy-Alias --gk-text hat identischen Light-Wert."
+   },
+   {
+    "zeile": 2440,
+    "altText": "  background: var(--gk-bg-muted, #f1f5f9);",
+    "neuText": "  background: var(--gk-surface-container-high);",
+    "token": "--gk-surface-container-high",
+    "klasse": "B",
+    "altWert": "#f1f5f9 (var(--gk-bg-muted))",
+    "neuWert": "#eaeef2",
+    "begruendung": "Hover-Flaeche des Close-Buttons -> Regel 6 weist Hover-Flaechen ausdruecklich --gk-surface-container-high zu. Wertgleich waere nur --gk-surface-container (Seitenhintergrund-Rolle), die im Dark Mode identisch zur Modal-Flaeche ist und den Hover unsichtbar machen wuerde. Verschiebung #f1f5f9 -> #eaeef2 ist minimal (7 Punkte je Kanal)."
+   },
+   {
+    "zeile": 2443,
+    "altText": "  outline: 2px solid var(--gk-primary, #4f46e5);",
+    "neuText": "  outline: 2px solid var(--gk-primary);",
+    "token": "--gk-primary",
+    "klasse": "A",
+    "altWert": "#6366f1 (var(--gk-primary); Fallback-Literal #4f46e5 greift nie)",
+    "neuWert": "#6366f1",
+    "begruendung": "Fokus-Outline in Markenfarbe -> Regel 1. Rolle bereits korrekt, nur das irrefuehrende Fallback-Literal (abweichendes Indigo) entfaellt."
+   },
+   {
+    "zeile": 2451,
+    "altText": "  background: #fff;",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Modal-Body auf der Overlay-Flaeche -> --gk-surface. Light-Wert identisch."
+   },
+   {
+    "zeile": 2464,
+    "altText": "  border-top: 1px solid var(--gk-border, #e2e8f0);",
+    "neuText": "  border-top: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0 (var(--gk-border))",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Haarlinie ueber dem Footer -> Regel 8. Legacy-Alias --gk-border mit identischem Light-Wert."
+   },
+   {
+    "zeile": 2465,
+    "altText": "  background: #fff;",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "Modal-Footer teilt die Modal-Flaeche -> --gk-surface. Light-Wert identisch."
+   },
+   {
+    "zeile": 2474,
+    "altText": "  background: #fff;",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#fff",
+    "neuWert": "#ffffff",
+    "begruendung": "gk-form-actions als Modal-Footer-Ersatz, gleiche Flaeche wie .gk-modal-footer -> --gk-surface. Light-Wert identisch."
+   },
+   {
+    "zeile": 5187,
+    "altText": "  border: 1px solid #dde1e6;",
+    "neuText": "  border: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "B",
+    "altWert": "#dde1e6",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Ruhezustand-Rahmen des Select-Feldes. Nicht --gk-outline (#94a3b8): der Hover in Zeile 5198 nutzt bereits --gk-outline, die Hover-Eskalation ginge sonst verloren. Dieselbe Staffelung hat .gk-multiselect-display (Zeile 5294 ruht auf --gk-outline-variant). Verschiebung #dde1e6 -> #e2e8f0 ist minimal (5-10 Punkte je Kanal)."
+   },
+   {
+    "zeile": 5189,
+    "altText": "  background: var(--gk-surface-container-lowest, #fff);",
+    "neuText": "  background: var(--gk-surface-container-lowest);",
+    "token": "--gk-surface-container-lowest",
+    "klasse": "A",
+    "altWert": "#ffffff (var(--gk-surface-container-lowest))",
+    "neuWert": "#ffffff",
+    "begruendung": "Rolle bereits korrekt (Eingabeflaeche auf hoechster Ebene); nur das Fallback-Literal entfaellt. Wert unveraendert."
+   },
+   {
+    "zeile": 5198,
+    "altText": "  border-color: var(--gk-outline, #94a3b8);",
+    "neuText": "  border-color: var(--gk-outline);",
+    "token": "--gk-outline",
+    "klasse": "A",
+    "altWert": "#94a3b8 (var(--gk-outline))",
+    "neuWert": "#94a3b8",
+    "begruendung": "Kraeftige Linie im Hover -> Regel 8, Rolle bereits korrekt; nur das Fallback-Literal entfaellt."
+   },
+   {
+    "zeile": 5219,
+    "altText": "  background: var(--gk-surface, #fff);",
+    "neuText": "  background: var(--gk-surface);",
+    "token": "--gk-surface",
+    "klasse": "A",
+    "altWert": "#ffffff (var(--gk-surface))",
+    "neuWert": "#ffffff",
+    "begruendung": "Dropdown ist Popover-Flaeche -> Regel 6 hoechste Ebene = --gk-surface. Rolle bereits korrekt; nur das Fallback-Literal entfaellt."
+   },
+   {
+    "zeile": 5262,
+    "altText": "  background: var(--gk-surface-container, #f1f5f9);",
+    "neuText": "  background: var(--gk-surface-container-high);",
+    "token": "--gk-surface-container-high",
+    "klasse": "B",
+    "altWert": "#f1f5f9 (var(--gk-surface-container))",
+    "neuWert": "#eaeef2",
+    "begruendung": "Hover-Flaeche eines Listeneintrags -> Regel 6 weist Hover-Flaechen --gk-surface-container-high zu. Die wertgleiche Rolle --gk-surface-container ist der Seitenhintergrund und faellt im Dark Mode mit der Dropdown-Flaeche (--gk-surface = #1e293b) zusammen, der Hover waere unsichtbar. Verschiebung #f1f5f9 -> #eaeef2 minimal."
+   },
+   {
+    "zeile": 5265,
+    "altText": "  background: rgba(99, 102, 241, 0.08);",
+    "neuText": "  background: var(--gk-state-primary);",
+    "token": "--gk-state-primary",
+    "klasse": "A",
+    "altWert": "rgba(99, 102, 241, 0.08)",
+    "neuWert": "color-mix(in oklab, #6366f1 8%, transparent) = #6366f1 mit 8% Deckung",
+    "begruendung": "Zustandsschleier fuer den markierten Eintrag, wortwoertlich das Beispiel aus Regel 9. Der Token traegt im Light Mode dieselbe Farbe (#6366f1) mit derselben Deckung (8%)."
+   },
+   {
+    "zeile": 5294,
+    "altText": "  border: 1.5px solid var(--gk-outline-variant, #cbd5e1);",
+    "neuText": "  border: 1.5px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "A",
+    "altWert": "#e2e8f0 (var(--gk-outline-variant); Fallback-Literal #cbd5e1 greift nie)",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Rolle bereits korrekt (Ruhezustand-Rahmen, Regel 8); nur das abweichende Fallback-Literal entfaellt. Aufgeloester Wert unveraendert."
+   },
+   {
+    "zeile": 5296,
+    "altText": "  background: var(--gk-surface-container-lowest, #fff);",
+    "neuText": "  background: var(--gk-surface-container-lowest);",
+    "token": "--gk-surface-container-lowest",
+    "klasse": "A",
+    "altWert": "#ffffff (var(--gk-surface-container-lowest))",
+    "neuWert": "#ffffff",
+    "begruendung": "Rolle bereits korrekt (Eingabeflaeche); nur das Fallback-Literal entfaellt. Wert unveraendert."
+   },
+   {
+    "zeile": 5302,
+    "altText": "  border-color: var(--gk-outline, #94a3b8);",
+    "neuText": "  border-color: var(--gk-outline);",
+    "token": "--gk-outline",
+    "klasse": "A",
+    "altWert": "#94a3b8 (var(--gk-outline))",
+    "neuWert": "#94a3b8",
+    "begruendung": "Kraeftige Linie im Hover -> Regel 8, Rolle bereits korrekt; nur das Fallback-Literal entfaellt."
+   },
+   {
+    "zeile": 5337,
+    "altText": "  background: var(--gk-primary-container, #e0e0ff);",
+    "neuText": "  background: var(--gk-primary-container);",
+    "token": "--gk-primary-container",
+    "klasse": "A",
+    "altWert": "#e0e0ff (var(--gk-primary-container))",
+    "neuWert": "#e0e0ff",
+    "begruendung": "Ausgewaehlter Chip = weiche Markenvariante -> Regel 1, Rolle bereits korrekt; nur das Fallback-Literal entfaellt."
+   },
+   {
+    "zeile": 5338,
+    "altText": "  color: var(--gk-on-primary-container, #1a1a6b);",
+    "neuText": "  color: var(--gk-on-primary-container);",
+    "token": "--gk-on-primary-container",
+    "klasse": "A",
+    "altWert": "#1a1a6b (var(--gk-on-primary-container))",
+    "neuWert": "#1a1a6b",
+    "begruendung": "Text auf primary-container -> Regel 1, Rolle bereits korrekt; nur das Fallback-Literal entfaellt."
+   },
+   {
+    "zeile": 5346,
+    "altText": "  color: var(--gk-on-primary-container, #1a1a6b);",
+    "neuText": "  color: var(--gk-on-primary-container);",
+    "token": "--gk-on-primary-container",
+    "klasse": "A",
+    "altWert": "#1a1a6b (var(--gk-on-primary-container))",
+    "neuWert": "#1a1a6b",
+    "begruendung": "Entfernen-Kreuz sitzt auf dem primary-container des Chips -> Regel 1, Rolle bereits korrekt; nur das Fallback-Literal entfaellt."
+   },
+   {
+    "zeile": 5363,
+    "altText": "  border: 1px solid #dde1e6;",
+    "neuText": "  border: 1px solid var(--gk-outline-variant);",
+    "token": "--gk-outline-variant",
+    "klasse": "B",
+    "altWert": "#dde1e6",
+    "neuWert": "#e2e8f0",
+    "begruendung": "Identische Situation wie Zeile 5187 (Ruhezustand-Rahmen des Ajax-Select-Feldes, Hover in Zeile 5370 nutzt --gk-outline). Gleiche Zuordnung haelt beide Select-Varianten deckungsgleich. Verschiebung minimal."
+   },
+   {
+    "zeile": 5365,
+    "altText": "  background: var(--gk-surface-container-lowest, #fff);",
+    "neuText": "  background: var(--gk-surface-container-lowest);",
+    "token": "--gk-surface-container-lowest",
+    "klasse": "A",
+    "altWert": "#ffffff (var(--gk-surface-container-lowest))",
+    "neuWert": "#ffffff",
+    "begruendung": "Rolle bereits korrekt (Eingabeflaeche); nur das Fallback-Literal entfaellt. Wert unveraendert."
+   }
+  ],
+  "offen": [
+   {
+    "zeile": 3115,
+    "problem": ".gk-tip { background: #1e293b; } — bewusst dunkle Tooltip-Flaeche (Inverse Surface). Im Light Mode gibt es keine passende Rolle: alle Surface-Rollen sind hell (#ffffff bis #d8dee4), eine Inverse-Surface-Rolle existiert in der Tokenliste nicht. Der einzige Token mit Light-Wert #1e293b ist --gk-neutral-800 — Legacy-Skala und laut Verbot untersagt. Empfehlung: neue Rolle --gk-inverse-surface (light #1e293b / dark #e2e8f0) einfuehren, dann diese Zeile darauf umstellen; bis dahin Literal belassen."
+   },
+   {
+    "zeile": 3116,
+    "problem": ".gk-tip { color: #fff; } — Text auf der dunklen Tooltip-Flaeche. Haengt direkt an Zeile 3115: solange die Flaeche ein Literal bleibt, muss auch der Text hart weiss bleiben. --gk-on-primary/--gk-on-error usw. waeren semantisch falsch (der Grund ist keine Markenfarbe) und wuerden im Dark Mode zu dunklen Werten kippen (#2e2e8a), also unlesbar auf #1e293b. Empfehlung: gemeinsam mit 3115 auf eine neue Rolle --gk-inverse-on-surface umstellen."
+   }
+  ]
+ },
+ {
+  "gruppe": "CKEditor",
+  "aenderungen": [
+   {
+    "zeile": 5533,
+    "altText": "  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);",
+    "neuText": "  box-shadow: var(--gk-focus-ring-soft);",
+    "token": "--gk-focus-ring-soft",
+    "klasse": "B",
+    "altWert": "rgba(99, 102, 241, 0.1)",
+    "neuWert": "0 0 0 3px color-mix(in oklab, #6366f1 12%, transparent)",
+    "begruendung": "Regel 10: Fokusring der CKEditor-Huelle (.gk-richtext-wrap:focus-within). Das Literal ist die Markenfarbe #6366f1 bei 10% Deckkraft, der Token traegt die vollstaendige box-shadow-Angabe mit identischer Geometrie (0 0 0 3px) und derselben Markenfarbe bei 12%. Nur die Deckkraft verschiebt sich um 2 Prozentpunkte, dafuer folgt der Ring ab jetzt Theme und Modus (Forest #059669, Ocean #0ea5e9, Dark #a5b4fc). Die danebenstehende Zeile 5532 nutzt bereits var(--gk-primary), der Ring war der letzte Ausreisser der Regel."
+   },
+   {
+    "zeile": 5850,
+    "altText": "  color: var(--gk-on-surface, #334155);",
+    "neuText": "  color: var(--gk-on-surface);",
+    "token": "--gk-on-surface",
+    "klasse": "A",
+    "altWert": "#0f172a (wirksam; #334155 nur toter Fallback)",
+    "neuWert": "#0f172a",
+    "begruendung": "Regel 7: Primaertext im Rich-Tooltip. Der Token wird bereits benutzt; --gk-on-surface ist in :root (Zeile ~104ff) immer definiert, deshalb greift der Fallback #334155 nie. Entfernen des toten Literals ist rechnerisch wertgleich (#0f172a hell, #e2e8f0 dunkel) und beseitigt eine Farbe, die bei einer spaeteren Token-Umbenennung still auf einen Light-Mode-Wert zurueckfallen wuerde."
+   },
+   {
+    "zeile": 5851,
+    "altText": "  background: var(--gk-surface-container-highest, #fff);",
+    "neuText": "  background: var(--gk-surface-container-highest);",
+    "token": "--gk-surface-container-highest",
+    "klasse": "A",
+    "altWert": "#d8dee4 (wirksam; #fff nur toter Fallback)",
+    "neuWert": "#d8dee4",
+    "begruendung": "Regel 6/12: Flaeche des Rich-Tooltips. Der Token wird bereits benutzt und ist in :root immer definiert, der Fallback #fff greift nie. Entfernen ist wertgleich (#d8dee4 hell, #2d3a52 dunkel). Wichtig: #fff hier NICHT pauschal auf --gk-surface umbiegen — das waere eine echte Wertaenderung; hier geht es nur um das tote Literal."
+   }
+  ],
+  "offen": [
+   {
+    "zeile": 5773,
+    "problem": "color: var(--gk-on-inverse-surface, #fff); — Der Token --gk-on-inverse-surface ist NIRGENDS in css/gridkit.css definiert (grep: nur diese eine Verwendung). Das Literal #fff ist also der real wirksame Wert, kein toter Fallback. Entfernen wuerde den Tooltip-Text unsichtbar machen. Keine bestehende Rolle leistet die noetige Inversion (heller Text auf dunklem Chip im Light Mode, dunkler Text auf hellem Chip im Dark Mode): --gk-on-primary ist hell #ffffff, im Dark aber #2e2e8a und damit auf dem dunklen Chip unlesbar. Richtiger Fix ist, --gk-on-inverse-surface in der M3-Rollenschicht zu DEFINIEREN (hell #ffffff / dunkel #0f172a) statt hier ein Literal zu ersetzen — das ist eine Aenderung am Rollenblock, nicht an dieser Komponentenzeile."
+   },
+   {
+    "zeile": 5774,
+    "problem": "background: var(--gk-inverse-surface, #1e293b); — Gleiches Bild wie 5773: --gk-inverse-surface existiert in der Datei nicht, #1e293b ist der wirksame Wert. Der Tooltip ist damit in BEIDEN Modi dunkelschiefer, obwohl M3 hier genau die Inversion vorsieht. Keine vorhandene Rolle passt: --gk-surface-dim ist hell #e8edf2, --gk-neutral-800 ist Legacy und verboten. Richtiger Fix: --gk-inverse-surface im Rollenblock definieren (hell #1e293b / dunkel #e2e8f0); danach kann der Fallback hier ersatzlos entfallen."
+   },
+   {
+    "zeile": 6148,
+    "problem": "background: rgba(15, 23, 42, 0.45); auf .gk-search-overlay — Das ist ein Scrim (Abdunkelung hinter dem Suchdialog). GridKit hat KEINE Scrim-Rolle: grep auf 'scrim' und '--gk-overlay' liefert nichts, und die Regeln 1-12 decken Scrims nicht ab. Ein Flaechen-Token waere hier falsch, weil der Scrim halbtransparent bleiben muss. Zusatzbefund: Zeile 6236 setzt bereits '[data-theme=\"dark\"] .gk-search-overlay { background: rgba(0, 0, 0, 0.6); }' — es gibt also schon eine handgepflegte Modus-Sonderbehandlung, die eine Token-Einfuehrung (--gk-scrim) ersetzen wuerde. Empfehlung: --gk-scrim im Rollenblock ergaenzen und beide Stellen (6148 und 6236) gemeinsam darauf umstellen. Als Einzelzeile nicht sauber loesbar."
+   },
+   {
+    "zeile": 6165,
+    "problem": "box-shadow: 0 20px 48px rgba(15, 23, 42, 0.22); auf .gk-search-box — Das Literal ist eine Schattentoenung, keine Flaechen-, Text- oder Linienrolle; Regeln 1-12 kennen dafuer keinen Token. Der einzige Schatten-Token --gk-shadow-lg hat eine ANDERE Geometrie (0 10px 25px statt 0 20px 48px), ein Ersatz waere also keine reine Farbaenderung, sondern eine sichtbare Verschiebung von Versatz und Weichzeichnung — laut Auftrag verboten. Der Schatten folgt zudem weder Theme noch Modus sinnvoll ueber eine Farbrolle. Empfehlung: entweder unangetastet lassen (dunkler Schatten funktioniert in allen sechs Themes) oder einen eigenen --gk-shadow-xl mit dieser Geometrie im Rollenblock anlegen."
+   },
+   {
+    "zeile": 5603,
+    "problem": "ABSCHNITTS-FEHLZUORDNUNG im Inventar. Ab Zeile 5548 beginnt in css/gridkit.css ein zweiter Bannerblock 'DARK MODE — Comprehensive Overrides' (Zeilen 5548-5551). Das Inventar erkennt ihn nicht als eigenen Abschnitt, weil er das mehrzeilige /* ====-Format statt /* === NAME === */ nutzt, und schreibt alle folgenden Treffer weiter auf 'CKEDITOR5 in GridKit'. Der echte CKEditor-Abschnitt endet bei Zeile 5546. Diese Zeile und die 21 folgenden Eintraege liegen in einem DARK-MODE-Block und fallen damit unter das Verbot 'Ruehre KEINE Zeile innerhalb des Abschnitts DARK MODE an'. Sie gehoeren an die Dark-Mode-Gruppe uebergeben, die aktuell nur den Abschnitt 4638-5095 zugewiesen bekommen hat — sonst bleiben sie unbearbeitet. Konkret hier: background: #161b22; auf [data-gk-mode=\"dark\"] .gk-table thead th — Empfehlung --gk-surface-container-low (Dark #172033, kleine Verschiebung von GitHub- auf Slate-Palette)."
+   },
+   {
+    "zeile": 5604,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). color: #8b949e; auf [data-gk-mode=\"dark\"] .gk-table thead th — Empfehlung --gk-on-surface-variant (Dark #94a3b8), Regel 7 gedaempfter Text."
+   },
+   {
+    "zeile": 5620,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: #262d38; auf [data-gk-mode=\"dark\"] .gk-table tbody tr:hover — Empfehlung --gk-surface-container-high (Dark #243044) als Hover-Flaeche nach Regel 6, alternativ --gk-state-hover als Zustandsschleier nach Regel 9."
+   },
+   {
+    "zeile": 5624,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: #1c2128; auf [data-gk-mode=\"dark\"] .gk-table tbody tr:nth-child(even) — Empfehlung --gk-surface-container-low (Dark #172033), leicht abgesetzte Zebra-Flaeche nach Regel 6."
+   },
+   {
+    "zeile": 5628,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: #262d38; auf [data-gk-mode=\"dark\"] .gk-table tbody tr:nth-child(even):hover — Empfehlung --gk-surface-container-high (Dark #243044), identisch zu Zeile 5620."
+   },
+   {
+    "zeile": 5632,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: #161b22; auf [data-gk-mode=\"dark\"] .gk-table-wrap — Empfehlung --gk-surface (Dark #1e293b), Panel-Flaeche nach Regel 6."
+   },
+   {
+    "zeile": 5655,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). color: #8b949e; auf [data-gk-mode=\"dark\"] .gk-table-minimal th — Empfehlung --gk-on-surface-variant (Dark #94a3b8), Regel 7."
+   },
+   {
+    "zeile": 5675,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: rgba(99, 102, 241, 0.12); auf [data-gk-mode=\"dark\"] .gk-table-selectable tbody tr:hover — Empfehlung --gk-state-primary nach Regel 9 (Dark color-mix(in oklab, #a5b4fc 8%, transparent)); haelt die Markenfarbe im Dark Mode theme-treu statt auf Indigo festgenagelt."
+   },
+   {
+    "zeile": 5681,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: #0d1117; auf [data-gk-mode=\"dark\"] .gk-table-definition td:first-child — Empfehlung --gk-surface-container-lowest (Dark #0a1120), Regel 6."
+   },
+   {
+    "zeile": 5682,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). color: #8b949e; auf [data-gk-mode=\"dark\"] .gk-table-definition td:first-child — Empfehlung --gk-on-surface-variant (Dark #94a3b8), Regel 7."
+   },
+   {
+    "zeile": 5688,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: #1c2128; auf [data-gk-mode=\"dark\"] .gk-table-striped tbody tr:nth-child(even) — Empfehlung --gk-surface-container-low (Dark #172033), identisch zu Zeile 5624."
+   },
+   {
+    "zeile": 5694,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: #161b22; auf [data-gk-mode=\"dark\"] .gk-table-mobile-card tr — Empfehlung --gk-surface (Dark #1e293b), Kartenflaeche nach Regel 6."
+   },
+   {
+    "zeile": 5706,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: #0d1117; auf [data-gk-mode=\"dark\"] .gk-input — Empfehlung --gk-surface-container-lowest (Dark #0a1120), Eingabefeldflaeche nach Regel 6."
+   },
+   {
+    "zeile": 5712,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). color: #484f58; auf [data-gk-mode=\"dark\"] .gk-input::placeholder — Empfehlung --gk-outline (Dark #475569), Platzhaltertext nach Regel 7."
+   },
+   {
+    "zeile": 5717,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); auf [data-gk-mode=\"dark\"] .gk-input:focus — Empfehlung --gk-focus-ring-soft nach Regel 10 (Dark 0 0 0 3px color-mix(in oklab, #a5b4fc 12%, transparent)); der Token traegt die vollstaendige box-shadow-Angabe, die Geometrie 0 0 0 3px stimmt exakt ueberein. Analog zur bereits vorgeschlagenen Aenderung an Zeile 5533."
+   },
+   {
+    "zeile": 5723,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: #161b22; auf [data-gk-mode=\"dark\"] .gk-modal-header — Empfehlung --gk-surface (Dark #1e293b), hoechste Ebene nach Regel 6."
+   },
+   {
+    "zeile": 5728,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: #161b22; auf [data-gk-mode=\"dark\"] .gk-modal-body — Empfehlung --gk-surface (Dark #1e293b), muss mit Zeile 5723 identisch bleiben, damit Header und Body nahtlos sind."
+   },
+   {
+    "zeile": 5732,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: #21262d; auf [data-gk-mode=\"dark\"] .gk-modal-close:hover — Empfehlung --gk-state-hover nach Regel 9 (neutraler Zustandsschleier), alternativ --gk-surface-container-high (Dark #243044)."
+   },
+   {
+    "zeile": 5738,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). background: rgba(99, 102, 241, 0.2); auf [data-gk-mode=\"dark\"] .gk-avatar — Empfehlung --gk-primary-container (Dark #4345b0) nach Regel 1, damit die Avatar-Flaeche dem Theme folgt; --gk-state-primary waere die dezentere Variante, ist aber mit 8% deutlich blasser als die heutigen 20%. Muss zusammen mit Zeile 5739 entschieden werden, damit der Kontrast stimmt."
+   },
+   {
+    "zeile": 5739,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). color: #a5b4fc; auf [data-gk-mode=\"dark\"] .gk-avatar — Empfehlung --gk-primary, dessen Dark-Wert exakt #a5b4fc ist (wertgleich im Dark Mode), oder --gk-on-primary-container (Dark #e0e0ff), falls Zeile 5738 auf --gk-primary-container geht. Kopplung an 5738 beachten."
+   },
+   {
+    "zeile": 5743,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). border-color: #161b22; auf [data-gk-mode=\"dark\"] .gk-avatar-status — Der Rahmen stanzt den Statuspunkt aus der dahinterliegenden Flaeche aus, muss also exakt der Hintergrundfarbe entsprechen. Empfehlung --gk-surface (Dark #1e293b) im Gleichschritt mit Zeile 5694; wird nur eine der beiden Stellen umgestellt, entsteht ein sichtbarer Rand."
+   },
+   {
+    "zeile": 5747,
+    "problem": "Dark-Mode-Block ab 5548 (siehe 5603). border-color: #161b22; auf [data-gk-mode=\"dark\"] .gk-avatar-group .gk-avatar — Gleiche Ausstanz-Logik wie Zeile 5743: Empfehlung --gk-surface (Dark #1e293b), zwingend im Gleichschritt mit 5743 und 5694."
+   }
+  ]
+ }
+]

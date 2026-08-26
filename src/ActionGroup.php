@@ -2,9 +2,9 @@
 namespace GridKit;
 
 /**
- * ActionGroup — Container für Action-Buttons in Tabellen-Spalten.
+ * ActionGroup — container for action buttons in table columns.
  *
- * Verwendung:
+ * Usage:
  *
  *   ActionGroup::render([
  *       ['icon' => 'edit',   'onclick' => "editRow($id)",   'title' => 'Bearbeiten'],
@@ -13,20 +13,20 @@ namespace GridKit;
  *        'onclick' => "remind($id)", 'showIf' => $isOverdue],
  *   ]);
  *
- * Pro Action-Item (alle optional ausser entweder `icon` oder `label`):
- *   - icon       Material-Icon-Name
- *   - label      Button-Text (wenn fehlt: icon-only)
- *   - href       statt onclick — rendert als <a>
- *   - onclick    JS-Code
+ * Per action item (all optional except either `icon` or `label`):
+ *   - icon       Material Icon name
+ *   - label      Button text (if absent: icon-only)
+ *   - href       instead of onclick — renders as <a>
+ *   - onclick    JS code
  *   - title      Tooltip
- *   - variant    filled | outlined | tonal | text (default: text wenn nur icon, sonst outlined)
+ *   - variant    filled | outlined | tonal | text (default: text if icon only, otherwise outlined)
  *   - color      primary | success | danger | warning | neutral (default: neutral)
- *   - size       xs | sm | md | lg (default: xs für Tabellen-Aktionen)
- *   - pill       true → border-radius:999px (Badge-Style)
- *   - disabled   true → disabled-Klasse + disabled-Attribut
- *   - showIf     falsy → Item wird nicht gerendert (für conditional actions)
+ *   - size       xs | sm | md | lg (default: sm for table actions)
+ *   - pill       true → border-radius:999px (badge style)
+ *   - disabled   true → disabled class + disabled attribute
+ *   - showIf     falsy → item is not rendered (for conditional actions)
  *
- * Alle CSS-Klassen kommen aus dem bestehenden gk-btn-System — kein Eigenbau.
+ * All CSS classes come from the existing gk-btn system — nothing home-grown.
  */
 class ActionGroup
 {
@@ -51,7 +51,7 @@ class ActionGroup
     {
         $hasLabel = !empty($a['label']);
         $hasIcon  = !empty($a['icon']);
-        $size     = $a['size']    ?? 'sm'; // v1.17.0: default sm (= 26x26 mit 16px-SVG-Icon, wie Table::button)
+        $size     = $a['size']    ?? 'sm'; // v1.17.0: default sm (= 26x26 with 16px SVG icon, like Table::button)
         $variant  = $a['variant'] ?? (!$hasLabel ? 'text' : 'outlined');
         $color    = $a['color']   ?? 'neutral';
 
@@ -66,7 +66,7 @@ class ActionGroup
         if (!empty($a['title']))  $opts['title']    = $a['title'];
         if (!empty($a['disabled']))$opts['disabled']= true;
 
-        // Pill-Modifier (border-radius:999px)
+        // Pill modifier (border-radius:999px)
         if (!empty($a['pill'])) {
             $opts['class'] = trim(($opts['class'] ?? '') . ' gk-btn-pill');
         }

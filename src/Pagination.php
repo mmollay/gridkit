@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace GridKit;
 
 /**
- * Pagination — EINE einheitliche, gefensterte Server-Pagination für das ganze System.
+ * Pagination — ONE uniform, windowed server-side pagination for the whole system.
  *
- * Ersetzt alle bespoke Pager-Varianten (.bl-pager / .ssi-pagination / .gk-page-btn /
- * .gk-pagination …). Optik identisch zur client-seitigen GK.rowPager: nutzt dieselben
- * CSS-Klassen `.gk-rowpager` (Wrapper) + `.gk-pg` (Buttons) — kein eigenes/inline CSS.
+ * Replaces every bespoke pager variant (.bl-pager / .ssi-pagination / .gk-page-btn /
+ * .gk-pagination …). Looks identical to the client-side GK.rowPager: it uses the same
+ * CSS classes `.gk-rowpager` (wrapper) + `.gk-pg` (buttons) — no own or inline CSS.
  *
- * Darstellung: « Erste · ‹ Zurück · 1 … aktuell±2 … letzte · Weiter › · Letzte »
- * + Info „N Einträge · Seite X von Y" + optionales PageSize-Dropdown.
+ * Rendering: « Erste · ‹ Zurück · 1 … current±2 … last · Weiter › · Letzte »
+ * + the info „N Einträge · Seite X von Y" + an optional PageSize dropdown.
  *
- * Platzierung: als Geschwister UNTERHALB von `.gk-table-wrap` (nicht in der Karte,
- * nicht im Live-Container). Live-Updates: im Partial
- * `<template data-gk-replace="[data-gk-pager=ID]">` mit demselben Aufruf.
+ * Placement: as a sibling BELOW `.gk-table-wrap` (not inside the card, not inside
+ * the live container). Live updates: in the partial
+ * `<template data-gk-replace="[data-gk-pager=ID]">` with the very same call.
  *
- * Verwendung:
+ * Usage:
  *   Pagination::render(['page'=>$p, 'totalPages'=>$tp, 'params'=>['filter'=>$f], 'total'=>$n]);
  *   Pagination::fromPaginator($paginator, ['params'=>['q'=>$q], 'label'=>'Belege', 'live'=>'exp-live']);
  */
@@ -37,7 +37,7 @@ final class Pagination
     }
 
     /**
-     * HTML-String (für `<template data-gk-replace>` im Live-Partial).
+     * HTML string (for `<template data-gk-replace>` in the live partial).
      *
      * @param array<string,mixed> $o
      */
@@ -54,8 +54,8 @@ final class Pagination
         $total     = $o['total'] ?? null;
         $label     = $o['label'] ?? 'Einträge';
 
-        // Ohne Blättern und ohne Zeilenwahl: leerer Platzhalter, damit ein
-        // Live-Replace einen vorher sichtbaren Pager zuverlässig entfernt.
+        // Without paging and without a row-count selector: an empty placeholder, so
+        // that a live replace reliably removes a pager that was visible before.
         if ($totalPages <= 1 && $pageSize === null) {
             return self::shell($live, true, '');
         }
@@ -116,8 +116,8 @@ final class Pagination
     }
 
     /**
-     * Bequemlichkeit für einen Paginator (SsiCore\Pagination\Paginator o.ä.) —
-     * per Duck-Typing (currentPage/totalPages/total), ohne harte Abhängigkeit.
+     * Convenience for a paginator (SsiCore\Pagination\Paginator or similar) —
+     * via duck typing (currentPage/totalPages/total), without a hard dependency.
      *
      * @param array<string,mixed> $o
      */
@@ -144,7 +144,7 @@ final class Pagination
         $attr = ' class="gk-rowpager" data-gk-pager="' . $e($live) . '"';
         if ($live !== '') $attr .= ' data-gk-live-pager="' . $e($live) . '"';
         if ($hidden) $attr .= ' hidden';
-        return '<nav' . $attr . ' aria-label="Seitennavigation">' . $inner . '</nav>';
+        return '<nav' . $attr . ' aria-label="' . htmlspecialchars(Lang::t('pagination.aria'), ENT_QUOTES, 'UTF-8') . '">' . $inner . '</nav>';
     }
 
     /**

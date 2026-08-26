@@ -264,6 +264,28 @@
           });
         });
 
+        // "Reset filters" from the empty state. Delegated, because the
+        // button is created anew on every reload.
+        wrap.addEventListener("click", (ev) => {
+          const button = ev.target.closest("[data-gk-reset-filters]");
+          if (!button || !wrap.contains(button)) return;
+          ev.preventDefault();
+          const params = { gk_page: 1, gk_search: "" };
+          const resetInput = wrap.querySelector("[data-gk-search]");
+          if (resetInput) resetInput.value = "";
+          wrap.querySelectorAll("[data-gk-filter]").forEach((sel) => {
+            sel.value = "";
+            params["gk_filter_" + sel.dataset.gkFilter] = "";
+          });
+          if (isStatic && wrap._gkData) {
+            wrap._gkSearch = "";
+            wrap._gkFilters = {};
+            this.renderStatic(wrap);
+          } else {
+            this.reload(wrap, params);
+          }
+        });
+
         // Multi-select
         if (wrap.hasAttribute("data-gk-selectable")) this.initSelectable(wrap);
       },
@@ -271,8 +293,8 @@
       initSelectable(wrap) {
         if (wrap._gkSelectableBound) return;
         wrap._gkSelectableBound = true;
-        // Set am wrap halten, damit renderStatic (Client-Modus) die Auswahl
-        // ueber Re-Renders (Sort/Suche/Filter) hinweg kennt und wiederherstellt.
+        // Keep the Set on the wrap so that renderStatic (client mode) still knows
+        // the selection across re-renders (sort/search/filter) and restores it.
         const selected = wrap._gkSelected || (wrap._gkSelected = new Set());
         const bulkBar = wrap.querySelector(".gk-bulk-bar");
         let lastRangeId = null;
@@ -319,7 +341,7 @@
           }
           bulkBar.style.display = n > 0 ? "flex" : "none";
         }
-        // Fuer renderStatic erreichbar machen (Auswahl nach Re-Render spiegeln).
+        // Make it reachable for renderStatic (mirror the selection after a re-render).
         wrap._gkUpdateBar = updateBar;
 
         wrap.addEventListener(
@@ -365,20 +387,20 @@
           updateBar();
         });
 
-        // Klick AUF die Checkbox-Spalte (auch daneben in derselben Zelle) togglet
-        // die Auswahl. Klicks auf andere Spalten machen NICHTS — sonst wird der
-        // User durch ungewollt aufpoppende Bulk-Action-Bars verwirrt (z.B. wenn
-        // er nur eine Tracking-Zelle ansehen will).
+        // A click ON the checkbox column (next to the box in the same cell counts)
+        // toggles the selection. Clicks on other columns do NOTHING — otherwise the
+        // user gets confused by bulk action bars popping up unintentionally (e.g.
+        // when all they want is to look at a tracking cell).
         wrap.addEventListener("click", function (e) {
           const cell = e.target.closest("td.gk-cb-col");
           if (!cell) return;
-          // Nicht doppelt feuern wenn nativ schon die Checkbox getoggelt wurde
+          // Do not fire twice when the checkbox was already toggled natively
           if (e.target.matches('input[type=checkbox]')) return;
           const tr = cell.closest("tbody tr[data-gk-row-id]");
           if (!tr) return;
           const cb = cell.querySelector("input[type=checkbox]");
           if (!cb || cb.disabled) return;
-          // Klicks auf <label>, die die Checkbox nativ togglen, ignorieren
+          // Ignore clicks on <label>, which toggle the checkbox natively
           if (e.target.closest("label")) return;
 
           cb.checked = !cb.checked;
@@ -387,8 +409,8 @@
           updateBar();
         });
 
-        // Select-all checkbox — delegiert auf wrap, damit es das Re-Rendern
-        // der Tabelle durch renderStatic (neue thead-Checkbox) ueberlebt.
+        // Select-all checkbox — delegated on wrap so that it survives the table
+        // being re-rendered by renderStatic (a new thead checkbox).
         wrap.addEventListener("change", function (e) {
           if (!e.target.matches("[data-gk-select-all]")) return;
           const checked = e.target.checked;
@@ -630,8 +652,8 @@
               sortCol === key && sortDir === "asc" ? "desc" : "asc";
             attrs =
               ' data-gk-sort="' + e(key) + '" data-gk-dir="' + newDir + '"';
-            // gk-sortable-mi = Material-Icon-Indikator (einheitlich mit SortLink);
-            // unterdrueckt den ::after-Pfeil von .gk-sortable.
+            // gk-sortable-mi = Material icon indicator (consistent with SortLink);
+            // suppresses the ::after arrow of .gk-sortable.
             const base =
               "gk-sortable gk-sortable-mi" +
               (col.hideOnMobile ? " gk-hide-mobile" : "");
@@ -739,12 +761,25 @@
             (hasLeft ? 1 : 0) +
             (hasRight ? 1 : 0) +
             (selectable ? 1 : 0);
+          // The same empty state as on the server side: a statement, a piece
+          // of context and — when the view has been narrowed — a way out.
+          const narrowed =
+            !!(wrap._gkSearch && wrap._gkSearch !== "") ||
+            Object.values(wrap._gkFilters || {}).some((v) => v !== "");
           html +=
-            '<tr><td colspan="' +
-            colspan +
-            '" class="gk-empty">' +
-            _t("no_entries") +
-            "</td></tr>";
+            '<tr class="gk-empty-row"><td colspan="' + colspan + '" class="gk-empty">' +
+            '<div class="gk-empty-inner">' +
+            '<span class="material-icons gk-empty-icon" aria-hidden="true">' +
+            (narrowed ? "search_off" : "inbox") + "</span>" +
+            '<span class="gk-empty-title">' +
+            _t(narrowed ? "no_matches" : "no_entries") + "</span>" +
+            '<span class="gk-empty-hint">' +
+            (_lang[narrowed ? "no_matches_hint" : "empty_hint"] || "") + "</span>" +
+            (narrowed
+              ? '<span class="gk-empty-action"><button type="button" class="gk-btn gk-btn-text gk-btn-primary gk-btn-sm" data-gk-reset-filters>' +
+                (_lang["reset_filters"] || "Reset filters") + "</button></span>"
+              : "") +
+            "</div></td></tr>";
         } else {
           const groupBy = data.groupBy || null;
           const groupCounts = {};
@@ -835,7 +870,7 @@
         } else {
           wrap.insertAdjacentHTML("afterbegin", html);
         }
-        // Auswahl nach dem Neuaufbau wieder spiegeln (Checkbox/Highlight/Bulk-Bar).
+        // Mirror the selection again after the rebuild (checkbox/highlight/bulk bar).
         if (selectable && typeof wrap._gkUpdateBar === "function")
           wrap._gkUpdateBar();
       },
@@ -898,9 +933,40 @@
           );
         url.searchParams.set("gk_table", id);
 
+        // Visible feedback for as long as the reload is running. The existing
+        // rows stay where they are and recede — no jumping, and the user can
+        // see that something is happening. aria-busy says the same thing to
+        // screen readers.
+        wrap.setAttribute("data-gk-loading", "");
+        wrap.setAttribute("aria-busy", "true");
+        // Overtaking requests: only the last one may write the result.
+        // finish() returns true exactly once — otherwise the catch branch would
+        // run a second time after a successful render and replace the content
+        // just inserted with the error message.
+        const run = (wrap._gkLauf = (wrap._gkLauf || 0) + 1);
+        let settled = false;
+        const finish = () => {
+          if (wrap._gkLauf !== run || settled) return false;
+          settled = true;
+          wrap.removeAttribute("data-gk-loading");
+          wrap.removeAttribute("aria-busy");
+          return true;
+        };
+
         fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
-          .then((r) => r.text())
+          .then((r) => {
+            if (!r.ok) {
+              const error = new Error("HTTP " + r.status);
+              error.gkTransport = true;
+              throw error;
+            }
+            return r.text();
+          }, (networkError) => {
+            networkError.gkTransport = true;
+            throw networkError;
+          })
           .then((html) => {
+            if (!finish()) return;
             const toolbar = wrap.querySelector(".gk-toolbar");
             const templates = wrap.querySelectorAll("template");
             Array.from(wrap.children).forEach((ch) => {
@@ -913,7 +979,7 @@
             });
             toolbar.insertAdjacentHTML("afterend", html);
             // Out-of-band updates: <template data-gk-replace="css-selector">
-            // Ersetzt Elemente AUSSERHALB des Containers (z.B. StatCards).
+            // Replaces elements OUTSIDE the container (e.g. StatCards).
             wrap.querySelectorAll("template[data-gk-replace]").forEach(function(tpl) {
               var sel = tpl.getAttribute("data-gk-replace");
               var target = document.querySelector(sel);
@@ -925,6 +991,36 @@
               tpl.remove();
             });
             window.history.replaceState(null, "", url);
+          })
+          .catch((err) => {
+            // Only transport errors lead to the error display. If the render
+            // path throws (Safari throttles history.replaceState after about
+            // 100 calls per 30 s, outerHTML can throw as well), the data has
+            // long since been inserted correctly — replacing it with
+            // "could not be loaded" would simply be wrong.
+            if (!err || !err.gkTransport) {
+              finish();
+              if (window.console) console.error("GridKit: failed to insert the table", err);
+              return;
+            }
+            if (!finish()) return;
+            // Before this, a failed request stayed silent: the table kept on
+            // showing the old data without anyone noticing.
+            const body = wrap.querySelector(".gk-table tbody");
+            const columnCount = wrap.querySelectorAll(".gk-table thead th").length || 1;
+            if (body) {
+              body.innerHTML =
+                '<tr class="gk-empty-row"><td colspan="' + columnCount + '" class="gk-empty">' +
+                '<div class="gk-empty-inner">' +
+                '<span class="material-icons gk-empty-icon" aria-hidden="true">cloud_off</span>' +
+                '<span class="gk-empty-title">' + (_lang["load_error"] || "The table could not be loaded.") + "</span>" +
+                '<span class="gk-empty-action"><button type="button" class="gk-btn gk-btn-text gk-btn-primary gk-btn-sm" data-gk-retry>' +
+                (_lang["retry"] || "Try again") + "</button></span>" +
+                "</div></td></tr>";
+              const button = body.querySelector("[data-gk-retry]");
+              if (button) button.addEventListener("click", () => this.reload(wrap, {}));
+            }
+            wrap.dispatchEvent(new CustomEvent("gk-table-error", { bubbles: true, detail: { error: err } }));
           });
       },
       refreshAll() {
@@ -1092,17 +1188,17 @@
       var self = this;
       sidebar.querySelectorAll('.gk-sidebar-nav a[href]').forEach(function (link) {
         var href = link.getAttribute('href');
-        // Nur interne Links abfangen
+        // Only intercept internal links
         if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
         if (href.startsWith('http') && !href.startsWith(location.origin)) return;
         if (link.target === '_blank') return;
-        // Anker auf der AKTUELLEN Seite (z.B. /faktura/steuerberater#chat):
-        // nativ scrollen lassen — der AJAX-Loader würde die Seite nur neu rendern
-        // und das Fragment verwerfen ("Klick ohne Wirkung").
+        // Anchors on the CURRENT page (e.g. /faktura/steuerberater#chat):
+        // let the browser scroll natively — the AJAX loader would only re-render
+        // the page and drop the fragment ("a click with no effect").
         var hashPos = href.indexOf('#');
         if (hashPos > -1 && (hashPos === 0 || href.slice(0, hashPos) === location.pathname)) return;
 
-        // onclick statt addEventListener — preventDefault SOFORT
+        // onclick instead of addEventListener — preventDefault IMMEDIATELY
         link.onclick = function (e) {
           if (e.ctrlKey || e.metaKey || e.shiftKey) return true;
           e.preventDefault();
@@ -1112,9 +1208,9 @@
         };
       });
 
-      // Reine Hash-Sprünge (Anker-Klicks, Vor/Zurück zwischen Ankern) ändern
-      // pathname+search NICHT — dann darf popstate keinen AJAX-Reload auslösen
-      // (sichtbar als endlose Ladeleiste nach jedem Anker-Klick).
+      // Pure hash jumps (anchor clicks, back/forward between anchors) do NOT
+      // change pathname+search — popstate must not trigger an AJAX reload then
+      // (visible as an endless loading bar after every anchor click).
       this._lastPath = location.pathname + location.search;
       window.addEventListener('popstate', function () {
         var cur = location.pathname + location.search;
@@ -1171,16 +1267,16 @@
         if (pushState) history.pushState({ gkNav: true }, '', url);
         self._lastPath = location.pathname + location.search;
         self.updateActive(url);
-        // Ziel-Anker aus der URL respektieren (Seitenwechsel MIT Fragment) —
-        // sonst landet man nach dem Content-Swap immer am Seitenanfang.
+        // Respect the target anchor from the URL (page change WITH a fragment) —
+        // otherwise you always land at the top of the page after the content swap.
         var frag = (url.split('#')[1] || '');
         var anchor = frag ? document.getElementById(frag) : null;
         if (anchor) anchor.scrollIntoView(); else window.scrollTo(0, 0);
         try {
           if (typeof GK.table !== 'undefined' && GK.table.init) GK.table.init();
           if (typeof GK.tooltip !== 'undefined' && GK.tooltip.init) GK.tooltip.init();
-          // BelegModal liegt innerhalb [data-gk-content] und wird beim Swap neu
-          // gerendert → Close-Button verliert seinen Listener. Neu binden.
+          // BelegModal sits inside [data-gk-content] and is re-rendered on the
+          // swap → the close button loses its listener. Bind it again.
           if (typeof GK.belegModal !== 'undefined' && GK.belegModal._init) GK.belegModal._init();
         } catch (e) {}
       } catch (err) {
@@ -1336,7 +1432,7 @@
     });
   };
 
-  // ── Hilfsfunktionen ──────────────────────────────────────────
+  // ── Helper functions ─────────────────────────────────────────
   GK._parseSize = function (str) {
     if (!str) return 0;
     var m = String(str)
@@ -1354,7 +1450,7 @@
     return bytes + " B";
   };
 
-  // ── Validierung ───────────────────────────────────────────────
+  // ── Validation ───────────────────────────────────────────────
   GK._uploadZoneValidate = function (zone, fileList) {
     var cfg = {
       maxSize: GK._parseSize(zone.dataset.gkMaxSize),
@@ -1374,7 +1470,7 @@
     var accepted = [];
     var errors = [];
 
-    // Max Dateianzahl
+    // Max file count
     if (cfg.maxFiles > 0 && files.length > cfg.maxFiles) {
       errors.push(_t("max_files", { n: cfg.maxFiles, m: files.length }));
       files = files.slice(0, cfg.maxFiles);
@@ -1497,7 +1593,7 @@
       status.textContent = _t("ready");
       item.appendChild(status);
 
-      // Remove-Button (nur im Pending-State)
+      // Remove button (only in the pending state)
       var rm = document.createElement("button");
       rm.type = "button";
       rm.className = "gk-uq-remove";
@@ -1539,7 +1635,7 @@
     return map[ext] || "insert_drive_file";
   };
 
-  // ── Queue-Status-Helpers (für App-Code) ──────────────────────
+  // ── Queue status helpers (for app code) ──────────────────────
   GK.uqSetUploading = function (item) {
     item.el.className = "gk-uq-item gk-uq-uploading";
     item.el.querySelector(".gk-uq-status").innerHTML =
@@ -1571,7 +1667,7 @@
     if (rm) rm.style.display = "";
   };
 
-  // Legacy-Helpers (Rückwärtskompatibilität)
+  // Legacy helpers (backwards compatibility)
   GK.uploadZoneBusy = function (zone, label) {
     var idle = zone.querySelector(".gk-upload-idle");
     var prog = zone.querySelector(".gk-upload-progress");
@@ -1590,24 +1686,24 @@
   };
 
   // === RICHTEXT EDITOR ===
-  // gk-richtext wird nun via CKEditor5 initialisiert (siehe Form.php)
+  // gk-richtext is now initialised via CKEditor5 (see Form.php)
   GK.initRichtext = function () {};
 
   // === LIVE TABLE ===
   //
-  // AJAX-gefilterte Tabellen-Views. Search + Filter + Sort + Pagination ohne
-  // Full-Page-Reload. Cursor bleibt beim Tippen, URL wird via replaceState
-  // synchron gehalten.
+  // AJAX-filtered table views. Search + filter + sort + pagination without a
+  // full-page reload. The cursor stays put while typing, the URL is kept in
+  // sync via replaceState.
   //
-  // Usage (Beispiel):
+  // Usage (example):
   //   <div id="my-tbl" data-gk-live-table="/invoices">
-  //     <!-- Tabelle, Sort-Header, Pagination — alles AJAX-swappable -->
+  //     <!-- table, sort headers, pagination — all AJAX-swappable -->
   //   </div>
   //   <input data-gk-live-input="my-tbl" name="q">
   //   <select data-gk-live-input="my-tbl" name="status">...</select>
   //
-  // Controller muss bei X-Requested-With: XMLHttpRequest oder ?partial=1 nur
-  // den Container-Inhalt liefern (kein Layout).
+  // On X-Requested-With: XMLHttpRequest or ?partial=1 the controller must
+  // deliver the container content only (no layout).
   //
   GK.liveTable = {
     init: function (root) {
@@ -1623,8 +1719,8 @@
       GK.liveTable.patchNavSelects(r);
       GK.liveTable.bindOutsidePager();
     },
-    // Server-Pager gehört als Geschwister UNTER .gk-table-wrap (wie Rechnungen).
-    // Sitzt er noch im Live-Container (alte Views), hier rausheben.
+    // The server pager belongs as a sibling BELOW .gk-table-wrap (like invoices).
+    // If it still sits inside the live container (older views), lift it out here.
     hoistPager: function (container) {
       if (!container || !container.querySelector) return;
       var incoming = container.querySelector("[data-gk-pager]");
@@ -1640,7 +1736,7 @@
       if (existing) existing.replaceWith(incoming);
       else wrap.after(incoming);
     },
-    // Klicks auf den gehobenen Pager (ausserhalb des Live-Containers) per AJAX.
+    // Clicks on the lifted-out pager (outside the live container) go via AJAX.
     bindOutsidePager: function () {
       if (document._gkLivePagerBound) return;
       document._gkLivePagerBound = true;
@@ -1659,10 +1755,10 @@
         GK.liveTable.loadUrl(container, urlObj);
       });
     },
-    // Session-Persistenz: wenn URL keine Filter hat (Sidebar-Klick), restauriere
-    // den gespeicherten Stand der aktuellen Session.
-    // WICHTIG: Voller Redirect statt AJAX, damit alle äußeren Elemente (Dropdowns,
-    // Pagination) korrekt vom PHP gerendert werden.
+    // Session persistence: when the URL carries no filters (sidebar click),
+    // restore the state stored for the current session.
+    // IMPORTANT: a full redirect instead of AJAX, so that all the outer elements
+    // (dropdowns, pagination) are rendered correctly by PHP.
     restoreSession: function (container) {
       if (container._gkLiveRestored) return;
       container._gkLiveRestored = true;
@@ -1684,7 +1780,7 @@
     bind: function (container) {
       if (container._gkLiveBound) return;
       container._gkLiveBound = true;
-      // Session sofort speichern wenn URL-Filter vorhanden (z.B. direkter Link)
+      // Save the session right away when the URL carries filters (e.g. a direct link)
       if (window.location.search && window.location.search.length > 1) {
         GK.liveTable.saveSession(container);
       }
@@ -1705,10 +1801,11 @@
         GK.liveTable.loadUrl(container, urlObj);
       });
     },
-    // Self-Modus (data-gk-live-self): die Antwort ist die GANZE Seite (Controller
-    // ohne Partial-Zweig). Wir schneiden den gleichnamigen Container heraus und
-    // tauschen nur dessen Inhalt. So wird jede Liste live, ohne Partial/Controller-
-    // Umbau — der Such-Input liegt außerhalb des Containers und behält den Fokus.
+    // Self mode (data-gk-live-self): the response is the WHOLE page (a controller
+    // without a partial branch). We cut out the container of the same name and
+    // swap only its content. That makes every list live without rebuilding
+    // partials/controllers — the search input sits outside the container and so
+    // keeps the focus.
     applyHtml: function (container, html) {
       if (container.hasAttribute("data-gk-live-self")) {
         try {
@@ -1787,14 +1884,14 @@
         if (val === "" || val === "0") params.delete(name);
         else params.set(name, val);
       });
-      // Filterwechsel → zurück auf Seite 1
+      // Filter change → back to page 1
       params.delete("page");
       return params;
     },
     reload: function (container) {
-      // Robust: akzeptiert Element ODER ID-String. Mehrere Views riefen
-      // reload('exp-live') auf -> "container.dataset is undefined". Ohne
-      // gefundenen Live-Container fallback auf Voll-Reload statt JS-Fehler.
+      // Robust: accepts an element OR an id string. Several views called
+      // reload('exp-live') -> "container.dataset is undefined". With no live
+      // container found, fall back to a full reload instead of a JS error.
       if (typeof container === "string") container = document.getElementById(container);
       if (!container || !container.dataset || !container.dataset.gkLiveTable) {
         window.location.reload();
@@ -1824,10 +1921,10 @@
   };
 
   // Extend init
-  // ── RowPager: client-seitige Pagination (+ optionale Suche) für gerenderte Tabellen ──
-  // Markup: <table data-gk-rows="25"> … </table>  (Zeilen >25 → Pager erscheint).
-  // Optional filter-fähig: data-gk-search="#such-input" → die Suche filtert die Zeilen
-  // (Volltext, case-insensitive) UND paginiert die Treffer. Ersetzt bespoke xxxFilter().
+  // ── RowPager: client-side pagination (+ optional search) for rendered tables ──
+  // Markup: <table data-gk-rows="25"> … </table>  (rows >25 → the pager appears).
+  // Optionally filterable: data-gk-search="#such-input" → the search filters the rows
+  // (full text, case-insensitive) AND paginates the matches. Replaces bespoke xxxFilter().
   GK.rowPager = {
     init(root) {
       (root || document).querySelectorAll("table[data-gk-rows]").forEach(function (tbl) {
@@ -1840,7 +1937,7 @@
         });
         var searchSel = tbl.getAttribute("data-gk-search");
         var searchEl = searchSel ? document.querySelector(searchSel) : null;
-        if (!searchEl && allRows.length <= per) return; // nichts zu tun
+        if (!searchEl && allRows.length <= per) return; // nothing to do
         tbl._gkRowPager = true;
         var page = 1, query = "";
         var host = tbl.closest(".gk-table-wrap") || tbl;
@@ -1886,7 +1983,7 @@
       for (var i = page - win; i <= page + win; i++) if (i >= 1 && i <= pages) set.push(i);
       set = set.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
       var from = (page - 1) * per + 1, to = Math.min(total, page * per);
-      var h = '<span class="gk-rowpager-info">' + from + "–" + to + " von " + total + "</span><span class=\"gk-rowpager-nav\">";
+      var h = '<span class="gk-rowpager-info">' + from + "–" + to + " " + (_lang["rowpager_of"] || "of") + " " + total + "</span><span class=\"gk-rowpager-nav\">";
       h += '<button class="gk-pg gk-pg-icon' + (page <= 1 ? " gk-pg-off" : "") + '" data-gp="prev"><span class="material-icons">chevron_left</span></button>';
       var prev = 0;
       set.forEach(function (p) {
@@ -1899,8 +1996,8 @@
     },
   };
 
-  // ── Tabs: <div data-gk-tabs> mit <div data-gk-tabpanel="key" data-gk-tab-title="…"> ──
-  // Nav-Buttons werden aus den Panels erzeugt; erstes Panel ist aktiv.
+  // ── Tabs: <div data-gk-tabs> with <div data-gk-tabpanel="key" data-gk-tab-title="…"> ──
+  // The nav buttons are generated from the panels; the first panel is active.
   GK.tabs = {
     init(root) {
       (root || document).querySelectorAll("[data-gk-tabs]").forEach(function (wrap) {
@@ -1932,7 +2029,7 @@
     },
   };
 
-  // RowPager nach Live-Tabellen-Reload neu anwenden (Container-Inhalt wurde getauscht).
+  // Re-apply RowPager after a live table reload (the container content was swapped).
   document.addEventListener("gk-live-reloaded", function (e) {
     if (GK.rowPager) GK.rowPager.init(e.target || document);
     if (GK.table) GK.table.init(e.target || document);
@@ -1979,18 +2076,18 @@
 
   // Theme System
   //
-  // Der localStorage gehoert dem BROWSER, nicht dem angemeldeten Benutzer. Ohne
-  // Namensraum erbt der naechste Benutzer am selben Rechner das Farbprofil des
-  // vorigen — gemeldet am 31.07.2026: Farbe bei einem Kunden umgestellt, danach
-  // beim Steuerberater angemeldet, und dort war sie ebenfalls gesetzt.
+  // localStorage belongs to the BROWSER, not to the logged-in user. Without a
+  // namespace the next user on the same machine inherits the colour profile of
+  // the previous one — reported on 2026-07-31: the colour was switched at one
+  // client, then someone logged in at the tax adviser and it was set there too.
   //
-  // Deshalb kann das Gastsystem einen Namensraum setzen:
+  // That is why the host system can set a namespace:
   //   GK.theme.init({ scope: 'u' + userId })
-  // Ohne Namensraum verhaelt sich alles wie bisher.
+  // Without a namespace everything behaves as it did before.
   GK.theme = {
-    // Namensraum kann auch vom Gastsystem vorgegeben werden — genau wie
-    // window.GK_LANG bei den Uebersetzungen. Das ist noetig, weil GRIDKit das
-    // Profil beim Laden selbst wiederherstellt, bevor eigener Code laufen kann.
+    // The namespace can also be supplied by the host system — exactly like
+    // window.GK_LANG for the translations. That is necessary because GRIDKit
+    // restores the profile itself on load, before any of your own code can run.
     scope: String(window.GK_THEME_SCOPE || ""),
 
     init(options) {
@@ -1999,7 +2096,7 @@
       return this;
     },
 
-    /** Schluessel im Namensraum des Benutzers. */
+    /** Key within the user's namespace. */
     _key(name) {
       return this.scope ? name + ":" + this.scope : name;
     },
@@ -2024,7 +2121,7 @@
       try {
         var theme = localStorage.getItem(this._key("gk-theme"));
         var mode = localStorage.getItem(this._key("gk-mode"));
-        // Kein Erben mehr: Wer nichts gespeichert hat, bekommt die Voreinstellung.
+        // No more inheriting: whoever has nothing stored gets the default.
         document.body.dataset.gkTheme = theme || "";
         document.body.dataset.gkMode = mode || "";
         if (theme) this.set(theme);
@@ -2444,20 +2541,20 @@
   });
 
   // ════════════════════════════════════════════════════════════════════
-  // GK.belegModal — Globaler PDF-/Beleg-Vorschau-Modal (since v1.15.0)
+  // GK.belegModal — global PDF/receipt preview modal (since v1.15.0)
   // ════════════════════════════════════════════════════════════════════
   GK.belegModal = {
     _el: function () { return document.getElementById("gk-beleg-modal"); },
 
     /**
-     * Öffnet den Modal mit der gegebenen URL.
+     * Opens the modal with the given URL.
      *
      * @param {string} url
      * @param {object} [opts]
-     * @param {string} [opts.title]            Header-Titel (default: "Beleg")
-     * @param {boolean}[opts.autoPrint]        Druckt das iframe sobald geladen
-     * @param {number} [opts.unlinkExpenseId]  Zeigt „Verknüpfung trennen"-Button
-     * @param {function}[opts.onUnlink]        Callback nach erfolgreicher Trennung
+     * @param {string} [opts.title]            Header title (default: "Beleg")
+     * @param {boolean}[opts.autoPrint]        Prints the iframe as soon as it loaded
+     * @param {number} [opts.unlinkExpenseId]  Shows the "unlink receipt" button
+     * @param {function}[opts.onUnlink]        Callback after a successful unlink
      */
     open: function (url, opts) {
       if (!url) return;
@@ -2465,7 +2562,7 @@
       var overlay = this._el();
       if (!overlay) {
         console.warn("GK.belegModal: container not found. Did you call BelegModal::container()?");
-        // Fallback: direkt im Browser öffnen
+        // Fallback: open it directly in the browser
         window.open(url, "_blank");
         return;
       }
@@ -2477,17 +2574,17 @@
       var mobBtn  = q("[data-gk-beleg-mobile-open]");
       var unlink  = q("[data-gk-beleg-unlink]");
 
-      if (titleEl) titleEl.textContent = opts.title || "Beleg";
+      if (titleEl) titleEl.textContent = opts.title || _lang["doc_title"] || "Document";
       if (openBtn) openBtn.href = url;
       if (dlBtn)   dlBtn.href   = url;
       if (mobBtn)  mobBtn.href  = url;
 
-      // Unlink-Button: nur sichtbar wenn unlinkExpenseId gesetzt
+      // Unlink button: only visible when unlinkExpenseId is set
       if (unlink) {
         if (opts.unlinkExpenseId) {
           unlink.classList.remove("gk-hidden");
           unlink.onclick = function () {
-            if (!confirm("Beleg-Verknüpfung wirklich trennen?")) return;
+            if (!confirm(_lang["doc_unlink_confirm"] || "Really detach this document?")) return;
             fetch("/faktura/api/beleg/unlink", {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -2509,7 +2606,7 @@
         }
       }
 
-      // iframe nur auf Desktop laden — Mobile zeigt Call-to-Action
+      // Load the iframe on desktop only — mobile shows a call to action
       var isMobile = window.matchMedia("(max-width: 768px)").matches;
       if (frame) {
         frame.src = isMobile ? "about:blank" : url;
@@ -2539,7 +2636,7 @@
       var overlay = this._el();
       if (!overlay) return;
       var self = this;
-      // Idempotent: mehrfaches _init (z.B. nach AJAX-Nav) darf Listener nicht stapeln.
+      // Idempotent: a repeated _init (e.g. after AJAX nav) must not stack listeners.
       if (!overlay.dataset.gkBelegBound) {
         overlay.dataset.gkBelegBound = "1";
         // Click outside to close
@@ -2547,12 +2644,12 @@
           if (e.target === overlay) self.close();
         });
       }
-      // Close button(s): per Swap neu gerendert → onclick (überschreibt sich selbst,
-      // kein Stapeln) statt addEventListener.
+      // Close button(s): re-rendered by the swap → onclick (overwrites itself, no
+      // stacking) instead of addEventListener.
       overlay.querySelectorAll("[data-gk-beleg-close]").forEach(function (btn) {
         btn.onclick = function () { self.close(); };
       });
-      // ESC nur einmal global binden
+      // Bind ESC globally only once
       if (!GK.belegModal._escBound) {
         GK.belegModal._escBound = true;
         document.addEventListener("keydown", function (e) {
@@ -2563,7 +2660,7 @@
     }
   };
 
-  // Backwards-compat aliases (Panel verwendet bisher openBelegModal/closeBelegModal)
+  // Backwards-compat aliases (Panel still uses openBelegModal/closeBelegModal)
   window.openBelegModal  = function (url, title, opts) {
     opts = opts || {};
     if (title) opts.title = title;
@@ -2572,10 +2669,10 @@
   window.closeBelegModal = function () { GK.belegModal.close(); };
 
   window.GridKit = GK;
-  // Übersetzen auch AUSSERHALB dieser Kapsel möglich machen. Komponenten, die
-  // unterhalb von })(); stehen (tooltip, search, …), erreichen das private _t
-  // sonst nicht — GK.search.init() starb daran mit "ReferenceError: _t is not
-  // defined" und registrierte keinen einzigen Horcher (gefunden 30.07.2026).
+  // Make translating possible OUTSIDE this capsule as well. Components that sit
+  // below })(); (tooltip, search, …) cannot reach the private _t otherwise —
+  // GK.search.init() died on exactly that with "ReferenceError: _t is not
+  // defined" and registered not a single listener (found 2026-07-30).
   GK.t = _t;
 
   window.GK = GK;
@@ -2786,11 +2883,11 @@ GK.tooltip = {
 };
 document.addEventListener("DOMContentLoaded", () => GK.tooltip.init());
 
-// === TOOLTIP (Global) — wertet native title-Attribute zu GK-Popups auf ===
-// Jedes Element mit title bekommt beim Hover ein gestyltes Popup (300 ms Delay,
-// über dem Element, am Viewport geclamped, \n = Zeilenumbruch). Der title wird
-// beim ersten Hover nach data-gk-tip verschoben (unterdrückt das Browser-Popup).
-// Opt-out: data-gk-tip-off am Element oder einem Vorfahren.
+// === TOOLTIP (Global) — upgrades native title attributes to GK popups ===
+// Every element with a title gets a styled popup on hover (300 ms delay, above
+// the element, clamped to the viewport, \n = line break). On the first hover the
+// title is moved to data-gk-tip (which suppresses the browser's own popup).
+// Opt-out: data-gk-tip-off on the element or on one of its ancestors.
 GK.tip = {
   el: null,
   cur: null,
@@ -2849,19 +2946,19 @@ GK.tip = {
 };
 document.addEventListener("DOMContentLoaded", () => GK.tip.init());
 
-// === SUCHE (GK.search) ==================================================
-// Systemweite Schnellsuche. GRIDKit liefert nur das Bedienelement — WAS
-// gefunden wird, bestimmt das jeweilige System über die konfigurierte Adresse.
+// === SEARCH (GK.search) =================================================
+// System-wide quick search. GRIDKit supplies only the control element — WHAT
+// gets found is decided by each system through the configured address.
 //
 //   GK.search.init({ url: '/api/suche', hotkey: 'ctrl+k', minLength: 2 })
 //
-// Antwort des Servers:
+// Server response:
 //   { gruppen: [ { titel: 'Buchungen',
 //                  treffer: [ { titel, untertitel, betrag, url, icon } ] } ] }
-// _t liefert bei fehlender Übersetzung den SCHLÜSSEL zurück. Für interne Zwecke
-// ist das brauchbar, im Bedienelement nicht: Dort stand dann wörtlich
-// "search_error" statt einer Meldung (gemeldet 31.07.2026). Dieser Helfer nimmt
-// den Ersatztext, sobald keine echte Übersetzung vorliegt.
+// When a translation is missing, _t returns the KEY. That is usable for internal
+// purposes, but not in the control element: there it literally read
+// "search_error" instead of a message (reported 2026-07-31). This helper takes
+// the replacement text as soon as no real translation is available.
 function _tOderText(key, ersatz) {
   var wert = GK.t(key);
   return wert && wert !== key ? wert : ersatz;
@@ -2884,10 +2981,10 @@ GK.search = {
         url: "/api/suche",
         hotkey: "ctrl+k",
         minLength: 2,
-        placeholder: _tOderText("search_placeholder", "Suchen …"),
-        hint: _tOderText("search_hint", "Tippe, um zu suchen."),
-        empty: _tOderText("search_empty", "Nichts gefunden."),
-        error: _tOderText("search_error", "Suche nicht erreichbar."),
+        placeholder: _tOderText("search_placeholder", "Search …"),
+        hint: _tOderText("search_hint", "Type to search."),
+        empty: _tOderText("search_empty", "Nothing found."),
+        error: _tOderText("search_error", "Search unavailable."),
       },
       options || {},
     );
@@ -2902,7 +2999,7 @@ GK.search = {
         self.open();
       }
     });
-    // Auch ohne Tastatur bedienbar.
+    // Usable without a keyboard as well.
     document.addEventListener("click", function (e) {
       var ausloeser = e.target.closest && e.target.closest("[data-gk-search]");
       if (ausloeser) {
@@ -2953,7 +3050,7 @@ GK.search = {
 
   taste(e) {
     if (e.key === "Escape") { e.preventDefault(); this.close(); return; }
-    if (e.key === "Tab") { e.preventDefault(); return; }   // Fokus bleibt gefangen
+    if (e.key === "Tab") { e.preventDefault(); return; }   // focus stays trapped
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
       if (!this.treffer.length) return;
@@ -2985,7 +3082,7 @@ GK.search = {
 
   suche(q) {
     var self = this;
-    // Laufende Abfrage abbrechen — sonst überholt eine alte Antwort die neue.
+    // Abort a request already in flight — otherwise an old response overtakes the new one.
     if (this.controller) this.controller.abort();
     this.controller = new AbortController();
     this.zeigeHinweis('<span class="gk-search-laedt"></span>');
@@ -3062,7 +3159,7 @@ GK.search = {
     });
   },
 
-  /** Suchbegriff im Treffer hervorheben — auf dem escapten Text, nie auf dem rohen. */
+  /** Highlight the search term in the match — on the escaped text, never on the raw one. */
   hervor(text, q) {
     var e = this.esc(text);
     if (!q) return e;

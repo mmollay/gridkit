@@ -1,0 +1,72 @@
+{
+ "artboards": [
+  {
+   "file": "Main.dc.html",
+   "title": "01 · Übersicht",
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1560
+  },
+  {
+   "file": "Befunde.dc.html",
+   "title": "02 · Befunde",
+   "x": 1560,
+   "y": 0,
+   "w": 1440,
+   "h": 2080
+  },
+  {
+   "file": "Tokens.dc.html",
+   "title": "03 · Tokens",
+   "x": 3120,
+   "y": 0,
+   "w": 1440,
+   "h": 2260
+  },
+  {
+   "file": "Tabelle.dc.html",
+   "title": "04 · Tabelle",
+   "x": 0,
+   "y": 2400,
+   "w": 1560,
+   "h": 1120
+  },
+  {
+   "file": "Themes.dc.html",
+   "title": "05 · Themes",
+   "x": 1720,
+   "y": 2400,
+   "w": 1440,
+   "h": 1060
+  },
+  {
+   "file": "Fahrplan.dc.html",
+   "title": "06 · Fahrplan",
+   "x": 3280,
+   "y": 2400,
+   "w": 1440,
+   "h": 1210
+  },
+  {
+   "file": "Ergebnis.dc.html",
+   "title": "07 · Ergebnis",
+   "x": 4840,
+   "y": 2400,
+   "w": 1440,
+   "h": 1780
+  }
+ ],
+ "annotations": [
+  {
+   "id": "lesehinweis",
+   "x": -420,
+   "y": 0,
+   "w": 340,
+   "text": "GridKit 1.27.3 — Design-Audit\n\nAlle Zahlen sind im laufenden Demo-Build gemessen oder in css/gridkit.css gezählt.\n\nBlatt 01 gibt die Übersicht, 02 die Befunde, 03–05 die Vorschläge, 06 den Fahrplan.\n\nBlatt 07 kam nach der Umsetzung dazu: dieselbe Sonde, gegen den Stand davor gemessen."
+  }
+ ],
+ "launch": {
+  "view": "canvas"
+ }
+}

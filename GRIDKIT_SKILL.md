@@ -1,7 +1,7 @@
 # GRIDKit – Agent Skill
 
-> **Version:** 1.27.1 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
-> **Demo:** https://gridkit.ssi.at | **Source:** `/home/pawbot/projects/gridkit/` (= `/home/develop/gridkit/`)
+> **Version:** 1.28.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Demo:** https://gridkit.ssi.at
 
 ## Purpose
 
@@ -13,17 +13,12 @@ You are building or maintaining a web application using **GRIDKit**, a lightweig
 - **Zero Dependencies:** 1 CSS file + 1 JS file, no build process
 - **Namespace:** `GridKit\` | CSS prefix: `gk-` | Data attributes: `data-gk-`
 
-## CRITICAL: Change Workflow
+## Change Workflow
 
-**NEVER modify GRIDKit files inside consuming projects.** Always change at the source first.
-
-```
-1. Edit source:  /home/pawbot/projects/gridkit/  (= /home/develop/gridkit/)
-2. Bump version: echo '1.4.x' > /home/pawbot/projects/gridkit/VERSION
-3. Update:       /home/develop/ssi-core/public/gridkit/VERSION  (same if hardlinked)
-4. Update CHANGELOG.md
-5. Sync dashboard if needed (see Sync section)
-```
+**Never modify GridKit files inside a consuming project.** Change the framework
+at its source, bump `VERSION`, note it in `CHANGELOG.md`, then update the copy
+your project uses. Local edits in a consuming project are silently lost on the
+next update and split the codebase in two.
 
 ## Available Components
 
@@ -508,25 +503,6 @@ layout, typography, or semantic colors. **Spacing scale: 0/1/2/3/4/5/6 = 0/4/8/1
 <div class="gk-flex-center gk-gap-md gk-fs-md gk-text-muted">…</div>
 ```
 
-## Sync: GridKit to Consuming Systems
-
-### → SSI Panel (s7, already hardlinked)
-`/home/develop/gridkit/` = `/home/pawbot/projects/gridkit/` — same inode, no sync needed.
-Public assets served from `/home/develop/ssi-core/public/gridkit/` — check if hardlinked too.
-
-### → PawBot Dashboard (s7)
-```bash
-rsync -av /home/pawbot/projects/gridkit/ /home/pawbot/core/dashboard/gridkit/ \
-  --exclude='.git' --exclude='demo' --exclude='vendor' \
-  --exclude='src/Auth.php' --exclude='src/Sidebar.php' --exclude='js/gridkit.js'
-```
-⚠️ These 3 files have PawBot-specific extensions — NEVER overwrite:
-- `src/Auth.php` — Session-Lock, Remember-Cookie
-- `src/Sidebar.php` — Brand-Image, HTML-Column support
-- `js/gridkit.js` — Dashboard-specific extensions
-
-**Dashboard is currently at v1.0.0 — needs sync!**
-
 ## Common Pitfalls
 
 1. **Search through HTML** — Never put HTML in `search()` column keys. Use plain-text key + separate display key.
@@ -534,4 +510,4 @@ rsync -av /home/pawbot/projects/gridkit/ /home/pawbot/core/dashboard/gridkit/ \
 3. **Wrong button classes** — Use `gk-btn-filled` not `gk-btn--filled` (no double dash).
 4. **Wrong toast API** — Use `GK.toast.success()` not `GK.toast()`.
 5. **Wrong modal API** — `GK.modal.open(title, html)` takes title + HTML string, not an ID.
-6. **Direct project edits** — Always edit source at `/home/pawbot/projects/gridkit/`, never in consuming projects.
+6. **Direct project edits** — Always change GridKit at its own source, never inside a consuming project.
