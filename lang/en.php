@@ -80,6 +80,8 @@ return [
     'js.no_matches_hint'        => 'No entries match this search or filter.',
     'js.reset_filters'          => 'Reset filters',
     'js.too_small'          => '{name}: too small ({size}, min. {min})',
+    'js.too_large'          => '{name}: too large ({size}, max. {max})',
+    'js.one_file_only'      => 'Only one file allowed — {m} dropped',
     'js.total_size_exceeded'=> 'Total size {size} exceeds maximum ({max})',
     'js.ready'              => 'Ready',
     'js.remove'             => 'Remove',

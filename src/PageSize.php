@@ -19,7 +19,7 @@ namespace GridKit;
  *   PageSize::make('per_page')->current($perPage)->live('exp-live')->render();
  *
  * Example (navigate):
- *   PageSize::make('per_page')->current($perPage)->baseUrl('/faktura/expenses')
+ *   PageSize::make('per_page')->current($perPage)->baseUrl('/expenses')
  *       ->preserve(['q','status'])->render();
  */
 final class PageSize

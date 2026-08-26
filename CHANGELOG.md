@@ -7,6 +7,97 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.41.0] - 2026-08-26
+
+The JavaScript — 3,233 lines, the last large file without a systematic pass.
+The method was the same one that has worked for twelve rounds: take what the
+documentation promises, call it exactly as written, and watch.
+
+### Fixed
+
+- **`GK.table.refresh('table-id')` did not exist.** `GRIDKIT_SKILL.md` has
+  documented it since 1.10 under the heading *"Table refresh (after save/delete
+  in server-side mode)"* — the single most common thing anyone does after
+  saving a modal. `GK.table` had `init`, `reload(wrapElement, …)` and
+  `refreshAll()`; nothing named `refresh`. Every agent that followed the
+  document wrote the documented call and got a `TypeError`. That file exists so
+  assistants write correct GridKit code on the first try, which makes a
+  documented method that was never implemented the most expensive kind of bug
+  this project can carry. `refresh(id)` now exists, picks the static or live
+  path the way `refreshAll()` always has, and returns `false` when no table on
+  the page carries that id.
+
+- **`GK.belegModal` POSTed to the author's own application.**
+  `fetch("/faktura/api/beleg/unlink", …)` — a route from a private invoicing
+  system, hardcoded inside a general-purpose library and reached through a
+  button the class documents as a feature. On anyone else's site that is a 404,
+  and the `.json()` behind it rejected with nothing catching it, so the detach
+  button did nothing and said nothing. The endpoint is now yours to name
+  (`GK.belegModal.unlinkUrl`, or `unlinkUrl` per call); with neither set the
+  button fires a cancelable `gk:belegunlink` event and your code decides what
+  detaching means — the pattern `gk:rowaction` already uses. The failure path
+  now reports instead of vanishing.
+  **If you relied on the old path, set it once:**
+  `GK.belegModal.unlinkUrl = "/faktura/api/beleg/unlink";`
+
+- **The tooltip was silently dead whenever the script loaded late.**
+  `GK.tip` and `GK.tooltip` bootstrapped through a bare
+  `addEventListener("DOMContentLoaded", …)`, which never fires for a script
+  loaded with `async`, injected after load, or arriving inside an AJAX
+  fragment. The main bootstrap has always guarded this with a `readyState`
+  check; these two never did. Verified in a browser both ways on the same page:
+  with `async`, the old code left `title` untouched on hover while the rest of
+  `GK` worked perfectly — which is exactly why it went unnoticed.
+
+- **`data-gk-multiple` was written by `Form.php` and read by nobody.** The
+  `<input>` carries the native `multiple` attribute, so the file *picker*
+  respected the limit — but a drop never goes through the input, and the drop
+  handler read every constraint except this one. Five files dropped on a
+  single-file field were all accepted. Drag & drop is on the README's feature
+  list.
+
+- **"Too large" was the one upload error not translated.** Every other branch
+  of the validator calls `_t()`; the most common failure of all concatenated
+  English by hand, so a German user rejecting a 20 MB photo got
+  *"foto.jpg: too large (20 MB, max. 5MB)"* between two German messages. Added
+  `js.too_large` and `js.one_file_only` to both locales.
+
+### Changed
+
+- **`GK.search`'s default endpoint was `/api/suche`.** 1.39.0 anglicised the
+  response contract and the demo endpoint but left the default URL — so the
+  documented English library still shipped a German route as the address it
+  calls when you configure nothing. Now `/api/search`.
+
+- **The last German identifiers in the JavaScript are gone** — `_tOderText`,
+  `kombi`, `taste`, `ersatz`, and a source comment that still documented the
+  German response shape as *the* contract nine hundred lines after 1.39.0
+  documented the English one. The compat reads (`d.groups || d.gruppen`) and
+  the `gk-search-treffer` class names stay: both are contracts with code that
+  already exists.
+
+- **`GRIDKIT_SKILL.md` was stamped `1.28.0`** while `VERSION` said `1.40.0` —
+  twelve releases of drift in the file an agent reads to learn what version it
+  is working against. Its German example strings are gone too: an agent that
+  copies `GK.toast.success('Gespeichert!')` writes German into an English
+  application.
+
+- **The author's own application paths are out of the doc comments.**
+  `/faktura/expenses`, `/faktura/invoices` and friends appeared as examples in
+  five classes. They now read as a library's examples rather than one site's.
+
+### Added
+
+- `tests/js.test.php` — 170 assertions across the seams where these files drift
+  apart silently. The general forms, not the specific bugs: every `GK.x.y()`
+  the skill document shows must exist in `gridkit.js`; every `_t("key")` the
+  JavaScript asks for must exist in both locales; every behavioural `data-gk-*`
+  the PHP writes must be read by something; no `fetch()` of a fixed application
+  path. Each was checked against its own reintroduced bug.
+
+**1,272 assertions.**
+
+---
 ## [1.40.0] - 2026-08-26
 
 The stylesheet — 6,765 lines, the last large file without a systematic pass.

@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.28.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.41.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.ssi.at
 
 ## Purpose
@@ -370,7 +370,7 @@ TableHeader::make('exp')
     ->filter(fn() => $yearFilter->render())                    // closure
     ->filter('<select class="gk-filter">…</select>')           // raw HTML
     ->advanced(fn() => renderDateRange(), 'Date & amount')     // optional collapsible
-    ->reset('/faktura/expenses')                               // optional reset btn
+    ->reset('/expenses')                                     // optional reset btn
     ->render();
 ```
 
@@ -392,7 +392,7 @@ CSS classes (all auto-applied): `gk-tableheader`, `gk-tableheader-status`, `gk-t
 (new StatCards('stats-id'))
     ->card('Umsatz',   12450.80, ['format' => 'currency', 'icon' => 'euro',    'color' => 'primary'])
     ->card('Benutzer', 1284,     ['format' => 'number',   'icon' => 'people',  'color' => 'success'])
-    ->card('Fehler',   3,        ['format' => 'number',   'icon' => 'error',   'color' => 'danger', 'highlight' => true])
+    ->card('Errors',   3,        ['format' => 'number',   'icon' => 'error',   'color' => 'danger', 'highlight' => true])
     ->card('Quote',    78,       ['format' => 'percent',  'icon' => 'speed',   'color' => 'warning'])
     ->card('Zu Details', '/url', ['icon' => 'arrow_forward', 'href' => '/url'])  // clickable
     ->render();
@@ -514,29 +514,32 @@ Lang::jsConfig();    // MUST be output in <head> before gridkit.js — sets wind
 
 ```javascript
 // Toast notifications (use these exact forms!)
-GK.toast.success('Gespeichert!');
-GK.toast.error('Fehler aufgetreten!');
-GK.toast.warning('Achtung!');
-GK.toast.info('Information.');
+GK.toast.success('Saved.');
+GK.toast.error('Something went wrong.');
+GK.toast.warning('Check this before continuing.');
+GK.toast.info('Nothing to do here yet.');
 
 // Dynamic modal
 GK.modal.open('Title', '<p>HTML content</p>');
 GK.modal.close();
 
-// Table refresh (after save/delete in server-side mode)
+// Table refresh (after save/delete in server-side mode).
+// Returns false when no table with that id is on the page.
 GK.table.refresh('table-id');
+GK.table.refreshAll();          // every table on the page
 ```
 
 ### Pagination + PageSize (since 1.22 / 1.27)
 
 Server-side pager **below** `.gk-table-wrap`, not inside the card and not
-im Live-Container. Gleiche Optik wie `GK.rowPager` (`.gk-rowpager` / `.gk-pg`).
+and not inside the live container. Same look as `GK.rowPager`
+(`.gk-rowpager` / `.gk-pg`).
 
 ```php
 // The page, on first render — a sibling below the table:
 Pagination::fromPaginator($items, [
     'label'    => 'Expenses',
-    'live'     => 'exp-live',          // bindet AJAX-Klicks + Replace-Ziel
+    'live'     => 'exp-live',          // binds the AJAX clicks + replace target
     'pageSize' => ['current' => $perPage, 'live' => 'exp-live'],
     'params'   => ['year' => $year, 'q' => $q ?: null],
 ]);
@@ -596,7 +599,7 @@ The caret stays put while typing; the URL is kept in step via `history.replaceSt
 
 <!-- Container: swapped over AJAX -->
 <div id="my-tbl" data-gk-live-table="/my-list">
-    <!-- Tabelle, Sort-Header (<a>), Paginierung — alles live -->
+    <!-- Table, sort headers (<a>), pagination — all live -->
 </div>
 ```
 
@@ -618,7 +621,7 @@ Features:
 ### AJAX Navigation (SPA-lite)
 
 ```php
-// Sidebar mit AJAX-Navigation aktivieren
+// Turn on AJAX navigation for the sidebar
 $sidebar->ajaxNav(true);
 ```
 

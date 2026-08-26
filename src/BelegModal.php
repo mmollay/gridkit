@@ -10,7 +10,7 @@ namespace GridKit;
  *   \GridKit\BelegModal::container();
  *
  *   // JS API, available everywhere:
- *   GK.belegModal.open('/faktura/invoices/123/pdf');
+ *   GK.belegModal.open('/invoices/123/pdf');
  *   GK.belegModal.open(url, { title: 'Rechnung 123', autoPrint: true });
  *   GK.belegModal.open(url, {
  *       unlinkExpenseId: 456,
@@ -24,7 +24,10 @@ namespace GridKit;
  *   - Download + open in a new tab: both are reliable (target=_blank).
  *   - ESC closes the modal.
  *   - autoPrint: prints the iframe as soon as it has loaded.
- *   - unlinkExpenseId: shows the Lang::t('doc.unlink') button (POST to /faktura/api/beleg/unlink).
+ *   - unlinkExpenseId: shows the Lang::t('doc.unlink') button.
+ *     Where it POSTs is yours to say — set GK.belegModal.unlinkUrl once, or
+ *     pass unlinkUrl per call. With neither, the button fires a cancelable
+ *     `gk:belegunlink` event and your code decides what detaching means.
  */
 class BelegModal
 {

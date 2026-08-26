@@ -1071,14 +1071,34 @@
             wrap.dispatchEvent(new CustomEvent("gk-table-error", { bubbles: true, detail: { error: err } }));
           });
       },
-      refreshAll() {
-        document.querySelectorAll("[data-gk-table]").forEach((wrap) => {
-          if (wrap.hasAttribute("data-gk-static") && wrap._gkData) {
-            this.renderStatic(wrap);
-          } else {
-            this.reload(wrap, {});
-          }
-        });
+      // One table by its id — the call you make after a modal save or a
+      // delete. GRIDKIT_SKILL.md has documented this since 1.10; it never
+      // existed, so every agent that followed the documentation wrote
+      // GK.table.refresh('products') and got a TypeError.
+      // Returns false when no table with that id is on the page.
+      refresh(id, overrides) {
+        const wrap = document.querySelector(
+          '[data-gk-table="' + String(id).replace(/"/g, '\\"') + '"]',
+        );
+        if (!wrap) return false;
+        this._refresh(wrap, overrides);
+        return true;
+      },
+
+      refreshAll(overrides) {
+        document
+          .querySelectorAll("[data-gk-table]")
+          .forEach((wrap) => this._refresh(wrap, overrides));
+      },
+
+      // Static tables re-render from the data they already hold; live ones
+      // go back to the server. Both spellings of "refresh" want this choice.
+      _refresh(wrap, overrides) {
+        if (wrap.hasAttribute("data-gk-static") && wrap._gkData) {
+          this.renderStatic(wrap);
+        } else {
+          this.reload(wrap, overrides || {});
+        }
       },
     },
 
@@ -1240,7 +1260,7 @@
         if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
         if (href.startsWith('http') && !href.startsWith(location.origin)) return;
         if (link.target === '_blank') return;
-        // Anchors on the CURRENT page (e.g. /faktura/steuerberater#chat):
+        // Anchors on the CURRENT page (e.g. /reports#chat):
         // let the browser scroll natively — the AJAX loader would only re-render
         // the page and drop the fragment ("a click with no effect").
         var hashPos = href.indexOf('#');
@@ -1518,6 +1538,15 @@
     var accepted = [];
     var errors = [];
 
+    // A single-file field. The <input> carries the native `multiple`
+    // attribute, but a drop never goes through the input — the files come
+    // straight off the DataTransfer — so without this a drop of five files
+    // onto a single-file field queued all five.
+    if (!zone.hasAttribute("data-gk-multiple") && files.length > 1) {
+      errors.push(_t("one_file_only", { m: files.length }));
+      files = files.slice(0, 1);
+    }
+
     // Max file count
     if (cfg.maxFiles > 0 && files.length > cfg.maxFiles) {
       errors.push(_t("max_files", { n: cfg.maxFiles, m: files.length }));
@@ -1532,12 +1561,11 @@
       }
       if (cfg.maxSize > 0 && f.size > cfg.maxSize) {
         errors.push(
-          f.name +
-            ": too large (" +
-            GK._formatSize(f.size) +
-            ", max. " +
-            zone.dataset.gkMaxSize +
-            ")",
+          _t("too_large", {
+            name: f.name,
+            size: GK._formatSize(f.size),
+            max: zone.dataset.gkMaxSize,
+          }),
         );
         return;
       }
@@ -2603,6 +2631,9 @@
   // GK.belegModal — global PDF/receipt preview modal (since v1.15.0)
   // ════════════════════════════════════════════════════════════════════
   GK.belegModal = {
+    // Set this to the route that detaches a document. Empty by default: a
+    // library must not know your application's URLs.
+    unlinkUrl: "",
     _el: function () { return document.getElementById("gk-beleg-modal"); },
 
     /**
@@ -2644,19 +2675,56 @@
           unlink.classList.remove("gk-hidden");
           unlink.onclick = function () {
             if (!confirm(_lang["doc_unlink_confirm"] || "Really detach this document?")) return;
-            fetch("/faktura/api/beleg/unlink", {
+
+            // Where to POST. Until 1.41 this was hardcoded to
+            // "/faktura/api/beleg/unlink" — a route from the author's own
+            // invoicing application, shipped inside a general-purpose
+            // library. On anyone else's site that is a 404, and the .json()
+            // that followed rejected without ever showing an error.
+            //
+            // Set it once, at startup:
+            //   GK.belegModal.unlinkUrl = "/api/documents/unlink";
+            // or per call: GK.belegModal.open(url, { unlinkUrl: … }).
+            var endpoint = opts.unlinkUrl || GK.belegModal.unlinkUrl;
+
+            // With no endpoint the component does what the rest of GridKit
+            // does with a destructive action: it reports the intent and lets
+            // the application decide what detaching means.
+            if (!endpoint) {
+              var handled = !overlay.dispatchEvent(
+                new CustomEvent("gk:belegunlink", {
+                  bubbles: true,
+                  cancelable: true,
+                  detail: { id: opts.unlinkExpenseId, url: url },
+                }),
+              );
+              if (!handled) {
+                console.warn(
+                  "GK.belegModal: nothing handled gk:belegunlink and no " +
+                    "unlinkUrl is set — the detach button did nothing. Set " +
+                    "GK.belegModal.unlinkUrl, or preventDefault() the event.",
+                );
+              }
+              return;
+            }
+
+            var fail = function (msg) {
+              if (window.GK && GK.toast) GK.toast.error(msg);
+              else alert(msg);
+            };
+            fetch(endpoint, {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
-              body: "expense_id=" + opts.unlinkExpenseId
+              body: "expense_id=" + encodeURIComponent(opts.unlinkExpenseId)
             }).then(function (r) { return r.json(); }).then(function (d) {
               if (d.ok) {
                 GK.belegModal.close();
                 (opts.onUnlink || function () { location.reload(); })();
-              } else if (window.GK && GK.toast) {
-                GK.toast.error(d.error || "Fehler");
               } else {
-                alert(d.error || "Fehler");
+                fail(d.error || _t("error_saving"));
               }
+            }).catch(function () {
+              fail(_t("error_saving"));
             });
           };
         } else {
@@ -2897,6 +2965,19 @@
   })();
 })();
 
+// Run now if the document is already parsed, otherwise on DOMContentLoaded.
+// A bare addEventListener("DOMContentLoaded") never fires when the script is
+// loaded with `async`, injected into a page after load, or pulled in by an
+// AJAX fragment — the tooltip then silently does nothing and there is no error
+// to go on. The main bootstrap has always guarded this; these two did not.
+function _gkReady(fn) {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", fn);
+  } else {
+    fn();
+  }
+}
+
 // === TOOLTIP (Rich) ===
 GK.tooltip = {
   init() {
@@ -2940,7 +3021,7 @@ GK.tooltip = {
     });
   },
 };
-document.addEventListener("DOMContentLoaded", () => GK.tooltip.init());
+_gkReady(() => GK.tooltip.init());
 
 // === TOOLTIP (Global) — upgrades native title attributes to GK popups ===
 // Every element with a title gets a styled popup on hover (300 ms delay, above
@@ -3003,24 +3084,27 @@ GK.tip = {
     });
   },
 };
-document.addEventListener("DOMContentLoaded", () => GK.tip.init());
+_gkReady(() => GK.tip.init());
 
 // === SEARCH (GK.search) =================================================
 // System-wide quick search. GridKit supplies only the control element — WHAT
 // gets found is decided by each system through the configured address.
 //
-//   GK.search.init({ url: '/api/suche', hotkey: 'ctrl+k', minLength: 2 })
+//   GK.search.init({ url: '/api/search', hotkey: 'ctrl+k', minLength: 2 })
 //
 // Server response:
-//   { gruppen: [ { titel: 'Buchungen',
-//                  treffer: [ { titel, untertitel, betrag, url, icon } ] } ] }
+//   { groups: [ { title: 'Transactions',
+//                 items: [ { title, subtitle, amount, url, icon } ] } ] }
+//
+// The German key names — gruppen / titel / treffer / untertitel / betrag —
+// are still read as a fallback so endpoints written before 1.39 keep working.
 // When a translation is missing, _t returns the KEY. That is usable for internal
 // purposes, but not in the control element: there it literally read
 // "search_error" instead of a message (reported 2026-07-31). This helper takes
 // the replacement text as soon as no real translation is available.
-function _tOderText(key, ersatz) {
-  var wert = GK.t(key);
-  return wert && wert !== key ? wert : ersatz;
+function _tOr(key, fallback) {
+  var value = GK.t(key);
+  return value && value !== key ? value : fallback;
 }
 
 GK.search = {
@@ -3037,23 +3121,23 @@ GK.search = {
   init(options) {
     this.cfg = Object.assign(
       {
-        url: "/api/suche",
+        url: "/api/search",
         hotkey: "ctrl+k",
         minLength: 2,
-        placeholder: _tOderText("search_placeholder", "Search …"),
-        hint: _tOderText("search_hint", "Type to search."),
-        empty: _tOderText("search_empty", "Nothing found."),
-        error: _tOderText("search_error", "Search unavailable."),
+        placeholder: _tOr("search_placeholder", "Search …"),
+        hint: _tOr("search_hint", "Type to search."),
+        empty: _tOr("search_empty", "Nothing found."),
+        error: _tOr("search_error", "Search unavailable."),
       },
       options || {},
     );
 
     var self = this;
-    var kombi = String(this.cfg.hotkey).toLowerCase();
+    var combo = String(this.cfg.hotkey).toLowerCase();
     document.addEventListener("keydown", function (e) {
-      var mod = kombi.indexOf("ctrl") >= 0 && (e.ctrlKey || e.metaKey);
-      var taste = kombi.split("+").pop();
-      if (mod && e.key.toLowerCase() === taste) {
+      var mod = combo.indexOf("ctrl") >= 0 && (e.ctrlKey || e.metaKey);
+      var key = combo.split("+").pop();
+      if (mod && e.key.toLowerCase() === key) {
         e.preventDefault();
         self.open();
       }
@@ -3092,7 +3176,7 @@ GK.search = {
     var self = this;
     ov.addEventListener("click", function (e) { if (e.target === ov) self.close(); });
     this.input.addEventListener("input", function () { self.entprellt(); });
-    this.input.addEventListener("keydown", function (e) { self.taste(e); });
+    this.input.addEventListener("keydown", function (e) { self.onKey(e); });
     setTimeout(function () { self.input.focus(); }, 20);
   },
 
@@ -3107,7 +3191,7 @@ GK.search = {
     if (this.lastFocus && this.lastFocus.focus) this.lastFocus.focus();
   },
 
-  taste(e) {
+  onKey(e) {
     if (e.key === "Escape") { e.preventDefault(); this.close(); return; }
     if (e.key === "Tab") { e.preventDefault(); return; }   // focus stays trapped
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {

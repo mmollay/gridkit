@@ -25,7 +25,7 @@ namespace GridKit;
  *         echo '<input type="date" class="gk-filter" value="'.$date_from.'">';
  *         echo '<input type="date" class="gk-filter" value="'.$date_to.'">';
  *     })
- *     ->reset('/faktura/expenses')
+ *     ->reset('/expenses')
  *     ->render();
  */
 class TableHeader

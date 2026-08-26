@@ -22,7 +22,7 @@ class Header
         return $this;
     }
 
-    /** @param array $items Assoc: ['Dashboard' => '/', 'Faktura' => '/faktura', 'Rechnungen'] or mixed */
+    /** @param array $items Assoc: ['Dashboard' => '/', 'Invoices' => '/invoices', 'Current page'] or mixed */
     public function breadcrumb(array $items): self
     {
         $this->breadcrumb = $items;

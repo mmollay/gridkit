@@ -16,13 +16,13 @@ namespace GridKit;
  *   echo SortLink::header('invoice_date', 'Date', [
  *       'current_sort' => $sort,      // currently sorted column
  *       'current_dir'  => $dir,       // 'asc' or 'desc'
- *       'base_url'     => '/faktura/invoices',
+ *       'base_url'     => '/invoices',
  *       'preserve'     => ['q' => $q, 'year' => $year, 'status' => $status],
  *   ]);
  *
  * Alternatively fluent style (when several columns share the same context):
  *
- *   $sl = SortLink::context('/faktura/invoices', $sort, $dir, ['q'=>$q,'year'=>$year]);
+ *   $sl = SortLink::context('/invoices', $sort, $dir, ['q'=>$q,'year'=>$year]);
  *   echo $sl('invoice_date', 'Date');
  *   echo $sl('customer_name', 'Kunde');
  *   echo $sl('gross_total', 'Brutto', 'gk-text-right');
