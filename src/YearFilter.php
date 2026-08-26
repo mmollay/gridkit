@@ -113,7 +113,9 @@ class YearFilter
                 $params[$p] = $_GET[$p];
             }
         }
-        $base = $this->baseUrl ?: strtok($_SERVER['REQUEST_URI'] ?? '', '?');
+        // A caller who writes baseUrl('?') means "this page" — without this the
+        // links come out as '??year=2026'.
+        $base = rtrim((string) ($this->baseUrl ?: strtok($_SERVER['REQUEST_URI'] ?? '', '?')), '?');
 
         if ($this->mode === 'dropdown') {
             $selectId = $e($this->id) . '-select';
@@ -142,6 +144,21 @@ class YearFilter
         }
 
         echo '<div class="gk-year-filter" data-gk-years="' . $e($this->id) . '">';
+
+        // allOption used to be honoured in dropdown mode only. In chip mode —
+        // the default — it still moved the default year to its value, so no
+        // chip was active and there was no control to get back to "all". The
+        // filter sat in a state the interface could neither show nor leave.
+        if ($this->allOption !== null) {
+            $allVal   = (int) $this->allOption['value'];
+            $cls      = 'gk-chip gk-chip-sm'
+                      . ($allVal === $this->currentYear ? ' gk-chip-active' : '');
+            $allParams = $params;
+            $allParams[$this->paramName] = $allVal;
+            echo '<a href="' . $e($base . '?' . http_build_query($allParams)) . '" class="' . $cls . '">'
+               . $e($this->allOption['label']) . '</a>';
+        }
+
         foreach ($this->years as $year) {
             $year = (int)$year;
             $isActive = $year === $this->currentYear;

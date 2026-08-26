@@ -1,164 +1,158 @@
 <?php
 /**
- * GridKit Skeleton
+ * GridKit skeleton
  * ----------------
- * Kopieren, anpassen, loslegen.
- * Benötigt: autoload.php, css/gridkit.css, css/themes.css, js/gridkit.js
+ * Copy it, change the parts marked below, and you have a working page.
+ * Needs: autoload.php, css/gridkit.css, css/themes.css, js/gridkit.js
+ *
+ * This file sits in the GridKit directory, so the asset paths below are
+ * relative to it. Copy it somewhere else and adjust them.
  */
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/autoload.php';
 
-use GridKit\Header;
-use GridKit\Sidebar;
-use GridKit\Layout;
-use GridKit\Theme;
-use GridKit\Modal;
-use GridKit\Button;
-use GridKit\Table;
-use GridKit\Form;
-use GridKit\StatCards;
+use GridKit\{Button, Header, Lang, Layout, Modal, Sidebar, StatCards, Table, Theme};
 
-// ─── Konfiguration ───────────────────────────────────────────────────────────
+// ─── Configuration ───────────────────────────────────────────────────────────
 
-$pageTitle    = 'Mein Projekt';
+$pageTitle     = 'My project';
 $activeSection = $_GET['section'] ?? 'dashboard';
 
-// Theme: indigo (default) | ocean | forest | sunset | rose | slate
+Lang::set($_GET['lang'] ?? 'en');            // 'en' | 'de'
+
+// Theme: indigo (default) | ocean | forest | rose | amber | slate
 // Mode:  light (default)  | dark
 Theme::set('indigo', 'light');
 
-// Layout: header-first (Header volle Breite) | sidebar-first (Sidebar volle Höhe)
+// Layout: header-first (header spans the full width) | sidebar-first (sidebar does)
 Layout::mode('header-first');
 
 ?>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="<?= htmlspecialchars(Lang::locale(), ENT_QUOTES, 'UTF-8') ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle) ?></title>
+    <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
 
-    <!-- GridKit Core -->
-    <link rel="stylesheet" href="<?= Layout::asset('/gridkit/css/gridkit.css') ?>">
-    <link rel="stylesheet" href="<?= Layout::asset('/gridkit/css/themes.css') ?>">
+    <!-- GridKit -->
+    <link rel="stylesheet" href="<?= Layout::asset('css/gridkit.css') ?>">
+    <link rel="stylesheet" href="<?= Layout::asset('css/themes.css') ?>">
 
-    <!-- Material Icons (benötigt für Sidebar, Header, Buttons) -->
+    <!-- Material Icons — the sidebar, header and buttons use them -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+    <?= Lang::jsConfig() ?>
 </head>
 <?= Layout::bodyTag('gk-root') ?>
 
 <!-- ─── Sidebar ──────────────────────────────────────────────────────────── -->
 <?php
-$sidebar = new Sidebar('main');
-$sidebar
-    ->brand($pageTitle, 'widgets')            // Name, Icon [, Subtext]
+(new Sidebar('main'))
+    ->brand($pageTitle, 'widgets')            // name, icon [, subtext]
     ->group('Navigation')
-    ->item('Dashboard',   '?section=dashboard',   'dashboard',    ['active' => $activeSection === 'dashboard'])
-    ->item('Artikel',     '?section=artikel',     'inventory_2',  ['active' => $activeSection === 'artikel'])
-    ->item('Kunden',      '?section=kunden',      'people',       ['active' => $activeSection === 'kunden'])
-    ->item('Rechnungen',  '?section=rechnungen',  'receipt_long', ['active' => $activeSection === 'rechnungen', 'badge' => 3])
+    ->item('Dashboard', '?section=dashboard', 'dashboard',    ['active' => $activeSection === 'dashboard'])
+    ->item('Products',  '?section=products',  'inventory_2',  ['active' => $activeSection === 'products'])
+    ->item('Customers', '?section=customers', 'people',       ['active' => $activeSection === 'customers'])
+    ->item('Invoices',  '?section=invoices',  'receipt_long', ['active' => $activeSection === 'invoices', 'badge' => 3])
     ->group('System')
-    ->item('Einstellungen', '?section=einstellungen', 'settings')
+    ->item('Settings', '?section=settings', 'settings')
     ->render();
 ?>
 
-<!-- ─── Wrapper für Sidebar-Layout ──────────────────────────────────────── -->
+<!--
+    The sidebar is position:fixed, so the content beside it needs this wrapper.
+    Without it everything renders underneath the sidebar — nothing breaks, it is
+    simply covered.
+-->
 <div class="gk-with-sidebar">
 
     <!-- ─── Header ──────────────────────────────────────────────────────── -->
-    <?php
-    $header = new Header();
-    echo $header
+    <?= (new Header())
         ->title($pageTitle)
         ->sidebarToggle(true)
         ->fixed(true)
-        ->action(Button::render('Neu', [
+        ->action(Button::render('New', [
             'variant' => 'filled',
             'color'   => 'primary',
             'icon'    => 'add',
             'size'    => 'sm',
         ]))
         ->action(Theme::switcher())
-        ->user('Max Mustermann', [
-            'role'   => 'Administrator',
-            'menu'   => [
-                ['label' => 'Profil',        'href' => '/profil',   'icon' => 'person'],
-                ['label' => 'Einstellungen', 'href' => '/settings', 'icon' => 'settings'],
+        ->user('Jane Doe', [
+            'role' => 'Administrator',
+            'menu' => [
+                ['label' => 'Profile',  'href' => '/profile',  'icon' => 'person'],
+                ['label' => 'Settings', 'href' => '/settings', 'icon' => 'settings'],
                 'divider',
-                ['label' => 'Abmelden',      'href' => '/logout',   'icon' => 'logout'],
+                ['label' => 'Sign out', 'href' => '/logout',   'icon' => 'logout'],
             ],
         ])
-        ->render();
-    ?>
+        ->render() ?>
 
-    <!-- ─── Content ──────────────────────────────────────────────────────── -->
+    <!-- ─── Content ─────────────────────────────────────────────────────── -->
     <main class="gk-main">
 
         <?php if ($activeSection === 'dashboard'): ?>
-        <!-- Dashboard ─────────────────────────────────────────────────── -->
 
         <?php
-        // StatCards: Kennzahlen-Übersicht
-        $stats = new StatCards('dashboard-stats');
-        $stats
-            ->card('Kunden',    248,       ['format' => 'number',   'color' => 'blue'])
-            ->card('Umsatz',    84250.00,  ['format' => 'currency', 'color' => 'green'])
-            ->card('Offen',     12480.00,  ['format' => 'currency', 'color' => 'orange'])
-            ->card('Überfällig', 3200.00,  ['format' => 'currency', 'color' => 'red'])
+        (new StatCards('dashboard-stats'))
+            ->card('Customers',   248,      ['format' => 'number',   'color' => 'blue'])
+            ->card('Revenue',     84250.00, ['format' => 'currency', 'color' => 'green'])
+            ->card('Outstanding', 12480.00, ['format' => 'currency', 'color' => 'orange'])
+            ->card('Overdue',      3200.00, ['format' => 'currency', 'color' => 'red'])
             ->render();
         ?>
 
-        <?php elseif ($activeSection === 'artikel'): ?>
-        <!-- Artikel-Liste ─────────────────────────────────────────────── -->
+        <?php elseif ($activeSection === 'products'): ?>
 
         <?php
-        // Beispiel mit statischen Daten — ersetzbar durch DB-Query
-        $artikel = [
-            ['id' => 1, 'nr' => 'ART-001', 'name' => 'Webdesign Paket S', 'preis' => 1200.00, 'status' => 'aktiv'],
-            ['id' => 2, 'nr' => 'ART-002', 'name' => 'Hosting Standard',  'preis' =>    9.90, 'status' => 'aktiv'],
-            ['id' => 3, 'nr' => 'ART-003', 'name' => 'SEO Beratung',      'preis' =>   95.00, 'status' => 'inaktiv'],
+        // Static rows, so this page runs before you have a database.
+        // Three ways to feed a table:
+        //   ->setData($rows)          the browser searches and sorts (small lists)
+        //   ->rows($page, $total)     you ran the query — PDO, SQLite, an API
+        //   ->query($db, $sql)        GridKit writes the SQL (mysqli only)
+        $products = [
+            ['id' => 1, 'sku' => 'ART-001', 'name' => 'Web design package S', 'price' => 1200.00, 'status' => 'active'],
+            ['id' => 2, 'sku' => 'ART-002', 'name' => 'Hosting standard',     'price' =>    9.90, 'status' => 'active'],
+            ['id' => 3, 'sku' => 'ART-003', 'name' => 'SEO consulting',       'price' =>   95.00, 'status' => 'inactive'],
         ];
 
-        $table = new Table('artikel');
-        $table
-            ->setData($artikel)
-            // ->query($db, "SELECT * FROM artikel ORDER BY name")  // alternativ: DB-Query
-            ->search(['nr', 'name'])
-            ->column('nr',     'Artikelnr.',  ['width' => '120px', 'sortable' => true, 'nowrap' => true])
-            ->column('name',   'Bezeichnung', ['sortable' => true])
-            ->column('preis',  'Preis',       ['format' => 'currency', 'align' => 'right', 'width' => '100px'])
-            ->column('status', 'Status',      ['format' => 'label', 'width' => '100px'])
-            ->button('edit',   ['icon' => 'edit',   'class' => 'primary', 'params' => ['id' => 'id']])
-            ->button('delete', ['icon' => 'delete', 'class' => 'danger',  'params' => ['id' => 'id']])
-            ->newButton('Neuer Artikel', ['icon' => 'add', 'modal' => 'artikel_form'])
-            ->modal('artikel_form', 'Artikel bearbeiten', 'forms/artikel.php', ['size' => 'medium'])
+        (new Table('products'))
+            ->setData($products)
+            ->search(['sku', 'name'])
+            ->column('sku',    'SKU',     ['width' => '120px', 'sortable' => true, 'nowrap' => true])
+            ->column('name',   'Product', ['sortable' => true])
+            ->column('price',  'Price',   ['format' => 'currency', 'align' => 'right', 'width' => '100px'])
+            ->column('status', 'Status',  ['format' => 'label', 'width' => '100px'])
+            ->button('edit',   ['icon' => 'edit',   'color' => 'primary'])
+            ->button('delete', ['icon' => 'delete', 'color' => 'danger', 'confirm' => true])
+            ->newButton('New product', ['icon' => 'add', 'modal' => 'product_form'])
+            ->modal('product_form', 'Edit product', 'forms/product.php', ['size' => 'medium'])
             ->paginate(25)
             ->render();
         ?>
 
-        <?php elseif ($activeSection === 'kunden'): ?>
-        <!-- Kunden-Liste ──────────────────────────────────────────────── -->
-        <p style="color:var(--gk-on-surface-variant)">Hier kommt die Kundenliste.</p>
+        <?php elseif ($activeSection === 'customers'): ?>
+        <p style="color:var(--gk-on-surface-variant)">The customer list goes here.</p>
 
-        <?php elseif ($activeSection === 'rechnungen'): ?>
-        <!-- Rechnungen ────────────────────────────────────────────────── -->
-        <p style="color:var(--gk-on-surface-variant)">Hier kommt die Rechnungsliste.</p>
+        <?php elseif ($activeSection === 'invoices'): ?>
+        <p style="color:var(--gk-on-surface-variant)">The invoice list goes here.</p>
 
         <?php else: ?>
-        <!-- Fallback ──────────────────────────────────────────────────── -->
-        <p style="color:var(--gk-on-surface-variant)">Seite nicht gefunden.</p>
+        <p style="color:var(--gk-on-surface-variant)">Page not found.</p>
 
         <?php endif; ?>
 
     </main>
 
-    <!-- Modal-Container (einmal am Ende, immer einbinden) -->
+    <!-- The modal container. Once per page, at the end. -->
     <?php Modal::container(); ?>
 
 </div><!-- /gk-with-sidebar -->
 
-<script src="<?= Layout::asset('/gridkit/js/gridkit.js') ?>"></script>
+<script src="<?= Layout::asset('js/gridkit.js') ?>"></script>
 </body>
 </html>

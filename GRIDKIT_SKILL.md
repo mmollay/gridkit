@@ -96,6 +96,35 @@ use GridKit\{ActionGroup, Auth, BelegModal, FilterChips, Header, Icon,
 
 A complete working application is in [`examples/invoices/`](examples/invoices/).
 
+### With a sidebar
+
+A sidebar is `position: fixed`, so the content beside it needs the wrapper that
+makes room. Without it everything renders **underneath** the sidebar — silently,
+because nothing is broken, it is just covered:
+
+```php
+<?= Theme::bodyTag('gk-root') ?>
+
+<?php (new Sidebar('main'))
+    ->brand('My app', 'widgets')
+    ->group('Navigation')
+    ->item('Dashboard', '?p=dashboard', 'dashboard', ['active' => true])
+    ->item('Invoices',  '?p=invoices',  'receipt_long', ['badge' => 12])
+    ->render(); ?>
+
+<div class="gk-with-sidebar">          <!-- required: clears the fixed sidebar -->
+    <?= (new Header())->title('Dashboard')->user('Jane')->render() ?>
+
+    <main class="gk-main">             <!-- padding and max-width -->
+        <!-- components go here -->
+    </main>
+</div>
+```
+
+`gk-with-sidebar` carries the left margin and shrinks when the sidebar
+collapses; `gk-main` carries the padding. `skeleton.php` in the repository is
+this file, filled in.
+
 ### Inside SSI Panel
 
 In SSI Panel the layout loads GridKit, so a view only imports what it uses:
@@ -560,7 +589,7 @@ $sidebar->ajaxNav(true);
 ```
 
 ```html
-<!-- Content-Container markieren -->
+<!-- Mark the content container -->
 <div class="gk-with-sidebar" data-gk-content>
   <!-- This region is replaced on navigation -->
 </div>

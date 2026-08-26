@@ -7,6 +7,52 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.36.0] - 2026-08-26
+
+The components that are neither `Table` nor `Form`, driven in a browser.
+
+### Fixed
+
+- **The wrapper a sidebar layout needs was documented nowhere.** A sidebar is
+  `position: fixed`, so the content beside it belongs inside
+  `<div class="gk-with-sidebar">`. That class appeared only inside
+  `skeleton.php` — not in the skill, not in the README. Leave it out and the
+  whole page renders *underneath* the sidebar: nothing errors, nothing warns,
+  the left 260 pixels of every component are simply covered. I built a probe
+  page from the documentation and hit exactly that. The **Page skeleton**
+  section now shows the sidebar layout with both wrappers.
+- **`YearFilter::allOption()` did nothing in chip mode**, which is the default.
+  It was honoured in `dropdown` mode only — but it still moved the default year
+  to its value, so no chip was active and there was no control to get back to
+  "all years". The filter sat in a state the interface could neither show nor
+  leave.
+- `YearFilter` produced `??year=2026` when given `baseUrl('?')`, which is a
+  reasonable way to write "this page".
+
+### Changed
+
+- **`skeleton.php` rewritten in English.** The README tells people to copy this
+  file as their starting point and it ships inside the Composer package — and
+  it was German throughout, down to the variable names and array keys
+  (`$artikel`, `'nr'`, `'preis'`), with `<html lang="de">` and asset paths
+  hardcoded to `/gridkit/…`. It now sets the locale from the query string,
+  names the three ways to feed a table, and its paths are relative to where it
+  actually sits.
+
+### Verified
+
+Sidebar (collapse moves the content from 260 px to 60 px), Header, Select,
+FilterChips, YearFilter, TableHeader, PageSize, Pagination, ActionGroup, Icon,
+Modal, `GK.confirm`, `BelegModal` (opens, loads its iframe, closes on Esc) and
+the theme switcher (which carries through to `--gk-primary`) were each exercised
+in a browser rather than only rendered.
+
+### Added
+
+- `tests/components.test.php` — 41 assertions, including that the starter file
+  stays English and keeps its layout wrappers. 1001 assertions in total.
+
+---
 ## [1.35.1] - 2026-08-26
 
 ### Fixed
