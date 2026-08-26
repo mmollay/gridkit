@@ -613,7 +613,6 @@ $form->row()
             <li>Uniform <strong>44px height</strong> like all other GridKit inputs</li>
         </ul>
     </div>
-</div>
 
     <!-- Form Density -->
     <div class="demo-card">
@@ -714,6 +713,7 @@ $form->row()
   &lt;/div&gt;
 &lt;/div&gt;</pre>
     </div>
+</div>
 </div>
 
 <!-- ===== CARDS (merged: cards + statcards) ===== -->

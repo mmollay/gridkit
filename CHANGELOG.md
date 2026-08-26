@@ -4,6 +4,16 @@ Alle Änderungen an diesem Projekt werden hier dokumentiert.
 Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ---
+## [1.27.3] - 2026-08-26
+
+### Behoben
+- **Demo: „Form Density"-Karte klebte auf jeder Ansicht.** Das schließende
+  `</div>` der Sektion `form` stand eine Karte zu früh, dadurch hing die
+  Karte als Geschwister neben den Sektionen statt darin. `showSection()`
+  blendet nur `.demo-section` aus — die Karte blieb deshalb auch bei
+  `#changelog`, `#table` usw. sichtbar und schob den Inhalt nach unten.
+
+---
 ## [1.27.2] - 2026-08-23
 
 ### Behoben
