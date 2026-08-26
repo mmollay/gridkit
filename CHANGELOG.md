@@ -7,6 +7,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.35.1] - 2026-08-26
+
+### Fixed
+
+- **The login page loaded its stylesheet from a path that does not exist.**
+  The default was the literal `gridkit/css`, which is right for exactly one
+  directory layout. From `/demo/login.php` it resolved to
+  `/demo/gridkit/css/gridkit.css` — a 404 — so the project's own login page
+  rendered unstyled. `Auth` now works the path out from `DOCUMENT_ROOT` and
+  keeps it absolute, because the page may sit in a subdirectory where a
+  relative `css/` would point at the wrong place. `cssPath` and `jsPath` still
+  override it, and a page outside the document root falls back to relative.
+
+---
 ## [1.35.0] - 2026-08-26
 
 `GridKit\Auth` — sessions, passwords and a remember-me cookie — had never been

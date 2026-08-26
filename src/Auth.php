@@ -68,6 +68,39 @@ class Auth {
     }
 
     /**
+     * Where GridKit's own css/ and js/ sit, as a URL path.
+     *
+     * The default used to be the literal `gridkit/css`, which is right for
+     * exactly one directory layout and wrong for every other — the demo's own
+     * login page asked for `demo/gridkit/css/gridkit.css` and got a 404, so it
+     * rendered unstyled. When GridKit lives under the document root the path
+     * can simply be worked out; `cssPath` / `jsPath` override it either way.
+     */
+    private static function assetBase(): ?string
+    {
+        // Check the raw value first: realpath('') returns the working
+        // directory, which is not the document root and would send a CLI run
+        // down the wrong branch.
+        $raw = (string) ($_SERVER['DOCUMENT_ROOT'] ?? '');
+        if ($raw === '') return null;
+
+        $docRoot = realpath($raw);
+        $gridkit = dirname(__DIR__);
+
+        if ($docRoot !== false && str_starts_with($gridkit, $docRoot)) {
+            // '' when GridKit *is* the document root, '/gridkit' when it sits
+            // one level down. Either way the result has to stay absolute: the
+            // login page may be at /demo/login.php, where a relative 'css/'
+            // would resolve to /demo/css/.
+            $tail = str_replace('\\', '/', substr($gridkit, strlen($docRoot)));
+            return '/' . trim($tail, '/');
+        }
+
+        // Not under the document root, so there is nothing to work out.
+        return null;
+    }
+
+    /**
      * Render a complete standalone login page.
      *
      * Every attribute here is quoted. It used not to be, and
@@ -98,8 +131,10 @@ class Auth {
 
         // Where the assets live is the caller's business — the old hardcoded
         // `gridkit/css/…` only worked for one directory layout.
-        $cssPath = rtrim((string) ($options['cssPath'] ?? 'gridkit/css'), '/');
-        $jsPath  = rtrim((string) ($options['jsPath']  ?? 'gridkit/js'), '/');
+        $base    = self::assetBase();
+        $prefix  = $base !== null ? rtrim($base, '/') . '/' : '';
+        $cssPath = rtrim((string) ($options['cssPath'] ?? $prefix . 'css'), '/');
+        $jsPath  = rtrim((string) ($options['jsPath']  ?? $prefix . 'js'), '/');
 
         $locale     = $e(Lang::locale());
         $themeAttr  = class_exists(Theme::class)  ? Theme::attributes() : '';

@@ -152,4 +152,38 @@ return [
     });
 },
 
+
+'the asset path is worked out, not guessed' => function (): void {
+    Lang::set('en');
+    $saved = $_SERVER['DOCUMENT_ROOT'] ?? null;
+    $root  = dirname(__DIR__);
+
+    $cssOf = static function (): string {
+        $html = T::capture(fn() => Auth::renderLogin());
+        preg_match('/href="([^"]*gridkit\.css)"/', $html, $m);
+        return $m[1] ?? '';
+    };
+
+    // The default was the literal 'gridkit/css'. From /demo/login.php that
+    // resolved to /demo/gridkit/css/gridkit.css — a 404, so the page rendered
+    // unstyled on the project's own site.
+    $_SERVER['DOCUMENT_ROOT'] = $root;
+    T::eq($cssOf(), '/css/gridkit.css', 'GridKit is the document root');
+
+    $_SERVER['DOCUMENT_ROOT'] = dirname($root);
+    T::eq($cssOf(), '/' . basename($root) . '/css/gridkit.css', 'GridKit sits one level down');
+
+    // Absolute, never relative: the login page may be at /demo/login.php,
+    // where 'css/' would resolve to /demo/css/.
+    T::ok(str_starts_with($cssOf(), '/'), 'a derived path is absolute');
+
+    $_SERVER['DOCUMENT_ROOT'] = sys_get_temp_dir();
+    T::eq($cssOf(), 'css/gridkit.css', 'outside the document root it falls back');
+
+    unset($_SERVER['DOCUMENT_ROOT']);
+    T::eq($cssOf(), 'css/gridkit.css', "realpath('') is the working directory, not a document root");
+
+    if ($saved !== null) $_SERVER['DOCUMENT_ROOT'] = $saved;
+},
+
 ];
