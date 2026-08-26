@@ -11,6 +11,7 @@
 /docs             export-ignore
 /.design          export-ignore
 /.github          export-ignore
+/ci               export-ignore
 /index.php        export-ignore
 /sitemap.xml      export-ignore
 /robots.txt       export-ignore

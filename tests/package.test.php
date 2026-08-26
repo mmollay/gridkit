@@ -48,6 +48,40 @@ return [
     }
 },
 
+'the README does not claim a CI that does not exist' => function (): void {
+    // The README stated "CI runs it on PHP 8.2, 8.3 and 8.4" as fact from
+    // 1.30.0 onwards. GitHub reported zero workflows: the file existed only
+    // on this machine, because the token has no `workflow` scope and GitHub
+    // refuses a push that creates one. A credibility claim aimed at exactly
+    // the people deciding whether to trust the package, and it was not true.
+    $readme = (string) file_get_contents(ROOT . '/README.md');
+
+    // Whatever the README says about CI, the file it points at must be there.
+    if (preg_match('/\[`?ci\/`?\]\(ci\/\)/', $readme)) {
+        T::ok(is_file(ROOT . '/ci/github-actions.yml'),
+            'README links ci/ but ci/github-actions.yml is missing');
+        T::ok(is_file(ROOT . '/ci/README.md'),
+            'README links ci/README.md but it is missing');
+    }
+
+    // And it must not assert a running CI while no workflow is committed.
+    //
+    // Tracked, not present on disk. The first version of this check asked the
+    // filesystem — and passed, because ci.yml has been sitting in
+    // .github/workflows/ untracked this whole time. That is the very shape of
+    // the original bug: a file that exists here and nowhere GitHub can see it.
+    $out = [];
+    exec('git -C ' . escapeshellarg(ROOT) . ' ls-files .github/workflows 2>/dev/null', $out);
+    $hasWorkflow = array_filter($out) !== [];
+
+    if (!$hasWorkflow) {
+        T::ok(
+            !preg_match('/^CI runs it on/m', $readme),
+            'the README states CI runs, but no workflow is committed'
+        );
+    }
+},
+
 'VERSION, composer.json and the changelog agree' => function (): void {
     $version = trim((string) file_get_contents(ROOT . '/VERSION'));
     T::ok((bool) preg_match('/^\d+\.\d+\.\d+$/', $version), "VERSION is not semver: $version");

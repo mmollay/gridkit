@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }}${{ matrix.without-mbstring && ' (no mbstring)' || '' }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4']
+        without-mbstring: [false]
+        include:
+          # GridKit documents that it runs without mbstring. Documenting it is
+          # not the same as testing it — a missing mbstring took a production
+          # page down mid-render once, so it gets its own job.
+          - php: '8.3'
+            without-mbstring: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          # ":mbstring" removes just that one. "none" would strip every
+          # extension and break far more than the thing under test.
+          extensions: ${{ matrix.without-mbstring && ':mbstring' || 'mbstring' }}
+          coverage: none
+          ini-values: error_reporting=E_ALL, display_errors=On
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate composer.json
+        run: composer validate --strict --no-check-lock
+
+      - name: Every class autoloads
+        run: |
+          php -r 'require "autoload.php";
+            foreach (glob("src/*.php") as $f) {
+              $c = "GridKit\\\\" . basename($f, ".php");
+              if (!class_exists($c)) { fwrite(STDERR, "$c did not autoload\n"); exit(1); }
+            }
+            echo "all classes autoload\n";'
+
+      - name: Run the test suite
+        run: php tests/run.php
+
+  package:
+    name: Package contents
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the archive Composer would ship
+        run: |
+          git archive --format=tar HEAD > /tmp/package.tar
+          echo "### Package" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "size: $(du -h /tmp/package.tar | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
+          tar -tf /tmp/package.tar | awk -F/ '{print $1}' | sort -u >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: The demo and the CKEditor bundle must stay out of the package
+        run: |
+          for unwanted in demo/ vendor/ docs/ .design/; do
+            if tar -tf /tmp/package.tar | grep -q "^$unwanted"; then
+              echo "::error::$unwanted leaked into the Composer package"
+              exit 1
+            fi
+          done
+          echo "package is clean"
+
+      - name: The package must stay small
+        run: |
+          bytes=$(stat -c%s /tmp/package.tar)
+          echo "package: $((bytes / 1024)) KB"
+          if [ "$bytes" -gt 1500000 ]; then
+            echo "::error::package grew past 1.5 MB — check .gitattributes"
+            exit 1
+          fi

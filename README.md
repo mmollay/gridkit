@@ -203,7 +203,10 @@ test suite that needed a package manager would contradict the first line of this
 README. It renders every component and checks that the markup balances, that no
 value reaches the page unescaped, and that the English locale contains no German.
 
-CI runs it on PHP 8.2, 8.3 and 8.4, plus one job with `mbstring` switched off.
+The workflow in [`ci/`](ci/) runs it on PHP 8.2, 8.3 and 8.4, plus one job with
+`mbstring` switched off. It is not active yet: it sits in `ci/` rather than
+`.github/workflows/` because the token this repository is pushed with has no
+`workflow` scope. [One `git mv` turns it on.](ci/README.md)
 
 ---
 
