@@ -11,7 +11,7 @@ You write PHP. You get a searchable, sortable, filterable, paginated table that
 reloads over AJAX — with themes, dark mode and a mobile layout you didn't have
 to think about.
 
-![A GridKit table: search, filter, status pills, row actions](docs/screenshots/tabelle-hell.png)
+![A GridKit table: search, filter, status pills, row actions](docs/screenshots/table-light.png)
 
 ---
 
@@ -91,7 +91,7 @@ That is a complete seventh theme. Switching happens on `<body>`:
 <body class="gk-root" data-gk-theme="ocean" data-gk-mode="dark">
 ```
 
-![The same table in dark mode](docs/screenshots/tabelle-dunkel.png)
+![The same table in dark mode](docs/screenshots/table-dark.png)
 
 ---
 
@@ -100,7 +100,7 @@ That is a complete seventh theme. Switching happens on `<body>`:
 Sixteen-column grid, validation, file upload with drag & drop, searchable
 selects, rich text. Same fluent API as everything else.
 
-![A GridKit form](docs/screenshots/formular.png)
+![A GridKit form](docs/screenshots/form.png)
 
 ```php
 (new Form('product'))

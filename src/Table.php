@@ -467,7 +467,7 @@ class Table
                 }
             } else {
                 // Load time only
-                $timeDisplay = $this->loadTimeMs < 1000 ? $this->loadTimeMs . ' ms' : number_format($this->loadTimeMs / 1000, 2, ',', '.') . ' s';
+                $timeDisplay = $this->loadTimeMs < 1000 ? $this->loadTimeMs . ' ms' : number_format($this->loadTimeMs / 1000, 2, Lang::t('format.decimal'), Lang::t('format.thousands')) . ' s';
                 echo '<td colspan="' . $totalCols . '" class="gk-table-meta">'
                     . $e((string) $this->totalRows) . ' ' . $e(Lang::t('pagination.entries')) . ' · ' . $timeDisplay
                     . '</td>';
@@ -608,14 +608,15 @@ class Table
     /** Whole numbers; 0 and empty turn into an em dash (count columns). */
     private function formatNumber(mixed $val, array $col): string
     {
-        $leer = ($col['blankZero'] ?? true)
+        $blank = ($col['blankZero'] ?? true)
             && ($val === null || $val === '' || (is_numeric($val) && (float) $val == 0.0));
-        if ($leer) {
+        if ($blank) {
             return '<span class="gk-num gk-num-empty">—</span>';
         }
-        $stellen = (int) ($col['decimals'] ?? 0);
+        $decimals = (int) ($col['decimals'] ?? 0);
         $text = is_numeric($val)
-            ? number_format((float) $val, $stellen, ',', '.')
+            ? number_format((float) $val, $decimals,
+                Lang::t('format.decimal'), Lang::t('format.thousands'))
             : (string) $val;
         return '<span class="gk-num">' . htmlspecialchars($text, ENT_QUOTES, 'UTF-8') . '</span>';
     }
@@ -627,10 +628,19 @@ class Table
         if ($fmt === null) return $e($val);
 
         return match ($fmt) {
-            'currency' => $e(number_format((float)$val, 2, ',', '.') . ' €'),
+            'currency' => $e(str_replace(
+                '{value}',
+                number_format((float) $val, 2,
+                    Lang::t('format.decimal'), Lang::t('format.thousands')),
+                $col['currency'] ?? Lang::t('format.currency')
+            )),
             'percent' => $e((int)$val . '%'),
-            'date' => $val ? $e(date('d.m.Y', strtotime($val))) : '',
-            'datetime' => $val ? $e(date('d.m.Y H:i', strtotime($val))) : '',
+            'date' => $val
+                ? $e(date($col['dateFormat'] ?? Lang::t('format.date'), strtotime($val)))
+                : '',
+            'datetime' => $val
+                ? $e(date($col['dateFormat'] ?? Lang::t('format.datetime'), strtotime($val)))
+                : '',
             'boolean' => (int)$val ? '<span class="gk-bool gk-bool-yes">✓</span>' : '<span class="gk-bool gk-bool-no">–</span>',
             'email' => '<a href="mailto:' . $e($val) . '">' . $e($val) . '</a>',
             'label' => $this->renderLabel($val, $col['labels'] ?? []),

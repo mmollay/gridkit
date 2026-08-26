@@ -7,6 +7,50 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.30.0] - 2026-08-26
+
+The last places where GridKit assumed its user was German, and a shop window
+that finally shows what an English visitor would actually see.
+
+### Fixed
+
+- **Currency, dates and numbers ignored the locale.** `['format' => 'currency']`
+  emitted `1.200,00 €` for everyone; `['format' => 'date']` emitted `d.m.Y`;
+  `['format' => 'number']` grouped with German separators. An English page
+  therefore showed German money and a date format that an American reader would
+  misread by ten months. All four now resolve through `Lang::t()`:
+  - `format.currency` — `€{value}` (en) / `{value} €` (de)
+  - `format.date` — `M j, Y` (en) / `d.m.Y` (de). The English format is
+    deliberately not `m/d/Y`: `03/09` is genuinely ambiguous across the
+    Atlantic, `Mar 9` is not.
+  - `format.datetime`, `format.decimal`, `format.thousands`
+- A column can override either with `['currency' => '${value}']` or
+  `['dateFormat' => 'Y-m-d']`, so a non-EUR project is one option away.
+- Two more `number_format(…, ',', '.')` calls in `Table` that the previous pass
+  had missed, and the German identifiers `$leer` / `$stellen`.
+
+### Changed
+
+- **The demo's sample data now follows the locale.** The English demo used to
+  list `Webdesign Paket S` and `SEO Beratung` at `1.200,00 €`. This is the
+  first thing a visitor sees, and it said "German-market tool" before the
+  README got a word in.
+- **All README screenshots retaken in English**, and renamed from
+  `tabelle-hell.png` / `formular.png` to `table-light.png` / `form.png`.
+  The theme comparison was rebuilt from real GridKit markup rather than
+  hand-drawn, so it now shows what the six themes actually render — including
+  that the status colours stay constant across all six, which is the point of
+  keeping semantic roles out of the theme blocks.
+- **Added `docs/social-preview.png`** (1280×640) for the repository's social
+  card. Without one, every link posted to Reddit, Hacker News or X shows
+  GitHub's grey default instead of the product.
+
+### Added
+
+- Tests for all of the above: both locales' currency, date and number output,
+  and the per-column overrides.
+
+---
 ## [1.29.0] - 2026-08-26
 
 Making the repository something a stranger can actually rely on: a test suite,

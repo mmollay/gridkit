@@ -101,4 +101,7 @@ return [
     'tableheader.advanced'     => 'Erweiterte Filter',
     'tableheader.reset'        => 'Filter zurücksetzen',
     'yearfilter.all'           => 'Alle Jahre',
+    'format.currency'          => '{value} €',
+    'format.date'              => 'd.m.Y',
+    'format.datetime'          => 'd.m.Y H:i',
 ];

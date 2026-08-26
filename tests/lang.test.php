@@ -134,4 +134,38 @@ return [
     Lang::set('en');
 },
 
+'currency, dates and numbers follow the locale' => function (): void {
+    $render = static fn(): string => T::capture(fn() => (new Table('t'))
+        ->setData([['id' => 1, 'price' => 1234.5, 'due' => '2026-03-09', 'qty' => 9876]])
+        ->column('price', 'Price', ['format' => 'currency'])
+        ->column('due',   'Due',   ['format' => 'date'])
+        ->column('qty',   'Qty',   ['format' => 'number'])
+        ->render());
+
+    Lang::set('en');
+    $en = $render();
+    T::contains($en, '€1,234.50', 'english currency: symbol first, comma grouping');
+    T::contains($en, 'Mar 9, 2026', 'english date is unambiguous — not d.m.Y or m/d/Y');
+    T::contains($en, '9,876', 'english number grouping');
+
+    Lang::set('de');
+    $de = $render();
+    T::contains($de, '1.234,50 €', 'german currency: symbol last, dot grouping');
+    T::contains($de, '09.03.2026', 'german date');
+    T::contains($de, '9.876', 'german number grouping');
+
+    Lang::set('en');
+},
+
+'a column may override the format it was given' => function (): void {
+    Lang::set('en');
+    $html = T::capture(fn() => (new Table('t'))
+        ->setData([['id' => 1, 'price' => 5, 'due' => '2026-03-09']])
+        ->column('price', 'Price', ['format' => 'currency', 'currency' => '${value}'])
+        ->column('due',   'Due',   ['format' => 'date', 'dateFormat' => 'Y-m-d'])
+        ->render());
+    T::contains($html, '$5.00', 'per-column currency pattern wins');
+    T::contains($html, '2026-03-09', 'per-column date format wins');
+},
+
 ];

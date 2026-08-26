@@ -18,6 +18,42 @@ use GridKit\Lang;
 $lang = $_GET['lang'] ?? $_COOKIE['gk_lang'] ?? 'en';
 if (!in_array($lang, ['en', 'de'])) $lang = 'en';
 Lang::set($lang);
+
+/**
+ * The sample data is written in German. Translating it for the English demo
+ * matters more than it looks: this table is the project's shop window, and
+ * German product names tell an English visitor that GridKit is a
+ * German-market tool. Prices stay as they are — the currency is genuinely EUR.
+ */
+$demoRows = static function (array $rows) use ($lang): array {
+    if ($lang !== 'en') return $rows;
+
+    static $map = [
+        'Webdesign Paket S'   => 'Web Design Package S',
+        'Webdesign Paket L'   => 'Web Design Package L',
+        'Webdesign Paket'     => 'Web Design Package',
+        'SEO Beratung'        => 'SEO Consulting',
+        'Social Media Paket'  => 'Social Media Package',
+        'Content Erstellung'  => 'Content Creation',
+        'SSL Zertifikat'      => 'SSL Certificate',
+        'App Entwicklung'     => 'App Development',
+        'Datenbank Migration' => 'Database Migration',
+        'E-Mail Marketing'    => 'Email Marketing',
+        'psch'                => 'flat',
+        'Stk'                 => 'pcs',
+    ];
+
+    foreach ($rows as &$row) {
+        foreach ($row as $key => $value) {
+            if (is_string($value) && isset($map[$value])) {
+                $row[$key] = $map[$value];
+            }
+        }
+    }
+    unset($row);
+
+    return $rows;
+};
 if (isset($_GET['lang'])) {
     setcookie('gk_lang', $lang, time() + 86400 * 365, '/');
 }
@@ -136,7 +172,7 @@ echo $demoHeader->title($headerTitle, true)
 
     <h3 style="margin: 32px 0 16px;">Complete table with all features</h3>
         <?php
-        $articles = [
+        $articles = $demoRows([
             ['article_id' => 1, 'article_number' => 'ART-001', 'name' => 'Webdesign Paket S', 'unit' => 'psch', 'net_price' => 1200.00, 'tax_rate' => 20, 'is_active' => 'active'],
             ['article_id' => 2, 'article_number' => 'ART-002', 'name' => 'Hosting Standard', 'unit' => 'Stk', 'net_price' => 9.90, 'tax_rate' => 20, 'is_active' => 'active'],
             ['article_id' => 3, 'article_number' => 'ART-003', 'name' => 'SEO Beratung', 'unit' => 'h', 'net_price' => 95.00, 'tax_rate' => 20, 'is_active' => 'inactive'],
@@ -152,7 +188,7 @@ echo $demoHeader->title($headerTitle, true)
             ['article_id' => 13, 'article_number' => 'ART-013', 'name' => 'App Entwicklung', 'unit' => 'h', 'net_price' => 125.00, 'tax_rate' => 20, 'is_active' => 'draft'],
             ['article_id' => 14, 'article_number' => 'ART-014', 'name' => 'Datenbank Migration', 'unit' => 'psch', 'net_price' => 890.00, 'tax_rate' => 20, 'is_active' => 'active'],
             ['article_id' => 15, 'article_number' => 'ART-015', 'name' => 'Security Audit', 'unit' => 'psch', 'net_price' => 1500.00, 'tax_rate' => 20, 'is_active' => 'inactive'],
-        ];
+        ]);
         $table = new Table('articles');
         $table->setData($articles)
             ->search(['article_number', 'name'])
@@ -254,12 +290,12 @@ $table->size('lg');  // spacious</pre></div>
 
     <h3 style="margin: 32px 0 16px;">Display variants</h3>
     <?php
-    $varData = [
+    $varData = $demoRows([
         ['name' => 'Webdesign Paket', 'price' => '1.200 €', 'status' => 'active'],
         ['name' => 'Hosting Standard', 'price' => '9,90 €', 'status' => 'active'],
         ['name' => 'SEO Beratung', 'price' => '95 €', 'status' => 'inactive'],
         ['name' => 'Logo Design', 'price' => '450 €', 'status' => 'draft'],
-    ];
+    ]);
     $variants = [
         'default'      => 'Default',
         'bordered'     => 'Bordered',
