@@ -212,4 +212,55 @@ return [
     T::notContains($render(3, 25), 'gk-pagination', 'a single page needs no pager');
 },
 
+
+'confirm gates the button instead of being ignored' => function (): void {
+    Lang::set('en');
+    asNormalRequest();
+
+    $html = T::capture(fn() => (new Table('t'))
+        ->rows([['id' => 7, 'name' => 'Widget']], 1)
+        ->column('name', 'Product')
+        ->button('delete',  ['icon' => 'delete',  'confirm' => true])
+        ->button('archive', ['icon' => 'archive', 'confirm' => 'Archive this?',
+                             'onclick' => 'arch({id})'])
+        ->button('plain',   ['icon' => 'edit',    'onclick' => 'ed({id})'])
+        ->render());
+
+    preg_match_all('/<button[^>]*data-gk-action="(\w+)"[^>]*>/', $html, $m, PREG_SET_ORDER);
+    $byName = [];
+    foreach ($m as $b) $byName[$b[1]] = $b[0];
+
+    // The README's headline example uses 'confirm' => true. It was read by
+    // nothing, so the delete button deleted without asking — and, having
+    // neither onclick nor modal, did nothing at all.
+    T::contains($byName['delete'] ?? '', 'data-gk-confirm="Delete this entry?"',
+        'confirm: true takes the translated default');
+    T::contains($byName['archive'] ?? '', 'data-gk-confirm="Archive this?"',
+        'a string is used as the message');
+    T::ok(!str_contains($byName['plain'] ?? '', 'data-gk-confirm'),
+        'a button without the option is untouched');
+
+    // An inline handler runs before any delegated listener could stop it, so
+    // the confirmation has to wrap the code itself.
+    $archive = html_entity_decode($byName['archive'] ?? '', ENT_QUOTES);
+    T::contains($archive, 'GK.confirm(', 'the onclick is wrapped');
+    T::contains($archive, 'if(ok){arch(7)}', 'the original code runs only on confirmation');
+    T::contains(html_entity_decode($byName['plain'] ?? '', ENT_QUOTES), 'onclick="ed(7)"',
+        'an unconfirmed button keeps its plain handler');
+},
+
+'confirm messages follow the locale' => function (): void {
+    asNormalRequest();
+    $render = static fn(): string => T::capture(fn() => (new Table('t'))
+        ->rows([['id' => 1, 'name' => 'A']], 1)
+        ->column('name', 'N')
+        ->button('delete', ['icon' => 'delete', 'confirm' => true])
+        ->render());
+
+    Lang::set('de');
+    T::contains($render(), 'Diesen Eintrag', 'german default message');
+    Lang::set('en');
+    T::contains($render(), 'Delete this entry?', 'english default message');
+},
+
 ];

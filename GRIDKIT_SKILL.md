@@ -111,6 +111,22 @@ use GridKit\Button;
 
 **Button colors:** `danger`, `success`, `warning`, `primary` (default: neutral)
 
+**`confirm`:** `->button('delete', ['icon' => 'delete', 'confirm' => true])` asks
+before the button acts — `true` uses the translated default, a string is used as
+the message. It gates whatever the button would otherwise do: an `onclick` is
+wrapped so it only runs on confirmation, and a `modal` opens only after.
+
+**Buttons with neither `modal` nor `onclick`** fire `gk:rowaction` on the table
+element, the same shape `gk:bulkdelete` uses. This is how a delete button works
+without you writing any JavaScript for it:
+
+```js
+document.querySelector('[data-gk-table=products]')
+    .addEventListener('gk:rowaction', e => {
+        const { action, params, tableId } = e.detail;   // 'delete', { id: 42 }
+    });
+```
+
 **Row identity:** a row button always carries its row's `id` in `data-gk-params`,
 so a modal knows which record it was opened for. `'params' => ['x' => 'column']`
 adds more, and mapping `id` yourself overrides the default.

@@ -194,12 +194,60 @@
           const params = btn.dataset.gkParams
             ? JSON.parse(btn.dataset.gkParams)
             : {};
-          GK.modal.open(
-            tpl.dataset.gkModalTitle,
-            tpl.dataset.gkModalUrl,
-            params,
-            tpl.dataset.gkModalSize,
-          );
+          const show = () =>
+            GK.modal.open(
+              tpl.dataset.gkModalTitle,
+              tpl.dataset.gkModalUrl,
+              params,
+              tpl.dataset.gkModalSize,
+            );
+
+          const ask = btn.dataset.gkConfirm;
+          if (ask) {
+            GK.confirm(ask, { danger: true }).then((ok) => ok && show());
+          } else {
+            show();
+          }
+        });
+
+        // Row buttons with neither a modal nor an onclick. Until 1.32 these
+        // rendered and did nothing at all — including the delete button in the
+        // README's headline example. They now fire `gk:rowaction`, the same
+        // shape `gk:bulkdelete` uses, so the application decides what happens.
+        wrap.addEventListener("click", (e) => {
+          const btn = e.target.closest("[data-gk-action]");
+          if (!btn) return;
+          if (btn.hasAttribute("data-gk-modal") || btn.hasAttribute("onclick")) return;
+
+          const fire = () =>
+            wrap.dispatchEvent(
+              new CustomEvent("gk:rowaction", {
+                bubbles: true,
+                detail: {
+                  action: btn.dataset.gkAction,
+                  params: btn.dataset.gkParams ? JSON.parse(btn.dataset.gkParams) : {},
+                  tableId: wrap.dataset.gkTable,
+                },
+              }),
+            );
+
+          const ask = btn.dataset.gkConfirm;
+          if (ask) {
+            GK.confirm(ask, { danger: true }).then((ok) => ok && fire());
+          } else {
+            fire();
+          }
+        });
+
+        // A sortable header is reachable by Tab and carries role="button", so
+        // it has to answer to Enter and Space like one. Space would otherwise
+        // scroll the page.
+        wrap.addEventListener("keydown", (e) => {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          const th = e.target.closest("[data-gk-sort]");
+          if (!th) return;
+          e.preventDefault();
+          th.click();
         });
 
         // Sort

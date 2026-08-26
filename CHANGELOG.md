@@ -7,6 +7,40 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.32.0] - 2026-08-26
+
+Running the README's own example, and then using the table without a mouse.
+
+### Fixed
+
+- **`'confirm' => true` did nothing.** It appears in the README's headline
+  example, on the delete button, and was read by no code at all — so that
+  button deleted without asking. Worse, having neither `onclick` nor `modal` it
+  did not delete either: it rendered, and clicking it was silent. Both halves
+  are now real:
+  - `confirm` gates the button. `true` takes the translated default message, a
+    string is used as-is. An `onclick` is wrapped so it runs only on
+    confirmation — an inline handler fires before any delegated listener could
+    stop it, so wrapping is the only way. A `modal` opens only after.
+  - A button with neither `modal` nor `onclick` fires **`gk:rowaction`** on the
+    table, carrying `{ action, params, tableId }` — the same shape
+    `gk:bulkdelete` already used. The application decides what deleting means.
+- **The table could not be sorted without a mouse.** Sortable headers were
+  plain `<th>` elements with a click handler: not in the tab order, nothing
+  announcing them as controls, nothing reporting the direction. They now carry
+  `tabindex="0"`, `role="button"` and `aria-sort`, and answer to Enter and
+  Space. Space no longer scrolls the page instead.
+- **The search box and the filter dropdown had no accessible name.** A
+  placeholder is not one — it is not reliably announced and it disappears as
+  soon as anything is typed. The search box is labelled from the translation;
+  the filter takes the column's own label (`'label' => …` overrides it), so a
+  screen reader says "Status" rather than nothing.
+
+### Added
+
+- `tests/a11y.test.php`, and tests for `confirm` — 819 assertions in total.
+
+---
 ## [1.31.0] - 2026-08-26
 
 An example application, and the four defects it uncovered on the way.

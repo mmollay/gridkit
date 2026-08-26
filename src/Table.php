@@ -382,7 +382,12 @@ class Table
         if ($this->showToolbar) {
         echo '<div class="gk-toolbar">';
         if ($this->searchCols) {
-            echo '<input type="text" class="gk-search" data-gk-search placeholder="' . $e(Lang::t('table.search')) . '" value="' . $e($this->searchQuery) . '">';
+            // A placeholder is not an accessible name: it is not always
+            // announced, and it disappears as soon as anything is typed.
+            $searchLabel = $e(Lang::t('table.search'));
+            echo '<input type="text" class="gk-search" data-gk-search'
+               . ' placeholder="' . $searchLabel . '" aria-label="' . $searchLabel . '"'
+               . ' value="' . $e($this->searchQuery) . '">';
         }
         if ($this->toolbarHtml !== '') {
             echo $this->toolbarHtml;
@@ -395,7 +400,12 @@ class Table
             $active = (string) ($_GET['gk_filter_' . $col] ?? '');
             $sel = static fn(string $value): string => $value === $active ? ' selected' : '';
 
-            echo '<select class="gk-filter" data-gk-filter="' . $e($col) . '">';
+            $filterLabel = $f['label']
+                ?? $this->columns[$col]['label']
+                ?? $f['placeholder']
+                ?? Lang::t('table.filter_all');
+            echo '<select class="gk-filter" data-gk-filter="' . $e($col) . '"'
+               . ' aria-label="' . $e($filterLabel) . '">';
             echo '<option value=""' . $sel('') . '>'
                . $e($f['placeholder'] ?? Lang::t('table.filter_all')) . '</option>';
             foreach ($f['options'] ?? [] as $val => $label) {
@@ -463,7 +473,15 @@ class Table
             $attrs = '';
             if ($sortable) {
                 $newDir = ($this->sortCol === $key && $this->sortDir === 'asc') ? 'desc' : 'asc';
-                $attrs = ' data-gk-sort="' . $e($key) . '" data-gk-dir="' . $newDir . '"';
+                // A sortable header is a control, so it has to behave like one:
+                // reachable by Tab, announced as a button, and reporting the
+                // direction it is currently sorted in. Without tabindex there
+                // was no way to sort the table without a mouse at all.
+                $ariaSort = $this->sortCol === $key
+                    ? ($this->sortDir === 'asc' ? 'ascending' : 'descending')
+                    : 'none';
+                $attrs = ' data-gk-sort="' . $e($key) . '" data-gk-dir="' . $newDir . '"'
+                       . ' tabindex="0" role="button" aria-sort="' . $ariaSort . '"';
                 if ($this->sortCol === $key) {
                     $clsList[] = 'gk-sorted-' . $this->sortDir;
                 }
@@ -663,9 +681,23 @@ class Table
             $colorMap = ['danger' => 'danger', 'success' => 'success', 'warning' => 'warning', 'primary' => 'primary'];
             $color = $colorMap[$bopts['class'] ?? ''] ?? 'neutral';
 
+            // `'confirm' => true` (or a message) asks before the button acts.
+            // It was documented in the README and read by nothing at all, which
+            // left the delete button in the headline example deleting without
+            // asking — and, with neither onclick nor modal, doing nothing.
+            $confirmAttr = '';
+            $confirmMsg  = null;
+            if (!empty($bopts['confirm'])) {
+                $confirmMsg = is_string($bopts['confirm'])
+                    ? $bopts['confirm']
+                    : Lang::t('table.confirm_delete');
+                $confirmAttr = ' data-gk-confirm="' . $e($confirmMsg) . '"';
+            }
+
             // Data attributes
             $dataAttrs = ' data-gk-action="' . $e($bname) . '"'
-                       . " data-gk-params='" . $e(json_encode($params)) . "'";
+                       . " data-gk-params='" . $e(json_encode($params)) . "'"
+                       . $confirmAttr;
             if (isset($bopts['modal'])) {
                 $dataAttrs .= ' data-gk-modal="' . $e($bopts['modal']) . '"';
             }
@@ -675,6 +707,12 @@ class Table
                 $js = preg_replace_callback('/\{(\w+)\}/', static function ($m) use ($row) {
                     return json_encode($row[$m[1]] ?? null, JSON_UNESCAPED_UNICODE);
                 }, (string) $bopts['onclick']);
+                // An inline handler runs before any delegated listener could stop
+                // it, so the confirmation has to wrap the code itself.
+                if ($confirmMsg !== null) {
+                    $js = 'GK.confirm(' . json_encode($confirmMsg, JSON_UNESCAPED_UNICODE)
+                        . ',{danger:true}).then(function(ok){if(ok){' . $js . '}})';
+                }
                 $clickAttr = ' onclick="' . $e($js) . '"';
             }
 

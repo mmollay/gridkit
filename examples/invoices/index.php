@@ -52,6 +52,9 @@ $table = (new Table('invoices'))
     ]])
     ->filter('status', 'select', ['options' => statuses()])
     ->button('edit',   ['icon' => 'edit',   'modal' => 'invoice_form', 'title' => t('edit')])
+    // A modal, because the dialog names the invoice it is about. The shorter
+    // route is ['confirm' => true], which asks with a standard dialog and then
+    // fires gk:rowaction for the application to handle.
     ->button('delete', ['icon' => 'delete', 'modal' => 'invoice_delete', 'title' => t('delete'), 'class' => 'danger'])
     // Two declarations of the same form, so the modal is headed "New invoice"
     // when creating and "Edit invoice" when editing.

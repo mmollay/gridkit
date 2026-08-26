@@ -40,8 +40,16 @@ use GridKit\Table;
 ```
 
 Search, sort, filter and paging run over AJAX. The edit button opens a modal
-that loads `forms/product.php`. The empty state knows whether the table is
-genuinely empty or just filtered, and offers a way back.
+that loads `forms/product.php`. The delete button asks first, then fires
+`gk:rowaction` with the row's id — your application decides what deleting
+means. The empty state knows whether the table is genuinely empty or just
+filtered, and offers a way back.
+
+```js
+table.addEventListener('gk:rowaction', e => {
+    const { action, params } = e.detail;         // 'delete', { id: 42 }
+});
+```
 
 ---
 
