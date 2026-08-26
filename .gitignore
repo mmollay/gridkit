@@ -11,3 +11,6 @@
 .design/verify/hex-inventory.json
 .design/verify/offsets.json
 .design/verify/token-*.json
+
+# Interne Betriebsanleitung — gehoert nicht ins oeffentliche Repository
+INTERNAL-DEPLOY.md
