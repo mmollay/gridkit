@@ -30,8 +30,8 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GridKit Demo v<?= $version ?></title>
-    <link rel="stylesheet" href="../css/gridkit.css">
-    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="<?= Layout::asset('../css/gridkit.css') ?>">
+    <link rel="stylesheet" href="<?= Layout::asset('../css/themes.css') ?>">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="../vendor/ckeditor5/ckeditor5.css">
     <script src="../vendor/ckeditor5/ckeditor5.umd.js"></script>
@@ -1881,7 +1881,7 @@ Auth::renderLogin([...]);    // Login page</div>
 <?php Modal::container(); ?>
 </div><!-- /gk-with-sidebar -->
 
-<script src="../js/gridkit.js"></script>
+<script src="<?= Layout::asset('../js/gridkit.js') ?>"></script>
 <script>
 (function() {
     var sections = document.querySelectorAll('.demo-section');

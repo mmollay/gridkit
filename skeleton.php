@@ -41,8 +41,8 @@ Layout::mode('header-first');
     <title><?= htmlspecialchars($pageTitle) ?></title>
 
     <!-- GridKit Core -->
-    <link rel="stylesheet" href="/gridkit/css/gridkit.css">
-    <link rel="stylesheet" href="/gridkit/css/themes.css">
+    <link rel="stylesheet" href="<?= Layout::asset('/gridkit/css/gridkit.css') ?>">
+    <link rel="stylesheet" href="<?= Layout::asset('/gridkit/css/themes.css') ?>">
 
     <!-- Material Icons (benötigt für Sidebar, Header, Buttons) -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -159,6 +159,6 @@ $sidebar
 
 </div><!-- /gk-with-sidebar -->
 
-<script src="/gridkit/js/gridkit.js"></script>
+<script src="<?= Layout::asset('/gridkit/js/gridkit.js') ?>"></script>
 </body>
 </html>

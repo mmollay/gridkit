@@ -133,6 +133,17 @@ Zustände, die im Alltag am häufigsten auftreten.
 - **Eingabefelder tragen dieselbe Fläche wie das Suchfeld.** Die beiden waren
   nach der Toolbar-Überarbeitung auseinandergelaufen.
 
+### Ausliefern
+
+- **CSS und JS tragen jetzt die Version im Pfad** (`?v=1.28.0`), gesetzt über
+  den neuen Helfer `Layout::asset()`. Ohne diesen Zusatz liefern CDNs und
+  Browser nach einem Update weiter die alte Datei aus. Auf gridkit.ssi.at stand
+  eine `themes.css` vom **11. März** im Cloudflare-Cache (Cache-Dauer 30 Tage),
+  während die Seite bereits 1.28.0 meldete — der Theme-Umschalter setzte
+  korrekt `data-gk-theme`, aber das ausgelieferte CSS kannte die Farben nicht.
+  Es sah aus, als sei das Theme kaputt. `skeleton.php` nutzt den Helfer
+  ebenfalls, damit kopierte Projekte nicht in dieselbe Falle laufen.
+
 ### Geändert
 
 Sichtbar, bitte vor dem Update ansehen:
