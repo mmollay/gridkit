@@ -110,6 +110,7 @@ a:hover {
   /* Fokusring — eine Zusage, ueberall dieselbe */
   --gk-focus-ring: 0 0 0 3px color-mix(in oklab, var(--gk-primary) 32%, transparent);
   --gk-focus-ring-soft: 0 0 0 3px color-mix(in oklab, var(--gk-primary) 10%, transparent);
+  --gk-focus-ring-error: 0 0 0 3px color-mix(in oklab, var(--gk-error) 32%, transparent);
 
   /* Legacy scale aliases (backward compat) */
   --gk-primary-50: #eef2ff;
@@ -175,6 +176,63 @@ a:hover {
   --gk-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --gk-font-size: 14px;
   --gk-font-size-sm: 12px;
+
+  /* === TYPO-SKALA ===
+     Sieben Rollen statt verstreuter Literale. Die Werte entsprechen den heute
+     ueberwiegend verwendeten Groessen — die Skala benennt sie, sie verschiebt
+     sie nicht. */
+  --gk-text-display: 32px;
+  --gk-text-title: 20px;
+  --gk-text-subtitle: 16px;
+  --gk-text-body: 14px;
+  --gk-text-label: 13px;
+  --gk-text-caption: 12px;
+  --gk-text-overline: 11px;
+
+  /* Zeilenhoehen — gehoeren zur Rolle, nicht zum Zufall */
+  --gk-leading-tight: 1.3;
+  --gk-leading-snug: 1.4;
+  --gk-leading-normal: 1.55;
+
+  /* === ICON-SKALA ===
+     Bewusst getrennt von der Typo-Skala: Material-Icons werden ueber font-size
+     dimensioniert, sind aber keine Schrift. Vorher lagen beide Skalen
+     ununterscheidbar im selben Zahlenraum. */
+  --gk-icon-xs: 16px;
+  --gk-icon-sm: 18px;
+  --gk-icon-md: 20px;
+  --gk-icon-lg: 22px;
+  --gk-icon-xl: 24px;
+  --gk-icon-2xl: 28px;
+
+  /* === BEWEGUNG ===
+     Drei Dauern, zwei Kurven. Keine Eigenschaft wird mehr pauschal ueber
+     "all" animiert — das erwischt auch Breite, Hoehe und Position und ist die
+     haeufigste Ursache fuer zuckende Layouts. */
+  --gk-dur-1: 120ms;   /* Zustand am Ort: Hover, Fokus, Auswahl */
+  --gk-dur-2: 200ms;   /* Erscheinen und Verschwinden: Dropdown, Tooltip, Toast */
+  --gk-dur-3: 320ms;   /* Bewegung im Raum: Modal, Schublade, Seitenleiste */
+  --gk-ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --gk-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Fertige Buendel fuer die zwei haeufigen Faelle. Sie nennen die Eigenschaften
+     ausdruecklich, damit nie wieder Breite oder Position mitanimiert wird. */
+  --gk-transition-state:
+    background-color var(--gk-dur-1) var(--gk-ease-out),
+    border-color var(--gk-dur-1) var(--gk-ease-out),
+    color var(--gk-dur-1) var(--gk-ease-out),
+    box-shadow var(--gk-dur-1) var(--gk-ease-out),
+    opacity var(--gk-dur-1) var(--gk-ease-out);
+  --gk-transition-move:
+    transform var(--gk-dur-2) var(--gk-ease-out),
+    opacity var(--gk-dur-2) var(--gk-ease-out);
+
+  /* === HOEHE ===
+     Vier Stufen, jede zweilagig: enger Kontaktschatten fuer die Kante, weiche
+     Streuung fuer die Distanz. Ein einlagiger Schatten wirkt aufgeklebt. */
+  --gk-elev-1: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.10);
+  --gk-elev-2: 0 2px 4px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.08);
+  --gk-elev-3: 0 4px 8px rgba(15, 23, 42, 0.08), 0 16px 32px rgba(15, 23, 42, 0.12);
+  --gk-elev-4: 0 8px 16px rgba(15, 23, 42, 0.10), 0 24px 48px rgba(15, 23, 42, 0.16);
   --gk-spacing: 16px;
   --gk-content-max-width: 1600px;
   font-family: var(--gk-font);
@@ -195,6 +253,12 @@ a:hover {
 
 /* === TABLE === */
 .gk-table-wrap {
+  /* Eine Tabelle darf ihren Platz nie aufweiten. Ohne diese beiden Zeilen
+     sprengt die Min-Content-Breite einer Tabelle jede Flex- oder Grid-Spur,
+     die als 1fr statt minmax(0, 1fr) definiert ist — und schiebt damit die
+     ganze Seite seitwaerts. Seitwaerts scrollen darf nur der Container. */
+  min-width: 0;
+  max-width: 100%;
   background: var(--gk-surface);
   border: 1px solid var(--gk-outline-variant);
   border-radius: 12px;
@@ -221,7 +285,7 @@ a:hover {
 /* Zweitzeile in einer Zelle: kürzt mit Auslassungspunkten, weitet die Spalte nicht. */
 .gk-cell-sub {
   display: block;
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   line-height: 1.3;
   color: var(--gk-text-muted);
   overflow: hidden;
@@ -291,7 +355,7 @@ a:hover {
   border-radius: var(--gk-radius-sm);
 }
 .gk-toolbar .gk-select-search .gk-select-arrow {
-  font-size: 18px;
+  font-size: var(--gk-icon-sm);
 }
 
 /* ── GridKit\TableHeader — einheitliche Filter-/Such-Leiste ── */
@@ -332,7 +396,7 @@ a:hover {
 .gk-tableheader-advanced > summary {
   cursor: pointer;
   user-select: none;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   color: var(--gk-primary, #5a4eff);
   font-weight: 500;
   padding: 8px 16px;
@@ -369,9 +433,10 @@ a:hover {
     border-color 0.15s,
     box-shadow 0.15s;
 }
-.gk-search:focus {
+.gk-search:focus-visible {
   border-color: var(--gk-primary);
-  box-shadow: var(--gk-focus-ring-soft);
+  box-shadow: var(--gk-focus-ring);
+  outline: none;
 }
 
 /* Filters */
@@ -397,9 +462,10 @@ a:hover {
 .gk-filter:hover {
   border-color: var(--gk-text-muted);
 }
-.gk-filter:focus {
+.gk-filter:focus-visible {
   border-color: var(--gk-primary);
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--gk-primary) 15%, transparent);
+  box-shadow: var(--gk-focus-ring);
+  outline: none;
 }
 .gk-filter option {
   padding: 4px 8px;
@@ -435,7 +501,7 @@ a:hover {
   border: 0;
   background: transparent;
   padding: 9px 16px;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   font-weight: 600;
   color: var(--gk-text-muted);
   cursor: pointer;
@@ -463,7 +529,7 @@ a:hover {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   color: var(--gk-text-muted);
 }
 .gk-rowpager-count { white-space: nowrap; }
@@ -496,7 +562,7 @@ a:hover {
 .gk-table thead th {
   background: var(--gk-surface-container-low);
   font-weight: 600;
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   color: var(--gk-on-surface-variant);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -573,7 +639,7 @@ a:hover {
   color: var(--gk-on-surface);
 }
 .gk-table-title > .material-icons {
-  font-size: 20px;
+  font-size: var(--gk-icon-md);
   flex: 0 0 auto;
   color: var(--gk-on-surface-variant);
 }
@@ -585,7 +651,7 @@ a:hover {
 }
 .gk-table-title small {
   font-weight: 400;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   color: var(--gk-on-surface-variant);
 }
 /* rechtsbündige Aktionen/Links in der Titelzeile */
@@ -648,7 +714,7 @@ a:hover {
   content: "⇅";
   margin-left: 4px;
   opacity: 0.3;
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
 }
 .gk-sorted-asc::after {
   content: "↑";
@@ -670,7 +736,7 @@ a:hover {
   vertical-align: -3px;
   margin-left: 2px;
   opacity: 0.4;
-  transition: opacity 0.15s;
+  transition: opacity var(--gk-dur-1);
 }
 .gk-sort-link {
   color: inherit;
@@ -692,7 +758,7 @@ a:hover {
   text-align: center;
   padding: 56px 24px;
   color: var(--gk-text-muted);
-  font-size: 14px;
+  font-size: var(--gk-text-body);
 }
 
 /* Gruppenzeile in einer Tabelle (Table::groupBy) */
@@ -700,7 +766,7 @@ a:hover {
   padding: 10px 12px 6px;
   background: var(--gk-surface-container);
   border-bottom: 1px solid var(--gk-outline-variant, #e2e8f0);
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   letter-spacing: 0.02em;
 }
 .gk-table tbody tr.gk-table-group:hover > td {
@@ -786,14 +852,14 @@ a:hover {
   border-radius: 10px;
   padding: 10px 16px;
   margin: 6px 0 2px;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   font-weight: 500;
 }
 .gk-bulk-bar .gk-toolbar-spacer {
   flex: 1;
 }
 .gk-bulk-bar .material-icons {
-  font-size: 18px;
+  font-size: var(--gk-icon-sm);
 }
 .gk-bulk-bar [data-gk-bulk-delete] {
   background: var(--gk-error);
@@ -802,7 +868,7 @@ a:hover {
   border-radius: 7px;
   padding: 0 14px;
   height: 32px;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -822,7 +888,7 @@ a:hover {
   border-radius: 7px;
   padding: 0 14px;
   height: 32px;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   font-weight: 500;
   cursor: pointer;
 }
@@ -853,7 +919,7 @@ a:hover {
 }
 /* Bordered Variante — explizit opt-in */
 .gk-btn-group-bordered {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--gk-elev-1);
   border: 1px solid var(--gk-outline-variant, #e5e7eb);
 }
 .gk-btn-group-bordered .gk-btn:not(:last-child) {
@@ -876,10 +942,10 @@ a:hover {
   padding: 8px 16px;
   border: 1.5px solid transparent;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: var(--gk-transition-state);
   line-height: 1.4;
   text-decoration: none;
   white-space: nowrap;
@@ -894,13 +960,13 @@ a:hover {
 /* Sizes */
 .gk-btn-sm {
   padding: 4px 12px;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   border-radius: 6px;
   gap: 4px;
 }
 .gk-btn-lg {
   padding: 12px 24px;
-  font-size: 16px;
+  font-size: var(--gk-text-subtitle);
   border-radius: 10px;
   gap: 8px;
 }
@@ -1266,7 +1332,7 @@ a:hover {
 }
 .gk-fab-extended.gk-fab-lg {
   padding: 20px 32px;
-  font-size: 18px;
+  font-size: var(--gk-icon-sm);
 }
 
 /* Icon-only in tables (small) */
@@ -1280,13 +1346,13 @@ a:hover {
 /* === PAGINATION === */
 .gk-table-footer td {
   padding: 8px 12px;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   color: var(--gk-on-surface-variant);
   border-top: 1px solid var(--gk-border);
   background: var(--gk-surface-variant, rgba(0,0,0,.02));
 }
 td.gk-table-meta {
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   opacity: 0.5;
   text-align: right;
   font-weight: 400;
@@ -1312,7 +1378,7 @@ td.gk-table-meta {
   font-size: var(--gk-font-size-sm);
   text-decoration: none;
   color: var(--gk-on-surface);
-  transition: all 0.15s;
+  transition: var(--gk-transition-state);
 }
 .gk-page-btn:hover {
   background: var(--gk-bg-hover);
@@ -1611,7 +1677,7 @@ td.gk-table-meta {
 .gk-label-text {
   display: block;
   margin-bottom: 6px;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   font-weight: 600;
   color: var(--gk-on-surface-variant, #475569);
   text-transform: uppercase;
@@ -1632,7 +1698,7 @@ td.gk-table-meta {
   padding: 10px 14px;
   border: 1px solid var(--gk-outline-variant);
   border-radius: 8px;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   font-family: var(--gk-font);
   background: var(--gk-surface);
   color: var(--gk-text);
@@ -1649,11 +1715,12 @@ td.gk-table-meta {
 .gk-input:hover {
   border-color: var(--gk-outline, #94a3b8);
 }
-.gk-input:focus {
+.gk-input:focus-visible {
   border-color: var(--gk-primary);
   border-width: 1.5px;
   padding: 9.75px 13.75px;
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--gk-primary) 10%, transparent);
+  box-shadow: var(--gk-focus-ring);
+  outline: none;
 }
 textarea.gk-input {
   resize: vertical;
@@ -1698,7 +1765,7 @@ input[type="number"].gk-input::-webkit-inner-spin-button {
   background: var(--gk-bg-muted);
 }
 .gk-input-clear .material-icons {
-  font-size: 18px;
+  font-size: var(--gk-icon-sm);
 }
 /* === COLOR PICKER === */
 .gk-color-wrap {
@@ -1709,7 +1776,7 @@ input[type="number"].gk-input::-webkit-inner-spin-button {
   border-radius: 8px;
   overflow: hidden;
   background: var(--gk-surface-container-lowest, #fff);
-  transition: border-color 0.15s;
+  transition: border-color var(--gk-dur-1);
   box-sizing: border-box;
 }
 .gk-color-wrap:hover {
@@ -1756,7 +1823,7 @@ input[type="number"].gk-input::-webkit-inner-spin-button {
 .gk-color-hex {
   border: none;
   outline: none;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   font-family: inherit;
   color: var(--gk-text);
   background: none;
@@ -1828,7 +1895,7 @@ select.gk-input {
   margin-top: 16px;
 }
 .gk-field-hint {
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   color: var(--gk-text-secondary, #64748b);
   margin-top: 4px;
 }
@@ -1843,15 +1910,15 @@ select.gk-input {
 }
 .gk-form-compact .gk-label-text {
   margin-bottom: 3px;
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
 }
 .gk-form-compact .gk-input {
   padding: 6px 10px;
   height: 34px;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   border-radius: 6px;
 }
-.gk-form-compact .gk-input:focus {
+.gk-form-compact .gk-input:focus-visible {
   padding: 5.75px 9.75px;
 }
 .gk-form-compact select.gk-input {
@@ -1863,7 +1930,7 @@ select.gk-input {
   min-height: 56px;
 }
 .gk-form-compact .gk-section-title {
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   font-weight: 700;
   margin-bottom: 10px;
   color: var(--gk-primary, #6366f1);
@@ -1871,7 +1938,7 @@ select.gk-input {
   letter-spacing: 0.06em;
 }
 .gk-form-compact .gk-field-hint {
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   margin-top: 2px;
 }
 .gk-form-compact .gk-toggle {
@@ -1902,7 +1969,7 @@ select.gk-input {
 }
 .gk-form-compact .gk-checkbox-wrap {
   gap: 6px;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
 }
 .gk-form-compact .gk-field-inline {
   gap: 8px;
@@ -1910,38 +1977,38 @@ select.gk-input {
 .gk-form-compact .gk-select-display {
   padding: 6px 10px;
   height: 34px;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   border-radius: 6px;
 }
 .gk-form-compact .gk-select-display.open {
   padding: 5.75px 9.75px;
 }
 .gk-form-compact .gk-select-arrow {
-  font-size: 16px;
+  font-size: var(--gk-icon-xs);
 }
 .gk-form-compact .gk-select-option {
   padding: 6px 10px;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
 }
 .gk-form-compact .gk-ajax-select .gk-select-display {
   height: 34px;
   padding: 6px 10px;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   border-radius: 6px;
   border-width: 1px;
 }
 .gk-form-compact .gk-ajax-search-input {
-  font-size: 13px;
+  font-size: var(--gk-text-label);
 }
 .gk-form-compact .gk-select-search-input {
   padding: 6px 10px;
 }
 .gk-form-compact .gk-select-search-input input {
-  font-size: 13px;
+  font-size: var(--gk-text-label);
 }
 .gk-field-error {
   color: var(--gk-danger);
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   min-height: 0;
   margin-top: 4px;
 }
@@ -1951,8 +2018,8 @@ select.gk-input {
 .gk-input.gk-has-error {
   border-color: var(--gk-danger);
 }
-.gk-input.gk-has-error:focus {
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--gk-error) 10%, transparent);
+.gk-input.gk-has-error:focus-visible {
+  box-shadow: var(--gk-focus-ring-error);
 }
 .gk-field.gk-field-has-error .gk-label-text {
   color: var(--gk-danger);
@@ -1981,7 +2048,7 @@ select.gk-input {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: var(--gk-transition-state);
   flex-shrink: 0;
   position: relative;
 }
@@ -1993,7 +2060,7 @@ select.gk-input {
   border: solid var(--gk-on-primary);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg) scale(0);
-  transition: transform 0.15s ease;
+  transition: transform var(--gk-dur-1) ease;
   margin-top: -2px;
 }
 .gk-checkbox-wrap input:checked + .gk-checkbox-custom {
@@ -2044,7 +2111,7 @@ select.gk-input {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: var(--gk-transition-state);
   flex-shrink: 0;
 }
 .gk-radio-custom::after {
@@ -2054,7 +2121,7 @@ select.gk-input {
   border-radius: 50%;
   background: var(--gk-primary);
   transform: scale(0);
-  transition: transform 0.15s ease;
+  transition: transform var(--gk-dur-1) ease;
 }
 .gk-radio-wrap input:checked + .gk-radio-custom {
   border-color: var(--gk-primary);
@@ -2091,7 +2158,7 @@ select.gk-input {
   border: none;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: box-shadow 0.15s;
+  transition: box-shadow var(--gk-dur-1);
 }
 .gk-range::-webkit-slider-thumb:hover {
   box-shadow: 0 0 0 6px color-mix(in oklab, var(--gk-primary) 15%, transparent);
@@ -2111,7 +2178,7 @@ select.gk-input {
   border-radius: 2px;
 }
 .gk-range-value {
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   font-weight: 600;
   color: var(--gk-text);
   min-width: 32px;
@@ -2126,7 +2193,7 @@ select.gk-input {
   padding: 24px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: var(--gk-transition-state);
   width: 100%;
   box-sizing: border-box;
 }
@@ -2162,11 +2229,11 @@ select.gk-input {
   color: var(--gk-primary);
 }
 .gk-upload-text {
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   color: var(--gk-text-muted);
 }
 .gk-upload-hint {
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   color: var(--gk-neutral-400);
 }
 .gk-upload-idle {
@@ -2180,7 +2247,7 @@ select.gk-input {
   pointer-events: none;
 }
 .gk-upload-progress-label {
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   color: var(--gk-text-muted);
 }
 
@@ -2224,7 +2291,7 @@ select.gk-input {
   object-fit: cover;
 }
 .gk-uq-icon {
-  font-size: 20px;
+  font-size: var(--gk-icon-md);
   color: var(--gk-text-muted);
 }
 .gk-uq-info {
@@ -2235,18 +2302,18 @@ select.gk-input {
   gap: 1px;
 }
 .gk-uq-name {
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .gk-uq-size {
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   color: var(--gk-text-muted);
 }
 .gk-uq-status {
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   white-space: nowrap;
   padding: 2px 8px;
   border-radius: 20px;
@@ -2326,7 +2393,7 @@ select.gk-input {
   background: transparent;
   cursor: pointer;
   color: var(--gk-text-muted);
-  transition: all 0.15s;
+  transition: var(--gk-transition-state);
 }
 .gk-richtext-btn:hover {
   background: var(--gk-neutral-200);
@@ -2337,12 +2404,12 @@ select.gk-input {
   color: var(--gk-primary-700);
 }
 .gk-richtext-btn .material-icons {
-  font-size: 18px;
+  font-size: var(--gk-icon-sm);
 }
 .gk-richtext-content {
   min-height: 120px;
   padding: 12px 16px;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   font-family: var(--gk-font);
   color: var(--gk-text);
   outline: none;
@@ -2426,7 +2493,7 @@ select.gk-input {
 .gk-modal-close {
   background: none;
   border: none;
-  font-size: 22px;
+  font-size: var(--gk-icon-lg);
   cursor: pointer;
   color: var(--gk-on-surface-variant);
   /* Quadratisches Hit-Target, vertikal zentriert; negativer Rand richtet das
@@ -2440,7 +2507,7 @@ select.gk-input {
   margin: -4px -8px -4px 8px;
   line-height: 1;
   border-radius: 8px;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--gk-dur-1), color var(--gk-dur-1);
 }
 .gk-modal-close:hover {
   color: var(--gk-on-surface);
@@ -2517,7 +2584,7 @@ select.gk-input {
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: var(--gk-transition-state);
   border: 1px solid var(--gk-border);
   background: var(--gk-bg);
   color: var(--gk-text);
@@ -2550,17 +2617,17 @@ select.gk-input {
 }
 .gk-chip-sm {
   padding: 4px 10px;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
 }
 .gk-chip-icon {
-  font-size: 16px;
+  font-size: var(--gk-icon-xs);
   line-height: 1;
 }
 .gk-chip-count {
   background: rgba(0, 0, 0, 0.08);
   padding: 1px 6px;
   border-radius: 9999px;
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   margin-left: 2px;
 }
 .gk-chip-active .gk-chip-count {
@@ -2585,7 +2652,7 @@ select.gk-input {
   border: 1px solid var(--gk-border);
   text-decoration: none;
   color: inherit;
-  transition: box-shadow 0.15s;
+  transition: box-shadow var(--gk-dur-1);
 }
 a.gk-stat-card:hover {
   box-shadow: var(--gk-shadow-lg);
@@ -2610,7 +2677,7 @@ a.gk-stat-card:hover {
   color: var(--gk-danger);
 }
 .gk-stat-icon {
-  font-size: 28px;
+  font-size: var(--gk-icon-2xl);
   color: var(--gk-primary);
   opacity: 0.7;
 }
@@ -2697,7 +2764,7 @@ a.gk-stat-card:hover {
   background: var(--gk-sidebar-brand-bg);
 }
 .gk-sidebar-brand-icon {
-  font-size: 28px;
+  font-size: var(--gk-icon-2xl);
   color: var(--gk-sidebar-accent, #818cf8);
 }
 .gk-sidebar-brand-text {
@@ -2706,13 +2773,13 @@ a.gk-stat-card:hover {
 }
 .gk-sidebar-brand-title {
   display: block;
-  font-size: 16px;
+  font-size: var(--gk-text-subtitle);
   font-weight: 700;
   letter-spacing: -0.3px;
   white-space: nowrap;
 }
 .gk-sidebar-brand-version {
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   color: var(--gk-sidebar-text-muted);
 }
 .gk-sidebar-close-mobile {
@@ -2734,7 +2801,7 @@ a.gk-stat-card:hover {
   gap: 2px;
 }
 .gk-sidebar-group-label {
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   font-weight: 600;
   color: var(--gk-sidebar-text-muted);
   text-transform: uppercase;
@@ -2749,9 +2816,9 @@ a.gk-stat-card:hover {
   border-radius: 6px;
   color: var(--gk-sidebar-text);
   text-decoration: none;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   font-weight: 500;
-  transition: all 0.15s;
+  transition: var(--gk-transition-state);
   border-left: 3px solid transparent;
 }
 .gk-sidebar-item:hover {
@@ -2771,19 +2838,19 @@ a.gk-stat-card:hover {
   color: var(--gk-sidebar-accent);
 }
 .gk-sidebar-icon {
-  font-size: 20px;
+  font-size: var(--gk-icon-md);
   color: var(--gk-sidebar-icon-muted);
   width: 24px;
   text-align: center;
   flex-shrink: 0;
-  transition: color 0.15s;
+  transition: color var(--gk-dur-1);
 }
 .gk-sidebar-label {
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--gk-dur-2) ease;
 }
 .gk-sidebar.collapsed .gk-sidebar-label {
   opacity: 0;
@@ -2805,7 +2872,7 @@ a.gk-stat-card:hover {
   font-size: 18px !important;
   margin-left: auto;
   opacity: 0.5;
-  transition: transform 0.2s ease;
+  transition: transform var(--gk-dur-2) ease;
   flex-shrink: 0;
 }
 .gk-sidebar-group-toggle.collapsed .gk-sidebar-chevron {
@@ -2834,8 +2901,8 @@ a.gk-stat-card:hover {
   border-radius: 6px;
   color: var(--gk-sidebar-text);
   text-decoration: none;
-  font-size: 13px;
-  transition: all 0.15s;
+  font-size: var(--gk-text-label);
+  transition: var(--gk-transition-state);
   opacity: 0.85;
 }
 .gk-sidebar-subitem:hover {
@@ -2874,7 +2941,7 @@ a.gk-stat-card:hover {
 }
 
 .gk-sidebar-badge {
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   font-weight: 600;
   background: var(--gk-sidebar-accent);
   color: var(--gk-on-primary);
@@ -2898,7 +2965,7 @@ a.gk-stat-card:hover {
   padding: 8px;
   cursor: pointer;
   color: var(--gk-on-surface-variant);
-  transition: all 0.15s;
+  transition: var(--gk-transition-state);
 }
 .gk-sidebar-toggle:hover {
   background: var(--gk-surface-container-high);
@@ -2925,7 +2992,7 @@ a.gk-stat-card:hover {
 .gk-sidebar-badge,
 .gk-sidebar-group-label,
 .gk-sidebar-collapse-label {
-  transition: opacity 0.2s ease;
+  transition: opacity var(--gk-dur-2) ease;
 }
 .gk-sidebar.collapsed .gk-sidebar-brand {
   padding: 10px 0;
@@ -2964,7 +3031,7 @@ a.gk-stat-card:hover {
 }
 .gk-sidebar.collapsed .gk-sidebar-icon {
   width: auto !important;
-  font-size: 22px;
+  font-size: var(--gk-icon-lg);
   margin: 0 !important;
   flex-shrink: 0;
 }
@@ -2989,7 +3056,7 @@ a.gk-stat-card:hover {
   padding: 8px;
   border-radius: 8px;
   flex-shrink: 0;
-  transition: all 0.15s;
+  transition: var(--gk-transition-state);
 }
 .gk-sidebar-collapse-btn:hover {
   background: var(--gk-sidebar-item-hover);
@@ -3010,12 +3077,12 @@ a.gk-stat-card:hover {
   border-top: 1px solid var(--gk-sidebar-border);
   border-radius: 6px;
   width: calc(100% - 20px);
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   justify-content: flex-start;
 }
 .gk-sidebar-collapse-bottom .material-icons {
-  font-size: 20px;
-  transition: transform 0.25s;
+  font-size: var(--gk-icon-md);
+  transition: transform var(--gk-dur-2);
 }
 .gk-sidebar.collapsed .gk-sidebar-collapse-bottom {
   justify-content: center;
@@ -3039,11 +3106,11 @@ a.gk-stat-card:hover {
   color: var(--gk-sidebar-text-hover);
   padding: 4px 10px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.15s;
+  transition: opacity var(--gk-dur-1);
   margin-left: 8px;
   z-index: 1001;
 }
@@ -3055,7 +3122,7 @@ a.gk-stat-card:hover {
 .gk-with-sidebar {
   margin-left: 260px;
   min-width: 0; /* sonst sprengt eine breite Tabelle die Spalte bis zum Viewport-Rand */
-  transition: margin-left 0.25s ease;
+  transition: margin-left var(--gk-dur-2) ease;
 }
 
 /* === LAYOUT MAX-WIDTH (--gk-content-max-width) ===
@@ -3106,7 +3173,7 @@ a.gk-stat-card:hover {
   max-width: 360px;
   background: #1e293b;
   color: #fff;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   font-weight: 500;
   line-height: 1.45;
   padding: 6px 10px;
@@ -3145,7 +3212,7 @@ a.gk-stat-card:hover {
 }
 .gk-card-title {
   margin: 0 0 16px;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   font-weight: 700;
   color: var(--gk-primary, #6366f1);
   text-transform: uppercase;
@@ -3194,7 +3261,7 @@ a.gk-stat-card:hover {
   max-width: 560px;
   pointer-events: auto;
   animation: gk-toast-in 0.3s cubic-bezier(0.2, 0, 0, 1);
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   font-weight: 400;
   line-height: 1.4;
   box-shadow:
@@ -3219,7 +3286,7 @@ a.gk-stat-card:hover {
   color: #fef3c7;
 }
 .gk-toast-icon {
-  font-size: 22px;
+  font-size: var(--gk-icon-lg);
   flex-shrink: 0;
   opacity: 0.9;
 }
@@ -3229,7 +3296,7 @@ a.gk-stat-card:hover {
   color: inherit;
   opacity: 0.6;
   cursor: pointer;
-  font-size: 18px;
+  font-size: var(--gk-icon-sm);
   padding: 4px;
   margin-left: auto;
   border-radius: 50%;
@@ -3293,7 +3360,7 @@ a.gk-stat-card:hover {
 }
 .gk-confirm-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--gk-text-subtitle);
   font-weight: 600;
 }
 .gk-confirm-body {
@@ -3301,7 +3368,7 @@ a.gk-stat-card:hover {
 }
 .gk-confirm-body p {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   color: var(--gk-on-surface-variant);
   line-height: 1.5;
 }
@@ -3403,7 +3470,7 @@ a.gk-stat-card:hover {
   left: 260px;
   right: 0;
   z-index: 200;
-  transition: left 0.25s ease;
+  transition: left var(--gk-dur-2) ease;
 }
 [data-gk-layout="sidebar-first"] .gk-sidebar,
 .gk-layout-sidebar-first .gk-sidebar {
@@ -3469,7 +3536,7 @@ a.gk-stat-card:hover {
   overflow: hidden;
 }
 .gk-header-title h1 {
-  font-size: 16px;
+  font-size: var(--gk-text-subtitle);
   font-weight: 600;
   margin: 0;
   line-height: 1.2;
@@ -3484,7 +3551,7 @@ a.gk-stat-card:hover {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   color: var(--gk-on-surface-variant);
   padding: 8px 0;
   margin-bottom: 16px;
@@ -3492,7 +3559,7 @@ a.gk-stat-card:hover {
 .gk-header-title .gk-breadcrumb {
   padding: 2px 0 0;
   margin: 0;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   gap: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -3501,26 +3568,26 @@ a.gk-stat-card:hover {
 .gk-breadcrumb a {
   color: var(--gk-on-surface-variant);
   text-decoration: none;
-  transition: color 0.15s;
+  transition: color var(--gk-dur-1);
 }
 .gk-breadcrumb a:hover {
   color: var(--gk-primary);
 }
 .gk-breadcrumb-sep {
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   color: var(--gk-outline);
   display: flex;
   align-items: center;
 }
 .gk-breadcrumb-sep .material-icons {
-  font-size: 16px;
+  font-size: var(--gk-icon-xs);
 }
 .gk-breadcrumb-current {
   color: var(--gk-on-surface);
   font-weight: 500;
 }
 .gk-breadcrumb .material-icons {
-  font-size: 16px;
+  font-size: var(--gk-icon-xs);
   vertical-align: middle;
 }
 
@@ -3538,13 +3605,13 @@ a.gk-stat-card:hover {
   border: none;
   background: none;
   outline: none;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   width: 100%;
   font-family: inherit;
 }
 .gk-header-search .material-icons {
   color: var(--gk-on-surface-variant);
-  font-size: 20px;
+  font-size: var(--gk-icon-md);
 }
 
 /* Header actions */
@@ -3600,7 +3667,7 @@ a.gk-stat-card:hover {
   background: var(--gk-surface-container-high);
 }
 .gk-header-user-name {
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   font-weight: 500;
 }
 .gk-header-user .gk-dropdown-menu {
@@ -3619,7 +3686,7 @@ a.gk-stat-card:hover {
   margin-top: 8px;
   background: var(--gk-surface);
   border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--gk-elev-3);
   min-width: 200px;
   padding: 8px 0;
   z-index: 200;
@@ -3632,16 +3699,16 @@ a.gk-stat-card:hover {
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   color: var(--gk-text);
   text-decoration: none;
-  transition: background 0.1s;
+  transition: background var(--gk-dur-1);
 }
 .gk-dropdown-item:hover {
   background: var(--gk-surface-container-high);
 }
 .gk-dropdown-item .material-icons {
-  font-size: 20px;
+  font-size: var(--gk-icon-md);
   color: var(--gk-text-muted);
 }
 .gk-dropdown-divider {
@@ -3653,23 +3720,23 @@ a.gk-stat-card:hover {
 /* === TABLE SIZES === */
 .gk-table-sm th {
   padding: 6px 10px;
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
 }
 .gk-table-sm td {
   padding: 6px 10px;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
 }
 .gk-table-md th {
   padding: 10px 16px;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
 }
 .gk-table-md td {
   padding: 12px 16px;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
 }
 .gk-table-lg th {
   padding: 14px 20px;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
 }
 .gk-table-lg td {
   padding: 16px 20px;
@@ -3734,7 +3801,7 @@ a.gk-stat-card:hover {
 }
 .gk-table-xs td {
   padding: 4px 8px;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
 }
 
 /* Compact — seit v1.17.0 Hybrid: lesbare 14px Schrift, kompakteres Vertical-Padding.
@@ -3742,12 +3809,12 @@ a.gk-stat-card:hover {
 .gk-table-compact th,
 .gk-table-compact td {
   padding: 8px 12px;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
 }
 .gk-table-very-compact th,
 .gk-table-very-compact td {
   padding: 4px 8px;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
 }
 
 /* Single Line: Kein Textumbruch */
@@ -3766,7 +3833,7 @@ a.gk-stat-card:hover {
 /* Selectable: Zeilen wirken klickbar */
 .gk-table-selectable tbody tr {
   cursor: pointer;
-  transition: background 0.1s;
+  transition: background var(--gk-dur-1);
 }
 .gk-table-selectable tbody tr:hover {
   background: var(--gk-state-primary);
@@ -3818,7 +3885,7 @@ a.gk-stat-card:hover {
     display: block;
     background: var(--gk-surface);
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--gk-elev-1);
     padding: 16px;
     margin-bottom: 12px;
   }
@@ -3836,7 +3903,7 @@ a.gk-stat-card:hover {
   .gk-table-mobile-card td::before {
     content: attr(data-label);
     font-weight: 600;
-    font-size: 12px;
+    font-size: var(--gk-text-caption);
     color: var(--gk-on-surface-variant);
     text-transform: uppercase;
     flex: 0 0 40%;
@@ -3931,7 +3998,7 @@ a.gk-stat-card:hover {
   border: 1px solid var(--gk-outline-variant);
   background: var(--gk-surface-container);
   color: var(--gk-on-surface);
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   line-height: 1.5;
   margin-bottom: 16px;
   display: flex;
@@ -3939,7 +4006,7 @@ a.gk-stat-card:hover {
   gap: 12px;
 }
 .gk-message .material-icons {
-  font-size: 20px;
+  font-size: var(--gk-icon-md);
   flex-shrink: 0;
   margin-top: 1px;
 }
@@ -3957,7 +4024,7 @@ a.gk-stat-card:hover {
   padding: 2px;
   color: inherit;
   opacity: 0.5;
-  transition: opacity 0.15s;
+  transition: opacity var(--gk-dur-1);
   flex-shrink: 0;
 }
 .gk-message-dismiss:hover {
@@ -3997,7 +4064,7 @@ a.gk-stat-card:hover {
 }
 .gk-message-compact {
   padding: 10px 16px;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
 }
 .gk-message-list {
   margin: 8px 0 0;
@@ -4042,7 +4109,7 @@ a.gk-stat-card:hover {
   min-width: 0;
 }
 .gk-card-header > .material-icons {
-  font-size: 20px;
+  font-size: var(--gk-icon-md);
   flex: 0 0 auto;
   color: var(--gk-on-surface-variant);
 }
@@ -4060,7 +4127,7 @@ a.gk-stat-card:hover {
 .gk-card-footer {
   padding: 12px 20px;
   border-top: 1px solid var(--gk-outline-variant);
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   color: var(--gk-on-surface-variant);
 }
 .gk-card-image {
@@ -4069,12 +4136,12 @@ a.gk-stat-card:hover {
   display: block;
 }
 .gk-card-meta {
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   color: var(--gk-on-surface-variant);
   margin-bottom: 8px;
 }
 .gk-card-description {
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   line-height: 1.6;
   color: var(--gk-on-surface);
 }
@@ -4111,21 +4178,21 @@ a.gk-stat-card:hover {
   padding: 14px 20px;
   border: none;
   background: var(--gk-surface);
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   font-weight: 500;
   color: var(--gk-on-surface);
   cursor: pointer;
   text-align: left;
   font-family: inherit;
-  transition: background 0.15s;
+  transition: background var(--gk-dur-1);
 }
 .gk-accordion-trigger:hover {
   background: var(--gk-surface-container);
 }
 .gk-accordion-trigger .material-icons {
-  font-size: 20px;
+  font-size: var(--gk-icon-md);
   color: var(--gk-on-surface-variant);
-  transition: transform 0.2s ease;
+  transition: transform var(--gk-dur-2) ease;
 }
 .gk-accordion-item.open .gk-accordion-trigger .material-icons {
   transform: rotate(180deg);
@@ -4133,14 +4200,14 @@ a.gk-stat-card:hover {
 .gk-accordion-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease;
+  transition: max-height var(--gk-dur-3) ease;
 }
 .gk-accordion-item.open .gk-accordion-content {
   max-height: 500px;
 }
 .gk-accordion-body {
   padding: 0 20px 16px;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   line-height: 1.6;
   color: var(--gk-on-surface-variant);
 }
@@ -4290,7 +4357,7 @@ a.gk-stat-card:hover {
   .gk-message {
     padding: 12px 14px;
     gap: 10px;
-    font-size: 13px;
+    font-size: var(--gk-text-label);
   }
 
   /* Accordion */
@@ -4303,7 +4370,7 @@ a.gk-stat-card:hover {
 
   /* Breadcrumb */
   .gk-breadcrumb {
-    font-size: 12px;
+    font-size: var(--gk-text-caption);
     gap: 4px;
     flex-wrap: wrap;
   }
@@ -4408,12 +4475,12 @@ a.gk-stat-card:hover {
 .gk-avatar-lg {
   width: 56px;
   height: 56px;
-  font-size: 18px;
+  font-size: var(--gk-icon-sm);
 }
 .gk-avatar-xl {
   width: 80px;
   height: 80px;
-  font-size: 24px;
+  font-size: var(--gk-icon-xl);
 }
 .gk-avatar-status {
   position: absolute;
@@ -4503,12 +4570,12 @@ a.gk-stat-card:hover {
   inset: 0;
   background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.6));
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity var(--gk-dur-2);
   display: flex;
   align-items: flex-end;
   padding: 10px;
   color: #fff;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
 }
 .gk-gallery-item:hover .gk-gallery-overlay {
   opacity: 1;
@@ -4572,11 +4639,11 @@ a.gk-stat-card:hover {
   height: 40px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 20px;
+  font-size: var(--gk-icon-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
+  transition: background var(--gk-dur-1);
 }
 .gk-lightbox-close:hover {
   background: rgba(255, 255, 255, 0.25);
@@ -4596,7 +4663,7 @@ a.gk-stat-card:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
+  transition: background var(--gk-dur-1);
 }
 .gk-lightbox-nav:hover {
   background: rgba(255, 255, 255, 0.25);
@@ -4613,7 +4680,7 @@ a.gk-stat-card:hover {
   left: 50%;
   transform: translateX(-50%);
   color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   background: rgba(0, 0, 0, 0.5);
   padding: 6px 16px;
   border-radius: 20px;
@@ -4624,7 +4691,7 @@ a.gk-stat-card:hover {
   top: 18px;
   left: 20px;
   color: rgba(255, 255, 255, 0.6);
-  font-size: 13px;
+  font-size: var(--gk-text-label);
 }
 
 /* === DARK MODE === */
@@ -4678,6 +4745,12 @@ a.gk-stat-card:hover {
   --gk-on-info-container: #bfdbfe;
   --gk-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   --gk-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.4);
+  /* Schatten tragen auf dunklem Grund kaum — deshalb tiefer und zusaetzlich
+     eine helle Kante, die die Ebene wie in M3 ueber die Flaeche hebt. */
+  --gk-elev-1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.40);
+  --gk-elev-2: 0 2px 4px rgba(0, 0, 0, 0.32), 0 4px 12px rgba(0, 0, 0, 0.44);
+  --gk-elev-3: 0 4px 8px rgba(0, 0, 0, 0.36), 0 16px 32px rgba(0, 0, 0, 0.50);
+  --gk-elev-4: 0 8px 16px rgba(0, 0, 0, 0.40), 0 24px 48px rgba(0, 0, 0, 0.56);
 
   /* Alias-Variablen explizit überschreiben (Fallback-Kette sicherstellen) */
   --gk-bg: #0d1117;
@@ -5095,7 +5168,7 @@ a.gk-stat-card:hover {
   border-radius: 50%;
   border: 1.5px solid rgba(255, 255, 255, 0.18);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--gk-transition-state), transform var(--gk-dur-2) var(--gk-ease-out);
   box-shadow: 0 0 0 0 transparent;
 }
 .gk-theme-dot:hover {
@@ -5131,7 +5204,7 @@ a.gk-stat-card:hover {
   background: var(--gk-surface-container);
   cursor: pointer;
   color: var(--gk-on-surface);
-  transition: all 0.15s;
+  transition: var(--gk-transition-state);
   flex-shrink: 0;
 }
 .gk-mode-toggle:hover {
@@ -5173,9 +5246,9 @@ a.gk-stat-card:hover {
   border-radius: 8px;
   background: var(--gk-surface-container-lowest, #fff);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   color: var(--gk-text);
-  transition: border-color 0.15s;
+  transition: border-color var(--gk-dur-1);
   box-sizing: border-box;
   height: 44px;
 }
@@ -5188,9 +5261,9 @@ a.gk-stat-card:hover {
   padding: 9.5px 13.5px;
 }
 .gk-select-arrow {
-  font-size: 20px;
+  font-size: var(--gk-icon-md);
   color: var(--gk-outline);
-  transition: transform 0.2s;
+  transition: transform var(--gk-dur-2);
 }
 .gk-select-display.open .gk-select-arrow {
   transform: rotate(180deg);
@@ -5204,7 +5277,7 @@ a.gk-stat-card:hover {
   background: var(--gk-surface, #fff);
   border: 1px solid var(--gk-outline-variant);
   border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--gk-elev-3);
   z-index: 500;
   max-height: 300px;
   overflow: hidden;
@@ -5222,7 +5295,7 @@ a.gk-stat-card:hover {
 .gk-select-search-input input {
   border: none;
   outline: none;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   width: 100%;
   background: none;
   font-family: inherit;
@@ -5230,7 +5303,7 @@ a.gk-stat-card:hover {
 }
 .gk-select-search-input .material-icons {
   color: var(--gk-outline);
-  font-size: 20px;
+  font-size: var(--gk-icon-md);
 }
 .gk-select-options {
   overflow-y: auto;
@@ -5240,8 +5313,8 @@ a.gk-stat-card:hover {
 .gk-select-option {
   padding: 10px 14px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background 0.1s;
+  font-size: var(--gk-text-body);
+  transition: background var(--gk-dur-1);
 }
 .gk-select-option:hover {
   background: var(--gk-surface-container-high);
@@ -5258,7 +5331,7 @@ a.gk-stat-card:hover {
   padding: 16px;
   text-align: center;
   color: var(--gk-outline);
-  font-size: 13px;
+  font-size: var(--gk-text-label);
 }
 .gk-select-disabled .gk-select-display {
   opacity: 0.55;
@@ -5304,7 +5377,7 @@ a.gk-stat-card:hover {
 .gk-multiselect-input {
   border: none;
   outline: none;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   min-width: 80px;
   flex: 1;
   background: none;
@@ -5317,7 +5390,7 @@ a.gk-stat-card:hover {
   gap: 4px;
   padding: 3px 8px 3px 10px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   font-weight: 500;
   background: var(--gk-primary-container, #e0e0ff);
   color: var(--gk-on-primary-container, #1a1a6b);
@@ -5326,7 +5399,7 @@ a.gk-stat-card:hover {
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   line-height: 1;
   color: var(--gk-on-primary-container, #1a1a6b);
   opacity: 0.6;
@@ -5357,7 +5430,7 @@ a.gk-stat-card:hover {
 .gk-ajax-search-input {
   border: none;
   outline: none;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   width: 100%;
   background: none;
   font-family: inherit;
@@ -5367,7 +5440,7 @@ a.gk-stat-card:hover {
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 18px;
+  font-size: var(--gk-icon-sm);
   color: var(--gk-outline);
   padding: 0 4px;
 }
@@ -5376,20 +5449,20 @@ a.gk-stat-card:hover {
 }
 .gk-select-icon {
   color: var(--gk-outline);
-  font-size: 20px;
+  font-size: var(--gk-icon-md);
 }
 .gk-select-loading {
   padding: 16px;
   text-align: center;
   color: var(--gk-outline);
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
 .gk-select-option-sub {
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   color: var(--gk-outline);
   margin-top: 2px;
 }
@@ -5404,13 +5477,13 @@ a.gk-stat-card:hover {
 }
 .gk-page-header h1,
 .gk-page-header h2 {
-  font-size: 20px;
+  font-size: var(--gk-text-title);
   font-weight: 700;
   margin: 0;
   color: var(--gk-on-surface);
 }
 .gk-page-header h3 {
-  font-size: 16px;
+  font-size: var(--gk-text-subtitle);
   font-weight: 600;
   margin: 0;
   color: var(--gk-on-surface);
@@ -5429,7 +5502,7 @@ a.gk-stat-card:hover {
 }
 .gk-tab-btn {
   padding: 9px 18px;
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   font-weight: 500;
   color: var(--gk-text-muted);
   background: none;
@@ -5511,7 +5584,7 @@ a.gk-stat-card:hover {
   border: 1px solid var(--gk-border);
   border-radius: var(--gk-radius-sm);
   overflow: hidden;
-  transition: border-color 0.15s;
+  transition: border-color var(--gk-dur-1);
 }
 .gk-richtext-wrap:focus-within {
   border-color: var(--gk-primary);
@@ -5520,7 +5593,7 @@ a.gk-stat-card:hover {
 .gk-richtext-wrap .ck-editor__editable {
   min-height: 320px;
   font-family: var(--gk-font);
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   border: none !important;
   box-shadow: none !important;
 }
@@ -5572,7 +5645,7 @@ a.gk-stat-card:hover {
 .gk-dark .gk-table thead th {
   background: #161b22;
   color: #8b949e;
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-weight: 600;
@@ -5662,12 +5735,6 @@ a.gk-stat-card:hover {
   color: #484f58;
 }
 
-[data-gk-mode="dark"] .gk-input:focus,
-.gk-dark .gk-input:focus {
-  border-color: var(--gk-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-}
-
 /* --- Modal Header/Body --- */
 [data-gk-mode="dark"] .gk-modal-header,
 .gk-dark .gk-modal-header {
@@ -5717,14 +5784,14 @@ a.gk-stat-card:hover {
   position: absolute;
   z-index: 9999;
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   font-weight: 400;
   line-height: 1.4;
   white-space: nowrap;
   color: var(--gk-on-inverse-surface, #fff);
   background: var(--gk-inverse-surface, #1e293b);
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--gk-elev-2);
   pointer-events: none;
   opacity: 0;
   transform: translateY(4px);
@@ -5796,7 +5863,7 @@ a.gk-stat-card:hover {
   padding: 12px 16px;
   min-width: 200px;
   max-width: 360px;
-  font-size: 13px;
+  font-size: var(--gk-text-label);
   line-height: 1.5;
   color: var(--gk-on-surface, #334155);
   background: var(--gk-surface-container-highest, #fff);
@@ -6044,7 +6111,7 @@ a.gk-stat-card:hover {
     max-width: 280px;
     color: var(--gk-text-muted);
     margin: 0;
-    font-size: 14px;
+    font-size: var(--gk-text-body);
 }
 
 /* Mobile (≤ 768px): iframe weg, nativer-Viewer-Button im Vordergrund */
@@ -6076,7 +6143,7 @@ a.gk-stat-card:hover {
 /* Extra-kleine Button-Größe (kompakter als gk-btn-sm) */
 .gk-btn-xs {
     padding: 3px 8px;
-    font-size: 11px;
+    font-size: var(--gk-text-overline);
     border-radius: 6px;
     gap: 3px;
 }
@@ -6122,16 +6189,16 @@ a.gk-stat-card:hover {
   border-radius: 0;
   border-bottom: 1px solid var(--gk-border);
   padding: 16px 18px 16px 46px;
-  font-size: 16px;
+  font-size: var(--gk-text-subtitle);
   background-position: 18px center;
   background-color: var(--gk-surface);
   color: var(--gk-text);
 }
-.gk-search-box .gk-search-feld:focus { box-shadow: none; border-color: var(--gk-border); }
+.gk-search-box .gk-search-feld:focus-visible { box-shadow: none; border-color: var(--gk-border); }
 .gk-search-liste { max-height: 58vh; overflow-y: auto; }
 .gk-search-gruppe {
   padding: 10px 18px 4px;
-  font-size: 11px;
+  font-size: var(--gk-text-overline);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -6154,14 +6221,14 @@ a.gk-stat-card:hover {
 .gk-search-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .gk-search-titel { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gk-search-unter {
-  font-size: 12px;
+  font-size: var(--gk-text-caption);
   color: var(--gk-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .gk-search-betrag {
-  font-size: 14px;
+  font-size: var(--gk-text-body);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -6179,9 +6246,18 @@ a.gk-stat-card:hover {
 }
 @keyframes gk-search-dreh { to { transform: rotate(360deg); } }
 
+/* Wer Bewegung reduziert haben moechte, bekommt sie ueberall reduziert —
+   vorher galt das nur fuer zwei Regeln der Suche. */
 @media (prefers-reduced-motion: reduce) {
-  .gk-search-overlay { animation: none; }
-  .gk-search-laedt { animation-duration: 2s; }
+  .gk-root *,
+  .gk-root *::before,
+  .gk-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .gk-search-laedt { animation-duration: 2s !important; }
 }
 [data-theme="dark"] .gk-search-treffer mark { background: #854d0e; color: #fef9c3; }
 [data-theme="dark"] .gk-search-overlay { background: rgba(0, 0, 0, 0.6); }

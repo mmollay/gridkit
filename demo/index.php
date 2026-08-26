@@ -227,7 +227,7 @@ echo $demoHeader->title($headerTitle, true)
         ?>
 
     <h3 style="margin: 32px 0 16px;">Sizes</h3>
-    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px;">
+    <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px;">
         <?php
         $sizeData = [
             ['name' => 'Widget A', 'value' => '1.200 €', 'status' => 'active'],
@@ -621,7 +621,7 @@ $form->row()
             Wrap any form in <code>.gk-form-compact</code> for reduced spacing. All elements — inputs, selects, toggles, checkboxes — scale down proportionally.
         </p>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;">
             <!-- Normal -->
             <div>
                 <div style="font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--gk-on-surface-variant);margin-bottom:12px;">Normal (default)</div>
@@ -1757,7 +1757,7 @@ GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
                         <!-- Content mock -->
                         <div style="flex:1;padding:10px;background:var(--gk-surface-container);min-height:100px;">
                             <div style="font-size:9px;font-weight:600;color:var(--gk-on-surface-variant);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Content</div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">
+                            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px;margin-bottom:6px;">
                                 <div style="background:var(--gk-surface);border-radius:3px;height:18px;"></div>
                                 <div style="background:var(--gk-surface);border-radius:3px;height:18px;"></div>
                             </div>
