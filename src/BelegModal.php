@@ -2,14 +2,14 @@
 namespace GridKit;
 
 /**
- * BelegModal — Globaler PDF-/Beleg-Vorschau-Modal.
+ * BelegModal — global PDF / receipt (Beleg) preview modal.
  *
- * Verwendung:
+ * Usage:
  *
- *   // Einmalig im Layout (z.B. layouts/panel.php) — bevor </body>:
+ *   // Once in the layout (e.g. layouts/panel.php) — before </body>:
  *   \GridKit\BelegModal::container();
  *
- *   // JS-API überall:
+ *   // JS API, available everywhere:
  *   GK.belegModal.open('/faktura/invoices/123/pdf');
  *   GK.belegModal.open(url, { title: 'Rechnung 123', autoPrint: true });
  *   GK.belegModal.open(url, {
@@ -18,18 +18,18 @@ namespace GridKit;
  *   });
  *   GK.belegModal.close();
  *
- * Verhalten:
- *   - Desktop: iframe lädt URL inline (Browser-PDF-Viewer oder HTML-Vorschau).
- *   - Mobile (<= 768px): iframe versteckt, „PDF öffnen"-Button öffnet nativen Viewer.
- *   - Download + In neuem Tab: beide stabil (target=_blank).
- *   - ESC schliesst.
- *   - autoPrint: druckt das iframe sobald geladen.
- *   - unlinkExpenseId: zeigt „Verknüpfung trennen"-Button (POST an /faktura/api/beleg/unlink).
+ * Behaviour:
+ *   - Desktop: the iframe loads the URL inline (browser PDF viewer or HTML preview).
+ *   - Mobile (<= 768px): iframe hidden, the Lang::t('doc.open_pdf') button opens the native viewer.
+ *   - Download + open in a new tab: both are reliable (target=_blank).
+ *   - ESC closes the modal.
+ *   - autoPrint: prints the iframe as soon as it has loaded.
+ *   - unlinkExpenseId: shows the Lang::t('doc.unlink') button (POST to /faktura/api/beleg/unlink).
  */
 class BelegModal
 {
     /**
-     * Rendert den Modal-Container. Einmal pro Page (typischerweise im Layout).
+     * Renders the modal container. Once per page (typically in the layout).
      */
     public static function container(): void
     {

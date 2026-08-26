@@ -4,28 +4,28 @@ declare(strict_types=1);
 namespace GridKit;
 
 /**
- * Icon — zentrales SVG-Icon-Set für GRIDKit (since v1.17.0).
+ * Icon — central SVG icon set for GRIDKit (since v1.17.0).
  *
- * Wird von Table::button() und Button::icon()/render() genutzt, damit Icons
- * überall einheitlich als Outline-SVG (stroke 2px, currentColor) gerendert
- * werden — nicht als gefüllte Material-Icons-Font.
+ * Used by Table::button() and Button::icon()/render() so that icons are
+ * rendered uniformly everywhere as outline SVG (stroke 2px, currentColor)
+ * — not as the filled Material Icons font.
  *
- * Fällt auf Material-Icons-Font zurück wenn der Name nicht im Mapping ist.
+ * Falls back to the Material Icons font when the name is not in the mapping.
  */
 class Icon
 {
-    /** True wenn für diesen Namen ein SVG verfügbar ist. */
+    /** True when an SVG is available for this name. */
     public static function has(string $name): bool
     {
         return self::svg($name, 16, /* fallback */ false) !== '';
     }
 
     /**
-     * Rendert das Icon als SVG (falls im Mapping) oder als Material-Icons-Span.
+     * Renders the icon as SVG (if present in the mapping) or as a Material Icons span.
      *
-     * @param string $name      Icon-Name (z.B. 'edit', 'delete', 'add')
-     * @param int    $size      Pixel-Größe (default 16)
-     * @param bool   $fallback  Wenn kein SVG: Material-Icons-Span. Sonst leerer String.
+     * @param string $name      Icon name (e.g. 'edit', 'delete', 'add')
+     * @param int    $size      Pixel size (default 16)
+     * @param bool   $fallback  When true and no SVG exists: a Material Icons span. When false: an empty string.
      */
     public static function svg(string $name, int $size = 16, bool $fallback = true): string
     {

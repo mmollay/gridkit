@@ -65,6 +65,12 @@ content area, modal container, assets wired up.
 No npm, no Composer plugins, no compilation. `mbstring` is used when present
 but not required.
 
+**One thing the Composer package leaves out:** the bundled CKEditor 5 build that
+backs the rich-text form field. At 1.7 MB it would otherwise dominate every
+install of a framework that advertises zero dependencies. A git clone includes
+it and the demo uses it; if you need the rich-text field from a Composer
+install, include CKEditor yourself. Every other component works out of the box.
+
 ---
 
 ## Six themes, light and dark

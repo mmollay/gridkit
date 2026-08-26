@@ -22,7 +22,7 @@ class Button
      *   - class: string (additional classes)
      *   - title: string (tooltip)
      *   - onclick: string
-     *   - form: string (form-id für Submit-Buttons außerhalb des Formulars)
+     *   - form: string (form id for submit buttons located outside the form)
      *   - data: array of data-attributes ['action' => 'save']
      *   - iconPosition: 'left'|'right' (default: 'left')
      *   - loading: bool (shows spinner)
@@ -61,8 +61,8 @@ class Button
         $cls = implode(' ', $classes);
 
         // Build icon HTML.
-        // Seit v1.17.0: Default rendert SVG-Outline (via Icon::svg) wenn verfügbar.
-        // Opt-out: ['iconStyle' => 'material'] erzwingt die alte Material-Icons-Font.
+        // Since v1.17.0: by default renders an SVG outline (via Icon::svg) when available.
+        // Opt-out: ['iconStyle' => 'material'] forces the old Material Icons font.
         $iconHtml = '';
         if ($icon !== '') {
             $iconSize  = match($size) { 'xs' => 14, 'sm' => 16, 'lg' => 22, default => 18 };
@@ -108,9 +108,9 @@ class Button
         if (!empty($opts['title'])) $extras .= ' title="' . $e($opts['title']) . '"';
         if (!empty($opts['onclick'])) $extras .= ' onclick="' . $e($opts['onclick']) . '"';
         if (!empty($opts['target'])) $extras .= ' target="' . $e($opts['target']) . '"';
-        // form: bindet einen Submit-Button an ein Formular, in dem er NICHT steckt
-        // (Standard-HTML-Attribut). Ohne das war jeder ausgelagerte Speichern-Knopf
-        // stumm — Klick ohne jede Wirkung (Panel-Benutzerseite, 23.08.2026).
+        // form: binds a submit button to a form that it is NOT nested inside
+        // (standard HTML attribute). Without it, every save button placed outside its
+        // form was dead — a click with no effect at all (SSI Panel user page, 2026-08-23).
         if (!empty($opts['form'])) $extras .= ' form="' . $e($opts['form']) . '"';
 
         if ($href !== '' && !$disabled) {

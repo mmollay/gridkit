@@ -79,9 +79,9 @@ class Form
                 echo Button::render($this->cancelLabel, ['variant' => 'outlined', 'color' => 'neutral', 'href' => $this->cancelHref]);
             }
             if ($this->submitLabel) {
-                // Hauptaktion in Primary. Gruen ist im System die Erfolgsrolle — die Farbe
-                // fuer "hat geklappt". Sie an den Absenden-Knopf zu haengen verbraucht sie:
-                // wenn alles gruen ist, bedeutet Gruen nichts mehr.
+                // Main action in Primary. In this system green is the success role — the
+                // colour for "it worked". Attaching it to the submit button uses it up:
+                // if everything is green, green no longer means anything.
                 echo Button::render($this->submitLabel, ['variant' => 'filled', 'color' => 'primary', 'type' => 'submit', 'icon' => 'save']);
             }
             echo '</div>';
@@ -168,7 +168,7 @@ class Form
                     }
                     echo '</div></div></div>';
                 } else {
-                    // native: true → plain <select> (z.B. für Toolbar-Filter)
+                    // native: true → plain <select> (e.g. for toolbar filters)
                     echo "<select name=\"{$e($name)}\" id=\"{$e($name)}\" class=\"gk-input\"{$req}>";
                     foreach ($f['options'] ?? [] as $k => $v) {
                         $sel = (string)$k === (string)$value ? ' selected' : '';
@@ -268,7 +268,7 @@ class Form
                 $hint        = $f['hint'] ?? ($maxSize ? 'Max. ' . $maxSize : '');
                 $icon        = $e($f['icon'] ?? 'cloud_upload');
                 $label       = $e($f['label_text'] ?? ($multiple ? Lang::t('form.upload_multiple') : Lang::t('form.upload_single')));
-                // accept: array ['pdf','jpg',...] oder string '.pdf,.jpg,...'
+                // accept: array ['pdf','jpg',...] or string '.pdf,.jpg,...'
                 $acceptRaw   = $f['accept'] ?? [];
                 if (is_array($acceptRaw)) {
                     $acceptStr = implode(',', array_map(
@@ -373,7 +373,7 @@ class Form
                 $extra = '';
                 if (isset($f['min']))         $extra .= " min=\"{$e($f['min'])}\"";
                 if (isset($f['max']))         $extra .= " max=\"{$e($f['max'])}\"";
-                // Datumsfelder: max auf 4-stellige Jahre begrenzen (Browser erlaubt sonst 6+)
+                // Date fields: cap max at 4-digit years (browsers otherwise allow 6+)
                 if (in_array($type, ['date', 'datetime'], true) && !isset($f['max'])) {
                     $extra .= ' max="9999-12-31"';
                 }

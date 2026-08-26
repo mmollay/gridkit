@@ -20,10 +20,10 @@ class YearFilter
     {
         $this->id = $id;
         $this->paramName = $paramName;
-        // Wenn URL-Param gesetzt: nimm den. Sonst:
-        // - currentYear = 0 als „nicht entschieden". Wird in render() finalisiert,
-        //   abhängig davon ob allOption gesetzt ist (dann 0 = „Alle Jahre"-Default)
-        //   oder nicht (dann date('Y') = aktuelles Jahr).
+        // If the URL param is set: take it. Otherwise:
+        // - currentYear = -1 meaning "the URL param was not set". Finalised in render(),
+        //   depending on whether allOption is set (then 0 = the "Alle Jahre" default)
+        //   or not (then date('Y') = the current year).
         $this->currentYear = isset($_GET[$paramName]) && $_GET[$paramName] !== ''
             ? (int)$_GET[$paramName]
             : -1;
@@ -60,8 +60,8 @@ class YearFilter
     }
 
     /**
-     * Fügt eine "Alle"-Option am Anfang des Dropdowns ein.
-     * Der Controller muss den $value-Wert (default 0) als "kein Filter" interpretieren.
+     * Inserts an "Alle" option at the start of the dropdown.
+     * The controller has to interpret the $value argument (default 0) as "no filter".
      */
     public function allOption(string $label = 'Alle Jahre', int $value = 0): static
     {
@@ -70,8 +70,8 @@ class YearFilter
     }
 
     /**
-     * Setzt eine abweichende CSS-Klasse für das <select>. Nützlich, um das Dropdown
-     * in eine bestehende Toolbar (z.B. .gk-toolbar > .gk-filter) zu integrieren.
+     * Sets a different CSS class for the <select>. Useful for fitting the dropdown
+     * into an existing toolbar (e.g. .gk-toolbar > .gk-filter).
      */
     public function selectClass(string $class): static
     {
@@ -85,9 +85,9 @@ class YearFilter
     }
 
     /**
-     * currentYear finalisieren: -1 bedeutet „URL-Param war nicht gesetzt".
-     * Mit allOption → Default = allOption-Wert (typisch 0 = „Alle Jahre").
-     * Ohne allOption → Default = aktuelles Jahr.
+     * Finalise currentYear: -1 means "the URL param was not set".
+     * With allOption → default = the allOption value (typically 0 = "Alle Jahre").
+     * Without allOption → default = the current year.
      */
     private function resolveYear(): int
     {
