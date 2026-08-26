@@ -1,11 +1,11 @@
-# GRIDKit – Agent Skill
+# GridKit – Agent Skill
 
 > **Version:** 1.28.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.ssi.at
 
 ## Purpose
 
-You are building or maintaining a web application using **GRIDKit**, a lightweight PHP component framework for admin dashboards. This skill is the authoritative reference for correct GRIDKit usage.
+You are building or maintaining a web application using **GridKit**, a lightweight PHP component framework for admin dashboards. This skill is the authoritative reference for correct GridKit usage.
 
 ## Architecture
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace GridKit;
 
 /**
- * Icon — central SVG icon set for GRIDKit (since v1.17.0).
+ * Icon — central SVG icon set for GridKit (since v1.17.0).
  *
  * Used by Table::button() and Button::icon()/render() so that icons are
  * rendered uniformly everywhere as outline SVG (stroke 2px, currentColor)

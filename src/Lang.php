@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace GridKit;
 
 /**
- * GRIDKit Lang — Minimal i18n for zero-dependency frameworks.
+ * GridKit Lang — Minimal i18n for zero-dependency frameworks.
  *
  * Usage:
  *   Lang::set('en');                          // Switch locale

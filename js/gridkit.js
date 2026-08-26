@@ -2134,7 +2134,7 @@
   // Without a namespace everything behaves as it did before.
   GK.theme = {
     // The namespace can also be supplied by the host system — exactly like
-    // window.GK_LANG for the translations. That is necessary because GRIDKit
+    // window.GK_LANG for the translations. That is necessary because GridKit
     // restores the profile itself on load, before any of your own code can run.
     scope: String(window.GK_THEME_SCOPE || ""),
 
@@ -3006,7 +3006,7 @@ GK.tip = {
 document.addEventListener("DOMContentLoaded", () => GK.tip.init());
 
 // === SEARCH (GK.search) =================================================
-// System-wide quick search. GRIDKit supplies only the control element — WHAT
+// System-wide quick search. GridKit supplies only the control element — WHAT
 // gets found is decided by each system through the configured address.
 //
 //   GK.search.init({ url: '/api/suche', hotkey: 'ctrl+k', minLength: 2 })

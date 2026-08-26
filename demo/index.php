@@ -917,11 +917,11 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
     <div class="gk-accordion" data-gk-single>
         <div class="gk-accordion-item open">
             <button class="gk-accordion-trigger">
-                <span>What is GRIDKit?</span>
+                <span>What is GridKit?</span>
                 <span class="material-icons">expand_more</span>
             </button>
             <div class="gk-accordion-content">
-                <div class="gk-accordion-body">GRIDKit is a lightweight PHP/CSS/JS framework for admin dashboards and internal tools. Zero dependencies, M3-inspired.</div>
+                <div class="gk-accordion-body">GridKit is a lightweight PHP/CSS/JS framework for admin dashboards and internal tools. Zero dependencies, M3-inspired.</div>
             </div>
         </div>
         <div class="gk-accordion-item">
@@ -939,7 +939,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
                 <span class="material-icons">expand_more</span>
             </button>
             <div class="gk-accordion-content">
-                <div class="gk-accordion-body">No. GRIDKit has no dependencies &mdash; one CSS file, one JS file, done. Just include and get started.</div>
+                <div class="gk-accordion-body">No. GridKit has no dependencies &mdash; one CSS file, one JS file, done. Just include and get started.</div>
             </div>
         </div>
     </div>
@@ -1111,7 +1111,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
     <h3 style="margin: 32px 0 16px;">Combinations</h3>
-    <p class="demo-intro">Combination examples showing the full potential of GRIDKit.</p>
+    <p class="demo-intro">Combination examples showing the full potential of GridKit.</p>
 
     <h3 style="margin: 32px 0 16px;">Tabs + Accordion (combined)</h3>
     <p class="demo-intro">Tabs for main categories, accordion for details &mdash; a common pattern in admin UIs.</p>
@@ -1818,7 +1818,7 @@ GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
         </div>
     </div>
     <div class="demo-card">
-        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Anatomy of a GRIDKit Page</h3>
+        <h3 style="margin:0 0 8px;font-size:15px;color:var(--gk-on-surface, #374151);">Anatomy of a GridKit Page</h3>
         <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant);">Every page follows this structure — from <code>skeleton.php</code> to production.</p>
 
         <div class="anatomy-layout">

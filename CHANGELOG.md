@@ -7,6 +7,38 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.39.1] - 2026-08-26
+
+The landing page — the second thing a visitor sees.
+
+### Fixed
+
+- **The product screenshot had been a 404 since 1.39.0's predecessor.** When the
+  screenshots were renamed from German filenames in 1.30.0, every reference was
+  updated except this one, which still asked for
+  `docs/screenshots/tabelle-hell.png`. The comment above it reads *"a UI library
+  has to show what it looks like"*.
+- **Both images declared the wrong size** — `2800×1760` for a `1400×900` file.
+  A wrong intrinsic size reserves the wrong box, so the page jumps when the
+  image arrives.
+- **The page disagreed with itself about how many components there are.** Its
+  hero stat says 16; the meta description, the `og:` and `twitter:` tags and two
+  body sentences said 12. `src/` holds 21 classes — 16 components plus five
+  infrastructure ones. 16 everywhere now.
+- **The name was spelled `GRIDKit`** in `<title>`, `og:title`, `og:site_name`
+  and `twitter:title` — precisely the strings a search result and a shared link
+  display — and in nine other files. It is GridKit.
+- **The skill table was unreadable on a phone.** A fixed 140 px label column
+  left the value about 190 px at a 390 px viewport, and `.skill-table` clips, so
+  the right half of every row was cut off. Rows stack below 768 px now.
+
+### Added
+
+- `tests/landing.test.php` — every referenced image must exist, declared
+  dimensions must match the files, the component count must agree with `src/`,
+  and the name must be spelled one way. 1088 assertions in total.
+
+---
 ## [1.39.0] - 2026-08-26
 
 The demo — the project's most-visited page, and the first thing anyone tries.

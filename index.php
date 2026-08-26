@@ -146,8 +146,8 @@ $skillHtml = renderSkillMd($skillContent);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GRIDKit – Agent-Ready PHP Component Framework for Admin Dashboards</title>
-    <meta name="description" content="GRIDKit is a zero-dependency PHP framework for building admin dashboards. 12 components, 1 CSS + 1 JS file, built for AI agents. Open Source on GitHub.">
+    <title>GridKit – Agent-Ready PHP Component Framework for Admin Dashboards</title>
+    <meta name="description" content="GridKit is a zero-dependency PHP framework for building admin dashboards. 16 components, 1 CSS + 1 JS file, built for AI agents. Open Source on GitHub.">
     <meta name="keywords" content="PHP framework, admin dashboard, CRUD, AI agent, component framework, Material Design, open source">
     <meta name="author" content="Martin Mollay">
     <meta name="robots" content="index, follow">
@@ -155,15 +155,15 @@ $skillHtml = renderSkillMd($skillContent);
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="GRIDKit – Agent-Ready PHP Component Framework">
-    <meta property="og:description" content="Zero-dependency PHP framework for admin dashboards. 12 components, built for AI agents. Open Source.">
+    <meta property="og:title" content="GridKit – Agent-Ready PHP Component Framework">
+    <meta property="og:description" content="Zero-dependency PHP framework for admin dashboards. 16 components, built for AI agents. Open Source.">
     <meta property="og:url" content="<?= $canonicalUrl ?>">
-    <meta property="og:site_name" content="GRIDKit">
+    <meta property="og:site_name" content="GridKit">
     <meta property="og:image" content="<?= $canonicalUrl ?>/og-image.png">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="GRIDKit – Agent-Ready PHP Component Framework">
+    <meta name="twitter:title" content="GridKit – Agent-Ready PHP Component Framework">
     <meta name="twitter:description" content="Zero-dependency PHP framework for admin dashboards. Built for AI agents.">
 
     <!-- Favicon -->
@@ -174,7 +174,7 @@ $skillHtml = renderSkillMd($skillContent);
     {
         "@context": "https://schema.org",
         "@type": "SoftwareSourceCode",
-        "name": "GRIDKit",
+        "name": "GridKit",
         "description": "Agent-ready PHP component framework for admin dashboards. Zero dependencies, Material Design 3, AJAX-first.",
         "codeRepository": "https://github.com/mmollay/gridkit",
         "programmingLanguage": ["PHP", "JavaScript", "CSS"],
@@ -578,6 +578,15 @@ $skillHtml = renderSkillMd($skillContent);
             .section { padding: 56px 16px; }
             .features-grid { grid-template-columns: 1fr; }
             .skill-header { flex-direction: column; align-items: flex-start; }
+
+            /* A fixed 140px label column leaves the value about 190px on a
+               phone, and .skill-table clips what does not fit — so the right
+               half of every row was simply unreadable. Stack them instead. */
+            .skill-table-row { flex-direction: column; gap: 2px; }
+            .skill-table-cell,
+            .skill-table-cell:first-child { flex: 1 1 auto; padding: 8px 14px; }
+            .skill-table-cell:first-child { padding-bottom: 0; }
+            .skill-table-value { overflow-wrap: anywhere; }
         }
     </style>
 </head>
@@ -588,7 +597,7 @@ $skillHtml = renderSkillMd($skillContent);
     <div class="nav-inner">
         <a href="/" class="nav-brand">
             <span class="material-icons" style="font-size:24px">widgets</span>
-            GRIDKit <span>v<?= $version ?></span>
+            GridKit <span>v<?= $version ?></span>
         </a>
         <div class="nav-links">
             <a href="#features">Features</a>
@@ -613,8 +622,8 @@ $skillHtml = renderSkillMd($skillContent);
         <span class="gradient">Your AI Agent Understands</span>
     </h1>
     <p class="hero-sub">
-        GRIDKit is a zero-dependency PHP component framework designed for AI agents.
-        12 components, 1 CSS + 1 JS file, no build process. Your agent reads the skill file
+        GridKit is a zero-dependency PHP component framework designed for AI agents.
+        16 components, 1 CSS + 1 JS file, no build process. Your agent reads the skill file
         and builds complete CRUD applications in seconds.
     </p>
     <div class="hero-actions">
@@ -654,9 +663,9 @@ $skillHtml = renderSkillMd($skillContent);
         <figure style="margin:0; border-radius:16px; overflow:hidden;
                        box-shadow:0 2px 6px rgba(15,23,42,.08), 0 24px 60px rgba(15,23,42,.14);
                        border:1px solid rgba(15,23,42,.08);">
-            <img src="<?= $asset('docs/screenshots/tabelle-hell.png') ?>"
+            <img src="<?= $asset('docs/screenshots/table-light.png') ?>"
                  alt="A GridKit table: search, filter, status pills, row actions"
-                 width="2800" height="1760"
+                 width="1400" height="900"
                  style="display:block; width:100%; height:auto;">
         </figure>
         <p style="text-align:center; margin:18px auto 0; max-width:620px;
@@ -671,14 +680,14 @@ $skillHtml = renderSkillMd($skillContent);
 <section class="section section-alt" id="features">
     <div class="container">
         <div class="section-header">
-            <h2>Why GRIDKit?</h2>
+            <h2>Why GridKit?</h2>
             <p>Everything you need to build production-ready admin dashboards. Nothing you don't.</p>
         </div>
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon"><span class="material-icons">smart_toy</span></div>
                 <h3>Agent-First Design</h3>
-                <p>Built with AI agents in mind. Feed the skill file to your AI assistant and it generates complete GRIDKit applications — tables, forms, modals, authentication.</p>
+                <p>Built with AI agents in mind. Feed the skill file to your AI assistant and it generates complete GridKit applications — tables, forms, modals, authentication.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon"><span class="material-icons">bolt</span></div>
@@ -725,7 +734,7 @@ $skillHtml = renderSkillMd($skillContent);
                        border:1px solid rgba(15,23,42,.07);">
             <img src="<?= $asset('docs/screenshots/themes.png') ?>"
                  alt="The six GridKit themes side by side, same components"
-                 width="2800" height="1120"
+                 width="1400" height="632"
                  style="display:block; width:100%; height:auto;">
         </figure>
         <div class="code-block" style="margin-top:28px;">
@@ -745,23 +754,23 @@ $skillHtml = renderSkillMd($skillContent);
     <div class="container">
         <div class="section-header">
             <h2>Agent Skill — Let AI Build For You</h2>
-            <p>Give your AI agent the GRIDKit skill file. It knows every component, every pattern, every best practice.</p>
+            <p>Give your AI agent the GridKit skill file. It knows every component, every pattern, every best practice.</p>
         </div>
 
         <div class="agent-grid">
             <div class="agent-info">
                 <h3>How It Works</h3>
                 <p>
-                    The GRIDKit Agent Skill is a structured document that teaches any AI assistant
-                    (Claude, GPT, Gemini, or any LLM) how to use GRIDKit optimally. It contains
+                    The GridKit Agent Skill is a structured document that teaches any AI assistant
+                    (Claude, GPT, Gemini, or any LLM) how to use GridKit optimally. It contains
                     component references, code patterns, and best practices — everything an agent
-                    needs to generate correct GRIDKit code on the first try.
+                    needs to generate correct GridKit code on the first try.
                 </p>
                 <ol class="agent-steps">
                     <li>Download <code>GRIDKIT_SKILL.md</code> from the repository</li>
                     <li>Add it to your AI agent's context or project knowledge</li>
                     <li>Describe what you need: "Create a user management dashboard"</li>
-                    <li>The agent generates working GRIDKit PHP code — tables, forms, modals, all wired up</li>
+                    <li>The agent generates working GridKit PHP code — tables, forms, modals, all wired up</li>
                 </ol>
             </div>
 
@@ -771,7 +780,7 @@ $skillHtml = renderSkillMd($skillContent);
                     <div class="demo-terminal-dot"></div>
                     <div class="demo-terminal-dot"></div>
                     <div class="demo-terminal-dot"></div>
-                    <div class="demo-terminal-title">Agent + GRIDKit Skill</div>
+                    <div class="demo-terminal-title">Agent + GridKit Skill</div>
                 </div>
                 <div class="demo-terminal-body" id="demo-output">
                     <div class="line"><span class="comment">// Click a scenario below to see it in action</span></div>
@@ -802,7 +811,7 @@ $skillHtml = renderSkillMd($skillContent);
                 </div>
             </div>
             <p class="skill-desc">
-                Add this file to your AI agent's project context. It contains complete documentation for all 12 components,
+                Add this file to your AI agent's project context. It contains complete documentation for all 16 components,
                 code patterns, JavaScript API reference, and common recipes.
             </p>
             <div class="skill-preview collapsed" id="skill-preview"><?= $skillHtml ?></div>
@@ -949,7 +958,7 @@ $skillHtml = renderSkillMd($skillContent);
 <footer class="footer" role="contentinfo">
     <div class="footer-inner">
         <div class="footer-left">
-            GRIDKit v<?= $version ?> &middot; MIT License &middot; Made by <a href="https://github.com/mmollay" target="_blank" rel="noopener">Martin Mollay</a>
+            GridKit v<?= $version ?> &middot; MIT License &middot; Made by <a href="https://github.com/mmollay" target="_blank" rel="noopener">Martin Mollay</a>
         </div>
         <div class="footer-links">
             <a href="https://github.com/mmollay/gridkit" target="_blank" rel="noopener">GitHub</a>

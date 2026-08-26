@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace GridKit;
 
 /**
- * GRIDKit Auth — Session-based authentication with optional Remember Me
+ * GridKit Auth — Session-based authentication with optional Remember Me
  *
  * Usage:
  *   Auth::protect();

@@ -1,6 +1,6 @@
 <?php
 /**
- * GRIDKit Deutsche Übersetzungen
+ * GridKit Deutsche Übersetzungen
  */
 return [
     // Table
