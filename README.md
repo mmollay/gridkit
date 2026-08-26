@@ -3,7 +3,7 @@
 **PHP components for admin dashboards. No build step, no dependencies, no JavaScript framework.**
 
 [![Packagist](https://img.shields.io/packagist/v/mmollay/gridkit?label=packagist)](https://packagist.org/packages/mmollay/gridkit)
-[![Release](https://img.shields.io/github/v/release/mmollay/gridkit?label=release)](https://github.com/mmollay/gridkit/releases)
+[![Release](https://img.shields.io/github/v/tag/mmollay/gridkit?label=release&sort=semver)](https://github.com/mmollay/gridkit/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![PHP](https://img.shields.io/badge/PHP-8.2%2B-777bb3)](https://php.net)
 
