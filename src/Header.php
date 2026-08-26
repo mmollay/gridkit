@@ -142,11 +142,7 @@ class Header
             if (!empty($u['avatar'])) {
                 $html .= '<img class="gk-avatar" src="' . $e($u['avatar']) . '" alt="' . $e($u['name']) . '">';
             } else {
-                $initials = '';
-                foreach (explode(' ', $u['name']) as $w) {
-                    if ($w !== '') $initials .= mb_strtoupper(mb_substr($w, 0, 1));
-                }
-                $html .= '<div class="gk-avatar gk-avatar-initials">' . $e($initials) . '</div>';
+                $html .= '<div class="gk-avatar gk-avatar-initials">' . $e(self::initials($u['name'])) . '</div>';
             }
             $html .= '<span class="gk-header-user-name">' . $e($u['name']) . '</span>';
             $html .= '<span class="material-icons">expand_more</span>';
@@ -197,5 +193,30 @@ class Header
 
         $html .= '</header>';
         return $html;
+    }
+
+    /**
+     * Initialen aus einem Namen. Bewusst ohne harte mbstring-Abhaengigkeit:
+     * die Erweiterung ist optional und auf schlanken PHP-Installationen oft
+     * nicht vorhanden. GridKit wirbt mit "zero dependencies" — daran mit einem
+     * Fatal Error zu scheitern, waere ein gebrochenes Versprechen. Ohne
+     * mbstring bleiben Umlaute in ihrer Grossform unveraendert; das ist eine
+     * hinnehmbare Einbusse gegenueber einer weissen Seite.
+     */
+    private static function initials(string $name): string
+    {
+        $hatMb = function_exists('mb_substr') && function_exists('mb_strtoupper');
+        $out = '';
+        foreach (preg_split('/\s+/u', trim($name)) ?: [] as $w) {
+            if ($w === '') continue;
+            if ($hatMb) {
+                $out .= mb_strtoupper(mb_substr($w, 0, 1, 'UTF-8'), 'UTF-8');
+            } else {
+                // Erstes Zeichen UTF-8-sicher greifen, dann ASCII-Grossschreibung.
+                $erstes = preg_match('/^./u', $w, $m) ? $m[0] : '';
+                $out .= strtoupper($erstes);
+            }
+        }
+        return $out;
     }
 }

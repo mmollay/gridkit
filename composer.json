@@ -39,5 +39,8 @@
     },
     "config": {
         "sort-packages": true
+    },
+    "suggest": {
+        "ext-mbstring": "Korrekte Grossschreibung von Initialen bei nicht-ASCII-Namen; GridKit laeuft auch ohne."
     }
 }
