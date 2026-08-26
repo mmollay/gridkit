@@ -1,179 +1,157 @@
-# Changelog - GridKit
+# Changelog — GridKit
 
-Alle Änderungen an diesem Projekt werden hier dokumentiert.
-Format basierend auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
+All notable changes to this project are documented here.
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+> Entries up to 1.27.3 are in German — they are the historical record and are
+> left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
 ## [1.28.0] - 2026-08-26
 
-Design-Sanierung in drei Etappen. Die M3-Rollenschicht war vollständig
-vorhanden, wurde aber an rund 480 Stellen von fest verdrahteten Farbwerten
-überstimmt. Diese Version schließt die Leitung an und ergänzt die vier
-Schichten, die dem System gefehlt haben: Typografie, Bewegung, Höhe, Fokus.
+A design overhaul in three stages. The M3 role layer was already complete, but
+roughly 480 hardcoded colour values overruled it. This release connects the two
+and adds the four layers the system was missing: typography, motion, elevation,
+focus.
 
-Die PHP-Schnittstelle ändert sich nicht. Bestehende Klassennamen und die
-Alias-Tokens (`--gk-primary-500`, `--gk-neutral-*` …) bleiben.
+The PHP API does not change. Existing class names and the legacy alias tokens
+(`--gk-primary-500`, `--gk-neutral-*`, …) keep working.
 
-### Behoben
+### Fixed
 
-- **Die sechs Themes hatten im Light Mode keine Wirkung.** Neun Komponenten
-  geprüft — gefüllte, umrandete, textbasierte und tonale Buttons, Tabellenkopf,
-  Rahmen, Suchfeld, Seitenleiste — keine einzige reagierte auf den Wechsel,
-  obwohl `--gk-primary` korrekt umsprang. Gemessen ändern sich beim Wechsel
-  indigo → forest jetzt 432 statt 107 Eigenschaften, an 234 statt 83 Elementen.
-- **Dark Mode: jede zweite Tabellenzeile war unlesbar.** Kontrast 1,16 : 1
-  gegen die von WCAG AA geforderten 4,5 : 1. Ursache war ein
-  Spezifitätsfehler — die Zebra-Fläche wurde auf `> td` gemalt, der
-  Dark-Mode-Patch auf `tr`, die Zelle lag darüber. Jetzt 13,20 : 1.
-- **Weißer Text auf der Primärfläche trug je nach Theme 2,77 : 1.** Ocean lag
-  damit klar unter der WCAG-Schwelle. Über alle sechs Themes lag die Spanne
-  bei 2,77 – 7,58 : 1, jetzt bei 4,35 – 5,26 : 1 (Dark Mode 7,57 – 7,79 : 1).
-- **Erfolgsmeldungen waren im Forest-Theme violett.** `--gk-success` war auf
-  `--gk-tertiary` verdrahtet, und Forest setzt Tertiary auf `#8b5cf6`.
-  Semantische Rollen folgen dem Theme-Akzent nicht mehr.
-- **Die Dark-Sidebar war in allen Themes gleich.** Sieben Regeln haben sie auf
-  `#010409` gezwungen und die themenspezifischen Werte aus `themes.css`
-  ausgehebelt.
-- **`transition: all` ist verschwunden** (13 Vorkommen). Es animiert auch
-  Breite, Höhe und Position — die häufigste Ursache für Layouts, die beim
-  Aufklappen zucken.
-- **Demo: Seitwärtsscrollen am Telefon.** `repeat(3, 1fr)` ohne `minmax(0, …)`
-  ließ die Tabelle ihre Grid-Spur auf 542 px aufblähen. Dokumentbreite bei
-  390 px Viewport: 1.690 px → 407 px. Dazu eine Schutzregel, damit eine
-  Tabelle fremde Spuren gar nicht erst aufweiten kann.
+- **The six themes had no effect in light mode.** Nine components were probed —
+  filled, outlined, text and tonal buttons, table header, borders, search field,
+  sidebar — and not one reacted to a theme switch, even though `--gk-primary`
+  changed correctly. Switching indigo → forest now changes 488 properties across
+  272 elements, measured on the demo page; it was 151 across 116.
+- **Dark mode: every second table row was unreadable.** Contrast 1.16:1 against
+  the 4.5:1 WCAG AA requires. The cause was a specificity mismatch — line 469
+  painted the zebra fill on `> td`, the dark-mode patch on `tr`, and the cell sat
+  on top. Now 13.20:1.
+- **White text on the primary surface carried 2.77:1 in the ocean theme**, well
+  below the WCAG threshold. Across all six themes the range was 2.77–7.58:1; it
+  is now 4.35–5.26:1 (7.57–7.79:1 in dark mode).
+- **Success messages were purple in the forest theme.** `--gk-success` was wired
+  to `--gk-tertiary`, and forest sets tertiary to `#8b5cf6`. Semantic roles no
+  longer follow the theme accent.
+- **An empty `data-gk-theme` collapsed the primary colour entirely.** No theme
+  block matched, `--gk-hue` was undefined, `oklch()` became invalid and filled
+  buttons rendered with no background at all. The hue now falls back to indigo.
+- **The dark sidebar looked the same in every theme.** Seven rules forced it to
+  `#010409` and overrode the per-theme values from `themes.css`.
+- **`transition: all` is gone** (13 occurrences). It animates width, height and
+  position too — the most common cause of layouts that jump when something opens.
+- **`Table::renderLabel()` only knew German status words.** `active` and
+  `inactive` both fell through to grey, so a status column's most important
+  distinction carried no colour at all.
+- **A failed AJAX reload was silent.** `reload()` had no `catch`; the table kept
+  showing stale data. It now shows a message with a retry action and fires a
+  `gk-table-error` event.
+- **Icon sizes never took effect** where GridKit sets them with a single class.
+  The Material Icons stylesheet is usually included after `gridkit.css` and sets
+  `.material-icons { font-size: 24px }`; at equal specificity, order wins.
+  Demonstrably affected: `.gk-sidebar-icon` (set to 20px, rendered at 24) and
+  `.gk-select-arrow` (18 → 24). Twelve classes now win.
+- **`mbstring` was a silent hard requirement.** `Header::render()` called
+  `mb_strtoupper()` for avatar initials. The extension is optional and missing on
+  lean PHP builds, where the page died with a fatal error mid-render.
+- **Demo: the page scrolled sideways on a phone.** `repeat(3, 1fr)` without
+  `minmax(0, …)` let a table inflate its grid track to 542px. Document width at a
+  390px viewport: 1690px → 407px.
 
-### Neu
+### Added
 
-- **Zustands-Rollen.** `--gk-primary-hover` und Geschwister leiten sich aus der
-  jeweiligen Rolle ab, statt fest zu stehen; dazu Zustandsflächen
-  (`--gk-state-hover`, `--gk-state-primary` …) und ein Fokusring als Token.
-  Rückfall-Literale für Browser ohne relative Farbsyntax.
-- **Rollenpaare für Warnung und Info** (`--gk-warning-container`,
-  `--gk-on-info-container` …), die bisher fehlten — deshalb mussten Labels und
-  Meldungen eigene Literale mitbringen.
-- **`--gk-warning-text` / `--gk-success-text`** — dieselbe Farbe, dunkler. Als
-  Schriftfarbe auf heller Fläche reißt `--gk-warning` den Kontrast ein
-  (`#f59e0b` auf Weiß = 2,15 : 1).
-- **Typo-Skala:** sieben Rollen von `--gk-text-display` bis
-  `--gk-text-overline`, dazu drei Zeilenhöhen.
-- **Eigene Icon-Skala** (`--gk-icon-xs` … `--gk-icon-2xl`). Material-Icons
-  werden über `font-size` dimensioniert, sind aber keine Schrift; vorher lagen
-  beide Skalen ununterscheidbar im selben Zahlenraum.
-- **Bewegungs-Tokens:** drei Dauern, zwei Kurven, zwei fertige Bündel
+- **State roles.** `--gk-primary-hover` and siblings are derived from their role
+  instead of being fixed values, plus state layers (`--gk-state-hover`,
+  `--gk-state-primary`, …) and a focus ring as a token.
+- **Role pairs for warning and info** (`--gk-warning-container`,
+  `--gk-on-info-container`, …) which did not exist before, so labels and messages
+  had to carry their own literals.
+- **`--gk-warning-text` / `--gk-success-text`** — the same colour, darker. As a
+  text colour on a light surface, `--gk-warning` breaks contrast (`#f59e0b` on
+  white is 2.15:1).
+- **Type scale:** seven roles from `--gk-text-display` to `--gk-text-overline`,
+  plus three line heights.
+- **A separate icon scale** (`--gk-icon-xs` … `--gk-icon-3xl`). Material Icons are
+  sized through `font-size` but are not type; both scales previously shared one
+  indistinguishable range of numbers.
+- **Motion tokens:** three durations, two curves, two ready-made bundles
   (`--gk-transition-state`, `--gk-transition-move`).
-- **Vier Höhenstufen** (`--gk-elev-1` … `-4`), jede zweilagig; im Dark Mode
-  tiefer, weil Schatten auf dunklem Grund kaum tragen.
-- **Ein Theme ist ein Farbwinkel.** `themes.css` leitet jedes Theme aus
-  `--gk-hue` ab; ein siebtes Theme kostet eine Zeile statt zwanzig. Die
-  Literale bleiben als `@supports`-Rückfall stehen.
+- **Four elevation levels** (`--gk-elev-1` … `-4`), each two-layered; deeper in
+  dark mode, where shadows barely carry.
+- **A theme is one hue.** `themes.css` derives each theme from `--gk-theme-hue`;
+  a seventh theme costs one line instead of twenty. The literals remain as an
+  `@supports` fallback.
+- **A real empty state.** Icon, statement, explanation — and a "Reset filters"
+  action when a search or filter is active. The table works out by itself whether
+  there is no data at all or only the current filter matches nothing. Configurable
+  through `Table::emptyState()`.
+- **Disabled states.** There was exactly one rule (`.gk-btn:disabled`); a disabled
+  input looked editable and you found out by clicking. `readonly` stays
+  deliberately distinct from `disabled`.
+- **A visible loading state.** GridKit advertises "AJAX-first" and gave no
+  feedback at all — content simply jumped. Rows now stay and recede, a bar shows
+  the work, `aria-busy` says the same to screen readers.
+- **`.gk-skeleton`** as a placeholder for first paint.
+- **New column option `['muted' => true]`.** An article or document number is a
+  reference, not content; at full text colour it competes with the description
+  next to it.
+- **`Layout::asset()`** appends the file's modification timestamp to CSS and JS
+  paths. Without it, CDNs and browsers keep serving the old file after an update —
+  a `themes.css` from March sat in the cache while the site already reported
+  1.28.0, and the theme switcher looked broken as a result.
+- **Pagination and the document modal are translatable.** `Pagination` shipped a
+  German `aria-label`; `BelegModal` shipped eleven German strings. Both now go
+  through `Lang`, in English and German.
 
-### Veredelt
+### Refined
 
-Der sichtbare Teil — die Tabelle aus Blatt 04 des Audits:
+The visible half — the table:
 
-- **Status-Pillen tragen wieder Bedeutung.** `Table::renderLabel()` kannte nur
-  die deutschen Formen: `active` und `inactive` fielen beide auf grau durch,
-  womit die wichtigste Unterscheidung einer Statusspalte ohne Farbe blieb. Die
-  Liste kennt jetzt beide Sprachen und mehr Zustände. Jede Pille bekommt einen
-  Punkt in der Signalfarbe — er unterscheidet die Zustände auch bei
-  Farbsehschwäche und im Graustufendruck. `.gk-label-plain` schaltet ihn ab.
-- **Zeilenaktionen ruhen, bis die Zeile gemeint ist.** Löschen ist die seltenste
-  Handlung und die einzige unumkehrbare — und war die einzige, die auf jeder
-  Zeile Signalfarbe trug. Die Symbole bleiben sichtbar, nur farblos, und
-  kommen bei Hover oder Tastaturfokus zurück.
-- **Ein Trennsystem statt drei.** Zebra-Fläche, Zeilenlinie und Kartenrahmen
-  haben gleichzeitig getrennt. Die Zebra-Fläche entfällt (`.gk-table-striped`
-  bringt sie zurück), dadurch trägt die Hover-Fläche allein und wird zum
-  ersten Mal deutlich. Die angefasste Zeile bekommt eine Kante in Primary.
-- **Beträge in halbfetter Zahlenbreite.** `.gk-td-num` hatte die Zahlenbreite
-  schon; es fehlte das Gewicht, mit dem die Spalte als Block lesbar wird.
-- **Die Karte trägt sich selbst** — erste Höhenstufe statt hartem Rahmen.
-- **Die Toolbar wird leiser.** Das Suchfeld bekommt eine eigene Fläche statt
-  eines kräftigen Rahmens, Filter folgen der Pillenform.
-- **Die Höhenstufen sind jetzt zugewiesen**, nicht nur definiert: Karte auf
-  `--gk-elev-1`, Dropdowns auf `-2`, Modal auf `-4`.
-- **Die Kopfzeile hat keine eigene Fläche mehr.** Versalien, Größe und Gewicht
-  machen sie bereits eindeutig als Kopf lesbar — ein grauer Balken darunter war
-  eine zweite Ansage für dieselbe Sache. Die Trennung übernimmt die Linie.
-- **Neue Spaltenoption `['muted' => true]`.** Eine Artikel- oder Belegnummer ist
-  Zuordnung, kein Inhalt; in voller Textfarbe konkurriert sie mit der
-  Bezeichnung daneben um denselben Blick.
+- **Status pills carry meaning again**, each with a dot so the distinction also
+  survives colour blindness and greyscale printing.
+- **Row actions rest until the row is meant.** Deleting is the rarest action and
+  the only irreversible one — and it was the only one wearing a signal colour on
+  every row. Nothing is hidden, only desaturated, and it returns on hover or
+  keyboard focus. Guarded by `@media (hover: hover)` so touch devices are not left
+  with permanently greyed controls.
+- **One separator system instead of three.** The zebra fill is gone
+  (`.gk-table-striped` brings it back), so the hover surface carries alone and is
+  legible for the first time. The active row gets an edge in primary.
+- **Amounts in semibold tabular figures**, so the column reads as a block.
+- **The table header lost its own fill.** Caps, size and weight already mark it as
+  a header; the grey bar was a second statement for the same thing.
+- **Form labels moved out of all-caps.** 13px sentence case, not 12px caps with
+  letter-spacing. Caps stay where they carry: table headers and section marks.
+- **The submit button is primary, not green.** Green is the success role — if
+  everything is green, green means nothing.
+- **Elevation is assigned, not just defined**: card on `--gk-elev-1`, dropdowns on
+  `-2`, modal on `-4`. Dropdown and modal previously sat at the same height.
 
-### Zustände
+### Changed
 
-Leer, gesperrt, ladend — diese drei hatten zusammen **drei** CSS-Regeln,
-während Button und Tabelle je über hundert haben. Dabei sind es genau die
-Zustände, die im Alltag am häufigsten auftreten.
+Visible; worth a look before updating:
 
-- **Der leere Zustand sagt jetzt etwas.** Vorher ein zentrierter grauer Satz.
-  Jetzt Symbol, Aussage, Einordnung — und, wenn Suche oder Filter aktiv sind,
-  ein „Filter zurücksetzen"-Knopf. Die Tabelle unterscheidet dabei selbsttätig,
-  ob gar keine Daten da sind oder ob nur die aktuelle Einschränkung nichts
-  trifft. Anpassbar über `Table::emptyState()`; im JS-Pfad (statische Tabellen)
-  identisch umgesetzt.
-- **Gesperrte Felder sind zu erkennen.** Bisher gab es dafür genau eine Regel
-  (`.gk-btn:disabled`) — ein gesperrtes Eingabefeld sah aus wie ein
-  bearbeitbares, man merkte es erst beim Klicken. Jetzt gedämpfte Fläche,
-  zurückgenommener Text und `cursor: not-allowed`; `readonly` bleibt bewusst
-  anders (gestrichelter Rahmen, kein Verbotszeiger).
-- **Nachladen ist sichtbar.** GridKit wirbt mit „AJAX-first" und gab dafür
-  keine Rückmeldung — der Inhalt sprang einfach um. Jetzt bleiben die Zeilen
-  stehen und treten zurück, ein Balken zeigt die Arbeit, `aria-busy` sagt
-  dasselbe den Vorleseprogrammen. Überholende Anfragen schreiben nicht mehr
-  durcheinander.
-- **Fehlgeschlagene Nachladungen sind nicht mehr stumm.** `reload()` hatte kein
-  `catch` — bei einem Fehler zeigte die Tabelle weiter alte Daten. Jetzt
-  erscheint eine Meldung mit „Erneut versuchen" und ein `gk-table-error`-Ereignis.
-- **`.gk-skeleton`** als Platzhalter für den ersten Aufbau.
-- **Icongrößen greifen wieder.** Das Material-Icons-Stylesheet wird meist nach
-  `gridkit.css` eingebunden und setzt `.material-icons { font-size: 24px }` —
-  bei gleicher Spezifität gewann bisher die Reihenfolge. Nachweisbar betroffen
-  waren `.gk-sidebar-icon` (gesetzt 20 px, gerendert 24) und `.gk-select-arrow`
-  (18 → 24). Zwölf Icon-Klassen setzen ihre Größe jetzt durch.
-- **Eingabefelder tragen dieselbe Fläche wie das Suchfeld.** Die beiden waren
-  nach der Toolbar-Überarbeitung auseinandergelaufen.
+- **Theme colours shift.** The derivation fixes lightness at 0.55 and varies only
+  the hue. Rose and amber become calmer, ocean and slate deeper. To keep the old
+  values, remove the `@supports` block at the end of `themes.css`.
+- **Tables have no zebra striping by default.** `gk-table-striped` restores it.
+- **`prefers-reduced-motion`** covered two rules of the search overlay and now
+  covers everything.
+- **Focus rings are visible** rather than guessable at 10% opacity, and sit on
+  `:focus-visible` throughout instead of `:focus`.
+- **Source comments are in English.** The project is open source; German comments
+  in the source were a barrier.
 
-### Ausliefern
+### Known gaps
 
-- **CSS und JS tragen jetzt die Version im Pfad** (`?v=1.28.0`), gesetzt über
-  den neuen Helfer `Layout::asset()`. Ohne diesen Zusatz liefern CDNs und
-  Browser nach einem Update weiter die alte Datei aus. Auf gridkit.ssi.at stand
-  eine `themes.css` vom **11. März** im Cloudflare-Cache (Cache-Dauer 30 Tage),
-  während die Seite bereits 1.28.0 meldete — der Theme-Umschalter setzte
-  korrekt `data-gk-theme`, aber das ausgelieferte CSS kannte die Farben nicht.
-  Es sah aus, als sei das Theme kaputt. `skeleton.php` nutzt den Helfer
-  ebenfalls, damit kopierte Projekte nicht in dieselbe Falle laufen.
-
-### Geändert
-
-Sichtbar, bitte vor dem Update ansehen:
-
-- **Die Theme-Farben verschieben sich.** Die Ableitung hält die Helligkeit bei
-  0,55 fest und variiert nur den Winkel. Rose und Amber werden dadurch ruhiger,
-  Ocean und Slate dunkler. Wer die alten Werte behalten will, entfernt den
-  `@supports`-Block am Ende von `themes.css`.
-- **Formularbeschriftungen stehen im Gemischtsatz**, 13 px statt 12 px
-  Versalien mit Sperrsatz.
-- **Der Absenden-Knopf ist Primary statt Grün.** Grün ist die Erfolgsrolle —
-  wenn alles grün ist, bedeutet Grün nichts mehr.
-- **`prefers-reduced-motion`** galt bisher für zwei Regeln der Suche und deckt
-  jetzt alles ab.
-- **Tabellen haben standardmäßig keine Zebra-Streifen mehr.** `gk-table-striped`
-  bringt sie zurück.
-- **Fokusringe sind sichtbar** statt bei 10 % Deckung erahnbar, und liegen
-  durchgehend auf `:focus-visible` statt auf `:focus`.
-
-### Offen
-
-- Skelett-Platzhalter stehen als Klasse bereit, werden aber noch von keiner
-  Komponente selbst gesetzt.
-- Zweitrangige Zeilen (etwa der Status *inaktiv*) treten in der Textfarbe noch
-  nicht zurück — das setzt voraus, dass die Tabelle den Zustand einer Zeile
-  kennt, nicht nur den einer Zelle.
-- Der Dark-Mode-Block ist erst teilweise aufgeräumt: 14 von 120 Regeln waren
-  nachweislich wirkungslos und sind entfallen, 71 Farbliterale stehen dort noch.
-- Vier Schriftgrößen (10, 15, 17, 36 px) stehen weiter als Literal. Sie zu
-  vereinheitlichen würde Größen sichtbar verschieben.
+- The dark-mode block is only partly cleaned up: 14 of 120 rules were provably
+  inert and were removed, 71 colour literals remain there.
+- Four font sizes (10, 15, 17, 36px) are still literals. Unifying them would move
+  sizes visibly — a design decision, not cleanup.
+- Skeleton placeholders exist as a class but no component sets them yet.
+- Secondary rows (status *inactive*, say) do not yet recede in text colour; that
+  requires the table to know a row's state, not just a cell's.
 
 ---
 ## [1.27.3] - 2026-08-26

@@ -47,11 +47,11 @@ a:hover {
   --gk-outline: #94a3b8;
   --gk-outline-variant: #e2e8f0;
 
-  /* === SEMANTISCHE ROLLEN ===
-     Erfolg, Warnung und Info folgen dem Theme-Akzent bewusst NICHT: Gruen muss
-     Gruen bleiben, egal welches Theme laeuft. (Vorher war --gk-success auf
-     --gk-tertiary verdrahtet — im Forest-Theme wurden Erfolgsmeldungen dadurch
-     violett, weil Forest Tertiary auf #8b5cf6 setzt.) */
+  /* === SEMANTIC ROLES ===
+     Success, warning and info deliberately do NOT follow the theme accent: green
+     has to stay green, whatever theme is running. (--gk-success used to be wired
+     to --gk-tertiary — in the Forest theme that turned success messages purple,
+     because Forest sets tertiary to #8b5cf6.) */
   --gk-success: #10b981;
   --gk-on-success: #ffffff;
   --gk-success-container: #d1fae5;
@@ -70,8 +70,8 @@ a:hover {
   --gk-danger: var(--gk-error);
   --gk-info: #0ea5e9;
 
-  /* Warnung und Info hatten bisher kein Rollenpaar — ohne Container-/On-Rolle
-     mussten Komponenten (Labels, Meldungen, Toasts) eigene Literale mitbringen. */
+  /* Warning and info had no role pair until now — without a container/on role,
+     components (labels, messages, toasts) had to bring their own literals. */
   --gk-on-warning: #ffffff;
   --gk-warning-container: #fef3c7;
   --gk-on-warning-container: #92400e;
@@ -79,11 +79,11 @@ a:hover {
   --gk-info-container: #dbeafe;
   --gk-on-info-container: #1e40af;
 
-  /* === ZUSTANDS-ROLLEN ===
-     Hover-/Aktiv-Stufen werden aus der jeweiligen Rolle abgeleitet, damit sie dem
-     Theme folgen. Die Literale hier sind der Rückfall fuer Browser ohne relative
-     Farbsyntax; der @supports-Block am Ende dieser Datei ersetzt sie durch die
-     abgeleitete Variante (gleiche Buntheit, geringere Helligkeit). */
+  /* === STATE ROLES ===
+     Hover and active steps are derived from their own role so that they follow the
+     theme. The literals here are the fallback for browsers without relative color
+     syntax; the @supports block at the end of this file replaces them with the
+     derived variant (same chroma, lower lightness). */
   --gk-primary-hover: #4f46e5;
   --gk-tertiary-hover: #059669;
   --gk-error-hover: #e11d48;
@@ -92,7 +92,7 @@ a:hover {
   --gk-success-hover: #059669;
   --gk-danger-hover: var(--gk-error-hover);
 
-  /* Zustandsflaechen (M3 state layers) — liegen als Schleier ueber der Grundflaeche */
+  /* State layers (M3) — they lie as a veil over the base surface */
   --gk-state-hover: color-mix(in oklab, var(--gk-on-surface) 6%, transparent);
   --gk-state-pressed: color-mix(in oklab, var(--gk-on-surface) 10%, transparent);
   --gk-state-primary: color-mix(in oklab, var(--gk-primary) 8%, transparent);
@@ -100,14 +100,14 @@ a:hover {
   --gk-state-error: color-mix(in oklab, var(--gk-error) 8%, transparent);
   --gk-state-warning: color-mix(in oklab, var(--gk-warning) 8%, transparent);
 
-  /* Textsichere Varianten von Warnung und Erfolg.
-     --gk-warning/--gk-success sind Flaechenfarben; als Schriftfarbe auf heller
-     Flaeche reissen sie den Kontrast ein (#f59e0b auf Weiss = 2,15:1). Diese
-     Rollen sind dieselbe Farbe, nur dunkler — und bleiben ueber der 3:1-Schwelle. */
+  /* Text-safe variants of warning and success.
+     --gk-warning/--gk-success are surface colors; as a text color on a light
+     surface they break the contrast (#f59e0b on white = 2.15:1). These roles
+     are the same color, only darker — and stay above the 3:1 threshold. */
   --gk-warning-text: #d97706;
   --gk-success-text: #059669;
 
-  /* Fokusring — eine Zusage, ueberall dieselbe */
+  /* Focus ring — one promise, the same everywhere */
   --gk-focus-ring: 0 0 0 3px color-mix(in oklab, var(--gk-primary) 32%, transparent);
   --gk-focus-ring-soft: 0 0 0 3px color-mix(in oklab, var(--gk-primary) 10%, transparent);
   --gk-focus-ring-error: 0 0 0 3px color-mix(in oklab, var(--gk-error) 32%, transparent);
@@ -154,7 +154,7 @@ a:hover {
   --gk-neutral-900: #0f172a;
 
   /* Sidebar Colors */
-  /* Sidebar – Light Mode (dunkel = Dark Mode Block unten) */
+  /* Sidebar – light mode (dark = the dark mode block below) */
   --gk-sidebar-bg: #f1f5f9;
   --gk-sidebar-text: #374151;
   --gk-sidebar-text-muted: #9ca3af;
@@ -177,10 +177,10 @@ a:hover {
   --gk-font-size: 14px;
   --gk-font-size-sm: 12px;
 
-  /* === TYPO-SKALA ===
-     Sieben Rollen statt verstreuter Literale. Die Werte entsprechen den heute
-     ueberwiegend verwendeten Groessen — die Skala benennt sie, sie verschiebt
-     sie nicht. */
+  /* === TYPE SCALE ===
+     Seven roles instead of scattered literals. The values match the sizes that
+     are predominantly in use today — the scale gives them names, it does not
+     move them. */
   --gk-text-display: 32px;
   --gk-text-title: 20px;
   --gk-text-subtitle: 16px;
@@ -189,34 +189,34 @@ a:hover {
   --gk-text-caption: 12px;
   --gk-text-overline: 11px;
 
-  /* Zeilenhoehen — gehoeren zur Rolle, nicht zum Zufall */
+  /* Line heights — they belong to the role, not to chance */
   --gk-leading-tight: 1.3;
   --gk-leading-snug: 1.4;
   --gk-leading-normal: 1.55;
 
-  /* === ICON-SKALA ===
-     Bewusst getrennt von der Typo-Skala: Material-Icons werden ueber font-size
-     dimensioniert, sind aber keine Schrift. Vorher lagen beide Skalen
-     ununterscheidbar im selben Zahlenraum. */
+  /* === ICON SCALE ===
+     Deliberately kept apart from the type scale: Material icons are sized through
+     font-size, but they are not type. Before this, both scales sat
+     indistinguishably in the same range of numbers. */
   --gk-icon-xs: 16px;
   --gk-icon-sm: 18px;
   --gk-icon-md: 20px;
   --gk-icon-lg: 22px;
   --gk-icon-xl: 24px;
   --gk-icon-2xl: 28px;
-  --gk-icon-3xl: 40px;   /* nur fuer Anzeigen-Symbole, z. B. im Leerzustand */
+  --gk-icon-3xl: 40px;   /* display symbols only, e.g. in the empty state */
 
-  /* === BEWEGUNG ===
-     Drei Dauern, zwei Kurven. Keine Eigenschaft wird mehr pauschal ueber
-     "all" animiert — das erwischt auch Breite, Hoehe und Position und ist die
-     haeufigste Ursache fuer zuckende Layouts. */
-  --gk-dur-1: 120ms;   /* Zustand am Ort: Hover, Fokus, Auswahl */
-  --gk-dur-2: 200ms;   /* Erscheinen und Verschwinden: Dropdown, Tooltip, Toast */
-  --gk-dur-3: 320ms;   /* Bewegung im Raum: Modal, Schublade, Seitenleiste */
+  /* === MOTION ===
+     Three durations, two curves. No property is animated wholesale through
+     "all" any more — that catches width, height and position too, and is the
+     most common cause of jittering layouts. */
+  --gk-dur-1: 120ms;   /* state in place: hover, focus, selection */
+  --gk-dur-2: 200ms;   /* appearing and disappearing: dropdown, tooltip, toast */
+  --gk-dur-3: 320ms;   /* movement through space: modal, drawer, sidebar */
   --gk-ease-out: cubic-bezier(0.2, 0, 0, 1);
   --gk-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  /* Fertige Buendel fuer die zwei haeufigen Faelle. Sie nennen die Eigenschaften
-     ausdruecklich, damit nie wieder Breite oder Position mitanimiert wird. */
+  /* Ready-made bundles for the two common cases. They name the properties
+     explicitly so that width or position is never animated along again. */
   --gk-transition-state:
     background-color var(--gk-dur-1) var(--gk-ease-out),
     border-color var(--gk-dur-1) var(--gk-ease-out),
@@ -227,9 +227,9 @@ a:hover {
     transform var(--gk-dur-2) var(--gk-ease-out),
     opacity var(--gk-dur-2) var(--gk-ease-out);
 
-  /* === HOEHE ===
-     Vier Stufen, jede zweilagig: enger Kontaktschatten fuer die Kante, weiche
-     Streuung fuer die Distanz. Ein einlagiger Schatten wirkt aufgeklebt. */
+  /* === ELEVATION ===
+     Four steps, each two-layered: a tight contact shadow for the edge, a soft
+     spread for the distance. A single-layer shadow looks glued on. */
   --gk-elev-1: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.10);
   --gk-elev-2: 0 2px 4px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.08);
   --gk-elev-3: 0 4px 8px rgba(15, 23, 42, 0.08), 0 16px 32px rgba(15, 23, 42, 0.12);
@@ -254,21 +254,21 @@ a:hover {
 
 /* === TABLE === */
 .gk-table-wrap {
-  /* Eine Tabelle darf ihren Platz nie aufweiten. Ohne diese beiden Zeilen
-     sprengt die Min-Content-Breite einer Tabelle jede Flex- oder Grid-Spur,
-     die als 1fr statt minmax(0, 1fr) definiert ist — und schiebt damit die
-     ganze Seite seitwaerts. Seitwaerts scrollen darf nur der Container. */
+  /* A table must never widen the space it was given. Without these two lines
+     a table's min-content width blows out every flex or grid track that is
+     defined as 1fr instead of minmax(0, 1fr) — and pushes the whole page
+     sideways. Only the container is allowed to scroll sideways. */
   min-width: 0;
   max-width: 100%;
   background: var(--gk-surface);
   border: 1px solid var(--gk-outline-variant);
   border-radius: 12px;
-  /* overflow: visible, damit Dropdowns (gk-select-search, Status-Filter etc.)
-     aus der Toolbar ueber den Tabellen-Rand hinaus rendern koennen. Abgerundete
-     Ecken ueber gk-table-scroll (falls horizontal gescrollt wird). */
+  /* overflow: visible so that dropdowns (gk-select-search, status filter etc.)
+     from the toolbar can render past the table border. Rounded corners come
+     from gk-table-scroll (in case it is scrolled horizontally). */
   overflow: visible;
 }
-/* Wenn horizontal gescrollt werden muss: innerhalb eines gk-table-scroll-Containers */
+/* When horizontal scrolling is needed: inside a gk-table-scroll container */
 .gk-table-scroll {
   overflow-x: auto;
   max-width: 100%;
@@ -277,13 +277,13 @@ a:hover {
 .gk-table-scroll > .gk-table {
   width: 100%;
 }
-/* Zellen dürfen schmaler werden als ihr Inhalt — sonst sprengt eine lange
-   Zweitzeile (Betreff, Konto, Nr.) die ganze Tabelle. */
+/* Cells may become narrower than their content — otherwise a long second
+   line (subject, account, no.) blows out the whole table. */
 .gk-table-scroll td {
   overflow: hidden;
   min-width: 0;
 }
-/* Zweitzeile in einer Zelle: kürzt mit Auslassungspunkten, weitet die Spalte nicht. */
+/* Second line inside a cell: truncates with an ellipsis, does not widen the column. */
 .gk-cell-sub {
   display: block;
   font-size: var(--gk-text-overline);
@@ -305,8 +305,8 @@ a:hover {
 .gk-toolbar-spacer {
   flex: 1;
 }
-/* Zwei-Zeilen-Toolbar: Suche allein in Zeile 1, alle Filter in Zeile 2.
-   Verwendung:
+/* Two-row toolbar: search alone in row 1, all filters in row 2.
+   Usage:
      <div class="gk-toolbar gk-toolbar-stacked">
        <div class="gk-toolbar-row gk-toolbar-row-search">
          <input class="gk-search">
@@ -338,7 +338,7 @@ a:hover {
 .gk-toolbar-row-filters > .gk-select-search {
   flex: 0 0 auto;
 }
-/* Toolbar-Buttons immer pill — konsistent mit der Suchleiste */
+/* Toolbar buttons are always pills — consistent with the search bar */
 .gk-toolbar .gk-btn-filled,
 .gk-toolbar .gk-btn-outlined,
 .gk-toolbar .gk-btn-tonal {
@@ -347,10 +347,10 @@ a:hover {
 .gk-toolbar .gk-search {
   margin-right: 4px;
 }
-/* gk-select-search in einer Toolbar an gk-search / gk-filter angleichen (sonst 44px statt ~34px) */
+/* Align gk-select-search in a toolbar with gk-search / gk-filter (otherwise 44px instead of ~34px) */
 .gk-toolbar .gk-select-search .gk-select-display {
   padding: 6px 12px;
-  height: 34px;        /* override generische height:44px von .gk-select-display */
+  height: 34px;        /* override the generic height:44px from .gk-select-display */
   min-height: 34px;
   line-height: 1.4;
   border-radius: var(--gk-radius-sm);
@@ -359,7 +359,7 @@ a:hover {
   font-size: var(--gk-icon-sm);
 }
 
-/* ── GridKit\TableHeader — einheitliche Filter-/Such-Leiste ── */
+/* ── GridKit\TableHeader — unified filter and search bar ── */
 .gk-tableheader {
   display: flex;
   flex-direction: column;
@@ -472,7 +472,7 @@ a:hover {
   padding: 4px 8px;
 }
 
-/* PageSize — Zeilen-pro-Seite-Dropdown */
+/* PageSize — rows-per-page dropdown */
 .gk-pagesize {
   display: inline-flex;
   align-items: center;
@@ -513,15 +513,15 @@ a:hover {
 .gk-tab:hover { color: var(--gk-text); background: var(--gk-surface-variant, #f1f5f9); }
 .gk-tab-active { color: var(--gk-primary); border-bottom-color: var(--gk-primary); }
 
-/* RowPager (client-seitige Tabellen-Pagination) */
+/* RowPager (client-side table pagination) */
 .gk-rowpager {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  /* Horizontaler Innenabstand, damit Zähler "1–15 von 33" und Pfeile nicht direkt am
-     Container-/Kartenrand kleben (der Pager sitzt als Geschwister unter .gk-table-wrap). */
+  /* Horizontal inner spacing so that the counter "1–15 von 33" and the arrows do not
+     stick to the container/card edge (the pager sits as a sibling below .gk-table-wrap). */
   margin: 10px 0 6px;
   padding: 0 12px;
 }
@@ -561,10 +561,10 @@ a:hover {
   border-bottom: 1px solid var(--gk-outline-variant);
 }
 .gk-table thead th {
-  /* Ohne eigene Flaeche. Die Kopfzeile ist durch Versalien, Groesse und
-     Gewicht bereits eindeutig als Kopf lesbar — ein grauer Balken darunter
-     ist eine zweite Ansage fuer dieselbe Sache und macht die Karte unruhig.
-     Die Trennung uebernimmt allein die Linie darunter. */
+  /* No surface of its own. Caps, size and weight already make the header row
+     unmistakably readable as a header — a grey bar underneath it is a second
+     announcement of the same thing and makes the card restless. The line below
+     it does the separating on its own. */
   font-weight: 600;
   font-size: var(--gk-text-overline);
   color: var(--gk-on-surface-variant);
@@ -573,50 +573,50 @@ a:hover {
   user-select: none;
   white-space: nowrap;
 }
-/* Zebra-/Hover-Hintergrund auf die ZELLE (td), nicht die Zeile (tr): nur so
-   beschneidet der border-radius der Eck-Zellen den Hintergrund. Sonst ragt eine
-   graue letzte Zeile als eckiger Block über die runden Wrap-Ecken — sichtbar nur,
-   wenn die letzte Zeile grau ist (weiße fällt mit dem weißen Wrap zusammen). */
-/* Ein Trennsystem statt drei. Vorher trennten Zebra-Flaeche, Zeilenlinie UND
-   Karten-Rahmen gleichzeitig — eines davon reicht. Die Haarlinie bleibt, die
-   Zebra-Flaeche entfaellt; wer sie braucht, nimmt .gk-table-striped.
-   Dadurch traegt die Hover-Flaeche allein und wird zum ersten Mal deutlich. */
+/* Zebra/hover background on the CELL (td), not the row (tr): only that way does
+   the border-radius of the corner cells clip the background. Otherwise a grey
+   last row juts out as a square block over the rounded wrap corners — visible
+   only when the last row is grey (a white one blends into the white wrap). */
+/* One separator system instead of three. Zebra fill, row rule AND card border
+   used to separate at the same time — one of them is enough. The hairline stays,
+   the zebra fill goes; whoever needs it takes .gk-table-striped.
+   That leaves the hover fill carrying alone, and it reads clearly for the first time. */
 .gk-table tbody tr:hover > td,
 .gk-table tbody tr:focus-within > td {
   background: var(--gk-surface-container-low);
 }
-/* Die angefasste Zeile bekommt eine Kante in Primary — dieselbe Sprache, mit
-   der die Seitenleiste ihren aktiven Eintrag markiert. */
+/* The row being touched gets an edge in primary — the same language the
+   sidebar uses to mark its active entry. */
 .gk-table tbody tr:hover > td:first-child,
 .gk-table tbody tr:focus-within > td:first-child {
   box-shadow: inset 2px 0 0 var(--gk-primary);
 }
-/* Letzte SICHTBARE Zeile ohne Trennlinie. Mit tfoot ist die tfoot-Zeile die letzte
-   (die tbody-Zeile behält dann ihre Linie als Trenner vor der Summe); ohne tfoot
-   ist es die letzte tbody-Zeile. Sonst klebt eine 1px-Linie knapp über dem runden
-   Wrap-Rand ("lose Linie" unter der Summenzeile). */
+/* Last VISIBLE row without a separator line. With a tfoot the tfoot row is the last
+   one (the tbody row then keeps its line as the separator before the total); without
+   a tfoot it is the last tbody row. Otherwise a 1px line clings just above the round
+   wrap edge ("loose line" under the totals row). */
 .gk-table tbody:last-child tr:last-child > td,
 .gk-table tfoot tr:last-child > td,
 .gk-table tfoot tr:last-child > th {
   border-bottom: none;
 }
-/* Abgerundete Ecken wenn Tabelle direkt in gk-table-wrap (ohne vorherige Toolbar) */
+/* Rounded corners when the table sits directly in gk-table-wrap (with no toolbar before it) */
 .gk-table-wrap > .gk-table thead tr:first-child th:first-child {
   border-radius: 11px 0 0 0;
 }
 .gk-table-wrap > .gk-table thead tr:first-child th:last-child {
   border-radius: 0 11px 0 0;
 }
-/* Untere Ecken: Nachfahren-Selektor (nicht '>'), damit die Rundung auch greift,
-   wenn die Tabelle in einem Live-Container (z.B. #inv-live) statt direkt im
-   gk-table-wrap liegt. Die letzte Zeile ist immer der Karten-Boden. */
+/* Bottom corners: descendant selector (not '>'), so the rounding also takes effect
+   when the table sits in a live container (e.g. #inv-live) instead of directly in
+   the gk-table-wrap. The last row is always the bottom of the card. */
 .gk-table-wrap .gk-table tbody tr:last-child td:first-child {
   border-radius: 0 0 0 11px;
 }
 .gk-table-wrap .gk-table tbody tr:last-child td:last-child {
   border-radius: 0 0 11px 0;
 }
-/* Ist eine tfoot-Zeile (z.B. Summenzeile) vorhanden, ist SIE die letzte Zeile. */
+/* If a tfoot row (e.g. a totals row) is present, THAT is the last row. */
 .gk-table-wrap .gk-table tfoot tr:last-child td:first-child {
   border-radius: 0 0 0 11px;
 }
@@ -624,19 +624,19 @@ a:hover {
   border-radius: 0 0 11px 0;
 }
 
-/* Liegt ein gk-table-wrap INNERHALB einer Karte, behält er sein RUNDES Aussehen
-   (Radius 12px) — einheitlich mit eigenständigen Tabellen. Nur Schatten weg (die
-   Karte liefert ihn bereits) und ein dezenter Rahmen. Der Eck-Schimmer, der das
-   früher zum Problem machte, ist seit der Hintergrund-auf-Zelle-Korrektur (v1.22.9)
-   weg. overflow bleibt unangetastet (Toolbar-Dropdowns). */
+/* When a gk-table-wrap sits INSIDE a card it keeps its ROUND look
+   (radius 12px) — consistent with standalone tables. Only the shadow goes (the
+   card already supplies it) and the border stays the subtle hairline it inherits. The corner shimmer that
+   used to make this a problem is gone since the background-on-cell fix (v1.22.9).
+   overflow is left untouched (toolbar dropdowns). */
 .gk-card .gk-table-wrap {
   box-shadow: none;
 }
 
-/* Sektions-Titel ÜBER einer eigenständigen gk-table-wrap. Für Seiten mit mehreren
-   Tabellen, die je eine Überschrift brauchen — OHNE die Tabelle in eine zweite
-   Karte zu packen (kein doppelter Rahmen, kein verschwendetes Padding). Die
-   gk-table-wrap bleibt die "geschlossene" Karte; der Titel sitzt randlos darüber. */
+/* Section title ABOVE a standalone gk-table-wrap. For pages with several
+   tables that each need a heading — WITHOUT packing the table into a second
+   card (no double border, no wasted padding). The gk-table-wrap stays the
+   "closed" card; the title sits above it without a frame. */
 .gk-table-title {
   display: flex;
   align-items: center;
@@ -663,27 +663,27 @@ a:hover {
   font-size: var(--gk-text-label);
   color: var(--gk-on-surface-variant);
 }
-/* rechtsbündige Aktionen/Links in der Titelzeile */
+/* right-aligned actions/links in the title row */
 .gk-table-title-actions {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: 6px;
 }
-/* Abstand zwischen gestapelten Tabellen-Sektionen */
+/* Spacing between stacked table sections */
 .gk-table-section + .gk-table-section,
 .gk-table-title:not(:first-child) {
   margin-top: 18px;
 }
 
-/* ── gk-table-card: Titel + Tabelle als EINE geschlossene Karte ──
-   Wrappt eine gk-table-title (wird zum Karten-Header) + eine gk-table-wrap
-   (Tabelle bündig darin). Die Karte liefert Rahmen/Radius/Schatten — die Tabelle
-   füllt sie randvoll, kein Doppelrahmen, kein verschwendetes Padding, saubere
-   Ecken (overflow-clip). Für Seiten mit mehreren Tabellen, die als zusammen-
-   gehörige Karten erscheinen sollen.
-   Hinweis: overflow:hidden clippt eigene JS-Dropdowns (gk-select-search) — solche
-   Tabellen NICHT cardden. Native <select> sind unkritisch (OS-Popup). */
+/* ── gk-table-card: title + table as ONE closed card ──
+   Wraps a gk-table-title (becomes the card header) + a gk-table-wrap (table
+   flush inside it). The card supplies border/radius/shadow — the table fills it
+   edge to edge, no double border, no wasted padding, clean corners
+   (overflow clip). For pages with several tables that should appear as cards
+   belonging together.
+   Note: overflow:hidden clips our own JS dropdowns (gk-select-search) — do NOT
+   put such tables in a card. Native <select> is uncritical (OS popup). */
 .gk-table-card {
   background: var(--gk-surface, #fff);
   border: 1px solid var(--gk-outline-variant, #d0d7de);
@@ -702,7 +702,7 @@ a:hover {
   box-shadow: none;
   background: transparent;
 }
-/* Abstand zwischen gestapelten Karten */
+/* Spacing between stacked cards */
 .gk-table-card + .gk-table-card {
   margin-top: 16px;
 }
@@ -733,13 +733,13 @@ a:hover {
   content: "↓";
   opacity: 0.7;
 }
-/* Header mit Material-Icon-Indikator (gk-sort-icon) — den Text-Pfeil ::after
-   unterdruecken, sonst doppelter Indikator. Vereinheitlicht GK.table mit SortLink. */
+/* Header with a Material icon indicator (gk-sort-icon) — suppress the ::after text
+   arrow, otherwise there are two indicators. Unifies GK.table with SortLink. */
 .gk-sortable-mi::after { content: none !important; }
 
-/* Inline-Sort-Icon für eigene Sort-Header (z.B. via material-icons).
-   Nutzung: <a class="gk-sort-link"><span class="material-icons gk-sort-icon">unfold_more</span></a>
-   Sonst würde material-icons mit Default-Größe 24px die Tabellenkopfzeile aufblasen. */
+/* Inline sort icon for custom sort headers (e.g. via material-icons).
+   Usage: <a class="gk-sort-link"><span class="material-icons gk-sort-icon">unfold_more</span></a>
+   Otherwise material-icons would blow up the table header row with its default size of 24px. */
 .gk-sort-icon {
   font-size: 14px !important;
   vertical-align: -3px;
@@ -763,7 +763,7 @@ a:hover {
 }
 
 
-/* Gruppenzeile in einer Tabelle (Table::groupBy) */
+/* Group row in a table (Table::groupBy) */
 .gk-table tbody tr.gk-table-group > td {
   padding: 10px 12px 6px;
   background: var(--gk-surface-container);
@@ -784,7 +784,7 @@ a:hover {
   font-weight: 500;
 }
 
-/* Zähl- und Kennungsspalten */
+/* Count and identifier columns */
 .gk-td-num {
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -839,9 +839,9 @@ a:hover {
 .gk-table tr.gk-row-selected {
   background: color-mix(in srgb, var(--gk-primary) 6%, transparent);
 }
-/* Selectable-Tabelle: nur die Checkbox-Zelle bekommt Pointer-Cursor.
-   (Bis v1.10.1 war's die ganze Zeile — verwirrt aber, weil dann jeder
-   ungewollte Klick die Bulk-Action-Bar aufpoppen lässt.) */
+/* Selectable table: only the checkbox cell gets the pointer cursor.
+   (Up to v1.10.1 it was the whole row — but that confuses, because then every
+   unintended click makes the bulk action bar pop up.) */
 [data-gk-selectable] tbody tr[data-gk-row-id] td.gk-cb-col {
   cursor: pointer;
 }
@@ -897,7 +897,7 @@ a:hover {
 .gk-bulk-bar [data-gk-bulk-cancel]:hover {
   background: rgba(255, 255, 255, 0.25);
 }
-/* Button Group — Basis: kein Rahmen, kein Hintergrund */
+/* Button Group — base: no border, no background */
 .gk-btn-group {
   display: inline-flex;
   border-radius: 10px;
@@ -919,7 +919,7 @@ a:hover {
 .gk-btn-group .gk-btn:only-child {
   border-radius: 10px;
 }
-/* Bordered Variante — explizit opt-in */
+/* Bordered variant — explicit opt-in */
 .gk-btn-group-bordered {
   box-shadow: var(--gk-elev-1);
   border: 1px solid var(--gk-outline-variant, #e5e7eb);
@@ -1676,10 +1676,10 @@ td.gk-table-meta {
   flex: 1;
 }
 
-/* Formularbeschriftungen im Gemischtsatz statt in Versalien.
-   12px Grossbuchstaben mit Sperrsatz lesen sich messbar langsamer — und bei
-   dieser Groesse ist das die falsche Sparsamkeit. Versalien bleiben dort, wo
-   sie tragen: Tabellenkoepfe und Abschnittsmarken (--gk-text-overline). */
+/* Form labels in mixed case instead of all caps.
+   12px capitals with letter-spacing read measurably slower — and at that size
+   this is the wrong kind of economy. Caps stay where they carry: table headers
+   and section marks (--gk-text-overline). */
 .gk-label-text {
   display: block;
   margin-bottom: 6px;
@@ -1732,7 +1732,7 @@ textarea.gk-input {
   height: auto;
   min-height: 80px;
 }
-/* Number: Browser-Spinner entfernen für einheitliches Layout */
+/* Number: remove the browser spinner for a consistent layout */
 input[type="number"].gk-input {
   -moz-appearance: textfield;
 }
@@ -2501,8 +2501,8 @@ select.gk-input {
   font-size: var(--gk-icon-lg);
   cursor: pointer;
   color: var(--gk-on-surface-variant);
-  /* Quadratisches Hit-Target, vertikal zentriert; negativer Rand richtet das
-     Icon optisch an der Header-Innenkante aus, ohne dass es „an der Kante klebt". */
+  /* Square hit target, vertically centered; the negative margin aligns the icon
+     optically with the header's inner edge without it "sticking to the edge". */
   width: 36px;
   height: 36px;
   display: inline-flex;
@@ -2522,7 +2522,7 @@ select.gk-input {
   outline: 2px solid var(--gk-primary, #4f46e5);
   outline-offset: 1px;
 }
-/* Material-Icon als Close-Glyph (statt &times;) sauber zentrieren */
+/* Center the Material icon used as the close glyph (instead of &times;) cleanly */
 .gk-modal-close .material-icons { font-size: 20px; }
 .gk-modal-body {
   padding: 24px;
@@ -2532,8 +2532,8 @@ select.gk-input {
 .gk-modal-body .gk-form {
   margin: 0;
 }
-/* Modal-Footer: Aktionsleiste am Modal-Ende (Schließen/Speichern). Eigenes
-   Padding, weil sie AUSSERHALB der gepolsterten gk-modal-body liegt. */
+/* Modal footer: action bar at the end of the modal (close/save). It has its own
+   padding because it sits OUTSIDE the padded gk-modal-body. */
 .gk-modal-footer {
   display: flex;
   align-items: center;
@@ -2544,9 +2544,9 @@ select.gk-input {
   background: var(--gk-surface);
   flex: 0 0 auto;
 }
-/* Kompatibilität: viele Views nutzen gk-form-actions direkt im Modal als Footer.
-   gk-form-actions hat kein Seiten-/Bottom-Padding (fuer den Einsatz IN Formularen
-   gedacht) — direkt im Modal klebten die Buttons an der Kante. */
+/* Compatibility: many views use gk-form-actions directly in the modal as a footer.
+   gk-form-actions has no side or bottom padding (it is meant for use INSIDE forms)
+   — placed directly in the modal, the buttons clung to the edge. */
 .gk-modal > .gk-form-actions {
   margin-top: 0;
   padding: 16px 24px;
@@ -2724,7 +2724,7 @@ a.gk-stat-card:hover {
 }
 
 /* === SIDEBAR === */
-/* Sidebar Hintergrund direkt gesetzt (hohe Spezifität, zuverlässiger als var()-Kette) */
+/* Sidebar background set directly (high specificity, more reliable than a var() chain) */
 [data-gk-theme] .gk-sidebar {
   background: var(--gk-sidebar-bg);
   color: var(--gk-sidebar-text);
@@ -2734,10 +2734,10 @@ a.gk-stat-card:hover {
   color: rgba(255, 255, 255, 0.78);
 }
 
-/* Sieben Regeln haben die Dark-Sidebar aller Themes auf ein einheitliches
-   #010409 gezwungen und damit die themenspezifischen Werte aus themes.css
-   (#0d1225 indigo, #071a2d ocean, #071a12 forest, ...) ausgehebelt. Die
-   Sidebar zieht ihre Flaeche jetzt wie alle anderen Bauteile aus der Rolle. */
+/* Seven rules forced the dark sidebar of every theme to a uniform #010409 and
+   thereby overrode the theme-specific values from themes.css (#0d1225 indigo,
+   #071a2d ocean, #071a12 forest, ...). The sidebar now draws its surface from
+   the role, like every other component. */
 [data-gk-mode="dark"] .gk-sidebar {
   border-right-color: var(--gk-sidebar-border);
 }
@@ -3126,12 +3126,12 @@ a.gk-stat-card:hover {
 /* Sidebar: content offset */
 .gk-with-sidebar {
   margin-left: 260px;
-  min-width: 0; /* sonst sprengt eine breite Tabelle die Spalte bis zum Viewport-Rand */
+  min-width: 0; /* otherwise a wide table blows the column out to the viewport edge */
   transition: margin-left var(--gk-dur-2) ease;
 }
 
 /* === LAYOUT MAX-WIDTH (--gk-content-max-width) ===
-   Sidebar bleibt links. Content-Bereich wird auf (max-width - sidebar) begrenzt. */
+   The sidebar stays on the left. The content area is capped at (max-width - sidebar). */
 .gk-with-sidebar {
   max-width: calc(var(--gk-content-max-width, 1600px) - 260px);
 }
@@ -3170,8 +3170,8 @@ a.gk-stat-card:hover {
 .gk-tooltip {
   position: relative;
 }
-/* CSS-only Button-Tooltips entfernt (v1.23.0): GK.tip übernimmt ALLE
-   title-Attribute panel-weit — einheitliches Popup, kein Doppel-Tooltip. */
+/* CSS-only button tooltips removed (v1.23.0): GK.tip takes over ALL title
+   attributes panel-wide — one uniform popup, no double tooltip. */
 .gk-tip {
   position: fixed;
   z-index: 100050;
@@ -3427,7 +3427,7 @@ a.gk-stat-card:hover {
   flex-shrink: 0;
 }
 
-/* Fixed Header (full-width, oben fixiert) */
+/* Fixed Header (full-width, pinned to the top) */
 .gk-header-fixed {
   position: fixed;
   top: 0;
@@ -3435,7 +3435,7 @@ a.gk-stat-card:hover {
   right: 0;
 }
 
-/* Sticky Header (scrollt mit, klebt oben) */
+/* Sticky Header (scrolls along, sticks to the top) */
 .gk-header-sticky {
   position: sticky;
   top: 0;
@@ -3481,7 +3481,7 @@ a.gk-stat-card:hover {
 .gk-layout-sidebar-first .gk-sidebar {
   top: 0;
   height: 100vh;
-  z-index: 300; /* Sidebar ueber Header */
+  z-index: 300; /* Sidebar above the header */
 }
 [data-gk-layout="sidebar-first"]
   .gk-sidebar.collapsed
@@ -3500,7 +3500,7 @@ a.gk-stat-card:hover {
   padding-top: 56px;
 }
 
-/* Mobile: Immer header-first */
+/* Mobile: always header-first */
 @media (max-width: 768px) {
   [data-gk-layout="sidebar-first"] .gk-header-fixed {
     left: 0 !important;
@@ -3780,7 +3780,7 @@ a.gk-stat-card:hover {
   border-bottom: 1px solid var(--gk-outline-variant);
 }
 
-/* Celled: Vollstaendiges Gitternetz */
+/* Celled: complete grid of borders */
 .gk-table-celled,
 .gk-table-celled th,
 .gk-table-celled td {
@@ -3790,7 +3790,7 @@ a.gk-stat-card:hover {
   border-collapse: collapse;
 }
 
-/* Padded: Extra Padding fuer bessere Lesbarkeit */
+/* Padded: extra padding for better readability */
 .gk-table-padded th {
   padding: 14px 20px;
 }
@@ -3799,7 +3799,7 @@ a.gk-stat-card:hover {
   font-size: 15px;
 }
 
-/* Very Compact: Noch dichter als sm */
+/* Very Compact: denser still than sm */
 .gk-table-xs th {
   padding: 4px 8px;
   font-size: 10px;
@@ -3809,8 +3809,8 @@ a.gk-stat-card:hover {
   font-size: var(--gk-text-caption);
 }
 
-/* Compact — seit v1.17.0 Hybrid: lesbare 14px Schrift, kompakteres Vertical-Padding.
-   War vorher 6px 12px / 13px — auf User-Wunsch (Panel) auf 8px 12px / 14px gehoben. */
+/* Compact — a hybrid since v1.17.0: readable 14px type, more compact vertical padding.
+   It used to be 6px 12px / 13px — raised to 8px 12px / 14px on user request (Panel). */
 .gk-table-compact th,
 .gk-table-compact td {
   padding: 8px 12px;
@@ -3822,7 +3822,7 @@ a.gk-stat-card:hover {
   font-size: var(--gk-text-caption);
 }
 
-/* Single Line: Kein Textumbruch */
+/* Single Line: no text wrapping */
 .gk-table-single-line td {
   white-space: nowrap;
   overflow: hidden;
@@ -3830,12 +3830,12 @@ a.gk-stat-card:hover {
   max-width: 200px;
 }
 
-/* Fixed: Gleiche Spaltenbreiten */
+/* Fixed: equal column widths */
 .gk-table-fixed {
   table-layout: fixed;
 }
 
-/* Selectable: Zeilen wirken klickbar */
+/* Selectable: rows look clickable */
 .gk-table-selectable tbody tr {
   cursor: pointer;
   transition: background var(--gk-dur-1);
@@ -3844,7 +3844,7 @@ a.gk-stat-card:hover {
   background: var(--gk-state-primary);
 }
 
-/* Definition: Erste Spalte als Label */
+/* Definition: first column as a label */
 .gk-table-definition td:first-child {
   font-weight: 600;
   color: var(--gk-on-surface-variant);
@@ -3855,7 +3855,7 @@ a.gk-stat-card:hover {
   background: transparent;
 }
 
-/* Inverted: Dunkle Tabelle im Light Mode */
+/* Inverted: dark table in light mode */
 .gk-table-inverted {
   background: #1e293b;
   color: #e2e8f0;
@@ -4105,8 +4105,8 @@ a.gk-stat-card:hover {
   font-weight: 600;
   font-size: 15px;
 }
-/* Icon + Überschrift in einer Linie: h3 erbt die Header-Typo (statt Browser-h3
-   mit eigenen Margins), Icons bekommen feste Größe. */
+/* Icon + heading on one line: the h3 inherits the header typography (instead of
+   a browser h3 with its own margins), icons get a fixed size. */
 .gk-card-header h3 {
   margin: 0;
   font-size: inherit;
@@ -4118,7 +4118,7 @@ a.gk-stat-card:hover {
   flex: 0 0 auto;
   color: var(--gk-on-surface-variant);
 }
-/* Aktionen (Buttons/Links) rechtsbündig im Card-Header */
+/* Actions (buttons/links) right-aligned in the card header */
 .gk-card-actions {
   margin-left: auto;
   display: flex;
@@ -4750,14 +4750,14 @@ a.gk-stat-card:hover {
   --gk-on-info-container: #bfdbfe;
   --gk-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   --gk-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.4);
-  /* Schatten tragen auf dunklem Grund kaum — deshalb tiefer und zusaetzlich
-     eine helle Kante, die die Ebene wie in M3 ueber die Flaeche hebt. */
+  /* Shadows barely carry on a dark ground — hence deeper, plus a light edge
+     that lifts the layer above the surface the way M3 does. */
   --gk-elev-1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.40);
   --gk-elev-2: 0 2px 4px rgba(0, 0, 0, 0.32), 0 4px 12px rgba(0, 0, 0, 0.44);
   --gk-elev-3: 0 4px 8px rgba(0, 0, 0, 0.36), 0 16px 32px rgba(0, 0, 0, 0.50);
   --gk-elev-4: 0 8px 16px rgba(0, 0, 0, 0.40), 0 24px 48px rgba(0, 0, 0, 0.56);
 
-  /* Alias-Variablen explizit überschreiben (Fallback-Kette sicherstellen) */
+  /* Override the alias variables explicitly (make sure the fallback chain holds) */
   --gk-bg: #0d1117;
   --gk-bg-muted: #161b22;
   --gk-bg-subtle: #0d1117;
@@ -4768,10 +4768,10 @@ a.gk-stat-card:hover {
   --gk-border: rgba(255, 255, 255, 0.08);
 
   /* Legacy dark overrides */
-  /* Hover-Stufen: der @supports-Block am Dateiende leitet sie aus der jeweils
-     geltenden Rolle ab. Diese Werte sind nur der Rueckfall fuer Browser ohne
-     relative Farbsyntax — sie muessen im Dark Mode mitgedreht werden, sonst
-     faehrt der Rueckfallpfad dort die Light-Mode-Richtung. */
+  /* Hover steps: the @supports block at the end of the file derives them from
+     whichever role applies. These values are only the fallback for browsers
+     without relative color syntax — they have to be turned along in dark mode,
+     otherwise the fallback path runs the light-mode direction there. */
   --gk-primary-hover: #93a1e8;
   --gk-tertiary-hover: #59d3a4;
   --gk-success-hover: #01bf87;
@@ -4846,7 +4846,7 @@ a.gk-stat-card:hover {
   color: var(--gk-on-surface);
 }
 
-/* Dark mode: Komponenten die explizit umgestellt werden müssen */
+/* Dark mode: components that have to be switched over explicitly */
 [data-gk-mode="dark"] .gk-stat-card,
 .gk-dark .gk-stat-card {
   background: #161b22;
@@ -4953,7 +4953,7 @@ a.gk-stat-card:hover {
   border-color: var(--gk-primary);
 }
 
-/* Dark Mode: Tonal Buttons – helle Backgrounds durch dunkle Varianten ersetzen */
+/* Dark Mode: tonal buttons – replace light backgrounds with dark variants */
 [data-gk-mode="dark"] .gk-btn-tonal.gk-btn-primary,
 .gk-dark .gk-btn-tonal.gk-btn-primary {
   background: rgba(99, 102, 241, 0.22);
@@ -5219,7 +5219,7 @@ a.gk-stat-card:hover {
 .gk-mode-toggle .material-icons {
   font-size: 14px;
 }
-/* Dropdown HTML-Items (z.B. Theme-Switcher im Avatar-Menü) */
+/* Dropdown HTML items (e.g. the theme switcher in the avatar menu) */
 .gk-dropdown-html {
   cursor: default;
   padding: 6px 16px;
@@ -5610,10 +5610,10 @@ a.gk-stat-card:hover {
 
 /* ============================================================
    DARK MODE — Comprehensive Overrides
-   Fixes für alle hardcodierten Light-Mode Farben
+   Fixes for all hardcoded light-mode colors
    ============================================================ */
 
-/* --- Buttons: outlined neutral (weißer Rahmen → dezent) --- */
+/* --- Buttons: outlined neutral (white border → subtle) --- */
 [data-gk-mode="dark"] .gk-btn-outlined.gk-btn-neutral,
 .gk-dark .gk-btn-outlined.gk-btn-neutral {
   color: var(--gk-on-surface-variant);
@@ -5645,7 +5645,7 @@ a.gk-stat-card:hover {
   color: var(--gk-on-surface);
 }
 
-/* --- Tabellen: 4-Level Dark Mode (Page → Panel → Interactive → Elevated) --- */
+/* --- Tables: 4-level dark mode (page → panel → interactive → elevated) --- */
 [data-gk-mode="dark"] .gk-table thead th,
 .gk-dark .gk-table thead th {
   background: #161b22;
@@ -5714,7 +5714,7 @@ a.gk-stat-card:hover {
   color: #8b949e;
 }
 
-/* Dark: Striped (explizit) */
+/* Dark: Striped (explicit) */
 
 /* Dark Mode: Table Mobile Card */
 [data-gk-mode="dark"] .gk-table-mobile-card tr,
@@ -5901,15 +5901,15 @@ a.gk-stat-card:hover {
 }
 
 /* ── AJAX Navigation Progress ── */
-/* AJAX Navigation: kein visueller Progress-Indikator — Navigation ist schnell genug */
+/* AJAX navigation: no visual progress indicator — navigation is fast enough */
 
 
 /* ════════════════════════════════════════════════════════════════════════
- * UTILITIES (v1.14.0) — Hilfsklassen für Layout, Spacing, Typography, Farben.
+ * UTILITIES (v1.14.0) — helper classes for layout, spacing, typography, colors.
  *
- * Spacing-Skala: 0=0 · 1=4 · 2=8 · 3=12 · 4=16 · 5=20 · 6=24 (MD3 8-Grid).
- * Ziel: Inline-Styles in Consumer-Projekten (Panel etc.) eliminierbar machen.
- * Alle Regeln additiv — keine Breaking-Changes.
+ * Spacing scale: 0=0 · 1=4 · 2=8 · 3=12 · 4=16 · 5=20 · 6=24 (MD3 8-grid).
+ * Goal: make inline styles in consumer projects (Panel etc.) eliminable.
+ * All rules are additive — no breaking changes.
  * ════════════════════════════════════════════════════════════════════════ */
 
 /* — Display — */
@@ -5933,7 +5933,7 @@ a.gk-stat-card:hover {
 .gk-justify-end   { justify-content: flex-end; }
 .gk-justify-between{ justify-content: space-between; }
 
-/* Komposit-Shortcuts (häufigste Kombinationen) */
+/* Composite shortcuts (most frequent combinations) */
 .gk-flex-center   { display: flex; align-items: center; }
 .gk-flex-between  { display: flex; align-items: center; justify-content: space-between; }
 
@@ -5945,7 +5945,7 @@ a.gk-stat-card:hover {
 .gk-gap-xl        { gap: 16px; }
 .gk-gap-2xl       { gap: 20px; }
 
-/* — Margin (Skala 0/1/2/3/4/5/6 = 0/4/8/12/16/20/24) — */
+/* — Margin (scale 0/1/2/3/4/5/6 = 0/4/8/12/16/20/24) — */
 .gk-m-0  { margin: 0; }
 .gk-m-1  { margin: 4px; }
 .gk-m-2  { margin: 8px; }
@@ -5986,7 +5986,7 @@ a.gk-stat-card:hover {
 
 .gk-mx-auto { margin-left: auto; margin-right: auto; }
 
-/* — Padding (Skala 0/1/2/3/4/5/6) — */
+/* — Padding (scale 0/1/2/3/4/5/6) — */
 .gk-p-0  { padding: 0; }
 .gk-p-1  { padding: 4px; }
 .gk-p-2  { padding: 8px; }
@@ -6029,7 +6029,7 @@ a.gk-stat-card:hover {
 /* — Text-Align — */
 .gk-text-left   { text-align: left; }
 .gk-text-center { text-align: center; }
-/* .gk-text-right existiert bereits weiter oben — nicht erneut definieren */
+/* .gk-text-right already exists further up — do not define it again */
 
 /* — Text-Color (semantic) — */
 .gk-text-primary { color: var(--gk-primary, #6366f1); }
@@ -6037,9 +6037,9 @@ a.gk-stat-card:hover {
 .gk-text-danger  { color: var(--gk-danger,  #ef4444); }
 .gk-text-warning { color: var(--gk-warning, #f59e0b); }
 .gk-text-on-surface { color: var(--gk-on-surface, #1e293b); }
-/* .gk-text-muted existiert bereits */
+/* .gk-text-muted already exists */
 
-/* — Background (subtile Container-Hintergründe) — */
+/* — Background (subtle container backgrounds) — */
 .gk-bg-surface      { background: var(--gk-surface, #fff); }
 .gk-bg-muted        { background: var(--gk-bg-muted, var(--gk-surface-container-low, #f8fafc)); }
 .gk-bg-danger-soft  { background: rgba(239, 68, 68, 0.08); }
@@ -6073,17 +6073,17 @@ a.gk-stat-card:hover {
 
 
 /* ════════════════════════════════════════════════════════════════════════
- * BelegModal (v1.15.0) — Globaler PDF-/Beleg-Vorschau-Modal mit iframe.
- * Desktop: inline. Mobile: nativer Viewer-Button.
+ * BelegModal (v1.15.0) — global PDF/receipt preview modal with an iframe.
+ * Desktop: inline. Mobile: native viewer button.
  * ════════════════════════════════════════════════════════════════════════ */
 
 .gk-beleg-modal-overlay {
     display: none;
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.45);
-    /* Ueber Standard-Modals (.gk-modal-overlay = 9999), damit die PDF-Vorschau
-       auch sichtbar ist, wenn sie AUS einem Modal heraus geoeffnet wird
-       (z.B. Konto-Detail im Jahresabschluss). Unter .gk-confirm-overlay (10001). */
+    /* Above standard modals (.gk-modal-overlay = 9999), so that the PDF preview
+       is visible even when it is opened FROM inside a modal
+       (e.g. account detail in the year-end closing). Below .gk-confirm-overlay (10001). */
     z-index: 10000;
     align-items: stretch; justify-content: center;
 }
@@ -6119,7 +6119,7 @@ a.gk-stat-card:hover {
     font-size: var(--gk-text-body);
 }
 
-/* Mobile (≤ 768px): iframe weg, nativer-Viewer-Button im Vordergrund */
+/* Mobile (≤ 768px): iframe gone, native viewer button to the front */
 @media (max-width: 768px) {
     .gk-beleg-modal-frame { display: none; }
     .gk-beleg-modal-mobile { display: flex; }
@@ -6133,11 +6133,11 @@ a.gk-stat-card:hover {
 
 
 /* ════════════════════════════════════════════════════════════════════════
- * ActionGroup (v1.16.0) — Container für Action-Buttons in Tabellen-Spalten
- * + gk-btn-xs für Mini-Buttons + gk-btn-pill für Badge-shaped Buttons
+ * ActionGroup (v1.16.0) — container for action buttons in table columns
+ * + gk-btn-xs for mini buttons + gk-btn-pill for badge-shaped buttons
  * ════════════════════════════════════════════════════════════════════════ */
 
-/* Action-Buttons-Container: kompakte flex-row, kein Umbruch */
+/* Action button container: compact flex row, no wrapping */
 .gk-action-group {
     display: inline-flex;
     align-items: center;
@@ -6145,7 +6145,7 @@ a.gk-stat-card:hover {
     flex-wrap: nowrap;
 }
 
-/* Extra-kleine Button-Größe (kompakter als gk-btn-sm) */
+/* Extra small button size (more compact than gk-btn-sm) */
 .gk-btn-xs {
     padding: 3px 8px;
     font-size: var(--gk-text-overline);
@@ -6156,14 +6156,14 @@ a.gk-stat-card:hover {
 .gk-btn-icon-only.gk-btn-xs { padding: 4px; width: 26px; height: 26px; }
 .gk-btn-icon-only.gk-btn-xs .material-icons { font-size: 16px; }
 
-/* Pill-shaped (Badge-Style) — runde Ecken statt rechteckig */
+/* Pill-shaped (badge style) — round corners instead of rectangular */
 .gk-btn-pill { border-radius: 999px; }
 .gk-btn-pill.gk-btn-xs { padding: 2px 10px; }
 .gk-btn-pill.gk-btn-sm { padding: 3px 12px; }
 
-/* === SUCHE (GK.search) ===================================================
-   Systemweite Schnellsuche. Nutzt das vorhandene .gk-search-Feld weiter,
-   ergaenzt nur Overlay und Trefferliste. */
+/* === SEARCH (GK.search) ==================================================
+   System-wide quick search. It keeps using the existing .gk-search field and
+   only adds the overlay and the result list. */
 .gk-search-overlay {
   position: fixed;
   inset: 0;
@@ -6251,8 +6251,8 @@ a.gk-stat-card:hover {
 }
 @keyframes gk-search-dreh { to { transform: rotate(360deg); } }
 
-/* Wer Bewegung reduziert haben moechte, bekommt sie ueberall reduziert —
-   vorher galt das nur fuer zwei Regeln der Suche. */
+/* Whoever asks for reduced motion gets it reduced everywhere — before, that
+   applied to only two rules of the search. */
 @media (prefers-reduced-motion: reduce) {
   .gk-root *,
   .gk-root *::before,
@@ -6268,11 +6268,11 @@ a.gk-stat-card:hover {
 [data-theme="dark"] .gk-search-overlay { background: rgba(0, 0, 0, 0.6); }
 
 /* ===================================================================
-   ABGELEITETE ZUSTANDSFARBEN
-   Bewusst am Dateiende: dieser Block muss den Rueckfall-Literalen im
-   Rollenblock UND allen modusabhaengigen Bloecken nachstehen, damit die
-   Ableitung in jedem Theme und in beiden Modi greift.
-   Aeltere Browser ohne relative Farbsyntax behalten die Literale.
+   DERIVED STATE COLORS
+   Deliberately at the end of the file: this block has to come after the
+   fallback literals in the role block AND after every mode-dependent block,
+   so that the derivation takes effect in every theme and in both modes.
+   Older browsers without relative color syntax keep the literals.
    =================================================================== */
 @supports (color: oklch(from red l c h)) {
   .gk-root,
@@ -6282,21 +6282,21 @@ a.gk-stat-card:hover {
     --gk-success-hover: oklch(from var(--gk-success) calc(l - 0.06) c h);
     --gk-error-hover: oklch(from var(--gk-error) calc(l - 0.06) c h);
     --gk-warning-hover: oklch(from var(--gk-warning) calc(l - 0.06) c h);
-    /* Textrollen: staerker abgedunkelt, damit der Kontrast auf heller Flaeche haelt */
+    /* Text roles: darkened further so the contrast holds on a light surface */
     --gk-warning-text: oklch(from var(--gk-warning) calc(l - 0.10) c h);
     --gk-success-text: oklch(from var(--gk-success) calc(l - 0.10) c h);
   }
 }
 
 /* ===================================================================
-   VEREDELUNG — Tabelle, Status, Toolbar
-   Bewusst am Dateiende: diese Regeln verfeinern vorhandene Bauteile und
-   muessen ihnen deshalb im Kaskadenlauf nachstehen.
+   REFINEMENT — table, status, toolbar
+   Deliberately at the end of the file: these rules refine existing components
+   and therefore have to come after them in the cascade.
    =================================================================== */
 
-/* ── Status-Pillen tragen wieder Bedeutung ──────────────────────────────
-   Der Punkt ist nicht Zierde: er unterscheidet die Zustaende auch dort,
-   wo Farbe allein nicht ankommt (Farbsehschwaeche, Graustufendruck). */
+/* ── Status pills carry meaning again ───────────────────────────────────
+   The dot is not decoration: it tells the states apart even where color
+   alone does not get through (color vision deficiency, greyscale print). */
 .gk-label {
   display: inline-flex;
   align-items: center;
@@ -6316,17 +6316,17 @@ a.gk-stat-card:hover {
 .gk-label-red::before { background: var(--gk-error); }
 .gk-label-blue::before { background: var(--gk-info); }
 .gk-label-gray::before { background: var(--gk-outline); }
-/* Fuer Faelle, in denen das Label nur eine Auszeichnung ist, kein Zustand. */
+/* For cases where the label is only a marker, not a state. */
 .gk-label-plain::before { display: none; }
 
-/* ── Zeilenaktionen ruhen, bis die Zeile gemeint ist ────────────────────
-   Loeschen ist die seltenste Handlung und die einzige unumkehrbare — und
-   war die einzige, die auf jeder Zeile Signalfarbe trug. Fuenfzehn rote
-   Papierkoerbe pro Bildschirm sind kein Hinweis, sondern Rauschen.
-   Nichts wird versteckt: die Symbole bleiben sichtbar, nur farblos. */
-/* Nur wo es einen Mauszeiger gibt. Auf Touch-Geraeten feuert :hover nie —
-   die Aktionen blieben dort dauerhaft bei 50 % Deckkraft und entfaerbt und
-   waren damit von .gk-btn:disabled (0,45) nicht zu unterscheiden. */
+/* ── Row actions rest until the row is meant ────────────────────────────
+   Delete is the rarest action and the only irreversible one — and it was the
+   only one carrying a signal color on every row. Fifteen red waste baskets
+   per screen are not a hint, they are noise.
+   Nothing is hidden: the symbols stay visible, only colorless. */
+/* Only where there is a mouse pointer. On touch devices :hover never fires —
+   there the actions stayed permanently at 50 % opacity and desaturated, and
+   were therefore indistinguishable from .gk-btn:disabled (0.45). */
 @media (hover: hover) {
   .gk-table tbody td .gk-btn-icon-only,
   .gk-table tbody td.gk-actions .gk-btn {
@@ -6347,16 +6347,16 @@ a.gk-stat-card:hover {
   filter: none;
 }
 
-/* ── Zahlen liest man nicht, man springt sie ab ─────────────────────────
-   Zahlenbreite hat .gk-td-num schon; es fehlte das Gewicht, mit dem die
-   Spalte als Block wahrnehmbar wird. */
+/* ── Numbers are not read, they are scanned ─────────────────────────────
+   .gk-td-num already has tabular figures; what was missing is the weight that
+   makes the column perceivable as a block. */
 .gk-td-num {
   font-weight: 500;
 }
 
-/* ── Die Karte traegt sich selbst ───────────────────────────────────────
-   Vorher ein harter Rahmen ohne Hoehe. Jetzt die erste Hoehenstufe, der
-   Rahmen tritt auf die Haarlinie zurueck. */
+/* ── The card carries itself ────────────────────────────────────────────
+   Before, a hard border without elevation. Now the first elevation step, and
+   the border retreats to a hairline. */
 .gk-table-wrap {
   border-color: var(--gk-outline-variant);
   box-shadow: var(--gk-elev-1);
@@ -6366,9 +6366,9 @@ a.gk-stat-card:hover {
   box-shadow: none;
 }
 
-/* ── Toolbar wird leiser ────────────────────────────────────────────────
-   Das Suchfeld bekommt eine eigene Flaeche statt eines kraeftigen Rahmens
-   und tritt beim Fokus auf die Kartenflaeche hervor. */
+/* ── The toolbar gets quieter ───────────────────────────────────────────
+   The search field gets a surface of its own instead of a strong border, and
+   steps forward onto the card surface on focus. */
 .gk-toolbar .gk-search,
 .gk-tableheader-toolbar .gk-search {
   background-color: var(--gk-surface-container-low);
@@ -6378,32 +6378,32 @@ a.gk-stat-card:hover {
 .gk-tableheader-toolbar .gk-search:focus-visible {
   background-color: var(--gk-surface);
 }
-/* Filter folgen der Pillenform der uebrigen Toolbar-Bedienelemente. */
+/* Filters follow the pill shape of the other toolbar controls. */
 .gk-toolbar .gk-filter,
 .gk-tableheader-toolbar .gk-filter {
   border-radius: 9999px;
   padding-left: 14px;
 }
 
-/* ── Nebenspalten treten zurueck ────────────────────────────────────────
-   Eine Artikel- oder Belegnummer ist Zuordnung, kein Inhalt. In voller
-   Textfarbe konkurriert sie mit der Bezeichnung daneben um denselben Blick.
-   Spaltenoption: ['muted' => true] */
+/* ── Secondary columns step back ────────────────────────────────────────
+   An article or document number is a reference, not content. In full text
+   color it competes with the label beside it for the same glance.
+   Column option: ['muted' => true] */
 .gk-table td.gk-td-muted {
   color: var(--gk-on-surface-variant);
 }
 
 /* ===================================================================
-   ZUSTAENDE
-   Leer, gesperrt, ladend. Diese drei hatten zusammen drei CSS-Regeln,
-   waehrend Button und Tabelle je ueber hundert haben — dabei sind es
-   genau die Zustaende, die Nutzer im Alltag am haeufigsten sehen.
+   STATES
+   Empty, disabled, loading. Between them these three had three CSS rules,
+   while button and table have over a hundred each — even though these are
+   exactly the states users see most often day to day.
    =================================================================== */
 
-/* ── Der leere Zustand ──────────────────────────────────────────────────
-   Vorher: ein zentrierter grauer Satz. Eine leere Tabelle ist aber kein
-   Fehler, sondern eine Lage — und die braucht eine Aussage, eine
-   Einordnung und einen Weg heraus. */
+/* ── The empty state ────────────────────────────────────────────────────
+   Before: one centered grey sentence. An empty table is not an error though,
+   it is a situation — and that needs a statement, a way to place it and a
+   way out of it. */
 .gk-empty,
 .gk-table td.gk-empty {
   text-align: center;
@@ -6419,9 +6419,9 @@ a.gk-stat-card:hover {
   max-width: 380px;
   margin: 0 auto;
 }
-/* Zwei Klassen tief, nicht eine: das Material-Icons-Stylesheet wird meist NACH
-   gridkit.css eingebunden und setzt .material-icons { font-size: 24px }. Bei
-   gleicher Spezifitaet gewinnt es dann ueber die Reihenfolge. */
+/* Two classes deep, not one: the Material Icons stylesheet is usually included
+   AFTER gridkit.css and sets .material-icons { font-size: 24px }. At equal
+   specificity it then wins on source order. */
 .gk-empty .gk-empty-icon {
   font-size: var(--gk-icon-3xl);
   color: var(--gk-outline);
@@ -6443,18 +6443,18 @@ a.gk-stat-card:hover {
 .gk-empty-action {
   margin-top: 10px;
 }
-/* Die leere Zeile traegt keine Zeilen-Hervorhebung. */
+/* The empty row carries no row highlight. */
 .gk-table tbody tr.gk-empty-row:hover > td,
 .gk-table tbody tr.gk-empty-row:hover > td:first-child {
   background: transparent;
   box-shadow: none;
 }
 
-/* ── Gesperrte Zustaende ────────────────────────────────────────────────
-   Bisher gab es dafuer genau eine Regel (.gk-btn:disabled). Ein gesperrtes
-   Eingabefeld sah aus wie ein bearbeitbares — man merkte es erst beim
-   Klicken. Das ist bei Formularen mit Berechtigungslogik ein taeglicher
-   Aerger und fuer Screenreader-Nutzer der einzige Hinweis ueberhaupt. */
+/* ── Disabled states ────────────────────────────────────────────────────
+   Until now there was exactly one rule for this (.gk-btn:disabled). A disabled
+   input looked like an editable one — you only noticed on clicking it. With
+   forms that carry permission logic that is a daily annoyance, and for screen
+   reader users it is the only hint there is at all. */
 .gk-input:disabled,
 select.gk-input:disabled,
 textarea.gk-input:disabled,
@@ -6469,16 +6469,16 @@ textarea.gk-input:disabled,
 .gk-input:disabled::placeholder {
   color: var(--gk-outline);
 }
-/* Nur-lesbar ist etwas anderes als gesperrt: der Wert zaehlt weiterhin und
-   das Feld bleibt fokussierbar. Deshalb ruhiger, aber ohne Verbotszeiger. */
+/* Read-only is something other than disabled: the value still counts and the
+   field stays focusable. Hence quieter, but without the not-allowed cursor. */
 .gk-input[readonly],
 textarea.gk-input[readonly] {
   background-color: var(--gk-surface-container-low);
   border-style: dashed;
 }
-/* Das Markup ist <label class="gk-checkbox-wrap"><input type="checkbox">…;
-   die Eingabe traegt KEINE eigene Klasse. Selektoren auf .gk-checkbox oder
-   ein .gk-label-wrap gehen deshalb ins Leere. */
+/* The markup is <label class="gk-checkbox-wrap"><input type="checkbox">…;
+   the input carries NO class of its own. Selectors on .gk-checkbox or on a
+   .gk-label-wrap therefore hit nothing. */
 .gk-checkbox-wrap:has(input:disabled),
 .gk-radio-wrap:has(input:disabled) {
   cursor: not-allowed;
@@ -6491,7 +6491,7 @@ textarea.gk-input[readonly] {
 .gk-field:has(.gk-input:disabled) .gk-label-text {
   color: var(--gk-outline);
 }
-/* Auch Bedienelemente, die kein <button> sind, muessen sich sperren lassen. */
+/* Controls that are not a <button> must be disableable too. */
 .gk-btn[aria-disabled="true"],
 a.gk-btn[aria-disabled="true"],
 .gk-disabled {
@@ -6500,20 +6500,20 @@ a.gk-btn[aria-disabled="true"],
   pointer-events: none;
 }
 
-/* ── Ladezustand ────────────────────────────────────────────────────────
-   GridKit wirbt damit, dass Tabellen ohne Neuladen suchen und filtern —
-   und gab dafuer bisher keine sichtbare Rueckmeldung. Der Inhalt sprang
-   einfach um. Die vorhandenen Zeilen bleiben stehen und treten zurueck;
-   ein Balken zeigt, dass gearbeitet wird. Kein Springen, kein Leerlauf. */
+/* ── Loading state ──────────────────────────────────────────────────────
+   GridKit advertises that tables search and filter without a reload — and so
+   far gave no visible feedback for it. The content simply jumped. The existing
+   rows now stay in place and step back; a bar shows that work is happening.
+   No jumping, no dead time. */
 .gk-table-wrap[data-gk-loading] {
   position: relative;
 }
-/* Bahn und Balken liegen in EINEM Pseudo-Element als zwei Hintergrundlagen.
-   Ein zweites, absolut positioniertes Element waere hier falsch:
-   .gk-table-wrap steht bewusst auf overflow: visible, damit Dropdowns aus der
-   Karte ragen duerfen — ein wandernder Balken wuerde dann ueber den
-   Kartenrand hinausmalen und horizontales Scrollen ausloesen. Hintergruende
-   werden dagegen immer an der Box beschnitten. */
+/* Track and bar live in ONE pseudo element as two background layers.
+   A second, absolutely positioned element would be wrong here:
+   .gk-table-wrap is deliberately set to overflow: visible so that dropdowns may
+   stick out of the card — a traveling bar would then paint past the card edge
+   and trigger horizontal scrolling. Backgrounds, by contrast, are always
+   clipped to the box. */
 .gk-table-wrap[data-gk-loading]::after {
   content: "";
   position: absolute;
@@ -6536,7 +6536,7 @@ a.gk-btn[aria-disabled="true"],
   0% { background-position: -45% 0, 0 0; }
   100% { background-position: 145% 0, 0 0; }
 }
-/* Die Toolbar bleibt bedienbar — nur der Inhalt wartet. */
+/* The toolbar stays operable — only the content waits. */
 .gk-table-wrap[data-gk-loading] .gk-table,
 .gk-table-wrap[data-gk-loading] .gk-rowpager {
   opacity: 0.45;
@@ -6544,8 +6544,8 @@ a.gk-btn[aria-disabled="true"],
   transition: opacity var(--gk-dur-2) var(--gk-ease-out);
 }
 
-/* Platzhalterzeilen fuer den ersten Aufbau, wenn noch gar nichts da ist.
-   Verwendung: <td><span class="gk-skeleton" style="width:60%"></span></td> */
+/* Placeholder rows for the first build-up, when nothing is there yet.
+   Usage: <td><span class="gk-skeleton" style="width:60%"></span></td> */
 .gk-skeleton {
   display: inline-block;
   height: 0.75em;
@@ -6566,12 +6566,11 @@ a.gk-btn[aria-disabled="true"],
   100% { background-position: -200% 0; }
 }
 
-/* ── Feldflaechen einheitlich ───────────────────────────────────────────
-   Das Suchfeld hatte eine eigene Flaeche bekommen, die Formularfelder
-   nicht — zwei Eingabefelder, zwei Erscheinungen. Beide tragen jetzt
-   dieselbe zurueckgenommene Flaeche UND ihren Rahmen: die Flaeche macht
-   sie weich, der Rahmen haelt sie auch dort sichtbar, wo der Container
-   zufaellig dieselbe Farbe hat. */
+/* ── Field surfaces made uniform ────────────────────────────────────────
+   The search field had been given a surface of its own, the form fields had
+   not — two input fields, two appearances. Both now carry the same restrained
+   surface AND their border: the surface makes them soft, the border keeps them
+   visible even where the container happens to have the same color. */
 .gk-input,
 .gk-search,
 .gk-filter {
@@ -6582,20 +6581,20 @@ a.gk-btn[aria-disabled="true"],
 .gk-filter:focus-visible {
   background-color: var(--gk-surface);
 }
-/* Ein nur-lesbares Feld behaelt seine ruhige Flaeche auch im Fokus — genau
-   dann braucht man den Hinweis "hier laesst sich nichts eintragen". */
+/* A read-only field keeps its quiet surface on focus too — that is exactly
+   when the hint "nothing can be entered here" is needed. */
 .gk-input[readonly]:focus-visible,
 textarea.gk-input[readonly]:focus-visible {
   background-color: var(--gk-surface-container-low);
 }
 
-/* ── Icongroessen gegen das Icon-Stylesheet durchsetzen ─────────────────
-   Das Material-Icons-Stylesheet wird ueblicherweise NACH gridkit.css
-   eingebunden und setzt .material-icons { font-size: 24px }. Bei gleicher
-   Spezifitaet entscheidet die Reihenfolge — GridKits eigene Groessen haben
-   deshalb bisher stillschweigend verloren (nachweisbar bei .gk-sidebar-icon
-   und .gk-select-arrow: gesetzt 20 bzw. 18px, gerendert 24px). Zwei Klassen
-   tief gewinnen sie wieder, ohne !important. */
+/* ── Enforce icon sizes against the icon stylesheet ─────────────────────
+   The Material Icons stylesheet is usually included AFTER gridkit.css and sets
+   .material-icons { font-size: 24px }. At equal specificity source order
+   decides — GridKit's own sizes have therefore been losing silently up to now
+   (demonstrable on .gk-sidebar-icon and .gk-select-arrow: set to 20px and 18px
+   respectively, rendered at 24px). Two classes deep they win again, without
+   !important. */
 .material-icons.gk-uq-icon,
 .material-symbols-outlined.gk-uq-icon,
 .material-symbols-rounded.gk-uq-icon {
@@ -6657,15 +6656,15 @@ textarea.gk-input[readonly]:focus-visible {
   font-size: var(--gk-icon-md);
 }
 
-/* Bewegungsempfindlichkeit — Ausnahmen fuer die Lade-Rueckmeldung.
-   Bewusst hier unten: der allgemeine prefers-reduced-motion-Block steht rund
-   270 Zeilen weiter oben, also VOR den Regeln, die er ueberschreiben soll.
-   Bei gleicher Spezifitaet entscheidet die Reihenfolge — dort haetten nur die
-   !important-Angaben gewonnen, und der Balken waere bei 40 % Breite stehen
-   geblieben statt als voller Balken zu erscheinen. */
+/* Motion sensitivity — exceptions for the loading feedback.
+   Deliberately down here: the general prefers-reduced-motion block sits around
+   400 lines further up, that is BEFORE the rules it is meant to override.
+   At equal specificity source order decides — up there only the !important
+   declarations would have won, and the bar would have stayed frozen at 40 %
+   width instead of appearing as a full bar. */
 @media (prefers-reduced-motion: reduce) {
-  /* Kein Wandern, aber weiterhin sichtbar: sonst haetten genau diese Nutzer
-     gar keine Rueckmeldung mehr. */
+  /* No traveling, but still visible: otherwise these very users would have no
+     feedback at all any more. */
   .gk-table-wrap[data-gk-loading]::after {
     animation: none;
     background-size: 100% 100%, 100% 100%;

@@ -2,15 +2,15 @@
 $version = trim(file_get_contents(__DIR__ . '/VERSION'));
 
 /**
- * Pfad mit Cache-Stempel. Diese Seite laedt das Framework bewusst nicht
- * (sie ist reines Marketing), deshalb hier eine eigene kleine Fassung von
- * GridKit\Layout::asset(). Der Aenderungszeitstempel wechselt genau dann,
- * wenn sich die Datei aendert — die Release-Version tut das nicht.
+ * Path with a cache stamp. This page deliberately does not load the framework
+ * (it is pure marketing), which is why there is a small local version of
+ * GridKit\Layout::asset() here. The modification timestamp changes exactly when
+ * the file changes — the release version does not.
  */
-$asset = static function (string $pfad) use ($version): string {
-    $datei = __DIR__ . '/' . ltrim($pfad, '/');
-    $stempel = is_file($datei) ? (string) filemtime($datei) : $version;
-    return htmlspecialchars($pfad . '?v=' . $stempel, ENT_QUOTES, 'UTF-8');
+$asset = static function (string $path) use ($version): string {
+    $file = __DIR__ . '/' . ltrim($path, '/');
+    $stamp = is_file($file) ? (string) filemtime($file) : $version;
+    return htmlspecialchars($path . '?v=' . $stamp, ENT_QUOTES, 'UTF-8');
 };
 $skillContent = file_get_contents(__DIR__ . '/GRIDKIT_SKILL.md');
 $canonicalUrl = 'https://gridkit.ssi.at';
@@ -648,7 +648,7 @@ $skillHtml = renderSkillMd($skillContent);
     </div>
 </header>
 
-<!-- Produktbild: eine UI-Bibliothek muss zeigen, wie sie aussieht -->
+<!-- Product shot: a UI library has to show what it looks like -->
 <section class="section" id="screenshot" style="padding-top:0">
     <div class="container">
         <figure style="margin:0; border-radius:16px; overflow:hidden;
@@ -709,7 +709,7 @@ $skillHtml = renderSkillMd($skillContent);
     </div>
 </section>
 
-<!-- Themes: der Beleg statt der Behauptung -->
+<!-- Themes: the proof instead of the claim -->
 <section class="section" id="themes">
     <div class="container">
         <div class="section-head" style="text-align:center; margin-bottom:36px;">

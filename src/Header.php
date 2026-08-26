@@ -196,25 +196,25 @@ class Header
     }
 
     /**
-     * Initialen aus einem Namen. Bewusst ohne harte mbstring-Abhaengigkeit:
-     * die Erweiterung ist optional und auf schlanken PHP-Installationen oft
-     * nicht vorhanden. GridKit wirbt mit "zero dependencies" — daran mit einem
-     * Fatal Error zu scheitern, waere ein gebrochenes Versprechen. Ohne
-     * mbstring bleiben Umlaute in ihrer Grossform unveraendert; das ist eine
-     * hinnehmbare Einbusse gegenueber einer weissen Seite.
+     * Initials from a name. Deliberately without a hard mbstring dependency:
+     * the extension is optional and often not present on slim PHP
+     * installations. GridKit advertises "zero dependencies" — failing at that
+     * with a fatal error would be a broken promise. Without mbstring, umlauts
+     * are left unchanged instead of being uppercased; that is an acceptable
+     * loss compared with a blank page.
      */
     private static function initials(string $name): string
     {
-        $hatMb = function_exists('mb_substr') && function_exists('mb_strtoupper');
+        $hasMb = function_exists('mb_substr') && function_exists('mb_strtoupper');
         $out = '';
         foreach (preg_split('/\s+/u', trim($name)) ?: [] as $w) {
             if ($w === '') continue;
-            if ($hatMb) {
+            if ($hasMb) {
                 $out .= mb_strtoupper(mb_substr($w, 0, 1, 'UTF-8'), 'UTF-8');
             } else {
-                // Erstes Zeichen UTF-8-sicher greifen, dann ASCII-Grossschreibung.
-                $erstes = preg_match('/^./u', $w, $m) ? $m[0] : '';
-                $out .= strtoupper($erstes);
+                // Grab the first character UTF-8-safely, then uppercase as ASCII.
+                $firstChar = preg_match('/^./u', $w, $m) ? $m[0] : '';
+                $out .= strtoupper($firstChar);
             }
         }
         return $out;

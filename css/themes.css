@@ -1,18 +1,18 @@
 /* GridKit Themes – M3 Color System
  *
- * Aufbau dieser Datei:
- *   1. Literal-Bloecke je Theme — der Rueckfall fuer Browser ohne oklch().
- *   2. Ein @supports-Block am Ende, der jedes Theme aus EINEM Farbwinkel
- *      ableitet. Dort ist ein Theme genau eine Zeile.
+ * How this file is built:
+ *   1. Literal blocks per theme — the fallback for browsers without oklch().
+ *   2. One @supports block at the end that derives every theme from a SINGLE
+ *      hue angle. There a theme is exactly one line.
  *
- * Warum: Die Literale unten sind von Hand aus einer fremden Palette gepflueckt.
- * In OKLCH gemessen streut ihre Helligkeit von 0,45 bis 0,69 und ihre Buntheit
- * von 0,04 bis 0,21 — deshalb wirkt Amber leichter als Slate und Rose lauter
- * als Forest. Die Ableitung haelt die Helligkeit fest und variiert nur den
- * Winkel; die Buntheit laeuft gegen die sRGB-Grenze, was oklch() selbst regelt.
+ * Why: the literals below were hand-picked from an external palette. Measured
+ * in OKLCH their lightness scatters from 0.45 to 0.69 and their chroma from
+ * 0.04 to 0.21 — which is why Amber looks lighter than Slate and Rose louder
+ * than Forest. The derivation pins the lightness and varies only the angle; the
+ * chroma runs against the sRGB boundary, which oklch() handles by itself.
  *
- * error und warning stehen bewusst NICHT in den Theme-Bloecken: semantische
- * Farben duerfen dem Akzent nicht folgen.
+ * error and warning are deliberately NOT in the theme blocks: semantic colors
+ * must not follow the accent.
  */
 
 /* === THEME: Indigo (Default) === */
@@ -76,8 +76,8 @@
 }
 
 /* === Dark variants per theme === */
-/* Sidebar: dunkler als Content (#1e293b) → niedrigere Elevation, M3-konform */
-/* Accent: helle Version der Theme-Farbe die auf dunklem Hintergrund leuchtet  */
+/* Sidebar: darker than the content (#1e293b) → lower elevation, M3-compliant */
+/* Accent: light version of the theme color that glows on a dark background    */
 
 [data-gk-theme="indigo"][data-gk-mode="dark"] {
     --gk-sidebar-bg: #0d1225;
@@ -147,34 +147,34 @@
 
 
 /* ===================================================================
-   ABLEITUNG — ein Theme ist ein Farbwinkel
-   Ueberschreibt die Literale oben, sobald der Browser oklch() kann.
+   DERIVATION — a theme is a hue angle
+   Overrides the literals above as soon as the browser can do oklch().
    =================================================================== */
 @supports (color: oklch(0.6 0.15 277)) {
-  /* Der Winkel je Theme. Mehr braucht ein Theme nicht. */
+  /* The angle per theme. A theme needs nothing more. */
   [data-gk-theme="indigo"] { --gk-theme-hue: 277; }
   [data-gk-theme="ocean"]  { --gk-theme-hue: 237; }
   [data-gk-theme="forest"] { --gk-theme-hue: 163; }
   [data-gk-theme="rose"]   { --gk-theme-hue: 354; }
   [data-gk-theme="amber"]  { --gk-theme-hue:  58; }
-  /* Slate ist die bewusste Ausnahme: gleiche Helligkeit, niedrige Buntheit —
-     das neutrale Theme soll neutral bleiben. */
+  /* Slate is the deliberate exception: same lightness, low chroma — the
+     neutral theme is meant to stay neutral. */
   [data-gk-theme="slate"]  { --gk-theme-hue: 257; --gk-theme-chroma: 0.04; }
 
   [data-gk-theme] {
-    /* Ueber Fallbacks statt ueber Zuweisungen: die Theme-Bloecke oben haben
-       dieselbe Spezifitaet wie dieser Block, eine direkte Zuweisung wuerde sie
-       je nach Reihenfolge ueberstimmen.
-       Der Rueckfallwinkel ist ueberlebenswichtig: ohne ihn kippt die gesamte
-       Primaerfarbe, sobald data-gk-theme leer oder unbekannt ist — dann greift
-       kein Theme-Block, --gk-hue fehlt, oklch() wird ungueltig und Buttons
-       stehen ohne Hintergrund da. Genau das passiert, wenn gridkit.js beim
-       Start ein leeres data-gk-theme schreibt. */
+    /* Via fallbacks instead of via assignments: the theme blocks above have the
+       same specificity as this block, so a direct assignment would override
+       them depending on the order.
+       The fallback angle is vital: without it the whole primary color collapses
+       as soon as data-gk-theme is empty or unknown — no theme block matches,
+       --gk-hue is missing, oklch() turns invalid and buttons end up standing
+       there with no background. That is exactly what happens when gridkit.js
+       writes an empty data-gk-theme at startup. */
     --gk-hue: var(--gk-theme-hue, 277);
     --gk-chroma: var(--gk-theme-chroma, 0.15);
-    /* 0.55 statt 0.60: erst hier traegt weisser Text auf JEDER Themefarbe
-       mindestens 4,3:1. Vorher reichte die Spanne von 2,77:1 (Ocean, ein echter
-       Verstoss) bis 7,58:1 (Slate) — je nach Theme ein anderes Ergebnis. */
+    /* 0.55 instead of 0.60: only here does white text carry at least 4.3:1 on
+       EVERY theme color. Before, the range ran from 2.77:1 (Ocean, a real
+       violation) up to 7.58:1 (Slate) — a different result per theme. */
     --gk-l-primary: 0.55;
 
     --gk-primary:              oklch(var(--gk-l-primary) var(--gk-chroma) var(--gk-hue));
@@ -182,7 +182,7 @@
     --gk-primary-container:    oklch(0.95 calc(var(--gk-chroma) * 0.28) var(--gk-hue));
     --gk-on-primary-container: oklch(0.36 calc(var(--gk-chroma) * 0.75) var(--gk-hue));
 
-    /* Tertiaer ist die Akzentrolle — ein Drittel des Farbkreises weiter. */
+    /* Tertiary is the accent role — one third further around the color wheel. */
     --gk-tertiary:              oklch(var(--gk-l-primary) var(--gk-chroma) calc(var(--gk-hue) + 120));
     --gk-on-tertiary:           #ffffff;
     --gk-tertiary-container:    oklch(0.95 calc(var(--gk-chroma) * 0.28) calc(var(--gk-hue) + 120));
@@ -192,7 +192,7 @@
     --gk-sidebar-accent: var(--gk-primary);
   }
 
-  /* Dark Mode: dieselbe Rechnung, gespiegelte Helligkeiten. */
+  /* Dark mode: the same math, mirrored lightness values. */
   [data-gk-theme][data-gk-mode="dark"],
   [data-gk-theme].gk-dark {
     --gk-primary:              oklch(0.80 calc(var(--gk-chroma) * 0.80) var(--gk-hue));

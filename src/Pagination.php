@@ -144,7 +144,7 @@ final class Pagination
         $attr = ' class="gk-rowpager" data-gk-pager="' . $e($live) . '"';
         if ($live !== '') $attr .= ' data-gk-live-pager="' . $e($live) . '"';
         if ($hidden) $attr .= ' hidden';
-        return '<nav' . $attr . ' aria-label="Seitennavigation">' . $inner . '</nav>';
+        return '<nav' . $attr . ' aria-label="' . htmlspecialchars(Lang::t('pagination.aria'), ENT_QUOTES, 'UTF-8') . '">' . $inner . '</nav>';
     }
 
     /**

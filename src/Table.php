@@ -21,7 +21,7 @@ class Table
     private string $sortCol = '';
     private string $sortDir = 'asc';
     private string $searchQuery = '';
-    /** Leerzustand: ['title' => …, 'hint' => …, 'icon' => …, 'action' => html] */
+    /** Empty state: ['title' => …, 'hint' => …, 'icon' => …, 'action' => html] */
     private array $emptyState = [];
     private ?\mysqli $db = null;
     private string $baseQuery = '';
@@ -134,8 +134,8 @@ class Table
     }
 
     /**
-     * Setzt Fußzeilen-Zellen für die Tabelle.
-     * Jede Zelle ist ein String oder ['text' => '...', 'align' => 'right', 'colspan' => 2, 'bold' => true]
+     * Sets the footer cells for the table.
+     * Each cell is a string or ['text' => '...', 'align' => 'right', 'colspan' => 2, 'bold' => true]
      */
     public function footer(array $cells): static
     {
@@ -171,11 +171,11 @@ class Table
     }
 
     /**
-     * Gruppenzeilen einfügen, sobald sich $column ändert.
-     * Die Zeilen müssen nach dieser Spalte sortiert ankommen — sonst
-     * wiederholt sich die Überschrift bei jedem Wechsel.
+     * Insert a group row as soon as $column changes.
+     * The rows have to arrive sorted by that column — otherwise the
+     * heading repeats on every change.
      *
-     * @param array<string,string> $labels  Rohwert → Anzeigename
+     * @param array<string,string> $labels  raw value → display name
      */
     public function groupBy(string $column, array $labels = []): static
     {
@@ -413,8 +413,8 @@ class Table
                     if (empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
                 }
                 if (!empty($col['hideOnMobile'])) $tdCls[] = 'gk-hide-mobile';
-                // Nebenspalten (Nummern, Kennungen) treten in der Textfarbe zurueck,
-                // damit die eigentliche Bezeichnung den Blick bekommt.
+                // Secondary columns (numbers, identifiers) step back in text color
+                // so that the actual name is what gets the attention.
                 if (!empty($col['muted'])) $tdCls[] = 'gk-td-muted';
                 $tdStyle = $tdStyles ? ' style="' . implode(';', $tdStyles) . '"' : '';
                 $tdClass = $tdCls ? ' class="' . implode(' ', $tdCls) . '"' : '';
@@ -437,7 +437,7 @@ class Table
 
         echo '</tbody>';
 
-        // Fußzeile: benutzerdefinierte Zellen oder Ladezeit
+        // Footer: custom cells or load time
         if ($this->footerCells || $this->loadTimeMs !== null) {
             $totalCols = count($this->columns) + ($leftButtons ? 1 : 0) + ($rightButtons ? 1 : 0) + ($this->selectable ? 1 : 0);
             echo '<tfoot><tr class="gk-table-footer">';
@@ -457,7 +457,7 @@ class Table
                     echo '<td colspan="' . $colspan . '" style="' . $style . '">' . ($cell['text'] ?? '') . '</td>';
                     $usedCols += $colspan;
                 }
-                // Restliche Spalten + Ladezeit
+                // Remaining columns + load time
                 $remaining = $totalCols - $usedCols;
                 if ($remaining > 0 && $this->loadTimeMs !== null) {
                     $timeDisplay = $this->loadTimeMs < 1000 ? $this->loadTimeMs . ' ms' : number_format($this->loadTimeMs / 1000, 2, ',', '.') . ' s';
@@ -466,7 +466,7 @@ class Table
                     echo '<td colspan="' . $remaining . '"></td>';
                 }
             } else {
-                // Nur Ladezeit
+                // Load time only
                 $timeDisplay = $this->loadTimeMs < 1000 ? $this->loadTimeMs . ' ms' : number_format($this->loadTimeMs / 1000, 2, ',', '.') . ' s';
                 echo '<td colspan="' . $totalCols . '" class="gk-table-meta">'
                     . $e((string) $this->totalRows) . ' Einträge · ' . $timeDisplay
@@ -509,12 +509,12 @@ class Table
     private function renderButtons(array $buttons, array $row, \Closure $e): void
     {
         foreach ($buttons as $bname => $bopts) {
-            // showIf: Button nur anzeigen wenn Row-Feld truthy ist
+            // showIf: only show the button when the row field is truthy
             if (isset($bopts["showIf"])) {
                 $field = $bopts["showIf"];
                 if (empty($row[$field])) continue;
             }
-            // hideIf: Button verstecken wenn Row-Feld truthy ist
+            // hideIf: hide the button when the row field is truthy
             if (isset($bopts["hideIf"])) {
                 $field = $bopts["hideIf"];
                 if (!empty($row[$field])) continue;
@@ -561,13 +561,13 @@ class Table
         }
     }
 
-    /** SVG icons for table buttons — delegiert seit v1.17.0 an GridKit\Icon */
+    /** SVG icons for table buttons — delegated to GridKit\Icon since v1.17.0 */
     private function iconSvg(string $name): string
     {
         return Icon::svg($name, 16, true);
     }
 
-    /** @deprecated nur als Backup behalten falls Icon::svg in Zukunft Unterschied macht */
+    /** @deprecated kept only as a backup in case Icon::svg ever differs in future */
     private function iconSvgLegacy(string $name): string
     {
         $s = 'viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"';
@@ -605,7 +605,7 @@ class Table
         };
     }
 
-    /** Ganze Zahlen; 0 und leer werden zum Gedankenstrich (Zählspalten). */
+    /** Whole numbers; 0 and empty turn into an em dash (count columns). */
     private function formatNumber(mixed $val, array $col): string
     {
         $leer = ($col['blankZero'] ?? true)
@@ -641,9 +641,9 @@ class Table
     }
 
     /**
-     * Text des Leerzustands setzen. Ohne Aufruf zeigt die Tabelle einen
-     * sinnvollen Standard — und unterscheidet dabei selbsttaetig, ob gar keine
-     * Daten da sind oder ob nur die aktuelle Suche nichts trifft.
+     * Set the text of the empty state. Without a call the table shows a
+     * sensible default — and works out by itself whether there is no data at
+     * all or whether only the current search comes up empty.
      *
      * @param array{title?:string,hint?:string,icon?:string,action?:string} $opts
      */
@@ -655,14 +655,14 @@ class Table
     }
 
     /**
-     * Ist DIESE Ansicht gerade durch Suche oder Filter eingeschraenkt?
+     * Is THIS view currently narrowed down by a search or a filter?
      *
-     * gk_search ist ein seitenweiter Parameter. Ohne die Pruefung auf eigene
-     * Suchspalten wuerde auf einer Seite mit zwei Tabellen die Suche in der
-     * einen dazu fuehren, dass die andere "Keine Treffer" meldet und einen
-     * "Filter zuruecksetzen"-Knopf anbietet — obwohl sie gar nicht durchsucht
-     * wird. Gleiches gilt fuer Filter: nur die von dieser Tabelle deklarierten
-     * zaehlen.
+     * gk_search is a page-wide parameter. Without the check against this
+     * table's own search columns, a search in one of two tables on the same
+     * page would make the other one report "no matches" and offer a
+     * "reset filters" button — even though it is not being searched at all.
+     * The same goes for filters: only the ones declared by this table
+     * count.
      */
     private function isFiltered(): bool
     {
@@ -674,24 +674,24 @@ class Table
     }
 
     /**
-     * Der leere Zustand ist der, den Nutzer am haeufigsten sehen — jedes Mal,
-     * wenn ein Filter nichts trifft. Er braucht deshalb mehr als einen grauen
-     * Satz: eine Aussage, eine Einordnung und einen Weg heraus.
+     * The empty state is the one users see most often — every time a filter
+     * matches nothing. That is why it needs more than one grey sentence: a
+     * statement, some context, and a way out.
      */
     private function renderEmpty(int $colspan): string
     {
         $e = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES, 'UTF-8');
-        $gefiltert = $this->isFiltered();
-        $es = $this->emptyState;
+        $filtered = $this->isFiltered();
+        $empty = $this->emptyState;
 
-        $icon  = $es['icon']  ?? ($gefiltert ? 'search_off' : 'inbox');
-        $title = $es['title'] ?? Lang::t($gefiltert ? 'table.empty_filtered' : 'table.empty');
-        $hint  = $es['hint']  ?? Lang::t($gefiltert ? 'table.empty_filtered_hint' : 'table.empty_hint');
+        $icon  = $empty['icon']  ?? ($filtered ? 'search_off' : 'inbox');
+        $title = $empty['title'] ?? Lang::t($filtered ? 'table.empty_filtered' : 'table.empty');
+        $hint  = $empty['hint']  ?? Lang::t($filtered ? 'table.empty_filtered_hint' : 'table.empty_hint');
 
-        // Bei eingeschraenkter Ansicht ist der Weg heraus immer derselbe und
-        // wird deshalb von selbst angeboten.
-        $action = $es['action'] ?? '';
-        if ($action === '' && $gefiltert) {
+        // When the view is narrowed down, the way out is always the same and
+        // is therefore offered on its own.
+        $action = $empty['action'] ?? '';
+        if ($action === '' && $filtered) {
             $action = '<button type="button" class="gk-btn gk-btn-text gk-btn-primary gk-btn-sm"'
                 . ' data-gk-reset-filters="' . $e($this->id) . '">'
                 . $e(Lang::t('table.reset_filters')) . '</button>';
@@ -712,9 +712,9 @@ class Table
     {
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
         $v = strtolower(trim((string)$val));
-        // Die Liste kannte bisher nur die deutschen Formen: 'active' und 'inactive'
-        // fielen beide auf 'gray' durch, womit die wichtigste Unterscheidung einer
-        // Statusspalte ohne Farbe blieb.
+        // The list used to know only the German forms: 'active' and 'inactive'
+        // both fell through to 'gray', which left the most important distinction
+        // of a status column without a color.
         $map = [
             'green' => ['aktiv', 'active', 'bezahlt', 'paid', 'ja', 'yes', '1', 'true',
                         'gesendet', 'delivered', 'erledigt', 'done', 'abgeschlossen',
