@@ -164,6 +164,36 @@ class Table
         return $this;
     }
 
+    /**
+     * Rows the application has already fetched, plus the total before paging.
+     *
+     * `query()` speaks mysqli and nothing else. Every other source — PDO,
+     * SQLite, Postgres, an HTTP API, a plain array — comes in here: run your
+     * own query, hand over one page of rows and how many rows there are in
+     * total.
+     *
+     * Unlike `setData()` the table stays server-driven. Search, sort, filter
+     * and paging go back to the server as `gk_search`, `gk_sort` / `gk_dir`,
+     * `gk_filter_<column>` and `gk_page`, which is what you want as soon as the
+     * list outgrows what a browser should hold. Read them where you build the
+     * query, and end the request with the fragment — see `isAjaxReload()`.
+     *
+     *     $result = $repo->page($_GET);
+     *     $table  = (new Table('invoices'))
+     *         ->rows($result['rows'], $result['total'])
+     *         ->paginate(25);
+     *
+     * @param list<array<string,mixed>> $rows  One page, already filtered and sorted.
+     * @param int                       $total All matching rows, before LIMIT.
+     */
+    public function rows(array $rows, int $total): static
+    {
+        $this->rows      = array_values($rows);
+        $this->totalRows = max(0, $total);
+        $this->isStatic  = false;
+        return $this;
+    }
+
     public function filter(string $column, string $type, array $opts = []): static
     {
         $this->filters[$column] = ['type' => $type, ...$opts];
@@ -184,6 +214,46 @@ class Table
         return $this;
     }
 
+    /**
+     * The WHERE clauses this table adds to the query it was given, with their
+     * bound parameters.
+     *
+     * Search is a group of ORs across the searchable columns; every active
+     * filter is an AND on top of it. Kept separate from loadData() so that it
+     * can be checked without a database connection.
+     *
+     * @return array{0: list<string>, 1: list<string>, 2: string}
+     */
+    private function buildWhere(): array
+    {
+        $where  = [];
+        $params = [];
+        $types  = '';
+
+        if ($this->searchQuery !== '' && $this->searchCols) {
+            $clauses = [];
+            foreach ($this->searchCols as $col) {
+                $clauses[] = "`$col` LIKE ?";
+                $params[]  = '%' . $this->searchQuery . '%';
+                $types    .= 's';
+            }
+            $where[] = '(' . implode(' OR ', $clauses) . ')';
+        }
+
+        // Until 1.31 a declared filter rendered its dropdown, wrote its value
+        // into the URL and was then ignored by the query — the list simply did
+        // not change. Static tables were unaffected: the client filters those.
+        foreach (array_keys($this->filters) as $col) {
+            $value = (string) ($_GET['gk_filter_' . $col] ?? '');
+            if ($value === '') continue;
+            $where[]  = "`$col` = ?";
+            $params[] = $value;
+            $types   .= 's';
+        }
+
+        return [$where, $params, $types];
+    }
+
     private function loadData(): void
     {
         if (!$this->db || !$this->baseQuery) return;
@@ -192,15 +262,9 @@ class Table
         $params = [];
         $types = '';
 
-        // Search
-        if ($this->searchQuery !== '' && $this->searchCols) {
-            $clauses = [];
-            foreach ($this->searchCols as $col) {
-                $clauses[] = "`$col` LIKE ?";
-                $params[] = '%' . $this->searchQuery . '%';
-                $types .= 's';
-            }
-            $sql = "SELECT * FROM ($sql) AS _gk WHERE " . implode(' OR ', $clauses);
+        [$where, $params, $types] = $this->buildWhere();
+        if ($where !== []) {
+            $sql = "SELECT * FROM ($sql) AS _gk WHERE " . implode(' AND ', $where);
         }
 
         // Sort
@@ -238,13 +302,51 @@ class Table
         }
     }
 
+    /**
+     * True when this request is the AJAX reload of one table.
+     *
+     * The reload replaces the table's contents with the raw response body, so
+     * that body must be the table fragment and nothing else. `render()` already
+     * emits only the fragment for such a request — but it cannot stop the page
+     * around it, and a page that draws a sidebar and a header would send those
+     * along and inject the whole layout inside the table.
+     *
+     * So a page with a server-side table ends the request itself:
+     *
+     *     $table = (new Table('invoices'))->query($db, $sql)-> ... ;
+     *
+     *     if (Table::isAjaxReload('invoices')) {
+     *         $table->render();
+     *         exit;
+     *     }
+     *
+     * Anything the reload should also update outside the table goes between
+     * `render()` and `exit` as `<template data-gk-replace="css-selector">`.
+     *
+     * @param string|null $id Restrict to one table; null accepts any.
+     */
+    public static function isAjaxReload(?string $id = null): bool
+    {
+        $requestedWith = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
+        if (strcasecmp($requestedWith, 'XMLHttpRequest') !== 0) {
+            return false;
+        }
+
+        $requested = $_GET['gk_table'] ?? '';
+        if ($requested === '') {
+            return false;
+        }
+
+        return $id === null || $requested === $id;
+    }
+
     public function render(): void
     {
         if ($this->db) $this->loadData();
 
-        // AJAX request: return just the table body
-        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest'
-            && ($_GET['gk_table'] ?? '') === $this->id) {
+        // AJAX reload of this table: emit the fragment only. Stopping the
+        // page around it is the caller's job — see isAjaxReload().
+        if (self::isAjaxReload($this->id)) {
             $this->renderInner();
             return;
         }
@@ -286,10 +388,19 @@ class Table
             echo $this->toolbarHtml;
         }
         foreach ($this->filters as $col => $f) {
+            // The active value comes back from the URL. Without this the
+            // dropdown snaps to "All" on every full page load while the table
+            // below it still shows filtered rows — which is what a shared link
+            // or a plain reload does.
+            $active = (string) ($_GET['gk_filter_' . $col] ?? '');
+            $sel = static fn(string $value): string => $value === $active ? ' selected' : '';
+
             echo '<select class="gk-filter" data-gk-filter="' . $e($col) . '">';
-            echo '<option value="">' . $e($f['placeholder'] ?? Lang::t('table.filter_all')) . '</option>';
+            echo '<option value=""' . $sel('') . '>'
+               . $e($f['placeholder'] ?? Lang::t('table.filter_all')) . '</option>';
             foreach ($f['options'] ?? [] as $val => $label) {
-                echo '<option value="' . $e($val) . '">' . $e($label) . '</option>';
+                echo '<option value="' . $e($val) . '"' . $sel((string) $val) . '>'
+                   . $e($label) . '</option>';
             }
             echo '</select>';
         }
@@ -487,7 +598,23 @@ class Table
                 'data' => ['gk-page' => max(1, $this->currentPage - 1)],
                 'disabled' => $this->currentPage <= 1,
             ]);
-            for ($i = 1; $i <= $pages; $i++) {
+            // A window around the current page, plus the first and the last —
+            // the same shape Pagination uses. Printing every page put 400
+            // buttons in the DOM for a 10,000-row list, on every reload, which
+            // is precisely the size the server-side path exists for.
+            $window = 2;
+            $show = [1, $pages];
+            for ($i = $this->currentPage - $window; $i <= $this->currentPage + $window; $i++) {
+                if ($i >= 1 && $i <= $pages) $show[] = $i;
+            }
+            $show = array_values(array_unique($show));
+            sort($show);
+
+            $previous = 0;
+            foreach ($show as $i) {
+                if ($previous && $i - $previous > 1) {
+                    echo '<span class="gk-pg-gap">…</span>';
+                }
                 $isActive = $i === $this->currentPage;
                 echo Button::render((string)$i, [
                     'variant' => $isActive ? 'tonal' : 'text',
@@ -496,6 +623,7 @@ class Table
                     'shape' => 'pill',
                     'data' => ['gk-page' => $i],
                 ]);
+                $previous = $i;
             }
             echo Button::icon('chevron_right', [
                 'variant' => 'text', 'color' => 'neutral', 'size' => 'sm',
@@ -522,6 +650,13 @@ class Table
             $params = [];
             foreach ($bopts['params'] ?? [] as $pkey => $pcol) {
                 $params[$pkey] = $row[$pcol] ?? '';
+            }
+            // Almost every row button needs to say which row it belongs to, and
+            // forgetting `'params' => ['id' => 'id']` failed silently: the edit
+            // modal opened as if it were a new record. The row's own id is sent
+            // unless the caller mapped one itself.
+            if (!array_key_exists('id', $params) && isset($row['id'])) {
+                $params['id'] = $row['id'];
             }
 
             // Map legacy 'class' option to Button color
@@ -738,14 +873,31 @@ class Table
             'gray' => ['inaktiv', 'inactive', 'deaktiviert', 'disabled', 'archiviert',
                        'archived', 'gesperrt', 'blocked', '0', 'false', 'nein', 'no', 'offline'],
         ];
-        $color = $custom[$v] ?? null;
+        // A `labels` entry is either a colour, as it has always been:
+        //     'labels' => ['paid' => 'green']
+        // or a colour together with the text to show, which is what a status
+        // column needs in an application that runs in more than one language —
+        // the stored value stays 'paid', the cell reads "bezahlt".
+        //     'labels' => ['paid' => ['color' => 'green', 'text' => 'bezahlt']]
+        $entry = $custom[$v] ?? null;
+        $color = null;
+        $text  = (string) $val;
+
+        if (is_array($entry)) {
+            $color = $entry['color'] ?? null;
+            $text  = (string) ($entry['text'] ?? $val);
+        } elseif (is_string($entry) && $entry !== '') {
+            $color = $entry;
+        }
+
         if (!$color) {
             foreach ($map as $c => $vals) {
-                if (in_array($v, $vals)) { $color = $c; break; }
+                if (in_array($v, $vals, true)) { $color = $c; break; }
             }
         }
-        $color = $color ?? 'gray';
-        return '<span class="gk-label gk-label-' . $e($color) . '">' . $e($val) . '</span>';
+
+        return '<span class="gk-label gk-label-' . $e($color ?? 'gray') . '">'
+             . $e($text) . '</span>';
     }
 
 }

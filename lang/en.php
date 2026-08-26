@@ -104,4 +104,7 @@ return [
     'format.currency'          => '€{value}',
     'format.date'              => 'M j, Y',
     'format.datetime'          => 'M j, Y H:i',
+    'table.confirm_delete'     => 'Delete this entry?',
+    'table.delete_note'        => 'This cannot be undone.',
+    'form.cancel'              => 'Cancel',
 ];

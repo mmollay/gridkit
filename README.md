@@ -45,6 +45,26 @@ genuinely empty or just filtered, and offers a way back.
 
 ---
 
+## A whole application
+
+The snippet above is a table. This is what it looks like around one:
+
+![The invoice example: cards, filters, modal forms](docs/screenshots/example-invoices.png)
+
+[`examples/invoices/`](examples/invoices/) is a working invoice manager — list,
+create, edit, delete, with search, filter, sort and paging answered by the
+server over AJAX. English and German. About 300 lines across five files, no
+database, no build step.
+
+```bash
+git clone https://github.com/mmollay/gridkit.git
+cd gridkit && php -S localhost:8000
+```
+
+Then open <http://localhost:8000/examples/invoices/>. [What each file does.](examples/README.md)
+
+---
+
 ## Install
 
 ```bash
@@ -181,6 +201,7 @@ CI runs it on PHP 8.2, 8.3 and 8.4, plus one job with `mbstring` switched off.
 ## Documentation
 
 - **[Live demo](https://gridkit.ssi.at/demo/)** — every component, switchable themes
+- **[Example application](examples/invoices/)** — a CRUD app you can run in one command
 - **[Agent skill](GRIDKIT_SKILL.md)** — the complete API in one file
 - **[Changelog](CHANGELOG.md)** — what changed and why
 - **[Contributing](CONTRIBUTING.md)** — and the [Code of Conduct](CODE_OF_CONDUCT.md)

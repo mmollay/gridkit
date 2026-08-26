@@ -7,6 +7,64 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.31.0] - 2026-08-26
+
+An example application, and the four defects it uncovered on the way.
+
+The demo has always been a component gallery: it shows what exists, not what it
+is for. Building a real application against GridKit turned out to be the best
+test the framework has had — every one of the fixes below was found by trying to
+use the documented feature and watching it not work.
+
+### Added
+
+- **[`examples/invoices/`](examples/invoices/) — a complete CRUD application.**
+  List, create, edit, delete; search, filter, sort and paging answered by the
+  server over AJAX; English and German. About 300 lines across five files, with
+  no database and no build step — `php -S localhost:8000` and it runs.
+- **`Table::rows($page, $total)`** — the missing third data source. `query()`
+  speaks mysqli and nothing else, and `setData()` hands the whole set to the
+  browser. Anyone on PDO, SQLite, Postgres or an HTTP API had no way to use the
+  server-side table at all. `rows()` takes one page plus the total and keeps the
+  table server-driven.
+- **`Table::isAjaxReload($id)`** — names the contract that was previously
+  invisible. A table reload injects the response body straight into the table's
+  wrapper, so the page has to end the request after rendering the fragment.
+  Nothing said so, and nothing enforced it: following the README's `query()`
+  example gave you a table that swallowed the whole page on the first keystroke.
+- **Status labels can carry their own text.** `'labels' => ['paid' => ['color'
+  => 'green', 'text' => 'bezahlt']]` — the stored value stays `paid`, the cell
+  reads what the locale calls it. Previously `labels` mapped to a colour only
+  and the cell always showed the raw value, so a status column could not be
+  translated at all. The old colour-only form still works.
+
+### Fixed
+
+- **A filter dropdown never reached the query.** `->filter('status', …)` on a
+  `query()` table rendered the dropdown, put `gk_filter_status` in the URL, and
+  was then ignored — the list simply did not change. Filters now become bound
+  `AND` clauses alongside the search. Static tables were unaffected, which is
+  why it went unnoticed: the demo has no server-side table.
+- **The filter dropdown lost its value on a full page load.** A shared link or a
+  plain reload showed "All" while the table below it was still filtered.
+- **The built-in pager printed every page.** 10,000 rows at 25 a page meant 400
+  buttons in the DOM, rebuilt on every reload — at exactly the size the
+  server-side path exists for. Now windowed, like `Pagination` already was.
+- **A row button did not carry its row's id** unless you remembered
+  `'params' => ['id' => 'id']`, and forgetting it failed silently: the edit
+  modal opened as if it were a new record. The id is sent by default.
+- **`StatCards` formatted numbers in German** regardless of locale, so a card
+  and the column beneath it disagreed. Same locale keys as `Table` now.
+- The demo's modal forms were German — reachable from the English demo.
+
+### Changed
+
+- `GRIDKIT_SKILL.md`: the last 42 German lines translated, and the new APIs
+  documented. `Table.php`'s WHERE building was extracted into `buildWhere()` so
+  the filter path can be checked without a live database.
+- 9 more tests (`tests/ajax.test.php`), 800 assertions in total.
+
+---
 ## [1.30.0] - 2026-08-26
 
 The last places where GridKit assumed its user was German, and a shop window

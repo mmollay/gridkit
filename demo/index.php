@@ -1710,6 +1710,21 @@ GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
 <div class="demo-section" data-section="examples">
     <h2>Examples</h2>
 
+    <div class="demo-card" style="border-left:3px solid var(--gk-primary);">
+        <h3 style="margin:0 0 8px;">A whole application, not a mock-up</h3>
+        <p class="demo-intro" style="margin-bottom:14px;">
+            Everything below this box is a gallery — it shows what exists. If you would
+            rather see what it is <em>for</em>, <code>examples/invoices/</code> is a
+            working invoice manager: create, edit, delete, with search, filter, sort and
+            paging answered by the server. About 300 lines, no database.
+        </p>
+        <a class="gk-btn gk-btn-filled gk-btn-primary gk-btn-sm"
+           href="../examples/invoices/?lang=<?= $lang ?>">
+            <span class="material-icons" style="font-size:16px;vertical-align:-3px;">open_in_new</span>
+            Open the example application
+        </a>
+    </div>
+
     <h3 style="margin: 32px 0 16px;">Dashboard Demo</h3>
     <div class="demo-card">
         <?php

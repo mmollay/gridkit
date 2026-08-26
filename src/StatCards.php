@@ -40,11 +40,20 @@ class StatCards
             // Format value
             $val = $card['value'];
             if (isset($card['format'])) {
+                // Same locale keys as Table's column formats, so a card and
+                // the column below it never disagree about what a number
+                // looks like.
+                $dec   = Lang::t('format.decimal');
+                $thou  = Lang::t('format.thousands');
                 $val = match ($card['format']) {
-                    'currency' => number_format((float)$val, 2, ',', '.') . ' €',
-                    'number' => number_format((int)$val, 0, ',', '.'),
+                    'currency' => str_replace(
+                        '{value}',
+                        number_format((float) $val, 2, $dec, $thou),
+                        $card['currency'] ?? Lang::t('format.currency')
+                    ),
+                    'number'  => number_format((int) $val, 0, $dec, $thou),
                     'percent' => $val . ' %',
-                    default => (string)$val,
+                    default   => (string) $val,
                 };
             }
             $valCls = 'gk-stat-value';

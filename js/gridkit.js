@@ -943,10 +943,10 @@
         // finish() returns true exactly once — otherwise the catch branch would
         // run a second time after a successful render and replace the content
         // just inserted with the error message.
-        const run = (wrap._gkLauf = (wrap._gkLauf || 0) + 1);
+        const run = (wrap._gkRun = (wrap._gkRun || 0) + 1);
         let settled = false;
         const finish = () => {
-          if (wrap._gkLauf !== run || settled) return false;
+          if (wrap._gkRun !== run || settled) return false;
           settled = true;
           wrap.removeAttribute("data-gk-loading");
           wrap.removeAttribute("aria-busy");

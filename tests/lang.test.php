@@ -71,6 +71,10 @@ return [
             ->render()),
         'YearFilter' => T::capture(fn() => (new YearFilter())
             ->range(2020, 2024)->allOption()->render()),
+        'StatCards' => T::capture(fn() => (new StatCards('s'))
+            ->card('Revenue', 1234.5, ['format' => 'currency'])
+            ->card('Orders', 9876, ['format' => 'number'])
+            ->render()),
         'Table' => T::capture(fn() => (new Table('t'))
             ->setData([['id' => 1, 'name' => 'Widget']])
             ->column('name', 'Name')
@@ -148,11 +152,20 @@ return [
     T::contains($en, 'Mar 9, 2026', 'english date is unambiguous — not d.m.Y or m/d/Y');
     T::contains($en, '9,876', 'english number grouping');
 
+    // A card and the column under it must never disagree about a number.
+    $card = T::capture(fn() => (new StatCards('s'))
+        ->card('Revenue', 1234.5, ['format' => 'currency'])->render());
+    T::contains($card, '€1,234.50', 'StatCards uses the same locale keys as Table');
+
     Lang::set('de');
     $de = $render();
     T::contains($de, '1.234,50 €', 'german currency: symbol last, dot grouping');
     T::contains($de, '09.03.2026', 'german date');
     T::contains($de, '9.876', 'german number grouping');
+
+    $cardDe = T::capture(fn() => (new StatCards('s'))
+        ->card('Umsatz', 1234.5, ['format' => 'currency'])->render());
+    T::contains($cardDe, '1.234,50 €', 'StatCards follows the german locale too');
 
     Lang::set('en');
 },

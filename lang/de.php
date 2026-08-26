@@ -104,4 +104,7 @@ return [
     'format.currency'          => '{value} €',
     'format.date'              => 'd.m.Y',
     'format.datetime'          => 'd.m.Y H:i',
+    'table.confirm_delete'     => 'Diesen Eintrag löschen?',
+    'table.delete_note'        => 'Das lässt sich nicht rückgängig machen.',
+    'form.cancel'              => 'Abbrechen',
 ];

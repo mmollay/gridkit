@@ -99,22 +99,96 @@ use GridKit\Button;
 
 **Column formats:** `currency`, `percent`, `date`, `datetime`, `boolean`, `label`, `html`, `email`, `number`
 
-**Zweitzeile in einer Zelle** (Betreff, Konto, Nummer) — nie die Spalte weiten:
+**A second line inside a cell** (subject, account, reference) — never widens the column:
 
 ```html
-<div class="gk-cell-sub" title="Volltext">Your receipt from Anthropic…</div>
+<div class="gk-cell-sub" title="Full text">Your receipt from Anthropic…</div>
 ```
 
-**`groupBy($spalte, $labels)`:** Gruppenzeile, sobald sich der Wert ändert. Zeilen vorher nach dieser Spalte sortieren.
+**`groupBy($column, $labels)`:** inserts a group row whenever the value changes. Sort the rows by that column first.
 
-**Knopf `onclick`:** `{feld}` wird durch den JSON-Wert der Zeile ersetzt (`'onclick' => 'oeffnen({id})'`).
+**Button `onclick`:** `{field}` is replaced with the row's value, JSON-encoded (`'onclick' => 'open({id})'`).
 
 **Button colors:** `danger`, `success`, `warning`, `primary` (default: neutral)
+
+**Row identity:** a row button always carries its row's `id` in `data-gk-params`,
+so a modal knows which record it was opened for. `'params' => ['x' => 'column']`
+adds more, and mapping `id` yourself overrides the default.
 
 **`showIf`:** `->button('preview', ['icon' => 'open_in_new', 'params' => ['url' => 'url'], 'showIf' => 'has_preview'])`
 — button only renders if the row's `has_preview` value is truthy.
 
-**`->selectable('id')`:** Checkbox-Spalte, Kopf „alle“, Bulk-Leiste. Löschen feuert `gk:bulkdelete` mit `{ ids, tableId }` — die App löscht selbst. Jede Änderung feuert `gk:selectionchange` mit `{ ids, tableId, count }` (auch ohne Bulk-Leiste). Shift-Klick wählt den Bereich. Ohne `Table`-Klasse: `data-gk-table` + `data-gk-selectable`, Zeilen mit `data-gk-row-id` und `td.gk-cb-col`. Zeilen ohne `data-gk-row-id` sind nicht wählbar. „Alle“ gilt nur für sichtbare Zeilen. Nach Live-Reload (`gk-live-reloaded`) bindet GRIDKit die Tabelle neu.
+**`->selectable('id')`:** checkbox column, a select-all in the header, and a bulk bar. Deleting fires `gk:bulkdelete` with `{ ids, tableId }` — the application does the deleting. Every change fires `gk:selectionchange` with `{ ids, tableId, count }`, bulk bar or not. Shift-click selects a range. Without the `Table` class: `data-gk-table` + `data-gk-selectable`, rows carrying `data-gk-row-id` and a `td.gk-cb-col`. A row without `data-gk-row-id` cannot be selected. Select-all covers the visible rows only. After a live reload (`gk-live-reloaded`) GridKit re-binds the table.
+
+### Server-side tables (`rows()` + `isAjaxReload()`)
+
+Three ways to get data into a table, in order of how much GridKit does for you:
+
+```php
+->setData($rows)              // client-side: the browser gets everything and
+                              // searches, sorts and pages in JavaScript.
+                              // Fine up to a few hundred rows.
+
+->query($db, $sql)            // GridKit builds the SQL: LIKE for the search,
+                              // WHERE for every declared filter, ORDER BY,
+                              // COUNT and LIMIT. mysqli only.
+
+->rows($page, $total)         // you ran the query. PDO, SQLite, Postgres, an
+                              // HTTP API, an array — anything. Hand over one
+                              // page plus the total before LIMIT.
+```
+
+`rows()` and `query()` are both **server-driven**: search, filter, sort and
+paging go back to the server as URL parameters. Read them where you build the
+query:
+
+| Parameter | From |
+|---|---|
+| `gk_search` | the search box |
+| `gk_filter_<column>` | a `filter()` dropdown |
+| `gk_sort` / `gk_dir` | a sortable column header |
+| `gk_page` | the pager |
+
+**The page must end the request itself.** The reload injects the response body
+straight into the table's wrapper, so it has to be the fragment and nothing
+else — otherwise your sidebar, header and script tags land inside the table:
+
+```php
+$table = (new Table('invoices'))->rows($result['rows'], $result['total']);
+
+if (Table::isAjaxReload('invoices')) {
+    $table->render();
+
+    // Anything outside the table that should keep up goes in a template,
+    // addressed by a CSS selector.
+    echo '<template data-gk-replace="[data-gk-stats=invoice-stats]">';
+    renderStats();
+    echo '</template>';
+
+    exit;
+}
+```
+
+`Table::isAjaxReload()` without an argument matches any table, which is enough
+when the page has one.
+
+A complete worked example is in [`examples/invoices/`](examples/invoices/).
+
+### Status labels with their own text
+
+`labels` maps a stored value to a colour, or to a colour and the text to show —
+which is what a status column needs once the application runs in more than one
+language. The value stays `paid`; the cell reads whatever this locale calls it.
+
+```php
+->column('status', 'Status', ['format' => 'label', 'labels' => [
+    'draft'   => 'gray',                                        // colour only
+    'paid'    => ['color' => 'green', 'text' => Lang::t('paid')],
+]])
+```
+
+Without a `labels` entry the colour is guessed from a built-in word list
+(English and German), and the raw value is shown.
 
 ### Button
 
@@ -211,7 +285,7 @@ API:
 - `search(string $name, string $value = '', string $placeholder = '…', array $opts = ['live' => '…', 'id' => '…'])`
 - `filter($contentOrClosure)`: any number of toolbar slots — Closure (echo'd) or raw HTML string
 - `advanced(\Closure $renderer, string $summary = 'Erweiterte Filter', bool $open = false)`
-- `reset(string $baseUrl, string $label = 'Filter zurücksetzen')`
+- `reset(string $baseUrl, string $label = '')` — an empty label uses the translation
 
 CSS classes (all auto-applied): `gk-tableheader`, `gk-tableheader-status`, `gk-tableheader-toolbar`, `gk-tableheader-advanced`, `gk-tableheader-spacer`.
 
@@ -252,14 +326,15 @@ GK.modal.close();
         </div>
         <div class="gk-modal-body">Inhalt</div>
         <div class="gk-modal-footer">   <!-- seit 1.22.3: Aktionsleiste mit eigenem Padding -->
-            <?= Button::render('Schließen', ['variant' => 'outlined', 'color' => 'neutral', 'onclick' => "..."]) ?>
+            <?= Button::render('Close', ['variant' => 'outlined', 'color' => 'neutral', 'onclick' => "..."]) ?>
         </div>
     </div>
 </div>
 ```
 
-**Footer:** Aktions-Buttons am Modal-Ende gehören in `gk-modal-footer` (NICHT `gk-form-actions`
-direkt ins Modal — das hat kein Seiten-Padding; eine Kompat-Regel fängt Altfälle ab).
+**Footer:** action buttons at the end of a modal belong in `gk-modal-footer` — NOT
+`gk-form-actions` straight inside the modal, which has no side padding. A
+compatibility rule catches the old shape.
 
 ### Form (AJAX)
 
@@ -347,7 +422,7 @@ GK.table.refresh('table-id');
 
 ### Pagination + PageSize (since 1.22 / 1.27)
 
-Server-Pager **unterhalb** von `.gk-table-wrap`, nicht in der Karte und nicht
+Server-side pager **below** `.gk-table-wrap`, not inside the card and not
 im Live-Container. Gleiche Optik wie `GK.rowPager` (`.gk-rowpager` / `.gk-pg`).
 
 ```php
@@ -359,32 +434,32 @@ Pagination::fromPaginator($items, [
     'params'   => ['year' => $year, 'q' => $q ?: null],
 ]);
 
-// Im Live-Partial (AJAX), damit Zähler/Seiten nach Filter mitwechseln:
+// In the live partial (AJAX), so the counter and page list follow the filter:
 <template data-gk-replace="[data-gk-pager=exp-live]">
-<?php Pagination::fromPaginator($items, /* dieselben Optionen */); ?>
+<?php Pagination::fromPaginator($items, /* the same options */); ?>
 </template>
 ```
 
-Kleine Listen ohne Server-LIMIT: `data-gk-rows="25"` auf der Tabelle — der
-Client-`GK.rowPager` erzeugt dieselbe Leiste.
+Short lists with no server-side LIMIT: put `data-gk-rows="25"` on the table and
+the client-side `GK.rowPager` builds the same bar.
 
 ### Live Tables (`GK.liveTable`) — since 1.9.0
 
-AJAX-gefilterte Tabellen: Search + Filter + Sort + Pagination ohne Full-Page-Reload.
-Cursor bleibt beim Tippen, URL wird via `history.replaceState` synchron gehalten.
+AJAX-filtered tables: search, filter, sort and paging with no full page reload.
+The caret stays put while typing; the URL is kept in step via `history.replaceState`.
 
 ```html
 <!-- Inputs: beliebig ausserhalb des Containers -->
 <input data-gk-live-input="my-tbl" name="q" placeholder="Suche">
 <select data-gk-live-input="my-tbl" name="status">...</select>
 
-<!-- Container: wird AJAX-getauscht -->
+<!-- Container: swapped over AJAX -->
 <div id="my-tbl" data-gk-live-table="/my-list">
     <!-- Tabelle, Sort-Header (<a>), Paginierung — alles live -->
 </div>
 ```
 
-**Controller-Seite**: bei `X-Requested-With: XMLHttpRequest` oder `?partial=1` nur den Container-Inhalt ohne Layout rendern. Beispiel PHP:
+**On the controller page**: when `X-Requested-With: XMLHttpRequest` or `?partial=1` is present, render the container's contents only, without the layout. In PHP:
 
 ```php
 if ($request->isAjax() || $request->get('partial') === '1') {
@@ -394,10 +469,10 @@ return $this->view('my-list', $data);
 ```
 
 Features:
-- **Debounce 250 ms** für XHR-fetch, URL-Sync aber sofort.
+- **250 ms debounce** before the fetch; the URL is synced immediately.
 - **Link-Interceptor**: `<a href>` innerhalb des Containers die auf denselben Endpoint zeigen → AJAX-Reload (Sort-Header, Pagination).
-- **`patchNavSelects()`**: überschreibt `onchange` von `<select data-gk-years>` sodass sie `window.location.search` als Basis nehmen. Behält aktuelle Suche beim Jahr-Wechsel.
-- Event `gk-live-reloaded` wird nach jedem Swap auf dem Container gefeuert — an Eigen-Code für Re-Init binden.
+- **`patchNavSelects()`**: overrides `onchange` on `<select data-gk-years>` so they build on `window.location.search`. Keeps the current search when the year changes.
+- The `gk-live-reloaded` event fires on the container after every swap — bind your own re-initialisation to it.
 
 ### AJAX Navigation (SPA-lite)
 
@@ -409,17 +484,17 @@ $sidebar->ajaxNav(true);
 ```html
 <!-- Content-Container markieren -->
 <div class="gk-with-sidebar" data-gk-content>
-  <!-- Dieser Bereich wird bei Navigation ersetzt -->
+  <!-- This region is replaced on navigation -->
 </div>
 ```
 
 Features:
-- Sidebar-Links laden Content per fetch() ohne Seiten-Reload
+- Sidebar links load content with fetch(), no page reload
 - Ladebalken am oberen Bildschirmrand
-- Browser Zurück/Vorwärts funktioniert via pushState
+- Browser back/forward works through pushState
 - Automatische Re-Initialisierung von Table, Tooltip etc.
 - Fallback auf normale Navigation bei Fehler
-- Externe Links und Ctrl/Cmd+Click werden nicht abgefangen
+- External links and Ctrl/Cmd-click are left alone
 
 ## CSS Classes Reference
 
@@ -450,59 +525,59 @@ Features:
 
 ### BelegModal (since v1.15.0)
 
-Globaler PDF-/Dokument-Vorschau-Modal mit `<iframe>`. Eliminiert `window.open()` für PDF-Previews.
+A global PDF / document preview modal built on an `<iframe>`. Replaces `window.open()` for previews.
 
 ```php
-// Einmal pro Page (im Layout, vor </body>):
+// Once per page, in the layout, before </body>:
 \GridKit\BelegModal::container();
 ```
 
 ```javascript
-// JS-API überall:
+// The JS API, available anywhere:
 GK.belegModal.open('/path/to/file.pdf');
-GK.belegModal.open(url, { title: 'Rechnung 123' });
-GK.belegModal.open(url, { autoPrint: true });             // druckt iframe nach load
+GK.belegModal.open(url, { title: 'Invoice 123' });
+GK.belegModal.open(url, { autoPrint: true });             // prints the iframe once loaded
 GK.belegModal.open(url, {
-    unlinkExpenseId: 456,                                  // zeigt "Verknüpfung trennen"-Btn
+    unlinkExpenseId: 456,                                  // shows an "unlink" button
     onUnlink: function() { location.reload(); }
 });
 GK.belegModal.close();
 ```
 
-- **Desktop**: iframe lädt URL inline (Browser-PDF-Viewer).
-- **Mobile (≤ 768px)**: iframe versteckt, „PDF öffnen"-Button öffnet nativen Viewer.
-- **ESC** schliesst, Click-outside schliesst.
-- Falls Container fehlt: Fallback auf `window.open(url)` mit Console-Warning.
+- **Desktop**: the iframe loads the URL inline, in the browser's own PDF viewer.
+- **Mobile (≤ 768px)**: the iframe is hidden; an "Open PDF" button hands off to the native viewer.
+- **Esc** closes it, so does clicking outside.
+- With no container on the page it falls back to `window.open(url)` and warns on the console.
 
 ### ActionGroup (since v1.16.0)
 
-Container für Action-Buttons in Tabellen-Spalten — vereinheitlicht das wiederkehrende
-„flex-row mit Mini-Buttons"-Pattern. Eliminiert eigene `.xx-btn-icon`/`.xx-btn-match` Klassen.
+A container for action buttons inside table columns — one shape for the recurring
+"flex row of small buttons" pattern, instead of per-project `.xx-btn-icon` classes.
 
 ```php
-// PHP-API (deklarativ):
+// The declarative PHP API:
 \GridKit\ActionGroup::render([
-    ['icon' => 'edit',   'onclick' => "edit($id)",  'title' => 'Bearbeiten'],
-    ['icon' => 'delete', 'onclick' => "del($id)",   'title' => 'Löschen', 'color' => 'danger'],
-    ['icon' => 'send',   'label' => 'Mahnen',       'color' => 'warning', 'variant' => 'filled',
+    ['icon' => 'edit',   'onclick' => "edit($id)",  'title' => 'Edit'],
+    ['icon' => 'delete', 'onclick' => "del($id)",   'title' => 'Delete', 'color' => 'danger'],
+    ['icon' => 'send',   'label' => 'Remind',       'color' => 'warning', 'variant' => 'filled',
      'pill' => true, 'onclick' => "remind($id)", 'showIf' => $isOverdue],
 ]);
 ```
 
 ```html
-<!-- Oder rohes HTML (für JS-generierten Inhalt): -->
+<!-- Or raw HTML, for content generated in JavaScript: -->
 <div class="gk-action-group">
     <button class="gk-btn gk-btn-xs gk-btn-text gk-btn-neutral gk-btn-icon-only">…</button>
     <button class="gk-btn gk-btn-xs gk-btn-filled gk-btn-warning gk-btn-pill">…</button>
 </div>
 ```
 
-Neue CSS-Klassen:
+New CSS classes:
 - `.gk-action-group` — `inline-flex; gap:4px; flex-wrap:nowrap` Container
-- `.gk-btn-xs` — kleiner als `gk-btn-sm` (padding 3px 8px, font 11px). Icon-only: 26×26 px
-- `.gk-btn-pill` — `border-radius:999px` (Badge-Stil)
+- `.gk-btn-xs` — smaller than `gk-btn-sm` (padding 3px 8px, font 11px). Icon-only: 26×26 px
+- `.gk-btn-pill` — `border-radius:999px`, badge-shaped
 
-Action-Item-Optionen: `icon`, `label`, `href`, `onclick`, `title`, `variant`, `color`, `size`,
+Action item options: `icon`, `label`, `href`, `onclick`, `title`, `variant`, `color`, `size`,
 `pill`, `disabled`, `showIf`, `class`.
 
 ## Utility Classes (since v1.14.0)
