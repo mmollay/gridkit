@@ -550,6 +550,40 @@ Pagination::fromPaginator($items, [
 Short lists with no server-side LIMIT: put `data-gk-rows="25"` on the table and
 the client-side `GK.rowPager` builds the same bar.
 
+### Global search (`GK.search`)
+
+A system-wide quick search, opened with Ctrl+K (Cmd+K on Mac) or by any element
+carrying `data-gk-search`. GridKit draws the widget; **what** is searched is
+entirely your endpoint's business.
+
+```js
+GK.search.init({
+    url:       '/api/search',   // called with ?q=<query>
+    hotkey:    'ctrl+k',
+    minLength: 2,               // 0 opens with results already showing
+});
+```
+
+Your endpoint answers with groups of hits:
+
+```json
+{ "groups": [
+    { "title": "Invoices",
+      "items": [
+        { "title":    "INV-2026-0184",
+          "subtitle": "Ecklund & Partner · Mar 12, 2026",
+          "amount":   "€1,240.00",
+          "url":      "/invoices/184",
+          "icon":     "receipt_long" } ] } ] }
+```
+
+Only `title` and `url` are required. Arrow keys move, Enter opens, Escape
+closes.
+
+The German key names this contract used to require — `gruppen`, `titel`,
+`treffer`, `untertitel`, `betrag` — are still accepted, so an endpoint written
+against the old shape keeps working. New ones should use the English names.
+
 ### Live Tables (`GK.liveTable`) — since 1.9.0
 
 AJAX-filtered tables: search, filter, sort and paging with no full page reload.

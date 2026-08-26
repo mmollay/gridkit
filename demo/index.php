@@ -54,6 +54,48 @@ $demoRows = static function (array $rows) use ($lang): array {
 
     return $rows;
 };
+
+/**
+ * A placeholder image as a data URI.
+ *
+ * The demo used to pull these from picsum.photos and i.pravatar.cc. For a
+ * project whose first line is "no dependencies", a shop window that breaks when
+ * a third party is slow — and that sends every visitor's IP to two of them —
+ * was the wrong thing to ship. Generated here instead: no files, no requests.
+ */
+function ph(int $w, int $h, int $seed, string $initials = ''): string
+{
+    $hue  = ($seed * 47) % 360;
+    $hue2 = ($hue + 38) % 360;
+
+    if ($initials !== '') {
+        $svg = sprintf(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="%1$d" height="%2$d" viewBox="0 0 %1$d %2$d">'
+            . '<rect width="%1$d" height="%2$d" fill="hsl(%3$d 52%% 62%%)"/>'
+            . '<text x="50%%" y="50%%" dy=".35em" text-anchor="middle" fill="#fff"'
+            . ' font-family="system-ui,sans-serif" font-size="%4$d" font-weight="600">%5$s</text>'
+            . '</svg>',
+            $w, $h, $hue, (int) round($w * 0.4), htmlspecialchars($initials, ENT_QUOTES, 'UTF-8')
+        );
+    } else {
+        $svg = sprintf(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="%1$d" height="%2$d" viewBox="0 0 %1$d %2$d">'
+            . '<defs><linearGradient id="g%3$d" x1="0" y1="0" x2="1" y2="1">'
+            . '<stop offset="0" stop-color="hsl(%4$d 58%% 66%%)"/>'
+            . '<stop offset="1" stop-color="hsl(%5$d 54%% 44%%)"/></linearGradient></defs>'
+            . '<rect width="%1$d" height="%2$d" fill="url(#g%3$d)"/>'
+            . '<circle cx="%6$d" cy="%7$d" r="%8$d" fill="#fff" opacity=".16"/>'
+            . '<circle cx="%9$d" cy="%10$d" r="%11$d" fill="#000" opacity=".10"/>'
+            . '</svg>',
+            $w, $h, $seed, $hue, $hue2,
+            (int) ($w * 0.72), (int) ($h * 0.28), (int) ($w * 0.22),
+            (int) ($w * 0.24), (int) ($h * 0.78), (int) ($w * 0.30)
+        );
+    }
+
+    return 'data:image/svg+xml;base64,' . base64_encode($svg);
+}
+
 if (isset($_GET['lang'])) {
     setcookie('gk_lang', $lang, time() + 86400 * 365, '/');
 }
@@ -131,6 +173,7 @@ $sidebar->brand('', 'widgets')
     ->item('Cards', '#cards', 'grid_view')
     ->item('Layout', '#layout', 'layers')
     ->item('Navigation', '#navigation', 'filter_list')
+    ->item('Search', '#suche', 'search')
     ->item('Feedback', '#feedback', 'notifications')
     ->item('UI', '#ui', 'palette')
     ->item('Tooltip', '#tooltip', 'chat_bubble')
@@ -155,7 +198,7 @@ echo $demoHeader->title($headerTitle, true)
     ->fixed(true)
     ->action($langBtn)
     ->user('Demo User', [
-        'avatar' => 'https://i.pravatar.cc/72?img=12',
+        'avatar' => ph(72, 72, 12, 'JD'),
         'menu' => [
             ['label' => 'Profile', 'href' => '#', 'icon' => 'person'],
             ['label' => 'Settings', 'href' => '#', 'icon' => 'settings'],
@@ -929,17 +972,17 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
             <div class="gk-avatar gk-avatar-md">MD</div>
             <div class="gk-avatar gk-avatar-lg">LG</div>
             <div class="gk-avatar gk-avatar-xl">XL</div>
-            <div class="gk-avatar gk-avatar-lg"><img src="https://i.pravatar.cc/112?img=12" alt=""></div>
-            <div class="gk-avatar gk-avatar-lg"><img src="https://i.pravatar.cc/112?img=32" alt=""></div>
+            <div class="gk-avatar gk-avatar-lg"><img src="<?= ph(112, 112, 12, 'JD') ?>" alt=""></div>
+            <div class="gk-avatar gk-avatar-lg"><img src="<?= ph(112, 112, 32, 'MK') ?>" alt=""></div>
         </div>
     </div>
 
     <div class="gk-segment" style="margin-top:12px">
         <div class="gk-segment-header">Status</div>
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-            <div class="gk-avatar gk-avatar-lg"><img src="https://i.pravatar.cc/112?img=12" alt=""><span class="gk-avatar-status online"></span></div>
-            <div class="gk-avatar gk-avatar-lg"><img src="https://i.pravatar.cc/112?img=32" alt=""><span class="gk-avatar-status away"></span></div>
-            <div class="gk-avatar gk-avatar-lg"><img src="https://i.pravatar.cc/112?img=44" alt=""><span class="gk-avatar-status busy"></span></div>
+            <div class="gk-avatar gk-avatar-lg"><img src="<?= ph(112, 112, 12, 'JD') ?>" alt=""><span class="gk-avatar-status online"></span></div>
+            <div class="gk-avatar gk-avatar-lg"><img src="<?= ph(112, 112, 32, 'MK') ?>" alt=""><span class="gk-avatar-status away"></span></div>
+            <div class="gk-avatar gk-avatar-lg"><img src="<?= ph(112, 112, 44, 'AS') ?>" alt=""><span class="gk-avatar-status busy"></span></div>
             <div class="gk-avatar gk-avatar-lg">MM<span class="gk-avatar-status offline"></span></div>
         </div>
     </div>
@@ -947,10 +990,10 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
     <div class="gk-segment" style="margin-top:12px">
         <div class="gk-segment-header">Group (stacked)</div>
         <div class="gk-avatar-group">
-            <div class="gk-avatar gk-avatar-md"><img src="https://i.pravatar.cc/80?img=12" alt=""></div>
-            <div class="gk-avatar gk-avatar-md"><img src="https://i.pravatar.cc/80?img=32" alt=""></div>
-            <div class="gk-avatar gk-avatar-md"><img src="https://i.pravatar.cc/80?img=44" alt=""></div>
-            <div class="gk-avatar gk-avatar-md"><img src="https://i.pravatar.cc/80?img=55" alt=""></div>
+            <div class="gk-avatar gk-avatar-md"><img src="<?= ph(80, 80, 12, 'JD') ?>" alt=""></div>
+            <div class="gk-avatar gk-avatar-md"><img src="<?= ph(80, 80, 32, 'MK') ?>" alt=""></div>
+            <div class="gk-avatar gk-avatar-md"><img src="<?= ph(80, 80, 44, 'AS') ?>" alt=""></div>
+            <div class="gk-avatar gk-avatar-md"><img src="<?= ph(80, 80, 55, 'TW') ?>" alt=""></div>
             <div class="gk-avatar gk-avatar-md">+3</div>
         </div>
     </div>
@@ -966,37 +1009,37 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
     <p class="demo-intro">Image grid with lazy loading, hover overlay and lightbox (arrow keys, Escape).</p>
 
     <div class="gk-gallery">
-        <div class="gk-gallery-item" data-lightbox="https://picsum.photos/800/600?random=1" data-caption="Landscape 1" data-lazy>
-            <img data-src="https://picsum.photos/400/400?random=1" alt="Landscape 1">
+        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 1) ?>" data-caption="Landscape 1" data-lazy>
+            <img data-src="<?= ph(400, 400, 1) ?>" alt="Landscape 1">
             <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Landscape</span></div>
         </div>
-        <div class="gk-gallery-item" data-lightbox="https://picsum.photos/800/600?random=2" data-caption="Architecture" data-lazy>
-            <img data-src="https://picsum.photos/400/400?random=2" alt="Architecture">
+        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 2) ?>" data-caption="Architecture" data-lazy>
+            <img data-src="<?= ph(400, 400, 2) ?>" alt="Architecture">
             <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Architecture</span></div>
         </div>
-        <div class="gk-gallery-item" data-lightbox="https://picsum.photos/800/600?random=3" data-caption="Nature" data-lazy>
-            <img data-src="https://picsum.photos/400/400?random=3" alt="Nature">
+        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 3) ?>" data-caption="Nature" data-lazy>
+            <img data-src="<?= ph(400, 400, 3) ?>" alt="Nature">
             <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Nature</span></div>
         </div>
-        <div class="gk-gallery-item" data-lightbox="https://picsum.photos/800/600?random=4" data-caption="City" data-lazy>
-            <img data-src="https://picsum.photos/400/400?random=4" alt="City">
+        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 4) ?>" data-caption="City" data-lazy>
+            <img data-src="<?= ph(400, 400, 4) ?>" alt="City">
             <div class="gk-gallery-overlay"><span class="gk-gallery-caption">City</span></div>
         </div>
-        <div class="gk-gallery-item" data-lightbox="https://picsum.photos/800/600?random=5" data-caption="Abstract" data-lazy>
-            <img data-src="https://picsum.photos/400/400?random=5" alt="Abstract">
+        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 5) ?>" data-caption="Abstract" data-lazy>
+            <img data-src="<?= ph(400, 400, 5) ?>" alt="Abstract">
             <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Abstract</span></div>
         </div>
-        <div class="gk-gallery-item" data-lightbox="https://picsum.photos/800/600?random=6" data-caption="Panorama" data-lazy>
-            <img data-src="https://picsum.photos/400/400?random=6" alt="Panorama">
+        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 6) ?>" data-caption="Panorama" data-lazy>
+            <img data-src="<?= ph(400, 400, 6) ?>" alt="Panorama">
             <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Panorama</span></div>
         </div>
     </div>
 
     <div class="demo-code"><pre>&lt;div class="gk-gallery"&gt;
-    &lt;div class="gk-gallery-item" data-lightbox="full.jpg" data-caption="Titel" data-lazy&gt;
+    &lt;div class="gk-gallery-item" data-lightbox="full.jpg" data-caption="Caption" data-lazy&gt;
         &lt;img data-src="thumb.jpg" alt=""&gt;
         &lt;div class="gk-gallery-overlay"&gt;
-            &lt;span class="gk-gallery-caption"&gt;Titel&lt;/span&gt;
+            &lt;span class="gk-gallery-caption"&gt;Caption&lt;/span&gt;
         &lt;/div&gt;
     &lt;/div&gt;
 &lt;/div&gt;
@@ -1275,7 +1318,7 @@ $years->range(2022, 2026)->render();</pre></div>
 
 <!-- ===== SUCHE ===== -->
 <div class="demo-section" data-section="suche">
-    <h2>Suche</h2>
+    <h2>Search</h2>
     <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">System-wide quick search. GridKit provides the widget only —
@@ -1374,10 +1417,10 @@ GK.confirm('Really delete?', {
                 </div>
             </div>
         </div>
-        <div class="demo-code"><pre>GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'small');
-GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'medium');
-GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'large');
-GK.modal.open('Titel', 'form/edit.php', {id: 42}, 'full');
+        <div class="demo-code"><pre>GK.modal.open('Title', 'form/edit.php', {id: 42}, 'small');
+GK.modal.open('Title', 'form/edit.php', {id: 42}, 'medium');
+GK.modal.open('Title', 'form/edit.php', {id: 42}, 'large');
+GK.modal.open('Title', 'form/edit.php', {id: 42}, 'full');
 
 $table->button('edit', ['icon' => 'edit', 'modal' => 'edit_form'])
     ->modal('edit_form', 'Edit', 'form/edit.php', ['size' => 'large']);</pre></div>
@@ -1610,7 +1653,7 @@ Button::icon('edit', ['title' => 'Edit']);
             ->action(Button::render('New Invoice', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'add', 'size' => 'sm']))
             ->action(Button::icon('notifications', ['variant' => 'text', 'color' => 'neutral', 'title' => 'Notifications']))
             ->user('Martin Huber', [
-                'avatar' => 'https://i.pravatar.cc/72?img=12', 'role' => 'Administrator',
+                'avatar' => ph(72, 72, 12, 'JD'), 'role' => 'Administrator',
                 'menu' => [
                     ['label' => 'Profile', 'href' => '/profil', 'icon' => 'person'],
                     ['label' => 'Settings', 'href' => '/settings', 'icon' => 'settings'],
@@ -1883,7 +1926,7 @@ Auth::renderLogin([...]);    // Login page</div>
     </div>
 </div>
 
-<!-- ===== TOOLTIP ===== --><div class="demo-section" data-section="tooltip">    <h2>Tooltip</h2>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">CSS-only Tooltips</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Pure CSS tooltips via <code>data-gk-tooltip</code> attribute. No JavaScript needed.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="Tooltip on top" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Top (default)</span>            <span data-gk-tooltip="Tooltip on bottom" data-gk-tooltip-pos="bottom" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Bottom</span>            <span data-gk-tooltip="Tooltip on left" data-gk-tooltip-pos="left" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Left</span>            <span data-gk-tooltip="Tooltip on right" data-gk-tooltip-pos="right" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Right</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Multiline Tooltip</h3>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="This is a longer tooltip text that wraps to multiple lines for better readability" data-gk-tooltip-wrap style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Hover for multiline</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Rich Tooltip (HTML content)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Rich tooltips use <code>data-gk-tooltip-rich</code> pointing to a hidden element. Supports links, formatting, and stays open on hover.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip-rich="#richTip1" style="padding:8px 16px;background:var(--gk-primary);color:#fff;border-radius:6px;cursor:pointer">Hover for details</span>            <div id="richTip1">                <strong>GridKit Tooltip</strong>                <p style="margin:8px 0 4px;font-size:12px;color:var(--gk-on-surface-variant)">Rich tooltips support full HTML content including links, images, and interactive elements.</p>                <a href="#" style="font-size:12px">Learn more &rarr;</a>            </div>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Tooltip on Buttons</h3>        <div style="display:flex;gap:16px;align-items:center;justify-content:center;padding:40px 0">            <button class="gk-btn gk-btn-filled gk-btn-primary" data-gk-tooltip="Save your changes"><span class="material-icons" style="font-size:18px">save</span> Save</button>            <button class="gk-btn gk-btn-outlined gk-btn-error" data-gk-tooltip="Delete this item" data-gk-tooltip-pos="bottom"><span class="material-icons" style="font-size:18px">delete</span> Delete</button>            <button class="gk-btn gk-btn-tonal gk-btn-neutral" data-gk-tooltip="Print document" data-gk-tooltip-pos="right"><span class="material-icons" style="font-size:18px">print</span></button>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Globales Titel-Tooltip (GK.tip, v1.23.0)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Jedes Element mit <code>title</code>-Attribut bekommt automatisch ein GK-Popup — kein Markup nötig. Opt-out per <code>data-gk-tip-off</code>.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span title="Automatisch aufgewertet — einfach title verwenden" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Element mit title</span>            <span title="Erste Zeile&#10;Zweite Zeile (\n = Umbruch)" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Mehrzeilig</span>            <span data-gk-tip-off><span title="Dieses Popup siehst du nativ" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Opt-out</span></span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 12px;font-size:15px">Usage</h3>        <pre style="background:var(--gk-surface-container);padding:16px;border-radius:8px;font-size:12px;line-height:1.6;overflow-x:auto">&lt;!-- Simple tooltip (CSS-only) --&gt;
+<!-- ===== TOOLTIP ===== --><div class="demo-section" data-section="tooltip">    <h2>Tooltip</h2>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">CSS-only Tooltips</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Pure CSS tooltips via <code>data-gk-tooltip</code> attribute. No JavaScript needed.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="Tooltip on top" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Top (default)</span>            <span data-gk-tooltip="Tooltip on bottom" data-gk-tooltip-pos="bottom" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Bottom</span>            <span data-gk-tooltip="Tooltip on left" data-gk-tooltip-pos="left" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Left</span>            <span data-gk-tooltip="Tooltip on right" data-gk-tooltip-pos="right" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Right</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Multiline Tooltip</h3>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="This is a longer tooltip text that wraps to multiple lines for better readability" data-gk-tooltip-wrap style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Hover for multiline</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Rich Tooltip (HTML content)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Rich tooltips use <code>data-gk-tooltip-rich</code> pointing to a hidden element. Supports links, formatting, and stays open on hover.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip-rich="#richTip1" style="padding:8px 16px;background:var(--gk-primary);color:#fff;border-radius:6px;cursor:pointer">Hover for details</span>            <div id="richTip1">                <strong>GridKit Tooltip</strong>                <p style="margin:8px 0 4px;font-size:12px;color:var(--gk-on-surface-variant)">Rich tooltips support full HTML content including links, images, and interactive elements.</p>                <a href="#" style="font-size:12px">Learn more &rarr;</a>            </div>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Tooltip on Buttons</h3>        <div style="display:flex;gap:16px;align-items:center;justify-content:center;padding:40px 0">            <button class="gk-btn gk-btn-filled gk-btn-primary" data-gk-tooltip="Save your changes"><span class="material-icons" style="font-size:18px">save</span> Save</button>            <button class="gk-btn gk-btn-outlined gk-btn-error" data-gk-tooltip="Delete this item" data-gk-tooltip-pos="bottom"><span class="material-icons" style="font-size:18px">delete</span> Delete</button>            <button class="gk-btn gk-btn-tonal gk-btn-neutral" data-gk-tooltip="Print document" data-gk-tooltip-pos="right"><span class="material-icons" style="font-size:18px">print</span></button>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Global title tooltip (GK.tip, since v1.23.0)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Any element with a <code>title</code> attribute gets a GridKit popup — no markup needed. Opt out with <code>data-gk-tip-off</code>.</p>        <div style="display:flex;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span title="Upgraded automatically — just use title" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Element with title</span>            <span title="First line&#10;Second line (\n breaks)" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Multiline</span>            <span data-gk-tip-off><span title="This one is the browser's own" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Opt-out</span></span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 12px;font-size:15px">Usage</h3>        <pre style="background:var(--gk-surface-container);padding:16px;border-radius:8px;font-size:12px;line-height:1.6;overflow-x:auto">&lt;!-- Simple tooltip (CSS-only) --&gt;
 &lt;span data-gk-tooltip="Hello!"&gt;Hover me&lt;/span&gt;
 
 &lt;!-- Position: top (default), bottom, left, right --&gt;

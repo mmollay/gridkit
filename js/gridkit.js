@@ -3027,12 +3027,12 @@ GK.search = {
   cfg: null,
   overlay: null,
   input: null,
-  liste: null,
-  treffer: [],
-  aktiv: -1,
+  list: null,
+  hits: [],
+  active: -1,
   timer: null,
   controller: null,
-  zuletztFokus: null,
+  lastFocus: null,
 
   init(options) {
     this.cfg = Object.assign(
@@ -3071,7 +3071,7 @@ GK.search = {
   open() {
     if (this.overlay) return;
     if (!this.cfg) this.init();
-    this.zuletztFokus = document.activeElement;
+    this.lastFocus = document.activeElement;
 
     var ov = document.createElement("div");
     ov.className = "gk-search-overlay";
@@ -3086,8 +3086,8 @@ GK.search = {
 
     this.overlay = ov;
     this.input = ov.querySelector(".gk-search-feld");
-    this.liste = ov.querySelector(".gk-search-liste");
-    this.zeigeHinweis(this.cfg.hint);
+    this.list = ov.querySelector(".gk-search-liste");
+    this.showNotice(this.cfg.hint);
 
     var self = this;
     ov.addEventListener("click", function (e) { if (e.target === ov) self.close(); });
@@ -3101,10 +3101,10 @@ GK.search = {
     if (this.controller) { this.controller.abort(); this.controller = null; }
     clearTimeout(this.timer);
     this.overlay.remove();
-    this.overlay = this.input = this.liste = null;
-    this.treffer = [];
-    this.aktiv = -1;
-    if (this.zuletztFokus && this.zuletztFokus.focus) this.zuletztFokus.focus();
+    this.overlay = this.input = this.list = null;
+    this.hits = [];
+    this.active = -1;
+    if (this.lastFocus && this.lastFocus.focus) this.lastFocus.focus();
   },
 
   taste(e) {
@@ -3112,16 +3112,16 @@ GK.search = {
     if (e.key === "Tab") { e.preventDefault(); return; }   // focus stays trapped
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-      if (!this.treffer.length) return;
-      this.aktiv += e.key === "ArrowDown" ? 1 : -1;
-      if (this.aktiv < 0) this.aktiv = this.treffer.length - 1;
-      if (this.aktiv >= this.treffer.length) this.aktiv = 0;
-      this.markiere();
+      if (!this.hits.length) return;
+      this.active += e.key === "ArrowDown" ? 1 : -1;
+      if (this.active < 0) this.active = this.hits.length - 1;
+      if (this.active >= this.hits.length) this.active = 0;
+      this.highlight();
       return;
     }
-    if (e.key === "Enter" && this.aktiv >= 0 && this.treffer[this.aktiv]) {
+    if (e.key === "Enter" && this.active >= 0 && this.hits[this.active]) {
       e.preventDefault();
-      var url = this.treffer[this.aktiv].url;
+      var url = this.hits[this.active].url;
       if (url) location.href = url;
     }
   },
@@ -3132,8 +3132,8 @@ GK.search = {
     var q = this.input.value.trim();
     if (q.length < this.cfg.minLength) {
       if (this.controller) { this.controller.abort(); this.controller = null; }
-      this.treffer = []; this.aktiv = -1;
-      this.zeigeHinweis(this.cfg.hint);
+      this.hits = []; this.active = -1;
+      this.showNotice(this.cfg.hint);
       return;
     }
     this.timer = setTimeout(function () { self.suche(q); }, 200);
@@ -3144,72 +3144,77 @@ GK.search = {
     // Abort a request already in flight — otherwise an old response overtakes the new one.
     if (this.controller) this.controller.abort();
     this.controller = new AbortController();
-    this.zeigeHinweis('<span class="gk-search-laedt"></span>');
+    this.showNotice('<span class="gk-search-laedt"></span>');
 
     fetch(this.cfg.url + (this.cfg.url.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q), {
       headers: { "X-Requested-With": "XMLHttpRequest" },
       signal: this.controller.signal,
     })
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function (d) { self.zeige(d.gruppen || [], q); })
+      .then(function (d) { self.show(d.groups || d.gruppen || [], q); })
       .catch(function (err) {
         if (err.name === "AbortError") return;
-        self.zeigeHinweis(self.cfg.error);
+        self.showNotice(self.cfg.error);
       });
   },
 
-  zeige(gruppen, q) {
-    this.treffer = [];
-    this.aktiv = -1;
+    show(groups, q) {
+    this.hits = [];
+    this.active = -1;
     var html = "";
     var self = this;
 
-    gruppen.forEach(function (g) {
-      if (!g.treffer || !g.treffer.length) return;
-      html += '<div class="gk-search-gruppe">' + self.esc(g.titel || "") + "</div>";
-      g.treffer.forEach(function (t) {
-        var i = self.treffer.length;
-        self.treffer.push(t);
+      groups.forEach(function (g) {
+        // The response contract used German key names — an English-facing
+        // library asking for `gruppen`, `titel`, `treffer`. English is the
+        // documented shape now; the German names keep working, so an endpoint
+        // written against the old one does not break.
+        var items = g.items || g.treffer || [];
+        if (!items.length) return;
+        html += '<div class="gk-search-gruppe">' + self.esc(g.title || g.titel || "") + "</div>";
+        items.forEach(function (t) {
+        var i = self.hits.length;
+        self.hits.push(t);
         html +=
           '<a class="gk-search-treffer" role="option" id="gk-t' + i + '"' +
           ' data-i="' + i + '" href="' + self.esc(t.url || "#") + '">' +
           (t.icon ? '<span class="material-icons gk-search-icon">' + self.esc(t.icon) + "</span>" : "") +
           '<span class="gk-search-text"><span class="gk-search-titel">' +
-          self.hervor(t.titel || "", q) + "</span>" +
-          (t.untertitel ? '<span class="gk-search-unter">' + self.hervor(t.untertitel, q) + "</span>" : "") +
+          self.mark(t.title || t.titel || "", q) + "</span>" +
+          ((t.subtitle || t.untertitel) ? '<span class="gk-search-unter">' + self.mark(t.subtitle || t.untertitel, q) + "</span>" : "") +
           "</span>" +
-          (t.betrag ? '<span class="gk-search-betrag">' + self.esc(t.betrag) + "</span>" : "") +
+          ((t.amount || t.betrag) ? '<span class="gk-search-betrag">' + self.esc(t.amount || t.betrag) + "</span>" : "") +
           "</a>";
       });
     });
 
-    if (!this.treffer.length) { this.zeigeHinweis(this.cfg.empty); return; }
-    this.liste.innerHTML = html;
-    this.liste.querySelectorAll(".gk-search-treffer").forEach(function (el) {
+    if (!this.hits.length) { this.showNotice(this.cfg.empty); return; }
+    this.list.innerHTML = html;
+    this.list.querySelectorAll(".gk-search-treffer").forEach(function (el) {
       el.addEventListener("mouseenter", function () {
-        self.aktiv = parseInt(el.dataset.i, 10);
-        self.markiere();
+        self.active = parseInt(el.dataset.i, 10);
+        self.highlight();
       });
     });
-    this.aktiv = 0;
-    this.markiere();
+    this.active = 0;
+    this.highlight();
   },
 
-  markiere() {
+  highlight() {
     var self = this;
-    this.liste.querySelectorAll(".gk-search-treffer").forEach(function (el, i) {
-      el.classList.toggle("ist-aktiv", i === self.aktiv);
-      if (i === self.aktiv) {
+    this.list.querySelectorAll(".gk-search-treffer").forEach(function (el, i) {
+      el.classList.toggle("ist-active", i === self.active);
+      if (i === self.active) {
         el.scrollIntoView({ block: "nearest" });
         self.input.setAttribute("aria-activedescendant", el.id);
       }
     });
   },
 
-  zeigeHinweis(text) {
-    this.treffer = [];
-    this.aktiv = -1;
-    if (this.liste) this.liste.innerHTML = '<div class="gk-search-hinweis">' + text + "</div>";
+  showNotice(text) {
+    this.hits = [];
+    this.active = -1;
+    if (this.list) this.list.innerHTML = '<div class="gk-search-hinweis">' + text + "</div>";
   },
 
   esc(s) {
@@ -3219,7 +3224,7 @@ GK.search = {
   },
 
   /** Highlight the search term in the match — on the escaped text, never on the raw one. */
-  hervor(text, q) {
+  mark(text, q) {
     var e = this.esc(text);
     if (!q) return e;
     var muster = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

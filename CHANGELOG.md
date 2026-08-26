@@ -7,6 +7,44 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.39.0] - 2026-08-26
+
+The demo — the project's most-visited page, and the first thing anyone tries.
+
+### Fixed
+
+- **`GK.search` required German JSON keys from your endpoint.** An
+  English-facing library asking an English-speaking developer to return
+  `gruppen`, `titel`, `treffer`, `untertitel` and `betrag`. The documented shape
+  is English now — `groups`, `title`, `items`, `subtitle`, `amount` — and the
+  German names are still accepted, so an endpoint written against the old
+  contract keeps working. The widget's own internals were German throughout
+  (`liste`, `treffer`, `aktiv`, `zeige`, `hervor`, `markiere`); they are not any
+  more.
+- **A whole demo section had no navigation entry.** Eleven sections, ten links:
+  the Search section was unreachable unless you knew the anchor. It is the only
+  place `GK.search` is shown at all, and `GK.search` was not in the agent skill
+  either. Both fixed.
+- **The demo's search endpoint needed `mbstring`**, which GridKit documents as
+  optional — `mb_strtolower` and `mb_strpos`, unguarded. It fataled on a host
+  without the extension.
+- **The demo loaded its images from picsum.photos and i.pravatar.cc.** A shop
+  window for "no dependencies" that breaks when a third party is slow, and that
+  sends every visitor's IP to two of them. 23 placeholders are generated as
+  inline SVG now — no requests, no files. The only external request left is the
+  Material Icons font, which is documented.
+- The GK.tip card was German end to end — heading, description and every
+  example label. So were four `GK.modal.open('Titel', …)` samples, the gallery
+  markup sample, and the Search section's own heading.
+
+### Added
+
+- `GK.search` documented in `GRIDKIT_SKILL.md`, with the response contract.
+- `tests/demo.test.php` — including a check that no demo section is left without
+  a link, and that no third-party image host appears in the markup.
+  1063 assertions in total.
+
+---
 ## [1.38.0] - 2026-08-26
 
 "Themes, dark mode" is in the README's opening sentence. Nothing had ever
