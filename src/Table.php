@@ -21,6 +21,8 @@ class Table
     private string $sortCol = '';
     private string $sortDir = 'asc';
     private string $searchQuery = '';
+    /** Leerzustand: ['title' => …, 'hint' => …, 'icon' => …, 'action' => html] */
+    private array $emptyState = [];
     private ?\mysqli $db = null;
     private string $baseQuery = '';
     private bool $isStatic = false;
@@ -430,7 +432,7 @@ class Table
 
         if (!$this->rows) {
             $colspan = count($this->columns) + ($leftButtons ? 1 : 0) + ($rightButtons ? 1 : 0) + ($this->selectable ? 1 : 0);
-            echo "<tr><td colspan=\"{$colspan}\" class=\"gk-empty\">" . $e(Lang::t('table.empty')) . "</td></tr>";
+            echo $this->renderEmpty($colspan);
         }
 
         echo '</tbody>';
@@ -636,6 +638,65 @@ class Table
             'number' => $this->formatNumber($val, $col),
             default => $e($val),
         };
+    }
+
+    /**
+     * Text des Leerzustands setzen. Ohne Aufruf zeigt die Tabelle einen
+     * sinnvollen Standard — und unterscheidet dabei selbsttaetig, ob gar keine
+     * Daten da sind oder ob nur die aktuelle Suche nichts trifft.
+     *
+     * @param array{title?:string,hint?:string,icon?:string,action?:string} $opts
+     */
+    public function emptyState(string $title = '', array $opts = []): static
+    {
+        if ($title !== '') $opts['title'] = $title;
+        $this->emptyState = $opts + $this->emptyState;
+        return $this;
+    }
+
+    /** Ist die Ansicht gerade durch Suche oder Filter eingeschraenkt? */
+    private function isFiltered(): bool
+    {
+        if ($this->searchQuery !== '') return true;
+        foreach (array_keys($this->filters) as $col) {
+            if (($_GET['gk_filter_' . $col] ?? '') !== '') return true;
+        }
+        return false;
+    }
+
+    /**
+     * Der leere Zustand ist der, den Nutzer am haeufigsten sehen — jedes Mal,
+     * wenn ein Filter nichts trifft. Er braucht deshalb mehr als einen grauen
+     * Satz: eine Aussage, eine Einordnung und einen Weg heraus.
+     */
+    private function renderEmpty(int $colspan): string
+    {
+        $e = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES, 'UTF-8');
+        $gefiltert = $this->isFiltered();
+        $es = $this->emptyState;
+
+        $icon  = $es['icon']  ?? ($gefiltert ? 'search_off' : 'inbox');
+        $title = $es['title'] ?? Lang::t($gefiltert ? 'table.empty_filtered' : 'table.empty');
+        $hint  = $es['hint']  ?? Lang::t($gefiltert ? 'table.empty_filtered_hint' : 'table.empty_hint');
+
+        // Bei eingeschraenkter Ansicht ist der Weg heraus immer derselbe und
+        // wird deshalb von selbst angeboten.
+        $action = $es['action'] ?? '';
+        if ($action === '' && $gefiltert) {
+            $action = '<button type="button" class="gk-btn gk-btn-text gk-btn-primary gk-btn-sm"'
+                . ' data-gk-reset-filters="' . $e($this->id) . '">'
+                . $e(Lang::t('table.reset_filters')) . '</button>';
+        }
+
+        $html = '<tr class="gk-empty-row"><td colspan="' . $colspan . '" class="gk-empty">'
+              . '<div class="gk-empty-inner">';
+        if ($icon !== '') {
+            $html .= '<span class="material-icons gk-empty-icon" aria-hidden="true">' . $e($icon) . '</span>';
+        }
+        $html .= '<span class="gk-empty-title">' . $e($title) . '</span>';
+        if ($hint !== '') $html .= '<span class="gk-empty-hint">' . $e($hint) . '</span>';
+        if ($action !== '') $html .= '<span class="gk-empty-action">' . $action . '</span>';
+        return $html . '</div></td></tr>';
     }
 
     private function renderLabel(mixed $val, array $custom): string

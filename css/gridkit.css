@@ -204,6 +204,7 @@ a:hover {
   --gk-icon-lg: 22px;
   --gk-icon-xl: 24px;
   --gk-icon-2xl: 28px;
+  --gk-icon-3xl: 40px;   /* nur fuer Anzeigen-Symbole, z. B. im Leerzustand */
 
   /* === BEWEGUNG ===
      Drei Dauern, zwei Kurven. Keine Eigenschaft wird mehr pauschal ueber
@@ -6269,6 +6270,19 @@ a.gk-stat-card:hover {
     scroll-behavior: auto !important;
   }
   .gk-search-laedt { animation-duration: 2s !important; }
+  /* Der Ladebalken darf nicht verschwinden, nur weil er sich nicht bewegen
+     soll — sonst gaebe es fuer diese Nutzer gar keine Rueckmeldung mehr.
+     Statt der Laufbewegung steht er als voller Balken. */
+  .gk-table-wrap[data-gk-loading]::before {
+    animation: none !important;
+    left: 0;
+    width: 100%;
+    opacity: 0.7;
+  }
+  .gk-skeleton {
+    animation: none !important;
+    background: var(--gk-surface-container-high);
+  }
 }
 [data-theme="dark"] .gk-search-treffer mark { background: #854d0e; color: #fef9c3; }
 [data-theme="dark"] .gk-search-overlay { background: rgba(0, 0, 0, 0.6); }
@@ -6392,4 +6406,255 @@ a.gk-stat-card:hover {
    Spaltenoption: ['muted' => true] */
 .gk-table td.gk-td-muted {
   color: var(--gk-on-surface-variant);
+}
+
+/* ===================================================================
+   ZUSTAENDE
+   Leer, gesperrt, ladend. Diese drei hatten zusammen drei CSS-Regeln,
+   waehrend Button und Tabelle je ueber hundert haben — dabei sind es
+   genau die Zustaende, die Nutzer im Alltag am haeufigsten sehen.
+   =================================================================== */
+
+/* ── Der leere Zustand ──────────────────────────────────────────────────
+   Vorher: ein zentrierter grauer Satz. Eine leere Tabelle ist aber kein
+   Fehler, sondern eine Lage — und die braucht eine Aussage, eine
+   Einordnung und einen Weg heraus. */
+.gk-empty,
+.gk-table td.gk-empty {
+  text-align: center;
+  padding: 56px 24px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-body);
+}
+.gk-empty-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 380px;
+  margin: 0 auto;
+}
+/* Zwei Klassen tief, nicht eine: das Material-Icons-Stylesheet wird meist NACH
+   gridkit.css eingebunden und setzt .material-icons { font-size: 24px }. Bei
+   gleicher Spezifitaet gewinnt es dann ueber die Reihenfolge. */
+.gk-empty .gk-empty-icon {
+  font-size: var(--gk-icon-3xl);
+  color: var(--gk-outline);
+  opacity: 0.5;
+  margin-bottom: 4px;
+}
+.gk-empty-title {
+  font-size: var(--gk-text-subtitle);
+  font-weight: 600;
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface);
+}
+.gk-empty-hint {
+  font-size: var(--gk-text-body);
+  line-height: var(--gk-leading-normal);
+  color: var(--gk-on-surface-variant);
+  text-wrap: pretty;
+}
+.gk-empty-action {
+  margin-top: 10px;
+}
+/* Die leere Zeile traegt keine Zeilen-Hervorhebung. */
+.gk-table tbody tr.gk-empty-row:hover > td,
+.gk-table tbody tr.gk-empty-row:hover > td:first-child {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* ── Gesperrte Zustaende ────────────────────────────────────────────────
+   Bisher gab es dafuer genau eine Regel (.gk-btn:disabled). Ein gesperrtes
+   Eingabefeld sah aus wie ein bearbeitbares — man merkte es erst beim
+   Klicken. Das ist bei Formularen mit Berechtigungslogik ein taeglicher
+   Aerger und fuer Screenreader-Nutzer der einzige Hinweis ueberhaupt. */
+.gk-input:disabled,
+select.gk-input:disabled,
+textarea.gk-input:disabled,
+.gk-search:disabled,
+.gk-filter:disabled {
+  background-color: var(--gk-surface-container);
+  border-color: var(--gk-outline-variant);
+  color: var(--gk-on-surface-variant);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.gk-input:disabled::placeholder {
+  color: var(--gk-outline);
+}
+/* Nur-lesbar ist etwas anderes als gesperrt: der Wert zaehlt weiterhin und
+   das Feld bleibt fokussierbar. Deshalb ruhiger, aber ohne Verbotszeiger. */
+.gk-input[readonly],
+textarea.gk-input[readonly] {
+  background-color: var(--gk-surface-container-low);
+  border-style: dashed;
+}
+.gk-checkbox:disabled + .gk-checkbox-custom,
+.gk-radio:disabled + .gk-radio-custom,
+.gk-checkbox:disabled ~ *,
+.gk-radio:disabled ~ * {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.gk-label-wrap:has(:disabled),
+.gk-field:has(.gk-input:disabled) .gk-label-text {
+  color: var(--gk-outline);
+}
+/* Auch Bedienelemente, die kein <button> sind, muessen sich sperren lassen. */
+.gk-btn[aria-disabled="true"],
+a.gk-btn[aria-disabled="true"],
+.gk-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Ladezustand ────────────────────────────────────────────────────────
+   GridKit wirbt damit, dass Tabellen ohne Neuladen suchen und filtern —
+   und gab dafuer bisher keine sichtbare Rueckmeldung. Der Inhalt sprang
+   einfach um. Die vorhandenen Zeilen bleiben stehen und treten zurueck;
+   ein Balken zeigt, dass gearbeitet wird. Kein Springen, kein Leerlauf. */
+.gk-table-wrap[data-gk-loading] {
+  position: relative;
+}
+.gk-table-wrap[data-gk-loading]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--gk-primary) 18%, transparent);
+  z-index: 2;
+}
+.gk-table-wrap[data-gk-loading]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  height: 2px;
+  width: 40%;
+  background: var(--gk-primary);
+  z-index: 3;
+  animation: gk-ladebalken 1.1s var(--gk-ease-in-out) infinite;
+}
+@keyframes gk-ladebalken {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+/* Die Toolbar bleibt bedienbar — nur der Inhalt wartet. */
+.gk-table-wrap[data-gk-loading] .gk-table,
+.gk-table-wrap[data-gk-loading] .gk-rowpager {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity var(--gk-dur-2) var(--gk-ease-out);
+}
+
+/* Platzhalterzeilen fuer den ersten Aufbau, wenn noch gar nichts da ist.
+   Verwendung: <td><span class="gk-skeleton" style="width:60%"></span></td> */
+.gk-skeleton {
+  display: inline-block;
+  height: 0.75em;
+  min-width: 2em;
+  border-radius: var(--gk-radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--gk-surface-container) 0%,
+    var(--gk-surface-container-high) 50%,
+    var(--gk-surface-container) 100%
+  );
+  background-size: 200% 100%;
+  animation: gk-skelett 1.4s var(--gk-ease-in-out) infinite;
+  vertical-align: middle;
+}
+@keyframes gk-skelett {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Feldflaechen einheitlich ───────────────────────────────────────────
+   Das Suchfeld hatte eine eigene Flaeche bekommen, die Formularfelder
+   nicht — zwei Eingabefelder, zwei Erscheinungen. Beide tragen jetzt
+   dieselbe zurueckgenommene Flaeche UND ihren Rahmen: die Flaeche macht
+   sie weich, der Rahmen haelt sie auch dort sichtbar, wo der Container
+   zufaellig dieselbe Farbe hat. */
+.gk-input,
+.gk-search,
+.gk-filter {
+  background-color: var(--gk-surface-container-low);
+}
+.gk-input:focus-visible,
+.gk-search:focus-visible,
+.gk-filter:focus-visible {
+  background-color: var(--gk-surface);
+}
+
+/* ── Icongroessen gegen das Icon-Stylesheet durchsetzen ─────────────────
+   Das Material-Icons-Stylesheet wird ueblicherweise NACH gridkit.css
+   eingebunden und setzt .material-icons { font-size: 24px }. Bei gleicher
+   Spezifitaet entscheidet die Reihenfolge — GridKits eigene Groessen haben
+   deshalb bisher stillschweigend verloren (nachweisbar bei .gk-sidebar-icon
+   und .gk-select-arrow: gesetzt 20 bzw. 18px, gerendert 24px). Zwei Klassen
+   tief gewinnen sie wieder, ohne !important. */
+.material-icons.gk-uq-icon,
+.material-symbols-outlined.gk-uq-icon,
+.material-symbols-rounded.gk-uq-icon {
+  font-size: var(--gk-icon-md);
+}
+.material-icons.gk-modal-close,
+.material-symbols-outlined.gk-modal-close,
+.material-symbols-rounded.gk-modal-close {
+  font-size: var(--gk-icon-lg);
+}
+.material-icons.gk-chip-icon,
+.material-symbols-outlined.gk-chip-icon,
+.material-symbols-rounded.gk-chip-icon {
+  font-size: var(--gk-icon-xs);
+}
+.material-icons.gk-stat-icon,
+.material-symbols-outlined.gk-stat-icon,
+.material-symbols-rounded.gk-stat-icon {
+  font-size: var(--gk-icon-2xl);
+}
+.material-icons.gk-sidebar-brand-icon,
+.material-symbols-outlined.gk-sidebar-brand-icon,
+.material-symbols-rounded.gk-sidebar-brand-icon {
+  font-size: var(--gk-icon-2xl);
+}
+.material-icons.gk-sidebar-icon,
+.material-symbols-outlined.gk-sidebar-icon,
+.material-symbols-rounded.gk-sidebar-icon {
+  font-size: var(--gk-icon-md);
+}
+.material-icons.gk-toast-icon,
+.material-symbols-outlined.gk-toast-icon,
+.material-symbols-rounded.gk-toast-icon {
+  font-size: var(--gk-icon-lg);
+}
+.material-icons.gk-toast-close,
+.material-symbols-outlined.gk-toast-close,
+.material-symbols-rounded.gk-toast-close {
+  font-size: var(--gk-icon-sm);
+}
+.material-icons.gk-lightbox-close,
+.material-symbols-outlined.gk-lightbox-close,
+.material-symbols-rounded.gk-lightbox-close {
+  font-size: var(--gk-icon-md);
+}
+.material-icons.gk-select-arrow,
+.material-symbols-outlined.gk-select-arrow,
+.material-symbols-rounded.gk-select-arrow {
+  font-size: var(--gk-icon-md);
+}
+.material-icons.gk-ajax-clear,
+.material-symbols-outlined.gk-ajax-clear,
+.material-symbols-rounded.gk-ajax-clear {
+  font-size: var(--gk-icon-sm);
+}
+.material-icons.gk-select-icon,
+.material-symbols-outlined.gk-select-icon,
+.material-symbols-rounded.gk-select-icon {
+  font-size: var(--gk-icon-md);
 }

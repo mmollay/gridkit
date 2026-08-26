@@ -99,6 +99,40 @@ Der sichtbare Teil — die Tabelle aus Blatt 04 des Audits:
   Zuordnung, kein Inhalt; in voller Textfarbe konkurriert sie mit der
   Bezeichnung daneben um denselben Blick.
 
+### Zustände
+
+Leer, gesperrt, ladend — diese drei hatten zusammen **drei** CSS-Regeln,
+während Button und Tabelle je über hundert haben. Dabei sind es genau die
+Zustände, die im Alltag am häufigsten auftreten.
+
+- **Der leere Zustand sagt jetzt etwas.** Vorher ein zentrierter grauer Satz.
+  Jetzt Symbol, Aussage, Einordnung — und, wenn Suche oder Filter aktiv sind,
+  ein „Filter zurücksetzen"-Knopf. Die Tabelle unterscheidet dabei selbsttätig,
+  ob gar keine Daten da sind oder ob nur die aktuelle Einschränkung nichts
+  trifft. Anpassbar über `Table::emptyState()`; im JS-Pfad (statische Tabellen)
+  identisch umgesetzt.
+- **Gesperrte Felder sind zu erkennen.** Bisher gab es dafür genau eine Regel
+  (`.gk-btn:disabled`) — ein gesperrtes Eingabefeld sah aus wie ein
+  bearbeitbares, man merkte es erst beim Klicken. Jetzt gedämpfte Fläche,
+  zurückgenommener Text und `cursor: not-allowed`; `readonly` bleibt bewusst
+  anders (gestrichelter Rahmen, kein Verbotszeiger).
+- **Nachladen ist sichtbar.** GridKit wirbt mit „AJAX-first" und gab dafür
+  keine Rückmeldung — der Inhalt sprang einfach um. Jetzt bleiben die Zeilen
+  stehen und treten zurück, ein Balken zeigt die Arbeit, `aria-busy` sagt
+  dasselbe den Vorleseprogrammen. Überholende Anfragen schreiben nicht mehr
+  durcheinander.
+- **Fehlgeschlagene Nachladungen sind nicht mehr stumm.** `reload()` hatte kein
+  `catch` — bei einem Fehler zeigte die Tabelle weiter alte Daten. Jetzt
+  erscheint eine Meldung mit „Erneut versuchen" und ein `gk-table-error`-Ereignis.
+- **`.gk-skeleton`** als Platzhalter für den ersten Aufbau.
+- **Icongrößen greifen wieder.** Das Material-Icons-Stylesheet wird meist nach
+  `gridkit.css` eingebunden und setzt `.material-icons { font-size: 24px }` —
+  bei gleicher Spezifität gewann bisher die Reihenfolge. Nachweisbar betroffen
+  waren `.gk-sidebar-icon` (gesetzt 20 px, gerendert 24) und `.gk-select-arrow`
+  (18 → 24). Zwölf Icon-Klassen setzen ihre Größe jetzt durch.
+- **Eingabefelder tragen dieselbe Fläche wie das Suchfeld.** Die beiden waren
+  nach der Toolbar-Überarbeitung auseinandergelaufen.
+
 ### Geändert
 
 Sichtbar, bitte vor dem Update ansehen:
@@ -120,6 +154,8 @@ Sichtbar, bitte vor dem Update ansehen:
 
 ### Offen
 
+- Skelett-Platzhalter stehen als Klasse bereit, werden aber noch von keiner
+  Komponente selbst gesetzt.
 - Zweitrangige Zeilen (etwa der Status *inaktiv*) treten in der Textfarbe noch
   nicht zurück — das setzt voraus, dass die Tabelle den Zustand einer Zeile
   kennt, nicht nur den einer Zelle.

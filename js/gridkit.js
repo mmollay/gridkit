@@ -264,6 +264,28 @@
           });
         });
 
+        // "Filter zuruecksetzen" aus dem Leerzustand. Delegiert, weil der
+        // Knopf bei jedem Nachladen neu entsteht.
+        wrap.addEventListener("click", (ev) => {
+          const knopf = ev.target.closest("[data-gk-reset-filters]");
+          if (!knopf || !wrap.contains(knopf)) return;
+          ev.preventDefault();
+          const params = { gk_page: 1, gk_search: "" };
+          const suche = wrap.querySelector("[data-gk-search]");
+          if (suche) suche.value = "";
+          wrap.querySelectorAll("[data-gk-filter]").forEach((sel) => {
+            sel.value = "";
+            params["gk_filter_" + sel.dataset.gkFilter] = "";
+          });
+          if (isStatic && wrap._gkData) {
+            wrap._gkSearch = "";
+            wrap._gkFilters = {};
+            this.renderStatic(wrap);
+          } else {
+            this.reload(wrap, params);
+          }
+        });
+
         // Multi-select
         if (wrap.hasAttribute("data-gk-selectable")) this.initSelectable(wrap);
       },
@@ -739,12 +761,25 @@
             (hasLeft ? 1 : 0) +
             (hasRight ? 1 : 0) +
             (selectable ? 1 : 0);
+          // Derselbe Leerzustand wie serverseitig: eine Aussage, eine
+          // Einordnung und — wenn eingeschraenkt wurde — ein Weg heraus.
+          const eingeschraenkt =
+            !!(wrap._gkSearch && wrap._gkSearch !== "") ||
+            Object.values(wrap._gkFilters || {}).some((v) => v !== "");
           html +=
-            '<tr><td colspan="' +
-            colspan +
-            '" class="gk-empty">' +
-            _t("no_entries") +
-            "</td></tr>";
+            '<tr class="gk-empty-row"><td colspan="' + colspan + '" class="gk-empty">' +
+            '<div class="gk-empty-inner">' +
+            '<span class="material-icons gk-empty-icon" aria-hidden="true">' +
+            (eingeschraenkt ? "search_off" : "inbox") + "</span>" +
+            '<span class="gk-empty-title">' +
+            _t(eingeschraenkt ? "no_matches" : "no_entries") + "</span>" +
+            '<span class="gk-empty-hint">' +
+            (_lang[eingeschraenkt ? "no_matches_hint" : "empty_hint"] || "") + "</span>" +
+            (eingeschraenkt
+              ? '<span class="gk-empty-action"><button type="button" class="gk-btn gk-btn-text gk-btn-primary gk-btn-sm" data-gk-reset-filters>' +
+                (_lang["reset_filters"] || "Reset filters") + "</button></span>"
+              : "") +
+            "</div></td></tr>";
         } else {
           const groupBy = data.groupBy || null;
           const groupCounts = {};
@@ -898,9 +933,28 @@
           );
         url.searchParams.set("gk_table", id);
 
+        // Sichtbare Rueckmeldung, solange nachgeladen wird. Die vorhandenen
+        // Zeilen bleiben stehen und treten zurueck — kein Springen, und der
+        // Nutzer sieht, dass gearbeitet wird. aria-busy sagt dasselbe den
+        // Vorleseprogrammen.
+        wrap.setAttribute("data-gk-loading", "");
+        wrap.setAttribute("aria-busy", "true");
+        // Ueberholende Anfragen: nur die letzte darf das Ergebnis schreiben.
+        const lauf = (wrap._gkLauf = (wrap._gkLauf || 0) + 1);
+        const fertig = () => {
+          if (wrap._gkLauf !== lauf) return false;
+          wrap.removeAttribute("data-gk-loading");
+          wrap.removeAttribute("aria-busy");
+          return true;
+        };
+
         fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
-          .then((r) => r.text())
+          .then((r) => {
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            return r.text();
+          })
           .then((html) => {
+            if (!fertig()) return;
             const toolbar = wrap.querySelector(".gk-toolbar");
             const templates = wrap.querySelectorAll("template");
             Array.from(wrap.children).forEach((ch) => {
@@ -925,6 +979,26 @@
               tpl.remove();
             });
             window.history.replaceState(null, "", url);
+          })
+          .catch((err) => {
+            if (!fertig()) return;
+            // Vorher ist ein fehlgeschlagener Request stumm geblieben: die
+            // Tabelle zeigte weiter alte Daten, ohne dass jemand es merkte.
+            const koerper = wrap.querySelector(".gk-table tbody");
+            const spalten = wrap.querySelectorAll(".gk-table thead th").length || 1;
+            if (koerper) {
+              koerper.innerHTML =
+                '<tr class="gk-empty-row"><td colspan="' + spalten + '" class="gk-empty">' +
+                '<div class="gk-empty-inner">' +
+                '<span class="material-icons gk-empty-icon" aria-hidden="true">cloud_off</span>' +
+                '<span class="gk-empty-title">' + (_lang["load_error"] || "The table could not be loaded.") + "</span>" +
+                '<span class="gk-empty-action"><button type="button" class="gk-btn gk-btn-text gk-btn-primary gk-btn-sm" data-gk-retry>' +
+                (_lang["retry"] || "Try again") + "</button></span>" +
+                "</div></td></tr>";
+              const knopf = koerper.querySelector("[data-gk-retry]");
+              if (knopf) knopf.addEventListener("click", () => this.reload(wrap, {}));
+            }
+            wrap.dispatchEvent(new CustomEvent("gk-table-error", { bubbles: true, detail: { error: err } }));
           });
       },
       refreshAll() {
