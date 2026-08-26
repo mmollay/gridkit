@@ -7,6 +7,49 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.34.0] - 2026-08-26
+
+Every form field type, rendered and then actually used in a browser.
+
+### Fixed
+
+- **`'searchable-select'` was documented and does not exist.** `Form` handles
+  eleven types itself and passes everything else through as
+  `<input type="…">` — which is deliberate, because it covers `month`, `week`
+  and whatever HTML adds next. It also meant the documented type rendered
+  `<input type="searchable-select">`, which every browser shows as a plain text
+  box, without a word of complaint. The searchable select is plain `'select'`.
+  An unknown type now raises an `E_USER_WARNING` naming the type and listing the
+  real ones; valid HTML types still pass in silence.
+- **Four types were implemented and undocumented**: `multiselect`,
+  `ajaxselect`, `color`, `range`.
+- **The rich text editor was pinned to German** for every user —
+  `language:'de'`, hardcoded. That put `lang="de"` around English content,
+  which is wrong for a screen reader and wrong for the toolbar as soon as a
+  translation for that locale is loaded. It follows `Lang::locale()` now, and a
+  field may pin its own with `['language' => 'fr']`.
+- **`->field($name, $label, 'hidden')` raised a PHP warning.** It reaches the
+  same branch as `->hidden()`, which always sets a value, and read a key that
+  was never there. On a host with `display_errors` on, that warning lands in
+  the page.
+- The skill's `Form` example was still German — `Vorname`, `Nachname`, `Rolle`,
+  `Aktiv`, `Speichern`.
+
+### Verified
+
+All eleven types were rendered in a browser and exercised: the searchable
+select carries its value, multiselect shows removable chips, the toggle and
+colour swatch reflect their state, radio marks the selected option, the range
+shows a live value, the file field takes a drop, and the rich text editor
+starts on scroll, loads its content and keeps the hidden input in step.
+
+### Added
+
+- `tests/form.test.php` — 47 assertions across every type, including that each
+  one renders the `data-gk-error` slot the AJAX handler writes into. A field
+  without one swallows its server-side error message. 891 assertions in total.
+
+---
 ## [1.33.0] - 2026-08-26
 
 Running the agent skill's own 22 examples. It is the file GridKit is advertised

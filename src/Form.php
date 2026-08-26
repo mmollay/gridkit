@@ -5,6 +5,19 @@ use GridKit\Button;
 
 class Form
 {
+    /** Types with rendering of their own, beyond a plain <input>. */
+    private const FIELD_TYPES = [
+        'textarea', 'select', 'multiselect', 'ajaxselect', 'checkbox', 'toggle',
+        'radio', 'file', 'richtext', 'color', 'range',
+    ];
+
+    /** Everything HTML accepts as an <input type>. Anything else is a typo. */
+    private const HTML_INPUT_TYPES = [
+        'button', 'checkbox', 'color', 'date', 'datetime-local', 'email', 'file',
+        'hidden', 'image', 'month', 'number', 'password', 'radio', 'range',
+        'reset', 'search', 'submit', 'tel', 'text', 'time', 'url', 'week',
+    ];
+
     private string $id;
     private string $action = '';
     private string $method = 'post';
@@ -66,7 +79,10 @@ class Form
 
         foreach ($this->fields as $f) {
             match ($f['type']) {
-                'hidden' => printf('<input type="hidden" name="%s" value="%s">', $e($f['name']), $e($f['value'])),
+                // `->hidden()` always sets a value; `->field($n, $l, 'hidden')`
+                // reaches the same arm and need not.
+                'hidden' => printf('<input type="hidden" name="%s" value="%s">',
+                    $e($f['name']), $e($f['value'] ?? '')),
                 '_row_start' => $this->renderRowStart($f),
                 '_row_end' => print('</div>'),
                 default => $this->renderField($f),
@@ -348,7 +364,12 @@ class Form
                 echo "if(_init)return;_init=true;";
                 echo "var CK=window.CKEDITOR||{};var CE=CK.ClassicEditor;if(!CE)return;";
                 echo "var p=[{$ckPlugins}].filter(Boolean);";
-                echo "CE.create(document.getElementById(_id),{licenseKey:'GPL',plugins:p,toolbar:[{$ckToolbar}],language:'de'})";
+                // The editor's own language was pinned to 'de' for every user,
+                // which put lang="de" on English content — wrong for a screen
+                // reader, and wrong for the toolbar as soon as a translation
+                // file for that locale is loaded.
+                $ckLang = json_encode($f['language'] ?? Lang::locale());
+                echo "CE.create(document.getElementById(_id),{licenseKey:'GPL',plugins:p,toolbar:[{$ckToolbar}],language:{$ckLang}})";
                 echo ".then(function(editor){";
                 echo "var initial={$jsonValue};if(initial)editor.setData(initial);";
                 echo "var h=document.getElementById(_id+'-hidden');";
@@ -369,6 +390,20 @@ class Form
 
             default: // text, number, email, tel, url, password, date, time, datetime
                 $htmlType  = $type === 'datetime' ? 'datetime-local' : $type;
+
+                // The passthrough is deliberate — it covers `month`, `week`,
+                // `search` and anything else HTML grows. But it also swallowed
+                // typos: `'searchable-select'` was documented for years and
+                // rendered `<input type="searchable-select">`, which every
+                // browser shows as a plain text box. Silent, and wrong.
+                if (!in_array($htmlType, self::HTML_INPUT_TYPES, true)) {
+                    trigger_error(
+                        "GridKit\\Form: unknown field type '{$type}'. It will render as a plain"
+                        . " text input. Did you mean one of: "
+                        . implode(', ', self::FIELD_TYPES) . '?',
+                        E_USER_WARNING
+                    );
+                }
                 $clearable = !empty($f['clearable']);
                 $extra = '';
                 if (isset($f['min']))         $extra .= " min=\"{$e($f['min'])}\"";

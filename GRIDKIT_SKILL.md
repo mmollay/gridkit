@@ -409,17 +409,29 @@ compatibility rule catches the old shape.
     ->action('/api/save-user')
     ->method('POST')
     ->row()
-        ->field('first_name', 'Vorname', 'text',  ['width' => 8, 'required' => true])
-        ->field('last_name',  'Nachname', 'text', ['width' => 8, 'required' => true])
+        ->field('first_name', 'First name', 'text', ['width' => 8, 'required' => true])
+        ->field('last_name',  'Last name',  'text', ['width' => 8, 'required' => true])
     ->endRow()
-    ->field('email', 'E-Mail', 'email', ['width' => 16])
-    ->field('role',  'Rolle',  'select', ['width' => 8, 'options' => ['admin' => 'Admin', 'user' => 'User']])
-    ->field('active', 'Aktiv', 'toggle')
-    ->submit('Speichern')
+    ->field('email', 'Email', 'email', ['width' => 16])
+    ->field('role',  'Role',  'select', ['width' => 8, 'options' => ['admin' => 'Admin', 'user' => 'User']])
+    ->field('active', 'Active', 'toggle')
+    ->submit('Save')
     ->render();
 ```
 
-**Field types:** `text`, `textarea`, `select`, `number`, `date`, `time`, `email`, `tel`, `url`, `toggle`, `checkbox`, `radio`, `file`, `hidden`, `richtext`, `searchable-select`
+**Field types.** Eleven have rendering of their own:
+
+`textarea` · `select` (searchable) · `multiselect` · `ajaxselect` · `checkbox` ·
+`toggle` · `radio` · `file` (drag & drop) · `richtext` (CKEditor) · `color` · `range`
+
+Anything else becomes an `<input type="…">`, so every HTML type works:
+`text`, `number`, `email`, `tel`, `url`, `password`, `date`, `time`,
+`datetime` (rendered as `datetime-local`), `month`, `week`, `search`, `hidden`.
+
+A type that is neither of those raises an `E_USER_WARNING` and falls back to a
+text box — `'searchable-select'` was documented here for a long time, is not a
+type, and rendered as a plain text field without a word of complaint. The
+searchable select is plain `'select'`.
 
 **Form Density:** Add `gk-form-compact` class to a `<form>` or wrapper `<div>` for compact forms. All elements scale down proportionally:
 
