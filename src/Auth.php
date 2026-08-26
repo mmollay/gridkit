@@ -27,7 +27,7 @@ class Auth {
     /** Guard a page — redirects to login if not authenticated */
     public static function protect(string $loginUrl = 'login.php'): void {
         if (session_status() === PHP_SESSION_NONE) session_start();
-        if (!self::check() && !self::checkRememberCookie()) {
+        if (!self::check()) {
             $_SESSION['gk_intended'] = $_SERVER['REQUEST_URI'];
             header('Location: ' . $loginUrl);
             exit;
@@ -55,11 +55,18 @@ class Auth {
 
     public static function check(): bool {
         if (session_status() === PHP_SESSION_NONE) session_start();
-        return !empty($_SESSION[self::$sessionKey]);
+        if (!empty($_SESSION[self::$sessionKey])) return true;
+        // protect() used to consult the remember-me cookie itself, so a
+        // returning visitor was let through the guard while check() said false
+        // and user() returned null — the page rendered as if nobody were
+        // logged in. Resolving identity in one place keeps the three answers
+        // the same; checkRememberCookie() promotes the cookie to a session.
+        return self::checkRememberCookie();
     }
 
     public static function user(): ?string {
         if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_SESSION[self::$sessionKey])) self::checkRememberCookie();
         return $_SESSION[self::$sessionKey] ?? null;
     }
 
@@ -133,8 +140,11 @@ class Auth {
         // `gridkit/css/…` only worked for one directory layout.
         $base    = self::assetBase();
         $prefix  = $base !== null ? rtrim($base, '/') . '/' : '';
-        $cssPath = rtrim((string) ($options['cssPath'] ?? $prefix . 'css'), '/');
-        $jsPath  = rtrim((string) ($options['jsPath']  ?? $prefix . 'js'), '/');
+        // These land inside href="…" and src="…". Unescaped, a caller-supplied
+        // path could close the attribute and add its own — on a login page, of
+        // all places. htmlspecialchars is a no-op on an ordinary path.
+        $cssPath = $e(rtrim((string) ($options['cssPath'] ?? $prefix . 'css'), '/'));
+        $jsPath  = $e(rtrim((string) ($options['jsPath']  ?? $prefix . 'js'), '/'));
 
         $locale     = $e(Lang::locale());
         $themeAttr  = class_exists(Theme::class)  ? Theme::attributes() : '';
@@ -297,7 +307,13 @@ HTML;
     // ─── Remember-Me Cookie ───────────────────────────────────────────────────
 
     private static function checkRememberCookie(): bool {
+        // A cookie named gk_remember[] arrives as an ARRAY, and str_contains
+        // under strict_types is then a fatal TypeError — so any anonymous
+        // visitor could 500 every protected page in the application by setting
+        // one cookie, and keep it that way, since logout crashed on the same
+        // line and could never clear it.
         $cookie = $_COOKIE['gk_remember'] ?? '';
+        if (!is_string($cookie)) return false;
         if (!str_contains($cookie, ':')) return false;
 
         [$username, $token] = explode(':', $cookie, 2);
@@ -351,8 +367,12 @@ HTML;
     }
 
     private static function clearRememberCookie(): void {
+        // Deliberately not an early return: whatever shape the cookie has,
+        // execution must reach the setcookie() below that deletes it. Bailing
+        // out here would leave the visitor permanently locked out by their own
+        // malformed cookie, with logout unable to remove it.
         $cookie = $_COOKIE['gk_remember'] ?? '';
-        if (str_contains($cookie, ':')) {
+        if (is_string($cookie) && str_contains($cookie, ':')) {
             [, $token] = explode(':', $cookie, 2);
             @unlink(self::$tokenDir . '/' . hash('sha256', $token));
         }

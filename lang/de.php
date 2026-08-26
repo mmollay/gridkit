@@ -112,6 +112,7 @@ return [
     'js.too_large'          => '{name}: zu groß ({size}, max. {max})',
     'js.one_file_only'      => 'Nur eine Datei erlaubt — {m} abgelegt',
     'js.total_size_exceeded'=> 'Gesamtgröße {size} überschreitet Maximum ({max})',
+    'js.field_required'     => '{name} ist ein Pflichtfeld.',
     'js.close'              => 'Schließen',
     'js.ready'              => 'Bereit',
     'js.remove'             => 'Entfernen',

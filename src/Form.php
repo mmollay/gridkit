@@ -114,6 +114,17 @@ class Form
         echo "<div class=\"gk-form-row\"{$style}>";
     }
 
+    /**
+     * A field name reduced to what is safe in a DOM id and in a JS string
+     * literal at the same time. Escaping is not enough here: the id has to be
+     * byte-identical in both places, and htmlspecialchars would make them
+     * differ.
+     */
+    private static function slug(string $name): string
+    {
+        return preg_replace('/[^A-Za-z0-9_-]/', '', $name) ?? '';
+    }
+
     private function renderField(array $f): void
     {
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
@@ -144,17 +155,33 @@ class Form
 
         // Label (not for checkbox which has label integrated)
         $showLabel = $label && !in_array($type, ['checkbox']);
+
+        // These types render no labelable element the label can point at. The
+        // value carrier is hidden from the accessibility tree, or the control
+        // is a group of them — so `for` either dangled or, worse, resolved to
+        // a 1x1 aria-hidden input, and clicking the label focused nothing you
+        // could see. They are named through aria-labelledby instead.
+        $composite = in_array($type, ['radio', 'multiselect', 'ajaxselect', 'richtext', 'color'], true)
+                  || ($type === 'select' && empty($f['native']));
+        $labelId   = $e($name) . '-label';
+
         if ($showLabel) {
-            echo '<label class="gk-label-text" for="' . $e($name) . '">' . $e($label);
+            echo '<label class="gk-label-text" id="' . $labelId . '"'
+               . ($composite ? '' : ' for="' . $e($name) . '"') . '>' . $e($label);
             if ($req) echo ' <span class="gk-required">*</span>';
             echo '</label>';
         }
+
+        // What names a composite widget: its visible label when there is one.
+        $composedBy = ($showLabel && !isset($f['aria']))
+            ? ' aria-labelledby="' . $labelId . '"'
+            : (isset($f['aria']) ? ' aria-label="' . $e((string) $f['aria']) . '"' : '');
 
         echo '<div class="gk-input-wrap">';
 
         switch ($type) {
             case 'textarea':
-                $rows = $f['rows'] ?? 3;
+                $rows = (int) ($f['rows'] ?? 3);
                 echo "<textarea name=\"{$e($name)}\" id=\"{$e($name)}\" rows=\"{$rows}\" class=\"gk-input\"{$req}>{$e($value)}</textarea>";
                 break;
 
@@ -166,8 +193,21 @@ class Form
                     $displayValue = isset($options[$value]) ? $options[$value] : $placeholder;
                     $disabled = !empty($f['disabled']) ? ' gk-select-disabled' : '';
                     echo "<div class=\"gk-select-search{$disabled}\" data-gk-select-search" . (!empty($f['disabled']) ? ' data-disabled' : '') . ">";
-                    echo "<input type=\"hidden\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\">";
-                    echo '<div class="gk-select-display" tabindex="0">';
+                    // The value carrier must be a control the browser will
+                    // validate. type="hidden" is barred from constraint
+                    // validation, so ['required' => true] printed the red star
+                    // beside the label and did nothing else — the form
+                    // submitted empty. 1.42.0 fixed this in Select::searchable,
+                    // which nothing outside the tests calls; every doc, the
+                    // demo and SPEC.md build a select through here.
+                    $ariaName = $e($f['aria'] ?? $label ?: $placeholder);
+                    // The visible label names it when there is one — a name a
+                    // person can also read is better than a duplicate string.
+                    $nameAttr = ($showLabel && !isset($f['aria']))
+                        ? ' aria-labelledby="' . $labelId . '"'
+                        : ' aria-label="' . $ariaName . '"';
+                    echo "<input type=\"text\" class=\"gk-select-value-input\" tabindex=\"-1\" aria-hidden=\"true\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\"{$req}>";
+                    echo '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false"' . $nameAttr . '>';
                     echo '<span class="gk-select-value">' . $e($displayValue) . '</span>';
                     echo '<span class="material-icons gk-select-arrow" aria-hidden="true">expand_more</span>';
                     echo '</div>';
@@ -200,8 +240,11 @@ class Form
                 $placeholder = $f['placeholder'] ?? Lang::t('form.search');
                 $searchable = !empty($f['searchable']);
                 echo '<div class="gk-multiselect" data-gk-multiselect>';
-                echo "<input type=\"hidden\" name=\"{$e($name)}\" value=\"{$e(implode(',', $selectedValues))}\">";
-                echo '<div class="gk-multiselect-display" tabindex="0">';
+                // Same reason as the select above: required on a hidden input
+                // is inert, so the star was the only sign the field mattered.
+                echo "<input type=\"text\" class=\"gk-select-value-input\" tabindex=\"-1\" aria-hidden=\"true\" name=\"{$e($name)}\" value=\"{$e(implode(',', $selectedValues))}\"{$req}>";
+                echo '<div class="gk-multiselect-display" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false"'
+                   . (($showLabel && !isset($f['aria'])) ? ' aria-labelledby="' . $labelId . '"' : ' aria-label="' . $e($f['aria'] ?? $label ?: $placeholder) . '"') . '>';
                 echo '<div class="gk-multiselect-chips">';
                 foreach ($selectedValues as $sv) {
                     if (isset($options[$sv])) {
@@ -233,8 +276,8 @@ class Form
                 $minChars = $f['minChars'] ?? 2;
                 $searchParam = $f['searchParam'] ?? 'q';
                 echo "<div class=\"gk-ajax-select\" data-gk-ajax-select data-url=\"{$e($url)}\" data-label-field=\"{$e($labelField)}\" data-value-field=\"{$e($valueField)}\" data-subtext-field=\"{$e($subtextField)}\" data-min-chars=\"{$e($minChars)}\" data-search-param=\"{$e($searchParam)}\">";
-                echo "<input type=\"hidden\" name=\"{$e($name)}\" value=\"{$e($value)}\">";
-                echo '<div class="gk-select-display" tabindex="0">';
+                echo "<input type=\"text\" class=\"gk-select-value-input\" tabindex=\"-1\" aria-hidden=\"true\" name=\"{$e($name)}\" value=\"{$e($value)}\"{$req}>";
+                echo '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false"' . $composedBy . '>';
                 echo '<span class="material-icons gk-select-icon" aria-hidden="true">search</span>';
                 $clearStyle = $value ? '' : ' style="display:none;"';
                 echo "<input type=\"text\" class=\"gk-ajax-search-input\" value=\"{$e($displayValue)}\" placeholder=\"{$e($placeholder)}\" autocomplete=\"off\">";
@@ -247,7 +290,9 @@ class Form
 
             case 'toggle':
                 $checked = !empty($f['checked']) || !empty($value) ? ' checked' : '';
-                echo "<label class=\"gk-toggle\"><input type=\"checkbox\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"1\"{$checked}><span class=\"gk-toggle-slider\"></span></label>";
+                // The same control the checkbox branch renders, in a different
+                // skin — and that branch has always passed {$req} through.
+                echo "<label class=\"gk-toggle\"><input type=\"checkbox\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"1\"{$req}{$checked}><span class=\"gk-toggle-slider\"></span></label>";
                 break;
 
             case 'checkbox':
@@ -259,10 +304,19 @@ class Form
                 $options = $f['options'] ?? [];
                 $isInline = !empty($f['inline']);
                 $dirClass = $isInline ? 'gk-radio-group-inline' : 'gk-radio-group';
-                echo "<div class=\"{$dirClass}\">";
+                // A radio group is named by its own heading, not by each
+                // button, so the group gets a role and the label's text.
+                $groupName = ($showLabel && !isset($f['aria']))
+                    ? " aria-labelledby=\"{$labelId}\""
+                    : ' aria-label="' . $e($f['aria'] ?? $label) . '"';
+                echo "<div class=\"{$dirClass}\" role=\"radiogroup\"{$groupName}>";
                 foreach ($options as $k => $v) {
                     $chk = (string)$k === (string)$value ? ' checked' : '';
-                    echo "<label class=\"gk-radio-wrap\"><input type=\"radio\" name=\"{$e($name)}\" value=\"{$e($k)}\"{$chk}><span class=\"gk-radio-custom\"></span><span class=\"gk-radio-text\">{$e($v)}</span></label>";
+                    // required on ONE member constrains the whole group — the
+                    // browser then asks for a choice before submitting. It was
+                    // on none of them, so the star beside the label was the
+                    // only thing saying the field mattered.
+                    echo "<label class=\"gk-radio-wrap\"><input type=\"radio\" name=\"{$e($name)}\" value=\"{$e($k)}\"{$req}{$chk}><span class=\"gk-radio-custom\"></span><span class=\"gk-radio-text\">{$e($v)}</span></label>";
                 }
                 echo '</div>';
                 break;
@@ -322,12 +376,19 @@ class Form
                 break;
 
             case 'color':
-                $colorId  = 'gk-color-' . $name . '-' . substr(md5($name . microtime()), 0, 6);
+                // The field name goes into an id that is then written into an
+                // inline <script> as a single-quoted JS string. htmlspecialchars
+                // would make the two spellings differ; slugging keeps them
+                // byte-identical AND keeps quotes and spaces out of an id that
+                // CSS selectors elsewhere rely on. A name carrying a quote used
+                // to close the attribute and land a real onmouseover handler on
+                // the page. The md5 suffix already supplies uniqueness.
+                $colorId  = 'gk-color-' . self::slug($name) . '-' . substr(md5($name . microtime()), 0, 6);
                 $hexId    = $colorId . '-hex';
                 $colorVal = $value ?: '#6750a4';
                 echo "<div class=\"gk-color-wrap\" id=\"{$colorId}-wrap\">";
                 echo "<div class=\"gk-color-swatch\">";
-                echo "<input type=\"color\" id=\"{$colorId}\" value=\"{$e($colorVal)}\" name=\"{$e($name)}\">";
+                echo "<input type=\"color\" id=\"{$colorId}\" value=\"{$e($colorVal)}\" name=\"{$e($name)}\"{$composedBy}>";
                 echo "</div>";
                 echo "<input type=\"text\" id=\"{$hexId}\" class=\"gk-color-hex\" maxlength=\"7\" value=\"" . strtoupper($e($colorVal)) . "\" placeholder=\"#RRGGBB\" pattern=\"#[0-9A-Fa-f]{6}\">";
                 echo "</div>";
@@ -342,7 +403,7 @@ class Form
                 break;
 
             case 'richtext':
-                $editorId = 'gk-editor-' . $name . '-' . substr(md5($name . microtime()), 0, 6);
+                $editorId = 'gk-editor-' . self::slug($name) . '-' . substr(md5($name . microtime()), 0, 6);
                 $preset   = $f['preset'] ?? 'full'; // 'basic' | 'full'
                 if ($preset === 'basic') {
                     $ckPlugins  = "CK.Essentials,CK.Paragraph,CK.Bold,CK.Italic,CK.Underline,CK.Strikethrough,CK.Link,CK.List,CK.Undo";
@@ -351,10 +412,15 @@ class Form
                     $ckPlugins  = "CK.Essentials,CK.Paragraph,CK.Heading,CK.Bold,CK.Italic,CK.Underline,CK.Strikethrough,CK.Link,CK.BlockQuote,CK.List,CK.Table,CK.TableToolbar,CK.TableProperties,CK.TableCellProperties,CK.Alignment,CK.Undo,CK.SourceEditing";
                     $ckToolbar  = "'heading','|','bold','italic','underline','strikethrough','|','link','blockQuote','|','bulletedList','numberedList','|','insertTable','|','alignment','|','undo','redo','|','sourceEditing'";
                 }
-                echo "<div class=\"gk-richtext-wrap\">";
+                echo "<div class=\"gk-richtext-wrap\" role=\"group\"{$composedBy}>";
                 echo "<div id=\"{$editorId}\"></div>";
                 echo "</div>";
-                echo "<input type=\"hidden\" name=\"{$e($name)}\" id=\"{$editorId}-hidden\" value=\"{$e($value)}\">";
+                // CKEditor writes into this hidden input and hides everything
+                // around it, so the browser cannot validate or focus it — the
+                // one field type where `required` has to be checked in script.
+                // data-gk-required-rich marks it; gridkit.js blocks the submit.
+                $richReq = $req ? " data-gk-required-rich=\"{$e($label)}\"" : '';
+                echo "<input type=\"hidden\" name=\"{$e($name)}\" id=\"{$editorId}-hidden\" value=\"{$e($value)}\"{$richReq}>";
                 // Lazy-init via IntersectionObserver — works inside hidden tabs
                 $jsonValue = json_encode($value ?? '');
                 echo "<script>(function(){";

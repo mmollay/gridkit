@@ -70,6 +70,13 @@
             body.innerHTML = html;
             GK.form.bind(body);
             GK.table.init(body);
+            // Modal content is injected after DOMContentLoaded, so the widget
+            // binders that GK.init() ran for the page have to run again here.
+            GK.initRangeSliders();
+            GK.initUploadZones();
+            if (GK.selectSearch) GK.selectSearch.init(body);
+            if (GK.multiSelect) GK.multiSelect.init(body);
+            if (GK.ajaxSelect) GK.ajaxSelect.init(body);
           })
           .catch(() => {
             body.classList.remove("gk-loading");
@@ -112,7 +119,12 @@
         const btn = form.querySelector('[type="submit"]');
         if (btn) {
           btn.disabled = true;
-          btn._origText = btn.textContent;
+          // textContent flattens the button: the Material Icons glyph and
+          // the label became the single string "saveSave", permanently,
+          // from the first submit onwards. innerHTML puts back what was
+          // there. Safe: it is the element's own already-parsed markup,
+          // read and written back, so nothing new enters.
+          btn._origHTML = btn.innerHTML;
           btn.textContent = "…";
         }
 
@@ -139,7 +151,7 @@
           .finally(() => {
             if (btn) {
               btn.disabled = false;
-              btn.textContent = btn._origText;
+              btn.innerHTML = btn._origHTML;
             }
           });
       },
@@ -1035,16 +1047,32 @@
           .then((html) => {
             if (!finish()) return;
             const toolbar = wrap.querySelector(".gk-toolbar");
+            // The bulk bar lives beside the toolbar, not inside the table, so
+            // the sweep below took it out on the first page or filter change
+            // and it never came back — selection kept working internally with
+            // nothing on screen to act on it.
+            const bulkBar = wrap.querySelector(".gk-bulk-bar");
             const templates = wrap.querySelectorAll("template");
             Array.from(wrap.children).forEach((ch) => {
               if (
                 ch !== toolbar &&
+                ch !== bulkBar &&
                 ch.tagName !== "TEMPLATE" &&
                 ch.tagName !== "SCRIPT"
               )
                 ch.remove();
             });
-            toolbar.insertAdjacentHTML("afterend", html);
+            // toolbar(false) is a documented option, and a table built with
+            // it has no .gk-toolbar — so this threw on the first sort, page
+            // click or GK.table.refresh(), after the loop above had already
+            // removed the old rows. The wrapper was left empty, and because
+            // the error is not a transport error the catch branch skips the
+            // "Try again" fallback: a blank space and no way back short of
+            // reloading. renderStatic() has guarded this all along, twelve
+            // hundred lines up; this path never did.
+            const anchor = bulkBar || toolbar;
+            if (anchor) anchor.insertAdjacentHTML("afterend", html);
+            else wrap.insertAdjacentHTML("afterbegin", html);
             // Out-of-band updates: <template data-gk-replace="css-selector">
             // Replaces elements OUTSIDE the container (e.g. StatCards).
             wrap.querySelectorAll("template[data-gk-replace]").forEach(function(tpl) {
@@ -3156,6 +3184,40 @@ GK.tip = {
   },
 };
 _gkReady(() => GK.tip.init());
+
+// A rich-text field marked required. CKEditor writes into a hidden input and
+// hides the rest, so the browser can neither validate nor focus it: the red
+// star beside the label was the only thing saying the field mattered. Checked
+// here, in the capture phase, so it also holds for a plain non-AJAX form.
+document.addEventListener(
+  "submit",
+  function (e) {
+    var form = e.target;
+    if (!form || form.nodeName !== "FORM") return;
+    var missing = null;
+    form.querySelectorAll("[data-gk-required-rich]").forEach(function (el) {
+      if (missing) return;
+      // Strip the markup CKEditor leaves behind for an "empty" document.
+      var text = String(el.value || "")
+        .replace(/<[^>]*>/g, "")
+        .replace(/&nbsp;|\s/g, "");
+      if (text === "") missing = el;
+    });
+    if (!missing) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var label = missing.getAttribute("data-gk-required-rich") || "";
+    var msg = _t("field_required").replace("{name}", label);
+    if (window.GK && GK.toast) GK.toast.error(msg);
+    else alert(msg);
+    var wrap = missing.previousElementSibling;
+    var editable = wrap && wrap.querySelector(".ck-editor__editable");
+    if (editable) editable.focus();
+    else if (wrap && wrap.scrollIntoView) wrap.scrollIntoView({ block: "center" });
+  },
+  true,
+);
+
 
 // === SEARCH (GK.search) =================================================
 // System-wide quick search. GridKit supplies only the control element — WHAT

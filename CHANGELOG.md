@@ -7,6 +7,106 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.43.0] - 2026-08-27
+
+Round fourteen, and the first finding is the previous round's. Five auditors
+over Form, Auth and the parts of Table nobody had walked, then an adversarial
+verifier per finding whose job was to refute it by running it. Fourteen
+findings; none were refuted.
+
+### Fixed — two things 1.42.0 got wrong
+
+- **The required-select fix landed on a code path nobody calls.** 1.42.0
+  announced "a required searchable select submitted empty" as fixed, and it was
+  — in `Select::searchable()`, which outside these tests nothing calls. Every
+  document, the demo and SPEC.md build a select through
+  `Form::field($name, $label, 'select', …)`, and that copy still emitted its
+  value carrier as `<input type="hidden">` with no `required` at all, under a
+  label wearing the red asterisk that promises the field is required. Verified
+  in a browser: `willValidate` false, and clicking Save posted `{"country":""}`.
+  Fixed now on the path people actually use, and on `multiselect`,
+  `ajaxselect`, `toggle` and `radio` besides — `required` was inert on eight of
+  the eleven field types. `richtext` cannot be validated by the browser at all
+  (CKEditor hides its carrier), so it is checked in script instead of wearing a
+  star that means nothing.
+
+- **The CSS half of that fix was pasted into the middle of another rule.** The
+  new block went between the selector and the brace of the toolbar rule below
+  it. It stayed valid CSS and shipped, and two things broke at once: the value
+  carrier was hidden only inside a toolbar — a visible 177 px text input in
+  every plain form using a searchable select — and the toolbar's 34 px height
+  escaped onto every searchable select on every page. A test now fails on any
+  comment spliced between a selector and its own brace.
+
+### Fixed — security
+
+- **Any anonymous visitor could take every guarded page down with one cookie.**
+  A cookie sent as `gk_remember[]` arrives as an array, and `str_contains()` on
+  an array under `strict_types` is a fatal `TypeError`. So every
+  `Auth::protect()` page answered 500 — and stayed that way, because logout
+  crashed on the same line and could never clear the cookie. Guarded on both
+  sides, deliberately asymmetrically: the clearing path must not return early,
+  or the lockout would survive the fix.
+
+- **A field name could become a real event handler.** It reaches ids that are
+  then written into an inline `<script>` as a single-quoted JS string, so
+  escaping is the wrong tool — the two spellings have to stay byte-identical.
+  A name carrying a quote closed the attribute and landed a working
+  `onmouseover` on the page. The name is slugged for id use now; the md5 suffix
+  already supplied the uniqueness.
+
+- **`renderLogin()` wrote its asset paths into `href` and `src` unescaped**, so
+  a caller-supplied path could add attributes of its own — on a login page.
+
+- **`Auth::check()` and `Auth::user()` ignored the remember-me cookie that
+  `Auth::protect()` accepted.** A returning visitor was let through the guard
+  while the page rendered as though nobody were logged in. Identity is resolved
+  in one place now.
+
+### Fixed — things that broke on the second interaction
+
+- **A form loaded into a table modal was inert.** Modal content arrives after
+  `DOMContentLoaded`, so the widget binders never ran on it: in the repo's own
+  invoice example, editing an invoice and trying to change Status did nothing
+  at all — the dropdown would not open by mouse or keyboard, and the form
+  posted back the value it was loaded with. This is the flow the README leads
+  with.
+
+- **A table with `toolbar(false)` deleted itself on the first sort.** The
+  reload path assumed a `.gk-toolbar` was there and threw after it had already
+  removed the old rows, leaving an empty wrapper — and because the error is not
+  a transport error, the "Try again" fallback was skipped. `renderStatic()` has
+  guarded this all along, twelve hundred lines up.
+
+- **The bulk bar was swept away by the first AJAX reload.** It sits beside the
+  toolbar rather than inside the table, so paging or filtering removed it for
+  good while selection went on working internally with nothing on screen to act
+  on it.
+
+- **`selectable('uuid')` was ignored by the client re-render.** The key never
+  shipped in the embedded payload, so the client fell back to `"id"` and every
+  row id went empty on the first sort — the whole selection collapsing to one
+  blank entry.
+
+- **The submit button read "saveSave" after the first submit.** The busy state
+  saved `textContent`, which flattens the Material Icons glyph and the label
+  into one string, and restored that. Permanently, from the first submit on.
+
+- **Six field types had a `<label for>` pointing at nothing** — the value
+  carrier is hidden from the accessibility tree, or the control is a group. The
+  label named nothing and clicking it focused nothing. They are named through
+  `aria-labelledby` now, by the visible label a person can also read.
+
+### Added
+
+- `tests/fields.test.php` — the general questions for a field: does `required`
+  reach something the browser can enforce, does every label resolve, does every
+  widget have a name, can a hostile field name become an attribute. Each was
+  checked against its own reintroduced bug.
+
+**1,577 assertions.**
+
+---
 ## [1.42.0] - 2026-08-27
 
 Two passes at once. The accessibility of what every component emits, measured

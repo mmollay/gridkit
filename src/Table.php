@@ -369,6 +369,11 @@ class Table
             }
             echo '<script type="application/json" data-gk-data>' . json_encode([
                 'rows' => $this->rows,
+                // The key selectable() was told to use. Without it the client
+                // re-render fell back to "id", so on a table keyed by anything
+                // else every row's id became empty on the first sort or search
+                // — the whole selection collapsed to one blank entry.
+                'rowId' => $this->selectKey,
                 'columns' => $colConfig,
                 'buttons' => $this->buttons,
                 'groupBy' => $this->groupCol === '' ? null : [

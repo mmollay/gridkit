@@ -370,13 +370,17 @@ a:hover {
 .gk-toolbar .gk-search {
   margin-right: 4px;
 }
-/* Align gk-select-search in a toolbar with gk-search / gk-filter (otherwise 44px instead of ~34px) */
-.gk-toolbar .gk-select-search /* The value carrier of a searchable select. It used to be type="hidden",
+/* The value carrier of a searchable select. It used to be type="hidden",
    which the HTML standard bars from constraint validation — so ['required']
    was accepted, emitted, and silently did nothing: the form submitted empty.
    It must stay a real, focusable control for the browser to anchor its
    validation bubble, so it is hidden by opacity rather than display:none, and
-   readonly is deliberately absent (readonly also disables validation). */
+   readonly is deliberately absent (readonly also disables validation).
+
+   1.42.0 spliced this block between the selector and the brace of the toolbar
+   rule below. Two things broke at once: the carrier was only hidden inside a
+   toolbar — a visible 177px text input in every plain form — and the toolbar's
+   34px height escaped onto every searchable select on every page. */
 .gk-select-value-input {
     position: absolute;
     opacity: 0;
@@ -387,7 +391,8 @@ a:hover {
     pointer-events: none;
 }
 
-.gk-select-display {
+/* Align gk-select-search in a toolbar with gk-search / gk-filter (otherwise 44px instead of ~34px) */
+.gk-toolbar .gk-select-search .gk-select-display {
   padding: 6px 12px;
   height: 34px;        /* override the generic height:44px from .gk-select-display */
   min-height: 34px;

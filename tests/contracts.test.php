@@ -173,6 +173,26 @@ return [
     T::notContains($rule[0], 'visibility: hidden', 'nor can a visibility:hidden one');
 },
 
+'the stylesheet has no rule whose selector swallowed a comment' => function (): void {
+    // 1.42.0 inserted a rule between the selector and the brace of an existing
+    // one. It stayed valid CSS and shipped: the searchable select's value
+    // carrier was hidden only inside a toolbar — a visible 177px text input in
+    // every plain form — and the toolbar's 34px height escaped onto every
+    // select on every page. Neither shows up as a parse error.
+    $css = (string) file_get_contents(__DIR__ . '/../css/gridkit.css')
+         . (string) file_get_contents(__DIR__ . '/../css/themes.css');
+
+    // A comment must not sit between a selector and its own opening brace.
+    T::eq(preg_match_all('/[.#\w\]\)]\s+\/\*(?:[^*]|\*(?!\/))*\*\/\s*[.#\w\[]/s', $css), 0,
+        'a comment is spliced into a selector — the rule below it is not the rule you think');
+
+    // And the two rules that collided must both be their own thing.
+    T::contains($css, "\n.gk-select-value-input {",
+        'the carrier rule must apply everywhere, not only under another selector');
+    T::contains($css, '.gk-toolbar .gk-select-search .gk-select-display {',
+        'the 34px height belongs to toolbars only');
+},
+
 'the year dropdown has a name like every other filter' => function (): void {
     Lang::set('en');
     $html = T::capture(fn() => (new YearFilter('y'))
