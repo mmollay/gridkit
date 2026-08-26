@@ -92,6 +92,12 @@ Der sichtbare Teil — die Tabelle aus Blatt 04 des Audits:
   eines kräftigen Rahmens, Filter folgen der Pillenform.
 - **Die Höhenstufen sind jetzt zugewiesen**, nicht nur definiert: Karte auf
   `--gk-elev-1`, Dropdowns auf `-2`, Modal auf `-4`.
+- **Die Kopfzeile hat keine eigene Fläche mehr.** Versalien, Größe und Gewicht
+  machen sie bereits eindeutig als Kopf lesbar — ein grauer Balken darunter war
+  eine zweite Ansage für dieselbe Sache. Die Trennung übernimmt die Linie.
+- **Neue Spaltenoption `['muted' => true]`.** Eine Artikel- oder Belegnummer ist
+  Zuordnung, kein Inhalt; in voller Textfarbe konkurriert sie mit der
+  Bezeichnung daneben um denselben Blick.
 
 ### Geändert
 

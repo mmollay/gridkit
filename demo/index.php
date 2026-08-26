@@ -156,7 +156,7 @@ echo $demoHeader->title($headerTitle, true)
         $table = new Table('articles');
         $table->setData($articles)
             ->search(['article_number', 'name'])
-            ->column('article_number', 'Article No.', ['width' => '120px', 'sortable' => true, 'nowrap' => true])
+            ->column('article_number', 'Article No.', ['width' => '120px', 'sortable' => true, 'nowrap' => true, 'muted' => true])
             ->column('name', 'Description', ['sortable' => true, 'nowrap' => true])
             ->column('unit', 'Unit', ['width' => '80px', 'nowrap' => true])
             ->column('net_price', 'Net', ['format' => 'currency', 'align' => 'right', 'width' => '100px', 'nowrap' => true])

@@ -411,6 +411,9 @@ class Table
                     if (empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
                 }
                 if (!empty($col['hideOnMobile'])) $tdCls[] = 'gk-hide-mobile';
+                // Nebenspalten (Nummern, Kennungen) treten in der Textfarbe zurueck,
+                // damit die eigentliche Bezeichnung den Blick bekommt.
+                if (!empty($col['muted'])) $tdCls[] = 'gk-td-muted';
                 $tdStyle = $tdStyles ? ' style="' . implode(';', $tdStyles) . '"' : '';
                 $tdClass = $tdCls ? ' class="' . implode(' ', $tdCls) . '"' : '';
                 $dataLabel = ' data-label="' . $e($col['label']) . '"';

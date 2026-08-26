@@ -560,12 +560,15 @@ a:hover {
   border-bottom: 1px solid var(--gk-outline-variant);
 }
 .gk-table thead th {
-  background: var(--gk-surface-container-low);
+  /* Ohne eigene Flaeche. Die Kopfzeile ist durch Versalien, Groesse und
+     Gewicht bereits eindeutig als Kopf lesbar — ein grauer Balken darunter
+     ist eine zweite Ansage fuer dieselbe Sache und macht die Karte unruhig.
+     Die Trennung uebernimmt allein die Linie darunter. */
   font-weight: 600;
   font-size: var(--gk-text-overline);
   color: var(--gk-on-surface-variant);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   user-select: none;
   white-space: nowrap;
 }
@@ -6381,4 +6384,12 @@ a.gk-stat-card:hover {
 .gk-tableheader-toolbar .gk-filter {
   border-radius: 9999px;
   padding-left: 14px;
+}
+
+/* ── Nebenspalten treten zurueck ────────────────────────────────────────
+   Eine Artikel- oder Belegnummer ist Zuordnung, kein Inhalt. In voller
+   Textfarbe konkurriert sie mit der Bezeichnung daneben um denselben Blick.
+   Spaltenoption: ['muted' => true] */
+.gk-table td.gk-td-muted {
+  color: var(--gk-on-surface-variant);
 }
