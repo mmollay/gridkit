@@ -47,6 +47,16 @@ a:hover {
   --gk-outline: #94a3b8;
   --gk-outline-variant: #e2e8f0;
 
+  /* === SEMANTISCHE ROLLEN ===
+     Erfolg, Warnung und Info folgen dem Theme-Akzent bewusst NICHT: Gruen muss
+     Gruen bleiben, egal welches Theme laeuft. (Vorher war --gk-success auf
+     --gk-tertiary verdrahtet — im Forest-Theme wurden Erfolgsmeldungen dadurch
+     violett, weil Forest Tertiary auf #8b5cf6 setzt.) */
+  --gk-success: #10b981;
+  --gk-on-success: #ffffff;
+  --gk-success-container: #d1fae5;
+  --gk-on-success-container: #064e3b;
+
   /* Backward-compat aliases */
   --gk-bg: var(--gk-surface);
   --gk-bg-muted: var(--gk-surface-container);
@@ -56,16 +66,50 @@ a:hover {
   --gk-text-muted: var(--gk-on-surface-variant);
   --gk-text-subtle: var(--gk-outline);
   --gk-border: var(--gk-outline-variant);
-  --gk-success: var(--gk-tertiary);
   --gk-warning: #f59e0b;
   --gk-danger: var(--gk-error);
   --gk-info: #0ea5e9;
 
-  /* Legacy hover aliases */
+  /* Warnung und Info hatten bisher kein Rollenpaar — ohne Container-/On-Rolle
+     mussten Komponenten (Labels, Meldungen, Toasts) eigene Literale mitbringen. */
+  --gk-on-warning: #ffffff;
+  --gk-warning-container: #fef3c7;
+  --gk-on-warning-container: #92400e;
+  --gk-on-info: #ffffff;
+  --gk-info-container: #dbeafe;
+  --gk-on-info-container: #1e40af;
+
+  /* === ZUSTANDS-ROLLEN ===
+     Hover-/Aktiv-Stufen werden aus der jeweiligen Rolle abgeleitet, damit sie dem
+     Theme folgen. Die Literale hier sind der Rückfall fuer Browser ohne relative
+     Farbsyntax; der @supports-Block am Ende dieser Datei ersetzt sie durch die
+     abgeleitete Variante (gleiche Buntheit, geringere Helligkeit). */
   --gk-primary-hover: #4f46e5;
-  --gk-success-hover: #059669;
+  --gk-tertiary-hover: #059669;
+  --gk-error-hover: #e11d48;
   --gk-warning-hover: #d97706;
-  --gk-danger-hover: #e11d48;
+  /* Legacy hover aliases */
+  --gk-success-hover: #059669;
+  --gk-danger-hover: var(--gk-error-hover);
+
+  /* Zustandsflaechen (M3 state layers) — liegen als Schleier ueber der Grundflaeche */
+  --gk-state-hover: color-mix(in oklab, var(--gk-on-surface) 6%, transparent);
+  --gk-state-pressed: color-mix(in oklab, var(--gk-on-surface) 10%, transparent);
+  --gk-state-primary: color-mix(in oklab, var(--gk-primary) 8%, transparent);
+  --gk-state-tertiary: color-mix(in oklab, var(--gk-tertiary) 8%, transparent);
+  --gk-state-error: color-mix(in oklab, var(--gk-error) 8%, transparent);
+  --gk-state-warning: color-mix(in oklab, var(--gk-warning) 8%, transparent);
+
+  /* Textsichere Varianten von Warnung und Erfolg.
+     --gk-warning/--gk-success sind Flaechenfarben; als Schriftfarbe auf heller
+     Flaeche reissen sie den Kontrast ein (#f59e0b auf Weiss = 2,15:1). Diese
+     Rollen sind dieselbe Farbe, nur dunkler — und bleiben ueber der 3:1-Schwelle. */
+  --gk-warning-text: #d97706;
+  --gk-success-text: #059669;
+
+  /* Fokusring — eine Zusage, ueberall dieselbe */
+  --gk-focus-ring: 0 0 0 3px color-mix(in oklab, var(--gk-primary) 32%, transparent);
+  --gk-focus-ring-soft: 0 0 0 3px color-mix(in oklab, var(--gk-primary) 10%, transparent);
 
   /* Legacy scale aliases (backward compat) */
   --gk-primary-50: #eef2ff;
@@ -151,8 +195,8 @@ a:hover {
 
 /* === TABLE === */
 .gk-table-wrap {
-  background: #fff;
-  border: 1px solid #d0d7de;
+  background: var(--gk-surface);
+  border: 1px solid var(--gk-outline-variant);
   border-radius: 12px;
   /* overflow: visible, damit Dropdowns (gk-select-search, Status-Filter etc.)
      aus der Toolbar ueber den Tabellen-Rand hinaus rendern koennen. Abgerundete
@@ -327,7 +371,7 @@ a:hover {
 }
 .gk-search:focus {
   border-color: var(--gk-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: var(--gk-focus-ring-soft);
 }
 
 /* Filters */
@@ -355,7 +399,7 @@ a:hover {
 }
 .gk-filter:focus {
   border-color: var(--gk-primary);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--gk-primary) 15%, transparent);
 }
 .gk-filter option {
   padding: 4px 8px;
@@ -429,7 +473,7 @@ a:hover {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 34px; height: 34px; padding: 0 10px;
   border: 1px solid var(--gk-border); border-radius: 8px;
-  background: var(--gk-bg, #fff); color: var(--gk-text); font-size: 13px; font-weight: 600;
+  background: var(--gk-surface); color: var(--gk-text); font-size: 13px; font-weight: 600;
   cursor: pointer; text-decoration: none;
 }
 .gk-pg:hover { background: var(--gk-surface-variant, #f1f5f9); }
@@ -447,13 +491,13 @@ a:hover {
 .gk-table td {
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid #d8dee4;
+  border-bottom: 1px solid var(--gk-outline-variant);
 }
 .gk-table thead th {
-  background: #f6f8fa;
+  background: var(--gk-surface-container-low);
   font-weight: 600;
   font-size: 11px;
-  color: #57606a;
+  color: var(--gk-on-surface-variant);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   user-select: none;
@@ -464,13 +508,13 @@ a:hover {
    graue letzte Zeile als eckiger Block über die runden Wrap-Ecken — sichtbar nur,
    wenn die letzte Zeile grau ist (weiße fällt mit dem weißen Wrap zusammen). */
 .gk-table tbody tr:hover > td {
-  background: #f6f8fa;
+  background: var(--gk-surface-container-high);
 }
 .gk-table tbody tr:nth-child(even) > td {
-  background: #f6f8fa;
+  background: var(--gk-surface-container-low);
 }
 .gk-table tbody tr:nth-child(even):hover > td {
-  background: #eaeef2;
+  background: var(--gk-surface-container-high);
 }
 /* Letzte SICHTBARE Zeile ohne Trennlinie. Mit tfoot ist die tfoot-Zeile die letzte
    (die tbody-Zeile behält dann ihre Linie als Trenner vor der Summe); ohne tfoot
@@ -526,12 +570,12 @@ a:hover {
   padding: 0 2px;
   font-size: 15px;
   font-weight: 600;
-  color: var(--gk-text-primary, #1e293b);
+  color: var(--gk-on-surface);
 }
 .gk-table-title > .material-icons {
   font-size: 20px;
   flex: 0 0 auto;
-  color: var(--gk-text-secondary, #64748b);
+  color: var(--gk-on-surface-variant);
 }
 .gk-table-title h3 {
   margin: 0;
@@ -542,7 +586,7 @@ a:hover {
 .gk-table-title small {
   font-weight: 400;
   font-size: 13px;
-  color: var(--gk-text-secondary, #64748b);
+  color: var(--gk-on-surface-variant);
 }
 /* rechtsbündige Aktionen/Links in der Titelzeile */
 .gk-table-title-actions {
@@ -654,13 +698,13 @@ a:hover {
 /* Gruppenzeile in einer Tabelle (Table::groupBy) */
 .gk-table tbody tr.gk-table-group > td {
   padding: 10px 12px 6px;
-  background: var(--gk-surface-variant, #f1f5f9);
+  background: var(--gk-surface-container);
   border-bottom: 1px solid var(--gk-outline-variant, #e2e8f0);
   font-size: 12px;
   letter-spacing: 0.02em;
 }
 .gk-table tbody tr.gk-table-group:hover > td {
-  background: var(--gk-surface-variant, #f1f5f9);
+  background: var(--gk-surface-container);
 }
 .gk-table-group-name {
   font-weight: 700;
@@ -668,7 +712,7 @@ a:hover {
 }
 .gk-table-group-n {
   margin-left: 8px;
-  color: var(--gk-text-muted, #64748b);
+  color: var(--gk-on-surface-variant);
   font-weight: 500;
 }
 
@@ -697,7 +741,7 @@ a:hover {
 }
 [data-gk-mode="dark"] .gk-num-empty,
 .gk-dark .gk-num-empty {
-  color: #475569;
+  color: var(--gk-outline);
 }
 .gk-actions {
   white-space: nowrap;
@@ -738,7 +782,7 @@ a:hover {
   align-items: center;
   gap: 10px;
   background: var(--gk-primary);
-  color: #fff;
+  color: var(--gk-on-primary);
   border-radius: 10px;
   padding: 10px 16px;
   margin: 6px 0 2px;
@@ -752,8 +796,8 @@ a:hover {
   font-size: 18px;
 }
 .gk-bulk-bar [data-gk-bulk-delete] {
-  background: #ef4444;
-  color: #fff;
+  background: var(--gk-error);
+  color: var(--gk-on-error);
   border: none;
   border-radius: 7px;
   padding: 0 14px;
@@ -766,14 +810,14 @@ a:hover {
   gap: 5px;
 }
 .gk-bulk-bar [data-gk-bulk-delete]:hover {
-  background: #dc2626;
+  background: var(--gk-error-hover);
 }
 .gk-bulk-bar [data-gk-bulk-delete] .material-icons {
   font-size: 15px;
 }
 .gk-bulk-bar [data-gk-bulk-cancel] {
   background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  color: var(--gk-on-primary);
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 7px;
   padding: 0 14px;
@@ -875,52 +919,52 @@ a:hover {
 
 /* --- Variant: Filled --- */
 .gk-btn-filled.gk-btn-primary {
-  background: #6366f1;
-  color: #fff;
-  border-color: #6366f1;
+  background: var(--gk-primary);
+  color: var(--gk-on-primary);
+  border-color: var(--gk-primary);
 }
 .gk-btn-filled.gk-btn-primary:hover {
-  background: #4f46e5;
-  border-color: #4f46e5;
-  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.3);
+  background: var(--gk-primary-hover);
+  border-color: var(--gk-primary-hover);
+  box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-primary) 30%, transparent);
 }
 .gk-btn-filled.gk-btn-success {
-  background: #10b981;
-  color: #fff;
-  border-color: #10b981;
+  background: var(--gk-success);
+  color: var(--gk-on-success);
+  border-color: var(--gk-success);
 }
 .gk-btn-filled.gk-btn-success:hover {
-  background: #059669;
-  border-color: #059669;
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
+  background: var(--gk-success-hover);
+  border-color: var(--gk-success-hover);
+  box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-success) 30%, transparent);
 }
 .gk-btn-filled.gk-btn-warning {
-  background: #f59e0b;
-  color: #fff;
-  border-color: #f59e0b;
+  background: var(--gk-warning);
+  color: var(--gk-on-warning);
+  border-color: var(--gk-warning);
 }
 .gk-btn-filled.gk-btn-warning:hover {
-  background: #d97706;
-  border-color: #d97706;
+  background: var(--gk-warning-hover);
+  border-color: var(--gk-warning-hover);
 }
 .gk-btn-filled.gk-btn-danger {
-  background: #f43f5e;
-  color: #fff;
-  border-color: #f43f5e;
+  background: var(--gk-error);
+  color: var(--gk-on-error);
+  border-color: var(--gk-error);
 }
 .gk-btn-filled.gk-btn-danger:hover {
-  background: #e11d48;
-  border-color: #e11d48;
-  box-shadow: 0 1px 3px rgba(244, 63, 94, 0.3);
+  background: var(--gk-error-hover);
+  border-color: var(--gk-error-hover);
+  box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-error) 30%, transparent);
 }
 .gk-btn-filled.gk-btn-neutral {
-  background: #475569;
-  color: #fff;
-  border-color: #475569;
+  background: var(--gk-secondary);
+  color: var(--gk-on-secondary);
+  border-color: var(--gk-secondary);
 }
 .gk-btn-filled.gk-btn-neutral:hover {
-  background: #334155;
-  border-color: #334155;
+  background: oklch(from var(--gk-secondary) calc(l - 0.06) c h);
+  border-color: oklch(from var(--gk-secondary) calc(l - 0.06) c h);
 }
 
 /* --- Variant: Outlined --- */
@@ -928,39 +972,39 @@ a:hover {
   background: transparent;
 }
 .gk-btn-outlined.gk-btn-primary {
-  color: #6366f1;
-  border-color: #6366f1;
+  color: var(--gk-primary);
+  border-color: var(--gk-primary);
 }
 .gk-btn-outlined.gk-btn-primary:hover {
-  background: rgba(99, 102, 241, 0.08);
+  background: var(--gk-state-primary);
 }
 .gk-btn-outlined.gk-btn-success {
-  color: #10b981;
-  border-color: #10b981;
+  color: var(--gk-success);
+  border-color: var(--gk-success);
 }
 .gk-btn-outlined.gk-btn-success:hover {
-  background: rgba(16, 185, 129, 0.08);
+  background: color-mix(in oklab, var(--gk-success) 8%, transparent);
 }
 .gk-btn-outlined.gk-btn-warning {
-  color: #d97706;
-  border-color: #d97706;
+  color: var(--gk-warning-text);
+  border-color: var(--gk-warning-text);
 }
 .gk-btn-outlined.gk-btn-warning:hover {
-  background: rgba(245, 158, 11, 0.08);
+  background: var(--gk-state-warning);
 }
 .gk-btn-outlined.gk-btn-danger {
-  color: #f43f5e;
-  border-color: #f43f5e;
+  color: var(--gk-error);
+  border-color: var(--gk-error);
 }
 .gk-btn-outlined.gk-btn-danger:hover {
-  background: rgba(244, 63, 94, 0.08);
+  background: var(--gk-state-error);
 }
 .gk-btn-outlined.gk-btn-neutral {
-  color: #374151;
+  color: var(--gk-on-surface-variant);
   border-color: #d1d5db;
 }
 .gk-btn-outlined.gk-btn-neutral:hover {
-  background: #f3f4f6;
+  background: var(--gk-state-hover);
 }
 
 /* --- Variant: Text (no border) --- */
@@ -969,77 +1013,77 @@ a:hover {
   border-color: transparent;
 }
 .gk-btn-text.gk-btn-primary {
-  color: #6366f1;
+  color: var(--gk-primary);
 }
 .gk-btn-text.gk-btn-primary:hover {
-  background: rgba(99, 102, 241, 0.08);
+  background: var(--gk-state-primary);
 }
 .gk-btn-text.gk-btn-success {
-  color: #10b981;
+  color: var(--gk-success);
 }
 .gk-btn-text.gk-btn-success:hover {
-  background: rgba(16, 185, 129, 0.08);
+  background: color-mix(in oklab, var(--gk-success) 8%, transparent);
 }
 .gk-btn-text.gk-btn-warning {
-  color: #d97706;
+  color: var(--gk-warning-text);
 }
 .gk-btn-text.gk-btn-warning:hover {
-  background: rgba(245, 158, 11, 0.08);
+  background: var(--gk-state-warning);
 }
 .gk-btn-text.gk-btn-danger {
-  color: #f43f5e;
+  color: var(--gk-error);
 }
 .gk-btn-text.gk-btn-danger:hover {
-  background: rgba(244, 63, 94, 0.08);
+  background: var(--gk-state-error);
 }
 .gk-btn-text.gk-btn-neutral {
-  color: #6b7280;
+  color: var(--gk-on-surface-variant);
 }
 .gk-btn-text.gk-btn-neutral:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--gk-state-hover);
+  color: var(--gk-on-surface);
 }
 
 /* --- Variant: Tonal (soft fill) --- */
 .gk-btn-tonal.gk-btn-primary {
-  background: #eef2ff;
-  color: #4338ca;
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
   border-color: transparent;
 }
 .gk-btn-tonal.gk-btn-primary:hover {
-  background: #e0e7ff;
+  background: color-mix(in oklab, var(--gk-on-primary-container) 8%, var(--gk-primary-container));
 }
 .gk-btn-tonal.gk-btn-success {
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--gk-success-container);
+  color: var(--gk-on-success-container);
   border-color: transparent;
 }
 .gk-btn-tonal.gk-btn-success:hover {
-  background: #d1fae5;
+  background: color-mix(in oklab, var(--gk-on-success-container) 8%, var(--gk-success-container));
 }
 .gk-btn-tonal.gk-btn-warning {
-  background: rgba(245, 158, 11, 0.1);
-  color: #b45309;
+  background: color-mix(in oklab, var(--gk-warning) 10%, transparent);
+  color: var(--gk-on-warning-container);
   border-color: transparent;
 }
 .gk-btn-tonal.gk-btn-warning:hover {
-  background: rgba(245, 158, 11, 0.18);
+  background: color-mix(in oklab, var(--gk-warning) 18%, transparent);
 }
 .gk-btn-tonal.gk-btn-danger {
-  background: #fff1f2;
-  color: #be123c;
+  background: var(--gk-error-container);
+  color: var(--gk-on-error-container);
   border-color: transparent;
 }
 .gk-btn-tonal.gk-btn-danger:hover {
-  background: #ffe4e6;
+  background: color-mix(in oklab, var(--gk-on-error-container) 8%, var(--gk-error-container));
 }
 .gk-btn-tonal.gk-btn-neutral {
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--gk-surface-container);
+  color: var(--gk-on-surface);
   border-color: transparent;
 }
 .gk-btn-tonal.gk-btn-neutral:hover {
-  background: #e2e8f0;
+  background: var(--gk-surface-container-high);
 }
 
 /* --- States --- */
@@ -1069,8 +1113,8 @@ a:hover {
 .gk-btn-badge {
   font-size: 10px;
   font-weight: 700;
-  background: #f43f5e;
-  color: #fff;
+  background: var(--gk-error);
+  color: var(--gk-on-error);
   min-width: 18px;
   height: 18px;
   border-radius: 9px;
@@ -1085,67 +1129,67 @@ a:hover {
 .gk-btn.gk-btn-primary:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ) {
-  background: #6366f1;
-  color: #fff;
-  border-color: #6366f1;
+  background: var(--gk-primary);
+  color: var(--gk-on-primary);
+  border-color: var(--gk-primary);
 }
 .gk-btn.gk-btn-primary:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ):hover {
-  background: #4f46e5;
-  border-color: #4f46e5;
+  background: var(--gk-primary-hover);
+  border-color: var(--gk-primary-hover);
 }
 .gk-btn.gk-btn-success:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ) {
-  background: #10b981;
-  color: #fff;
-  border-color: #10b981;
+  background: var(--gk-success);
+  color: var(--gk-on-success);
+  border-color: var(--gk-success);
 }
 .gk-btn.gk-btn-success:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ):hover {
-  background: #059669;
-  border-color: #059669;
+  background: var(--gk-success-hover);
+  border-color: var(--gk-success-hover);
 }
 .gk-btn.gk-btn-warning:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ) {
-  background: #f59e0b;
-  color: #fff;
-  border-color: #f59e0b;
+  background: var(--gk-warning);
+  color: var(--gk-on-warning);
+  border-color: var(--gk-warning);
 }
 .gk-btn.gk-btn-warning:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ):hover {
-  background: #d97706;
-  border-color: #d97706;
+  background: var(--gk-warning-hover);
+  border-color: var(--gk-warning-hover);
 }
 .gk-btn.gk-btn-danger:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ) {
-  background: #f43f5e;
-  color: #fff;
-  border-color: #f43f5e;
+  background: var(--gk-error);
+  color: var(--gk-on-error);
+  border-color: var(--gk-error);
 }
 .gk-btn.gk-btn-danger:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ):hover {
-  background: #e11d48;
-  border-color: #e11d48;
+  background: var(--gk-error-hover);
+  border-color: var(--gk-error-hover);
 }
 .gk-btn.gk-btn-neutral:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ) {
-  background: #475569;
-  color: #fff;
-  border-color: #475569;
+  background: var(--gk-secondary);
+  color: var(--gk-on-secondary);
+  border-color: var(--gk-secondary);
 }
 .gk-btn.gk-btn-neutral:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ):hover {
-  background: #334155;
-  border-color: #334155;
+  background: color-mix(in oklab, var(--gk-on-surface) 18%, var(--gk-secondary));
+  border-color: color-mix(in oklab, var(--gk-on-surface) 18%, var(--gk-secondary));
 }
 
 /* --- Shapes --- */
@@ -1274,8 +1318,8 @@ td.gk-table-meta {
   background: var(--gk-bg-hover);
 }
 .gk-page-btn.gk-active {
-  background: var(--gk-primary-50, #eef2ff);
-  color: var(--gk-primary-700, #4338ca);
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
   border-color: transparent;
   font-weight: 600;
 }
@@ -1291,55 +1335,55 @@ td.gk-table-meta {
   vertical-align: middle;
 }
 .gk-label-green {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--gk-success-container);
+  color: var(--gk-on-success-container);
 }
 .gk-label-orange {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--gk-warning-container);
+  color: var(--gk-on-warning-container);
 }
 .gk-label-red {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--gk-error-container);
+  color: var(--gk-on-error-container);
 }
 .gk-label-gray {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface-variant);
 }
 .gk-label-blue {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--gk-info-container);
+  color: var(--gk-on-info-container);
 }
 /* Dark Mode Labels */
 [data-gk-mode="dark"] .gk-label-green,
 .gk-dark .gk-label-green {
   font-weight: 600;
-  background: #166534;
-  color: #bbf7d0;
+  background: var(--gk-success-container);
+  color: var(--gk-on-success-container);
 }
 [data-gk-mode="dark"] .gk-label-orange,
 .gk-dark .gk-label-orange {
   font-weight: 600;
-  background: #92400e;
-  color: #fde68a;
+  background: var(--gk-warning-container);
+  color: var(--gk-on-warning-container);
 }
 [data-gk-mode="dark"] .gk-label-red,
 .gk-dark .gk-label-red {
   font-weight: 600;
-  background: #991b1b;
-  color: #fecaca;
+  background: var(--gk-error-container);
+  color: var(--gk-on-error-container);
 }
 [data-gk-mode="dark"] .gk-label-gray,
 .gk-dark .gk-label-gray {
   font-weight: 600;
-  background: #374151;
-  color: #d1d5db;
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface-variant);
 }
 [data-gk-mode="dark"] .gk-label-blue,
 .gk-dark .gk-label-blue {
   font-weight: 600;
-  background: #1e40af;
-  color: #bfdbfe;
+  background: var(--gk-info-container);
+  color: var(--gk-on-info-container);
 }
 
 .gk-bool-yes {
@@ -1586,11 +1630,11 @@ td.gk-table-meta {
 .gk-input {
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid #dde1e6;
+  border: 1px solid var(--gk-outline-variant);
   border-radius: 8px;
   font-size: 14px;
   font-family: var(--gk-font);
-  background: #fff;
+  background: var(--gk-surface);
   color: var(--gk-text);
   outline: none;
   transition:
@@ -1609,7 +1653,7 @@ td.gk-table-meta {
   border-color: var(--gk-primary);
   border-width: 1.5px;
   padding: 9.75px 13.75px;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--gk-primary) 10%, transparent);
 }
 textarea.gk-input {
   resize: vertical;
@@ -1747,7 +1791,7 @@ select.gk-input {
 .gk-toggle-slider {
   position: absolute;
   inset: 0;
-  background: var(--gk-neutral-300, #cbd5e1);
+  background: var(--gk-surface-container-highest);
   border-radius: 14px;
   transition:
     background 0.2s,
@@ -1908,7 +1952,7 @@ select.gk-input {
   border-color: var(--gk-danger);
 }
 .gk-input.gk-has-error:focus {
-  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--gk-error) 10%, transparent);
 }
 .gk-field.gk-field-has-error .gk-label-text {
   color: var(--gk-danger);
@@ -1946,7 +1990,7 @@ select.gk-input {
   display: block;
   width: 5px;
   height: 10px;
-  border: solid #fff;
+  border: solid var(--gk-on-primary);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg) scale(0);
   transition: transform 0.15s ease;
@@ -2050,7 +2094,7 @@ select.gk-input {
   transition: box-shadow 0.15s;
 }
 .gk-range::-webkit-slider-thumb:hover {
-  box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 6px color-mix(in oklab, var(--gk-primary) 15%, transparent);
 }
 .gk-range::-moz-range-thumb {
   width: 20px;
@@ -2224,7 +2268,7 @@ select.gk-input {
 }
 /* States */
 .gk-uq-pending .gk-uq-status {
-  background: var(--gk-neutral-100, #f1f5f9);
+  background: var(--gk-surface-container);
   color: var(--gk-text-muted);
 }
 .gk-uq-uploading {
@@ -2235,18 +2279,18 @@ select.gk-input {
   color: var(--gk-primary);
 }
 .gk-uq-done {
-  border-color: #16a34a;
+  border-color: var(--gk-success);
 }
 .gk-uq-done .gk-uq-status {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--gk-success-container);
+  color: var(--gk-on-success-container);
 }
 .gk-uq-error {
   border-color: var(--gk-danger);
 }
 .gk-uq-error .gk-uq-status {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--gk-error-container);
+  color: var(--gk-on-error-container);
 }
 
 /* === RICHTEXT EDITOR === */
@@ -2261,7 +2305,7 @@ select.gk-input {
 .gk-richtext:focus-within {
   border-color: var(--gk-primary);
   border-width: 2px;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: var(--gk-focus-ring-soft);
 }
 .gk-richtext-toolbar {
   display: flex;
@@ -2331,7 +2375,7 @@ select.gk-input {
   backdrop-filter: blur(4px);
 }
 .gk-modal {
-  background: #fff;
+  background: var(--gk-surface);
   border-radius: 16px;
   box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.2),
@@ -2370,21 +2414,21 @@ select.gk-input {
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  border-bottom: 1px solid var(--gk-border, #e2e8f0);
-  background: #fff;
+  border-bottom: 1px solid var(--gk-outline-variant);
+  background: var(--gk-surface);
 }
 .gk-modal-title {
   margin: 0;
   font-size: 17px;
   font-weight: 600;
-  color: var(--gk-text, #0f172a);
+  color: var(--gk-on-surface);
 }
 .gk-modal-close {
   background: none;
   border: none;
   font-size: 22px;
   cursor: pointer;
-  color: var(--gk-text-muted, #94a3b8);
+  color: var(--gk-on-surface-variant);
   /* Quadratisches Hit-Target, vertikal zentriert; negativer Rand richtet das
      Icon optisch an der Header-Innenkante aus, ohne dass es „an der Kante klebt". */
   width: 36px;
@@ -2399,8 +2443,8 @@ select.gk-input {
   transition: background 0.15s, color 0.15s;
 }
 .gk-modal-close:hover {
-  color: var(--gk-text, #0f172a);
-  background: var(--gk-bg-muted, #f1f5f9);
+  color: var(--gk-on-surface);
+  background: var(--gk-surface-container-high);
 }
 .gk-modal-close:focus-visible {
   outline: 2px solid var(--gk-primary, #4f46e5);
@@ -2411,7 +2455,7 @@ select.gk-input {
 .gk-modal-body {
   padding: 24px;
   overflow-y: auto;
-  background: #fff;
+  background: var(--gk-surface);
 }
 .gk-modal-body .gk-form {
   margin: 0;
@@ -2424,8 +2468,8 @@ select.gk-input {
   justify-content: flex-end;
   gap: 8px;
   padding: 16px 24px;
-  border-top: 1px solid var(--gk-border, #e2e8f0);
-  background: #fff;
+  border-top: 1px solid var(--gk-outline-variant);
+  background: var(--gk-surface);
   flex: 0 0 auto;
 }
 /* Kompatibilität: viele Views nutzen gk-form-actions direkt im Modal als Footer.
@@ -2434,7 +2478,7 @@ select.gk-input {
 .gk-modal > .gk-form-actions {
   margin-top: 0;
   padding: 16px 24px;
-  background: #fff;
+  background: var(--gk-surface);
 }
 
 /* Loading spinner */
@@ -2485,7 +2529,7 @@ select.gk-input {
 }
 .gk-chip-active {
   background: var(--gk-primary);
-  color: #fff;
+  color: var(--gk-on-primary);
   border-color: var(--gk-primary);
 }
 .gk-chip-active:hover {
@@ -2610,35 +2654,20 @@ a.gk-stat-card:hover {
 /* === SIDEBAR === */
 /* Sidebar Hintergrund direkt gesetzt (hohe Spezifität, zuverlässiger als var()-Kette) */
 [data-gk-theme] .gk-sidebar {
-  background: #f4f5f7;
-  color: #374151;
-  border-right: 1px solid #e2e8f0;
+  background: var(--gk-sidebar-bg);
+  color: var(--gk-sidebar-text);
+  border-right: 1px solid var(--gk-sidebar-border);
 }
 [data-gk-mode="dark"] .gk-sidebar {
   color: rgba(255, 255, 255, 0.78);
 }
 
+/* Sieben Regeln haben die Dark-Sidebar aller Themes auf ein einheitliches
+   #010409 gezwungen und damit die themenspezifischen Werte aus themes.css
+   (#0d1225 indigo, #071a2d ocean, #071a12 forest, ...) ausgehebelt. Die
+   Sidebar zieht ihre Flaeche jetzt wie alle anderen Bauteile aus der Rolle. */
 [data-gk-mode="dark"] .gk-sidebar {
-  background: #010409;
-  border-right-color: rgba(255, 255, 255, 0.06);
-}
-[data-gk-theme="indigo"][data-gk-mode="dark"] .gk-sidebar {
-  background: #010409;
-}
-[data-gk-theme="ocean"][data-gk-mode="dark"] .gk-sidebar {
-  background: #010409;
-}
-[data-gk-theme="forest"][data-gk-mode="dark"] .gk-sidebar {
-  background: #010409;
-}
-[data-gk-theme="rose"][data-gk-mode="dark"] .gk-sidebar {
-  background: #010409;
-}
-[data-gk-theme="amber"][data-gk-mode="dark"] .gk-sidebar {
-  background: #010409;
-}
-[data-gk-theme="slate"][data-gk-mode="dark"] .gk-sidebar {
-  background: #010409;
+  border-right-color: var(--gk-sidebar-border);
 }
 
 .gk-sidebar {
@@ -2847,8 +2876,8 @@ a.gk-stat-card:hover {
 .gk-sidebar-badge {
   font-size: 11px;
   font-weight: 600;
-  background: var(--gk-primary, #6366f1);
-  color: #fff;
+  background: var(--gk-sidebar-accent);
+  color: var(--gk-on-primary);
   padding: 1px 7px;
   border-radius: 9999px;
   min-width: 20px;
@@ -2868,11 +2897,11 @@ a.gk-stat-card:hover {
   border-radius: 8px;
   padding: 8px;
   cursor: pointer;
-  color: var(--gk-text-muted, #64748b);
+  color: var(--gk-on-surface-variant);
   transition: all 0.15s;
 }
 .gk-sidebar-toggle:hover {
-  background: var(--gk-surface-container, #f1f5f9);
+  background: var(--gk-surface-container-high);
   color: var(--gk-text);
 }
 
@@ -3251,7 +3280,7 @@ a.gk-stat-card:hover {
   animation: gk-fade-in 0.15s ease;
 }
 .gk-confirm-box {
-  background: var(--gk-bg, #fff);
+  background: var(--gk-surface);
   border-radius: var(--gk-radius);
   box-shadow: var(--gk-shadow-lg);
   width: 90%;
@@ -3273,7 +3302,7 @@ a.gk-stat-card:hover {
 .gk-confirm-body p {
   margin: 0;
   font-size: 14px;
-  color: var(--gk-text-muted, #6b7280);
+  color: var(--gk-on-surface-variant);
   line-height: 1.5;
 }
 .gk-confirm-footer {
@@ -3281,8 +3310,8 @@ a.gk-stat-card:hover {
   justify-content: flex-end;
   gap: 8px;
   padding: 12px 20px;
-  border-top: 1px solid var(--gk-border, #e5e7eb);
-  background: var(--gk-bg-subtle, #f9fafb);
+  border-top: 1px solid var(--gk-outline-variant);
+  background: var(--gk-surface-container-low);
 }
 @keyframes gk-fade-in {
   from {
@@ -3315,8 +3344,8 @@ a.gk-stat-card:hover {
   height: auto;
   min-height: 56px;
   padding: 8px 24px;
-  background: #fff;
-  border-bottom: 1px solid var(--gk-border, #e2e8f0);
+  background: var(--gk-surface);
+  border-bottom: 1px solid var(--gk-outline-variant);
   gap: 16px;
   z-index: 200;
   width: 100%;
@@ -3499,7 +3528,7 @@ a.gk-stat-card:hover {
 .gk-header-search {
   display: flex;
   align-items: center;
-  background: var(--gk-bg-muted, #f1f5f9);
+  background: var(--gk-surface-container);
   border-radius: 9999px;
   padding: 8px 16px;
   gap: 8px;
@@ -3514,7 +3543,7 @@ a.gk-stat-card:hover {
   font-family: inherit;
 }
 .gk-header-search .material-icons {
-  color: var(--gk-text-muted, #94a3b8);
+  color: var(--gk-on-surface-variant);
   font-size: 20px;
 }
 
@@ -3536,7 +3565,7 @@ a.gk-stat-card:hover {
   color: var(--gk-text);
 }
 .gk-header-menu-toggle:hover {
-  background: var(--gk-bg-muted, #f1f5f9);
+  background: var(--gk-surface-container-high);
 }
 
 /* Avatar */
@@ -3551,7 +3580,7 @@ a.gk-stat-card:hover {
   align-items: center;
   justify-content: center;
   background: var(--gk-primary, #6366f1);
-  color: #fff;
+  color: var(--gk-on-primary);
   font-size: 14px;
   font-weight: 600;
 }
@@ -3568,7 +3597,7 @@ a.gk-stat-card:hover {
   white-space: nowrap;
 }
 .gk-header-user:hover {
-  background: var(--gk-bg-muted, #f1f5f9);
+  background: var(--gk-surface-container-high);
 }
 .gk-header-user-name {
   font-size: 14px;
@@ -3588,7 +3617,7 @@ a.gk-stat-card:hover {
   top: 100%;
   right: 0;
   margin-top: 8px;
-  background: #fff;
+  background: var(--gk-surface);
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
   min-width: 200px;
@@ -3609,7 +3638,7 @@ a.gk-stat-card:hover {
   transition: background 0.1s;
 }
 .gk-dropdown-item:hover {
-  background: var(--gk-bg-muted, #f1f5f9);
+  background: var(--gk-surface-container-high);
 }
 .gk-dropdown-item .material-icons {
   font-size: 20px;
@@ -3617,7 +3646,7 @@ a.gk-stat-card:hover {
 }
 .gk-dropdown-divider {
   height: 1px;
-  background: var(--gk-border, #e2e8f0);
+  background: var(--gk-outline-variant);
   margin: 4px 0;
 }
 
@@ -3650,18 +3679,18 @@ a.gk-stat-card:hover {
 /* === TABLE VARIANTS === */
 .gk-table-bordered th,
 .gk-table-bordered td {
-  border: 1px solid var(--gk-border, #e2e8f0);
+  border: 1px solid var(--gk-outline-variant);
 }
 .gk-table-striped tbody tr:nth-child(even) {
-  background: var(--gk-bg-muted, #f8fafc);
+  background: var(--gk-surface-container-low);
 }
 .gk-table-minimal th {
   border: none;
   background: transparent;
-  color: var(--gk-text-muted, #94a3b8);
+  color: var(--gk-on-surface-variant);
 }
 .gk-table-minimal td {
-  border-bottom: 1px solid var(--gk-border, #f1f5f9);
+  border-bottom: 1px solid var(--gk-outline-variant);
 }
 .gk-table-minimal {
   box-shadow: none;
@@ -3673,10 +3702,10 @@ a.gk-stat-card:hover {
 }
 .gk-table-flat th {
   background: transparent;
-  border-bottom: 2px solid var(--gk-border, #e2e8f0);
+  border-bottom: 2px solid var(--gk-outline-variant);
 }
 .gk-table-flat td {
-  border-bottom: 1px solid var(--gk-border, #f1f5f9);
+  border-bottom: 1px solid var(--gk-outline-variant);
 }
 
 /* Celled: Vollstaendiges Gitternetz */
@@ -3740,7 +3769,7 @@ a.gk-stat-card:hover {
   transition: background 0.1s;
 }
 .gk-table-selectable tbody tr:hover {
-  background: var(--gk-primary-50, #eef2ff);
+  background: var(--gk-state-primary);
 }
 
 /* Definition: Erste Spalte als Label */
@@ -3787,7 +3816,7 @@ a.gk-stat-card:hover {
   }
   .gk-table-mobile-card tr {
     display: block;
-    background: #fff;
+    background: var(--gk-surface);
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     padding: 16px;
@@ -3799,7 +3828,7 @@ a.gk-stat-card:hover {
     align-items: center;
     padding: 6px 0;
     border: none;
-    border-bottom: 1px solid var(--gk-border, #f1f5f9);
+    border-bottom: 1px solid var(--gk-outline-variant);
   }
   .gk-table-mobile-card td:last-child {
     border-bottom: none;
@@ -3808,7 +3837,7 @@ a.gk-stat-card:hover {
     content: attr(data-label);
     font-weight: 600;
     font-size: 12px;
-    color: var(--gk-text-muted, #94a3b8);
+    color: var(--gk-on-surface-variant);
     text-transform: uppercase;
     flex: 0 0 40%;
   }
@@ -3935,36 +3964,36 @@ a.gk-stat-card:hover {
   opacity: 1;
 }
 .gk-message-info {
-  background: rgba(14, 165, 233, 0.08);
-  border-color: rgba(14, 165, 233, 0.25);
-  color: #0284c7;
+  background: color-mix(in oklab, var(--gk-info) 8%, transparent);
+  border-color: color-mix(in oklab, var(--gk-info) 25%, transparent);
+  color: var(--gk-on-info-container);
 }
 .gk-message-success {
-  background: rgba(16, 185, 129, 0.08);
-  border-color: rgba(16, 185, 129, 0.25);
-  color: #059669;
+  background: color-mix(in oklab, var(--gk-success) 8%, transparent);
+  border-color: color-mix(in oklab, var(--gk-success) 25%, transparent);
+  color: var(--gk-on-success-container);
 }
 .gk-message-warning {
-  background: rgba(245, 158, 11, 0.08);
-  border-color: rgba(245, 158, 11, 0.25);
-  color: #b45309;
+  background: color-mix(in oklab, var(--gk-warning) 8%, transparent);
+  border-color: color-mix(in oklab, var(--gk-warning) 25%, transparent);
+  color: var(--gk-on-warning-container);
 }
 .gk-message-error {
-  background: rgba(244, 63, 94, 0.08);
-  border-color: rgba(244, 63, 94, 0.25);
-  color: #be123c;
+  background: color-mix(in oklab, var(--gk-error) 8%, transparent);
+  border-color: color-mix(in oklab, var(--gk-error) 25%, transparent);
+  color: var(--gk-on-error-container);
 }
 .gk-message-info .material-icons {
-  color: #0ea5e9;
+  color: var(--gk-info);
 }
 .gk-message-success .material-icons {
-  color: #10b981;
+  color: var(--gk-success);
 }
 .gk-message-warning .material-icons {
-  color: #f59e0b;
+  color: var(--gk-warning);
 }
 .gk-message-error .material-icons {
-  color: #f43f5e;
+  color: var(--gk-error);
 }
 .gk-message-compact {
   padding: 10px 16px;
@@ -4015,7 +4044,7 @@ a.gk-stat-card:hover {
 .gk-card-header > .material-icons {
   font-size: 20px;
   flex: 0 0 auto;
-  color: var(--gk-text-secondary, #64748b);
+  color: var(--gk-on-surface-variant);
 }
 /* Aktionen (Buttons/Links) rechtsbündig im Card-Header */
 .gk-card-actions {
@@ -4350,7 +4379,7 @@ a.gk-stat-card:hover {
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  background: var(--gk-primary-100, #e0e7ff);
+  background: var(--gk-primary-container);
   color: var(--gk-primary-700, #4338ca);
   font-weight: 600;
   text-transform: uppercase;
@@ -4396,16 +4425,16 @@ a.gk-stat-card:hover {
   border: 2px solid var(--gk-surface, #fff);
 }
 .gk-avatar-status.online {
-  background: #10b981;
+  background: var(--gk-success);
 }
 .gk-avatar-status.offline {
-  background: #94a3b8;
+  background: var(--gk-outline);
 }
 .gk-avatar-status.busy {
-  background: #f43f5e;
+  background: var(--gk-error);
 }
 .gk-avatar-status.away {
-  background: #f59e0b;
+  background: var(--gk-warning);
 }
 .gk-avatar-lg .gk-avatar-status {
   width: 14px;
@@ -4616,6 +4645,11 @@ a.gk-stat-card:hover {
   --gk-tertiary-container: #065f46;
   --gk-on-tertiary-container: #d1fae5;
 
+  --gk-success: #34d399;
+  --gk-on-success: #064e3b;
+  --gk-success-container: #065f46;
+  --gk-on-success-container: #d1fae5;
+
   --gk-error: #fda4af;
   --gk-on-error: #6b1028;
   --gk-error-container: #881337;
@@ -4635,6 +4669,13 @@ a.gk-stat-card:hover {
   --gk-outline-variant: rgba(255, 255, 255, 0.08);
 
   --gk-warning: #fbbf24;
+  --gk-on-warning: #78350f;
+  --gk-warning-container: #78350f;
+  --gk-on-warning-container: #fde68a;
+  --gk-info: #38bdf8;
+  --gk-on-info: #0c4a6e;
+  --gk-info-container: #1e40af;
+  --gk-on-info-container: #bfdbfe;
   --gk-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   --gk-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.4);
 
@@ -4649,10 +4690,17 @@ a.gk-stat-card:hover {
   --gk-border: rgba(255, 255, 255, 0.08);
 
   /* Legacy dark overrides */
-  --gk-primary-hover: #818cf8;
-  --gk-success-hover: #34d399;
-  --gk-warning-hover: #fbbf24;
-  --gk-danger-hover: #fda4af;
+  /* Hover-Stufen: der @supports-Block am Dateiende leitet sie aus der jeweils
+     geltenden Rolle ab. Diese Werte sind nur der Rueckfall fuer Browser ohne
+     relative Farbsyntax — sie muessen im Dark Mode mitgedreht werden, sonst
+     faehrt der Rueckfallpfad dort die Light-Mode-Richtung. */
+  --gk-primary-hover: #93a1e8;
+  --gk-tertiary-hover: #59d3a4;
+  --gk-success-hover: #01bf87;
+  --gk-warning-hover: #e7ac00;
+  --gk-error-hover: #e8919c;
+  --gk-warning-text: #fbbf24;
+  --gk-success-text: #34d399;
   --gk-neutral-50: #2d333b;
   --gk-neutral-100: #21262d;
   --gk-neutral-200: #161b22;
@@ -4688,10 +4736,6 @@ a.gk-stat-card:hover {
   background: #161b22;
 }
 /* (Dark table overrides consolidated below in Comprehensive Overrides section) */
-[data-gk-mode="dark"] .gk-toolbar,
-.gk-dark .gk-toolbar {
-  border-bottom-color: var(--gk-outline-variant);
-}
 [data-gk-mode="dark"] .gk-search,
 .gk-dark .gk-search {
   background-color: #0d1117;
@@ -4808,10 +4852,6 @@ a.gk-stat-card:hover {
 }
 
 /* Cards grid dark mode */
-[data-gk-mode="dark"] .gk-card-header,
-.gk-dark .gk-card-header {
-  border-bottom-color: rgba(255, 255, 255, 0.08);
-}
 [data-gk-mode="dark"] .gk-card-footer,
 .gk-dark .gk-card-footer {
   border-top-color: rgba(255, 255, 255, 0.08);
@@ -4891,10 +4931,6 @@ a.gk-stat-card:hover {
 .gk-dark .gk-header-search input {
   background: transparent;
   border: none;
-  color: var(--gk-on-surface);
-}
-[data-gk-mode="dark"] .gk-header-user,
-.gk-dark .gk-header-user {
   color: var(--gk-on-surface);
 }
 [data-gk-mode="dark"] .gk-header-user:hover,
@@ -4990,10 +5026,6 @@ a.gk-stat-card:hover {
   background: #0d1117;
   border-color: rgba(255, 255, 255, 0.15);
   color: var(--gk-on-surface);
-}
-[data-gk-mode="dark"] .gk-select-search-input,
-.gk-dark .gk-select-search-input {
-  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Dark Mode: Breadcrumbs */
@@ -5137,7 +5169,7 @@ a.gk-stat-card:hover {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border: 1px solid #dde1e6;
+  border: 1px solid var(--gk-outline-variant);
   border-radius: 8px;
   background: var(--gk-surface-container-lowest, #fff);
   cursor: pointer;
@@ -5212,10 +5244,10 @@ a.gk-stat-card:hover {
   transition: background 0.1s;
 }
 .gk-select-option:hover {
-  background: var(--gk-surface-container, #f1f5f9);
+  background: var(--gk-surface-container-high);
 }
 .gk-select-option.selected {
-  background: rgba(99, 102, 241, 0.08);
+  background: var(--gk-state-primary);
   color: var(--gk-primary);
   font-weight: 500;
 }
@@ -5313,7 +5345,7 @@ a.gk-stat-card:hover {
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  border: 1px solid #dde1e6;
+  border: 1px solid var(--gk-outline-variant);
   border-radius: 8px;
   background: var(--gk-surface-container-lowest, #fff);
   height: 44px;
@@ -5483,7 +5515,7 @@ a.gk-stat-card:hover {
 }
 .gk-richtext-wrap:focus-within {
   border-color: var(--gk-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: var(--gk-focus-ring-soft);
 }
 .gk-richtext-wrap .ck-editor__editable {
   min-height: 320px;
@@ -5517,33 +5549,18 @@ a.gk-stat-card:hover {
 }
 
 /* --- Buttons: outlined primary/colors → theme-aware --- */
-[data-gk-mode="dark"] .gk-btn-outlined.gk-btn-primary,
-.gk-dark .gk-btn-outlined.gk-btn-primary {
-  color: var(--gk-primary);
-  border-color: var(--gk-primary);
-}
 [data-gk-mode="dark"] .gk-btn-outlined.gk-btn-primary:hover,
 .gk-dark .gk-btn-outlined.gk-btn-primary:hover {
   background: rgba(var(--gk-primary-rgb, 99, 102, 241), 0.12);
 }
 
 /* --- Buttons: filled primary → theme-aware --- */
-[data-gk-mode="dark"] .gk-btn-filled.gk-btn-primary,
-.gk-dark .gk-btn-filled.gk-btn-primary {
-  background: var(--gk-primary);
-  border-color: var(--gk-primary);
-  color: var(--gk-on-primary);
-}
 [data-gk-mode="dark"] .gk-btn-filled.gk-btn-primary:hover,
 .gk-dark .gk-btn-filled.gk-btn-primary:hover {
   filter: brightness(1.1);
 }
 
 /* --- Buttons: text neutral --- */
-[data-gk-mode="dark"] .gk-btn-text.gk-btn-neutral,
-.gk-dark .gk-btn-text.gk-btn-neutral {
-  color: var(--gk-on-surface-variant);
-}
 [data-gk-mode="dark"] .gk-btn-text.gk-btn-neutral:hover,
 .gk-dark .gk-btn-text.gk-btn-neutral:hover {
   background: rgba(255, 255, 255, 0.06);
@@ -5603,24 +5620,8 @@ a.gk-stat-card:hover {
 }
 
 /* Dark: Minimal */
-[data-gk-mode="dark"] .gk-table-minimal th,
-.gk-dark .gk-table-minimal th {
-  color: #8b949e;
-}
-[data-gk-mode="dark"] .gk-table-minimal td,
-.gk-dark .gk-table-minimal td {
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-}
 
 /* Dark: Flat */
-[data-gk-mode="dark"] .gk-table-flat th,
-.gk-dark .gk-table-flat th {
-  border-bottom-color: rgba(255, 255, 255, 0.12);
-}
-[data-gk-mode="dark"] .gk-table-flat td,
-.gk-dark .gk-table-flat td {
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-}
 
 /* Dark: Selectable */
 [data-gk-mode="dark"] .gk-table-selectable tbody tr:hover,
@@ -5636,10 +5637,6 @@ a.gk-stat-card:hover {
 }
 
 /* Dark: Striped (explizit) */
-[data-gk-mode="dark"] .gk-table-striped tbody tr:nth-child(even),
-.gk-dark .gk-table-striped tbody tr:nth-child(even) {
-  background: #1c2128;
-}
 
 /* Dark Mode: Table Mobile Card */
 [data-gk-mode="dark"] .gk-table-mobile-card tr,
@@ -5664,6 +5661,7 @@ a.gk-stat-card:hover {
 .gk-dark .gk-input::placeholder {
   color: #484f58;
 }
+
 [data-gk-mode="dark"] .gk-input:focus,
 .gk-dark .gk-input:focus {
   border-color: var(--gk-primary);
@@ -6187,3 +6185,24 @@ a.gk-stat-card:hover {
 }
 [data-theme="dark"] .gk-search-treffer mark { background: #854d0e; color: #fef9c3; }
 [data-theme="dark"] .gk-search-overlay { background: rgba(0, 0, 0, 0.6); }
+
+/* ===================================================================
+   ABGELEITETE ZUSTANDSFARBEN
+   Bewusst am Dateiende: dieser Block muss den Rueckfall-Literalen im
+   Rollenblock UND allen modusabhaengigen Bloecken nachstehen, damit die
+   Ableitung in jedem Theme und in beiden Modi greift.
+   Aeltere Browser ohne relative Farbsyntax behalten die Literale.
+   =================================================================== */
+@supports (color: oklch(from red l c h)) {
+  .gk-root,
+  [data-gk-theme] {
+    --gk-primary-hover: oklch(from var(--gk-primary) calc(l - 0.06) c h);
+    --gk-tertiary-hover: oklch(from var(--gk-tertiary) calc(l - 0.06) c h);
+    --gk-success-hover: oklch(from var(--gk-success) calc(l - 0.06) c h);
+    --gk-error-hover: oklch(from var(--gk-error) calc(l - 0.06) c h);
+    --gk-warning-hover: oklch(from var(--gk-warning) calc(l - 0.06) c h);
+    /* Textrollen: staerker abgedunkelt, damit der Kontrast auf heller Flaeche haelt */
+    --gk-warning-text: oklch(from var(--gk-warning) calc(l - 0.10) c h);
+    --gk-success-text: oklch(from var(--gk-success) calc(l - 0.10) c h);
+  }
+}
