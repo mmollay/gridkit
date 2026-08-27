@@ -28,7 +28,11 @@ class Auth {
     public static function protect(string $loginUrl = 'login.php'): void {
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (!self::check()) {
-            $_SESSION['gk_intended'] = $_SERVER['REQUEST_URI'];
+            // Every other class in the library guards this the same way. Auth
+            // was the one that did not, so a page guarded from a context
+            // without REQUEST_URI — a CLI task, a queue worker, a test —
+            // emitted a notice before redirecting.
+            $_SESSION['gk_intended'] = $_SERVER['REQUEST_URI'] ?? '/';
             header('Location: ' . $loginUrl);
             exit;
         }

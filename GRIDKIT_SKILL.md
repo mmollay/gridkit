@@ -60,7 +60,7 @@ without tripping over this.
 |---|---|---|
 | `Table::render()` | `Form::render()` | `Sidebar::render()` |
 | `StatCards::render()` | `FilterChips::render()` | `TableHeader::render()` |
-| `YearFilter::render()` | `Pagination::render()` | `PageSize::render()` |
+| `YearFilter::render()` | `Pagination::render()` | `PageSize::make()->…->render()` |
 | `ActionGroup::render()` | `Modal::container()` | `BelegModal::container()` |
 
 **These RETURN a string. You must echo it — `<?= … ?>`:**
@@ -451,6 +451,25 @@ echo (new Header())
     ->render();
 ```
 
+**The name and role above are yours to supply — `Auth::user()` does not return
+this array.** It returns the *username* as a plain string, or `null` when nobody
+is signed in. There is no `name`, `role` or `id` on it, and `$me['role']` against
+it is a fatal `TypeError: Cannot access offset of type string on string`. The
+users file holds `username:bcrypt-hash` and nothing more, so a display name or a
+role has to come from a table of your own, keyed by that username:
+
+```php
+$profiles = ['jsmith' => ['name' => 'Jane Smith', 'role' => 'Administrator']];
+
+$user = Auth::user();                     // 'jsmith', or null when signed out
+if ($user !== null) {
+    // The fallback has to be a string: ->user() takes one, and handing it the
+    // null that Auth::user() returns when nobody is signed in is a TypeError.
+    $me = $profiles[$user] ?? ['name' => $user, 'role' => ''];
+    echo (new Header())->user($me['name'], ['role' => $me['role']])->render();
+}
+```
+
 **`->user()` already contains a theme switcher.** Adding
 `->action(Theme::switcher())` beside it puts twelve theme dots and two mode
 toggles on the page, with competing active states and no error. Pick one:
@@ -547,8 +566,21 @@ $yf->baseUrl('/my-page')
    ->preserve(['status'])
    ->render();
 
-$currentYear = $yf->current();  // int — use for DB queries
+$currentYear = $yf->current();  // int — but UNVALIDATED, see below
 ```
+
+`current()` is a raw `(int)` cast of the query parameter. `range()` and `years()`
+only build the chips; they do not constrain it. `?year=abc` hands you `0` and
+`?year=1999` hands you `1999` — the report comes back empty, no chip is active,
+and nothing warns you. Clamp it against your own list before it reaches a query:
+
+```php
+$currentYear = (int) ($_GET['year'] ?? date('Y'));
+$years = range(2022, (int)date('Y'));
+if (!in_array($currentYear, $years, true)) $currentYear = (int)date('Y');
+```
+
+With `allOption()` set, `0` is the legitimate "all years" value — allow it too.
 
 ### SortLink
 
@@ -765,6 +797,49 @@ echo json_encode(['ok' => true, 'message' => 'Saved!']);  // with toast
 echo json_encode(['ok' => false, 'errors' => ['email' => 'Already exists']]);  // validation
 ```
 
+### Auth
+
+**Accounts live in a file, not in your code.** There is no array, DSN or
+callback way to register users — `Auth::users([...])` and friends do not exist,
+and calling one is a fatal error. The only knob is which file to read:
+
+```php
+Auth::setUsersFile(__DIR__ . '/users.conf');   // default: /etc/gridkit-users.conf
+```
+
+One account per line, `username:bcrypt-hash`; `#` starts a comment. The file
+stores nothing else — no display name, no role, no e-mail. `Auth::user()`
+returns the username string and that is the whole identity GridKit has.
+
+```
+# users.conf — generate hashes with Auth::hashPassword('secret')
+jane:$2y$12$37brFYi./gIWudvG263/x.TjcGi0cAE/RfrL2KAAlpcgUuHtlPiDq
+```
+
+The whole surface — six calls:
+
+- `Auth::protect(string $loginUrl = 'login.php'): void` — guard a page. Redirects
+  and exits when nobody is signed in, remembering where they were headed.
+- `Auth::login(string $username, string $password, bool $remember = false): bool`
+  — `$remember` sets a 30-day cookie. There is no `Auth::attempt()`.
+- `Auth::check(): bool` — signed in? No redirect.
+- `Auth::user(): ?string` — the username, or `null`.
+- `Auth::logout(string $redirectTo = 'login.php'): void`
+- `Auth::hashPassword(string $password): string` — bcrypt, cost 12. This is what
+  you write into `users.conf`.
+
+Plus `Auth::renderLogin(array $opts = [])`, which PRINTS a complete login page —
+its own `<html>`, its own stylesheet. Give it `['error' => '…']` after a failed
+attempt and `['action' => '…']` if the form should post somewhere other than the
+current URL.
+
+There is no `Auth::attempt()` — the login call is `login()`, and its full
+signature is `login(string $username, string $password, bool $remember = false): bool`.
+
+`Auth::renderLogin([...])` PRINTS a complete standalone login page — call it as
+a statement, never echo it. Options: `error`, `title`, `subtitle`, `icon`,
+`action`, `cssPath`, `jsPath`, `footer`.
+
 ### Theme
 
 ```php
@@ -832,6 +907,19 @@ Server-side pager **below** `.gk-table-wrap`, not inside the card and not
 and not inside the live container. Same look as `GK.rowPager`
 (`.gk-rowpager` / `.gk-pg`).
 
+**The two URL parameters you read yourself.** This pager does *not* use the
+`gk_*` convention of `Table`: the page links are `?…&page=N` and the PageSize
+select carries `per_page`. Reading `gk_page` here leaves the page stuck on 1
+with no error.
+
+```php
+$page    = max(1, (int) ($_GET['page'] ?? 1));   // NOT gk_page
+$perPage = PageSize::make()->resolve(25);        // $_GET['per_page'], checked against the options
+```
+
+Rename either with `'pageParam' => 'p'` on `Pagination` and
+`'pageSize' => ['param' => 'rows']` / `PageSize::make('rows')`.
+
 ```php
 // The page, on first render — a sibling below the table:
 Pagination::fromPaginator($items, [
@@ -839,6 +927,17 @@ Pagination::fromPaginator($items, [
     'live'     => 'exp-live',          // binds the AJAX clicks + replace target
     'pageSize' => ['current' => $perPage, 'live' => 'exp-live'],
     'params'   => ['year' => $year, 'q' => $q ?: null],
+]);
+
+// No paginator object, just numbers? `page` + `totalPages` are the two keys that
+// build the link list — miss either one and you silently get the count bar alone.
+// The other keys (total, label, live, pageSize, params) are the same as above.
+Pagination::render([
+    'page'       => $page,
+    'totalPages' => (int) ceil($total / $perPage),   // NOT 'pages'/'last'/'pageCount'
+    'total'      => $total,
+    'label'      => 'Expenses',
+    'params'     => ['year' => $year],
 ]);
 
 // In the live partial (AJAX), so the counter and page list follow the filter:
@@ -849,6 +948,22 @@ Pagination::fromPaginator($items, [
 
 Short lists with no server-side LIMIT: put `data-gk-rows="25"` on the table and
 the client-side `GK.rowPager` builds the same bar.
+
+`PageSize` on its own is the one printer in that table you do **not** call
+statically: build it fluently, then `render()`.
+
+```php
+// Live mode — bound to a data-gk-live-table container:
+PageSize::make('per_page')->current($perPage)->options([25, 50, 100])
+    ->live('exp-live')->label('Rows')->render();
+
+// Navigate mode — full reload, keeping the listed $_GET keys:
+PageSize::make('per_page')->current($perPage)
+    ->baseUrl('/expenses')->preserve(['year', 'sort', 'dir', 'lang'])->render();
+
+// In the controller: the chosen value, checked against the options whitelist.
+$perPage = PageSize::make('per_page')->options([25, 50, 100])->resolve(25);
+```
 
 ### Global search (`GK.search`)
 

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-use GridKit\{Lang, Layout, Modal, Sidebar, StatCards, Header, Select, Table, YearFilter};
+use GridKit\{FilterChips, Lang, Layout, Modal, PageSize, Pagination, Sidebar, StatCards, Header, Select, Table, YearFilter};
 
 /** @return array<string,callable> */
 return [
@@ -227,6 +227,53 @@ return [
     $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
     T::contains($js, '_staticPager', 'the client cannot rebuild the pager it removes');
     T::contains($js, 'wrap._gkPage = parseInt(btn.dataset.gkPage', 'the page button still asks the server');
+},
+
+'no component needs a superglobal that may not be there' => function (): void {
+    // Auth::protect() read $_SERVER['REQUEST_URI'] without a fallback, so
+    // guarding a page from a CLI task or a queue worker emitted a notice
+    // before it redirected. Every other class in the library guards it.
+    //
+    // Reading the source for this is a losing game — !empty($_SERVER['HTTPS'])
+    // is perfectly safe and a regex cannot tell. So strip the superglobal and
+    // watch what the components actually do.
+    $saved = $_SERVER;
+    foreach (['REQUEST_URI', 'HTTP_HOST', 'QUERY_STRING', 'HTTPS', 'SCRIPT_NAME'] as $k) {
+        unset($_SERVER[$k]);
+    }
+
+    $notices = [];
+    set_error_handler(static function (int $n, string $msg) use (&$notices): bool {
+        if (str_contains($msg, 'Undefined array key') || str_contains($msg, 'Undefined index')) {
+            $notices[] = $msg;
+        }
+        return true;
+    });
+
+    Lang::set('en');
+    try {
+        // Enough rows that the pager really renders — one row at paginate(1)
+        // renders none, which is how the first version of this check passed
+        // while a missing guard sat two files away.
+        $rows = [];
+        for ($i = 1; $i <= 5; $i++) $rows[] = ['id' => $i, 'n' => 'Row ' . $i];
+        T::capture(fn() => (new Table('t'))->setData($rows)
+            ->search(['n'])->filter('n', 'select', ['options' => ['a' => 'A']])
+            ->column('n', 'N')->paginate(2)->render());
+        T::capture(fn() => Pagination::render(['page' => 2, 'totalPages' => 4, 'total' => 40]));
+        T::capture(fn() => PageSize::make('per_page')->current(10)->render());
+        T::capture(fn() => (new FilterChips('f', 'status'))->chip('a', 'A')->render());
+        T::capture(fn() => (new StatCards('s'))->card('X', 1)->render());
+        T::capture(fn() => (new YearFilter('y'))->years([2025, 2026])->render());
+        (new Header())->title('T')->render();
+        Layout::asset('css/gridkit.css');
+    } finally {
+        restore_error_handler();
+        $_SERVER = $saved;
+    }
+
+    T::eq($notices, [], 'a component needs a superglobal that was not there: '
+        . implode(' | ', array_unique($notices)));
 },
 
 'the year dropdown has a name like every other filter' => function (): void {
