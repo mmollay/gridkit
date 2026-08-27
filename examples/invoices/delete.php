@@ -35,7 +35,7 @@ if (!$invoice) {
   <input type="hidden" name="lang" value="<?= e($lang) ?>">
 
   <p style="margin:0 0 6px;font-size:15px;">
-    <?= e(str_replace('{number}', $invoice['number'], t('delete_ask'))) ?>
+    <?= e(t('delete_ask', ['number' => $invoice['number']])) ?>
   </p>
   <p style="margin:0 0 4px;color:var(--gk-on-surface-variant);font-size:13.5px;">
     <?= e($invoice['customer']) ?> · <?= e(t('delete_note')) ?>

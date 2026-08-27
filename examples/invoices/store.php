@@ -27,83 +27,25 @@ if (!in_array($lang, ['en', 'de'], true)) {
     $lang = 'en';
 }
 $_SESSION['inv_lang'] = $lang;
+Lang::loadDir(__DIR__ . '/lang');   // this example's strings, beside GridKit's
 Lang::set($lang);
 
 /**
- * Strings that belong to this example rather than to GridKit. GridKit's own
- * catalogue covers the framework's chrome; an application still writes its own.
+ * This example's own strings, in GridKit's catalogue rather than beside it.
+ *
+ * Lang::loadDir() reads lang/en.php and lang/de.php and MERGES them, so one
+ * Lang::t() answers for both GridKit's chrome and the application — with
+ * {placeholder} substitution, and with the js.* keys reaching the browser
+ * through Lang::jsConfig(). Until 1.49.0 this file carried a 63-entry array
+ * and a lookup of its own, which is what people write when they have not
+ * found loadDir(); GRIDKIT_SKILL.md recommended exactly that, for two
+ * releases, because nobody had found it.
+ *
+ * @param array<string,scalar> $params
  */
-function t(string $key): string
+function t(string $key, array $params = []): string
 {
-    static $strings = [
-        'en' => [
-            'app'            => 'Invoices',
-            'subtitle'       => 'A complete GridKit application — about 300 lines.',
-            'new'            => 'New invoice',
-            'edit'           => 'Edit invoice',
-            'delete'         => 'Delete invoice',
-            'delete_ask'     => 'Delete invoice {number}?',
-            'delete_note'    => 'This cannot be undone.',
-            'cancel'         => 'Cancel',
-            'save'           => 'Save',
-            'number'         => 'Invoice no.',
-            'customer'       => 'Customer',
-            'issued'         => 'Issued',
-            'due'            => 'Due',
-            'amount'         => 'Amount',
-            'status'         => 'Status',
-            'notes'          => 'Notes',
-            'stat_count'     => 'Invoices',
-            'stat_total'     => 'Total',
-            'stat_open'      => 'Outstanding',
-            'stat_overdue'   => 'Overdue',
-            'reset'          => 'Reset sample data',
-            'reset_done'     => 'Sample data restored.',
-            'required'       => 'Required.',
-            'not_a_number'   => 'Enter an amount.',
-            'st_draft'       => 'draft',
-            'st_sent'        => 'sent',
-            'st_paid'        => 'paid',
-            'st_overdue'     => 'overdue',
-            'empty'          => 'No invoices yet',
-            'empty_hint'     => 'Create the first one — it is stored in your session.',
-        ],
-        'de' => [
-            'app'            => 'Rechnungen',
-            'subtitle'       => 'Eine vollständige GridKit-Anwendung — rund 300 Zeilen.',
-            'new'            => 'Neue Rechnung',
-            'edit'           => 'Rechnung bearbeiten',
-            'delete'         => 'Rechnung löschen',
-            'delete_ask'     => 'Rechnung {number} löschen?',
-            'delete_note'    => 'Das lässt sich nicht rückgängig machen.',
-            'cancel'         => 'Abbrechen',
-            'save'           => 'Speichern',
-            'number'         => 'Rechnungsnr.',
-            'customer'       => 'Kunde',
-            'issued'         => 'Ausgestellt',
-            'due'            => 'Fällig',
-            'amount'         => 'Betrag',
-            'status'         => 'Status',
-            'notes'          => 'Notizen',
-            'stat_count'     => 'Rechnungen',
-            'stat_total'     => 'Gesamt',
-            'stat_open'      => 'Offen',
-            'stat_overdue'   => 'Überfällig',
-            'reset'          => 'Beispieldaten zurücksetzen',
-            'reset_done'     => 'Beispieldaten wiederhergestellt.',
-            'required'       => 'Pflichtfeld.',
-            'not_a_number'   => 'Bitte einen Betrag eingeben.',
-            'st_draft'       => 'Entwurf',
-            'st_sent'        => 'versendet',
-            'st_paid'        => 'bezahlt',
-            'st_overdue'     => 'überfällig',
-            'empty'          => 'Noch keine Rechnungen',
-            'empty_hint'     => 'Lege die erste an — sie liegt in deiner Sitzung.',
-        ],
-    ];
-
-    global $lang;
-    return $strings[$lang][$key] ?? $strings['en'][$key] ?? $key;
+    return Lang::t('app.' . $key, $params);
 }
 
 /** The four states an invoice can be in, as value => label. */

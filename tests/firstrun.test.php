@@ -177,6 +177,36 @@ return [
         . ' unlisted / ' . implode(', ', array_diff($listed, $actual)) . ' invented');
 },
 
+'the example uses the translation mechanism the library ships' => function (): void {
+    // The example carried a 63-entry array and a lookup of its own — which is
+    // what people write when they have not found Lang::loadDir(). Three agents
+    // reported that "there is no way to register application strings", and
+    // 1.45.0 documented that workaround as the recommended pattern, because
+    // nobody involved had found it either. The example is what people copy.
+    $store = (string) file_get_contents(GK_ROOT . '/examples/invoices/store.php');
+
+    T::contains($store, 'Lang::loadDir', 'the example no longer uses the catalogue');
+    T::ok(!preg_match('/static \$strings = \[/', $store),
+        'the example keeps a translation array of its own again');
+
+    foreach (['en', 'de'] as $loc) {
+        $file = GK_ROOT . "/examples/invoices/lang/$loc.php";
+        T::ok(is_file($file), "examples/invoices/lang/$loc.php is missing");
+        $strings = require $file;
+        T::ok(count($strings) > 20, "$loc.php has only " . count($strings) . ' strings');
+        foreach (array_keys($strings) as $key) {
+            T::ok(str_starts_with($key, 'app.'),
+                "an unprefixed key can collide with GridKit's own: $key");
+        }
+    }
+
+    // en and de must define the same keys, like GridKit's own catalogue.
+    $en = array_keys(require GK_ROOT . '/examples/invoices/lang/en.php');
+    $de = array_keys(require GK_ROOT . '/examples/invoices/lang/de.php');
+    sort($en); sort($de);
+    T::eq($en, $de, 'the example locales define different keys');
+},
+
 'every documented install path names something reachable' => function (): void {
     $readme = (string) file_get_contents(GK_ROOT . '/README.md');
     // A Composer install puts the assets under vendor/, and Layout::asset()

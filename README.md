@@ -61,8 +61,9 @@ The snippet above is a table. This is what it looks like around one:
 
 [`examples/invoices/`](examples/invoices/) is a working invoice manager — list,
 create, edit, delete, with search, filter, sort and paging answered by the
-server over AJAX. English and German. Around 670 lines across five files, no
-database, no build step.
+server over AJAX. English and German, its own strings loaded into GridKit's
+catalogue with `Lang::loadDir()`. Around 700 lines across five files and a
+`lang/` directory, no database, no build step.
 
 ```bash
 git clone https://github.com/mmollay/gridkit.git
