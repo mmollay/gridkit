@@ -334,6 +334,35 @@ return [
         'without width:auto the base width:100% wins and the header overflows');
 },
 
+'an invisible tooltip cannot widen a phone screen' => function (): void {
+    // [data-gk-tooltip]::after is position:absolute, white-space:nowrap and
+    // opacity:0 — laid out while invisible. On the demo at 390px the document
+    // scrolled 58px sideways with no visible element anywhere near the edge,
+    // which is why several mobile passes went straight past it. The left and
+    // right variants reach out with left/right:100% and add their own.
+    $css = (string) file_get_contents(__DIR__ . '/../css/gridkit.css');
+
+    preg_match_all('/@media \(max-width: 640px\) \{(.*?)\n\}/s', $css, $m);
+    $mobile = implode("\n", $m[1] ?? []);
+    T::contains($mobile, '[data-gk-tooltip]::after',
+        'the tooltip has no narrow-screen cap');
+    T::contains($mobile, 'max-width',
+        'the cap does not limit the width');
+    T::contains($mobile, '[data-gk-tooltip-pos="right"]::after',
+        'a side tooltip still reaches past the screen edge on a phone');
+
+    // Source order decides here: same specificity, so the override has to come
+    // AFTER the position rules or it simply loses. It did, for one revision —
+    // and the first version of this check compared the block against itself,
+    // because the block contains the very selector it was looking for.
+    $mobileAt = strpos($css, '@media (max-width: 640px)');
+    $sideAt   = strpos($css, '[data-gk-tooltip-pos="right"]::after {');   // the original
+    T::ok($mobileAt !== false && $sideAt !== false, 'the tooltip rules moved');
+    T::ok($mobileAt > $sideAt,
+        'the narrow-screen block sits before the side rule it means to override,'
+        . " so it loses on source order (block at $mobileAt, rule at $sideAt)");
+},
+
 'the year dropdown has a name like every other filter' => function (): void {
     Lang::set('en');
     $html = T::capture(fn() => (new YearFilter('y'))

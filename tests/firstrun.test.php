@@ -207,6 +207,60 @@ return [
     T::eq($en, $de, 'the example locales define different keys');
 },
 
+'a Composer install works, laid out the way Composer lays it out' => function (): void {
+    // The README has offered `composer require mmollay/gridkit` since the
+    // start, and nobody had ever run one — Packagist has served v1.4.0 since
+    // March and the package has one download. So: build the archive Packagist
+    // would ship, put it where Composer would put it, generate the autoloader
+    // Composer would generate, and see whether the documented asset path
+    // resolves. That path is the one thing a plain clone never exercises.
+    $base = sys_get_temp_dir() . '/gk-composer-' . getmypid();
+    $pkg  = $base . '/vendor/mmollay/gridkit';
+    @mkdir($pkg, 0700, true);
+
+    // git archive honours .gitattributes export-ignore — this IS the package.
+    exec('git -C ' . escapeshellarg(GK_ROOT) . ' archive --format=tar HEAD | tar -x -C '
+        . escapeshellarg($pkg) . ' 2>/dev/null', $ignored, $code);
+    T::eq($code, 0, 'could not build the package archive');
+    T::ok(is_file($pkg . '/autoload.php'), 'the package has no autoload.php');
+    T::ok(is_file($pkg . '/css/gridkit.css'), 'the package ships no stylesheet');
+
+    // Composer's autoloader in miniature: the PSR-4 map, then the files entry.
+    $boot = "<?php\n"
+        . "spl_autoload_register(function (\$c) {\n"
+        . "    if (!str_starts_with(\$c, 'GridKit\\\\')) return;\n"
+        . "    \$f = __DIR__ . '/mmollay/gridkit/src/' . str_replace('\\\\', '/', substr(\$c, 8)) . '.php';\n"
+        . "    if (is_file(\$f)) require \$f;\n"
+        . "});\n"
+        . "require __DIR__ . '/mmollay/gridkit/autoload.php';\n";
+    file_put_contents($base . '/vendor/autoload.php', $boot);
+
+    $app = "<?php\n"
+        . "require __DIR__ . '/vendor/autoload.php';\n"
+        . "GridKit\\Lang::set('de');\n"
+        . "echo 'LANG:' . GridKit\\Lang::t('table.search') . PHP_EOL;\n"
+        . "ob_start();\n"
+        . "(new GridKit\\Table('t'))->setData([['n' => 'A']])->column('n', 'N')->render();\n"
+        . "echo 'TABLE:' . strlen(ob_get_clean()) . PHP_EOL;\n"
+        . "echo 'ASSET:' . GridKit\\Layout::asset('vendor/mmollay/gridkit/css/gridkit.css') . PHP_EOL;\n";
+    file_put_contents($base . '/index.php', $app);
+
+    $out = shell_exec('cd ' . escapeshellarg($base) . ' && php index.php 2>&1') ?? '';
+    T::notContains($out, 'Fatal error', "a Composer install dies: $out");
+    T::notContains($out, 'Warning',     "a Composer install warns: $out");
+    T::contains($out, 'LANG:Suchen',  'Lang did not load through the files autoload');
+    T::ok((bool) preg_match('/TABLE:(\\d+)/', $out, $m) && (int) $m[1] > 200,
+        'the table rendered nothing through a Composer install');
+
+    // The documented path must resolve to the file that is really there.
+    preg_match('/ASSET:(\\S+)/', $out, $a);
+    T::ok(isset($a[1]), 'Layout::asset() produced no URL');
+    $path = $base . '/' . preg_replace('/\\?.*/', '', $a[1]);
+    T::ok(is_file($path), "the documented asset URL {$a[1]} resolves to nothing");
+    T::contains($a[1], '?v=' . filemtime($pkg . '/css/gridkit.css'),
+        'the URL does not carry the vendored file own timestamp');
+},
+
 'every documented install path names something reachable' => function (): void {
     $readme = (string) file_get_contents(GK_ROOT . '/README.md');
     // A Composer install puts the assets under vendor/, and Layout::asset()

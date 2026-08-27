@@ -5956,6 +5956,7 @@ a.gk-stat-card:hover {
   transform: translateY(0);
 }
 
+
 /* Positions */
 [data-gk-tooltip]::after,
 [data-gk-tooltip-pos="top"]::after {
@@ -6006,6 +6007,37 @@ a.gk-stat-card:hover {
   max-width: 280px;
   text-align: left;
 }
+
+/* A CSS tooltip is position:absolute with white-space:nowrap and opacity:0 —
+   so it is LAID OUT even while invisible, and a long one widens the page it
+   sits on. Measured on the demo at 390px: the document scrolled 58px sideways
+   with no visible element anywhere near the edge, which is why it survived
+   several mobile passes. Capping the width on a narrow screen costs the
+   desktop look nothing. */
+@media (max-width: 640px) {
+  [data-gk-tooltip]::after {
+    max-width: min(70vw, 240px);
+    white-space: normal;
+    text-align: center;
+  }
+  /* left/right tooltips reach out sideways with left/right: 100%, which on a
+     phone puts them past the screen edge — and, being laid out, widens the
+     page. On a narrow screen every tooltip goes above its element instead,
+     where it stays within the element's own horizontal span. */
+  [data-gk-tooltip-pos="left"]::after,
+  [data-gk-tooltip-pos="right"]::after {
+    top: auto;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateY(4px);
+  }
+  [data-gk-tooltip-pos="left"]:hover::after,
+  [data-gk-tooltip-pos="right"]:hover::after {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 
 /* Rich Tooltip (HTML content from hidden element) */
 .gk-tooltip-content {

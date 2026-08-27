@@ -56,6 +56,42 @@ return [
     T::contains($js, 't.title || t.titel',    'and the hit title');
 },
 
+'every demo section sits inside the sidebar wrapper' => function (): void {
+    // One extra </div> ended .gk-with-sidebar right after the Form section, so
+    // nine of the eleven sections were children of <body> and the left 260px of
+    // each sat under the fixed sidebar — clipped AND unclickable
+    // (elementFromPoint(150,300) returned a sidebar link). CHANGELOG 1.36.0
+    // describes this exact failure as the thing the wrapper prevents.
+    //
+    // Counting tags cannot catch it: the stray close demotes the intended one
+    // at the end of the file to a trailing stray, browsers discard that
+    // silently, and the total nets to zero. Only ancestry catches it.
+    $html = T::capture(static function (): void {
+        $_GET = ['lang' => 'en'];
+        include __DIR__ . '/../demo/index.php';
+    });
+
+    // Walk the tags and record, for each [data-section], whether any open
+    // ancestor is the wrapper.
+    preg_match_all('/<(\/?)(div)\b([^>]*)>/i', $html, $m, PREG_SET_ORDER);
+    $stack = [];
+    $sections = [];
+    foreach ($m as [$whole, $slash, $tag, $attrs]) {
+        if ($slash === '/') { array_pop($stack); continue; }
+        $isWrapper = (bool) preg_match('/class="[^"]*gk-with-sidebar/', $attrs);
+        if (preg_match('/data-section="([^"]+)"/', $attrs, $s)) {
+            $sections[$s[1]] = in_array(true, $stack, true);
+        }
+        $stack[] = $isWrapper;
+    }
+
+    T::ok(count($sections) >= 8, 'the demo lost its sections: ' . count($sections));
+    foreach ($sections as $name => $inside) {
+        T::ok($inside, "the demo section '$name' renders outside .gk-with-sidebar — "
+            . 'its left 260px will sit under the sidebar');
+    }
+},
+
 'the search endpoint does not require mbstring' => function (): void {
     $src = (string) file_get_contents(__DIR__ . '/../demo/api/quicksearch.php');
 

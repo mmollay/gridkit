@@ -7,6 +7,64 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.51.0] - 2026-08-27
+
+Round twenty-three asked whether twenty-three rounds of edits still hold
+together, and pointed five auditors at the demo — the shop window, audited for
+its claims in 1.44.0 but never for its markup.
+
+### Fixed — nine of eleven demo sections were under the sidebar
+
+**One extra `</div>` closed `.gk-with-sidebar` right after the Form section.**
+Everything after it — Cards, Layout, Navigation, Search, Feedback, UI,
+Examples, Tooltip, Changelog — was a child of `<body>`, so the left 260px of
+each sat beneath the fixed sidebar. Not merely clipped: `elementFromPoint(150,
+300)` returned a sidebar link, so that strip swallowed clicks meant for the
+demo's own controls.
+
+CHANGELOG 1.36.0 describes this exact failure as the thing the wrapper
+prevents. The demo has had it ever since.
+
+It survived because counting tags cannot see it: the stray close consumes the
+wrapper, which demotes the intended closer at the end of the file to a trailing
+stray, and browsers discard that silently. The div count nets to zero. Only an
+ancestry assertion catches it, and there is one now.
+
+### Fixed — the demo at 390px
+
+- **Three fixed-column grids** gave each child 101px on a phone — the "Sizes"
+  sample rendered three tables at 101px each, labels printing over values. They
+  wrap now.
+- **An invisible tooltip widened the page by 58px.**
+  `[data-gk-tooltip]::after` is `position: absolute` with `white-space: nowrap`
+  and `opacity: 0` — laid out while invisible, so a long one pushes the
+  document wider with nothing visible anywhere near the edge. That is why
+  several mobile passes went straight past it. The left and right variants
+  reach out with `left`/`right: 100%` and added their own. On a narrow screen
+  the text now wraps under a cap and the side variants move above their
+  element; the desktop look is untouched.
+
+  The first attempt at that fix did nothing, because the override sat before
+  the rules it meant to beat and lost on source order. So did the first version
+  of the test for it, which compared the block against itself — the block
+  contains the very selector it was searching for.
+
+### Added
+
+- A test that every `[data-section]` in the rendered demo has `.gk-with-sidebar`
+  as an ancestor. Checked against the stray tag put back: nine failures.
+- A test that the narrow-screen tooltip cap exists **and comes after** the rules
+  it overrides.
+- **A Composer install, end to end.** The README has offered
+  `composer require mmollay/gridkit` from the start and nobody had ever run one.
+  The test builds the archive Packagist would ship, lays it out as Composer
+  would, generates the autoloader Composer would generate, and checks that the
+  documented asset path resolves to the file that is really there — the one
+  thing a plain clone never exercises. It passes.
+
+**2,174 assertions**, on three interpreters.
+
+---
 ## [1.50.0] - 2026-08-27
 
 Two claims on the README's requirements line had never been checked, in fifty
