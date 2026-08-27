@@ -228,6 +228,19 @@ $skillHtml = renderSkillMd($skillContent);
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Present for screen readers and search engines, absent visually. Used by the
+   product-shot section, which is a figure and a caption: meaningful, but with
+   no heading of its own, which leaves it unnamed in a document outline. */
+.visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
         :root {
             --gk-primary: #4f46e5;
             --gk-primary-light: #818cf8;
@@ -627,7 +640,7 @@ $skillHtml = renderSkillMd($skillContent);
 <body>
 
 <!-- Navigation -->
-<nav class="nav" role="navigation" aria-label="Main navigation">
+<nav class="nav" aria-label="Main navigation">
     <div class="nav-inner">
         <a href="/" class="nav-brand">
             <span class="material-icons" style="font-size:24px" aria-hidden="true">widgets</span>
@@ -692,7 +705,8 @@ $skillHtml = renderSkillMd($skillContent);
 </header>
 
 <!-- Product shot: a UI library has to show what it looks like -->
-<section class="section" id="screenshot" style="padding-top:0">
+<section class="section" id="screenshot" style="padding-top:0" aria-labelledby="screenshot-h">
+        <h2 id="screenshot-h" class="visually-hidden">A live GridKit table</h2>
     <div class="container">
         <!--
             overflow is clip, not hidden: hidden turns this into a scroll container,
@@ -704,7 +718,7 @@ $skillHtml = renderSkillMd($skillContent);
                        border:1px solid rgba(15,23,42,.08); background:var(--gk-surface,#fff);">
             <!--
                 data-gk-theme rather than class="gk-root": both hand the table the
-                full set of --gk-* variables, but .gk-root also carries
+                full set of gk-prefixed variables, but .gk-root also carries
                 min-height:100vh, which would stretch this frame to the height of
                 the window. The attribute gives the colours without the layout.
             -->
@@ -941,62 +955,62 @@ $skillHtml = renderSkillMd($skillContent);
         <div class="components-preview">
             <div class="comp-card">
                 <span class="material-icons" aria-hidden="true">table_chart</span>
-                <h4>Table</h4>
+                <h3>Table</h3>
                 <p>Search, sort, paginate, groupBy, number columns</p>
             </div>
             <div class="comp-card">
                 <span class="material-icons" aria-hidden="true">edit_note</span>
-                <h4>Form</h4>
+                <h3>Form</h3>
                 <p>16-column grid, 15 field types, AJAX submit</p>
             </div>
             <div class="comp-card">
                 <span class="material-icons" aria-hidden="true">menu</span>
-                <h4>Sidebar</h4>
+                <h3>Sidebar</h3>
                 <p>Groups, badges, collapse, mobile overlay</p>
             </div>
             <div class="comp-card">
                 <span class="material-icons" aria-hidden="true">web</span>
-                <h4>Header</h4>
+                <h3>Header</h3>
                 <p>Fixed, search, user menu, theme switcher</p>
             </div>
             <div class="comp-card">
                 <span class="material-icons" aria-hidden="true">open_in_new</span>
-                <h4>Modal</h4>
+                <h3>Modal</h3>
                 <p>Stackable dialogs, form-ready, sizes</p>
             </div>
             <div class="comp-card">
                 <span class="material-icons" aria-hidden="true">analytics</span>
-                <h4>StatCards</h4>
+                <h3>StatCards</h3>
                 <p>KPI display with trends and colors</p>
             </div>
             <div class="comp-card">
                 <span class="material-icons" aria-hidden="true">lock</span>
-                <h4>Auth</h4>
+                <h3>Auth</h3>
                 <p>Session auth, bcrypt, remember-me</p>
             </div>
             <div class="comp-card">
                 <span class="material-icons" aria-hidden="true">palette</span>
-                <h4>Theme</h4>
+                <h3>Theme</h3>
                 <p>6 themes, light/dark mode</p>
             </div>
             <div class="comp-card">
                 <span class="material-icons" aria-hidden="true">smart_button</span>
-                <h4>Button</h4>
+                <h3>Button</h3>
                 <p>Filled, outlined, text, tonal, FAB</p>
             </div>
             <div class="comp-card">
                 <span class="material-icons" aria-hidden="true">layers</span>
-                <h4>Layout</h4>
+                <h3>Layout</h3>
                 <p>Sidebar-first, header-first modes</p>
             </div>
             <div class="comp-card">
                 <span class="material-icons" aria-hidden="true">filter_list</span>
-                <h4>FilterChips</h4>
+                <h3>FilterChips</h3>
                 <p>Clickable filter chip buttons</p>
             </div>
             <div class="comp-card">
                 <span class="material-icons" aria-hidden="true">date_range</span>
-                <h4>YearFilter</h4>
+                <h3>YearFilter</h3>
                 <p>Year navigation filter</p>
             </div>
         </div>
@@ -1043,7 +1057,7 @@ $skillHtml = renderSkillMd($skillContent);
 </section>
 
 <!-- Footer -->
-<footer class="footer" role="contentinfo">
+<footer class="footer">
     <div class="footer-inner">
         <div class="footer-left">
             GridKit v<?= $version ?> &middot; MIT License &middot; Made by <a href="https://github.com/mmollay" target="_blank" rel="noopener">Martin Mollay</a>

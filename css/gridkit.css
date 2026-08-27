@@ -774,23 +774,52 @@ a:hover {
 .gk-sortable {
   cursor: pointer;
 }
-.gk-sortable::after {
+
+/* The clickable part of a sortable header is a real <button> inside the <th>,
+   so the header keeps its columnheader role and its aria-sort. This strips the
+   button back to looking like the header text it replaced — inheriting the
+   font, colour, alignment and letter-spacing the th already had. */
+.gk-sort-btn {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+}
+.gk-sort-btn:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* The arrow rides on the button, not on the th: on the th it sat outside the
+   control, so the one part of the header that looks most like "click me to
+   sort" was the one part that did nothing. */
+.gk-sortable .gk-sort-btn::after {
   content: "⇅";
   margin-left: 4px;
   opacity: 0.3;
   font-size: var(--gk-text-overline);
 }
-.gk-sorted-asc::after {
+.gk-sorted-asc .gk-sort-btn::after {
   content: "↑";
   opacity: 0.7;
 }
-.gk-sorted-desc::after {
+.gk-sorted-desc .gk-sort-btn::after {
   content: "↓";
   opacity: 0.7;
 }
 /* Header with a Material icon indicator (gk-sort-icon) — suppress the ::after text
    arrow, otherwise there are two indicators. Unifies GK.table with SortLink. */
-.gk-sortable-mi::after { content: none !important; }
+.gk-sortable-mi .gk-sort-btn::after { content: none !important; }
 
 /* Inline sort icon for custom sort headers (e.g. via material-icons).
    Usage: <a class="gk-sort-link"><span class="material-icons gk-sort-icon">unfold_more</span></a>

@@ -29,18 +29,36 @@ function tableHtml(array $extra = []): string
 
 return [
 
-'a sortable header is operable and announces itself' => function (): void {
+/**
+ * These two used to assert the bug. They required tabindex and role="button"
+ * ON the <th> — which is what the code emitted, and which the W3C validator
+ * rejects twice over: role="button" replaces the columnheader role, so the
+ * cell stops being a column header at all, and aria-sort is only defined on a
+ * header, so it turns invalid on that same element. A screen reader user lost
+ * the column. The header now keeps aria-sort; the control is a <button> inside.
+ */
+'a sortable header is a header containing a control' => function (): void {
     Lang::set('en');
     unset($_GET['gk_sort'], $_GET['gk_dir']);
 
     $html = tableHtml();
-    preg_match('/<th[^>]*data-gk-sort="name"[^>]*>/', $html, $m);
+    preg_match('/<th[^>]*aria-sort[^>]*>/', $html, $m);
     $th = $m[0] ?? '';
 
     T::ok($th !== '', 'the sortable header renders');
-    T::contains($th, 'tabindex="0"', 'reachable by Tab — without this there is no way to sort without a mouse');
-    T::contains($th, 'role="button"', 'announced as a control, not as a plain header');
     T::contains($th, 'aria-sort="none"', 'unsorted columns say so');
+    T::ok(
+        !str_contains($th, 'role='),
+        'no role on the th — it would replace columnheader and invalidate aria-sort'
+    );
+    T::ok(
+        !str_contains($th, 'tabindex='),
+        'no tabindex on the th — the button inside is the tab stop'
+    );
+
+    preg_match('/<button[^>]*data-gk-sort="name"[^>]*>/', $html, $b);
+    T::ok(($b[0] ?? '') !== '', 'the control is a real button, a tab stop by itself');
+    T::contains($b[0] ?? '', 'type="button"', 'typed, so it cannot submit a surrounding form');
 },
 
 'aria-sort follows the direction the column is sorted in' => function (): void {
@@ -48,11 +66,11 @@ return [
 
     $_GET['gk_sort'] = 'name';
     $_GET['gk_dir']  = 'asc';
-    preg_match('/<th[^>]*data-gk-sort="name"[^>]*>/', tableHtml(), $m);
+    preg_match('/<th[^>]*aria-sort[^>]*>/', tableHtml(), $m);
     T::contains($m[0] ?? '', 'aria-sort="ascending"', 'ascending is reported');
 
     $_GET['gk_dir'] = 'desc';
-    preg_match('/<th[^>]*data-gk-sort="name"[^>]*>/', tableHtml(), $m);
+    preg_match('/<th[^>]*aria-sort[^>]*>/', tableHtml(), $m);
     T::contains($m[0] ?? '', 'aria-sort="descending"', 'descending is reported');
 
     unset($_GET['gk_sort'], $_GET['gk_dir']);

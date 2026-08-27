@@ -487,23 +487,36 @@ class Table
             if ($sortable) $clsList[] = 'gk-sortable';
             if (!empty($col['hideOnMobile'])) $clsList[] = 'gk-hide-mobile';
             $attrs = '';
+            $sortBtn = null;
             if ($sortable) {
                 $newDir = ($this->sortCol === $key && $this->sortDir === 'asc') ? 'desc' : 'asc';
-                // A sortable header is a control, so it has to behave like one:
-                // reachable by Tab, announced as a button, and reporting the
-                // direction it is currently sorted in. Without tabindex there
-                // was no way to sort the table without a mouse at all.
+                // A sortable header is a control, so it has to behave like
+                // one: reachable by Tab, announced as a button, and reporting
+                // the direction it is currently sorted in.
                 $ariaSort = $this->sortCol === $key
                     ? ($this->sortDir === 'asc' ? 'ascending' : 'descending')
                     : 'none';
-                $attrs = ' data-gk-sort="' . $e($key) . '" data-gk-dir="' . $newDir . '"'
-                       . ' tabindex="0" role="button" aria-sort="' . $ariaSort . '"';
+                // aria-sort belongs on the header; the control goes inside it.
+                // This used to be one element doing both — a <th> carrying
+                // tabindex, role="button" and aria-sort. role="button" replaces
+                // the columnheader role, so the cell stopped being announced as
+                // a column header at all, and aria-sort, which is only defined
+                // on a header, became invalid on it. The W3C validator rejects
+                // that pair; a screen reader user simply lost the column.
+                $attrs = ' aria-sort="' . $ariaSort . '"';
+                $sortBtn = [$e($key), $newDir];
                 if ($this->sortCol === $key) {
                     $clsList[] = 'gk-sorted-' . $this->sortDir;
                 }
             }
             $cls = $clsList ? ' class="' . implode(' ', $clsList) . '"' : '';
-            echo "<th{$cls}{$style}{$attrs}>" . $e($col['label']) . "</th>";
+            $inner = $e($col['label']);
+            if ($sortBtn !== null) {
+                $inner = '<button type="button" class="gk-sort-btn"'
+                       . ' data-gk-sort="' . $sortBtn[0] . '"'
+                       . ' data-gk-dir="' . $sortBtn[1] . '">' . $inner . '</button>';
+            }
+            echo "<th{$cls}{$style}{$attrs}>" . $inner . "</th>";
         }
         $leftButtons = array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'left');
         $rightButtons = array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'right');

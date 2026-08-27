@@ -771,12 +771,24 @@
           const sortable = col.sortable || false;
           let cls = "",
             attrs = "",
+            sortBtn = "",
             sortIcon = "";
           if (sortable) {
             const newDir =
               sortCol === key && sortDir === "asc" ? "desc" : "asc";
+            // Same shape the server renders: aria-sort on the header, the
+            // control a real <button> inside it. The client used to emit
+            // neither, so a table redrawn in the browser lost both the sort
+            // state and any way to sort it without a mouse.
             attrs =
-              ' data-gk-sort="' + e(key) + '" data-gk-dir="' + newDir + '"';
+              ' aria-sort="' +
+              (sortCol === key
+                ? sortDir === "asc"
+                  ? "ascending"
+                  : "descending"
+                : "none") +
+              '"';
+            sortBtn = ' data-gk-sort="' + e(key) + '" data-gk-dir="' + newDir + '"';
             // gk-sortable-mi = Material icon indicator (consistent with SortLink);
             // suppresses the ::after arrow of .gk-sortable.
             const base =
@@ -804,8 +816,21 @@
           } else if (col.hideOnMobile) {
             cls = ' class="gk-hide-mobile"';
           }
+          const label = e(col.label) + sortIcon;
           html +=
-            "<th" + cls + style + attrs + ">" + e(col.label) + sortIcon + "</th>";
+            "<th" +
+            cls +
+            style +
+            attrs +
+            ">" +
+            (sortBtn
+              ? '<button type="button" class="gk-sort-btn"' +
+                sortBtn +
+                ">" +
+                label +
+                "</button>"
+              : label) +
+            "</th>";
         }
         const allBtns = data.buttons || {};
         const leftBtns = Object.fromEntries(

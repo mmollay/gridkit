@@ -7,6 +7,49 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.56.0] - 2026-08-27
+
+The W3C validator, pointed at the landing page, found a bug in the table.
+
+### Fixed — a sortable column header was not a column header
+
+Every sortable `<th>` rendered as:
+
+```html
+<th class="gk-sortable" tabindex="0" role="button" aria-sort="ascending">
+```
+
+`role="button"` replaces the implicit `columnheader` role, so the cell stopped
+being announced as a column header — a screen reader user lost the column the
+data belonged to. And `aria-sort` is only defined on a header, so putting it on
+the same element made it invalid. Two errors from one line, three times over per
+table. The validator reported six; neither the test suite nor any manual pass
+had caught it in the year the code shipped.
+
+The header now keeps `aria-sort` and its columnheader role, and the control is a
+real `<button>` inside it — a tab stop by itself, with a focus ring, no
+`tabindex` needed. The sort arrow moved onto the button, since on the `<th>` it
+sat outside the control: the one part of the header that looks most like "click
+to sort" was the one part that did nothing.
+
+The client-side renderer had the mirror-image bug — it emitted neither
+`role` nor `aria-sort`, so a table redrawn in the browser reported no sort state
+at all and could not be sorted without a mouse. Both sides now render the same
+shape.
+
+**The two tests covering this asserted the bug.** They required `tabindex="0"`
+and `role="button"` on the `<th>`, matching what the code did rather than what
+it should do, so the suite stayed green throughout. They now assert the
+structure and fail if a `role` or `tabindex` reappears on the header.
+
+### Fixed — landing page markup
+
+Twelve `<h4>` component cards directly under an `<h2>`, skipping a level; a
+redundant `role="navigation"` on `<nav>` and `role="contentinfo"` on `<footer>`;
+a section with no heading, now carrying a visually hidden one. The page
+validates with no errors and no warnings.
+
+---
 ## [1.55.0] - 2026-08-27
 
 The landing page of a component library now contains a component.
