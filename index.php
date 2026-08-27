@@ -764,8 +764,9 @@ $skillHtml = renderSkillMd($skillContent);
                 <p>
                     The GridKit Agent Skill is a structured document that teaches any AI assistant
                     (Claude, GPT, Gemini, or any LLM) how to use GridKit optimally. It contains
-                    component references, code patterns, and best practices — everything an agent
-                    needs to generate correct GridKit code on the first try.
+                    component references, code patterns, and best practices — every public method of
+                    every component, in one file an agent can read in one go instead of
+                    searching a docs site for it.
                 </p>
                 <ol class="agent-steps">
                     <li>Download <code>GRIDKIT_SKILL.md</code> from the repository</li>

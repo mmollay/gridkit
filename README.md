@@ -172,9 +172,20 @@ agent's project context and describe what you need:
 
 > *"Build me a user management dashboard with roles and an invite flow."*
 
-The agent writes correct GridKit PHP on the first try, because the whole
-surface fits in one file it can actually read. No scraping docs sites, no
+The whole surface fits in one file an agent can actually read — every public
+method of every component, named and shown. No scraping a docs site, no
 guessing at method names, no hallucinated options.
+
+**What that is worth, measured.** Five agents were given a page to build and
+this file as their only source, the source tree off limits, four times over
+twenty different tasks. On tasks the file had been corrected against, four of
+five wrote a working page straight through. On tasks it had never seen, one of
+five did — the rest needed a second or third pass, usually over something the
+file did not say rather than something it said wrongly. Every run is in
+[CHANGELOG.md](CHANGELOG.md) with the gaps it found.
+
+That is the honest number, and it is the number this file is being written
+against.
 
 ---
 
@@ -237,6 +248,7 @@ The workflow in [`ci/`](ci/) runs it on PHP 8.2, 8.3 and 8.4, plus one job with
 - **[Changelog](CHANGELOG.md)** — what changed and why
 - **[Contributing](CONTRIBUTING.md)** — and the [Code of Conduct](CODE_OF_CONDUCT.md)
 - **[Security policy](SECURITY.md)** — how to report a vulnerability privately
+- **[Announcement drafts](docs/ANNOUNCE.md)** — what to post where, and in what order
 
 ## License
 
