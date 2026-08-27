@@ -10,7 +10,9 @@
 # Screenshots and scratch files left in the repo root while auditing.
 # .playwright-mcp/ was already here; these were not, and a screenshot
 # once shipped inside the Composer package because of it.
-/skeleton-*.png
+# Any PNG dropped in the repo root is a screenshot from an audit run.
+# The project's own images live in docs/, which this does not touch.
+/*.png
 /tableprobe.php
 /selprobe.php
 /jsprobe.php

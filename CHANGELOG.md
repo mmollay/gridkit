@@ -7,6 +7,67 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.46.0] - 2026-08-27
+
+The same five tasks, the same rules, fresh agents, against the skill file as
+1.45.0 left it. This is the measurement 1.45.0 was worth making.
+
+| | round one | round two |
+|---|---|---|
+| worked on the first try | **0 / 5** | **4 / 5** |
+| gaps reported | 33 | 18 |
+| gaps confirmed | 30 | 17 |
+
+Four of the five agents named the echo-versus-return table at the top as the
+thing that saved them, unprompted. One wrote its page straight through, ran it
+once, and changed nothing.
+
+### Fixed — in the source
+
+- **`Button`'s `form` option could not submit anything.** A button carrying
+  `form="…"` renders `type="button"` by default, and a `type="button"` has no
+  default action — so the attribute sat there inert and the click produced no
+  request at all, silently. This is the option 1.45.0 added to the
+  documentation without checking it. Setting `form` now makes the button a
+  submit button unless the caller names a `type` outright.
+
+- **A `setData()` table ignored the columns `search()` was given.** The keys
+  never reached the browser, so the client fell back to searching every rendered
+  column: a declared key that is not itself a column was never searched, and the
+  markup of an HTML column matched instead. Measured on a probe — searching for
+  a value present only in a declared, unrendered key returned "No matches".
+
+### Fixed — in the skill file
+
+- **`Header` had no section at all** — the only component without one, and the
+  reason an agent shipped a page with two theme switchers: `->user()` renders
+  one of its own, and nothing said so. There is a section now, with a table of
+  which of the three you actually want.
+- **`Sidebar` and `Select` had none either.** Both have one now, with every
+  option each class reads.
+- **`->ajax()` is the opt-in for an AJAX form**, and the section titled "Form
+  (AJAX)" never mentioned it. Without it the form submits natively and
+  navigates to the endpoint, where the documented JSON response is shown to the
+  user as raw text.
+- `Button`'s `type` option was undocumented.
+- `TableHeader::advanced()` was documented with a German literal as its default
+  summary; the library translates it, so the file was pessimistic about its own
+  behaviour.
+- An out-of-band `<template data-gk-replace>` replaces the matched element
+  **whole**, so the template body must re-emit an element the selector matches.
+  Emitting only the inner cards deletes the target on the first reload — no
+  error, and the stats keep their first-load values for ever.
+- `textarea` and `richtext` drop `placeholder` silently; `rows` is `textarea`'s
+  only extra option.
+
+### Added
+
+- A check that every component the README lists has a section in the skill
+  file. Four did not.
+
+**1,664 assertions.** The skill file is 1,064 lines, from 814 two rounds ago.
+
+---
 ## [1.45.0] - 2026-08-27
 
 Round sixteen put the project's own headline claim on trial. README.md says:

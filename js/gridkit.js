@@ -562,9 +562,11 @@
 
         // Apply search
         const query = (wrap._gkSearch || "").toLowerCase().trim();
+        const searchKeys =
+          data.search && data.search.length ? data.search : colKeys;
         if (query) {
           rows = rows.filter((row) => {
-            return colKeys.some((key) => {
+            return searchKeys.some((key) => {
               return String(row[key] ?? "")
                 .toLowerCase()
                 .includes(query);

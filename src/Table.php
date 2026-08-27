@@ -381,6 +381,11 @@ class Table
                 // could not answer.
                 'perPage' => $this->perPage,
                 'columns' => $colConfig,
+                // The keys search() was told to use. Without them the client
+                // fell back to every rendered column, so a declared search key
+                // that is not itself a column was silently never searched —
+                // and the markup of an HTML column matched instead.
+                'search'  => array_values($this->searchCols),
                 'buttons' => $this->buttons,
                 'groupBy' => $this->groupCol === '' ? null : [
                     'column' => $this->groupCol,

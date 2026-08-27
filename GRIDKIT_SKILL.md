@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.45.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.46.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.ssi.at
 
 ## Purpose
@@ -314,7 +314,7 @@ Three ways to get data into a table, in order of how much GridKit does for you:
                               // WHERE for every declared filter, ORDER BY,
                               // COUNT and LIMIT. mysqli only.
 
-->rows($page, $total)         // you ran the query. PDO, SQLite, Postgres, an
+->rows($pageRows, $total)     // you ran the query. PDO, SQLite, Postgres, an
                               // HTTP API, an array — anything. Hand over one
                               // page plus the total before LIMIT.
 ```
@@ -341,9 +341,15 @@ if (Table::isAjaxReload('invoices')) {
     $table->render();
 
     // Anything outside the table that should keep up goes in a template,
-    // addressed by a CSS selector.
+    // addressed by a CSS selector. The matched element is replaced whole
+    // (outerHTML), so the template body must itself re-emit an element the
+    // selector matches — here the complete StatCards container, because
+    // (new StatCards('invoice-stats'))->render() writes
+    // data-gk-stats="invoice-stats" onto that container. Emitting only the
+    // inner cards deletes the target on the first reload: no error, and the
+    // stats silently keep their first-load values forever.
     echo '<template data-gk-replace="[data-gk-stats=invoice-stats]">';
-    renderStats();
+    renderStats();   // (new StatCards('invoice-stats'))->card(…)->render();
     echo '</template>';
 
     exit;
@@ -397,7 +403,11 @@ echo Button::render('Label', [
     'title'   => 'Add a row', // tooltip
     'aria'    => 'Add a row', // accessible name; see below
     'disabled' => false,
-    'form'    => 'form-id',   // submit a form this button is NOT inside
+    'type'    => 'submit',    // button (default) | submit | reset
+    'form'    => 'form-id',   // submit a form this button is NOT inside.
+                              // Setting it makes the button a submit button,
+                              // because a type="button" cannot submit anything
+                              // — the attribute would just sit there inert.
 ]);
 
 // Icon-only: pass an empty label. GridKit gives it an accessible name from
@@ -407,6 +417,108 @@ echo Button::render('Label', [
 echo Button::render('', ['icon' => 'delete', 'color' => 'danger']);
 echo Button::icon('content_copy', ['aria' => 'Copy the invoice number']);
 ```
+
+### Header
+
+The only component with no section here until 1.46.0, which is why an agent
+building a dashboard put two theme switchers on the page: `->user()` renders one
+of its own.
+
+**`Header::render()` RETURNS a string** — echo it. It is the one component you
+build with `new` that does not print (see *echo or return* at the top).
+
+```php
+echo (new Header())
+    ->title('Dashboard')                  // or ->title($html, raw: true)
+    ->breadcrumb(['Home' => '/', 'Invoices' => '/invoices', 'INV-2026-001'])
+    ->sidebarToggle(true)                 // the hamburger that opens the Sidebar
+    ->fixed(true)                         // stays at the top of the viewport
+    ->sticky(true)                        // scrolls away, comes back on scroll up
+    ->search('Search invoices…', 'q')     // only for a page you filter yourself
+    ->action(Button::render('New', ['icon' => 'add', 'size' => 'sm']))
+    ->action(Theme::switcher())           // ONLY if you skip the user menu — see below
+    ->user('Jane Doe', [
+        'role'   => 'Administrator',      // a non-clickable label at the top
+        'avatar' => '/img/jane.jpg',      // initials are used when absent
+        'theme_switcher' => true,         // DEFAULT — the menu carries its own switcher
+        'menu'   => [
+            ['label' => 'Profile',  'href' => '/profile',  'icon' => 'person'],
+            ['label' => 'Settings', 'href' => '/settings', 'icon' => 'settings'],
+            'divider',                    // exactly this string; anything else is ignored
+            ['label' => 'Sign out', 'href' => '/logout',   'icon' => 'logout'],
+        ],
+    ])
+    ->render();
+```
+
+**`->user()` already contains a theme switcher.** Adding
+`->action(Theme::switcher())` beside it puts twelve theme dots and two mode
+toggles on the page, with competing active states and no error. Pick one:
+
+| You want | Do |
+|---|---|
+| a user menu, switcher inside it | `->user($name, […])` — nothing else |
+| a switcher, no user menu | `->action(Theme::switcher())` |
+| a user menu with no switcher | `->user($name, ['theme_switcher' => false])` |
+
+**`->search()` is not a `Table` search.** It renders a plain input with a name;
+you read `$_GET['q']` and narrow the data yourself. A `Table` that declares
+`->search([…])` needs none of it — see the search rule under *TableHeader*.
+
+### Sidebar
+
+`Sidebar::render()` PRINTS. It is `position: fixed`, so whatever sits beside it
+needs the wrapper — see *With a sidebar* above; without it the page renders
+underneath the sidebar, silently.
+
+```php
+(new Sidebar('main'))                     // the id, for collapse state
+    ->brand('My project', 'widgets', 'v2.1')     // name, icon, optional version
+    ->group('Navigation')                        // a heading; items follow it
+    ->item('Dashboard', '?section=dashboard', 'dashboard', ['active' => true])
+    ->item('Invoices',  '?section=invoices',  'receipt_long', ['badge' => 3])
+    ->item('Reports',   '#', 'bar_chart', ['children' => [
+        ['label' => 'Monthly', 'href' => '/reports/monthly'],
+        ['label' => 'Yearly',  'href' => '/reports/yearly', 'active' => true],
+    ]])
+    ->divider()
+    ->group('System')
+    ->item('Settings', '?section=settings', 'settings')
+    ->ajaxNav(true)                       // SPA-lite navigation, see below
+    ->collapsePosition('bottom')          // 'top' (default) | 'bottom'
+    ->render();
+```
+
+`->item($label, $href, $icon = '', $opts = [])` — the options are `active`,
+`badge`, `children` (a submenu, same item shape) and `id` (the submenu's DOM id;
+one is derived from the label otherwise).
+
+`Sidebar::toggleButton()` RETURNS the hamburger for a page with no `Header`;
+`Header::sidebarToggle(true)` is the usual way.
+
+### Select
+
+`Select::searchable()` RETURNS a string — echo it. It is the standalone form of
+the widget `Form`'s `'select'` field type renders, for a `<select>` you are
+placing yourself rather than inside a `Form`.
+
+```php
+echo Select::searchable('country', ['at' => 'Austria', 'de' => 'Germany'], [
+    'selected'          => 'at',
+    'placeholder'       => 'Choose a country',   // shown when nothing is picked
+    'searchPlaceholder' => 'Type to filter…',
+    'required'          => true,                 // real browser validation
+    'aria'              => 'Country',            // accessible name; falls back
+                                                 // to label, then placeholder
+    'label'             => 'Country',
+    'id'                => 'country',
+    'class'             => 'my-extra-class',
+]);
+```
+
+Inside a `Form` use the field type instead — `->field('country', 'Country',
+'select', ['options' => …])` — which wires the label and the 16-column grid for
+you. Reach for `Select::searchable()` only outside one.
 
 ### FilterChips
 
@@ -507,7 +619,9 @@ API:
 - `status(\Closure $renderer)`: top row, full width
 - `search(string $name, string $value = '', string $placeholder = '…', array $opts = ['live' => '…', 'id' => '…'])`
 - `filter($contentOrClosure)`: any number of toolbar slots — Closure (echo'd) or raw HTML string
-- `advanced(\Closure $renderer, string $summary = 'Erweiterte Filter', bool $open = false)`
+- `advanced(\Closure $renderer, string $summary = '', bool $open = false)` — an
+  empty `$summary` takes the translated default ("Advanced filters" /
+  "Erweiterte Filter"). Pass one only to override it.
 - `reset(string $baseUrl, string $label = '')` — an empty label uses the translation
 
 CSS classes (all auto-applied): `gk-tableheader`, `gk-tableheader-status`, `gk-tableheader-toolbar`, `gk-tableheader-advanced`, `gk-tableheader-spacer`.
@@ -573,6 +687,7 @@ compatibility rule catches the old shape.
 (new Form('user-form'))
     ->action('/api/save-user')
     ->method('POST')
+    ->ajax()                    // REQUIRED for AJAX — without it the form does a native POST
     ->row()
         ->field('first_name', 'First name', 'text', ['width' => 8, 'required' => true])
         ->field('last_name',  'Last name',  'text', ['width' => 8, 'required' => true])
@@ -605,7 +720,7 @@ searchable select is plain `'select'`.
 | `width` | every field | columns out of 16 (default `16`); also `'auto'` or `'220px'` |
 | `required` | every field | red star + browser validation |
 | `value` | every field | pre-fill / pre-select. `multiselect` takes an array (or a comma string) and pre-checks the chips; a truthy value checks `checkbox`/`toggle`; `ajaxselect` needs `'displayValue' => 'Acme GmbH'` as well, or the box shows the id-less search field |
-| `placeholder` | input types, `select`, `multiselect`, `ajaxselect` | the input's placeholder — on `select` the empty-state text, on `multiselect`/`ajaxselect` the search box's |
+| `placeholder` | input types, `select`, `multiselect`, `ajaxselect` | the input's placeholder — on `select` the empty-state text, on `multiselect`/`ajaxselect` the search box's. `textarea` and `richtext` are not in that list: they drop it silently, and `rows` is `textarea`'s only extra option |
 | `options` | `select`, `multiselect`, `radio` | `value => label` map |
 | `rows` | `textarea` | height in rows (default `3`) |
 | `min`, `max`, `step` | `range`, `number`, `date`/`time` | bounds (`range` defaults to `0`/`100`/`1` and starts at `min`) |
@@ -637,6 +752,11 @@ searchable select is plain `'select'`.
   <div class="gk-card">...</div>
 </div>
 ```
+
+**`->ajax()` is the opt-in.** It is what renders `data-gk-ajax` on the `<form>`,
+and `GK.form.bind()` binds the submit handler to nothing else. Leave it off and
+the form still renders and still validates, but the browser submits it natively
+and navigates to the action URL — the JSON below is then shown as a raw page.
 
 **Form endpoint must return JSON:**
 ```php

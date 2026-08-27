@@ -133,7 +133,14 @@ class Button
         // form: binds a submit button to a form that it is NOT nested inside
         // (standard HTML attribute). Without it, every save button placed outside its
         // form was dead — a click with no effect at all (SSI Panel user page, 2026-08-23).
-        if (!empty($opts['form'])) $extras .= ' form="' . $e($opts['form']) . '"';
+        // A button carrying `form` exists to submit that form — and a
+        // type="button" cannot, so the attribute sat there inert and the click
+        // did nothing at all, with no error. Setting `form` therefore implies
+        // submit unless the caller asked for something else outright.
+        if (!empty($opts['form'])) {
+            $extras .= ' form="' . $e($opts['form']) . '"';
+            if (!isset($opts['type'])) $type = 'submit';
+        }
 
         if ($href !== '' && !$disabled) {
             return '<a href="' . $e($href) . '" class="' . $cls . '"' . $extras . $dataAttrs . '>' . $inner . '</a>';

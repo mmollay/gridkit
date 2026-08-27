@@ -162,6 +162,26 @@ return [
     }
 },
 
+'every component the README lists has a section in the skill' => function (): void {
+    // Header was the only one without. An agent building a dashboard from this
+    // file put two theme switchers on the page, because ->user() renders one
+    // of its own and nothing said so.
+    $md     = (string) file_get_contents(SKILL);
+    $readme = (string) file_get_contents(__DIR__ . '/../README.md');
+
+    preg_match('/Sixteen, each a PHP class.*?\n\n(.*?)\n\nPlus/s', $readme, $m);
+    preg_match_all('/`(\w+)` +—/', $m[1] ?? '', $c);
+    T::ok(count($c[1]) === 16, 'the README component table changed shape');
+
+    foreach ($c[1] as $component) {
+        T::ok(
+            // Anywhere in a heading — "Pagination + PageSize" covers both.
+            (bool) preg_match('/^#{2,3} .*\\b' . $component . '\\b/m', $md),
+            "GRIDKIT_SKILL.md has no section for $component"
+        );
+    }
+},
+
 'no German is left in the skill' => function (): void {
     $md = (string) file_get_contents(SKILL);
     T::ok(!preg_match('/[äöüÄÖÜß]/u', $md), 'umlauts');
