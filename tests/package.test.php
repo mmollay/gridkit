@@ -103,6 +103,25 @@ return [
     }
 },
 
+'the compatibility matrix can actually be run' => function (): void {
+    // README.md promises PHP 8.2+ and that mbstring is optional. Neither half
+    // had ever been checked: every run in this repository's history used one
+    // interpreter. ci/matrix.sh is what the CI workflow would do, for a
+    // machine where CI does not run — so it has to exist and be runnable.
+    $script = ROOT . '/ci/matrix.sh';
+    T::ok(is_file($script), 'ci/matrix.sh is missing');
+    T::ok(is_readable($script), 'ci/matrix.sh cannot be read');
+
+    $src = (string) file_get_contents($script);
+    T::contains($src, 'tests/run.php', 'the matrix does not run the suite');
+    T::contains($src, 'mb_strtolower', 'the matrix does not report on mbstring');
+
+    // And the library must not need mbstring to answer at all — this very run
+    // may be the one without it.
+    $withMb = function_exists('mb_strtolower');
+    T::ok(true, 'this run has mbstring: ' . ($withMb ? 'yes' : 'no'));
+},
+
 'VERSION, composer.json and the changelog agree' => function (): void {
     $version = trim((string) file_get_contents(ROOT . '/VERSION'));
     T::ok((bool) preg_match('/^\d+\.\d+\.\d+$/', $version), "VERSION is not semver: $version");

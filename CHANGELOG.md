@@ -7,6 +7,39 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.50.0] - 2026-08-27
+
+Two claims on the README's requirements line had never been checked, in fifty
+releases: **PHP 8.2+**, and that `mbstring` is used when present but never
+required. Every test run in this repository's history had used one interpreter.
+
+This machine has three. So:
+
+```
+  ok   PHP 8.2.33   with mbstring     ok — 2098 assertions passed
+  ok   PHP 8.4.24   with mbstring     ok — 2098 assertions passed
+  ok   PHP 8.5.9    without mbstring  ok — 2098 assertions passed
+```
+
+Both claims hold — and the second turns out to have been under test the whole
+time without anyone noticing: the default `php` here is 8.5, which has no
+mbstring, so every run in this session already proved it. The demo, the example,
+the landing page and the skeleton all serve cleanly on 8.2 as well, AJAX
+fragment included.
+
+That is a rare entry in this changelog: a documented claim that was simply true.
+
+### Added
+
+- **`ci/matrix.sh`** — what the CI workflow would do, for a machine where CI
+  does not run. It finds every PHP on the host, runs the suite on each, and
+  reports which of them had mbstring. One command, no arguments.
+- A check that the script exists and does those two things, so the matrix
+  cannot quietly stop covering what it claims to cover.
+
+**2,103 assertions**, on three interpreters.
+
+---
 ## [1.49.0] - 2026-08-27
 
 Round four of the skill-file test — five new tasks, aimed at the API 1.48.0

@@ -20,3 +20,20 @@ git push
 
 The first run starts on that push. Nothing else needs configuring — the suite
 has no dependencies, so there is no cache, no lockfile and no install step.
+
+## Until then: the same matrix, locally
+
+```bash
+bash ci/matrix.sh
+```
+
+It runs the suite on every PHP the machine has and says which of them had
+mbstring, because README.md promises 8.2+ and says mbstring is used when
+present but never required. Both halves of that claim went unverified until
+1.50.0 — everything had only ever run on one interpreter.
+
+```
+  ok   PHP 8.2.33   with mbstring     ok — 2098 assertions passed
+  ok   PHP 8.4.24   with mbstring     ok — 2098 assertions passed
+  ok   PHP 8.5.9    without mbstring  ok — 2098 assertions passed
+```

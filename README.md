@@ -109,7 +109,8 @@ somewhere none of those reach, it says so and tells you which line to change.
 
 **Requirements:** PHP 8.2+ and a browser with CSS Custom Properties.
 No npm, no Composer plugins, no compilation. `mbstring` is used when present
-but not required.
+but not required — `bash ci/matrix.sh` runs the suite on every PHP your machine
+has and tells you which of them had it.
 
 **One thing the Composer package leaves out:** the bundled CKEditor 5 build that
 backs the rich-text form field. At 1.7 MB it would otherwise dominate every
