@@ -12,7 +12,13 @@
         "material-design",
         "components",
         "ai-agent",
-        "zero-dependency"
+        "zero-dependency",
+        "table",
+        "datatable",
+        "ui",
+        "forms",
+        "ajax",
+        "admin-panel"
     ],
     "homepage": "https://gridkit.ssi.at",
     "authors": [
