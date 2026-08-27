@@ -3,8 +3,12 @@
 Four channels, four registers. Nothing here is scheduled or sent — these are
 drafts to edit and post by hand, in the order the launch checklist gives.
 
-**Do not post any of this until `composer require mmollay/gridkit` installs the
-current version.** Until Packagist is updated it installs v1.4.0, from March.
+**The gate is clear.** `composer require mmollay/gridkit` installs v1.54.0, the
+package is auto-updated from GitHub, the repo has a release, a social preview
+and Discussions. Checked 2026-08-27.
+
+Post in this order, one channel a day: the blog post first — everything else
+links to it — then Hacker News, then r/PHP, then Mastodon.
 
 ---
 
@@ -41,7 +45,23 @@ problem with a specific answer. Lead with the problem.
 
 HN wants the thing itself and one honest sentence about what it is not.
 
-> **Show HN: GridKit — PHP components for admin dashboards, no build step**
+**Pick the title deliberately — on HN it decides more than the text does.**
+Three that fit, most concrete first:
+
+1. `Show HN: GridKit – a searchable, sortable, paginated table in 15 lines of PHP`
+   Names the payoff and quantifies it. A reader knows in one line whether they
+   care. Strongest of the three.
+2. `Show HN: GridKit – PHP components for admin dashboards, no build step`
+   Plain and safe. "No build step" is the part that still earns attention.
+3. `Show HN: GridKit – admin UI in PHP, zero dependencies, one CSS and one JS file`
+   Leans hardest on the constraint. Good if the comments you want are about
+   dependency weight.
+
+Avoid putting "AI" in the title. It sets the wrong expectation for a component
+library and invites an argument about the wrong thing — the skill belongs in the
+text, where it reads as a feature rather than a pitch.
+
+> **Show HN: GridKit – a searchable, sortable, paginated table in 15 lines of PHP**
 >
 > A table with search, sort, filter, paging over AJAX, row actions and a modal
 > form is about fifteen lines of PHP. Six themes derived from one hue in OKLCH,
@@ -53,19 +73,23 @@ HN wants the thing itself and one honest sentence about what it is not.
 > client-side state. It renders UI from data you already have, and the
 > contributor base is one person — read the code before you depend on it.
 >
-> The API also ships as a single document for AI agents, which I have been
-> testing by giving it to agents and measuring how far they get. The current
-> number is in the README, along with what it found wrong.
+> The API also ships as something an assistant can read: one document, or an
+> installable skill, or a URL — `https://gridkit.ssi.at/skill/`, with an
+> `llms.txt` at the site root pointing at it. I have been testing that document
+> by giving it to agents with the source tree off limits and measuring how far
+> they get. The current number is in the README, along with what it found wrong.
 
 ---
 
 ## phpc.social / Mastodon — short
 
-> GridKit 1.51.0: PHP components for admin dashboards. Tables with AJAX search
+> GridKit 1.54.0: PHP components for admin dashboards. Tables with AJAX search
 > and paging, forms, six themes, dark mode, zero dependencies, no build step.
 >
 > The last twenty releases came out of pointing AI agents at my own
 > documentation and fixing everything they tripped over. It was humbling.
+>
+> The API now installs as a skill, or reads from a URL — llms.txt included.
 >
 > https://github.com/mmollay/gridkit
 >
