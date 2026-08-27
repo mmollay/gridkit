@@ -68,7 +68,10 @@ $table = (new Table('invoices'))
 // status filter in play the table has its own wording for "nothing matched",
 // and offers the way back — so the application's copy is confined to the
 // branch it actually describes.
-$isNarrowed = ($_GET['gk_search'] ?? '') !== '' || ($_GET['status'] ?? '') !== '';
+// The parameter names are GridKit's own — the same two queryInvoices() narrows
+// by in store.php. A guess at 'status' would have left the filter case wrong.
+$isNarrowed = ($_GET['gk_search'] ?? '') !== ''
+           || ($_GET['gk_filter_status'] ?? '') !== '';
 if (!$isNarrowed) {
     $table->emptyState(t('empty'), ['hint' => t('empty_hint'), 'icon' => 'receipt_long']);
 }

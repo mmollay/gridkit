@@ -108,6 +108,49 @@ return [
     T::eq(count($files), 5, 'the example no longer has five files');
 },
 
+'the example narrows its empty state by the parameters GridKit actually sends' => function (): void {
+    // The application's "no invoices yet" copy is only true when nothing is
+    // filtered — the table has its own wording for "nothing matched". Getting
+    // the guard right means naming GridKit's own query parameters: a guess at
+    // 'status' instead of 'gk_filter_status' leaves the filter case wrong and
+    // nothing fails loudly.
+    $index = (string) file_get_contents(GK_ROOT . '/examples/invoices/index.php');
+    $store = (string) file_get_contents(GK_ROOT . '/examples/invoices/store.php');
+
+    // The direction that matters is store -> index, not index -> store. Naming
+    // a parameter store.php does not read is one mistake; failing to name one
+    // it DOES read is the mistake that leaves the guard quietly wrong, and it
+    // shows up as nothing at all.
+    preg_match_all('/\$_GET\[\x27(gk_[a-z_]+)\x27\]/', $store, $inStore);
+    $narrowing = array_values(array_unique(array_filter(
+        $inStore[1],
+        // The two the query narrows by. Sort, direction and page change which
+        // rows you see, not whether any exist.
+        static fn(string $p): bool => $p === 'gk_search' || str_starts_with($p, 'gk_filter_')
+    )));
+    T::ok($narrowing !== [], 'store.php narrows by nothing — the fixture changed');
+
+    foreach ($narrowing as $param) {
+        T::contains($index, "\$_GET['$param']",
+            "store.php narrows by \$_GET['$param'] and the empty-state guard never asks about it");
+    }
+},
+
+'a documented example uses a translation key that exists' => function (): void {
+    // Lang.php's own docblock showed Lang::t('bulk.selected', ['n' => 5]).
+    // There is no such key, so anyone copying the line gets the key back.
+    $en = require GK_ROOT . '/lang/en.php';
+    foreach (glob(GK_ROOT . '/src/*.php') as $file) {
+        $src = (string) file_get_contents($file);
+        // Only the docblock examples — real calls are covered elsewhere.
+        preg_match_all('/^\s*\*\s+Lang::t\(\x27([a-z0-9_.]+)\x27/m', $src, $m);
+        foreach ($m[1] as $key) {
+            T::ok(isset($en[$key]),
+                basename($file) . " documents Lang::t('$key'), which lang/en.php does not define");
+        }
+    }
+},
+
 'every documented install path names something reachable' => function (): void {
     $readme = (string) file_get_contents(GK_ROOT . '/README.md');
     // A Composer install puts the assets under vendor/, and Layout::asset()

@@ -11,7 +11,7 @@ namespace GridKit;
  *   Lang::load('en', [...]);                  // Load translations
  *   Lang::loadFile(__DIR__.'/../lang/en.php'); // Load from file
  *   Lang::t('table.search');                  // Translate
- *   Lang::t('bulk.selected', ['n' => 5]);     // With parameters
+ *   Lang::t('table.selected', ['n' => 5]);    // With parameters
  *   Lang::locale();                           // Get current locale
  */
 class Lang
