@@ -214,6 +214,41 @@ return [
     T::eq($gaps, [], 'the skill file never names: ' . implode(', ', $gaps));
 },
 
+'the installable skill is current with the document it is built from' => function (): void {
+    // skill/ is generated from GRIDKIT_SKILL.md so the two cannot drift: one
+    // source, two shapes. The single file is what the site serves at /skill
+    // and what a paste-into-context user gets; skill/ is the same content
+    // split, so an assistant reads the rules first and fetches one reference
+    // instead of 61 KB to answer a question about one method.
+    $root = __DIR__ . '/..';
+    T::ok(is_file("$root/skill/SKILL.md"), 'skill/SKILL.md is missing — run ci/build-skill.sh');
+    T::ok(is_file("$root/ci/build-skill.sh"), 'the generator is gone');
+
+    // A skill needs its frontmatter, and the description is what an assistant
+    // matches on — an empty one means the skill is never chosen.
+    $md = (string) file_get_contents("$root/skill/SKILL.md");
+    T::ok(str_starts_with($md, "---\n"), 'SKILL.md has no frontmatter');
+    preg_match('/^---\n(.*?)\n---/s', $md, $m);
+    T::contains($m[1] ?? '', 'name: gridkit', 'the skill has no name');
+    T::ok(strlen($m[1] ?? '') > 120, 'the description is too thin to be matched on');
+
+    // The split must be lossless: every heading and every runnable example.
+    $src = (string) file_get_contents("$root/GRIDKIT_SKILL.md");
+    $gen = '';
+    foreach (glob("$root/skill/*.md") as $f)            $gen .= file_get_contents($f);
+    foreach (glob("$root/skill/reference/*.md") as $f)  $gen .= file_get_contents($f);
+
+    preg_match_all('/^#{2,3} .+$/m', $src, $h);
+    $lost = array_values(array_filter($h[0], static fn(string $x): bool => !str_contains($gen, $x)));
+    T::eq($lost, [], 'the split dropped headings: ' . implode(' | ', array_slice($lost, 0, 3)));
+    T::eq(substr_count($gen, '```php'), substr_count($src, '```php'),
+        'the split dropped code examples');
+
+    // And it must carry the current version, like the document does.
+    $version = trim((string) file_get_contents("$root/VERSION"));
+    T::contains($md, "# GridKit $version", "SKILL.md is stamped for another version");
+},
+
 'no German is left in the skill' => function (): void {
     $md = (string) file_get_contents(SKILL);
     T::ok(!preg_match('/[äöüÄÖÜß]/u', $md), 'umlauts');

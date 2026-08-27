@@ -1,203 +1,6 @@
-# GridKit – Agent Skill
+# GridKit 1.54.0 — components
 
-> **Version:** 1.54.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
-> **Demo:** https://gridkit.ssi.at
-
-## Purpose
-
-You are building or maintaining a web application using **GridKit**, a lightweight PHP component framework for admin dashboards. This skill is the authoritative reference for correct GridKit usage.
-
-## Architecture
-
-- **Stack:** PHP 8.2+, Vanilla JS, CSS (Material Design 3)
-- **Zero Dependencies:** 1 CSS file + 1 JS file, no build process
-- **Namespace:** `GridKit\` | CSS prefix: `gk-` | Data attributes: `data-gk-`
-
-## Change Workflow
-
-**Never modify GridKit files inside a consuming project.** Change the framework
-at its source, bump `VERSION`, note it in `CHANGELOG.md`, then update the copy
-your project uses. Local edits in a consuming project are silently lost on the
-next update and split the codebase in two.
-
-## Available Components
-
-| Component | Class | Purpose |
-|-----------|-------|---------|
-| Table | `GridKit\Table` | Data tables with search, sort, pagination |
-| Form | `GridKit\Form` | Grid-based forms (16-column), all field types, AJAX submit |
-| Header | `GridKit\Header` | Fixed header with breadcrumb, user menu |
-| Sidebar | `GridKit\Sidebar` | Navigation with groups, badges, collapse |
-| Modal | `GridKit\Modal` | Dialog overlays |
-| Button | `GridKit\Button` | Filled/Outlined/Text/Tonal, icons, sizes |
-| Auth | `GridKit\Auth` | Session auth, bcrypt, remember-me |
-| Theme | `GridKit\Theme` | 6 themes (indigo/ocean/forest/rose/amber/slate), light/dark |
-| Layout | `GridKit\Layout` | Layout modes (sidebar-first, header-first) |
-| StatCards | `GridKit\StatCards` | KPI cards with icon, color, format |
-| FilterChips | `GridKit\FilterChips` | URL-based filter chip buttons |
-| YearFilter | `GridKit\YearFilter` | Year navigation filter |
-| TableHeader | `GridKit\TableHeader` | **Unified filter/search bar above tables — Status / Toolbar / Advanced (since v1.10.0)** |
-| Lang | `GridKit\Lang` | i18n / multilingual support |
-| Pagination | `GridKit\Pagination` | Server-side pager below the table (`.gk-rowpager`), optional PageSize |
-| PageSize | `GridKit\PageSize` | Rows per page — lives in the pager bar, not in the table footer |
-| liveTable (JS) | `GK.liveTable` | AJAX tables (search/filter/sort/pagination live, no reload) |
-| BelegModal | `GridKit\BelegModal` | PDF / document preview modal with iframe + mobile fallback (since v1.15.0) |
-| ActionGroup | `GridKit\ActionGroup` | Container for action buttons inside table columns (since v1.16.0) |
-| SortLink | `GridKit\SortLink` | Sortable column headers for hand-built tables (server-side sort) |
-| Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
-| Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
-
-## The one rule to read first: echo or return
-
-Half of GridKit prints; half hands you a string. Getting this wrong produces no
-error and no warning — the page renders, the piece is simply missing. Five
-agents were given this file and a page to build; not one got a first draft
-without tripping over this.
-
-**These twelve PRINT. Call them as a statement — `<?php $x->render(); ?>`:**
-
-| | | |
-|---|---|---|
-| `Table::render()` | `Form::render()` | `Sidebar::render()` |
-| `StatCards::render()` | `FilterChips::render()` | `TableHeader::render()` |
-| `YearFilter::render()` | `Pagination::render()` | `PageSize::make()->…->render()` |
-| `ActionGroup::render()` | `Modal::container()` | `BelegModal::container()` |
-
-`PageSize::render()` above is an INSTANCE method — build it with the static
-`PageSize::make('per_page')` first, then chain. Same for `TableHeader::make()`.
-Everything else in that table is called on an object you constructed with `new`.
-
-**These RETURN a string. You must echo it — `<?= … ?>`:**
-
-| | | |
-|---|---|---|
-| `Header::render()` | `Button::render()` | `Button::icon()` |
-| `Theme::switcher()` | `Theme::attributes()` | `Layout::bodyTag()` |
-| `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
-| `Lang::jsConfig()` | `Pagination::build()` | |
-
-`Header::render()` is the exception that catches people: every other component
-you construct with `new` prints, and this one does not. `<?php (new Header())
-->render(); ?>` renders nothing at all, silently.
-
-The rule behind it, if you want one: a component that owns a block of the page
-prints it; a helper that produces a fragment for you to place returns it. Header
-sits on the wrong side of that line for historical reasons and is not going to
-move, because every existing page echoes it.
-
----
-
-## Page skeleton
-
-Every class lives under the `GridKit\` namespace and is autoloaded by
-`autoload.php`. A complete page needs nothing beyond that — no template engine,
-no build step:
-
-```php
-<?php
-require_once __DIR__ . '/vendor/autoload.php';   // or '/path/to/gridkit/autoload.php'
-
-use GridKit\{Button, Form, Lang, Layout, Sidebar, StatCards, Table, Theme};
-
-Lang::set($_GET['lang'] ?? 'en');   // 'en' | 'de'
-Theme::set('indigo', 'light');      // indigo | ocean | forest | rose | amber | slate
-?>
-<!doctype html>
-<html <?= Theme::attributes() ?>>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-<link rel="stylesheet" href="<?= Layout::asset('css/gridkit.css') ?>">
-<link rel="stylesheet" href="<?= Layout::asset('css/themes.css') ?>">
-<?= Lang::jsConfig() ?>
-</head>
-<?= Layout::bodyTag('gk-root') ?>
-
-<!-- components go here -->
-
-<script src="<?= Layout::asset('js/gridkit.js') ?>"></script>
-</body>
-</html>
-```
-
-`skeleton.php` in the repository is this file, filled in.
-
-**`Layout::asset()` stamps a path; it does not resolve one.** It appends the
-file's modification time so a changed stylesheet is not served from a stale
-cache — and it hands back whatever path you gave it. So the path has to be one
-the *browser* can reach from the page:
-
-```php
-// page inside the GridKit directory
-echo Layout::asset('css/gridkit.css');                    // css/gridkit.css?v=…
-
-// page in an app directory beside the checkout
-echo Layout::asset('../gridkit/css/gridkit.css');
-
-// Composer install — the files live under vendor/
-echo Layout::asset('vendor/mmollay/gridkit/css/gridkit.css');
-```
-
-Get it wrong and the stamp still appears, so the URL looks right while the
-browser gets a 404 and the page renders unstyled. If `vendor/` is outside your
-document root, copy or symlink its `css/` and `js/` into the public root.
-
-`Modal::container()` is **not** in the skeleton above and should not be in
-yours: since 1.42.0 it emits nothing. `GK.modal.open()` builds its own overlay.
-
-The other classes import the same way — the full list is in the table above,
-each one `GridKit\<Name>`:
-
-```php
-use GridKit\{ActionGroup, Auth, BelegModal, FilterChips, Header, Icon,
-              PageSize, Pagination, Select, SortLink, TableHeader, YearFilter};
-```
-
-A complete working application is in [`examples/invoices/`](examples/invoices/).
-
-### With a sidebar
-
-A sidebar is `position: fixed`, so the content beside it needs the wrapper that
-makes room. Without it everything renders **underneath** the sidebar — silently,
-because nothing is broken, it is just covered:
-
-```php
-<?= Layout::bodyTag('gk-root') ?>
-
-<?php (new Sidebar('main'))
-    ->brand('My app', 'widgets')
-    ->group('Navigation')
-    ->item('Dashboard', '?p=dashboard', 'dashboard', ['active' => true])
-    ->item('Invoices',  '?p=invoices',  'receipt_long', ['badge' => 12])
-    ->render(); ?>
-
-<div class="gk-with-sidebar">          <!-- required: clears the fixed sidebar -->
-    <?= (new Header())->title('Dashboard')->user('Jane')->render() ?>
-
-    <main class="gk-main">             <!-- padding and max-width -->
-        <!-- components go here -->
-    </main>
-</div>
-```
-
-`gk-with-sidebar` carries the left margin and shrinks when the sidebar
-collapses; `gk-main` carries the padding. `skeleton.php` in the repository is
-this file, filled in.
-
-### Inside SSI Panel
-
-In SSI Panel the layout loads GridKit, so a view only imports what it uses:
-
-```php
-<?php
-$this->layout('layouts/panel');
-use GridKit\{Table, Form, StatCards, FilterChips, Button};
-?>
-<?php $this->start('content') ?>
-<!-- Your components here -->
-<?php $this->end() ?>
-```
+Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
 ## Component Reference
 
@@ -1001,47 +804,6 @@ the `{placeholder}` substitution that `Lang::t()` does for free.
 `Lang::set()` — `€1,240.00` and `Mar 12, 2026` under `en`, `1.240,00 €` and
 `12.03.2026` under `de`. You do not translate those yourself.
 
-## JavaScript API
-
-```javascript
-// Toast notifications (use these exact forms!)
-GK.toast.success('Saved.');
-GK.toast.error('Something went wrong.');
-GK.toast.warning('Check this before continuing.');
-GK.toast.info('Nothing to do here yet.');
-
-// Dynamic modal — the second argument is a URL whose response fills the body
-GK.modal.open('Title', 'forms/edit.php', { id: 42 }, 'medium');
-GK.modal.close();
-
-// Table refresh (after save/delete in server-side mode).
-// Returns false when no table with that id is on the page.
-GK.table.refresh('table-id');
-GK.table.refreshAll();          // every table on the page
-```
-
-## Filters forget each other unless you say otherwise
-
-Four components build their own URLs — `Pagination`, `PageSize`, `FilterChips`
-and `YearFilter` — and each one rebuilds it from its base plus its **own**
-parameter. Everything else on the page is dropped, with no error and nothing in
-the console. On a report with a year, a status and a search, changing the row
-count sends you back to an unfiltered newest-year view, and it looks like a
-feature nobody finished.
-
-Tell each of them what to keep:
-
-```php
-->preserve(['year', 'status', 'q'])        // names — values read from $_GET
-->preserve(['year' => $year, 'q' => $q])   // or a name => value map
-Pagination::render([..., 'params' => ['year' => $year, 'q' => $q]]);
-```
-
-`Pagination` passes its own `baseUrl` and `params` down to a nested
-`pageSize`, so those two agree by themselves. The other two you tell yourself.
-A page that has exactly one filter needs none of this; a page with two needs all
-of it.
-
 ### Pagination + PageSize (since 1.22 / 1.27)
 
 Server-side pager **below** `.gk-table-wrap`, not inside the card and not
@@ -1149,119 +911,6 @@ PageSize::make('per_page')->current($perPage)
 $perPage = PageSize::make('per_page')->options([25, 50, 100])->resolve(25);
 ```
 
-### Global search (`GK.search`)
-
-A system-wide quick search, opened with Ctrl+K (Cmd+K on Mac) or by any element
-carrying `data-gk-search`. GridKit draws the widget; **what** is searched is
-entirely your endpoint's business.
-
-```js
-GK.search.init({
-    url:       '/api/search',   // called with ?q=<query>
-    hotkey:    'ctrl+k',
-    minLength: 2,               // 0 opens with results already showing
-});
-```
-
-Your endpoint answers with groups of hits:
-
-```json
-{ "groups": [
-    { "title": "Invoices",
-      "items": [
-        { "title":    "INV-2026-0184",
-          "subtitle": "Ecklund & Partner · Mar 12, 2026",
-          "amount":   "€1,240.00",
-          "url":      "/invoices/184",
-          "icon":     "receipt_long" } ] } ] }
-```
-
-Only `title` and `url` are required. Arrow keys move, Enter opens, Escape
-closes.
-
-The German key names this contract used to require — `gruppen`, `titel`,
-`treffer`, `untertitel`, `betrag` — are still accepted, so an endpoint written
-against the old shape keeps working. New ones should use the English names.
-
-### Live Tables (`GK.liveTable`) — since 1.9.0
-
-AJAX-filtered tables: search, filter, sort and paging with no full page reload.
-The caret stays put while typing; the URL is kept in step via `history.replaceState`.
-
-```html
-<!-- Inputs: beliebig ausserhalb des Containers -->
-<input data-gk-live-input="my-tbl" name="q" placeholder="Suche">
-<select data-gk-live-input="my-tbl" name="status">...</select>
-
-<!-- Container: swapped over AJAX -->
-<div id="my-tbl" data-gk-live-table="/my-list">
-    <!-- Table, sort headers (<a>), pagination — all live -->
-</div>
-```
-
-**On the controller page**: when `X-Requested-With: XMLHttpRequest` or `?partial=1` is present, render the container's contents only, without the layout. In PHP:
-
-```php
-if ($request->isAjax() || $request->get('partial') === '1') {
-    return $this->view('my-list-partial', $data);
-}
-return $this->view('my-list', $data);
-```
-
-Features:
-- **250 ms debounce** before the fetch; the URL is synced immediately.
-- **Link interception**: an `<a href>` inside the container pointing at the same endpoint is followed over AJAX-Reload (Sort-Header, Pagination).
-- **`patchNavSelects()`**: overrides `onchange` on `<select data-gk-years>` so they build on `window.location.search`. Keeps the current search when the year changes.
-- The `gk-live-reloaded` event fires on the container after every swap — bind your own re-initialisation to it.
-
-### AJAX Navigation (SPA-lite)
-
-```php
-// Turn on AJAX navigation for the sidebar
-$sidebar->ajaxNav(true);
-```
-
-```html
-<!-- Mark the content container -->
-<div class="gk-with-sidebar" data-gk-content>
-  <!-- This region is replaced on navigation -->
-</div>
-```
-
-Features:
-- Sidebar links load content with fetch(), no page reload
-- Ladebalken am oberen Bildschirmrand
-- Browser back/forward works through pushState
-- Automatische Re-Initialisierung von Table, Tooltip etc.
-- Falls back to a normal page load on error
-- External links and Ctrl/Cmd-click are left alone
-
-## CSS Classes Reference
-
-| Class | Purpose |
-|-------|---------|
-| `gk-root` | Root container (on `<body>`) |
-| `gk-with-sidebar` | Content area beside sidebar |
-| `gk-body-with-header` | Content area below fixed header |
-| `gk-btn` | Button base |
-| `gk-btn-filled` | Filled button variant |
-| `gk-btn-outlined` | Outlined button variant |
-| `gk-btn-tonal` | Tonal button variant |
-| `gk-btn-text` | Text button variant |
-| `gk-btn-icon-only` | Icon-only button (no text) |
-| `gk-btn-sm` | Small button size |
-| `gk-card` | Card container |
-| `gk-toolbar-spacer` | Pushes toolbar content right |
-| `gk-filter-chips` | FilterChips container |
-| `gk-chip` `gk-chip-active` | Individual chip |
-| `gk-stat-cards` | StatCards container |
-| `gk-modal-overlay` | Modal background |
-| `gk-modal` | Modal box |
-| `gk-modal-small` `gk-modal-large` | Modal size modifiers |
-| `gk-text-muted` | Muted text color |
-| `gk-section-title` | Section heading style |
-| `gk-page-header` | Page title + action area |
-| `gk-empty` | Empty state (centered, padded) |
 
 ### BelegModal (since v1.15.0)
 
@@ -1350,14 +999,46 @@ layout, typography, or semantic colors. **Spacing scale: 0/1/2/3/4/5/6 = 0/4/8/1
 <div class="gk-flex-center gk-gap-md gk-fs-md gk-text-muted">…</div>
 ```
 
-## Common Pitfalls
+## Purpose
 
-1. **Search through HTML** — Never put HTML in `search()` column keys. Use plain-text key + separate display key.
-2. **Missing `Lang::jsConfig()`** — "no_entries" shows as raw key. Must be in `<head>` before `gridkit.js`.
-3. **Wrong button classes** — Use `gk-btn-filled` not `gk-btn--filled` (no double dash).
-4. **Wrong toast API** — Use `GK.toast.success()` not `GK.toast()`.
-5. **Wrong modal API** — the signature is `GK.modal.open(title, url, params, size)`. It
-   POSTs to `url` and puts the response in the body. It does NOT take an HTML string: pass
-   markup and the browser requests it as a path, so the modal fills with the server's 404
-   page. For inline HTML use the static inline modal above.
-6. **Direct project edits** — Always change GridKit at its own source, never inside a consuming project.
+You are building or maintaining a web application using **GridKit**, a lightweight PHP component framework for admin dashboards. This skill is the authoritative reference for correct GridKit usage.
+
+## Architecture
+
+- **Stack:** PHP 8.2+, Vanilla JS, CSS (Material Design 3)
+- **Zero Dependencies:** 1 CSS file + 1 JS file, no build process
+- **Namespace:** `GridKit\` | CSS prefix: `gk-` | Data attributes: `data-gk-`
+
+## Change Workflow
+
+**Never modify GridKit files inside a consuming project.** Change the framework
+at its source, bump `VERSION`, note it in `CHANGELOG.md`, then update the copy
+your project uses. Local edits in a consuming project are silently lost on the
+next update and split the codebase in two.
+
+## Available Components
+
+| Component | Class | Purpose |
+|-----------|-------|---------|
+| Table | `GridKit\Table` | Data tables with search, sort, pagination |
+| Form | `GridKit\Form` | Grid-based forms (16-column), all field types, AJAX submit |
+| Header | `GridKit\Header` | Fixed header with breadcrumb, user menu |
+| Sidebar | `GridKit\Sidebar` | Navigation with groups, badges, collapse |
+| Modal | `GridKit\Modal` | Dialog overlays |
+| Button | `GridKit\Button` | Filled/Outlined/Text/Tonal, icons, sizes |
+| Auth | `GridKit\Auth` | Session auth, bcrypt, remember-me |
+| Theme | `GridKit\Theme` | 6 themes (indigo/ocean/forest/rose/amber/slate), light/dark |
+| Layout | `GridKit\Layout` | Layout modes (sidebar-first, header-first) |
+| StatCards | `GridKit\StatCards` | KPI cards with icon, color, format |
+| FilterChips | `GridKit\FilterChips` | URL-based filter chip buttons |
+| YearFilter | `GridKit\YearFilter` | Year navigation filter |
+| TableHeader | `GridKit\TableHeader` | **Unified filter/search bar above tables — Status / Toolbar / Advanced (since v1.10.0)** |
+| Lang | `GridKit\Lang` | i18n / multilingual support |
+| Pagination | `GridKit\Pagination` | Server-side pager below the table (`.gk-rowpager`), optional PageSize |
+| PageSize | `GridKit\PageSize` | Rows per page — lives in the pager bar, not in the table footer |
+| liveTable (JS) | `GK.liveTable` | AJAX tables (search/filter/sort/pagination live, no reload) |
+| BelegModal | `GridKit\BelegModal` | PDF / document preview modal with iframe + mobile fallback (since v1.15.0) |
+| ActionGroup | `GridKit\ActionGroup` | Container for action buttons inside table columns (since v1.16.0) |
+| SortLink | `GridKit\SortLink` | Sortable column headers for hand-built tables (server-side sort) |
+| Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
+| Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |

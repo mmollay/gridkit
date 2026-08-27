@@ -1,0 +1,33 @@
+# GridKit
+
+> PHP components for admin dashboards. Tables with search, sort, filter and
+> paging over AJAX; forms on a 16-column grid; six themes; dark mode; a mobile
+> layout. Zero dependencies, no build step, PHP 8.2+.
+
+GridKit renders admin UI from PHP you already have. It is not a framework: no
+routing, no ORM, no client-side state. A checkout is a working install.
+
+## For an assistant writing GridKit code
+
+- [The complete API in one document](https://gridkit.ssi.at/skill): every
+  public method of every component, with the rules that are not guessable —
+  which calls print and which return a string, how `Layout::asset()` resolves,
+  which components silently drop your filters unless told to keep them.
+  Read this before writing GridKit code. It is the whole surface; there is no
+  second docs site to search.
+
+## Docs
+
+- [README](https://github.com/mmollay/gridkit#readme): what it is, how to install
+- [Live demo](https://gridkit.ssi.at/demo/): every component, switchable themes
+- [Worked example](https://github.com/mmollay/gridkit/tree/main/examples/invoices):
+  a CRUD application in five files and a lang directory
+- [Changelog](https://github.com/mmollay/gridkit/blob/main/CHANGELOG.md): what
+  changed and why, including every round of agents being given the document
+  above and the gaps they found
+
+## Install
+
+composer require mmollay/gridkit
+
+Source: https://github.com/mmollay/gridkit

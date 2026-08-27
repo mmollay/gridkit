@@ -769,7 +769,8 @@ $skillHtml = renderSkillMd($skillContent);
                     searching a docs site for it.
                 </p>
                 <ol class="agent-steps">
-                    <li>Download <code>GRIDKIT_SKILL.md</code> from the repository</li>
+                    <li>Install it: <code>cp -r skill ~/.claude/skills/gridkit</code> &mdash; or point any
+                        assistant at <a href="/skill"><code>gridkit.ssi.at/skill</code></a></li>
                     <li>Add it to your AI agent's context or project knowledge</li>
                     <li>Describe what you need: "Create a user management dashboard"</li>
                     <li>The agent generates working GridKit PHP code — tables, forms, modals, all wired up</li>

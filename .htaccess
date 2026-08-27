@@ -1,0 +1,32 @@
+# GridKit — the public site at gridkit.ssi.at
+#
+# Two jobs: give the agent-facing document a short, stable address, and keep
+# things out of the document root that have no business being served.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # /skill — the whole API in one document, for an AI assistant to read.
+    # Served as text/markdown so a fetch gets the source, not a download.
+    RewriteRule ^skill/?$ GRIDKIT_SKILL.md [L]
+</IfModule>
+
+<Files "GRIDKIT_SKILL.md">
+    ForceType text/markdown
+    Header set Access-Control-Allow-Origin "*"
+    Header set Cache-Control "public, max-age=3600"
+</Files>
+
+<Files "llms.txt">
+    ForceType text/plain
+    Header set Access-Control-Allow-Origin "*"
+</Files>
+
+# Nothing below is part of the site.
+<FilesMatch "\.(conf|ini|log|lock|dist)$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "^(composer\.json|composer\.lock|\.gitattributes|\.gitignore)$">
+    Require all denied
+</FilesMatch>
+RedirectMatch 403 ^/(tests|ci|\.git|\.design)/

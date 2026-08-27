@@ -187,6 +187,23 @@ file did not say rather than something it said wrongly. Every run is in
 That is the honest number, and it is the number this file is being written
 against.
 
+### Three ways to give it to an assistant
+
+```bash
+# 1. Installed, for Claude Code — the assistant reads the rules first and
+#    fetches one reference on demand instead of all 61 KB.
+cp -r skill ~/.claude/skills/gridkit
+
+# 2. Fetched, for anything that can read a URL:
+#    https://gridkit.ssi.at/skill
+#    (llms.txt at the site root points there too)
+
+# 3. Pasted: drop GRIDKIT_SKILL.md into the context. One file, no setup.
+```
+
+All three are the same content. `skill/` is generated from `GRIDKIT_SKILL.md`
+by `ci/build-skill.sh`, and a test fails if the two drift apart.
+
 ---
 
 ## Components
