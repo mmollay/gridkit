@@ -363,6 +363,29 @@ return [
         . " so it loses on source order (block at $mobileAt, rule at $sideAt)");
 },
 
+'a delete button keeps its confirmation after a re-render' => function (): void {
+    // Table::renderButtons emits data-gk-confirm on the server. The client
+    // re-render — which runs on every sort, search and page change of a
+    // setData() table — did not, so the delete button asked once and then
+    // stopped: the click went straight through to gk:rowaction with no
+    // question. Found by installing the real package from Packagist and
+    // sorting a table.
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, "data-gk-confirm=", 'the client re-render drops the confirmation again');
+
+    // And it must use the single-row wording, not the bulk one.
+    T::contains($js, '_t("confirm_delete_row")',
+        'the re-render asks the bulk question ("Really delete entries?") for one row');
+
+    $en = require __DIR__ . '/../lang/en.php';
+    $de = require __DIR__ . '/../lang/de.php';
+    foreach (['en' => $en, 'de' => $de] as $loc => $cat) {
+        T::ok(isset($cat['js.confirm_delete_row']), "js.confirm_delete_row missing from $loc");
+        T::eq($cat['js.confirm_delete_row'], $cat['table.confirm_delete'],
+            "the client and server ask differently in $loc");
+    }
+},
+
 'the year dropdown has a name like every other filter' => function (): void {
     Lang::set('en');
     $html = T::capture(fn() => (new YearFilter('y'))

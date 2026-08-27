@@ -78,6 +78,7 @@ return [
     'js.error_upload'       => 'Fehler',
     'js.selected'           => '{n} ausgewählt',
     'js.confirm_delete'     => 'Einträge wirklich löschen?',
+    'js.confirm_delete_row' => 'Diesen Eintrag löschen?',
     'js.confirm_title'      => 'Bestätigung',
     'js.confirm_ok'         => 'Bestätigen',
     'js.confirm_cancel'     => 'Abbrechen',

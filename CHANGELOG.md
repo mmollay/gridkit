@@ -7,6 +7,51 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.52.0] - 2026-08-27
+
+Packagist was updated, so `composer require mmollay/gridkit` finally installs
+the current version rather than v1.4.0 from March. That made a test possible
+that had never been run: download the archive Packagist really serves, unpack
+it, write a page against it the way the README says, and use it.
+
+It found a bug in about two minutes.
+
+### Fixed — a delete button that stopped asking
+
+**`data-gk-confirm` was not emitted by the client re-render.** The server puts
+it on the button; the browser rebuilds that button on every sort, search and
+page change of a `setData()` table, and rebuilt it without the attribute. So a
+delete button asked for confirmation once, on first load, and then never again
+— the click went straight through to `gk:rowaction`.
+
+Measured in a browser against the real package:
+
+| | `data-gk-confirm` | click asks? |
+|---|---|---|
+| on load | "Delete this entry?" | yes |
+| after a sort | *missing* | **no** |
+
+1.32.0 fixed exactly this on the server side, where the delete button in the
+README's own example was deleting without asking. The client path kept it.
+
+The re-render now emits it, using `js.confirm_delete_row` — the single-row
+wording that matches `table.confirm_delete`, not the bulk "Really delete
+entries?" that `js.confirm_delete` carries.
+
+### Verified — the whole thing, from Packagist
+
+Not a simulation this time. The zipball Packagist points at, unpacked into
+`vendor/mmollay/gridkit/`, with a page written from the README: sidebar, fixed
+header, stat cards with trends, a searchable sortable table with row actions and
+client-side paging, in English and German.
+
+All three assets 200. No PHP notice, no console error. Page two slices in the
+browser with no network request. Search filters. The status labels colour
+correctly. The delete button announces itself as "Delete" / "Löschen".
+
+**2,184 assertions.**
+
+---
 ## [1.51.0] - 2026-08-27
 
 Round twenty-three asked whether twenty-three rounds of edits still hold

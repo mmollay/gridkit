@@ -78,6 +78,7 @@ return [
     'js.error_upload'       => 'Error',
     'js.selected'           => '{n} selected',
     'js.confirm_delete'     => 'Really delete entries?',
+    'js.confirm_delete_row' => 'Delete this entry?',
     'js.confirm_title'      => 'Confirmation',
     'js.confirm_ok'         => 'Confirm',
     'js.confirm_cancel'     => 'Cancel',

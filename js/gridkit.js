@@ -835,6 +835,20 @@
               }
               btnAttrs += ' aria-label="' + e(aria) + '"';
             }
+            // The confirmation. Table::renderButtons emits data-gk-confirm on
+            // the server; this re-render did not, so a delete button asked on
+            // first load and stopped asking after any sort, search or page
+            // change — the click went straight through to gk:rowaction with no
+            // question. Verified in a browser from a real Composer install.
+            if (bopts.confirm) {
+              btnAttrs +=
+                ' data-gk-confirm="' +
+                e(typeof bopts.confirm === "string" ? bopts.confirm : _t("confirm_delete_row")) +
+                //   confirm_delete is the BULK wording ("Really delete
+                //   entries?"); one row gets the same sentence the server
+                //   uses, table.confirm_delete.
+                '"';
+            }
             if (bopts.title) btnAttrs += ' title="' + e(bopts.title) + '"';
             btnAttrs += " data-gk-params='" + e(JSON.stringify(params)) + "'";
             if (bopts.onclick) {
