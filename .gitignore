@@ -16,7 +16,11 @@
 /tableprobe.php
 /selprobe.php
 /jsprobe.php
-/_audit_*.php
+# Anything at the repo root whose name starts with an underscore is a
+# scratch file from an audit run. No project file is named that way —
+# _audit_seam.php and _repro_rowaction.php each reached a commit before
+# this line existed, both swept in by `git add -A`.
+/_*
 .design/verify/snapshots/
 .design/verify/hex-inventory.json
 .design/verify/offsets.json

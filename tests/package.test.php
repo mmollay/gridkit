@@ -82,6 +82,27 @@ return [
     }
 },
 
+'no scratch file from an audit run is tracked' => function (): void {
+    // Twice now an agent left a probe script in the repo root and `git add -A`
+    // carried it into a commit — once into the Composer package itself. The
+    // ignore rules catch the shapes; this catches the ones that got past them.
+    $out = [];
+    exec('git -C ' . escapeshellarg(ROOT) . ' ls-files 2>/dev/null', $out);
+    T::ok($out !== [], 'git ls-files returned nothing — is this a checkout?');
+
+    foreach ($out as $path) {
+        $base = basename($path);
+        T::ok(!str_starts_with($base, '_'), "a scratch file is tracked: $path");
+        // Only the repo root. .design/verify/probe-src.js is a deliberate
+        // tool that lives in a directory named for the purpose.
+        T::ok(str_contains($path, '/') || !preg_match('/^(probe|repro|tmp|scratch)/i', $base),
+            "a scratch file is tracked at the repo root: $path");
+        // A screenshot belongs under docs/, nowhere else.
+        T::ok(!preg_match('/\.(png|jpe?g)$/i', $path) || str_starts_with($path, 'docs/'),
+            "an image outside docs/ is tracked: $path");
+    }
+},
+
 'VERSION, composer.json and the changelog agree' => function (): void {
     $version = trim((string) file_get_contents(ROOT . '/VERSION'));
     T::ok((bool) preg_match('/^\d+\.\d+\.\d+$/', $version), "VERSION is not semver: $version");
