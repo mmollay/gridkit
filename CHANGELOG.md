@@ -2613,6 +2613,23 @@ $toolbarHtml = ob_get_clean();
 
 ---
 
+## [1.4.0] - 2026-03-26
+
+Reconstructed on 2026-08-27 from the tag and its commit. This is the version
+Packagist has served since March, and it was the one release with no changelog
+entry — found by comparing the thirty tags on GitHub against the hundred and
+forty-three entries here.
+
+### Added
+
+- **`showIf` / `hideIf` on a table row button** — the button renders only when
+  the named field on that row is truthy (or falsy). A delete button that should
+  not appear for a locked record needs no `if` around the whole column.
+
+### Fixed
+
+- The header's `z-index`, which let a table's sticky elements sit over it.
+
 ## [1.3.1] - 2026-03-26 — Header + Select-Dropdown Fixes
 
 ### Fixed

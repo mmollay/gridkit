@@ -122,6 +122,45 @@ return [
     T::ok(true, 'this run has mbstring: ' . ($withMb ? 'yes' : 'no'));
 },
 
+'every tagged release has a changelog entry' => function (): void {
+    // 1.4.0 is what Packagist has served since March, it has a tag, and it was
+    // the one release with no entry here — found only by counting the tags on
+    // GitHub against the entries in this file. A release nobody wrote down is
+    // a release nobody can read about from the Releases page.
+    $md = (string) file_get_contents(ROOT . '/CHANGELOG.md');
+    preg_match_all('/^## \[(\d+\.\d+\.\d+)\]/m', $md, $m);
+    $logged = array_flip($m[1]);
+
+    $out = [];
+    exec('git -C ' . escapeshellarg(ROOT) . ' tag 2>/dev/null', $out);
+    $tags = array_values(array_filter(array_map(
+        static fn(string $t): string => ltrim(trim($t), 'v'),
+        $out
+    ), static fn(string $t): bool => (bool) preg_match('/^\d+\.\d+\.\d+$/', $t)));
+
+    T::ok($tags !== [], 'no tags found — is this a checkout with tags?');
+    foreach ($tags as $tag) {
+        T::ok(isset($logged[$tag]), "v$tag is tagged but CHANGELOG.md never mentions it");
+    }
+},
+
+'the release-notes script refuses a version it cannot find' => function (): void {
+    // Its first version silently printed the whole file when the version was
+    // missing — 144 entries back to 0.9.0 for a --since 1.4.0, which looked
+    // like a very thorough release note and was a bug.
+    $script = ROOT . '/ci/release-notes.sh';
+    T::ok(is_file($script), 'ci/release-notes.sh is missing');
+
+    exec('bash ' . escapeshellarg($script) . ' 9.9.9 2>/dev/null', $out, $code);
+    T::eq($code, 1, 'an unknown version does not fail the script');
+
+    $out = [];
+    exec('bash ' . escapeshellarg($script) . ' ' . trim((string) file_get_contents(ROOT . '/VERSION'))
+        . ' 2>/dev/null', $out, $code);
+    T::eq($code, 0, 'the current version cannot be printed');
+    T::ok(count($out) > 3, 'the notes for the current version are suspiciously short');
+},
+
 'VERSION, composer.json and the changelog agree' => function (): void {
     $version = trim((string) file_get_contents(ROOT . '/VERSION'));
     T::ok((bool) preg_match('/^\d+\.\d+\.\d+$/', $version), "VERSION is not semver: $version");
