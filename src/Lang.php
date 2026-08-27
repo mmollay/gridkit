@@ -83,7 +83,14 @@ class Lang
     public static function jsConfig(): string
     {
         $jsKeys = [];
-        foreach (self::$strings[self::$locale] ?? [] as $key => $val) {
+        // Same fallback order t() uses: English is the floor, the active locale
+        // overrides it key by key. Without the floor a locale GridKit does not
+        // ship (fr, es, ...) emitted an empty catalogue, and every browser
+        // string came out as its raw key while the server side quietly read
+        // English. JSON_FORCE_OBJECT keeps an empty payload a {} rather than an
+        // [], which is truthy and survives `window.GK_LANG || {}`.
+        $catalogue = array_merge(self::$strings['en'] ?? [], self::$strings[self::$locale] ?? []);
+        foreach ($catalogue as $key => $val) {
             if (str_starts_with($key, 'js.')) {
                 $jsKeys[substr($key, 3)] = $val;
             } elseif (str_starts_with($key, 'action.')) {
@@ -94,7 +101,7 @@ class Lang
                 $jsKeys['action_' . substr($key, 7)] = $val;
             }
         }
-        $json = json_encode($jsKeys, JSON_UNESCAPED_UNICODE);
+        $json = json_encode($jsKeys, JSON_UNESCAPED_UNICODE | JSON_FORCE_OBJECT);
         return '<script>window.GK_LANG=' . $json . ';</script>';
     }
 }

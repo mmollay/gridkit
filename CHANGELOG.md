@@ -7,6 +7,66 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.49.0] - 2026-08-27
+
+Round four of the skill-file test — five new tasks, aimed at the API 1.48.0
+documented for the first time.
+
+| round | tasks | first try | confirmed gaps |
+|---|---|---|---|
+| one | set A | 0 / 5 | 30 |
+| two | set A again | 4 / 5 | 17 |
+| three | set B | 0 / 5 | 31 |
+| four | set C | **1 / 5** | **17** |
+
+On new ground: 0 → 1 of 5, and the gaps halved. Modest, and real. One agent
+wrote its page straight through and changed nothing.
+
+### Fixed — a claim I made in 1.48.0 that was false
+
+**`Lang::jsConfig()` did not carry the strings `loadDir()` registered, and for a
+locale GridKit does not ship it emitted `window.GK_LANG=[]`.** 1.48.0 said the
+opposite — that a hand-rolled `$t()` closure "costs you the browser-side
+catalogue that `Lang::jsConfig()` ships". It shipped nothing of the sort: a page
+in French got an empty array, which wiped GridKit's own browser strings too, so
+`GK.t('no_entries')` came back as `no_entries` while the server side quietly
+read English. And `[]` is truthy, so the obvious `window.GK_LANG || {}` guard
+did not help either.
+
+`jsConfig()` now uses the same fallback order `t()` uses — English as the floor,
+the active locale overriding key by key — and forces an object, so an empty
+payload is `{}`.
+
+### Fixed — a header 260px too wide
+
+**In `sidebar-first`, a fixed header ran past the right edge of the screen and
+took the user menu with it.** `.gk-header` carries `width: 100%`, and on a
+`position: fixed` element an explicit width beats the `right` offset — so the
+header started at `left: 260px` and was still a whole viewport wide. Measured in
+a browser at 780px: the header ended at 1040, and the user menu — which holds
+the only theme switcher on that layout — sat at x=1016, off screen and
+unclickable. PHP says nothing, the console says nothing.
+
+### Added — to the skill file
+
+- **One place that names the filter trap.** `Pagination`, `PageSize`,
+  `FilterChips` and `YearFilter` each rebuild the URL from their own parameter
+  and drop everything else unless told to `preserve()` it. Four sections
+  mentioned it in passing; it now has a heading of its own, because an agent
+  following the file literally shipped a report where changing the row count
+  reset the year, the status and the search at once.
+- `->footer()` takes an array per cell — `['text' => …, 'align' => 'right',
+  'bold' => true, 'colspan' => 2]`. Only the plain-string form was shown, so a
+  currency total could not be lined up under its own column.
+
+### Not changed
+
+Two reported gaps did not survive checking: `->loadTime()` does print in the
+toolbar (`38 ms` is there), and `GK.t()` is in the file.
+
+**2,098 assertions.** The skill file is 1,363 lines.
+
+---
 ## [1.48.0] - 2026-08-27
 
 Three rounds of the agent test gave the same verdict from two directions: the

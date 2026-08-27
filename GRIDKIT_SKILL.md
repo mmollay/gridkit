@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.48.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.49.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.ssi.at
 
 ## Purpose
@@ -320,8 +320,16 @@ second case, so only describe the first.
                      // minimal | flat | inverted | compact.
                      // ONE slot: a second call replaces the first.
 ->nowrap()           // no cell wraps anywhere in the table
-->footer(['', 'Total', '€12,480.00'])   // a <tfoot> row, cell by cell
-->loadTime(38)       // print "38 ms" in the toolbar — for a page that measures
+->footer(['', 'Total', '€12,480.00'])   // a <tfoot> row, cell by cell.
+                     // A plain string is a left-aligned cell. For anything
+                     // else pass an array — a currency total under a
+                     // right-aligned column needs one:
+                     //   ['text' => '€12,480.00', 'align' => 'right',
+                     //    'bold' => true, 'colspan' => 2]
+->loadTime(38)       // a <tfoot> meta row "N entries · 38 ms", NOT a toolbar
+                     // item: ->toolbar(false) still shows it, and with
+                     // ->footer() it shares that one row — the time only
+                     // fills the columns the footer cells leave over.
 ->mobile('card')     // card | scroll — how it collapses on a phone
 ```
 
@@ -618,12 +626,21 @@ only build the chips; they do not constrain it. `?year=abc` hands you `0` and
 and nothing warns you. Clamp it against your own list before it reaches a query:
 
 ```php
-$currentYear = (int) ($_GET['year'] ?? date('Y'));
+$raw = (string) ($_GET['year'] ?? '');                       // check the string first
+$currentYear = ctype_digit($raw) ? (int) $raw : (int) date('Y');
 $years = range(2022, (int)date('Y'));
 if (!in_array($currentYear, $years, true)) $currentYear = (int)date('Y');
 ```
 
-With `allOption()` set, `0` is the legitimate "all years" value — allow it too.
+Validate the raw string **before** the cast, not the int after it — `(int) 'abc'`
+is `0`, indistinguishable from a real `0`.
+
+With `allOption()` set, `0` is the legitimate "all years" value — allow it too,
+but only on top of the `ctype_digit()` guard above:
+`if ($currentYear !== 0 && !in_array(...))`. Casting first and then exempting `0`
+reopens the exact hole the clamp closes: `?year=abc` becomes `0`, passes as
+"all years", and silently widens the report to every year instead of falling
+back to the current one.
 
 ### SortLink
 
@@ -958,10 +975,27 @@ Each file returns a `key => string` array and is named for its locale
 GridKit's own strings survive; prefix yours (`app.`, or your module's name) and
 nothing can collide. `Lang::locale()` gives the active one back.
 
+**`Lang::jsConfig()` ships only the `js.*` and `action.*` keys.** It is a filter,
+not a dump of the catalogue: `js.` keys reach `window.GK_LANG` with that prefix
+stripped, `action.foo` arrives as `action_foo`, and every other key — your
+`app.*` included — stays server-side. So a string you also need in JavaScript
+takes a `js.` prefix on top of your own:
+
+```php
+Lang::load('en', ['js.app.toast.sent' => 'Sent to {name}.']);
+
+echo Lang::t('js.app.toast.sent', ['name' => 'Jane']);   // server: "Sent to Jane."
+// browser, same string, prefix stripped:
+//   GK.t('app.toast.sent', {name: 'Jane'})
+```
+
+Register it as plain `app.toast.sent` and `GK.t('app.toast.sent')` prints the raw
+key — no error, no warning, in every locale. Strings you only ever render on the
+server need no prefix.
+
 There is no need for a `$t()` closure over an array of your own — that is the
 workaround people write when they have not found `loadDir()`, and it costs you
-the `{placeholder}` substitution and the browser-side catalogue that
-`Lang::jsConfig()` ships.
+the `{placeholder}` substitution that `Lang::t()` does for free.
 
 `format => 'currency'` and `format => 'date'` localise on their own from
 `Lang::set()` — `€1,240.00` and `Mar 12, 2026` under `en`, `1.240,00 €` and
@@ -985,6 +1019,28 @@ GK.modal.close();
 GK.table.refresh('table-id');
 GK.table.refreshAll();          // every table on the page
 ```
+
+## Filters forget each other unless you say otherwise
+
+Four components build their own URLs — `Pagination`, `PageSize`, `FilterChips`
+and `YearFilter` — and each one rebuilds it from its base plus its **own**
+parameter. Everything else on the page is dropped, with no error and nothing in
+the console. On a report with a year, a status and a search, changing the row
+count sends you back to an unfiltered newest-year view, and it looks like a
+feature nobody finished.
+
+Tell each of them what to keep:
+
+```php
+->preserve(['year', 'status', 'q'])        // names — values read from $_GET
+->preserve(['year' => $year, 'q' => $q])   // or a name => value map
+Pagination::render([..., 'params' => ['year' => $year, 'q' => $q]]);
+```
+
+`Pagination` passes its own `baseUrl` and `params` down to a nested
+`pageSize`, so those two agree by themselves. The other two you tell yourself.
+A page that has exactly one filter needs none of this; a page with two needs all
+of it.
 
 ### Pagination + PageSize (since 1.22 / 1.27)
 
@@ -1023,7 +1079,7 @@ Pagination::render([
     'totalPages' => (int) ceil($total / $perPage),    // NOT 'pages'/'last'/'pageCount'
     'total'      => $total,                           // the count in the bar
     'label'      => 'Expenses',                       // what the count counts
-    'params'     => ['year' => $year, 'q' => $q ?: null],  // kept on every link
+    'params'     => ['year' => $year, 'q' => $q ?: null, 'per_page' => $perPage],  // kept on every link
     'pageParam'  => 'page',                           // the query key, default 'page'
     'baseUrl'    => '/expenses',                      // default: the current path
     'live'       => 'exp-live',                       // binds AJAX clicks + replace target
@@ -1034,7 +1090,16 @@ Pagination::render([
 The nested `pageSize` inherits the pager's own `baseUrl` and `params`, so the
 rows-per-page select keeps the same filters every page link keeps. (Until
 1.47.0 it did not, and changing rows per page threw the year filter and the
-sort away without a word.)
+sort away without a word.) The one parameter it deliberately drops is `page` —
+in both live and navigate mode, and even if you list it in `preserve()` — so a
+new row count always lands back on page 1.
+
+That inheritance runs **one way only**. Nothing feeds the row count back into
+the page links, so `per_page` (or whatever you named it) has to be listed in
+`params` by hand — as above. Leave it out and the links come out
+`?year=2025&page=2` with no row count: clicking page 2 snaps the table back to
+the `resolve()` default and the select then shows that default as if the user
+had picked it. No error either way.
 
 `Pagination::fromPaginator(object $p, array $o = [])` exists for applications
 that already have a paginator object carrying `currentPage()`, `totalPages()`

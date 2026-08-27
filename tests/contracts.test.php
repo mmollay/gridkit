@@ -317,6 +317,23 @@ return [
         'the global overlay opens over a table\'s own filter box again');
 },
 
+'a fixed header beside a sidebar sizes from its offsets' => function (): void {
+    // .gk-header carries width:100%, and on a position:fixed element an
+    // explicit width beats the right offset. So in sidebar-first the header
+    // started at left:260px and was still a whole viewport wide — 260px past
+    // the right edge, with the user menu (which holds the only theme switcher)
+    // off screen and unclickable. Measured in a browser at 780px: header right
+    // 1040, menu at x=1016. Neither PHP nor the console says a word.
+    $css = (string) file_get_contents(__DIR__ . '/../css/gridkit.css');
+
+    preg_match('/\[data-gk-layout="sidebar-first"\] \.gk-header-fixed,.*?\{(.*?)\}/s', $css, $m);
+    T::ok(isset($m[1]), 'the sidebar-first header rule is gone');
+    T::contains($m[1], 'left: 260px', 'it no longer starts beside the sidebar');
+    T::contains($m[1], 'right: 0',    'it no longer reaches the right edge');
+    T::contains($m[1], 'width: auto',
+        'without width:auto the base width:100% wins and the header overflows');
+},
+
 'the year dropdown has a name like every other filter' => function (): void {
     Lang::set('en');
     $html = T::capture(fn() => (new YearFilter('y'))

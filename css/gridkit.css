@@ -3547,6 +3547,13 @@ a.gk-stat-card:hover {
   top: 0;
   left: 260px;
   right: 0;
+  /* .gk-header carries width:100%, and on a fixed element an explicit width
+     beats the right offset — so the header started at 260px and was still a
+     full viewport wide, running 260px past the right edge with the user menu
+     off screen and unreachable. Nothing in PHP or the console says a word;
+     you only see it by measuring. width:auto hands the sizing back to
+     left/right. */
+  width: auto;
   z-index: 200;
   transition: left var(--gk-dur-2) ease;
 }
