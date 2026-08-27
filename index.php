@@ -1,11 +1,22 @@
 <?php
+require_once __DIR__ . '/autoload.php';
+
+use GridKit\{Lang, Table};
+
 $version = trim(file_get_contents(__DIR__ . '/VERSION'));
 
 /**
- * Path with a cache stamp. This page deliberately does not load the framework
- * (it is pure marketing), which is why there is a small local version of
- * GridKit\Layout::asset() here. The modification timestamp changes exactly when
- * the file changes — the release version does not.
+ * Path with a cache stamp.
+ *
+ * This page used to skip the framework on purpose — it is marketing, not an
+ * application. The cost of that showed up in the one place it mattered: the
+ * product shot under the hero was a PNG, so the version baked into it (v1.29.0)
+ * aged past the version printed in the header, and the site of a component
+ * library contained no component. The table below is now rendered by GridKit.
+ *
+ * The local asset() stays: Layout::asset() stamps a path it is handed, and this
+ * page wants the modification time rather than the release version, because the
+ * file changes exactly when it changes.
  */
 $asset = static function (string $path) use ($version): string {
     $file = __DIR__ . '/' . ltrim($path, '/');
@@ -188,6 +199,29 @@ $skillHtml = renderSkillMd($skillContent);
         "applicationCategory": "DeveloperApplication"
     }
     </script>
+
+    <!--
+        GridKit's own stylesheets, for the live table under the hero.
+        They go BEFORE the page's <style> below on purpose: the marketing CSS
+        that follows wins every collision, so loading the framework cannot
+        restyle the page around it. The one rule here without a gk- prefix is
+        `a { color: inherit }`, and every link on this page carries a class,
+        which outranks it.
+    -->
+    <link rel="stylesheet" href="<?= $asset('css/gridkit.css') ?>">
+    <link rel="stylesheet" href="<?= $asset('css/themes.css') ?>">
+
+    <?php
+    /*
+     * The catalogue the browser half of the table reads. Two things need it:
+     * the number shapes, so a sorted cell is formatted the way PHP formatted it
+     * rather than falling back to English by accident, and the accessible names
+     * for the icon-only row buttons, which the client re-renders from scratch
+     * on every redraw and would otherwise leave unnamed.
+     */
+    Lang::set('en');
+    echo Lang::jsConfig();
+    ?>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -660,18 +694,68 @@ $skillHtml = renderSkillMd($skillContent);
 <!-- Product shot: a UI library has to show what it looks like -->
 <section class="section" id="screenshot" style="padding-top:0">
     <div class="container">
-        <figure style="margin:0; border-radius:16px; overflow:hidden;
+        <!--
+            overflow is clip, not hidden: hidden turns this into a scroll container,
+            which cuts off the status filter's dropdown and every tooltip inside the
+            table. clip rounds the corners without setting that trap.
+        -->
+        <figure style="margin:0; border-radius:16px; overflow:clip;
                        box-shadow:0 2px 6px rgba(15,23,42,.08), 0 24px 60px rgba(15,23,42,.14);
-                       border:1px solid rgba(15,23,42,.08);">
-            <img src="<?= $asset('docs/screenshots/table-light.png') ?>"
-                 alt="A GridKit table: search, filter, status pills, row actions"
-                 width="1400" height="900"
-                 style="display:block; width:100%; height:auto;">
+                       border:1px solid rgba(15,23,42,.08); background:var(--gk-surface,#fff);">
+            <!--
+                data-gk-theme rather than class="gk-root": both hand the table the
+                full set of --gk-* variables, but .gk-root also carries
+                min-height:100vh, which would stretch this frame to the height of
+                the window. The attribute gives the colours without the layout.
+            -->
+            <div data-gk-theme="indigo" data-gk-mode="light">
+            <?php
+            /**
+             * Not a screenshot. Search it, sort a column, change the filter —
+             * this is the library rendering itself, from the twelve rows below.
+             * setData() keeps it self-contained: the searching, sorting, filtering
+             * and paging all happen in the browser, so the landing page needs no
+             * database and no endpoint of its own.
+             */
+            (new Table('gk-hero'))
+                ->setData([
+                    ['id' =>  1, 'sku' => 'ART-001', 'name' => 'Web Design Package S', 'unit' => 'flat', 'net' => 1200.00, 'vat' => '20%', 'status' => 'active'],
+                    ['id' =>  2, 'sku' => 'ART-002', 'name' => 'Hosting Standard',     'unit' => 'pcs',  'net' =>    9.90, 'vat' => '20%', 'status' => 'active'],
+                    ['id' =>  3, 'sku' => 'ART-003', 'name' => 'SEO Consulting',       'unit' => 'h',    'net' =>   95.00, 'vat' => '20%', 'status' => 'inactive'],
+                    ['id' =>  4, 'sku' => 'ART-004', 'name' => 'Logo Design',          'unit' => 'flat', 'net' =>  450.00, 'vat' => '20%', 'status' => 'draft'],
+                    ['id' =>  5, 'sku' => 'ART-005', 'name' => 'Newsletter Setup',     'unit' => 'flat', 'net' =>  350.00, 'vat' => '20%', 'status' => 'active'],
+                    ['id' =>  6, 'sku' => 'ART-006', 'name' => 'Social Media Package', 'unit' => 'flat', 'net' =>  680.00, 'vat' => '20%', 'status' => 'active'],
+                    ['id' =>  7, 'sku' => 'ART-007', 'name' => 'Email Marketing',      'unit' => 'flat', 'net' =>  420.00, 'vat' => '20%', 'status' => 'draft'],
+                    ['id' =>  8, 'sku' => 'ART-008', 'name' => 'Content Creation',     'unit' => 'h',    'net' =>   75.00, 'vat' => '20%', 'status' => 'active'],
+                    ['id' =>  9, 'sku' => 'ART-009', 'name' => 'Server Administration','unit' => 'h',    'net' =>  110.00, 'vat' => '20%', 'status' => 'inactive'],
+                    ['id' => 10, 'sku' => 'ART-010', 'name' => 'SSL Certificate',      'unit' => 'pcs',  'net' =>   49.00, 'vat' => '20%', 'status' => 'active'],
+                    ['id' => 11, 'sku' => 'ART-011', 'name' => 'Domain Registration',  'unit' => 'pcs',  'net' =>   15.00, 'vat' => '20%', 'status' => 'active'],
+                    ['id' => 12, 'sku' => 'ART-012', 'name' => 'Web Design Package L', 'unit' => 'flat', 'net' => 3500.00, 'vat' => '20%', 'status' => 'active'],
+                ])
+                ->search(['sku', 'name'])
+                ->filter('status', 'select', [
+                    'options'     => ['active' => 'Active', 'inactive' => 'Inactive', 'draft' => 'Draft'],
+                    'placeholder' => 'All Status',
+                ])
+                ->column('sku',    'Article No.', ['width' => '130px', 'sortable' => true, 'nowrap' => true])
+                ->column('name',   'Description', ['sortable' => true])
+                ->column('unit',   'Unit',        ['width' => '80px'])
+                ->column('net',    'Net',         ['format' => 'currency', 'align' => 'right', 'width' => '110px', 'sortable' => true])
+                ->column('vat',    'VAT',         ['width' => '80px'])
+                ->column('status', 'Status',      ['format' => 'label', 'width' => '110px'])
+                ->button('edit',   ['icon' => 'edit',   'color' => 'primary'])
+                ->button('delete', ['icon' => 'delete', 'color' => 'danger'])
+                ->newButton('New Article', ['icon' => 'add'])
+                ->paginate(8)
+                ->render();
+            ?>
+            </div>
         </figure>
         <p style="text-align:center; margin:18px auto 0; max-width:620px;
                   font-size:15px; color:var(--gk-on-surface-variant, #64748b);">
-            Search, sort, filter and paging run over AJAX. Themes, dark mode and the
-            mobile layout come with it — none of it written by hand.
+            That is not a screenshot — search it, sort a column, change the filter.
+            It is GridKit rendering itself from twelve rows of PHP. Point it at a
+            database instead and the same calls answer over AJAX.
         </p>
     </div>
 </section>
@@ -1170,6 +1254,26 @@ window.addEventListener('scroll', () => {
         nav.style.boxShadow = 'none';
     }
 });
+</script>
+
+<!--
+    GridKit's runtime, for the live table under the hero. Without it the table
+    renders and looks right but does nothing: search, sort, filter and paging
+    are all wired up here, not in the markup.
+-->
+<script src="<?= $asset('js/gridkit.js') ?>"></script>
+<script>
+    /*
+     * The two row buttons have nowhere to go on a marketing page — there is no
+     * record to edit and nothing to delete. Rather than leave them silently
+     * dead, say so and point at the demo, which has the working version.
+     */
+    document.addEventListener('gk:rowaction', function (e) {
+        if (!e.target.closest('#gk-hero, [data-gk-table="gk-hero"]')) return;
+        if (window.GK && GK.toast) {
+            GK.toast.info('This table is the live demo on the landing page — the full application is under Demo.', 4000);
+        }
+    });
 </script>
 
 </body>

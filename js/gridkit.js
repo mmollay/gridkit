@@ -14,6 +14,37 @@
     return text;
   }
 
+  /*
+   * Numbers, built the way the server builds them: the separators come out of
+   * the catalogue (format.decimal / format.thousands), not out of a locale
+   * name. A cell the browser redraws after a sort then matches the one PHP
+   * rendered, character for character. Before this both sides were hardcoded to
+   * "de-DE", so an English table flipped "€1,200.00" to "1.200,00 €" on the
+   * first click. With no catalogue loaded the English shape is the floor, which
+   * is the same fallback Lang::t() uses.
+   */
+  function _gkNumber(value, decimals) {
+    var n = parseFloat(value);
+    if (isNaN(n)) return value == null ? "" : String(value);
+    var dec = _lang.format_decimal || ".";
+    var tho = _lang.format_thousands || ",";
+    var parts = Math.abs(n).toFixed(decimals).split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, tho);
+    return (n < 0 ? "-" : "") + parts[0] + (parts[1] ? dec + parts[1] : "");
+  }
+
+  /*
+   * The currency template carries the symbol AND the side it sits on —
+   * "€{value}" in English, "{value} €" in German — so there is no separate rule
+   * here about where the symbol belongs.
+   */
+  function _gkCurrency(value) {
+    return (_lang.format_currency || "€{value}").replace(
+      "{value}",
+      _gkNumber(value || 0, 2),
+    );
+  }
+
   const GK = {
     // === MODAL ===
     modal: {
@@ -613,15 +644,25 @@
           if (!fmt) return e(val);
           switch (fmt) {
             case "currency":
-              return e(
-                parseFloat(val || 0).toLocaleString("de-DE", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }) + " €",
-              );
+              // Built from the same catalogue strings the server formats with —
+              // format.decimal, format.thousands, format.currency — instead of a
+              // hardcoded "de-DE". With the locale nailed down here, the first
+              // sort or filter on an English table quietly rewrote every
+              // "€1,200.00" as "1.200,00 €". The template carries the symbol and
+              // the side it sits on, so both shapes come out right.
+              return e(_gkCurrency(val));
             case "percent":
               return e(parseInt(val || 0) + "%");
             case "date":
+              // KNOWN GAP, deliberately left: currency and number above now
+              // build from the catalogue, dates do not. The server renders
+              // format.date, a PHP format string ("M j, Y" in English,
+              // "d.m.Y" in German), which JavaScript cannot consume — and the
+              // token that needs month names has none in the catalogue to
+              // read. Reproducing it per locale with toLocaleDateString options
+              // would be the second source of truth this file keeps warning
+              // about. So a date column redrawn in the browser still comes back
+              // German. Fix needs localized month names first.
               return val ? e(new Date(val).toLocaleDateString("de-DE")) : "";
             case "datetime":
               return val
@@ -659,10 +700,7 @@
               const dec = col.decimals || 0;
               const text = isNaN(n)
                 ? String(val)
-                : n.toLocaleString("de-DE", {
-                    minimumFractionDigits: dec,
-                    maximumFractionDigits: dec,
-                  });
+                : _gkNumber(n, dec);
               return '<span class="gk-num">' + e(text) + "</span>";
             }
             default:

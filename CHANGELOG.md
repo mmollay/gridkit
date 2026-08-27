@@ -7,6 +7,49 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.55.0] - 2026-08-27
+
+The landing page of a component library now contains a component.
+
+### Fixed — the browser formatted numbers in German whatever the locale
+
+`formatVal()` in `gridkit.js` built currency and number cells with
+`toLocaleString("de-DE")`, hardcoded. The server builds the same cells from
+`format.decimal`, `format.thousands` and `format.currency` in the catalogue.
+The two agreed only in German. In English a table rendered `€1,200.00` on the
+server and redrew it as `1.200,00 €` on the first sort, filter or page change —
+silently, since nothing errors.
+
+`Lang::jsConfig()` exported `js.*` and `action.*` but not `format.*`, so the
+browser had no way to know better. It now exports all three, for the reason the
+method already gives for `action.*`: one catalogue serving both sides beats a
+second copy drifting away from the first. `_gkNumber()` and `_gkCurrency()`
+build from those strings, and the currency template carries the symbol and the
+side it sits on, so `€{value}` and `{value} €` both come out right.
+
+Dates are a known gap, marked in the source: `format.date` is a PHP format
+string JavaScript cannot consume, and the token needing month names has none in
+the catalogue. A date column redrawn in the browser still comes back German.
+
+### Changed — the product shot is the product
+
+The image under the hero was a PNG with `v1.29.0` baked into it, sitting under a
+header that reads v1.54.0, and it aged further with every release. It is now a
+real `Table`: twelve rows, searchable, sortable, filterable, paginated, in the
+mobile card layout below 640px.
+
+That change surfaced the bug above, and two more things the page had been
+getting away with: it linked neither `css/gridkit.css` nor `js/gridkit.js` —
+the strings appear on the page, but inside the skill document it prints, not in
+a tag — and it never called `Lang::jsConfig()`. A grep for the filename found
+all three and reported them present. Only the browser disagreed.
+
+The table is scoped with `data-gk-theme` rather than `class="gk-root"`, whose
+`min-height: 100vh` would stretch the frame to the height of the window, and
+the frame uses `overflow: clip` rather than `hidden`, which would have cut off
+the status filter's dropdown.
+
+---
 ## [1.54.0] - 2026-08-27
 
 Three ways to hand the API to an assistant, where there was one.

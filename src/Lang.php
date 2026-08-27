@@ -99,6 +99,15 @@ class Lang
                 // way, so this one catalogue serves both rather than a second
                 // copy under js.* drifting away from the first.
                 $jsKeys['action_' . substr($key, 7)] = $val;
+            } elseif (str_starts_with($key, 'format.')) {
+                // Number and date shapes, for exactly the same reason as
+                // action.* above — and this pair had already drifted. The
+                // server built a currency cell from format.decimal,
+                // format.thousands and format.currency; the browser, having
+                // none of them, formatted with a hardcoded "de-DE". So a
+                // sorted or filtered English table redrew "€1,200.00" as
+                // "1.200,00 €" on the first click. Same catalogue, one shape.
+                $jsKeys['format_' . substr($key, 7)] = $val;
             }
         }
         $json = json_encode($jsKeys, JSON_UNESCAPED_UNICODE | JSON_FORCE_OBJECT);

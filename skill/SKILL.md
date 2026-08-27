@@ -8,7 +8,7 @@ description: >-
   GridKit in composer.json.
 ---
 
-# GridKit 1.54.0
+# GridKit 1.55.0
 
 PHP components for admin dashboards. Zero dependencies, no build step,
 PHP 8.2+. A checkout is a working install.
