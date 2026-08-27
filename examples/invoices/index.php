@@ -140,7 +140,7 @@ if (Table::isAjaxReload('invoices')) {
   .source code { font-size: 12.5px; }
 </style>
 </head>
-<?= Theme::bodyTag('gk-root') ?>
+<?= Layout::bodyTag('gk-root') ?>
 
 <div class="app">
 

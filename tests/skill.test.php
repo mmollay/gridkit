@@ -182,6 +182,38 @@ return [
     }
 },
 
+'the skill names every public method of every component' => function (): void {
+    // Three rounds of the agent test agree on where the file holds and where
+    // it does not: the components with a real section — Table, Form, Header,
+    // Sidebar, StatCards, Theme, Lang — were right first time in every run,
+    // and every failure landed on one documented as a table row. Layout was
+    // 1 of 6 methods, and Lang::loadDir() — the mechanism for an application's
+    // own translations — was missing entirely, so agents kept inventing a
+    // $t() closure and the file went and recommended one.
+    $md = (string) file_get_contents(SKILL);
+
+    // A handful are genuinely internal or adapters nobody should reach for.
+    $exempt = [
+        'Pagination::fromPaginatorHtml',  // the string twin of a documented call
+        'Table::loadTime',                // instrumentation for a page that measures
+        'Auth::renderLogin',              // covered in prose, not as a signature
+    ];
+
+    $gaps = [];
+    foreach (glob(__DIR__ . '/../src/*.php') as $file) {
+        $class = basename($file, '.php');
+        $ref   = new ReflectionClass('GridKit\\' . $class);
+        foreach ($ref->getMethods(ReflectionMethod::IS_PUBLIC) as $m) {
+            if ($m->class !== $ref->getName() || $m->name === '__construct') continue;
+            if (in_array("$class::{$m->name}", $exempt, true)) continue;
+            $named = str_contains($md, "$class::{$m->name}")
+                  || str_contains($md, "->{$m->name}(");
+            if (!$named) $gaps[] = "$class::{$m->name}()";
+        }
+    }
+    T::eq($gaps, [], 'the skill file never names: ' . implode(', ', $gaps));
+},
+
 'no German is left in the skill' => function (): void {
     $md = (string) file_get_contents(SKILL);
     T::ok(!preg_match('/[äöüÄÖÜß]/u', $md), 'umlauts');

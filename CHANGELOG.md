@@ -7,6 +7,64 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.48.0] - 2026-08-27
+
+Three rounds of the agent test gave the same verdict from two directions: the
+components with a real section were right first time in every run, and every
+failure landed on one documented as a table row. So this round stopped guessing
+at individual gaps and measured the thing itself.
+
+**Public methods the skill file never named: 43 of 128.** Now: 1.
+
+| class | before | after |
+|---|---|---|
+| `Layout` | 1 of 6 | 6 of 6 |
+| `Lang` | 3 of 7 | 7 of 7 |
+| `YearFilter` | 5 of 9 | 9 of 9 |
+| `Table` | 14 of 24 | 24 of 24 |
+| everything else | 12 classes short | complete |
+
+The one left out is `Pagination::fromPaginatorHtml()`, the string twin of a call
+that is itself an adapter for an object GridKit does not ship.
+
+### The one that matters
+
+**`Lang::loadDir()` was undocumented, and it is exactly what three agents said
+did not exist.** Round two's bilingual agent wrote that the file "never
+documents how to register application translation strings at all, which is the
+single most important thing a bilingual page needs" and supplied its own
+`$S['en']` array. It was right that the file did not say — and 1.45.0 then went
+and *documented that workaround* as the recommended pattern, because I had not
+found `loadDir()` either.
+
+`Lang::loadDir(__DIR__ . '/lang')` loads every `en.php` / `de.php` in a
+directory and **merges** them with GridKit's own strings. So an application's
+translations live in the same catalogue, keep `{placeholder}` substitution, and
+ship to the browser through `Lang::jsConfig()` — none of which a private `$t()`
+closure gives you.
+
+### Fixed — in the skeleton
+
+**`Theme::bodyTag()` does not emit the layout attribute.** The documented page
+skeleton used it, so a page calling `Layout::mode('sidebar-first')` set the mode
+and never applied it — `data-gk-layout` simply was not on the `<body>`.
+`Layout::bodyTag()` emits both sets and is what the skeleton, the examples and
+the echo/return table now name. `skeleton.php` and the demo already had it
+right; `examples/invoices/` did not.
+
+### Added
+
+- Documented for the first time: `Layout::mode/getMode/attributes/version/bodyTag`,
+  `Lang::load/loadFile/loadDir/locale`, `Table::toolbar/searchable/size/variant/
+  nowrap/footer/emptyState`, `YearFilter::years/mode/allOption/selectClass`,
+  `Form::cancel/hidden`, `Button::fab`, `Sidebar::headerOffset`,
+  `Theme::available`, `Icon::has`, `ActionGroup::html`.
+- A check that keeps it that way: every public method of every component must
+  be named in the skill file.
+
+**2,020 assertions.** The skill file is 1,298 lines, from 814 four rounds ago.
+
+---
 ## [1.47.0] - 2026-08-27
 
 Round three of the skill-file test, and the honest result: **five different

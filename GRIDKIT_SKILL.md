@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.47.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.48.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.ssi.at
 
 ## Purpose
@@ -72,7 +72,7 @@ Everything else in that table is called on an object you constructed with `new`.
 | | | |
 |---|---|---|
 | `Header::render()` | `Button::render()` | `Button::icon()` |
-| `Theme::switcher()` | `Theme::attributes()` | `Theme::bodyTag()` |
+| `Theme::switcher()` | `Theme::attributes()` | `Layout::bodyTag()` |
 | `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
 | `Lang::jsConfig()` | `Pagination::build()` | |
 
@@ -112,7 +112,7 @@ Theme::set('indigo', 'light');      // indigo | ocean | forest | rose | amber | 
 <link rel="stylesheet" href="<?= Layout::asset('css/themes.css') ?>">
 <?= Lang::jsConfig() ?>
 </head>
-<?= Theme::bodyTag('gk-root') ?>
+<?= Layout::bodyTag('gk-root') ?>
 
 <!-- components go here -->
 
@@ -163,7 +163,7 @@ makes room. Without it everything renders **underneath** the sidebar — silentl
 because nothing is broken, it is just covered:
 
 ```php
-<?= Theme::bodyTag('gk-root') ?>
+<?= Layout::bodyTag('gk-root') ?>
 
 <?php (new Sidebar('main'))
     ->brand('My app', 'widgets')
@@ -262,7 +262,7 @@ build the query. Use this for a status dropdown that belongs to a table — not
 <div class="gk-cell-sub" title="Full text">Your receipt from Anthropic…</div>
 ```
 
-**`groupBy($column, $labels)`:** inserts a group row whenever the value changes. Sort the rows by that column first.
+**`->groupBy($column, $labels)`:** inserts a group row whenever the value changes. Sort the rows by that column first.
 
 **Button `onclick`:** `{field}` is replaced with the row's value, JSON-encoded (`'onclick' => 'open({id})'`).
 
@@ -304,6 +304,26 @@ adds more, and mapping `id` yourself overrides the default.
 — button only renders if the row's `has_preview` value is truthy.
 
 **`->selectable('id')`:** checkbox column, a select-all in the header, and a bulk bar. Deleting fires `gk:bulkdelete` with `{ ids, tableId }` — the application does the deleting. Every change fires `gk:selectionchange` with `{ ids, tableId, count }`, bulk bar or not. Shift-click selects a range. Without the `Table` class: `data-gk-table` + `data-gk-selectable`, rows carrying `data-gk-row-id` and a `td.gk-cb-col`. A row without `data-gk-row-id` cannot be selected. Select-all covers the visible rows only. After a live reload (`gk-live-reloaded`) GridKit re-binds the table.
+
+**`->emptyState($title, $opts)`** sets the wording for a table with no rows —
+`['hint' => …, 'icon' => …, 'action' => …]`. GridKit works out by itself whether
+the table is genuinely empty or only filtered, and offers the way back in the
+second case, so only describe the first.
+
+**Shaping the table.** All chainable, all optional:
+
+```php
+->toolbar(false)     // no search/filter bar above the table at all
+->searchable(false)  // keep the toolbar, drop the search box
+->size('sm')         // sm | md (default) | lg — row height and padding
+->variant('striped') // default | bordered | striped | celled | padded |
+                     // minimal | flat | inverted | compact.
+                     // ONE slot: a second call replaces the first.
+->nowrap()           // no cell wraps anywhere in the table
+->footer(['', 'Total', '€12,480.00'])   // a <tfoot> row, cell by cell
+->loadTime(38)       // print "38 ms" in the toolbar — for a page that measures
+->mobile('card')     // card | scroll — how it collapses on a phone
+```
 
 ### Server-side tables (`rows()` + `isAjaxReload()`)
 
@@ -414,6 +434,9 @@ echo Button::render('Label', [
                               // — the attribute would just sit there inert.
 ]);
 
+// A floating action button — round, fixed, bottom right.
+echo Button::fab('add', ['color' => 'primary', 'extended' => true, 'label' => 'New']);
+
 // Icon-only: pass an empty label. GridKit gives it an accessible name from
 // the icon, translated for the active locale, so a screen reader does not
 // read the ligature. Pass 'aria' when the icon alone does not say what the
@@ -509,6 +532,7 @@ underneath the sidebar, silently.
     ->item('Settings', '?section=settings', 'settings')
     ->ajaxNav(true)                       // SPA-lite navigation, see below
     ->collapsePosition('bottom')          // 'top' (default) | 'bottom'
+    ->headerOffset(true)                  // start below a full-width header
     ->render();
 ```
 
@@ -562,6 +586,21 @@ The param is always present in the URL, the "All" chip included (`?status=`) —
 `($_GET['status'] ?? '') !== ''`, never with `isset($_GET['status'])`.
 
 ### YearFilter
+
+```php
+(new YearFilter('year-filter', 'year'))   // id, query parameter
+    ->years([2024, 2025, 2026])           // default: 2020 … this year
+    ->mode('chips')                       // chips (default) | dropdown
+    ->allOption('All years', 0)           // adds an "everything" entry
+    ->baseUrl('/expenses')
+    ->preserve(['q' => $q])
+    ->selectClass('gk-filter')            // dropdown mode only
+    ->render();
+```
+
+`->current()` gives back the selected year as an int — validate it yourself if
+it steers a query; a visitor can put anything in the URL.
+
 
 ```php
 $yf = new YearFilter('year-filter', 'year');  // 2nd param = GET param name
@@ -760,6 +799,8 @@ searchable select is plain `'select'`.
 | `options` | `select`, `multiselect`, `radio` | `value => label` map |
 | `rows` | `textarea` | height in rows (default `3`) |
 | `min`, `max`, `step` | `range`, `number`, `date`/`time` | bounds (`range` defaults to `0`/`100`/`1` and starts at `min`) |
+| `->cancel($label, $href)` | — | a link beside the submit button — a method, not a field |
+| `->hidden($name, $value)` | — | a hidden input — a method, not a field |
 | `error` | every field | a validation message, rendered red under the field. This is how a classic POST-redisplay shows errors: `['value' => $_POST['email'] ?? '', 'error' => $errors['email'] ?? '']`. The AJAX handler writes into the same slot, so both paths look identical |
 
 **Form Density:** Add `gk-form-compact` class to a `<form>` or wrapper `<div>` for compact forms. All elements scale down proportionally:
@@ -851,6 +892,40 @@ Theme::set('indigo', 'light');  // themes: indigo, ocean, forest, rose, amber, s
 echo Theme::switcher();          // RETURNS the switcher HTML — must be echoed
 ```
 
+### The small helpers
+
+```php
+Theme::available();          // ['indigo' => ['name' => …, 'color' => '#…'], …]
+                             // — build your own switcher from this
+Icon::has('receipt_long');   // does GridKit ship an inline SVG for it?
+                             // false means Icon::svg() falls back to the font
+echo ActionGroup::html([              // the string form of ActionGroup::render()
+    ['label' => 'Edit',   'href' => '/edit/1', 'icon' => 'edit'],
+    ['label' => 'Delete', 'onclick' => 'del(1)', 'icon' => 'delete', 'color' => 'danger'],
+]);
+```
+
+### Layout
+
+```php
+Layout::mode('header-first');   // header-first (default) | sidebar-first
+Layout::getMode();              // the active one
+echo Layout::asset('css/gridkit.css');   // a cache-busted URL — see the skeleton
+echo Layout::version();         // the VERSION file, e.g. '1.48.0'
+echo Layout::bodyTag('gk-root');   // <body> with the layout AND theme attributes
+echo Layout::attributes();        // just data-gk-layout, no tag
+```
+
+`header-first` puts the header across the full width with the sidebar beneath
+it; `sidebar-first` gives the sidebar the full height and starts the header
+beside it.
+
+Mind which `bodyTag()` you call: **`Layout::bodyTag()` emits both sets** —
+`data-gk-layout`, `data-gk-theme` and `data-gk-mode` — while `Theme::bodyTag()`
+emits only the theme pair. Use `Layout::bodyTag()` on a page that sets a layout
+mode, or the sidebar-first arrangement is chosen and never applied. Their
+`attributes()` are narrow in the same way: each gives back only its own.
+
 ### Lang
 
 ```php
@@ -863,24 +938,30 @@ state, the pager, the confirm dialog, the row-action names. `Lang::set()` plus
 `Lang::jsConfig()` is all it needs — every built-in string then follows, on the
 server and in the browser.
 
-**Translating your own strings.** `Lang` is not a catalogue for your
-application, and asking it for a key it does not have returns the key itself —
-so `Lang::t('paid')` prints `paid`, in every locale, with no error. Keep your
-own strings in your own array; the invoice example does exactly this:
+**Translating your own strings — put them in the same catalogue.** `Lang` holds
+GridKit's interface strings, and it will hold yours beside them. Asking for a
+key nobody registered returns the key itself, silently, so
+`Lang::t('paid')` prints `paid` until you load a `paid`.
 
 ```php
-$lang = $_GET['lang'] ?? 'en';
-if (!in_array($lang, ['en', 'de'], true)) $lang = 'en';
-Lang::set($lang);                       // GridKit's strings
+Lang::loadDir(__DIR__ . '/lang');   // every en.php / de.php in that directory
+Lang::loadFile(__DIR__ . '/lang/en.php');          // just one
+Lang::load('en', ['app.title' => 'Invoices']);     // or an array, inline
 
-$S = [                                  // yours
-    'en' => ['title' => 'Invoices', 'paid' => 'Paid',    'new' => 'New invoice'],
-    'de' => ['title' => 'Rechnungen', 'paid' => 'Bezahlt', 'new' => 'Neue Rechnung'],
-];
-$t = fn(string $k): string => $S[$lang][$k] ?? $k;
-
-echo $t('title');                       // "Invoices" / "Rechnungen"
+Lang::set($_GET['lang'] ?? 'en');
+echo Lang::t('app.title');           // yours
+echo Lang::t('table.search');        // GridKit's — still there
 ```
+
+Each file returns a `key => string` array and is named for its locale
+(`lang/en.php`, `lang/de.php`). Loading merges rather than replaces, so
+GridKit's own strings survive; prefix yours (`app.`, or your module's name) and
+nothing can collide. `Lang::locale()` gives the active one back.
+
+There is no need for a `$t()` closure over an array of your own — that is the
+workaround people write when they have not found `loadDir()`, and it costs you
+the `{placeholder}` substitution and the browser-side catalogue that
+`Lang::jsConfig()` ships.
 
 `format => 'currency'` and `format => 'date'` localise on their own from
 `Lang::set()` — `€1,240.00` and `Mar 12, 2026` under `en`, `1.240,00 €` and
