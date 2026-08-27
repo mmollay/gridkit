@@ -1398,24 +1398,24 @@ GK.confirm('Really delete?', {
             <div class="demo-card">
                 <p class="demo-intro">Modals in four sizes. Loaded via AJAX, backdrop click and ESC close them.</p>
                 <div class="demo-btn-row">
-                    <button class="gk-btn" onclick="GK.modal.open('Small (420px)', 'demo/form/f_delete.php', {}, 'small')"><span class="material-icons" style="font-size:16px" aria-hidden="true">crop_square</span> Small</button>
-                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Medium (640px)', 'demo/form/f_articles.php', {}, 'medium')"><span class="material-icons" style="font-size:16px" aria-hidden="true">crop_din</span> Medium</button>
-                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Large (900px)', 'demo/form/f_articles.php', {}, 'large')"><span class="material-icons" style="font-size:16px" aria-hidden="true">crop_free</span> Large</button>
-                    <button class="gk-btn gk-btn-filled gk-btn-neutral" onclick="GK.modal.open('Fullscreen Modal', 'demo/form/f_articles.php', {}, 'full')"><span class="material-icons" style="font-size:16px" aria-hidden="true">fullscreen</span> Full</button>
+                    <button class="gk-btn" onclick="GK.modal.open('Small (420px)', 'form/f_delete.php', {}, 'small')"><span class="material-icons" style="font-size:16px" aria-hidden="true">crop_square</span> Small</button>
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Medium (640px)', 'form/f_articles.php', {}, 'medium')"><span class="material-icons" style="font-size:16px" aria-hidden="true">crop_din</span> Medium</button>
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Large (900px)', 'form/f_articles.php', {}, 'large')"><span class="material-icons" style="font-size:16px" aria-hidden="true">crop_free</span> Large</button>
+                    <button class="gk-btn gk-btn-filled gk-btn-neutral" onclick="GK.modal.open('Fullscreen Modal', 'form/f_articles.php', {}, 'full')"><span class="material-icons" style="font-size:16px" aria-hidden="true">fullscreen</span> Full</button>
                 </div>
             </div>
             <div class="demo-card">
                 <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Nesting: Modal with form</h3>
                 <p class="demo-intro">A modal loads a form via AJAX – the most common use case.</p>
                 <div class="demo-btn-row">
-                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Edit Article', 'demo/form/f_articles.php', {}, 'medium')"><span class="material-icons" style="font-size:16px" aria-hidden="true">edit</span> Modal + Form</button>
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Edit Article', 'form/f_articles.php', {}, 'medium')"><span class="material-icons" style="font-size:16px" aria-hidden="true">edit</span> Modal + Form</button>
                 </div>
             </div>
             <div class="demo-card">
                 <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Nesting: Modal with table + sub-modal</h3>
                 <p class="demo-intro">A large modal shows a customer list. Clicking "Edit" opens a second modal with the form.</p>
                 <div class="demo-btn-row">
-                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Customer Management', 'demo/form/f_table_modal.php', {}, 'large')"><span class="material-icons" style="font-size:16px" aria-hidden="true">people</span> Modal + Table + Sub-Modal</button>
+                    <button class="gk-btn gk-btn-primary" onclick="GK.modal.open('Customer Management', 'form/f_table_modal.php', {}, 'large')"><span class="material-icons" style="font-size:16px" aria-hidden="true">people</span> Modal + Table + Sub-Modal</button>
                 </div>
             </div>
         </div>

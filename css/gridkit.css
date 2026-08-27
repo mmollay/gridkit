@@ -2654,16 +2654,20 @@ select.gk-input {
    existed; the demo ships green, orange, red and blue, and the skill document
    teaches primary — all of which rendered as an unstyled chip. The literal
    names are aliases of the semantic ones rather than a second palette. */
+/* --gk-*-fill, not --gk-*: 1.38.0 introduced the darker pair precisely because
+   white does not carry on the bright ones. 1.47.0 gave every chip colour a rule
+   at last — and reached for the bright token, so the active green chip went
+   from carrying its label to 2.54:1. The buttons have used -fill all along. */
 .gk-chip-danger.gk-chip-active,
 .gk-chip-red.gk-chip-active {
-  background: var(--gk-danger);
-  border-color: var(--gk-danger);
+  background: var(--gk-danger-fill);
+  border-color: var(--gk-danger-fill);
   color: var(--gk-on-primary, #fff);
 }
 .gk-chip-success.gk-chip-active,
 .gk-chip-green.gk-chip-active {
-  background: var(--gk-success);
-  border-color: var(--gk-success);
+  background: var(--gk-success-fill);
+  border-color: var(--gk-success-fill);
   color: var(--gk-on-primary, #fff);
 }
 .gk-chip-warning.gk-chip-active,
