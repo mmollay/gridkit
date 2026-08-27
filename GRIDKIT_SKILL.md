@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.46.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.47.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.ssi.at
 
 ## Purpose
@@ -45,7 +45,7 @@ next update and split the codebase in two.
 | ActionGroup | `GridKit\ActionGroup` | Container for action buttons inside table columns (since v1.16.0) |
 | SortLink | `GridKit\SortLink` | Sortable column headers for hand-built tables (server-side sort) |
 | Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
-| Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback |
+| Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
 
 ## The one rule to read first: echo or return
 
@@ -62,6 +62,10 @@ without tripping over this.
 | `StatCards::render()` | `FilterChips::render()` | `TableHeader::render()` |
 | `YearFilter::render()` | `Pagination::render()` | `PageSize::make()->…->render()` |
 | `ActionGroup::render()` | `Modal::container()` | `BelegModal::container()` |
+
+`PageSize::render()` above is an INSTANCE method — build it with the static
+`PageSize::make('per_page')` first, then chain. Same for `TableHeader::make()`.
+Everything else in that table is called on an object you constructed with `new`.
 
 **These RETURN a string. You must echo it — `<?= … ?>`:**
 
@@ -920,31 +924,65 @@ $perPage = PageSize::make()->resolve(25);        // $_GET['per_page'], checked a
 Rename either with `'pageParam' => 'p'` on `Pagination` and
 `'pageSize' => ['param' => 'rows']` / `PageSize::make('rows')`.
 
+**`Pagination::render(array $o)` is the one to use.** GridKit ships no paginator
+class, so you hand it plain numbers. `page` and `totalPages` are the two keys
+that build the link list — miss either and you silently get the count bar with
+no page links at all.
+
 ```php
-// The page, on first render — a sibling below the table:
-Pagination::fromPaginator($items, [
-    'label'    => 'Expenses',
-    'live'     => 'exp-live',          // binds the AJAX clicks + replace target
-    'pageSize' => ['current' => $perPage, 'live' => 'exp-live'],
-    'params'   => ['year' => $year, 'q' => $q ?: null],
-]);
+$page = max(1, (int) ($_GET['page'] ?? 1));
+$perPage = 25;
+$total = 148;
+$year = (int) ($_GET['year'] ?? date('Y'));
+$q = trim((string) ($_GET['q'] ?? ''));
 
-// No paginator object, just numbers? `page` + `totalPages` are the two keys that
-// build the link list — miss either one and you silently get the count bar alone.
-// The other keys (total, label, live, pageSize, params) are the same as above.
+// The page, on first render — a sibling below the table, not inside it.
 Pagination::render([
-    'page'       => $page,
-    'totalPages' => (int) ceil($total / $perPage),   // NOT 'pages'/'last'/'pageCount'
-    'total'      => $total,
-    'label'      => 'Expenses',
-    'params'     => ['year' => $year],
+    'page'       => $page,                            // 1-based
+    'totalPages' => (int) ceil($total / $perPage),    // NOT 'pages'/'last'/'pageCount'
+    'total'      => $total,                           // the count in the bar
+    'label'      => 'Expenses',                       // what the count counts
+    'params'     => ['year' => $year, 'q' => $q ?: null],  // kept on every link
+    'pageParam'  => 'page',                           // the query key, default 'page'
+    'baseUrl'    => '/expenses',                      // default: the current path
+    'live'       => 'exp-live',                       // binds AJAX clicks + replace target
+    'pageSize'   => ['current' => $perPage, 'options' => [10, 25, 50]],
 ]);
+```
 
+The nested `pageSize` inherits the pager's own `baseUrl` and `params`, so the
+rows-per-page select keeps the same filters every page link keeps. (Until
+1.47.0 it did not, and changing rows per page threw the year filter and the
+sort away without a word.)
+
+`Pagination::fromPaginator(object $p, array $o = [])` exists for applications
+that already have a paginator object carrying `currentPage()`, `totalPages()`
+and `total()` — it duck-types those three. **GridKit does not ship such a
+class**, and handing it an array is a `TypeError`, so reach for `render()`
+unless you have one.
+
+```php
 // In the live partial (AJAX), so the counter and page list follow the filter:
 <template data-gk-replace="[data-gk-pager=exp-live]">
-<?php Pagination::fromPaginator($items, /* the same options */); ?>
+<?php Pagination::render([/* the same options */]); ?>
 </template>
 ```
+
+`PageSize` on its own, outside a `Pagination`:
+
+```php
+PageSize::make('per_page')          // the query parameter
+    ->current(25)                   // what is selected now
+    ->options([10, 25, 50, 100])    // default: 10/25/50/100
+    ->baseUrl('/expenses')          // default: the current path
+    ->preserve(['year', 'sort'])    // names, read from $_GET …
+    ->preserve(['year' => 2024])    // … or a name => value map
+    ->live('exp-live')              // AJAX instead of a full navigation
+    ->render();
+```
+
+Without `preserve()` the select rebuilds the URL from the base alone, so every
+other filter on the page is dropped when somebody changes the row count.
 
 Short lists with no server-side LIMIT: put `data-gk-rows="25"` on the table and
 the client-side `GK.rowPager` builds the same bar.

@@ -3357,11 +3357,17 @@ GK.search = {
     });
     // Usable without a keyboard as well.
     document.addEventListener("click", function (e) {
-      var ausloeser = e.target.closest && e.target.closest("[data-gk-search]");
-      if (ausloeser) {
-        e.preventDefault();
-        self.open();
-      }
+      var trigger = e.target.closest && e.target.closest("[data-gk-search]");
+      if (!trigger) return;
+      // A Table's own filter box carries data-gk-search too — Table::search()
+      // has always rendered <input class="gk-search" data-gk-search>. So on a
+      // page with both, clicking the table's box opened the global overlay on
+      // top of it, and the obvious fix (dropping the attribute) killed the
+      // table's own filtering instead. The overlay belongs to the page-level
+      // trigger; a table's box belongs to its table.
+      if (trigger.closest("[data-gk-table]") || trigger.closest(".gk-toolbar")) return;
+      e.preventDefault();
+      self.open();
     });
   },
 

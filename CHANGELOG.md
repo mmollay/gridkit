@@ -7,6 +7,62 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.47.0] - 2026-08-27
+
+Round three of the skill-file test, and the honest result: **five different
+tasks, 0 of 5 on the first try.**
+
+| round | tasks | first try | confirmed gaps |
+|---|---|---|---|
+| one | dashboard, crud, forms, bilingual, live | 0 / 5 | 30 |
+| two | the same five again | **4 / 5** | 17 |
+| three | auth, hand-built table, global search, SPA shell, utility page | **0 / 5** | 31 |
+
+So round two measured what it measured: those five holes, closed. It did not
+make the file generally sound. On ground it had not been tested against, it
+fails as badly as it did at the start. That is worth stating plainly, because
+the 4/5 read like progress on the file and was progress on five tasks.
+
+The agents' own words are consistent about where it holds: `Table`, `Form`,
+`Header`, `Sidebar`, `StatCards`, `Theme` and `Lang` were right first time in
+every run. Everything below is what the third set walked into.
+
+### Fixed — in the source
+
+- **Changing rows per page threw away every other filter.** `PageSize::preserve()`
+  takes a list of parameter *names* and reads their values from `$_GET`;
+  `Pagination` hands down a name => value *map*. The list form used each value
+  as a name, nothing matched, and the select shipped `data-preserve="{}"` — so
+  on a report with a year filter and a sort, picking "50 per page" reset both.
+  Silently. `preserve()` accepts either shape now, and `Pagination` forwards its
+  own `baseUrl` and `params`, so the select keeps exactly what the page links
+  keep.
+
+- **A table's own search box opened the global search overlay.** `Table::search()`
+  renders `<input class="gk-search" data-gk-search>` — the same attribute
+  `GK.search` binds as its overlay trigger. Put a table and the quick-search on
+  one page, which is an ordinary admin page, and clicking the table's filter box
+  covered it with the overlay. Removing the attribute to fix that killed the
+  table's own filtering instead. The overlay now ignores any trigger inside a
+  table or a toolbar.
+
+### Fixed — in the skill file
+
+- **`Pagination::fromPaginator()` cannot be called.** It duck-types an object
+  with `currentPage`/`totalPages`/`total`, and GridKit ships no such class — the
+  file's two examples handed it an array, which is a `TypeError`. Worse, the
+  wrong object prints an empty hidden `<nav>` and says nothing.
+  `Pagination::render(array $o)` is documented as the form to use now, with
+  every key it reads; `fromPaginator` is described for what it is, an adapter.
+- **`PageSize::render()` sat in the "these PRINT" table as though it were
+  static.** It is an instance method behind `PageSize::make()`. Its fluent API
+  (`current`/`options`/`baseUrl`/`preserve`/`live`) was documented nowhere, on
+  the very page the pagination section is written for.
+- `Icon::svg($name, $px)` takes an int pixel size, not an options array.
+
+**1,676 assertions.**
+
+---
 ## [1.46.0] - 2026-08-27
 
 The same five tasks, the same rules, fresh agents, against the skill file as

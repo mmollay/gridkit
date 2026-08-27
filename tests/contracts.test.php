@@ -276,6 +276,47 @@ return [
         . implode(' | ', array_unique($notices)));
 },
 
+'changing rows per page keeps the filters the page links keep' => function (): void {
+    // PageSize::preserve() takes a list of parameter NAMES; Pagination hands
+    // down a name => value MAP. The list form used every value as a name, so
+    // nothing matched $_GET and the select shipped data-preserve="{}" — and
+    // changing rows per page threw away the year filter and the sort that
+    // every page link beside it carefully preserves. No error, no sign.
+    Lang::set('en');
+    $_SERVER['REQUEST_URI'] = '/report?year=2024&sort=name';
+    $_GET = ['year' => '2024', 'sort' => 'name'];
+
+    $html = T::capture(fn() => Pagination::render([
+        'page' => 2, 'totalPages' => 4, 'total' => 90,
+        'params'   => ['year' => 2024, 'sort' => 'name'],
+        'pageSize' => ['current' => 25, 'options' => [10, 25, 50]],
+    ]));
+
+    preg_match('/data-preserve="([^"]*)"/', $html, $m);
+    $kept = json_decode(html_entity_decode($m[1] ?? '{}'), true);
+    T::ok(isset($kept['year']), 'the row-count select drops the year filter');
+    T::ok(isset($kept['sort']), 'the row-count select drops the sort');
+
+    // Both shapes of preserve() have to work — a bare list reads $_GET.
+    $byName = T::capture(fn() => PageSize::make('per_page')->current(25)
+        ->preserve(['year', 'sort'])->render());
+    preg_match('/data-preserve="([^"]*)"/', $byName, $m2);
+    $kept2 = json_decode(html_entity_decode($m2[1] ?? '{}'), true);
+    T::eq($kept2, ['year' => '2024', 'sort' => 'name'], 'the list form stopped reading $_GET');
+
+    $_GET = [];
+},
+
+'a table\'s own search box is not the global overlay trigger' => function (): void {
+    // Table::search() renders <input class="gk-search" data-gk-search> — the
+    // exact attribute GK.search uses as its overlay trigger. On a page with
+    // both, clicking the table's box opened the overlay on top of it; dropping
+    // the attribute to fix that killed the table's own filtering instead.
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, 'trigger.closest("[data-gk-table]")',
+        'the global overlay opens over a table\'s own filter box again');
+},
+
 'the year dropdown has a name like every other filter' => function (): void {
     Lang::set('en');
     $html = T::capture(fn() => (new YearFilter('y'))

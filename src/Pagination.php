@@ -72,7 +72,12 @@ final class Pagination
         $inner = '';
         $inner .= '<span class="gk-rowpager-info">';
         if ($pageSize !== null) {
-            $inner .= self::pageSizeHtml($pageSize);
+            // Hand the pager's own base URL and params down. Without them the
+            // select emitted data-preserve="{}" and its onchange rebuilt the
+            // URL from nothing — so changing rows-per-page on a plain page
+            // threw away the year filter and the sort that every page link
+            // beside it carefully preserves. Silently.
+            $inner .= self::pageSizeHtml($pageSize, $base, $params);
         }
         if ($total !== null) {
             $inner .= '<span class="gk-rowpager-count">'
@@ -155,10 +160,15 @@ final class Pagination
     /**
      * @param array{current?:int, live?:string, param?:string, options?:int[]} $cfg
      */
-    private static function pageSizeHtml(array $cfg): string
+    private static function pageSizeHtml(array $cfg, string $base = '', array $params = []): string
     {
         $ps = PageSize::make((string) ($cfg['param'] ?? 'per_page'))
             ->current((int) ($cfg['current'] ?? 25));
+        // An explicit baseUrl/preserve in the config still wins.
+        if ($base !== '' && empty($cfg['baseUrl'])) $ps->baseUrl($base);
+        if ($params !== [] && empty($cfg['preserve'])) $ps->preserve($params);
+        if (!empty($cfg['baseUrl']))  $ps->baseUrl((string) $cfg['baseUrl']);
+        if (!empty($cfg['preserve'])) $ps->preserve((array) $cfg['preserve']);
         if (!empty($cfg['options']) && is_array($cfg['options'])) {
             $ps->options($cfg['options']);
         }

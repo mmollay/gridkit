@@ -70,6 +70,11 @@ final class PageSize
         return $this;
     }
 
+    /**
+     * @param array<int|string,mixed> $params A list of parameter names, whose
+     *   values come from $_GET, or a name => value map used as given. Both
+     *   shapes work; a map wins where a page already knows its own state.
+     */
     public function preserve(array $params): static
     {
         $this->preserveParams = $params;
@@ -116,9 +121,20 @@ final class PageSize
                 . ' data-gk-live-input="' . $e($this->liveTarget) . '">';
         } else {
             // Navigate mode: onchange keeps the other filters and reloads fully.
+            // preserve() takes either a list of parameter NAMES, whose values
+            // are read from $_GET, or a name => value map. Pagination hands
+            // down a map — its own params — and passing that to the list form
+            // used every VALUE as a name, so nothing matched $_GET and the
+            // select shipped data-preserve="{}". Changing rows per page then
+            // dropped the year filter and the sort, silently.
             $params = [];
-            foreach ($this->preserveParams as $p) {
-                if (isset($_GET[$p]) && $_GET[$p] !== '') $params[$p] = $_GET[$p];
+            foreach ($this->preserveParams as $key => $value) {
+                if (is_int($key)) {
+                    $name = (string) $value;                       // a bare name
+                    if (isset($_GET[$name]) && $_GET[$name] !== '') $params[$name] = $_GET[$name];
+                } elseif ($value !== null && $value !== '') {
+                    $params[(string) $key] = $value;               // an explicit value
+                }
             }
             $base = $this->baseUrl ?: strtok($_SERVER['REQUEST_URI'] ?? '', '?');
             echo '<select id="' . $selId . '" class="' . $e($this->selectClass) . '"'
