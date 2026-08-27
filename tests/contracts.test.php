@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-use GridKit\{Lang, Layout, Modal, Sidebar, StatCards, Header, Select, YearFilter};
+use GridKit\{Lang, Layout, Modal, Sidebar, StatCards, Header, Select, Table, YearFilter};
 
 /** @return array<string,callable> */
 return [
@@ -191,6 +191,42 @@ return [
         'the carrier rule must apply everywhere, not only under another selector');
     T::contains($css, '.gk-toolbar .gk-select-search .gk-select-display {',
         'the 34px height belongs to toolbars only');
+},
+
+'a static table pages, as the skill file says it does' => function (): void {
+    // GRIDKIT_SKILL.md has always said setData() "searches, sorts and pages in
+    // JavaScript". Search and sort did; paging did not. The server emitted
+    // every row plus a pager, the client re-render dropped the pager and never
+    // rebuilt it, and the page buttons fired an AJAX reload — for a table
+    // whose rows were already all in the browser. Given to five agents with
+    // only this file to work from, the one who built a list shipped a table
+    // showing everything on page one under a pager that led nowhere.
+    Lang::set('en');
+    $rows = [];
+    for ($i = 1; $i <= 25; $i++) $rows[] = ['id' => $i, 'n' => 'Row ' . $i];
+
+    $html = T::capture(fn() => (new Table('t'))
+        ->setData($rows)->column('n', 'N')->paginate(10)->render());
+
+    preg_match('/<tbody>(.*?)<\/tbody>/s', $html, $m);
+    T::eq(substr_count($m[1] ?? '', '<tr'), 10,
+        'the first render must show one page, not every row');
+    T::contains($html, 'gk-pagination', 'a paginated static table renders a pager');
+
+    // The client needs all of them to page without asking the server.
+    preg_match('/data-gk-data>(.*?)<\/script>/s', $html, $d);
+    $data = json_decode($d[1] ?? '{}', true);
+    T::eq(count($data['rows'] ?? []), 25, 'the payload must carry every row');
+    T::eq($data['perPage'] ?? null, 10, 'the payload must carry the page size');
+
+    // Without paginate() nothing is sliced.
+    $all = T::capture(fn() => (new Table('u'))->setData($rows)->column('n', 'N')->render());
+    preg_match('/<tbody>(.*?)<\/tbody>/s', $all, $m2);
+    T::eq(substr_count($m2[1] ?? '', '<tr'), 25, 'an unpaginated table shows everything');
+
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, '_staticPager', 'the client cannot rebuild the pager it removes');
+    T::contains($js, 'wrap._gkPage = parseInt(btn.dataset.gkPage', 'the page button still asks the server');
 },
 
 'the year dropdown has a name like every other filter' => function (): void {

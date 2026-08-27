@@ -199,7 +199,7 @@ class Header
             if ($showThemeSwitcher) {
                 $html .= '<div class="gk-dropdown-divider"></div>';
                 $html .= '<div class="gk-dropdown-item gk-dropdown-html">'
-                       . '<span style="font-size:11px;color:var(--gk-on-surface-variant);font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:2px 0;">Design</span>'
+                       . '<span style="font-size:11px;color:var(--gk-on-surface-variant);font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:2px 0;">' . $e(Lang::t('header.appearance')) . '</span>'
                        . '</div>';
                 $html .= '<div class="gk-dropdown-item gk-dropdown-html">' . Theme::switcher() . '</div>';
             }

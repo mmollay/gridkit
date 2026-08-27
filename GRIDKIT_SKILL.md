@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.44.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.45.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.ssi.at
 
 ## Purpose
@@ -47,6 +47,42 @@ next update and split the codebase in two.
 | Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback |
 
+## The one rule to read first: echo or return
+
+Half of GridKit prints; half hands you a string. Getting this wrong produces no
+error and no warning — the page renders, the piece is simply missing. Five
+agents were given this file and a page to build; not one got a first draft
+without tripping over this.
+
+**These twelve PRINT. Call them as a statement — `<?php $x->render(); ?>`:**
+
+| | | |
+|---|---|---|
+| `Table::render()` | `Form::render()` | `Sidebar::render()` |
+| `StatCards::render()` | `FilterChips::render()` | `TableHeader::render()` |
+| `YearFilter::render()` | `Pagination::render()` | `PageSize::render()` |
+| `ActionGroup::render()` | `Modal::container()` | `BelegModal::container()` |
+
+**These RETURN a string. You must echo it — `<?= … ?>`:**
+
+| | | |
+|---|---|---|
+| `Header::render()` | `Button::render()` | `Button::icon()` |
+| `Theme::switcher()` | `Theme::attributes()` | `Theme::bodyTag()` |
+| `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
+| `Lang::jsConfig()` | `Pagination::build()` | |
+
+`Header::render()` is the exception that catches people: every other component
+you construct with `new` prints, and this one does not. `<?php (new Header())
+->render(); ?>` renders nothing at all, silently.
+
+The rule behind it, if you want one: a component that owns a block of the page
+prints it; a helper that produces a fragment for you to place returns it. Header
+sits on the wrong side of that line for historical reasons and is not going to
+move, because every existing page echoes it.
+
+---
+
 ## Page skeleton
 
 Every class lives under the `GridKit\` namespace and is autoloaded by
@@ -57,7 +93,7 @@ no build step:
 <?php
 require_once __DIR__ . '/vendor/autoload.php';   // or '/path/to/gridkit/autoload.php'
 
-use GridKit\{Button, Form, Lang, Layout, Modal, Sidebar, StatCards, Table, Theme};
+use GridKit\{Button, Form, Lang, Layout, Sidebar, StatCards, Table, Theme};
 
 Lang::set($_GET['lang'] ?? 'en');   // 'en' | 'de'
 Theme::set('indigo', 'light');      // indigo | ocean | forest | rose | amber | slate
@@ -76,15 +112,35 @@ Theme::set('indigo', 'light');      // indigo | ocean | forest | rose | amber | 
 
 <!-- components go here -->
 
-<?php Modal::container(); ?>
 <script src="<?= Layout::asset('js/gridkit.js') ?>"></script>
 </body>
 </html>
 ```
 
-`skeleton.php` in the repository is this file, filled in. `Layout::asset()`
-appends the file's modification time so a changed stylesheet is not served from
-a stale cache.
+`skeleton.php` in the repository is this file, filled in.
+
+**`Layout::asset()` stamps a path; it does not resolve one.** It appends the
+file's modification time so a changed stylesheet is not served from a stale
+cache — and it hands back whatever path you gave it. So the path has to be one
+the *browser* can reach from the page:
+
+```php
+// page inside the GridKit directory
+echo Layout::asset('css/gridkit.css');                    // css/gridkit.css?v=…
+
+// page in an app directory beside the checkout
+echo Layout::asset('../gridkit/css/gridkit.css');
+
+// Composer install — the files live under vendor/
+echo Layout::asset('vendor/mmollay/gridkit/css/gridkit.css');
+```
+
+Get it wrong and the stamp still appears, so the URL looks right while the
+browser gets a 404 and the page renders unstyled. If `vendor/` is outside your
+document root, copy or symlink its `css/` and `js/` into the public root.
+
+`Modal::container()` is **not** in the skeleton above and should not be in
+yours: since 1.42.0 it emits nothing. `GK.modal.open()` builds its own overlay.
 
 The other classes import the same way — the full list is in the table above,
 each one `GridKit\<Name>`:
@@ -174,6 +230,24 @@ every declared filter, the `ORDER BY`, the `COUNT` and the `LIMIT`:
     ->render();
 ```
 
+**`filter($column, $type, $opts)`:** a dropdown in the toolbar, bound to the
+table — this is what "every declared filter" above means. `$type` is `'select'`;
+`$opts` takes `options` (value → label), `placeholder` (the empty "all" entry)
+and `label` (accessible name, defaults to the column's label).
+
+```php
+->filter('status', 'select', [
+    'options'     => ['open' => 'Open', 'paid' => 'Paid'],
+    'placeholder' => 'All statuses',
+])
+```
+
+The choice travels as `gk_filter_<column>` and comes back selected after a
+reload. `setData()` filters in the browser, `query()` adds `` `column` = ? `` to
+the WHERE, and with `rows()` you read `$_GET['gk_filter_<column>']` where you
+build the query. Use this for a status dropdown that belongs to a table — not
+`FilterChips` plus a GET parameter of your own.
+
 **⚠️ Search rule:** `search()` searches the column keys you name. If a column contains HTML (badges, links), use a separate plain-text key for search and a `_display` key for rendering. Never put HTML in searchable columns.
 
 **Column formats:** `currency`, `percent`, `date`, `datetime`, `boolean`, `label`, `html`, `email`, `number`
@@ -189,6 +263,18 @@ every declared filter, the `ORDER BY`, the `COUNT` and the `LIMIT`:
 **Button `onclick`:** `{field}` is replaced with the row's value, JSON-encoded (`'onclick' => 'open({id})'`).
 
 **Button colors:** `danger`, `success`, `warning`, `primary` (default: neutral)
+
+**Button `modal`:** `'modal' => 'edit_form'` names a modal registered on the same
+table with `->modal('edit_form', 'Edit', 'forms/edit.php', ['size' => 'medium'])`.
+GridKit opens it itself — `GK.modal.open(title, url, params, size)` with the row's
+`data-gk-params` as the params — so no JavaScript of yours is involved.
+`->newButton('New product', ['modal' => 'edit_form'])` opens the same modal for a
+new record. Wiring `onclick` to `GK.modal.open` by hand is the fallback, not the API.
+
+```php
+->modal('edit_form', 'Edit customer', 'forms/edit.php', ['size' => 'medium'])
+->button('edit', ['icon' => 'edit', 'modal' => 'edit_form'])
+```
 
 **`confirm`:** `->button('delete', ['icon' => 'delete', 'confirm' => true])` asks
 before the button acts — `true` uses the translated default, a string is used as
@@ -277,10 +363,21 @@ language. The value stays `paid`; the cell reads whatever this locale calls it.
 
 ```php
 ->column('status', 'Status', ['format' => 'label', 'labels' => [
-    'draft'   => 'gray',                                        // colour only
-    'paid'    => ['color' => 'green', 'text' => Lang::t('paid')],
+    'draft'   => 'gray',                                     // colour only
+    'paid'    => ['color' => 'green', 'text' => $t('paid')], // colour + text
 ]])
 ```
+
+**The colours are a fixed list:** `gray`, `green`, `red`, `orange`, `blue`,
+`plain`. Anything else renders as an unstyled label — `primary`, `success`,
+`danger` and `warning` are Button and StatCards vocabulary and do **not** work
+here.
+
+**`$t('paid')` above is your own translator, not `Lang::t()`.** `Lang` holds
+GridKit's own interface strings — "Search…", "No entries found", "Delete". It
+is not a catalogue for your application, and `Lang::t('paid')` returns the
+string `paid` because there is no such key. See *Translating your own strings*
+below.
 
 Without a `labels` entry the colour is guessed from a built-in word list
 (English and German), and the raw value is shown.
@@ -288,15 +385,27 @@ Without a `labels` entry the colour is guessed from a built-in word list
 ### Button
 
 ```php
-// Static render (returns HTML string)
-Button::render('Label', [
+// RETURNS a string — echo it. See "echo or return" at the top.
+echo Button::render('Label', [
     'variant' => 'filled',    // filled | outlined | tonal | text
     'color'   => 'primary',   // primary | success | danger | warning | neutral
     'icon'    => 'add',       // Material Icon name
+    'size'    => 'sm',        // sm | md (default) | lg
+    'shape'   => 'pill',      // rounded (default) | pill | circle | square
     'href'    => '/path',     // renders as <a>
     'onclick' => 'jsCode()',
-    'size'    => 'sm',        // sm | md (default) | lg
+    'title'   => 'Add a row', // tooltip
+    'aria'    => 'Add a row', // accessible name; see below
+    'disabled' => false,
+    'form'    => 'form-id',   // submit a form this button is NOT inside
 ]);
+
+// Icon-only: pass an empty label. GridKit gives it an accessible name from
+// the icon, translated for the active locale, so a screen reader does not
+// read the ligature. Pass 'aria' when the icon alone does not say what the
+// button does.
+echo Button::render('', ['icon' => 'delete', 'color' => 'danger']);
+echo Button::icon('content_copy', ['aria' => 'Copy the invoice number']);
 ```
 
 ### FilterChips
@@ -304,15 +413,18 @@ Button::render('Label', [
 ```php
 (new FilterChips('filter-id', 'status'))   // 2nd param = GET param name
     ->baseUrl('/my-page')
-    ->chip('',      'Alle (24)')           // value='' = "All" chip (no GET param)
-    ->chip('active', 'Aktiv (18)')
-    ->chip('won',    'Gewonnen', ['color' => 'success'])
-    ->chip('lost',   'Verloren', ['color' => 'danger'])
+    ->chip('',       'All (24)')           // value='' = "All" chip -> ?status= (empty, never omitted)
+    ->chip('active', 'Active (18)')
+    ->chip('won',    'Won',  ['color' => 'success'])
+    ->chip('lost',   'Lost', ['color' => 'danger'])
     ->preserve(['year'])                   // keep other GET params on click
     ->render();
 ```
 
 Active chip is auto-detected from `$_GET`. Color options: `success`, `danger`, `warning`, `primary`.
+The param is always present in the URL, the "All" chip included (`?status=`) — this empty query string is what stops
+`GK.liveTable.restoreSession` from jumping back to the last remembered filter. Read it with
+`($_GET['status'] ?? '') !== ''`, never with `isset($_GET['status'])`.
 
 ### YearFilter
 
@@ -355,9 +467,25 @@ echo $sl('gross_total',   'Total', 'gk-text-right');   // 3rd arg = extra class
 It toggles `sort` and `dir` in the URL and re-encodes everything under
 `preserve`, which is what keeps an active filter alive across a sort.
 
-### TableHeader (since v1.10.0) — **Required for every table page**
+### TableHeader (since v1.10.0)
 
-The single source of truth for filter/search bars above tables. Three fixed sections in this exact order:
+**Who owns the search — read this before you use both.** `Table::search([…])`
+and `TableHeader::search(…)` are two different things, and using both puts two
+boxes on the page, only one of which works:
+
+| You are building | Use | Not |
+|---|---|---|
+| a `Table` with `setData()` or `rows()` | `->search(['col', …])` on the Table | `TableHeader::search()` |
+| your own `<table>`, or a live container | `TableHeader::search($name, $value, …)` | — |
+
+`TableHeader::search()` renders an input bound to nothing unless you give it
+`['live' => 'container-id']` or wrap it in your own `<form>`. It does not know
+about a `Table` and cannot filter one. Earlier versions of this file called
+TableHeader "required for every table page"; it is not, and a `Table` that
+declares its own `search()` needs no TableHeader at all.
+
+The single source of truth for filter/search bars above tables you build
+yourself. Three fixed sections in this exact order:
 
 1. **Status row** (full-width, typically `FilterChips` like „All / Open / Paid")
 2. **Toolbar** (search + filter dropdowns inline, optional reset button)
@@ -390,22 +518,29 @@ CSS classes (all auto-applied): `gk-tableheader`, `gk-tableheader-status`, `gk-t
 
 ```php
 (new StatCards('stats-id'))
-    ->card('Umsatz',   12450.80, ['format' => 'currency', 'icon' => 'euro',    'color' => 'primary'])
-    ->card('Benutzer', 1284,     ['format' => 'number',   'icon' => 'people',  'color' => 'success'])
-    ->card('Errors',   3,        ['format' => 'number',   'icon' => 'error',   'color' => 'danger', 'highlight' => true])
-    ->card('Quote',    78,       ['format' => 'percent',  'icon' => 'speed',   'color' => 'warning'])
-    ->card('Zu Details', '/url', ['icon' => 'arrow_forward', 'href' => '/url'])  // clickable
+    ->card('Revenue',  12450.80, ['format' => 'currency', 'icon' => 'euro',   'color' => 'primary', 'trend' => '+12%'])
+    ->card('Users',    1284,     ['format' => 'number',   'icon' => 'people', 'color' => 'success', 'trend' => '+3.1%'])
+    ->card('Errors',   3,        ['format' => 'number',   'icon' => 'error',  'color' => 'danger', 'highlight' => true])
+    ->card('Rate',     78,       ['format' => 'percent',  'icon' => 'speed',  'color' => 'warning'])
+    ->card('Details',  '/url',   ['icon' => 'arrow_forward', 'href' => '/url'])  // clickable
     ->render();
 ```
 
 **Colors:** `primary`, `success`, `danger`, `warning`, `info`
-**Formats:** `currency` (1.234,56 €), `number` (1.234), `percent` (78 %)
+**Formats:** `currency`, `number`, `percent` — each follows the active locale,
+so `12450.80` is `€12,450.80` under `en` and `12.450,80 €` under `de`.
+
+**`trend`** is printed verbatim, exactly as you pass it — GridKit does no
+rounding, no sign and no percent sign of its own. A leading `-` colours it as a
+fall, anything else as a rise. So pass a finished string: `'+12%'`, `'-0.4%'`,
+`'▲ 3'`. Passing a raw float gives you a bare `-8` in the card.
 
 ### Modal
 
 ```php
-// In layout (panel.php does this automatically):
-<?php Modal::container(); ?>
+// Nothing to place in the layout: GK.modal.open() creates its own overlay and
+// appends it to <body>. (Modal::container() still exists and emits nothing —
+// it printed an empty shell nobody read until 1.42.0 retired it.)
 
 // JS API — the body is FETCHED from a URL (POST, X-Requested-With: XMLHttpRequest).
 // The second argument is an address, never markup.
@@ -463,6 +598,19 @@ text box — `'searchable-select'` was documented here for a long time, is not a
 type, and rendered as a plain text field without a word of complaint. The
 searchable select is plain `'select'`.
 
+**Field options** (the 4th argument of `field()`):
+
+| Option | Applies to | Effect |
+|---|---|---|
+| `width` | every field | columns out of 16 (default `16`); also `'auto'` or `'220px'` |
+| `required` | every field | red star + browser validation |
+| `value` | every field | pre-fill / pre-select. `multiselect` takes an array (or a comma string) and pre-checks the chips; a truthy value checks `checkbox`/`toggle`; `ajaxselect` needs `'displayValue' => 'Acme GmbH'` as well, or the box shows the id-less search field |
+| `placeholder` | input types, `select`, `multiselect`, `ajaxselect` | the input's placeholder — on `select` the empty-state text, on `multiselect`/`ajaxselect` the search box's |
+| `options` | `select`, `multiselect`, `radio` | `value => label` map |
+| `rows` | `textarea` | height in rows (default `3`) |
+| `min`, `max`, `step` | `range`, `number`, `date`/`time` | bounds (`range` defaults to `0`/`100`/`1` and starts at `min`) |
+| `error` | every field | a validation message, rendered red under the field. This is how a classic POST-redisplay shows errors: `['value' => $_POST['email'] ?? '', 'error' => $errors['email'] ?? '']`. The AJAX handler writes into the same slot, so both paths look identical |
+
 **Form Density:** Add `gk-form-compact` class to a `<form>` or wrapper `<div>` for compact forms. All elements scale down proportionally:
 
 | Element | Normal | Compact |
@@ -501,15 +649,43 @@ echo json_encode(['ok' => false, 'errors' => ['email' => 'Already exists']]);  /
 
 ```php
 Theme::set('indigo', 'light');  // themes: indigo, ocean, forest, rose, amber, slate
-Theme::switcher();               // renders theme-switcher UI
+echo Theme::switcher();          // RETURNS the switcher HTML — must be echoed
 ```
 
 ### Lang
 
 ```php
-Lang::set('de');     // set locale (default: de)
-Lang::jsConfig();    // MUST be output in <head> before gridkit.js — sets window.GK_LANG
+Lang::set('en');     // set the locale: 'en' | 'de'
+echo Lang::jsConfig();   // MUST be in <head> before gridkit.js — sets window.GK_LANG
 ```
+
+`Lang` translates **GridKit's own** interface: the search placeholder, the empty
+state, the pager, the confirm dialog, the row-action names. `Lang::set()` plus
+`Lang::jsConfig()` is all it needs — every built-in string then follows, on the
+server and in the browser.
+
+**Translating your own strings.** `Lang` is not a catalogue for your
+application, and asking it for a key it does not have returns the key itself —
+so `Lang::t('paid')` prints `paid`, in every locale, with no error. Keep your
+own strings in your own array; the invoice example does exactly this:
+
+```php
+$lang = $_GET['lang'] ?? 'en';
+if (!in_array($lang, ['en', 'de'], true)) $lang = 'en';
+Lang::set($lang);                       // GridKit's strings
+
+$S = [                                  // yours
+    'en' => ['title' => 'Invoices', 'paid' => 'Paid',    'new' => 'New invoice'],
+    'de' => ['title' => 'Rechnungen', 'paid' => 'Bezahlt', 'new' => 'Neue Rechnung'],
+];
+$t = fn(string $k): string => $S[$lang][$k] ?? $k;
+
+echo $t('title');                       // "Invoices" / "Rechnungen"
+```
+
+`format => 'currency'` and `format => 'date'` localise on their own from
+`Lang::set()` — `€1,240.00` and `Mar 12, 2026` under `en`, `1.240,00 €` and
+`12.03.2026` under `de`. You do not translate those yourself.
 
 ## JavaScript API
 

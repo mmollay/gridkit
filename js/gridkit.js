@@ -187,6 +187,8 @@
                   ? _savedSort
                   : { col: "", dir: "asc" };
               wrap._gkSearch = "";
+            wrap._gkPage = 1;
+              wrap._gkPage = 1;
               wrap._gkFilters = {};
               wrap._gkRestoreSort = _savedSort && _savedSort.col ? true : false;
             } catch (e) {
@@ -289,10 +291,17 @@
           }
         });
 
-        // Pagination
+        // Pagination. The search handler below has always checked isStatic;
+        // this one never did, so a static table's page button fired a server
+        // reload — for a table whose rows are already all in the browser.
         wrap.addEventListener("click", (e) => {
           const btn = e.target.closest("[data-gk-page]");
-          if (!btn) return;
+          if (!btn || btn.disabled) return;
+          if (isStatic && wrap._gkData) {
+            wrap._gkPage = parseInt(btn.dataset.gkPage, 10) || 1;
+            this.renderStatic(wrap);
+            return;
+          }
           this.reload(wrap, { gk_page: btn.dataset.gkPage });
         });
 
@@ -305,6 +314,7 @@
             timer = setTimeout(() => {
               if (isStatic && wrap._gkData) {
                 wrap._gkSearch = searchInput.value;
+                wrap._gkPage = 1;   // a new search starts at the beginning
                 this.renderStatic(wrap);
               } else {
                 this.reload(wrap, { gk_search: searchInput.value, gk_page: 1 });
@@ -318,6 +328,7 @@
           sel.addEventListener("change", () => {
             if (isStatic && wrap._gkData) {
               wrap._gkFilters[sel.dataset.gkFilter] = sel.value;
+              wrap._gkPage = 1;
               this.renderStatic(wrap);
             } else {
               const params = { gk_page: 1 };
@@ -576,6 +587,17 @@
             return String(va).localeCompare(String(vb), "de") * dir;
           });
         }
+
+        // Paging — after filtering, searching and sorting, so the page window
+        // is a window onto what the user is actually looking at.
+        const perPage = parseInt(data.perPage, 10) || 0;
+        const total = rows.length;
+        let page = wrap._gkPage || 1;
+        const pages = perPage > 0 ? Math.max(1, Math.ceil(total / perPage)) : 1;
+        if (page > pages) page = pages;
+        if (page < 1) page = 1;
+        wrap._gkPage = page;
+        if (perPage > 0) rows = rows.slice((page - 1) * perPage, page * perPage);
 
         // Build HTML
         const e = (s) => {
@@ -937,6 +959,14 @@
 
         html += "</tbody></table>";
 
+        // The pager. A static table has every row in the browser, so paging is
+        // a slice — but renderStatic used to drop the pager on every rebuild
+        // and never put it back, and the page buttons fired a server reload
+        // the page often could not answer. Both are handled here now.
+        if (perPage > 0 && total > perPage) {
+          html += GK.table._staticPager(page, Math.ceil(total / perPage));
+        }
+
         // Replace table content (keep toolbar, templates, script)
         const oldTable = wrap.querySelector(".gk-table");
         const oldPag = wrap.querySelector(".gk-pagination");
@@ -952,6 +982,40 @@
         // Mirror the selection again after the rebuild (checkbox/highlight/bulk bar).
         if (selectable && typeof wrap._gkUpdateBar === "function")
           wrap._gkUpdateBar();
+      },
+
+      /** The pager for a static table, matching what Table renders server-side. */
+      _staticPager(page, pages) {
+        const btn = (label, target, disabled, active) =>
+          '<button type="button" class="gk-btn gk-btn-text gk-btn-neutral gk-btn-sm'
+          + (active ? " gk-btn-filled gk-btn-primary" : "")
+          + '" data-gk-page="' + target + '"'
+          + (disabled ? " disabled" : "")
+          + (typeof label === "number" ? "" : ' aria-label="' + label.aria + '"')
+          + ">"
+          + (typeof label === "number"
+              ? label
+              : '<span class="material-icons" aria-hidden="true" style="font-size:18px">'
+                + label.icon + "</span>")
+          + "</button>";
+
+        let out = '<div class="gk-pagination">';
+        out += btn({ icon: "chevron_left", aria: _t("previous") }, page - 1, page <= 1, false);
+
+        // A window around the current page, plus the first and the last.
+        const set = new Set([1, pages]);
+        for (let i = page - 2; i <= page + 2; i++) if (i >= 1 && i <= pages) set.add(i);
+        const list = [...set].sort((a, b) => a - b);
+        let last = 0;
+        list.forEach((n) => {
+          if (last && n - last > 1) out += '<span class="gk-pagination-gap">…</span>';
+          out += btn(n, n, false, n === page);
+          last = n;
+        });
+
+        out += btn({ icon: "chevron_right", aria: _t("next") }, page + 1, page >= pages, false);
+        out += "</div>";
+        return out;
       },
 
       iconSvg(name) {

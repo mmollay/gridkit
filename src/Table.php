@@ -374,6 +374,12 @@ class Table
                 // else every row's id became empty on the first sort or search
                 // — the whole selection collapsed to one blank entry.
                 'rowId' => $this->selectKey,
+                // The page size, so the client can page a static table itself.
+                // Without it the browser had every row and no way to slice
+                // them, so paginate() on a setData() table showed everything
+                // at once and its pager fired a server reload the page often
+                // could not answer.
+                'perPage' => $this->perPage,
                 'columns' => $colConfig,
                 'buttons' => $this->buttons,
                 'groupBy' => $this->groupCol === '' ? null : [
@@ -510,7 +516,16 @@ class Table
         $groupSpan = count($this->columns) + ($leftButtons ? 1 : 0) + ($rightButtons ? 1 : 0) + ($this->selectable ? 1 : 0);
         $lastGroup = null;
 
-        foreach ($this->rows as $row) {
+        // A static table holds every row in the browser and pages there. The
+        // first render has to show one page all the same, or the page arrives
+        // with all of them and collapses to ten as soon as JavaScript runs.
+        // (query() and rows() already hand over a single page.)
+        $visible = $this->rows;
+        if ($this->isStatic && $this->perPage > 0) {
+            $visible = array_slice($visible, ($this->currentPage - 1) * $this->perPage, $this->perPage);
+        }
+
+        foreach ($visible as $row) {
             if ($this->groupCol !== '') {
                 $gk = (string) ($row[$this->groupCol] ?? '');
                 if ($gk !== $lastGroup) {

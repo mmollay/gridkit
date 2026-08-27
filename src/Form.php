@@ -496,7 +496,7 @@ class Form
                 }
         }
 
-        echo '<div class="gk-field-error" data-gk-error="' . $e($name) . '"></div>';
+        echo '<div class="gk-field-error" data-gk-error="' . $e($name) . '">' . $e($f['error'] ?? '') . '</div>';
         echo '</div></div>';
     }
 }

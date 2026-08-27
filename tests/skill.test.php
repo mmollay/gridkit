@@ -139,6 +139,29 @@ return [
         'the first skeleton must not depend on a template engine');
 },
 
+'the skill states which calls print and which return' => function (): void {
+    // Five agents were given this file and a page to build. None got a first
+    // draft without tripping over this, and the failure is silent: the page
+    // renders, the piece is simply absent. Theme::switcher() and
+    // Header::render() return strings; called as statements they emit nothing.
+    $md = (string) file_get_contents(SKILL);
+    T::contains($md, 'echo or return', 'the rule is gone from the skill file');
+
+    // And the file must not contradict it in its own examples.
+    T::ok(!preg_match('/<\?php\s+Theme::switcher\(\);/', $md),
+        'the skill calls Theme::switcher() as a statement — it returns a string');
+    // The anti-example inside the rule itself is allowed to show the wrong
+    // form. What must not appear is a line presented as one to copy.
+    T::eq(preg_match_all('/^<\?php\s+Modal::container\(\);/m', $md), 0,
+        'the skill still shows Modal::container() as a line to place — a no-op since 1.42.0');
+
+    // The table has to name every returning call, or it is worse than nothing.
+    foreach (['Header::render()', 'Button::render()', 'Theme::switcher()',
+              'Select::searchable()', 'Layout::asset()', 'Lang::jsConfig()'] as $call) {
+        T::contains($md, $call, "the echo/return table omits $call");
+    }
+},
+
 'no German is left in the skill' => function (): void {
     $md = (string) file_get_contents(SKILL);
     T::ok(!preg_match('/[äöüÄÖÜß]/u', $md), 'umlauts');

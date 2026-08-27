@@ -7,6 +7,92 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.45.0] - 2026-08-27
+
+Round sixteen put the project's own headline claim on trial. README.md says:
+
+> The agent writes correct GridKit PHP on the first try, because the whole
+> surface fits in one file it can actually read.
+
+Five agents were given a page to build and one source of knowledge —
+`GRIDKIT_SKILL.md`, with the source tree explicitly off limits. **None of them
+got a working first draft.** Thirty-three gaps reported, thirty confirmed by an
+adversarial verifier that reproduced each one.
+
+Every one of the five eventually shipped a page that runs clean, so the file is
+close. But the failure mode it produced is the worst kind: **exit 0, no warning,
+and a page with a piece silently missing.**
+
+### Fixed — the rule nobody had written down
+
+Half of GridKit prints and half returns a string, and nothing said so. Called as
+a statement, `Theme::switcher()` renders nothing at all; three of the five
+agents lost their theme switcher exactly that way and only found out by reading
+the HTML. `Header::render()` is the trap inside the trap — every other component
+you build with `new` prints, and that one does not, so a fourth agent's filter
+chips landed in front of the doctype.
+
+The skill file now opens with the rule and the full list of which calls do
+which, before anything else.
+
+### Fixed — a documented feature that had never worked
+
+**`setData()` did not page.** The file has always said it "searches, sorts and
+pages in JavaScript". Search and sort did. Paging did not: the server emitted
+every row plus a pager, the client re-render removed that pager and never
+rebuilt it, and the page buttons fired an AJAX reload — for a table whose rows
+were already all in the browser, from a page that usually had no handler for it.
+The agent asked to build a list shipped a table showing all 25 rows on page one
+under a pager that led nowhere, and `php list.php` exited 0.
+
+Now: the server renders one page, the payload carries every row and the page
+size, the client slices, and the pager is rebuilt on every render. Searching or
+filtering returns to page one. Verified in a browser — paging a static table
+makes no network request at all.
+
+### Fixed — in the source
+
+- **A form field's `error` option was accepted and dropped.** `Form` emitted an
+  empty `<div class="gk-field-error">` and put nothing in it, so the classic
+  POST-redisplay had nowhere to put a message. The container was there the whole
+  time; nothing filled it.
+- **`Header::user()` injected an untranslated `Design` label** into the user
+  menu — byte-identical in both locales, and the only German-flavoured string
+  that survived an English page. It goes through `Lang` now.
+
+### Fixed — in the skill file
+
+- `Layout::asset()` stamps a path, it does not resolve one. Four of the five
+  agents wrote a page outside the GridKit directory and got dead stylesheet
+  links with a cache-buster on them, so the URL looked right. Now spelled out,
+  with the three layouts that actually occur.
+- `Modal::container()` was still in the page skeleton. It has emitted nothing
+  since 1.42.0.
+- **TableHeader was labelled "Required for every table page".** It is not, and
+  its `search()` competes with `Table::search()`: two boxes, one of them inert.
+  There is a table now saying which to use when.
+- **`Lang` is not a catalogue for your application.** The status-label sample
+  showed `Lang::t('paid')`, which returns the string `paid` in every locale
+  because there is no such key — it would have stamped an English token into a
+  German column. There is now a section on translating your own strings.
+- The `labels` colours are a fixed list of six. `primary` and `success` are
+  Button vocabulary and render an unstyled label here.
+- `StatCards`' `trend` is printed verbatim: pass `'+12%'`, not a float, or the
+  card reads `-8`.
+- `Button`'s options were half-listed — `shape`, `aria`, `title`, `disabled` and
+  `form` were all missing, and the sample called a returning method as a
+  statement.
+- The last German example strings are gone from the English file.
+
+### Added
+
+- Three checks in `tests/skill.test.php` and `tests/contracts.test.php`: the
+  file must state the echo/return rule and name every returning call, must not
+  contradict it in its own examples, and a static table must page.
+
+**1,639 assertions.**
+
+---
 ## [1.44.0] - 2026-08-27
 
 Round fifteen turned outward: the demo, the landing page, the worked example,
