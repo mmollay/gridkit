@@ -606,12 +606,20 @@ a:hover {
   padding: 12px 16px;
   text-align: left;
   border-bottom: 1px solid var(--gk-outline-variant);
+  /* Digits on a fixed width, so figures and dates line up down the column
+     instead of drifting a little in every row. Only digits are affected —
+     prose in the same cell keeps its normal spacing. */
+  font-variant-numeric: tabular-nums;
 }
 .gk-table thead th {
   /* No surface of its own. Caps, size and weight already make the header row
      unmistakably readable as a header — a grey bar underneath it is a second
      announcement of the same thing and makes the card restless. The line below
-     it does the separating on its own. */
+     it does the separating on its own.
+     For that it has to be visible: with the same hairline as between the rows,
+     the header floated among them. One step darker, and the head reads as the
+     head — in both modes, the token carries its own dark value. */
+  border-bottom-color: var(--gk-surface-container-highest);
   font-weight: 600;
   font-size: var(--gk-text-overline);
   color: var(--gk-on-surface-variant);

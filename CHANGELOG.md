@@ -7,6 +7,42 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.53.0] - 2026-08-27
+
+Two small things in the table, both of which had been quietly costing
+readability. Neither changes any markup — every existing page gets them.
+
+### Changed — digits line up
+
+**`font-variant-numeric: tabular-nums` on table cells.** Proportional digits
+are narrower for a 1 than for a 0, so a column of amounts or dates wanders a
+little in every row. In prose that is right; in a column of figures it is
+noise. Only digits are affected — text in the same cell keeps its normal
+spacing.
+
+Visible immediately in any table with a date, a count or an amount.
+
+### Changed — the header reads as the header
+
+**The header rule is one step darker than the row rules**
+(`--gk-surface-container-highest` instead of `--gk-outline-variant`).
+
+1.44.0 removed the grey bar behind `thead` for good reasons: caps, size and
+weight already announce a header, and a filled bar says the same thing a second
+time. But the line that was left to do the separating alone was the *same*
+hairline that separates the rows — so it separated nothing in particular, and
+in a long table the head floated among the rows.
+
+One step darker is enough. The token carries its own dark-mode value, so this
+holds in both modes without an exception rule.
+
+### Unchanged on purpose
+
+The pill radius, the row padding and the zebra decision stay as they are. They
+are taste, not craft, and taste belongs in a theme — not in a patch release
+that every consuming system picks up without asking.
+
+---
 ## [1.52.0] - 2026-08-27
 
 Packagist was updated, so `composer require mmollay/gridkit` finally installs
