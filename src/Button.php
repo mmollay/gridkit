@@ -106,6 +106,28 @@ class Button
             }
         }
 
+        /*
+         * attrs: anything that is neither a data- attribute nor one of the
+         * named options above. It exists because aria-current had nowhere to
+         * go — the table's pager marks the page you are on with a colour and
+         * had no way to say so in markup.
+         *
+         * Names are restricted to aria-* and a short allowlist rather than
+         * passed through: this renders a button from caller-supplied data, and
+         * an unrestricted attribute name is an onclick waiting to happen.
+         */
+        if (!empty($opts['attrs'])) {
+            foreach ($opts['attrs'] as $k => $v) {
+                $k = (string) $k;
+                $safe = str_starts_with($k, 'aria-')
+                    || in_array($k, ['role', 'lang', 'dir', 'tabindex'], true);
+                if (!$safe || !preg_match('/^[a-z][a-z0-9-]*$/', $k)) {
+                    continue;
+                }
+                $dataAttrs .= ' ' . $k . '="' . $e((string) $v) . '"';
+            }
+        }
+
         // Extra attributes
         $extras = '';
         if (!empty($opts['id'])) $extras .= ' id="' . $e($opts['id']) . '"';

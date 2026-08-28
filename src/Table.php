@@ -471,9 +471,27 @@ class Table
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
         $tableClass = 'gk-table' . ($this->globalNowrap ? ' gk-table-nowrap' : '');
+        /*
+         * Where the client says what just happened.
+         *
+         * Sorting, filtering and paging replace the rows in place. On screen
+         * that is obvious; to a screen reader nothing announced itself at all —
+         * the user pressed a control and the table silently became different
+         * data, with no way to tell whether it had worked, or how much was left.
+         * role=status is polite: it waits for a pause rather than interrupting.
+         * Empty and off-screen, because this is for people who are not looking.
+         */
+        echo '<div class="gk-sr-only" role="status" aria-live="polite"'
+           . ' data-gk-table-status="' . $e($this->id) . '"></div>';
+
         echo '<table class="' . $tableClass . '"><thead><tr>';
         if ($this->selectable) {
-            echo '<th class="gk-cb-col"><input type="checkbox" data-gk-select-all title="' . $e(Lang::t('table.select_all')) . '"></th>';
+            // aria-label, not title alone: a title is announced inconsistently
+            // and never on touch, so this control read as an unnamed checkbox.
+            // scope="col" for the same reason as the headers below.
+            echo '<th scope="col" class="gk-cb-col"><input type="checkbox" data-gk-select-all'
+               . ' aria-label="' . $e(Lang::t('table.select_all')) . '"'
+               . ' title="' . $e(Lang::t('table.select_all')) . '"></th>';
         }
         foreach ($this->columns as $key => $col) {
             $styles = [];
@@ -516,12 +534,20 @@ class Table
                        . ' data-gk-sort="' . $sortBtn[0] . '"'
                        . ' data-gk-dir="' . $sortBtn[1] . '">' . $inner . '</button>';
             }
-            echo "<th{$cls}{$style}{$attrs}>" . $inner . "</th>";
+            // scope="col": without it a screen reader has to guess which
+            // header a cell belongs to, and on a table with an action column or
+            // a checkbox column it guesses wrong. This is the one attribute a
+            // data table cannot do without.
+            echo "<th scope=\"col\"{$cls}{$style}{$attrs}>" . $inner . "</th>";
         }
         $leftButtons = array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'left');
         $rightButtons = array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'right');
-        if ($leftButtons) echo '<th class="gk-actions-col"></th>';
-        if ($rightButtons) echo '<th class="gk-actions-col"></th>';
+        // Empty header cells still need the scope, or the cells beneath them
+        // inherit the association of the last real header to their left.
+        if ($leftButtons) echo '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">'
+            . $e(Lang::t('table.actions')) . '</span></th>';
+        if ($rightButtons) echo '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">'
+            . $e(Lang::t('table.actions')) . '</span></th>';
         echo '</tr></thead><tbody>';
 
         $groupCounts = [];
@@ -648,9 +674,17 @@ class Table
         // Pagination
         if ($this->perPage > 0 && $this->totalRows > $this->perPage) {
             $pages = (int)ceil($this->totalRows / $this->perPage);
-            echo '<div class="gk-pagination">';
+            // nav, so the pager is a landmark a screen reader can jump to and
+            // skip past, instead of a run of unexplained numbers in the middle
+            // of the table.
+            echo '<nav class="gk-pagination" aria-label="' . $e(Lang::t('pagination.aria')) . '">';
+            // Named from the catalogue. Without 'aria' Button::icon falls back
+            // to the icon ligature, so this button announced itself as "Chevron
+            // left" — the name of the glyph, not of what it does. Pagination.php
+            // has always passed the label; this pager never did.
             echo Button::icon('chevron_left', [
                 'variant' => 'text', 'color' => 'neutral', 'size' => 'sm',
+                'aria' => Lang::t('pagination.prev'),
                 'data' => ['gk-page' => max(1, $this->currentPage - 1)],
                 'disabled' => $this->currentPage <= 1,
             ]);
@@ -672,21 +706,27 @@ class Table
                     echo '<span class="gk-pg-gap">…</span>';
                 }
                 $isActive = $i === $this->currentPage;
+                // "3" on its own is not a name — it is a digit. The label says
+                // which page, and aria-current marks the one you are on, which
+                // was conveyed by colour alone.
                 echo Button::render((string)$i, [
                     'variant' => $isActive ? 'tonal' : 'text',
                     'color' => $isActive ? 'primary' : 'neutral',
                     'size' => 'sm',
                     'shape' => 'pill',
+                    'aria' => Lang::t('pagination.page_of', ['page' => $i, 'total' => $pages]),
+                    'attrs' => $isActive ? ['aria-current' => 'page'] : [],
                     'data' => ['gk-page' => $i],
                 ]);
                 $previous = $i;
             }
             echo Button::icon('chevron_right', [
                 'variant' => 'text', 'color' => 'neutral', 'size' => 'sm',
+                'aria' => Lang::t('pagination.next'),
                 'data' => ['gk-page' => min($pages, $this->currentPage + 1)],
                 'disabled' => $this->currentPage >= $pages,
             ]);
-            echo '</div>';
+            echo '</nav>';
         }
     }
 

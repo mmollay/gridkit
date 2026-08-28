@@ -152,4 +152,55 @@ return [
         'the input already carries `required`; the star would be read as "Name star"');
 },
 
+/**
+ * A table announced nothing. Sorting, filtering and paging swap the rows in
+ * place: obvious on screen, silent to everything else. And the headers carried
+ * no scope, so a cell in a table with an action column was associated with the
+ * wrong one — or with nothing.
+ */
+'every column header says it is a column header' => function (): void {
+    Lang::set('en');
+    $rows = [];
+    for ($i = 1; $i <= 5; $i++) $rows[] = ['id' => $i, 'name' => "Item $i"];
+    ob_start();
+    (new GridKit\Table('t'))->setData($rows)->selectable('id')
+        ->column('name', 'Name')->button('edit', ['icon' => 'edit'])->render();
+    $html = (string) ob_get_clean();
+
+    preg_match_all('/<th\b[^>]*>/', $html, $m);
+    T::ok(count($m[0]) >= 3, 'there are headers to check');
+    foreach ($m[0] as $th) {
+        T::contains($th, 'scope="col"', 'every th, including the checkbox and action columns');
+    }
+},
+
+'the table has somewhere to say what changed' => function (): void {
+    Lang::set('en');
+    ob_start();
+    (new GridKit\Table('t'))->setData([['id' => 1, 'name' => 'a']])->column('name', 'Name')->render();
+    $html = (string) ob_get_clean();
+    preg_match('/<div[^>]*data-gk-table-status[^>]*>/', $html, $m);
+    $el = $m[0] ?? '';
+    T::ok($el !== '', 'the region exists');
+    T::contains($el, 'role="status"', 'it is a status region');
+    T::contains($el, 'aria-live="polite"', 'polite — it waits rather than interrupting');
+    T::contains($el, 'gk-sr-only', 'and is not visible, because it is for people who are not looking');
+},
+
+'the pager is a named landmark, not loose digits' => function (): void {
+    Lang::set('en');
+    $rows = [];
+    for ($i = 1; $i <= 30; $i++) $rows[] = ['id' => $i, 'name' => "Item $i"];
+    ob_start();
+    (new GridKit\Table('t'))->setData($rows)->column('name', 'Name')->paginate(10)->render();
+    $html = (string) ob_get_clean();
+
+    T::contains($html, '<nav class="gk-pagination"', 'a landmark that can be skipped');
+    T::ok((bool) preg_match('/<nav class="gk-pagination" aria-label="[^"]+"/', $html),
+        'and it is named');
+    T::contains($html, 'aria-current="page"', 'the page you are on is stated, not only coloured');
+    T::ok(!str_contains($html, 'aria-label="Chevron left"'),
+        'the previous button is named for what it does, not for its glyph');
+},
+
 ];

@@ -23,6 +23,18 @@
    * first click. With no catalogue loaded the English shape is the floor, which
    * is the same fallback Lang::t() uses.
    */
+  /*
+   * HTML-escape, at module scope because two places need it and only one
+   * had it: renderStatic declared its own `e` as a local const, so the
+   * pager it calls threw ReferenceError the moment that pager tried to
+   * escape a label. One implementation, reachable from both.
+   */
+  function _gkEsc(s) {
+    const d = document.createElement("div");
+    d.textContent = String(s == null ? "" : s);
+    return d.innerHTML;
+  }
+
   function _gkNumber(value, decimals) {
     var n = parseFloat(value);
     if (isNaN(n)) return value == null ? "" : String(value);
@@ -748,11 +760,7 @@
         if (perPage > 0) rows = rows.slice((page - 1) * perPage, page * perPage);
 
         // Build HTML
-        const e = (s) => {
-          const d = document.createElement("div");
-          d.textContent = String(s);
-          return d.innerHTML;
-        };
+        const e = _gkEsc;
 
         const formatVal = (val, col) => {
           const fmt = col.format || null;
@@ -932,8 +940,11 @@
             cls = ' class="gk-hide-mobile"';
           }
           const label = e(col.label) + sortIcon;
+            // scope="col", the same as the server writes. Without it here the
+            // first sort or filter stripped the association off every header —
+            // PHP got it right and the client quietly undid it.
           html +=
-            "<th" +
+            '<th scope="col"' +
             cls +
             style +
             attrs +
@@ -960,8 +971,12 @@
         );
         const hasLeft = Object.keys(leftBtns).length > 0;
         const hasRight = Object.keys(rightBtns).length > 0;
-        if (hasLeft) html += '<th class="gk-actions-col"></th>';
-        if (hasRight) html += '<th class="gk-actions-col"></th>';
+        const actionsHead =
+          '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">' +
+          _gkEsc(_t("actions")) +
+          "</span></th>";
+        if (hasLeft) html += actionsHead;
+        if (hasRight) html += actionsHead;
         html += "</tr></thead><tbody>";
 
         const renderBtnGroup = (btns, row) => {
@@ -1176,16 +1191,54 @@
         // Mirror the selection again after the rebuild (checkbox/highlight/bulk bar).
         if (selectable && typeof wrap._gkUpdateBar === "function")
           wrap._gkUpdateBar();
+
+        GK.table._announce(
+          wrap,
+          // Not tr[data-gk-row-id]: rows carry that only when the table has a
+          // key, so a keyless table counted zero and announced "No matches"
+          // while showing twelve rows.
+          wrap.querySelectorAll("tbody tr:not(.gk-empty-row)").length,
+          total,
+          page,
+          perPage > 0 ? Math.ceil(total / perPage) : 1,
+        );
       },
 
       /** The pager for a static table, matching what Table renders server-side. */
+      /*
+       * Say what just happened, for people who are not watching it happen.
+       *
+       * Sorting, filtering and paging swap the rows in place. On screen that is
+       * self-evident; to a screen reader the table simply became different data
+       * with no announcement — no way to tell whether the filter had worked, or
+       * how much was left. The region is polite, so it waits for a pause rather
+       * than cutting across whatever is being read.
+       */
+      _announce(wrap, shown, total, page, pages) {
+        const el = wrap.querySelector("[data-gk-table-status]");
+        if (!el) return;
+        const msg =
+          shown === 0
+            ? _t("empty_filtered") || "No matches"
+            : _t("status", { n: total, page: page, pages: pages });
+        // Only on a real change: rewriting the same text does not re-announce
+        // in some readers and needlessly repeats in others.
+        if (el.textContent !== msg) el.textContent = msg;
+      },
+
       _staticPager(page, pages) {
         const btn = (label, target, disabled, active) =>
           '<button type="button" class="gk-btn gk-btn-text gk-btn-neutral gk-btn-sm'
           + (active ? " gk-btn-filled gk-btn-primary" : "")
           + '" data-gk-page="' + target + '"'
           + (disabled ? " disabled" : "")
-          + (typeof label === "number" ? "" : ' aria-label="' + label.aria + '"')
+          // A page button used to be the digit alone: it announced as
+          // "3, button", with no hint of what 3 meant, and the page you were
+          // on was marked by colour and nothing else.
+          + (typeof label === "number"
+              ? ' aria-label="' + _gkEsc(_t("page_n", { n: label })) + '"'
+                + (active ? ' aria-current="page"' : "")
+              : ' aria-label="' + label.aria + '"')
           + ">"
           + (typeof label === "number"
               ? label
@@ -1193,7 +1246,9 @@
                 + label.icon + "</span>")
           + "</button>";
 
-        let out = '<div class="gk-pagination">';
+        // nav, matching the server: a landmark that can be jumped to and
+        // skipped past, rather than loose digits inside the table.
+        let out = '<nav class="gk-pagination" aria-label="' + _gkEsc(_t("pagination")) + '">';
         out += btn({ icon: "chevron_left", aria: _t("previous") }, page - 1, page <= 1, false);
 
         // A window around the current page, plus the first and the last.
@@ -1208,7 +1263,7 @@
         });
 
         out += btn({ icon: "chevron_right", aria: _t("next") }, page + 1, page >= pages, false);
-        out += "</div>";
+        out += "</nav>";
         return out;
       },
 

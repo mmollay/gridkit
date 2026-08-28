@@ -7,6 +7,63 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.59.0] - 2026-08-28
+
+The table, audited. And a pattern worth naming: the client renderer is a second
+implementation of the server's markup, and it had drifted in every place it was
+checked.
+
+### Fixed — the table never said anything had changed
+
+Sorting, filtering and paging replace the rows in place. On screen that is
+self-evident. To a screen reader the table silently became different data: no
+way to tell whether the filter had worked, how many rows matched, or which page
+this now was. Each table now renders a visually hidden `role="status"` region
+and the client writes into it after every rebuild — "12 entries, page 2 of 2",
+or "No matches".
+
+### Fixed — headers that did not say they were headers
+
+No `<th>` carried `scope="col"`. On a table with a checkbox column and an
+action column, that leaves a cell associated with the wrong header or with
+none. Every header now has it, including the two empty ones, which also gained
+a hidden label rather than staying nameless.
+
+### Fixed — a pagination button named after its glyph
+
+`Button::icon('chevron_left')` with no label falls back to the icon ligature,
+so the previous-page button announced itself as **"Chevron left"**.
+`Pagination.php` had always passed the proper label; the table's own pager
+never did. Page buttons were bare digits — "3, button" — and the page you were
+on was marked by colour alone. The pager is now a `<nav>` with a name, its
+arrows are named from the catalogue, its pages read "Page 3", and the current
+one carries `aria-current="page"`.
+
+### Fixed — the client undid all of it on the first redraw
+
+Every fix above landed in `Table.php`, and the first sort or filter threw it
+away: `renderStatic` rebuilds the thead and the pager in JavaScript, and its
+version had none of it. This is the same defect as the hardcoded `de-DE` in
+1.55.0 — two implementations of one output, drifting. Both now emit the same
+markup, and the browser test walks load → search → no-match → page 2 checking
+that the attributes survive each rebuild.
+
+### Added — `Button` accepts `attrs`
+
+`aria-current` had nowhere to go. `attrs` takes `aria-*` plus a short
+allowlist; anything else is dropped, because this renders buttons from
+caller-supplied data and an unrestricted attribute name is an `onclick` waiting
+to happen.
+
+### Fixed — the escape helper existed once, in the wrong scope
+
+`renderStatic` declared `const e` as a local, so `_staticPager` threw
+`ReferenceError: e is not defined` the moment it tried to escape a label — a
+bug this release introduced and the browser caught within a minute. Hoisted to
+`_gkEsc` at module scope, with the local name now pointing at it, so there is
+one implementation rather than two.
+
+---
 ## [1.58.0] - 2026-08-28
 
 Forms and modals, audited end to end. Both had the same shape of defect: the
