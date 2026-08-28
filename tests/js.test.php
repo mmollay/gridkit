@@ -155,4 +155,43 @@ return [
     T::contains($js, 'd.gruppen', 'the pre-1.39 response fallback was dropped');
 },
 
+/**
+ * A modal was a div lying on top of the page: no role, no name, and focus left
+ * on the button behind the overlay. Pressing Tab walked the page underneath —
+ * controls the user could neither see nor click — with Escape the only way out.
+ */
+'a modal announces itself as a dialog' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, 'role="dialog"', 'it is a dialog, not a div');
+    T::contains($js, 'aria-modal="true"', 'and everything behind it is out of bounds');
+    T::contains($js, 'aria-labelledby="', 'and it has a name');
+    T::contains($js, 'gk-modal-title-', 'the title id is generated, since modals stack');
+},
+
+'a modal keeps the keyboard inside it' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, '_trap(ov, e)', 'Tab is intercepted');
+    T::contains($js, 'e.shiftKey && document.activeElement === first',
+        'and wraps backwards from the first control');
+    T::contains($js, '!e.shiftKey && document.activeElement === last',
+        'and forwards from the last');
+},
+
+'a modal moves focus in and gives it back' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, '_focusInto(ov)', 'focus starts inside the dialog');
+    T::contains($js, 'ov._gkOpener = opener', 'the opener is remembered');
+    T::contains($js, 'opener.isConnected',
+        'and only refocused if it still exists — a reloaded table has replaced its rows');
+},
+
+'a failed field is marked invalid and unmarked when fixed' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, 'input.setAttribute("aria-invalid", "true")', 'set on failure');
+    T::contains($js, 'el.removeAttribute("aria-invalid")',
+        'and cleared on the next submit — otherwise a fixed field stays wrong forever');
+    T::contains($js, 'form.querySelector(".gk-has-error")',
+        'and the first failed field is focused, not left off-screen');
+},
+
 ];

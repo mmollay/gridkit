@@ -7,6 +7,73 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.58.0] - 2026-08-28
+
+Forms and modals, audited end to end. Both had the same shape of defect: the
+information was on the screen and reached nobody who could not see it.
+
+### Fixed — error messages announced to nobody
+
+A field's error was rendered, styled, and never associated with the field.
+There was no `aria-describedby` in `Form.php` or in `gridkit.js` — not one, in
+either file. A screen reader read "Email address, required, edit text" and
+stopped. The reason the form had rejected the entry was available only to
+people who could see it, which is exactly what WCAG 3.3.1 exists to prevent.
+
+Every control now carries `aria-describedby` pointing at its message container,
+which now has the matching `id` and `role="alert"` so a message the client
+writes after submit is announced rather than appearing silently. `aria-invalid`
+marks the state, and only when there is an actual error — `required` is a
+state, not a failure, and marking an untouched field invalid would be a lie.
+
+The attributes are built once, next to `required`, and ride along to every
+control. The alternative was the same two attributes repeated at a dozen echo
+sites, one of which would have been missed. Composite widgets — the custom
+select, the colour input, the rich-text frame — name themselves through
+`aria-labelledby` rather than `for`, so they receive it there instead; the
+hidden value carrier they wrap announces nothing.
+
+On the client, `aria-invalid` is now cleared on the next submit. It never was,
+so a field that failed once stayed marked invalid for the life of the page,
+telling a screen reader it was still wrong long after the user had fixed it.
+The first failed field is also focused, instead of leaving the caret wherever
+it was while the messages appeared somewhere below.
+
+### Fixed — the required asterisk was read aloud
+
+`<span class="gk-required">*</span>` sat inside the label, so the field
+announced as "Email address star". The input already carries `required`, which
+is what conveys the state; the asterisk is decoration and is now
+`aria-hidden`.
+
+### Fixed — a modal was a div lying on top of the page
+
+No `role`, no `aria-modal`, no name, and focus left on the button that opened
+it — which the overlay covers. A keyboard user pressed Tab and walked the page
+underneath: controls they could neither see nor click, with Escape the only way
+back. A screen reader's virtual cursor read straight past the dialog into the
+content behind it.
+
+The dialog now has `role="dialog"`, `aria-modal="true"` and an
+`aria-labelledby` pointing at its title (generated per overlay, since modals
+stack). Focus moves inside on open — to the close button while the body is
+still loading, then to the first real control once one exists — is trapped by
+Tab and Shift+Tab, and is handed back to the opener on close, provided that
+element still exists; a row button whose table has since reloaded does not.
+
+Verified in a browser with real key presses: Tab does not escape across ten
+presses, Escape closes, focus returns to the exact button that opened it.
+
+### Verified and left alone — the sortable header's keyboard handler
+
+1.56.0 made sortable headers real buttons, which answer Enter and Space
+natively. The existing keydown handler could have made that fire twice. It does
+not: `preventDefault()` suppresses the native activation, so exactly one click
+reaches the sort. Measured with a real key press rather than reasoned about.
+The comment above it, which still described `role="button"` on the `th`, was
+rewritten to describe the code that is there.
+
+---
 ## [1.57.0] - 2026-08-28
 
 ### Fixed — an unticked checkbox nobody could see

@@ -132,7 +132,30 @@ class Form
         $label = $f['label'] ?? '';
         $type = $f['type'];
         $value = $f['value'] ?? '';
-        $req = ($f['required'] ?? false) ? ' required' : '';
+        $isRequired = (bool) ($f['required'] ?? false);
+
+        /*
+         * The error text under a field was rendered, styled and never announced.
+         * There was no aria-describedby anywhere in this class or in gridkit.js,
+         * so a screen reader read "Email address, required, edit text" and
+         * stopped — the reason the form had rejected the entry was visible only
+         * to people who could see it. WCAG 3.3.1 asks that an error be
+         * identified in text to the user, not to some users.
+         *
+         * describedby points at the error container unconditionally, because
+         * the container is always rendered and the client fills it later; an
+         * empty target is silently skipped. aria-invalid marks the state so the
+         * error is announced as an error rather than as trailing prose.
+         */
+        $errorId  = $e($name) . '-error';
+        $hasError = trim((string) ($f['error'] ?? '')) !== '';
+        $describe = ' aria-describedby="' . $errorId . '"'
+                  . ($hasError ? ' aria-invalid="true"' : '');
+
+        // Carries the describedby to every control that appends it, which is
+        // all of them — the alternative was the same two attributes repeated at
+        // a dozen echo sites, one of which would have been missed.
+        $req = ($isRequired ? ' required' : '') . $describe;
         $inline = !empty($f['inline']);
         $width = $f['width'] ?? 16;
 
@@ -168,7 +191,10 @@ class Form
         if ($showLabel) {
             echo '<label class="gk-label-text" id="' . $labelId . '"'
                . ($composite ? '' : ' for="' . $e($name) . '"') . '>' . $e($label);
-            if ($req) echo ' <span class="gk-required">*</span>';
+            // aria-hidden: the input already carries `required`, which is what
+            // announces the state. Without this the label reads "Email address
+            // star", and the asterisk is decoration doing the same job twice.
+            if ($isRequired) echo ' <span class="gk-required" aria-hidden="true">*</span>';
             echo '</label>';
         }
 
@@ -176,6 +202,10 @@ class Form
         $composedBy = ($showLabel && !isset($f['aria']))
             ? ' aria-labelledby="' . $labelId . '"'
             : (isset($f['aria']) ? ' aria-label="' . $e((string) $f['aria']) . '"' : '');
+        // A composite widget is named here rather than by `for`, and it is the
+        // visible control — so the error has to reach it here too. The hidden
+        // value carrier that $req lands on is aria-hidden and announces nothing.
+        $composedBy .= $describe;
 
         echo '<div class="gk-input-wrap">';
 
@@ -207,7 +237,10 @@ class Form
                         ? ' aria-labelledby="' . $labelId . '"'
                         : ' aria-label="' . $ariaName . '"';
                     echo "<input type=\"text\" class=\"gk-select-value-input\" tabindex=\"-1\" aria-hidden=\"true\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\"{$req}>";
-                    echo '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false"' . $nameAttr . '>';
+                    // $describe as well as $nameAttr: this is the element a
+                    // keyboard lands on, so it is the one that has to carry the
+                    // error. The value carrier behind it is aria-hidden.
+                    echo '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false"' . $nameAttr . $describe . '>';
                     echo '<span class="gk-select-value">' . $e($displayValue) . '</span>';
                     echo '<span class="material-icons gk-select-arrow" aria-hidden="true">expand_more</span>';
                     echo '</div>';
@@ -419,7 +452,7 @@ class Form
                 // around it, so the browser cannot validate or focus it — the
                 // one field type where `required` has to be checked in script.
                 // data-gk-required-rich marks it; gridkit.js blocks the submit.
-                $richReq = $req ? " data-gk-required-rich=\"{$e($label)}\"" : '';
+                $richReq = $isRequired ? " data-gk-required-rich=\"{$e($label)}\"" : '';
                 echo "<input type=\"hidden\" name=\"{$e($name)}\" id=\"{$editorId}-hidden\" value=\"{$e($value)}\"{$richReq}>";
                 // Lazy-init via IntersectionObserver — works inside hidden tabs
                 $jsonValue = json_encode($value ?? '');
@@ -496,7 +529,10 @@ class Form
                 }
         }
 
-        echo '<div class="gk-field-error" data-gk-error="' . $e($name) . '">' . $e($f['error'] ?? '') . '</div>';
+        // role=alert so an error the client writes after submit is announced;
+            // without it the message appears silently for anyone not looking.
+            echo '<div class="gk-field-error" id="' . $errorId . '" role="alert"'
+               . ' data-gk-error="' . $e($name) . '">' . $e($f['error'] ?? '') . '</div>';
         echo '</div></div>';
     }
 }

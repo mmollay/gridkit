@@ -110,4 +110,46 @@ return [
     Lang::set('en');
 },
 
+/**
+ * Form errors were rendered, styled, and announced to nobody. There was no
+ * aria-describedby in Form.php or in gridkit.js, so a screen reader read
+ * "Email address, required, edit text" and stopped — the reason the form had
+ * rejected the entry was available only to people who could see it.
+ */
+'a field points at the message that explains it' => function (): void {
+    Lang::set('en');
+    ob_start();
+    (new GridKit\Form('f'))
+        ->field('email', 'Email', 'email', ['required' => true, 'error' => 'Not valid'])
+        ->render();
+    $html = (string) ob_get_clean();
+
+    preg_match('/<input[^>]*id="email"[^>]*>/', $html, $m);
+    $input = $m[0] ?? '';
+    T::contains($input, 'aria-describedby="email-error"', 'the field names its message');
+    T::contains($input, 'aria-invalid="true"', 'and reports that it is in an error state');
+
+    preg_match('/<div class="gk-field-error"[^>]*>/', $html, $m2);
+    T::contains($m2[0] ?? '', 'id="email-error"', 'the message carries the id pointed at');
+    T::contains($m2[0] ?? '', 'role="alert"', 'so a message written after submit is announced');
+},
+
+'a field with no error is not marked invalid' => function (): void {
+    Lang::set('en');
+    ob_start();
+    (new GridKit\Form('f'))->field('name', 'Name', 'text', ['required' => true])->render();
+    $html = (string) ob_get_clean();
+    T::ok(!str_contains($html, 'aria-invalid'),
+        'required is a state, not a failure — marking it invalid before submit is a lie');
+},
+
+'the required asterisk is decoration' => function (): void {
+    Lang::set('en');
+    ob_start();
+    (new GridKit\Form('f'))->field('name', 'Name', 'text', ['required' => true])->render();
+    $html = (string) ob_get_clean();
+    T::contains($html, 'class="gk-required" aria-hidden="true"',
+        'the input already carries `required`; the star would be read as "Name star"');
+},
+
 ];

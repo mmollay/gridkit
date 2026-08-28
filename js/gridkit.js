@@ -55,12 +55,22 @@
         });
       },
       _createOverlay() {
+        // Unique per overlay: modals stack, and two dialogs sharing a title id
+        // would both point aria-labelledby at whichever came first.
+        var titleId = "gk-modal-title-" + (this._seq = (this._seq || 0) + 1);
         var ov = document.createElement("div");
         ov.className = "gk-modal-overlay";
         ov.style.zIndex = 9000 + this.stack.length * 10;
         ov.innerHTML =
-          '<div class="gk-modal" data-gk-modal-container>' +
-          '<div class="gk-modal-header"><h3 class="gk-modal-title" data-gk-modal-title-el></h3>' +
+          // role and aria-modal: without them this is a div lying on top of
+          // the page. A screen reader's virtual cursor walked straight past it
+          // into the content behind, which is still there and still readable.
+          // aria-modal says everything else is out of bounds while this is
+          // open; aria-labelledby is what gives the dialog a name at all.
+          '<div class="gk-modal" data-gk-modal-container role="dialog"' +
+          ' aria-modal="true" aria-labelledby="' + titleId + '">' +
+          '<div class="gk-modal-header"><h3 class="gk-modal-title" id="' + titleId +
+          '" data-gk-modal-title-el></h3>' +
           // A screen reader read this button as "multiplication sign".
           '<button class="gk-modal-close" data-gk-modal-close aria-label="' +
           _t("close") +
@@ -76,8 +86,78 @@
         document.body.appendChild(ov);
         return ov;
       },
+      /** Everything inside `root` a keyboard can reach, in document order. */
+      _focusable(root) {
+        return Array.prototype.filter.call(
+          root.querySelectorAll(
+            'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]),' +
+              " select:not([disabled]), textarea:not([disabled]), [tabindex]",
+          ),
+          function (el) {
+            return (
+              el.getAttribute("tabindex") !== "-1" &&
+              el.offsetParent !== null &&
+              !el.closest('[aria-hidden="true"]')
+            );
+          },
+        );
+      },
+
+      /*
+       * Tab must not leave the dialog. Without this the focus ring walked out
+       * of the modal into the page behind it — which the overlay covers, so the
+       * user was tabbing through controls they could neither see nor click,
+       * with no way back except Escape.
+       */
+      _trap(ov, e) {
+        if (e.key !== "Tab") return;
+        var items = this._focusable(ov);
+        if (!items.length) {
+          e.preventDefault();
+          return;
+        }
+        var first = items[0];
+        var last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      },
+
+      /*
+       * Focus starts inside the dialog, on the first thing that can take it —
+       * the close button, while the body is still loading. It used to stay on
+       * whatever opened the modal, which sits behind the overlay: press Tab and
+       * you were walking the page underneath.
+       */
+      _focusInto(ov) {
+        var items = this._focusable(ov);
+        var target = items[0] || ov.querySelector("[data-gk-modal-container]");
+        if (!target) return;
+        if (!items.length && !target.hasAttribute("tabindex")) {
+          target.setAttribute("tabindex", "-1");
+        }
+        try {
+          target.focus({ preventScroll: true });
+        } catch (err) {
+          target.focus();
+        }
+      },
+
       open(title, url, params, size) {
+        // Remembered so close() can put the caret back where it came from.
+        // Losing it drops focus to the top of the document, and a keyboard user
+        // has to cross the whole page again to reach the row they were on.
+        var opener =
+          document.activeElement && document.activeElement !== document.body
+            ? document.activeElement
+            : null;
         var ov = this._createOverlay();
+        ov._gkOpener = opener;
+        ov.addEventListener("keydown", this._trap.bind(this, ov));
         var container = ov.querySelector("[data-gk-modal-container]");
         var titleEl = ov.querySelector("[data-gk-modal-title-el]");
         var body = ov.querySelector("[data-gk-modal-body]");
@@ -86,6 +166,7 @@
         body.innerHTML = "";
         body.classList.add("gk-loading");
         this.stack.push(ov);
+        this._focusInto(ov);
 
         var fd = new FormData();
         if (params) Object.entries(params).forEach(([k, v]) => fd.append(k, v));
@@ -100,6 +181,9 @@
             body.classList.remove("gk-loading");
             body.innerHTML = html;
             GK.form.bind(body);
+            // The body arrives after the frame, so focus lands on the close
+            // button first and moves on to the real first field once one exists.
+            if (!body.contains(document.activeElement)) GK.modal._focusInto(ov);
             GK.table.init(body);
             // Modal content is injected after DOMContentLoaded, so the widget
             // binders that GK.init() ran for the page have to run again here.
@@ -120,7 +204,17 @@
       close() {
         if (!this.stack.length) return;
         var ov = this.stack.pop();
+        var opener = ov._gkOpener;
         ov.remove();
+        // Back to whatever opened it — but only if that is still on the page
+        // and still focusable; a row button whose table has reloaded is not.
+        if (opener && opener.isConnected && typeof opener.focus === "function") {
+          try {
+            opener.focus({ preventScroll: true });
+          } catch (err) {
+            opener.focus();
+          }
+        }
       },
       closeAll() {
         while (this.stack.length) this.close();
@@ -143,9 +237,13 @@
         form
           .querySelectorAll(".gk-field-error")
           .forEach((el) => (el.textContent = ""));
-        form
-          .querySelectorAll(".gk-has-error")
-          .forEach((el) => el.classList.remove("gk-has-error"));
+        form.querySelectorAll(".gk-has-error").forEach((el) => {
+          el.classList.remove("gk-has-error");
+          // The class was the only thing cleared, so a field that had failed
+          // once stayed aria-invalid for the rest of the page's life — telling
+          // a screen reader it was still wrong long after it had been fixed.
+          el.removeAttribute("aria-invalid");
+        });
 
         const btn = form.querySelector('[type="submit"]');
         if (btn) {
@@ -174,8 +272,22 @@
                 const errEl = form.querySelector(`[data-gk-error="${field}"]`);
                 if (errEl) errEl.textContent = msg;
                 const input = form.querySelector(`[name="${field}"]`);
-                if (input) input.classList.add("gk-has-error");
+                if (input) {
+                  input.classList.add("gk-has-error");
+                  // The class turns the border red, which used to be the whole
+                  // of what a failed field communicated. aria-invalid says it
+                  // to a screen reader; the message itself is announced by the
+                  // role=alert on the container the field already points at.
+                  input.setAttribute("aria-invalid", "true");
+                }
               });
+              // Move to the first field that failed. Without this the messages
+              // appear somewhere below and the caret stays where it was, which
+              // on a long form is off-screen from the thing needing attention.
+              const firstBad = form.querySelector(".gk-has-error");
+              if (firstBad && typeof firstBad.focus === "function") {
+                firstBad.focus();
+              }
             }
           })
           .catch(() => alert(_t("error_saving")))
@@ -287,9 +399,12 @@
           }
         });
 
-        // A sortable header is reachable by Tab and carries role="button", so
-        // it has to answer to Enter and Space like one. Space would otherwise
-        // scroll the page.
+        // The sortable control is a real <button> now and answers Enter and
+        // Space by itself. This stays for the other things carrying
+        // data-gk-sort — SortLink's anchors among them — and preventDefault is
+        // what stops it firing twice on a button: it suppresses the native
+        // activation, so exactly one click reaches the sort. Measured with a
+        // real key press, not assumed.
         wrap.addEventListener("keydown", (e) => {
           if (e.key !== "Enter" && e.key !== " ") return;
           const th = e.target.closest("[data-gk-sort]");
