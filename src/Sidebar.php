@@ -127,7 +127,10 @@ class Sidebar
         }
 
         // Nav
-        echo '<nav class="gk-sidebar-nav">';
+        // A named landmark. The page has more than one nav now — the table
+        // pager is one too — and a reader listing "navigation, navigation"
+        // is no more use than having none.
+        echo '<nav class="gk-sidebar-nav" aria-label="' . $e(Lang::t('sidebar.aria')) . '">';
 
         // Ungrouped items
         foreach ($this->items as $item) {
@@ -218,13 +221,23 @@ class Sidebar
         } else {
             $cls = 'gk-sidebar-item';
             if ($item['active']) $cls .= ' active';
-            echo '<a href="' . $e($item['href']) . '" class="' . $cls . '" data-label="' . $e($item['label']) . '">';
+            // aria-current: which page you are on was carried by the `active`
+            // class and nothing else — a colour. A screen reader read the same
+            // list of links whichever page it was on.
+            echo '<a href="' . $e($item['href']) . '" class="' . $cls . '"'
+               . ($item['active'] ? ' aria-current="page"' : '')
+               . ' data-label="' . $e($item['label']) . '">';
             if ($item['icon'] !== '') {
                 echo '<span class="material-icons gk-sidebar-icon" aria-hidden="true">' . $e($item['icon']) . '</span>';
             }
             echo '<span class="gk-sidebar-label">' . $e($item['label']) . '</span>';
             if ($item['badge'] !== null) {
-                echo '<span class="gk-sidebar-badge">' . $e((string)$item['badge']) . '</span>';
+                // "Invoices 3" says three of what? The badge is a count the eye
+                // reads from context; a screen reader gets a bare number stuck to
+                // the end of a link name. The hidden word makes it a sentence again.
+                echo '<span class="gk-sidebar-badge">' . $e((string)$item['badge'])
+                   . '<span class="gk-sr-only"> ' . $e(Lang::t('sidebar.badge_suffix')) . '</span>'
+                   . '</span>';
             }
             echo '</a>';
         }

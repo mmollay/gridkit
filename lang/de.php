@@ -35,6 +35,8 @@ return [
     'table.search'          => 'Suchen…',
     'table.filter_all'      => 'Alle',
     'table.empty'           => 'Keine Einträge gefunden',
+    'sidebar.aria'              => 'Hauptnavigation',
+    'sidebar.badge_suffix'      => 'offen',
     'table.actions'         => 'Aktionen',
     'table.select_all'      => 'Alle auswählen',
     'table.selected'        => '{n} ausgewählt',

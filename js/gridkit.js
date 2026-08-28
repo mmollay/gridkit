@@ -2485,13 +2485,58 @@
     if (GK.rowPager) GK.rowPager.init();
   };
 
-  // Dropdown toggle (Header user menu etc.)
+  /*
+   * Dropdown toggle (header user menu and friends).
+   *
+   * Three things were wrong, and together they meant the user menu — which
+   * contains Sign out — could not be operated without a mouse at all:
+   *
+   *   - the trigger is a div with role="button" and tabindex="0", and only
+   *     `click` was handled. A div does not synthesise a click from Enter or
+   *     Space the way a real button does, so the keyboard did nothing.
+   *   - aria-expanded was written once as "false" and never updated, so it
+   *     stated the opposite of the truth whenever the menu was open. That is
+   *     worse than omitting it.
+   *   - Escape did not close it, and closing left focus nowhere.
+   */
+  function _gkDropdownSet(el, open) {
+    el.classList.toggle("open", open);
+    el.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  function _gkCloseDropdowns(except) {
+    document.querySelectorAll("[data-gk-dropdown].open").forEach(function (el) {
+      if (el !== except) _gkDropdownSet(el, false);
+    });
+  }
+
   document.addEventListener("click", function (e) {
     var dropdown = e.target.closest("[data-gk-dropdown]");
-    document.querySelectorAll("[data-gk-dropdown].open").forEach(function (el) {
-      if (el !== dropdown) el.classList.remove("open");
-    });
-    if (dropdown) dropdown.classList.toggle("open");
+    _gkCloseDropdowns(dropdown);
+    // A click on something inside the open menu is the user choosing an item —
+    // toggling there would close and immediately reopen it.
+    if (dropdown && !e.target.closest(".gk-dropdown-menu")) {
+      _gkDropdownSet(dropdown, !dropdown.classList.contains("open"));
+    }
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      var open = document.querySelector("[data-gk-dropdown].open");
+      if (open) {
+        _gkDropdownSet(open, false);
+        if (typeof open.focus === "function") open.focus();
+      }
+      return;
+    }
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var trigger = e.target.closest("[data-gk-dropdown]");
+    // Only the trigger itself: Enter on a link inside the menu must follow it.
+    if (!trigger || e.target !== trigger) return;
+    e.preventDefault();
+    var willOpen = !trigger.classList.contains("open");
+    _gkCloseDropdowns(trigger);
+    _gkDropdownSet(trigger, willOpen);
   });
 
   // Layout System

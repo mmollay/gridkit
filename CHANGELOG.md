@@ -7,6 +7,54 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.60.0] - 2026-08-28
+
+Sidebar and header. The worst of the three rounds, because what it found was
+not a degraded experience — it was a control that could not be operated at all.
+
+### Fixed — the user menu could not be opened without a mouse
+
+The header's user menu, the one containing **Sign out**, is a `div` with
+`role="button"` and `tabindex="0"`. Only `click` was handled, and a `div` does
+not synthesise a click from Enter or Space the way a real button does. So it
+took focus, announced itself as a button, and then did nothing. There was no
+way to reach Sign out from the keyboard.
+
+`aria-expanded` made it worse rather than better: it was written once as
+`"false"` and never updated, so it stated the opposite of the truth for as long
+as the menu was open. An attribute that lies is worse than one that is missing.
+
+Enter and Space now open it, `aria-expanded` follows the actual state, Escape
+closes it and returns focus to the trigger, and a click on an item inside the
+open menu no longer counts as a toggle — which had closed and immediately
+reopened it.
+
+### Fixed — the sidebar never said which page you were on
+
+The active item carried an `active` class and nothing else. On screen that is a
+colour; to a screen reader every page presented the same undifferentiated list
+of links. It carries `aria-current="page"` now.
+
+### Fixed — two navigations with the same name
+
+The sidebar's `<nav>` was unnamed, and since 1.59.0 the table's pager is a
+`<nav>` too. A screen reader listing landmarks read "navigation, navigation".
+Both are named now.
+
+### Fixed — a badge that was a number with no noun
+
+`Invoices 3` — three of what? The eye reads the count from context. A screen
+reader gets a bare digit stuck to the end of a link name. A visually hidden
+word after the number turns it back into a sentence.
+
+### Checked and found sound
+
+The theme swatches already carried `aria-pressed` and proper labels. The header
+is a real `<header>` with an `<h1>`, and its menu toggle was correctly named
+and already reported `aria-expanded`. Sidebar icons were already `aria-hidden`.
+Not everything was broken.
+
+---
 ## [1.59.0] - 2026-08-28
 
 The table, audited. And a pattern worth naming: the client renderer is a second

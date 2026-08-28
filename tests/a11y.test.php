@@ -203,4 +203,42 @@ return [
         'the previous button is named for what it does, not for its glyph');
 },
 
+/**
+ * The user menu — the one containing Sign out — could not be opened without a
+ * mouse. Its trigger is a div with role="button" and tabindex="0", and only
+ * `click` was handled; a div does not synthesise a click from Enter the way a
+ * real button does. aria-expanded was written once as "false" and never
+ * updated, so it stated the opposite of the truth whenever the menu was open.
+ */
+'the dropdown answers the keyboard and reports its state' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, '_gkDropdownSet', 'open and aria-expanded move together');
+    T::contains($js, 'el.setAttribute("aria-expanded", open ? "true" : "false")',
+        'the attribute follows the state instead of being written once');
+    T::contains($js, 'if (e.key !== "Enter" && e.key !== " ") return',
+        'Enter and Space open it');
+    T::ok(str_contains($js, 'if (e.key === "Escape")') && str_contains($js, '_gkDropdownSet(open, false)'),
+        'Escape closes it');
+    T::contains($js, 'if (typeof open.focus === "function") open.focus()',
+        'and hands focus back to the trigger');
+},
+
+'the sidebar says which page you are on' => function (): void {
+    Lang::set('en');
+    ob_start();
+    (new GridKit\Sidebar('s'))->group('Nav')
+        ->item('Dashboard', '?a', 'dashboard', ['active' => true])
+        ->item('Invoices', '?b', 'receipt_long', ['badge' => 3])
+        ->render();
+    $html = (string) ob_get_clean();
+
+    T::contains($html, 'aria-current="page"',
+        'the current item was a colour and nothing else');
+    T::eq(substr_count($html, 'aria-current="page"'), 1, 'and only one item is current');
+    T::ok((bool) preg_match('/<nav class="gk-sidebar-nav" aria-label="[^"]+"/', $html),
+        'the navigation is named — the page has more than one nav now');
+    T::contains($html, 'gk-sidebar-badge">3<span class="gk-sr-only">',
+        '"Invoices 3" says three of what; the hidden word answers it');
+},
+
 ];
