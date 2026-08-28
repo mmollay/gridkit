@@ -26,6 +26,40 @@ function themesCss(): string
     return $c ??= (string) file_get_contents(__DIR__ . '/../css/themes.css');
 }
 
+/**
+ * The actual WCAG maths, not a pinned string.
+ *
+ * Every other test in this file asserts that a particular value is present,
+ * which catches a change but cannot tell a good change from a bad one. These
+ * two compute the ratio, so a future edit to any of these colours is judged on
+ * whether it reads, not on whether it matches what was written down.
+ */
+function gkLuminance(string $hex): float
+{
+    $hex = ltrim($hex, '#');
+    $chan = static function (int $v): float {
+        $c = $v / 255;
+        return $c <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * $chan((int) hexdec(substr($hex, 0, 2)))
+         + 0.7152 * $chan((int) hexdec(substr($hex, 2, 2)))
+         + 0.0722 * $chan((int) hexdec(substr($hex, 4, 2)));
+}
+
+function gkContrast(string $a, string $b): float
+{
+    $la = gkLuminance($a);
+    $lb = gkLuminance($b);
+    return (max($la, $lb) + 0.05) / (min($la, $lb) + 0.05);
+}
+
+/** Reads a --gk-* custom property out of the core stylesheet. */
+function gkToken(string $name): string
+{
+    preg_match('/--' . preg_quote($name, '/') . ':\s*(#[0-9a-fA-F]{6})/', css(), $m);
+    return $m[1] ?? '';
+}
+
 /** @return array<string,callable> */
 return [
 
@@ -165,6 +199,38 @@ return [
     // so the rows simply sat there until new ones replaced them.
     T::contains(css(), '.gk-live-loading::after', 'it gets the same bar as the plain table');
     T::contains(css(), '.gk-live-loading .gk-table', 'and the same receding content');
+},
+
+/**
+ * neutral-400 (#94a3b8) measures 2.56:1 on white. It was the colour of the
+ * upload hint, the upload icon, the rich-text placeholder — and, worse, the
+ * border of every unticked checkbox and unselected radio, which is the entire
+ * visible control. Under 3:1 that control is invisible to some people, and the
+ * suite had nothing that would notice.
+ */
+'the muted text token is readable on white' => function (): void {
+    $c = gkContrast(gkToken('gk-neutral-500'), '#ffffff');
+    T::ok($c >= 4.5, sprintf('neutral-500 on white is %.2f:1, AA body text needs 4.5', $c));
+},
+
+'no control is drawn in a colour too faint to see' => function (): void {
+    // 1.4.11 asks 3:1 of a control's visible boundary. neutral-400 does not
+    // reach it, so nothing that draws a control or its label may use it.
+    $tooFaint = gkContrast(gkToken('gk-neutral-400'), '#ffffff');
+    T::ok($tooFaint < 3.0,
+        sprintf('neutral-400 is %.2f:1 — this test exists because it is too faint', $tooFaint));
+
+    foreach ([
+        '.gk-upload-hint'        => 'the caption under an upload zone',
+        '.gk-upload-icon'        => 'the icon inside it',
+        '.gk-checkbox-custom'    => 'the box of an unticked checkbox',
+        '.gk-radio-custom'       => 'the ring of an unselected radio',
+    ] as $sel => $what) {
+        preg_match('/' . preg_quote($sel, '/') . '\s*\{([^}]*)\}/s', css(), $m);
+        T::ok($m !== [] && $m[1] !== '', "$sel is styled at all");
+        T::ok(!str_contains($m[1] ?? '', 'gk-neutral-400'),
+            "$what must not be drawn in neutral-400");
+    }
 },
 
 ];

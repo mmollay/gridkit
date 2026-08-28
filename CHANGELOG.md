@@ -7,6 +7,45 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.57.0] - 2026-08-28
+
+### Fixed — an unticked checkbox nobody could see
+
+`--gk-neutral-400` is `#94a3b8`, which measures **2.56:1** on white. WCAG asks
+4.5:1 of body text and 3:1 of a control's visible boundary. That colour drew:
+
+- the caption under an upload zone, and the icon inside it
+- the placeholder in an empty rich-text field
+- **the border of every unticked checkbox and every unselected radio**
+
+The last one is the serious one. When nothing is ticked, that border *is* the
+control — there is nothing else to see. Below 3:1 a person with low vision is
+looking at a blank space where a checkbox should be. All five now use
+`--gk-neutral-500` (`#64748b`, 4.76:1). Dark mode already measured 4.76:1 and
+is unchanged.
+
+### Fixed — the demo told screen readers the wrong language
+
+`<html lang="en">` was a constant while `Lang::set()` switched the content. At
+`?lang=de` the page served German and declared English, so a screen reader
+applied English pronunciation to German text. It now follows `Lang::locale()`.
+
+### Added — contrast tests that compute rather than pin
+
+Every existing test in `contrast.test.php` asserts that a particular value is
+present, which catches a change but cannot tell a good one from a bad one. Two
+new tests implement the WCAG relative-luminance formula and judge the colour on
+whether it reads. Verified by reverting the fix and watching them fail.
+
+### Not changed — touch targets
+
+Measured at 390px: icon buttons 40px, sidebar items 38px, text buttons 26px.
+Against WCAG 2.2 SC 2.5.8, which asks **24×24** at AA, all of them pass; inline
+text links are explicitly exempt. The 44px figure is AAA. Inflating every
+control to 44px would cost GridKit the density it exists for, to meet a level
+it was never claiming.
+
+---
 ## [1.56.0] - 2026-08-27
 
 The W3C validator, pointed at the landing page, found a bug in the table.

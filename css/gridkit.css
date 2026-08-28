@@ -2132,7 +2132,10 @@ select.gk-input {
 .gk-checkbox-custom {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--gk-neutral-400);
+  /* The box border IS the control when nothing is ticked, so WCAG 1.4.11 asks
+     3:1 of it. neutral-400 (#94a3b8) on white is 2.56:1 — an empty checkbox
+     that some people simply cannot see. neutral-500 is 4.76:1. */
+  border: 2px solid var(--gk-neutral-500);
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -2195,7 +2198,8 @@ select.gk-input {
 .gk-radio-custom {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--gk-neutral-400);
+  /* Same as the checkbox above: this ring is the whole control when unselected. */
+  border: 2px solid var(--gk-neutral-500);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -2311,7 +2315,7 @@ select.gk-input {
 }
 .gk-upload-icon {
   font-size: 32px;
-  color: var(--gk-neutral-400);
+  color: var(--gk-neutral-500);
 }
 .gk-upload-zone:hover .gk-upload-icon,
 .gk-upload-zone.gk-dragover .gk-upload-icon {
@@ -2323,7 +2327,13 @@ select.gk-input {
 }
 .gk-upload-hint {
   font-size: var(--gk-text-caption);
-  color: var(--gk-neutral-400);
+  /* neutral-500, not neutral-400: #94a3b8 on white measures 2.56:1, which is
+     under the 4.5:1 AA asks of body text and under the 3:1 it asks of icons —
+     and this is caption-sized text, the hardest kind to read. #64748b is
+     4.76:1. The same swap covers .gk-upload-icon and the rich-text
+     placeholder, which had inherited the same value. Dark mode was already
+     compliant at 4.76:1 and is untouched. */
+  color: var(--gk-neutral-500);
 }
 .gk-upload-idle {
   display: flex;
@@ -2506,7 +2516,7 @@ select.gk-input {
 }
 .gk-richtext-content:empty::before {
   content: attr(data-placeholder);
-  color: var(--gk-neutral-400);
+  color: var(--gk-neutral-500);
 }
 
 /* Legacy checkbox/radio labels */

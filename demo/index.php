@@ -103,7 +103,12 @@ if (isset($_GET['lang'])) {
 $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<!--
+    The locale, not a constant. With ?lang=de the page renders GridKit's strings
+    in German while claiming to be English, so a screen reader reads German text
+    with English pronunciation rules — which makes it close to unintelligible.
+-->
+<html lang="<?= htmlspecialchars(Lang::locale(), ENT_QUOTES, 'UTF-8') ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
