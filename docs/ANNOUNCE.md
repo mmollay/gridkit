@@ -3,9 +3,9 @@
 Four channels, four registers. Nothing here is scheduled or sent — these are
 drafts to edit and post by hand, in the order the launch checklist gives.
 
-**The gate is clear.** `composer require mmollay/gridkit` installs v1.54.0, the
+**The gate is clear.** `composer require mmollay/gridkit` installs the current version, the
 package is auto-updated from GitHub, the repo has a release, a social preview
-and Discussions. Checked 2026-08-27.
+and Discussions. Checked 2026-08-28.
 
 Post in this order, one channel a day: the blog post first — everything else
 links to it — then Hacker News, then r/PHP, then Mastodon.
@@ -83,7 +83,7 @@ text, where it reads as a feature rather than a pitch.
 
 ## phpc.social / Mastodon — short
 
-> GridKit 1.54.0: PHP components for admin dashboards. Tables with AJAX search
+> GridKit 1.56.0: PHP components for admin dashboards. Tables with AJAX search
 > and paging, forms, six themes, dark mode, zero dependencies, no build step.
 >
 > The last twenty releases came out of pointing AI agents at my own
@@ -126,6 +126,32 @@ The piece worth actually writing, because it is the part nobody else has:
 > pattern.
 
 ---
+
+## Curated lists — later, and only once
+
+[awesome-php](https://github.com/ziadoz/awesome-php) is worth having and worth
+not rushing. Its bar is "widely known or recognised within the PHP community"
+and "established and mature", it discourages submissions made for self
+promotion, and — the part that decides the timing — an entry that has been
+rejected once "won't be reviewed if previously rejected". One attempt, no
+second chance.
+
+GridKit clears everything else the list asks for: Composer-installable, PSR-4,
+semantically versioned, thoroughly tested, actively maintained, documented in
+English, on a supported PHP. What it does not yet have is the recognition, and
+that is precisely what the channels above are for.
+
+**Submit after there is real usage** — a few hundred downloads that are not
+yours, an issue or two from a stranger, something written about it that you did
+not write. Three to six months, not this week. The entry, ready to paste into
+the "Frameworks" or "Components" section in alphabetical order:
+
+```
+* [GridKit](https://github.com/mmollay/gridkit) - A component library for admin interfaces, rendering tables, forms and modals from PHP with no build step.
+```
+
+The pull request description should link the project and say what it does — not
+that you wrote it, and not why it deserves inclusion.
 
 ## What not to do
 
