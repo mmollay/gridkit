@@ -1045,9 +1045,24 @@
             if (bopts.title) btnAttrs += ' title="' + e(bopts.title) + '"';
             btnAttrs += " data-gk-params='" + e(JSON.stringify(params)) + "'";
             if (bopts.onclick) {
-              const oc = String(bopts.onclick).replace(/\{(\w+)\}/g, (_, k) =>
+              let oc = String(bopts.onclick).replace(/\{(\w+)\}/g, (_, k) =>
                 JSON.stringify(row[k] ?? null),
               );
+              // Wrap it exactly as Table::renderButtons does. An inline handler runs
+              // before any delegated listener could stop it, so data-gk-confirm — which
+              // is what the delegated path reads — cannot hold this back. It did not:
+              // a button with both `onclick` and `confirm` asked on the server-rendered
+              // page and then, from the first sort onwards, deleted without asking.
+              if (bopts.confirm) {
+                const msg =
+                  typeof bopts.confirm === "string" ? bopts.confirm : _t("confirm_delete_row");
+                oc =
+                  "GK.confirm(" +
+                  JSON.stringify(msg) +
+                  ",{danger:true}).then(function(ok){if(ok){" +
+                  oc +
+                  "}})";
+              }
               btnAttrs += " onclick='" + oc.replace(/'/g, "&#39;") + "'";
             }
             const icon = bopts.icon ? GK.table.iconSvg(bopts.icon) : "";

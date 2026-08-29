@@ -7,6 +7,29 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.62.1] - 2026-08-29
+
+### Fixed — a delete that stopped asking
+
+A row button given both `onclick` and `confirm` asked before acting on the
+server-rendered page, and from the first sort, filter or page change onwards
+acted without asking. Anyone who trusted the prompt lost a record to a
+mis-click.
+
+`Table::renderButtons` wraps the handler in `GK.confirm(...)`, with a comment
+explaining why: an inline handler runs before any delegated listener could stop
+it, so the `data-gk-confirm` attribute the delegated path reads cannot hold it
+back. The client renderer draws the same button and set the handler raw.
+
+That is the third instance of one defect: the same output rendered in two
+places, drifting apart. The hardcoded `de-DE` in 1.55.0, the table header
+attributes in 1.59.0, this. Each was invisible in the source of either side —
+they only appear when you render one, change something, and render again.
+
+The test pins both sides, so a change to either is caught. Verified by
+reverting the fix and watching it fail.
+
+---
 ## [1.62.0] - 2026-08-29
 
 Two review passes, one over the PHP and one over the rendered pages. Both found

@@ -194,4 +194,33 @@ return [
         'and the first failed field is focused, not left off-screen');
 },
 
+/**
+ * A row button with both `onclick` and `confirm` asked before acting on the
+ * server-rendered page and then, from the first sort onwards, acted without
+ * asking. Table::renderButtons wraps the handler in GK.confirm because an
+ * inline handler runs before any delegated listener could stop it — and the
+ * client renderer, drawing the same button, set the handler raw. The delegated
+ * data-gk-confirm path it relied on cannot intercept an inline onclick.
+ *
+ * The failure mode is a delete that happens with no prompt, so this is pinned
+ * on both sides.
+ */
+'the client wraps a confirmed onclick the way the server does' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+
+    T::contains($js, '"GK.confirm(" +',
+        'the client builds the same wrapper');
+    T::contains($js, ',{danger:true}).then(function(ok){if(ok){',
+        'with the same shape the server emits');
+    T::ok(
+        (bool) preg_match('/if \(bopts\.confirm\) \{\s*const msg =/', $js),
+        'and only when confirm is set'
+    );
+
+    // The server side of the pair, so a change to either is caught here.
+    $php = (string) file_get_contents(__DIR__ . '/../src/Table.php');
+    T::contains($php, "'GK.confirm('",
+        'the server still wraps too — this test exists because the two disagreed');
+},
+
 ];
