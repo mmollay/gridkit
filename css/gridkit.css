@@ -4655,7 +4655,17 @@ a.gk-stat-card:hover {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  overflow: hidden;
+  /*
+   * No overflow:hidden here. It was clipping the status dot.
+   *
+   * The dot is positioned at bottom:0 right:0 — the corner of the square the
+   * avatar occupies, which on a circle is outside the shape. A round clip then
+   * sliced it into a crescent, which is what it looked like: a little leaf
+   * stuck to the avatar rather than a status badge.
+   *
+   * The clip only ever existed to round a photo, so the photo rounds itself
+   * (border-radius: inherit below) and the badge is free to sit on the edge.
+   */
   flex-shrink: 0;
   background: var(--gk-primary-container);
   color: var(--gk-primary-700, #4338ca);
@@ -4667,6 +4677,8 @@ a.gk-stat-card:hover {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* inherit, so a square avatar variant keeps its corners without a second rule */
+  border-radius: inherit;
 }
 .gk-avatar-xs {
   width: 24px;

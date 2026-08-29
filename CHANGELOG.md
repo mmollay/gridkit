@@ -7,6 +7,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.60.1] - 2026-08-29
+
+### Fixed — the status dot was a crescent
+
+`.gk-avatar` carried `border-radius: 50%` together with `overflow: hidden`, and
+`.gk-avatar-status` is absolutely positioned at `bottom: 0; right: 0` — the
+corner of the square the avatar occupies, which on a circle lies outside the
+shape. The round clip sliced the badge into a crescent: a small leaf stuck to
+the avatar rather than a status dot.
+
+The clip only ever existed to round a photograph, so the photograph now rounds
+itself (`border-radius: inherit` on `.gk-avatar img`) and the avatar no longer
+clips anything. The badge renders whole, in all four states.
+
+Checked while there and deliberately not changed: the stacked avatar group
+looks sliced at a glance, but that is the overlap doing its job — 40px circles
+at `-8px` with a white ring, each covering the edge of the next.
+
+---
 ## [1.60.0] - 2026-08-28
 
 Sidebar and header. The worst of the three rounds, because what it found was
