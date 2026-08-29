@@ -19,8 +19,20 @@
         Header always set Cache-Control "no-cache, must-revalidate"
         Header always unset Expires
     </FilesMatch>
+    # immutable ONLY for a URL that carries a version stamp. Layout::asset()
+    # appends ?v=<mtime>, so a changed file is a changed URL and a year is safe.
+    # A bare /js/gridkit.js is a different matter: freezing that for a year
+    # means a visitor keeps last year's script and no deployment reaches them.
+    # This bit the project's own parity fixture within an hour of the rule
+    # landing — it linked the script unstamped and was served a copy from
+    # before that morning's fixes, which looked exactly like a real regression.
     <FilesMatch "\.(css|js|png|jpg|jpeg|svg|webp|woff2?)$">
-        Header always set Cache-Control "public, max-age=31536000, immutable"
+        <If "%{QUERY_STRING} =~ /(^|&)v=/">
+            Header always set Cache-Control "public, max-age=31536000, immutable"
+        </If>
+        <Else>
+            Header always set Cache-Control "public, max-age=3600"
+        </Else>
         Header always unset Expires
     </FilesMatch>
     # Directory requests resolve to index.php but FilesMatch never sees a name.

@@ -1262,20 +1262,20 @@
           // "3, button", with no hint of what 3 meant, and the page you were
           // on was marked by colour and nothing else.
           + (typeof label === "number"
-              ? ' aria-label="' + _gkEsc(_t("page_n", { n: label })) + '"'
+              ? ' aria-label="' + _gkEsc(_t("pagination_page_of", { page: label, total: pages })) + '"'
                 + (active ? ' aria-current="page"' : "")
               : ' aria-label="' + label.aria + '"')
           + ">"
           + (typeof label === "number"
               ? label
-              : '<span class="material-icons" aria-hidden="true" style="font-size:18px">'
+              : '<span class="material-icons" aria-hidden="true" style="font-size:16px">'
                 + label.icon + "</span>")
           + "</button>";
 
         // nav, matching the server: a landmark that can be jumped to and
         // skipped past, rather than loose digits inside the table.
-        let out = '<nav class="gk-pagination" aria-label="' + _gkEsc(_t("pagination")) + '">';
-        out += btn({ icon: "chevron_left", aria: _t("previous") }, page - 1, page <= 1, false);
+        let out = '<nav class="gk-pagination" aria-label="' + _gkEsc(_t("pagination_aria")) + '">';
+        out += btn({ icon: "chevron_left", aria: _t("pagination_prev") }, page - 1, page <= 1, false);
 
         // A window around the current page, plus the first and the last.
         const set = new Set([1, pages]);
@@ -1288,7 +1288,7 @@
           last = n;
         });
 
-        out += btn({ icon: "chevron_right", aria: _t("next") }, page + 1, page >= pages, false);
+        out += btn({ icon: "chevron_right", aria: _t("pagination_next") }, page + 1, page >= pages, false);
         out += "</nav>";
         return out;
       },

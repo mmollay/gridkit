@@ -99,6 +99,14 @@ class Lang
                 // way, so this one catalogue serves both rather than a second
                 // copy under js.* drifting away from the first.
                 $jsKeys['action_' . substr($key, 7)] = $val;
+            } elseif (str_starts_with($key, 'pagination.')) {
+                // The pager is rendered by both sides, so both have to name its
+                // controls the same way. They did not: the server said
+                // "Previous" and "Page 1 of 3" from pagination.*, the client
+                // said "Previous page" and "Page 1" from a separate js.* pair.
+                // A screen reader heard one wording before a sort and another
+                // after. Found by the parity harness, which is what it is for.
+                $jsKeys['pagination_' . substr($key, 11)] = $val;
             } elseif (str_starts_with($key, 'format.')) {
                 // Number and date shapes, for exactly the same reason as
                 // action.* above — and this pair had already drifted. The

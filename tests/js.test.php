@@ -61,11 +61,32 @@ return [
     $keys = array_unique($m[1]);
     T::ok(count($keys) > 10, 'expected a good number of JS keys, found ' . count($keys));
 
+    /*
+     * jsConfig() exports four families, each flattened with its own prefix:
+     * js.* loses it entirely, while action.*, pagination.* and format.*
+     * keep it with the dot turned into an underscore. A key the script asks
+     * for may live under any of them, so the test has to look where the
+     * export actually put it. Checking only js.* reported the shared
+     * pagination catalogue as missing when it was there under its own name.
+     */
+    $sources = static function (string $key): array {
+        $candidates = ["js.$key"];
+        foreach (['action', 'pagination', 'format'] as $family) {
+            if (str_starts_with($key, $family . '_')) {
+                $candidates[] = $family . '.' . substr($key, strlen($family) + 1);
+            }
+        }
+        return $candidates;
+    };
+
     foreach ($keys as $key) {
         // _t() falls back to returning the key itself, so a missing entry
         // shows the user the literal string "too_large" and throws nothing.
-        T::ok(isset($en["js.$key"]), "js/gridkit.js asks for _t(\"$key\") — missing from lang/en.php");
-        T::ok(isset($de["js.$key"]), "js/gridkit.js asks for _t(\"$key\") — missing from lang/de.php");
+        $where = $sources($key);
+        $inEn = array_filter($where, static fn(string $k): bool => isset($en[$k]));
+        $inDe = array_filter($where, static fn(string $k): bool => isset($de[$k]));
+        T::ok($inEn !== [], "js/gridkit.js asks for _t(\"$key\") — not in lang/en.php under " . implode(' or ', $where));
+        T::ok($inDe !== [], "js/gridkit.js asks for _t(\"$key\") — not in lang/de.php under " . implode(' or ', $where));
     }
 },
 

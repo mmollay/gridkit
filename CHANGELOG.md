@@ -7,6 +7,56 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.63.0] - 2026-08-29
+
+### Added — `ci/parity.php`, a harness for the bug this project keeps having
+
+Three releases in a row fixed the same shape of defect: the table is rendered
+by PHP and again by JavaScript, and the two had drifted. Hardcoded `de-DE` in
+1.55.0, missing `scope` and `aria-sort` in 1.59.0, an unwrapped confirmation in
+1.62.1. None was visible in the source of either side. Each appears only when
+you render once, change something, and render again.
+
+So the harness does that. It renders six tables server-side — plain, sortable,
+formatted, with row buttons, selectable, filtered — captures each one's markup
+**before gridkit.js loads**, forces a client rebuild, and compares the element
+and attribute vocabulary of the two.
+
+It is not part of `php tests/run.php`. The suite runs on plain PHP with no
+dependencies, and requiring a browser would break that promise for everyone who
+clones the repo. Run it when touching either renderer.
+
+**Two mistakes in the harness itself, both instructive.** The first version
+compared position by position, so one element added by the rebuild shifted
+everything after it and reported a whole table as divergent. The second — worse
+— snapshotted inside the comparison, which runs after load, by which time the
+library has already re-rendered every `setData()` table. It compared the client
+against itself and reported perfect agreement while a button in the DOM carried
+a raw, unwrapped `onclick`. Both were caught by deliberately reintroducing a
+known bug and checking the harness noticed. It did not, until fixed.
+
+### Fixed — the two pagers announced themselves differently
+
+Found by the harness on its first honest run. The server named its controls
+from `pagination.*` and the client from a separate `js.*` pair, so a screen
+reader heard "Previous" and "Page 1 of 3" on load, then "Previous page" and
+"Page 1" after the first sort. `Lang::jsConfig()` now exports `pagination.*`
+alongside `js.*`, `action.*` and `format.*`, and the client reads it. The
+divergence count across the six cases fell from 121 to 61, and what remains is
+documented in the harness as benign.
+
+### Fixed — `immutable` caching on unstamped assets
+
+Yesterday's cache fix gave every CSS and JS file a year of `immutable`. That is
+safe for `Layout::asset()`, which appends `?v=<mtime>` so a changed file is a
+changed URL — and unsafe for anything linking `/js/gridkit.js` bare, which
+would then keep last year's script through every deployment. It bit this
+project's own harness within the hour: the fixture linked the script unstamped,
+was served a copy from before that morning's fixes, and reported a regression
+that had been fixed hours earlier. `immutable` now applies only to a URL that
+carries a `v=` parameter; everything else gets an hour.
+
+---
 ## [1.62.1] - 2026-08-29
 
 ### Fixed — a delete that stopped asking
