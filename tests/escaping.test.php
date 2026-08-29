@@ -88,6 +88,18 @@ return [
     assertEscaped($html, 'Pagination baseUrl');
 },
 
+'a sort header escapes its label, its url and its extra class' => function (): void {
+    // extra_class was the one value in SortLink that reached an attribute
+    // unescaped. It is meant to hold a CSS class, but it is caller-supplied
+    // like the label and the base url beside it, both of which are escaped.
+    $html = \GridKit\SortLink::header('name', XSS, [
+        'base_url'    => ATTR_BREAK,
+        'extra_class' => ATTR_BREAK,
+        'preserve'    => ['q' => ATTR_BREAK],
+    ]);
+    assertEscaped($html, 'SortLink');
+},
+
 'title(raw: true) is the documented, deliberate exception' => function (): void {
     $html = (new Header())->title('<em>ok</em>', true)->render();
     T::contains($html, '<em>ok</em>', 'raw mode must pass markup through unchanged');

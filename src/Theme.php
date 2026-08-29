@@ -21,25 +21,24 @@ class Theme {
     }
 
     public static function switcher(): string {
-        $themes = ['indigo', 'ocean', 'forest', 'rose', 'amber', 'slate'];
-        $colors = [
-            'indigo' => '#6366f1', 'ocean' => '#0ea5e9', 'forest' => '#059669',
-            'rose' => '#ec4899', 'amber' => '#d97706', 'slate' => '#475569'
-        ];
+        // Driven by available(), which is the list. The switcher used to carry
+        // a second copy of the same six names and the same six hex values, so
+        // a theme added to one appeared in the other only if you remembered
+        // both — and the dots would have kept showing the old set.
         $html = '<div class="gk-theme-switcher">';
         $html .= '<div class="gk-theme-colors">';
-        foreach ($themes as $t) {
+        foreach (self::available() as $t => $meta) {
             $active = ($t === self::$theme) ? ' gk-theme-active' : '';
             // The dot is an empty <button> — a coloured circle and nothing
             // else. title was its only name, and GK.tip removes title on the
             // first hover, so it went silent the moment a pointer crossed it.
             // aria-pressed says which one is on; the colour alone cannot.
-            $name = Lang::t('theme.choose', ['name' => ucfirst($t)]);
+            $name = Lang::t('theme.choose', ['name' => $meta['name']]);
             $html .= '<button class="gk-theme-dot' . $active . '" data-gk-set-theme="' . $t . '"'
-                   . ' style="background:' . $colors[$t] . '"'
+                   . ' style="background:' . $meta['color'] . '"'
                    . ' aria-pressed="' . ($active !== '' ? 'true' : 'false') . '"'
                    . ' aria-label="' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '"'
-                   . ' title="' . htmlspecialchars(ucfirst($t), ENT_QUOTES, 'UTF-8') . '"></button>';
+                   . ' title="' . htmlspecialchars($meta['name'], ENT_QUOTES, 'UTF-8') . '"></button>';
         }
         $html .= '</div>';
         // Both glyphs sit in the button at once and CSS shows one. Exposed,

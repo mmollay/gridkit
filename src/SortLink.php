@@ -74,7 +74,12 @@ class SortLink
         $linkCls  = 'gk-sort-link' . ($extraClass ? ' ' . $extraClass : '');
         $href     = $baseUrl . '?' . http_build_query($params);
 
-        return '<a href="' . htmlspecialchars($href, ENT_QUOTES, 'UTF-8') . '" class="' . $linkCls . '">'
+        // extra_class was the one value in this method that reached an
+        // attribute unescaped. It is meant to be a CSS class, but it is
+        // caller-supplied like everything else here, and a caller passing
+        // something derived from a request would have closed the attribute.
+        return '<a href="' . htmlspecialchars($href, ENT_QUOTES, 'UTF-8') . '"'
+            . ' class="' . htmlspecialchars($linkCls, ENT_QUOTES, 'UTF-8') . '">'
             . htmlspecialchars($label, ENT_QUOTES, 'UTF-8')
             . '<span class="material-icons ' . $iconCls . '" aria-hidden="true">' . $iconName . '</span>'
             . '</a>';

@@ -90,7 +90,18 @@ return [
     exec('git -C ' . escapeshellarg(ROOT) . ' ls-files 2>/dev/null', $out);
     T::ok($out !== [], 'git ls-files returned nothing — is this a checkout?');
 
+    // A leading underscore means two different things. On a probe script left
+    // behind by an agent it means "temporary"; on a partial it means "included,
+    // never served". The rule cannot tell them apart, so the partials are named
+    // here — a short list that has to be edited deliberately, which is the point.
+    $partials = [
+        'demo/_showcase.php',
+    ];
+
     foreach ($out as $path) {
+        if (in_array($path, $partials, true)) {
+            continue;
+        }
         $base = basename($path);
         T::ok(!str_starts_with($base, '_'), "a scratch file is tracked: $path");
         // Only the repo root. .design/verify/probe-src.js is a deliberate
@@ -116,10 +127,19 @@ return [
     T::contains($src, 'tests/run.php', 'the matrix does not run the suite');
     T::contains($src, 'mb_strtolower', 'the matrix does not report on mbstring');
 
-    // And the library must not need mbstring to answer at all — this very run
-    // may be the one without it.
-    $withMb = function_exists('mb_strtolower');
-    T::ok(true, 'this run has mbstring: ' . ($withMb ? 'yes' : 'no'));
+    // And the library must not need mbstring to answer at all. This used to be
+    // `T::ok(true, 'this run has mbstring: yes')` — it computed the answer and
+    // then asserted a literal, so it passed on every interpreter including one
+    // that would have crashed on the first umlaut. The promise is about the
+    // source, so check the source: an mb_* call is only allowed where the file
+    // has worked out for itself that the extension is there.
+    foreach (glob(ROOT . '/src/*.php') ?: [] as $file) {
+        $src = (string) file_get_contents($file);
+        if (!preg_match('/\bmb_[a-z_]+\s*\(/', $src)) continue;
+        T::contains($src, "function_exists('mb_",
+            basename($file) . ' calls mb_* with no function_exists guard —'
+            . ' README.md promises mbstring is optional');
+    }
 },
 
 'every tagged release has a changelog entry' => function (): void {

@@ -63,7 +63,7 @@ class BelegModal
                 </a>
                 <button type="button" data-gk-beleg-close
                         class="gk-btn gk-btn-text gk-btn-neutral gk-btn-sm gk-beleg-modal-close-btn"
-                        title="{$t('doc.close')}">
+                        aria-label="{$t('doc.close')}" title="{$t('doc.close')}">
                     <span class="material-icons" aria-hidden="true">close</span>
                 </button>
             </div>

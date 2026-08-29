@@ -386,6 +386,56 @@ return [
     }
 },
 
+'a row button with text and no icon is still a button' => function (): void {
+    // renderButtons asked for `$hasText && $iconHtml`, then for $iconHtml, and
+    // had no third arm — so ->button('save', ['text' => 'Save']) emitted
+    // nothing at all. Nothing errored; the actions cell simply came out empty.
+    // The client draws that same button from data-gk-data, so on a setData()
+    // table it appeared out of nowhere on the first sort.
+    Lang::set('en');
+    $html = T::capture(fn() => (new Table('t'))
+        ->setData([['id' => 1, 'n' => 'Row']])
+        ->column('n', 'N')
+        ->button('save', ['text' => 'Save'])
+        ->render());
+
+    preg_match('#<td class="gk-actions[^"]*">(.*?)</td>#s', $html, $m);
+    $cell = $m[1] ?? '';
+    T::ok($cell !== '', 'the actions cell renders');
+    T::contains($cell, 'data-gk-action="save"', 'a text-only row button reaches the page');
+    T::contains($cell, '<span>Save</span>', 'and carries its label');
+
+    // And it must still be the same button the client would draw.
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, 'const text = hasText ? "<span>" + e(bopts.text) + "</span>" : "";',
+        'the client stopped drawing the label the server now draws');
+},
+
+'a page past the end says so instead of going blank' => function (): void {
+    // A static table slices its own page in renderInner, but the empty state
+    // was keyed off $this->rows — every row, before the slice. Ask for page 99
+    // of a three-page table and the tbody came out with no rows and no empty
+    // state either: a table that just stopped, under a pager still offering
+    // the way back.
+    Lang::set('en');
+    $rows = [];
+    for ($i = 1; $i <= 25; $i++) $rows[] = ['id' => $i, 'n' => 'Row ' . $i];
+
+    $_GET['gk_page'] = '99';
+    $html = T::capture(fn() => (new Table('t'))
+        ->setData($rows)->column('n', 'N')->paginate(10)->render());
+    unset($_GET['gk_page']);
+
+    T::contains($html, 'gk-empty-row', 'an out-of-range page renders the empty state');
+    preg_match('/<tbody>(.*?)<\/tbody>/s', $html, $m);
+    T::ok(trim($m[1] ?? '') !== '', 'the tbody is never left empty');
+
+    // A table with rows on the page it was asked for must not show it.
+    $ok = T::capture(fn() => (new Table('t'))
+        ->setData($rows)->column('n', 'N')->paginate(10)->render());
+    T::notContains($ok, 'gk-empty-row', 'a page that has rows shows them, not the empty state');
+},
+
 'the year dropdown has a name like every other filter' => function (): void {
     Lang::set('en');
     $html = T::capture(fn() => (new YearFilter('y'))

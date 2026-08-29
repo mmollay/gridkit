@@ -207,9 +207,15 @@ class Sidebar
             echo '</button>';
             echo '<div class="gk-sidebar-subitems' . ($isOpen ? '' : ' collapsed') . '" id="' . $e($groupId) . '">';
             foreach ($item['children'] as $child) {
+                $childIsCurrent = (bool) ($child['active'] ?? false);
                 $cls = 'gk-sidebar-subitem';
-                if ($child['active'] ?? false) $cls .= ' active';
-                echo '<a href="' . $e($child['href'] ?? '#') . '" class="' . $cls . '" data-label="' . $e($child['label'] ?? '') . '">';
+                if ($childIsCurrent) $cls .= ' active';
+                // aria-current for the same reason as on a top-level item
+                // below — and a submenu entry is the more common place to be:
+                // it is where the deep pages live. It had the colour only.
+                echo '<a href="' . $e($child['href'] ?? '#') . '" class="' . $cls . '"'
+                   . ($childIsCurrent ? ' aria-current="page"' : '')
+                   . ' data-label="' . $e($child['label'] ?? '') . '">';
                 if (!empty($child['icon'])) {
                     echo '<span class="material-icons gk-sidebar-icon" aria-hidden="true">' . $e($child['icon']) . '</span>';
                 }

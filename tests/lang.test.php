@@ -120,16 +120,58 @@ return [
     T::contains($html, 'Per page', 'caller-supplied label must not be overridden');
 },
 
-'jsConfig exports only js.* keys, as valid JSON' => function (): void {
+/**
+ * This used to be called "exports only js.* keys" and its only loop asserted
+ * that no exported key starts with "js." — which jsConfig guarantees by
+ * construction, since stripping that prefix is what it does. The assertion
+ * could not fail, and the two catalogues it did NOT check are the ones that
+ * had already drifted: the client formatted with a hardcoded "de-DE" because
+ * format.* never reached it, so an English table redrew "€1,200.00" as
+ * "1.200,00 €" on the first click.
+ */
+'jsConfig hands the client every catalogue it renders from' => function (): void {
+    $payload = static function (): array {
+        preg_match('/window\.GK_LANG=(.*?);<\/script>/s', Lang::jsConfig(), $m);
+        return (array) json_decode($m[1] ?? '', true);
+    };
+
     Lang::set('en');
     $tag = Lang::jsConfig();
     T::contains($tag, 'window.GK_LANG=', 'jsConfig emits the global');
-    preg_match('/window\.GK_LANG=(.*?);<\/script>/s', $tag, $m);
-    $data = json_decode($m[1] ?? '', true);
-    T::ok(is_array($data) && $data !== [], 'jsConfig payload is a non-empty object');
-    foreach (array_keys($data ?: []) as $k) {
-        T::ok(!str_starts_with((string) $k, 'js.'), "js. prefix should be stripped: $k");
-    }
+    T::ok((bool) preg_match('/window\.GK_LANG=\{/', $tag),
+        'the payload must be an object — an [] is truthy and survives `|| {}` as an empty catalogue');
+
+    $data = $payload();
+    T::ok($data !== [], 'jsConfig payload is a non-empty object');
+
+    // js.* arrives stripped, and carries its placeholders.
+    T::ok(isset($data['selected']), 'js.selected should export as "selected"');
+    T::contains((string) ($data['status'] ?? ''), '{pages}', 'the placeholders survive the export');
+
+    // action.* names the row buttons. GK.table re-renders those on every sort
+    // of a static table and looks them up as _t("action_" + name), so the
+    // server and the client have to name the same button the same way.
+    T::eq($data['action_delete'] ?? null, 'Delete', 'action.delete should export as action_delete');
+    T::eq($data['action_edit'] ?? null, 'Edit', 'action.edit should export as action_edit');
+
+    // format.* is what stopped a sorted English table turning German.
+    T::eq($data['format_decimal'] ?? null, '.', 'format.decimal should export as format_decimal');
+    T::eq($data['format_thousands'] ?? null, ',', 'format.thousands should export as format_thousands');
+    T::eq($data['format_currency'] ?? null, '€{value}', 'format.currency should reach the client');
+
+    Lang::set('de');
+    $de = $payload();
+    T::eq($de['format_decimal'] ?? null, ',', 'the active locale wins, key by key');
+    T::eq($de['action_delete'] ?? null, 'Löschen', 'and so do its action names');
+
+    // A locale GridKit does not ship must still get a catalogue: English is
+    // the floor. Without it every browser string came out as its raw key
+    // while the server side quietly went on reading English.
+    Lang::set('fr');
+    $fr = $payload();
+    T::eq($fr, $data, 'an unshipped locale falls back to the full English catalogue, not to {}');
+
+    Lang::set('en');
 },
 
 'an unknown key falls back to english, then to itself' => function (): void {

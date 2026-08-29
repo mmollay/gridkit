@@ -84,8 +84,12 @@ return [
         ->chip('', 'All')->chip('open', 'Open')->chip('paid', 'Paid')->render());
 
     T::contains($html, 'Paid', 'the chips render');
-    T::ok((bool) preg_match('/gk-chip[^"]*active[^"]*"[^>]*>\s*Paid/', $html)
-        || (bool) preg_match('/>\s*Paid\s*<\/a>/', $html), 'the active chip is present');
+    // The second half of this used to be `|| />\s*Paid\s*<\/a>/`, which any
+    // chip labelled Paid satisfies whether it is active or not — so the
+    // assertion could not fail and said nothing about the thing it names.
+    T::ok((bool) preg_match('/gk-chip[^"]*gk-chip-active[^"]*"[^>]*>\s*Paid/', $html),
+        'the chip the URL asks for is the one marked active');
+    T::eq(substr_count($html, 'gk-chip-active'), 1, 'and it is the only one');
     unset($_GET['st']);
 },
 

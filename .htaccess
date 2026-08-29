@@ -53,6 +53,13 @@
     Header set Access-Control-Allow-Origin "*"
 </Files>
 
+# Partials: included by a page, never a page themselves. Fetching one directly
+# does nothing useful — _showcase.php only defines functions — but a partial
+# that later holds anything else should not be reachable by guessing its name.
+<FilesMatch "^_.*\.php$">
+    Require all denied
+</FilesMatch>
+
 # Nothing below is part of the site.
 <FilesMatch "\.(conf|ini|log|lock|dist)$">
     Require all denied

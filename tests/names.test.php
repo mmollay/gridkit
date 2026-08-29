@@ -113,6 +113,20 @@ function everyComponent(): array
             ->action(Button::render('New', ['icon' => 'add']))
             ->user('Jane Doe', ['menu' => [['label' => 'Profile', 'href' => '/p', 'icon' => 'person']]])
             ->render()),
+
+        // These three were absent, and the general question is only general if
+        // it is asked of everything: BelegModal's close button was named by
+        // its title alone — the one naming mechanism GK.tip removes — and the
+        // list that would have caught it stopped one component short.
+        'BelegModal' => T::capture(fn() => \GridKit\BelegModal::container()),
+
+        'TableHeader' => T::capture(fn() => TableHeader::make('th')
+            ->search('q', '', 'Find an invoice')
+            ->reset('/x')
+            ->render()),
+
+        'YearFilter' => T::capture(fn() => (new YearFilter('y'))
+            ->baseUrl('/x')->range(2023, 2025)->allOption()->render()),
     ];
 }
 

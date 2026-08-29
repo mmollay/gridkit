@@ -138,11 +138,17 @@ class TableHeader
             if ($this->search !== null) {
                 $s = $this->search;
                 $liveAttr = $s['liveInput'] !== '' ? ' data-gk-live-input="' . $e($s['liveInput']) . '"' : '';
+                // A placeholder is not an accessible name: it is not reliably
+                // announced and it disappears the moment anything is typed.
+                // Table got this in 1.32.0 and Header followed; this third copy
+                // of the same search box was the one left unnamed.
+                $searchLabel = $e($s['placeholder'] !== '' ? $s['placeholder'] : Lang::t('table.search'));
                 echo '<input type="text"'
                     . ' id="' . $e($s['id']) . '"'
                     . ' name="' . $e($s['name']) . '"'
                     . ' class="gk-search"'
-                    . ' placeholder="' . $e($s['placeholder'] !== '' ? $s['placeholder'] : Lang::t('table.search')) . '"'
+                    . ' placeholder="' . $searchLabel . '"'
+                    . ' aria-label="' . $searchLabel . '"'
                     . ' value="' . $e($s['value']) . '"'
                     . $liveAttr . '>';
             }
