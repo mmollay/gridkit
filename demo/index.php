@@ -63,6 +63,8 @@ $demoRows = static function (array $rows) use ($lang): array {
  * a third party is slow — and that sends every visitor's IP to two of them —
  * was the wrong thing to ship. Generated here instead: no files, no requests.
  */
+require_once __DIR__ . '/_showcase.php';
+
 function ph(int $w, int $h, int $seed, string $initials = ''): string
 {
     $hue  = ($seed * 47) % 360;
@@ -150,6 +152,44 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-card .gk-table-wrap { border:none !important; }
         .demo-code { background:var(--gk-surface-dim, #1e293b); color:var(--gk-on-surface, #e2e8f0); padding:20px; border-radius:8px; overflow-x:auto; font-family:'SF Mono',Monaco,Consolas,monospace; font-size:13px; line-height:1.6; margin-top:16px; }
         .demo-code pre { margin:0; }
+
+        /* ── Beispiel mit ausklappbarem Code ─────────────────────────────
+           <details> statt eines Divs mit Klick-Handler: es funktioniert ohne
+           JavaScript, ist von Haus aus mit der Tastatur bedienbar und wird von
+           Vorleseprogrammen korrekt als aufklappbarer Bereich angesagt. */
+        .demo-showcase { margin-bottom: 24px; }
+        .demo-showcase-code { margin-top: 12px; }
+        .demo-showcase-code summary {
+            display: inline-flex; align-items: center; gap: 6px;
+            cursor: pointer; user-select: none; list-style: none;
+            font-size: 13px; font-weight: 600; color: var(--gk-on-surface-variant);
+            padding: 6px 12px; border: 1px solid var(--gk-outline-variant);
+            border-radius: 999px; transition: .15s;
+        }
+        .demo-showcase-code summary::-webkit-details-marker { display: none; }
+        .demo-showcase-code summary:hover { color: var(--gk-primary); border-color: var(--gk-primary); }
+        .demo-showcase-code summary:focus-visible { outline: 2px solid var(--gk-primary); outline-offset: 2px; }
+        .demo-showcase-code summary .material-icons { font-size: 16px; }
+        .demo-showcase-code[open] summary { margin-bottom: 10px; }
+        .demo-showcase-src { position: relative; }
+        .demo-showcase-src pre {
+            margin: 0; padding: 16px; overflow-x: auto;
+            background: var(--gk-surface-dim, #1e293b); color: var(--gk-on-surface, #e2e8f0);
+            border-radius: 8px; font-size: 12.5px; line-height: 1.6;
+            font-family: "JetBrains Mono", ui-monospace, monospace;
+        }
+        /* Token-based, not white-on-dark: .demo-code renders light in light mode,
+           so a button styled for a dark block was invisible on it. */
+        .demo-showcase-copy {
+            position: absolute; top: 8px; right: 8px; z-index: 1;
+            font: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+            background: var(--gk-surface); color: var(--gk-on-surface-variant);
+            border: 1px solid var(--gk-outline-variant); border-radius: 6px; padding: 4px 10px;
+            opacity: .75; transition: .15s;
+        }
+        .demo-showcase-copy:hover { opacity: 1; color: var(--gk-primary); border-color: var(--gk-primary); }
+        .demo-showcase-copy:focus-visible { opacity: 1; outline: 2px solid var(--gk-primary); outline-offset: 2px; }
+        .demo-showcase-copy[data-ok] { opacity: 1; color: var(--gk-success); border-color: var(--gk-success); }
         .demo-pair { display:flex; flex-direction:column; gap:16px; margin-bottom:24px; }
         .demo-pair-left { display:contents; }
         .demo-stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:24px; }
@@ -237,22 +277,24 @@ echo $demoHeader->title($headerTitle, true)
             ['article_id' => 14, 'article_number' => 'ART-014', 'name' => 'Datenbank Migration', 'unit' => 'psch', 'net_price' => 890.00, 'tax_rate' => 20, 'is_active' => 'active'],
             ['article_id' => 15, 'article_number' => 'ART-015', 'name' => 'Security Audit', 'unit' => 'psch', 'net_price' => 1500.00, 'tax_rate' => 20, 'is_active' => 'inactive'],
         ]);
-        $table = new Table('articles');
-        $table->setData($articles)
-            ->search(['article_number', 'name'])
-            ->column('article_number', 'Article No.', ['width' => '120px', 'sortable' => true, 'nowrap' => true, 'muted' => true])
-            ->column('name', 'Description', ['sortable' => true, 'nowrap' => true])
-            ->column('unit', 'Unit', ['width' => '80px', 'nowrap' => true])
-            ->column('net_price', 'Net', ['format' => 'currency', 'align' => 'right', 'width' => '100px', 'nowrap' => true])
-            ->column('tax_rate', 'VAT', ['format' => 'percent', 'width' => '80px', 'nowrap' => true])
-            ->column('is_active', 'Status', ['format' => 'label', 'nowrap' => true])
-            ->filter('is_active', 'select', ['options' => ['active' => 'Active', 'inactive' => 'Inactive', 'draft' => 'Draft'], 'placeholder' => 'All Status'])
-            ->button('edit', ['icon' => 'edit', 'class' => 'primary', 'position' => 'right', 'params' => ['id' => 'article_id']])
-            ->button('delete', ['icon' => 'delete', 'class' => 'danger', 'position' => 'right', 'params' => ['id' => 'article_id']])
-            ->newButton('New Article', ['icon' => 'add'])
-            ->nowrap(true)
-            ->paginate(5)
-            ->render();
+        showcase(function () use ($articles) {
+                    $table = new Table('articles');
+                    $table->setData($articles)
+                        ->search(['article_number', 'name'])
+                        ->column('article_number', 'Article No.', ['width' => '120px', 'sortable' => true, 'nowrap' => true, 'muted' => true])
+                        ->column('name', 'Description', ['sortable' => true, 'nowrap' => true])
+                        ->column('unit', 'Unit', ['width' => '80px', 'nowrap' => true])
+                        ->column('net_price', 'Net', ['format' => 'currency', 'align' => 'right', 'width' => '100px', 'nowrap' => true])
+                        ->column('tax_rate', 'VAT', ['format' => 'percent', 'width' => '80px', 'nowrap' => true])
+                        ->column('is_active', 'Status', ['format' => 'label', 'nowrap' => true])
+                        ->filter('is_active', 'select', ['options' => ['active' => 'Active', 'inactive' => 'Inactive', 'draft' => 'Draft'], 'placeholder' => 'All Status'])
+                        ->button('edit', ['icon' => 'edit', 'class' => 'primary', 'position' => 'right', 'params' => ['id' => 'article_id']])
+                        ->button('delete', ['icon' => 'delete', 'class' => 'danger', 'position' => 'right', 'params' => ['id' => 'article_id']])
+                        ->newButton('New Article', ['icon' => 'add'])
+                        ->nowrap(true)
+                        ->paginate(5)
+                        ->render();
+        });
         ?>
 
     <h3 style="margin: 32px 0 16px;">Invoice list with date and currency formatting</h3>
@@ -475,23 +517,25 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Grid Layout (16 columns)</h3>
         <?php
-        $form = new Form('article_form');
-        $form->action('save/process_article.php')
-            ->ajax()
-            ->hidden('article_id', '')
-            ->row()
-                ->field('article_number', 'Article No.', 'text', ['required' => true, 'width' => 8])
-                ->field('name', 'Description', 'text', ['required' => true, 'width' => 8])
-            ->endRow()
-            ->field('description', 'Description', 'textarea', ['rows' => 3])
-            ->row()
-                ->field('unit', 'Unit', 'select', ['options' => ['Stk' => 'Piece', 'h' => 'Hour', 'psch' => 'Flat rate'], 'width' => 5])
-                ->field('net_price', 'Net price', 'number', ['step' => '0.01', 'width' => 5])
-                ->field('tax_rate', 'VAT %', 'select', ['options' => ['20' => '20%', '10' => '10%', '0' => '0%'], 'width' => 6])
-            ->endRow()
-            ->field('is_active', 'Active', 'toggle', ['inline' => true])
-            ->submit('Save')
-            ->render();
+        showcase(function () {
+                    $form = new Form('article_form');
+                    $form->action('save/process_article.php')
+                        ->ajax()
+                        ->hidden('article_id', '')
+                        ->row()
+                            ->field('article_number', 'Article No.', 'text', ['required' => true, 'width' => 8])
+                            ->field('name', 'Description', 'text', ['required' => true, 'width' => 8])
+                        ->endRow()
+                        ->field('description', 'Description', 'textarea', ['rows' => 3])
+                        ->row()
+                            ->field('unit', 'Unit', 'select', ['options' => ['Stk' => 'Piece', 'h' => 'Hour', 'psch' => 'Flat rate'], 'width' => 5])
+                            ->field('net_price', 'Net price', 'number', ['step' => '0.01', 'width' => 5])
+                            ->field('tax_rate', 'VAT %', 'select', ['options' => ['20' => '20%', '10' => '10%', '0' => '0%'], 'width' => 6])
+                        ->endRow()
+                        ->field('is_active', 'Active', 'toggle', ['inline' => true])
+                        ->submit('Save')
+                        ->render();
+        });
         ?>
     </div>
 
@@ -2058,6 +2102,26 @@ document.querySelectorAll('.gk-upload-zone[data-gk-upload]').forEach(function(zo
 })();
 
 GK.search.init({ url: 'api/quicksearch.php', hotkey: 'ctrl+k', minLength: 0 });
+</script>
+
+<script>
+/* The copy button on a code disclosure. Delegated, because the disclosures are
+   spread across the page and several are added by showcase() at render time. */
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-demo-copy]');
+    if (!btn) return;
+    var code = btn.parentElement.querySelector('code');
+    if (!code) return;
+    var done = function () {
+        var was = btn.textContent;
+        btn.textContent = '\u2713';
+        btn.setAttribute('data-ok', '');
+        setTimeout(function () { btn.textContent = was; btn.removeAttribute('data-ok'); }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code.textContent).then(done, function () {});
+    }
+});
 </script>
 </body>
 </html>

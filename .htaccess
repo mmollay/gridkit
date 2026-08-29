@@ -1,4 +1,35 @@
-# GridKit — the public site at gridkit.ssi.at
+# GridKit — the public site
+#
+# Cache policy, first, because it was wrong in a way that hid every deployment.
+#
+# Something server-wide sends `Cache-Control: max-age=2592000` — thirty days —
+# on everything, HTML included. It is not in /etc/apache2 anywhere I could find
+# it, and it applies to the other sites on this host too. The effect on a site
+# that is edited daily is that a returning visitor sees the copy they first
+# loaded, for a month. It is why the landing page still showed v1.54.0 in a
+# browser while the server had 1.60.1 on disk.
+#
+# HTML must revalidate. Assets need not: every asset URL carries ?v=<mtime>, so
+# a changed file is a changed URL and a year is safe.
+<IfModule mod_expires.c>
+    ExpiresActive Off
+</IfModule>
+<IfModule mod_headers.c>
+    <FilesMatch "\.(php|html)$">
+        Header always set Cache-Control "no-cache, must-revalidate"
+        Header always unset Expires
+    </FilesMatch>
+    <FilesMatch "\.(css|js|png|jpg|jpeg|svg|webp|woff2?)$">
+        Header always set Cache-Control "public, max-age=31536000, immutable"
+        Header always unset Expires
+    </FilesMatch>
+    # Directory requests resolve to index.php but FilesMatch never sees a name.
+    <If "%{REQUEST_URI} =~ m#/$#">
+        Header always set Cache-Control "no-cache, must-revalidate"
+        Header always unset Expires
+    </If>
+</IfModule>
+
 #
 # Two jobs: give the agent-facing document a short, stable address, and keep
 # things out of the document root that have no business being served.

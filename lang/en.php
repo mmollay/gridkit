@@ -37,6 +37,8 @@ return [
     'table.empty'           => 'No entries found',
     'sidebar.aria'              => 'Main navigation',
     'sidebar.badge_suffix'      => 'pending',
+    'demo.show_code'            => 'Show code',
+    'demo.copy'                 => 'Copy',
     'table.actions'         => 'Actions',
     'table.select_all'      => 'Select all',
     'table.selected'        => '{n} selected',

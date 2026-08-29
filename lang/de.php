@@ -37,6 +37,8 @@ return [
     'table.empty'           => 'Keine Einträge gefunden',
     'sidebar.aria'              => 'Hauptnavigation',
     'sidebar.badge_suffix'      => 'offen',
+    'demo.show_code'            => 'Code anzeigen',
+    'demo.copy'                 => 'Kopieren',
     'table.actions'         => 'Aktionen',
     'table.select_all'      => 'Alle auswählen',
     'table.selected'        => '{n} ausgewählt',

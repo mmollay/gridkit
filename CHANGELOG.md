@@ -7,6 +7,48 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.61.0] - 2026-08-29
+
+### Added — the demo shows the code that produced each example
+
+Fomantic UI, Bootstrap and Tailwind UI all put the source under the example.
+For GridKit it earns more than it does for them, because the claim being made
+is "fifteen lines of PHP and you have this table" — and until the reader can
+see the fifteen lines, that is something to take on faith.
+
+`showcase()` wraps an example in a closure, then reads the closure's body back
+out of the file using the line numbers PHP itself reports for it. What a reader
+sees is the code that just ran, by construction. The `use (...)` clause is
+dropped — it is plumbing for the demo page, not part of what anyone would
+write — and the body is dedented to column zero.
+
+This replaces the pattern the demo had been using: hand-written blocks beside
+the examples, like `$table->size('sm');  // compact`. Those are a second copy
+of the truth, and the copy is the one that rots. Two examples are converted so
+far — the full-featured table and the 16-column form — because those are the
+two where the claim needs the evidence. A list of avatar sizes does not.
+
+The disclosure is a `<details>`: keyboard-operable and announced as an
+expandable section with no ARIA of its own, which a div with a click handler is
+not. The copy button takes its colours from the theme tokens; the first version
+was styled white-on-dark and turned out invisible, because the demo's code
+blocks render light in light mode.
+
+### Fixed — the site told every browser to cache it for a month
+
+Something server-wide on this host sends `Cache-Control: max-age=2592000` on
+everything, HTML included — it is in no active Apache config that could be
+found, and it applies to the other sites on the machine too. On a site that
+changes daily the effect is that a returning visitor sees the copy they first
+loaded, for thirty days. It is why the landing page still showed v1.54.0 in a
+browser while the server had 1.60.1 on disk, and why every check during this
+work needed a cache-busting query to tell the truth.
+
+`.htaccess` now overrides it for GridKit only: HTML revalidates on every
+request, while assets keep a year — every asset URL already carries `?v=<mtime>`,
+so a changed file is a changed URL.
+
+---
 ## [1.60.1] - 2026-08-29
 
 ### Fixed — the status dot was a crescent

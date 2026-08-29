@@ -146,4 +146,41 @@ return [
     }
 },
 
+/**
+ * The demo used to carry hand-written code blocks beside its examples — a
+ * second copy of the truth, and the copy is the one that rots. showcase()
+ * reads the closure's body back out of the file using the line numbers PHP
+ * reports for it, so the listing is the code that just ran, by construction.
+ */
+'the code shown is the code that ran' => function (): void {
+    require_once __DIR__ . '/../demo/_showcase.php';
+
+    $marker = 'a-string-that-appears-nowhere-else-in-this-repo';
+    $src = showcaseSource(static function () use ($marker) {
+        $x = 'a-string-that-appears-nowhere-else-in-this-repo';
+        return $x;
+    });
+
+    T::contains($src, $marker, 'the body is read from the file, not guessed');
+    T::ok(!str_contains($src, 'use ($marker)'),
+        'the use clause is plumbing for the page, not part of the example');
+    T::ok(!str_starts_with($src, ' '),
+        'and it is dedented to column zero rather than carrying this file\'s indentation');
+},
+
+'a showcase renders the example and the listing' => function (): void {
+    require_once __DIR__ . '/../demo/_showcase.php';
+    \GridKit\Lang::set('en');
+
+    ob_start();
+    showcase(static function () {
+        echo '<p id="the-example">rendered</p>';
+    });
+    $html = (string) ob_get_clean();
+
+    T::contains($html, 'id="the-example"', 'the example runs and its output is shown');
+    T::contains($html, '<details', 'the listing is a details element — keyboard and screen reader for free');
+    T::contains($html, 'the-example', 'and the listing contains the source that produced it');
+},
+
 ];
