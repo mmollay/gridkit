@@ -1555,8 +1555,13 @@ td.gk-table-meta {
   color: var(--gk-on-info-container);
 }
 
+/* --gk-success is a FILL colour: as 14px text on the table surface the raw
+   #10b981 measured 2.54:1, and the ✓ is the only carrier of the cell's meaning.
+   --gk-success-text is the on-surface variant of the same hue (5.48:1 light,
+   #34d399 dark, theme-derived elsewhere) — the same idiom .gk-stat-trend-up
+   already uses. Bold 14px is not "large text", so 4.5:1 is the bar to clear. */
 .gk-bool-yes {
-  color: var(--gk-success);
+  color: var(--gk-success-text, var(--gk-success));
   font-weight: bold;
 }
 .gk-bool-no {
@@ -1796,8 +1801,13 @@ td.gk-table-meta {
   font-size: 1em;
   vertical-align: middle;
 }
+/* The required marker is the only thing that says a field is mandatory, so it
+   is read as text, not decoration. --gk-danger is the FILL red: at 13px it
+   measured 3.67:1 on the form surface. --gk-danger-text is the on-surface red
+   of the same family (5.67:1 light, #fda4af dark) — the idiom .gk-btn-text
+   .gk-btn-danger and .gk-stat-trend-down already use. */
 .gk-required {
-  color: var(--gk-danger);
+  color: var(--gk-danger-text, var(--gk-danger));
 }
 .gk-input {
   width: 100%;
@@ -4008,7 +4018,15 @@ a.gk-stat-card:hover {
   background: #1e293b;
   color: #e2e8f0;
 }
-.gk-table-inverted th {
+/* Both selectors, and the thead one on purpose: `.gk-table thead th` (0,1,2)
+   outranks a plain `.gk-table-inverted th` (0,1,1), so the light-mode header
+   colour --gk-on-surface-variant kept winning while the dark background here
+   still applied. The header of an inverted table rendered as #475569 on
+   #0f172a — 2.36:1, unreadable. Matching that specificity lets the intended
+   #94a3b8 through again (6.96:1). The bare `th` selector stays for a `tbody th`
+   in a definition table, which has no thead to match. */
+.gk-table-inverted th,
+.gk-table-inverted thead th {
   background: #0f172a;
   color: #94a3b8;
   border-bottom-color: rgba(255, 255, 255, 0.1);
@@ -4497,6 +4515,22 @@ a.gk-stat-card:hover {
     .gk-header-actions {
       min-width: 0;
       flex-shrink: 1;
+    }
+    /* Shrinking a flex box does not shrink what is inside it. The row got
+       narrower and the buttons kept their width, so they were painted straight
+       over the avatar beside them instead of being cut off: at 320px the
+       actions row measured 33px wide while holding 63px of buttons, and the
+       New button covered gk-header-user by 17px. Same story for a header in a
+       container narrower than the viewport (the demo card at 390px): the row
+       collapsed to 0 and its buttons spilled 48px past the header.
+       Carry the overflow here, so a squeeze scrolls instead of colliding. The
+       scrollbar itself stays hidden — it would sit across the header bar. */
+    .gk-header-actions {
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .gk-header-actions::-webkit-scrollbar {
+      display: none;
     }
     /* The accent is a preference set once. The light/dark toggle beside it is
        used daily, so that is the one that stays. */

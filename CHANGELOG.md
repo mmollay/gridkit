@@ -7,6 +7,76 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.62.0] - 2026-08-29
+
+Two review passes, one over the PHP and one over the rendered pages. Both found
+real defects; the visual pass found them by measuring in a browser, where
+reading the CSS would not have.
+
+### Fixed — the active page button was invisible
+
+The client-side pager ADDED `gk-btn-filled gk-btn-primary` on top of
+`gk-btn-text gk-btn-neutral` rather than replacing it. Two variants on one
+button fight in the cascade: the text variant, declared later, won the colour;
+the filled variant won the background. Slate on grey, **1.19:1**, with square
+corners where the server renders a pill. It now emits one variant, matching
+what `Pagination` sends: **9.56:1**.
+
+### Fixed — a table header that outranked its own inverted variant
+
+`.gk-table thead th` has specificity 0,1,2 and `.gk-table-inverted th` has
+0,1,1, so the light-mode text colour won while the dark background still
+applied: **2.36:1**. Now **6.96:1**.
+
+### Fixed — fill colours used as text
+
+`.gk-bool-yes` drew its tick in `--gk-success` at **2.54:1** and `.gk-required`
+its asterisk in `--gk-danger` at **3.67:1**. Both now use the `-text` variant
+the rest of the library already uses for this, reaching 5.87:1 and 5.67:1.
+
+### Fixed — white on primary, in dark mode, in every theme
+
+Four inline styles in the demo paired `background: var(--gk-primary)` with a
+hardcoded `color: #fff`. In dark mode the primary flips light and the pairing
+gives **1.78–1.97:1** — in all six themes. `var(--gk-on-primary)` is identical
+to white in light mode, so nothing changes there, and dark mode goes to
+7.57–7.86:1.
+
+### Fixed — header actions painted over the avatar
+
+The mobile rule shrank `.gk-header-right` but not its children, so at 320px a
+33px box held 63px of buttons and overlapped the user menu by 17px. It scrolls
+now instead of colliding.
+
+### Fixed — the landing page's terminal demo never ran
+
+`runDemo()` read the implicit global `event`, which is undefined when an
+IntersectionObserver calls it. It threw before printing its first line, and the
+`observer.disconnect()` after it never ran. Zero lines became thirteen, and the
+console is clean.
+
+### Fixed — muted text on the landing page at 2.45:1
+
+`--gk-text-muted: #94a3b8` in six places on white. Now `#64748b`, which is what
+the same palette already uses in dark mode. `.skill-desc` was worse at
+**1.93:1** — a light-mode token used inside the dark agent section.
+
+### Fixed — two horizontal overflows at 320px
+
+`minmax(280px, 1fr)` forces a track wider than its container; a bare
+`<table class="gk-table">` had no scrolling ancestor. Nine and sixty pixels of
+body scroll respectively, both gone.
+
+### A note on measuring
+
+The first contrast sweep reported 61 failures that were not real: the numbers
+were read mid-transition, with `oklab()` intermediates. Disabling transitions
+was required to get truthful values. The same trap caught the verification of
+this changelog — `getComputedStyle` returns `oklch()` for these themes, which a
+regex-based luminance parser silently mangles. Resolving the colour through a
+canvas pixel is the reliable way.
+
+---
 ## [1.61.0] - 2026-08-29
 
 ### Added — the demo shows the code that produced each example

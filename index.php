@@ -250,7 +250,13 @@ $skillHtml = renderSkillMd($skillContent);
             --gk-surface-container: #f1f5f9;
             --gk-text: #0f172a;
             --gk-text-secondary: #475569;
-            --gk-text-muted: #94a3b8;
+            /* Was #94a3b8. Every one of the six places this token is used sits on
+               a light surface (#fff or the #f8fafc hero/footer), where it measured
+               2.45-2.56:1 - well under the 4.5:1 body-text bar, for the footer,
+               the hero stat labels and the component card copy. #64748b is the
+               same slate one step darker (4.76:1 on #fff, 4.55:1 on #f8fafc) and
+               is already this palette's dark-mode muted value. */
+            --gk-text-muted: #64748b;
             --gk-border: #e2e8f0;
             --gk-success: #10b981;
             --gk-accent: #f59e0b;
@@ -502,7 +508,11 @@ $skillHtml = renderSkillMd($skillContent);
         .skill-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 16px; }
         .skill-header h3 { font-size: 20px; font-weight: 700; }
         .skill-actions { display: flex; gap: 8px; }
-        .skill-desc { color: var(--gk-text-secondary); margin-bottom: 24px; font-size: 15px; }
+        /* This block sits inside .agent-section, which is dark (--gk-code-bg
+           #1e293b). --gk-text-secondary is the LIGHT-mode slate #475569, so the
+           paragraph rendered at 1.93:1 on that navy. Its neighbours in the same
+           dark section already use #94a3b8 (5.53:1) - match them. */
+        .skill-desc { color: #94a3b8; margin-bottom: 24px; font-size: 15px; }
         .skill-preview {
             background: var(--gk-surface); border: 1px solid var(--gk-border);
             border-radius: 12px; padding: 32px; max-height: 600px; overflow-y: auto;
@@ -890,10 +900,10 @@ $skillHtml = renderSkillMd($skillContent);
                     <div class="line"><span class="cursor"></span></div>
                 </div>
                 <div class="demo-controls">
-                    <button class="demo-btn active" onclick="runDemo('table')">CRUD Table</button>
-                    <button class="demo-btn" onclick="runDemo('form')">Form</button>
-                    <button class="demo-btn" onclick="runDemo('dashboard')">Dashboard</button>
-                    <button class="demo-btn" onclick="runDemo('auth')">Auth</button>
+                    <button class="demo-btn active" data-demo="table" onclick="runDemo('table')">CRUD Table</button>
+                    <button class="demo-btn" data-demo="form" onclick="runDemo('form')">Form</button>
+                    <button class="demo-btn" data-demo="dashboard" onclick="runDemo('dashboard')">Dashboard</button>
+                    <button class="demo-btn" data-demo="auth" onclick="runDemo('auth')">Auth</button>
                 </div>
             </div>
         </div>
@@ -1166,9 +1176,16 @@ let demoTimeout = null;
 function runDemo(name) {
     if (demoTimeout) clearTimeout(demoTimeout);
 
-    // Update buttons
-    document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+    // Update buttons. This used to read the implicit global `event`, which only
+    // exists while an inline onclick is running: the auto-start below calls
+    // runDemo() from an IntersectionObserver, where `event` is undefined. That
+    // threw "Cannot read properties of undefined (reading 'target')" before the
+    // first line was ever printed, so the terminal that is supposed to play
+    // when the section scrolls into view stayed empty and the observer was
+    // never disconnected. The active button follows from the demo name.
+    document.querySelectorAll('.demo-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.demo === name);
+    });
 
     const output = document.getElementById('demo-output');
     output.innerHTML = '';

@@ -1228,8 +1228,19 @@
 
       _staticPager(page, pages) {
         const btn = (label, target, disabled, active) =>
-          '<button type="button" class="gk-btn gk-btn-text gk-btn-neutral gk-btn-sm'
-          + (active ? " gk-btn-filled gk-btn-primary" : "")
+          // The active page used to ADD "gk-btn-filled gk-btn-primary" on top of
+          // "gk-btn-text gk-btn-neutral" rather than replacing it. Two variants on
+          // one button fight in the cascade: .gk-btn-text.gk-btn-neutral is declared
+          // later and won the colour, .gk-btn-filled.gk-btn-primary won the
+          // background, and the current page rendered as slate rgb(71,85,105) on
+          // grey rgb(87,96,106) — 1.19:1, effectively invisible — with square
+          // corners instead of a pill. Emit exactly ONE variant, the same pair the
+          // server's Pagination sends (tonal/primary active, text/neutral idle),
+          // so a client redraw cannot disagree with the server's first paint.
+          '<button type="button" class="gk-btn '
+          + (active ? "gk-btn-tonal gk-btn-primary" : "gk-btn-text gk-btn-neutral")
+          + " gk-btn-sm "
+          + (typeof label === "number" ? "gk-btn-pill" : "gk-btn-icon-only")
           + '" data-gk-page="' + target + '"'
           + (disabled ? " disabled" : "")
           // A page button used to be the digit alone: it announced as

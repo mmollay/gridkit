@@ -199,7 +199,11 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-intro { color:var(--gk-on-surface-variant, #6b7280); margin:0 0 16px; font-size:14px; line-height:1.6; }
         .demo-btn-row { display:flex; gap:8px; flex-wrap:wrap; }
         .anatomy-layout { display:flex; gap:16px; align-items:stretch; }
-        .anatomy-mockup { flex:0 0 220px; }
+        /* display lives here, not inline: an inline display:flex outranks any
+           stylesheet rule, so the display:none below never fired and the
+           schematic stayed on phones — 292px wide instead of its 220px basis,
+           clipping its own header row by 17px. */
+        .anatomy-mockup { flex:0 0 220px; display:flex; flex-direction:column; }
         @media (max-width: 768px) {
             .anatomy-layout { flex-direction:column; }
             .anatomy-mockup { display:none; }
@@ -1224,14 +1228,16 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
             <span class="material-icons" aria-hidden="true">check_circle</span>
             <div class="gk-message-content">All 3 servers are online &mdash; last check 2 minutes ago.</div>
         </div>
-        <table class="gk-table">
-            <thead><tr><th>Server</th><th>Status</th><th>CPU</th><th>RAM</th><th>Uptime</th></tr></thead>
-            <tbody>
-                <tr><td>Baerli (server8)</td><td><span class="gk-label gk-label-green">Online</span></td><td>12%</td><td>4.2 GB</td><td>47 days</td></tr>
-                <tr><td>Theo (server7)</td><td><span class="gk-label gk-label-green">Online</span></td><td>8%</td><td>3.8 GB</td><td>23 days</td></tr>
-                <tr><td>Waldi (server6)</td><td><span class="gk-label gk-label-green">Online</span></td><td>15%</td><td>5.1 GB</td><td>31 days</td></tr>
-            </tbody>
-        </table>
+        <div class="gk-table-scroll">
+            <table class="gk-table">
+                <thead><tr><th>Server</th><th>Status</th><th>CPU</th><th>RAM</th><th>Uptime</th></tr></thead>
+                <tbody>
+                    <tr><td>Baerli (server8)</td><td><span class="gk-label gk-label-green">Online</span></td><td>12%</td><td>4.2 GB</td><td>47 days</td></tr>
+                    <tr><td>Theo (server7)</td><td><span class="gk-label gk-label-green">Online</span></td><td>8%</td><td>3.8 GB</td><td>23 days</td></tr>
+                    <tr><td>Waldi (server6)</td><td><span class="gk-label gk-label-green">Online</span></td><td>15%</td><td>5.1 GB</td><td>31 days</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
@@ -1293,7 +1299,7 @@ $years->range(2022, 2026)->render();</pre></div>
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>TableHeader <span style="font-size:11px;background:var(--gk-success);color:#fff;padding:2px 6px;border-radius:4px;vertical-align:middle;">v1.10</span></h3>
+    <h3>TableHeader <span style="font-size:11px;background:var(--gk-success-container);color:var(--gk-on-success-container);padding:2px 6px;border-radius:4px;vertical-align:middle;">v1.10</span></h3>
     <p class="demo-intro">One unified filter/search bar for all tables. Three fixed sections: Status row · Toolbar · Advanced (collapsible). Stops every page from looking different.</p>
     <div class="demo-pair">
     <div class="demo-card" style="padding:0;overflow:hidden;border-radius:8px;">
@@ -1762,7 +1768,7 @@ GK.sidebar.toggle(); GK.sidebar.open(); GK.sidebar.close();</pre></div>
         <h3 style="margin:16px 0 12px; font-size:15px;">Theme Selection</h3>
         <?= Theme::switcher() ?>
         <h3 style="margin:24px 0 12px; font-size:15px;">Live Preview</h3>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap:16px;">
             <div style="background:var(--gk-surface-container); border-radius:var(--gk-radius); padding:20px; border:1px solid var(--gk-outline-variant);">
                 <h4 style="margin:0 0 8px; color:var(--gk-on-surface);">Card Title</h4>
                 <p style="margin:0 0 12px; color:var(--gk-on-surface-variant); font-size:13px;">Surface-container background with on-surface text colors.</p>
@@ -1874,9 +1880,9 @@ GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
 
         <div class="anatomy-layout">
             <!-- Visual page mockup -->
-            <div class="anatomy-mockup" style="border:2px solid var(--gk-outline-variant);border-radius:10px;overflow:hidden;font-size:11px;display:flex;flex-direction:column;">
+            <div class="anatomy-mockup" style="border:2px solid var(--gk-outline-variant);border-radius:10px;overflow:hidden;font-size:11px;">
                 <!-- Config bar -->
-                <div style="background:var(--gk-primary);color:#fff;padding:6px 10px;font-weight:600;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;display:flex;align-items:center;gap:6px;">
+                <div style="background:var(--gk-primary);color:var(--gk-on-primary);padding:6px 10px;font-weight:600;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;display:flex;align-items:center;gap:6px;">
                     <span class="material-icons" style="font-size:13px" aria-hidden="true">settings</span> Config
                 </div>
                 <div style="display:flex;flex:1;">
@@ -1918,7 +1924,7 @@ GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
 
             <!-- Code reference -->
             <div style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:0;">
-                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-primary);border-radius:8px;color:#fff;">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--gk-primary);border-radius:8px;color:var(--gk-on-primary);">
                     <span class="material-icons" style="font-size:18px" aria-hidden="true">settings</span>
                     <div style="flex:1;min-width:0;">
                         <div style="font-weight:600;font-size:13px;">Configuration</div>
@@ -1977,7 +1983,7 @@ Auth::renderLogin([...]);    // Login page</div>
     </div>
 </div>
 
-<!-- ===== TOOLTIP ===== --><div class="demo-section" data-section="tooltip">    <h2>Tooltip</h2>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">CSS-only Tooltips</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Pure CSS tooltips via <code>data-gk-tooltip</code> attribute. No JavaScript needed.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="Tooltip on top" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Top (default)</span>            <span data-gk-tooltip="Tooltip on bottom" data-gk-tooltip-pos="bottom" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Bottom</span>            <span data-gk-tooltip="Tooltip on left" data-gk-tooltip-pos="left" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Left</span>            <span data-gk-tooltip="Tooltip on right" data-gk-tooltip-pos="right" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Right</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Multiline Tooltip</h3>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="This is a longer tooltip text that wraps to multiple lines for better readability" data-gk-tooltip-wrap style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Hover for multiline</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Rich Tooltip (HTML content)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Rich tooltips use <code>data-gk-tooltip-rich</code> pointing to a hidden element. Supports links, formatting, and stays open on hover.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip-rich="#richTip1" style="padding:8px 16px;background:var(--gk-primary);color:#fff;border-radius:6px;cursor:pointer">Hover for details</span>            <div id="richTip1">                <strong>GridKit Tooltip</strong>                <p style="margin:8px 0 4px;font-size:12px;color:var(--gk-on-surface-variant)">Rich tooltips support full HTML content including links, images, and interactive elements.</p>                <a href="#" style="font-size:12px">Learn more &rarr;</a>            </div>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Tooltip on Buttons</h3>        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center;padding:40px 0">            <button class="gk-btn gk-btn-filled gk-btn-primary" data-gk-tooltip="Save your changes"><span class="material-icons" style="font-size:18px" aria-hidden="true">save</span> Save</button>            <button class="gk-btn gk-btn-outlined gk-btn-error" data-gk-tooltip="Delete this item" data-gk-tooltip-pos="bottom"><span class="material-icons" style="font-size:18px" aria-hidden="true">delete</span> Delete</button>            <button class="gk-btn gk-btn-tonal gk-btn-neutral" data-gk-tooltip="Print document" data-gk-tooltip-pos="right"><span class="material-icons" style="font-size:18px" aria-hidden="true">print</span></button>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Global title tooltip (GK.tip, since v1.23.0)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Any element with a <code>title</code> attribute gets a GridKit popup — no markup needed. Opt out with <code>data-gk-tip-off</code>.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span title="Upgraded automatically — just use title" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Element with title</span>            <span title="First line&#10;Second line (\n breaks)" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Multiline</span>            <span data-gk-tip-off><span title="This one is the browser's own" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Opt-out</span></span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 12px;font-size:15px">Usage</h3>        <pre style="background:var(--gk-surface-container);padding:16px;border-radius:8px;font-size:12px;line-height:1.6;overflow-x:auto">&lt;!-- Simple tooltip (CSS-only) --&gt;
+<!-- ===== TOOLTIP ===== --><div class="demo-section" data-section="tooltip">    <h2>Tooltip</h2>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">CSS-only Tooltips</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Pure CSS tooltips via <code>data-gk-tooltip</code> attribute. No JavaScript needed.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="Tooltip on top" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Top (default)</span>            <span data-gk-tooltip="Tooltip on bottom" data-gk-tooltip-pos="bottom" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Bottom</span>            <span data-gk-tooltip="Tooltip on left" data-gk-tooltip-pos="left" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Left</span>            <span data-gk-tooltip="Tooltip on right" data-gk-tooltip-pos="right" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Right</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Multiline Tooltip</h3>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="This is a longer tooltip text that wraps to multiple lines for better readability" data-gk-tooltip-wrap style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Hover for multiline</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Rich Tooltip (HTML content)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Rich tooltips use <code>data-gk-tooltip-rich</code> pointing to a hidden element. Supports links, formatting, and stays open on hover.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip-rich="#richTip1" style="padding:8px 16px;background:var(--gk-primary);color:var(--gk-on-primary);border-radius:6px;cursor:pointer">Hover for details</span>            <div id="richTip1">                <strong>GridKit Tooltip</strong>                <p style="margin:8px 0 4px;font-size:12px;color:var(--gk-on-surface-variant)">Rich tooltips support full HTML content including links, images, and interactive elements.</p>                <a href="#" style="font-size:12px">Learn more &rarr;</a>            </div>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Tooltip on Buttons</h3>        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center;padding:40px 0">            <button class="gk-btn gk-btn-filled gk-btn-primary" data-gk-tooltip="Save your changes"><span class="material-icons" style="font-size:18px" aria-hidden="true">save</span> Save</button>            <button class="gk-btn gk-btn-outlined gk-btn-error" data-gk-tooltip="Delete this item" data-gk-tooltip-pos="bottom"><span class="material-icons" style="font-size:18px" aria-hidden="true">delete</span> Delete</button>            <button class="gk-btn gk-btn-tonal gk-btn-neutral" data-gk-tooltip="Print document" data-gk-tooltip-pos="right"><span class="material-icons" style="font-size:18px" aria-hidden="true">print</span></button>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Global title tooltip (GK.tip, since v1.23.0)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Any element with a <code>title</code> attribute gets a GridKit popup — no markup needed. Opt out with <code>data-gk-tip-off</code>.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span title="Upgraded automatically — just use title" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Element with title</span>            <span title="First line&#10;Second line (\n breaks)" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Multiline</span>            <span data-gk-tip-off><span title="This one is the browser's own" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Opt-out</span></span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 12px;font-size:15px">Usage</h3>        <pre style="background:var(--gk-surface-container);padding:16px;border-radius:8px;font-size:12px;line-height:1.6;overflow-x:auto">&lt;!-- Simple tooltip (CSS-only) --&gt;
 &lt;span data-gk-tooltip="Hello!"&gt;Hover me&lt;/span&gt;
 
 &lt;!-- Position: top (default), bottom, left, right --&gt;
@@ -2008,7 +2014,7 @@ Auth::renderLogin([...]);    // Login page</div>
         $date = $parts[1] ?? '';
         echo '<div class="gk-segment" style="margin-bottom:12px">';
         echo '<div class="gk-segment-header" style="display:flex;align-items:center;gap:8px">';
-        echo '<span style="font-family:monospace;background:var(--gk-primary);color:#fff;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:600">' . htmlspecialchars($ver) . '</span>';
+        echo '<span style="font-family:monospace;background:var(--gk-primary);color:var(--gk-on-primary);padding:2px 10px;border-radius:4px;font-size:12px;font-weight:600">' . htmlspecialchars($ver) . '</span>';
         if ($date) echo '<span style="font-size:12px;color:var(--gk-on-surface-variant)">' . htmlspecialchars($date) . '</span>';
         echo '</div>';
         echo '<div style="font-size:13px;line-height:1.7;color:var(--gk-on-surface-variant);margin-top:8px">';
