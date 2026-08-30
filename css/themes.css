@@ -217,3 +217,34 @@
     --gk-sidebar-accent: oklch(0.80 calc(var(--gk-chroma) * 0.80) var(--gk-hue));
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DENSITY — how tightly a table is set
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Independent of colour: set data-gk-density on <body> alongside any theme and
+   any mode. Nothing here names a colour, so light and dark both keep working.
+
+   Why it is a variant and not the default: a tighter table fits more rows on a
+   screen, which is what someone who lives in the tool all day wants — and it
+   is exactly wrong for someone who opens one page a week. That is a decision
+   per installation, not one to make for everybody.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Konsole — for people who work in the tool all day.
+   Tighter rows, quieter status marks. Roughly a third more rows on the same
+   screen. */
+[data-gk-density="konsole"] {
+    --gk-table-pad-y: 8px;
+    --gk-table-pad-x: 12px;
+    /* Pills are for one-word states in prose. In a column of them, a small
+       radius reads as a data field and stops competing with the text. */
+    --gk-label-radius: 4px;
+}
+
+/* Weit — the other direction, for pages that are read rather than worked:
+   dashboards on a wall, a page a customer sees once. */
+[data-gk-density="weit"] {
+    --gk-table-pad-y: 16px;
+    --gk-table-pad-x: 20px;
+}

@@ -196,6 +196,13 @@ a:hover {
   --gk-radius-sm: 8px;
   --gk-radius-lg: 16px;
 
+  /* The rhythm of a table, as tokens rather than numbers scattered through the
+     rules. The defaults ARE what tables looked like before these existed, so
+     nothing moves until a density variant redefines them. */
+  --gk-table-pad-y: 12px;
+  --gk-table-pad-x: 16px;
+  --gk-label-radius: 9999px;
+
   --gk-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --gk-font-size: 14px;
   --gk-font-size-sm: 12px;
@@ -620,7 +627,7 @@ a:hover {
 }
 .gk-table th,
 .gk-table td {
-  padding: 12px 16px;
+  padding: var(--gk-table-pad-y) var(--gk-table-pad-x);
   text-align: left;
   border-bottom: 1px solid var(--gk-outline-variant);
   /* Digits on a fixed width, so figures and dates line up down the column
@@ -1497,7 +1504,7 @@ td.gk-table-meta {
 .gk-label {
   display: inline-block;
   padding: 2px 8px;
-  border-radius: 9999px;
+  border-radius: var(--gk-label-radius);
   font-size: var(--gk-font-size-sm);
   font-weight: 500;
   white-space: nowrap;

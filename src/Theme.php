@@ -6,13 +6,27 @@ class Theme {
     private static string $theme = 'indigo';
     private static string $mode = 'light';
 
+    /**
+     * How tightly tables are set: '' (the default rhythm), 'konsole' (tighter,
+     * for people who work in the tool all day) or 'weit' (roomier, for pages
+     * that are read rather than worked). Independent of theme and mode.
+     */
+    private static string $density = '';
+
+    /** Which density this page uses. Empty string leaves the default rhythm. */
+    public static function density(string $density): void {
+        self::$density = in_array($density, ['konsole', 'weit'], true) ? $density : '';
+    }
+
     public static function set(string $theme, string $mode = 'light'): void {
         self::$theme = $theme;
         self::$mode = $mode;
     }
 
     public static function attributes(): string {
-        return 'data-gk-theme="' . htmlspecialchars(self::$theme) . '" data-gk-mode="' . htmlspecialchars(self::$mode) . '"';
+        return 'data-gk-theme="' . htmlspecialchars(self::$theme) . '"'
+            . ' data-gk-mode="' . htmlspecialchars(self::$mode) . '"'
+            . (self::$density !== '' ? ' data-gk-density="' . htmlspecialchars(self::$density) . '"' : '');
     }
 
     public static function bodyTag(string $class = ''): string {

@@ -7,6 +7,33 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.65.0] - 2026-08-30
+
+### Added — density as a variant, not a decision made for everyone
+
+A table's rhythm is now three tokens instead of numbers scattered through the
+rules: `--gk-table-pad-y`, `--gk-table-pad-x`, `--gk-label-radius`. **The
+defaults are exactly what tables looked like before, so nothing moves** until
+something redefines them.
+
+Two variants do, via `data-gk-density` on `<body>` — set it with
+`Theme::density('konsole')`, or leave it alone for the default:
+
+| | rows | status pills |
+|---|---|---|
+| default | 12px / 16px | fully round |
+| `konsole` | 8px / 12px | 4px radius |
+| `weit` | 16px / 20px | fully round |
+
+`konsole` fits roughly a third more rows on the same screen — what someone who
+works in the tool all day wants, and exactly wrong for someone who opens one
+page a week. That is a decision per installation, which is why it is a variant
+and not the new default.
+
+It names no colour, so it composes with any theme and with either mode. An
+unknown value is ignored rather than stamped onto the page.
+
+---
 ## [1.64.0] - 2026-08-30
 
 ### Changed — the project lives at gridkit.at
