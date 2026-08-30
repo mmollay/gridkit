@@ -32,7 +32,7 @@ class Layout {
      * Path to a GridKit file with a cache-busting stamp appended.
      *
      * Without that suffix, CDNs and browsers keep serving the old file after an
-     * update — on gridkit.ssi.at a themes.css from 11 March was still sitting
+     * update — on gridkit.at a themes.css from 11 March was still sitting
      * in the cache while the page already reported 1.28.0. The theme switcher
      * then set data-gk-theme correctly, but the CSS that was delivered did not
      * know the colors: it looked as if the theme were broken. With

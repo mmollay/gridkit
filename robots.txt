@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://gridkit.ssi.at/sitemap.xml
+Sitemap: https://gridkit.at/sitemap.xml

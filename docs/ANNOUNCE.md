@@ -35,7 +35,7 @@ problem with a specific answer. Lead with the problem.
 > sidebar for months because one `</div>` too many closes the wrapper — and the
 > tag count nets to zero, so nothing caught it.
 >
-> Repo: <https://github.com/mmollay/gridkit> · Demo: <https://gridkit.ssi.at/demo/>
+> Repo: <https://github.com/mmollay/gridkit> · Demo: <https://gridkit.at/demo/>
 >
 > Happy to go into any of it.
 
@@ -74,7 +74,7 @@ text, where it reads as a feature rather than a pitch.
 > contributor base is one person — read the code before you depend on it.
 >
 > The API also ships as something an assistant can read: one document, or an
-> installable skill, or a URL — `https://gridkit.ssi.at/skill/`, with an
+> installable skill, or a URL — `https://gridkit.at/skill/`, with an
 > `llms.txt` at the site root pointing at it. I have been testing that document
 > by giving it to agents with the source tree off limits and measuring how far
 > they get. The current number is in the README, along with what it found wrong.

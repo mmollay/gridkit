@@ -9,7 +9,7 @@ routing, no ORM, no client-side state. A checkout is a working install.
 
 ## For an assistant writing GridKit code
 
-- [The complete API in one document](https://gridkit.ssi.at/skill/): every
+- [The complete API in one document](https://gridkit.at/skill/): every
   public method of every component, with the rules that are not guessable —
   which calls print and which return a string, how `Layout::asset()` resolves,
   which components silently drop your filters unless told to keep them.
@@ -19,7 +19,7 @@ routing, no ORM, no client-side state. A checkout is a working install.
 ## Docs
 
 - [README](https://github.com/mmollay/gridkit#readme): what it is, how to install
-- [Live demo](https://gridkit.ssi.at/demo/): every component, switchable themes
+- [Live demo](https://gridkit.at/demo/): every component, switchable themes
 - [Worked example](https://github.com/mmollay/gridkit/tree/main/examples/invoices):
   a CRUD application in five files and a lang directory
 - [Changelog](https://github.com/mmollay/gridkit/blob/main/CHANGELOG.md): what

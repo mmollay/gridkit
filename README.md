@@ -195,7 +195,7 @@ against.
 cp -r skill ~/.claude/skills/gridkit
 
 # 2. Fetched, for anything that can read a URL:
-#    https://gridkit.ssi.at/skill
+#    https://gridkit.at/skill
 #    (llms.txt at the site root points there too)
 
 # 3. Pasted: drop GRIDKIT_SKILL.md into the context. One file, no setup.
@@ -259,7 +259,7 @@ The workflow in [`ci/`](ci/) runs it on PHP 8.2, 8.3 and 8.4, plus one job with
 
 ## Documentation
 
-- **[Live demo](https://gridkit.ssi.at/demo/)** — every component, switchable themes
+- **[Live demo](https://gridkit.at/demo/)** — every component, switchable themes
 - **[Example application](examples/invoices/)** — a CRUD app you can run in one command
 - **[Agent skill](GRIDKIT_SKILL.md)** — the complete API in one file
 - **[Changelog](CHANGELOG.md)** — what changed and why

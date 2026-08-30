@@ -114,7 +114,43 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GridKit Demo v<?= $version ?></title>
+    <?php
+    /*
+     * Search metadata.
+     *
+     * The demo had a description and nothing else: no canonical, so ?lang=de,
+     * ?lang=en and every cache-busting query a visitor arrives with counted as
+     * separate pages competing with each other; and no Open Graph, so sharing
+     * the link — the one page that actually shows what GridKit does — produced
+     * a bare URL with no picture and no title.
+     */
+    $demoBase = 'https://gridkit.at/demo/';
+    $demoUrl  = $demoBase . ($lang !== 'en' ? '?lang=' . $lang : '');
+    $demoDesc = $lang === 'de'
+        ? 'Jede GridKit-Komponente live: Tabellen mit Suche, Sortierung und Filter, Formulare, Modale, sechs Farbschemata und Dunkelmodus.'
+        : 'Every GridKit component, live: tables with search, sort and filter, forms, modals, six themes and dark mode.';
+    $e = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
+    ?>
+    <?php /* The version belongs in the page, not the title: a title that changes
+             every release gives a search engine a moving target for one URL. */ ?>
+    <title><?= $lang === 'de' ? 'GridKit Demo — alle Komponenten live' : 'GridKit Demo — every component, live' ?></title>
+    <meta name="description" content="<?= $e($demoDesc) ?>">
+    <link rel="canonical" href="<?= $e($demoUrl) ?>">
+    <link rel="alternate" hreflang="en" href="<?= $e($demoBase) ?>">
+    <link rel="alternate" hreflang="de" href="<?= $e($demoBase) ?>?lang=de">
+    <link rel="alternate" hreflang="x-default" href="<?= $e($demoBase) ?>">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="GridKit">
+    <meta property="og:title" content="<?= $lang === 'de' ? 'GridKit Demo — alle Komponenten live' : 'GridKit Demo — every component, live' ?>">
+    <meta property="og:description" content="<?= $e($demoDesc) ?>">
+    <meta property="og:url" content="<?= $e($demoUrl) ?>">
+    <meta property="og:image" content="https://gridkit.at/docs/social-preview.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= $lang === 'de' ? 'GridKit Demo — alle Komponenten live' : 'GridKit Demo — every component, live' ?>">
+    <meta name="twitter:description" content="<?= $e($demoDesc) ?>">
+    <meta name="twitter:image" content="https://gridkit.at/docs/social-preview.png">
     <link rel="stylesheet" href="<?= Layout::asset('../css/gridkit.css') ?>">
     <link rel="stylesheet" href="<?= Layout::asset('../css/themes.css') ?>">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">

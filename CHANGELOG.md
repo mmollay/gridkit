@@ -7,6 +7,46 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.64.0] - 2026-08-30
+
+### Changed — the project lives at gridkit.at
+
+`gridkit.ssi.at` read as a subfolder of a company rather than a thing with its
+own identity, which matters for a library someone is deciding whether to depend
+on. Every reference moved: `composer.json`, the README, `llms.txt`, the
+sitemap, `robots.txt`, `Layout`, the skill document and the announcement drafts.
+
+`CHANGELOG.md` is deliberately untouched. It is a record of what was true when
+it was written, and rewriting history to match the present is how a changelog
+stops being worth reading.
+
+The old name keeps working — a permanent redirect, path for path, not a
+switch-off. It is in two emails already sent, in the Packagist metadata of
+every release up to 1.62, and in whatever else has quietly linked it. R=301
+also transfers what authority the subdomain had rather than starting the new
+name at zero.
+
+Timing: this is the cheapest it will ever be. A search for the project today
+returns Packagist and not the site, so there is almost nothing to migrate.
+
+### Added — the demo can be found and shared
+
+It had a description and nothing else. No canonical, so `?lang=de`, `?lang=en`
+and every cache-busting query a visitor arrived with counted as separate pages
+competing with one another. No Open Graph, so sharing the link — the one page
+that actually shows what GridKit does — produced a bare URL with no title and
+no picture.
+
+It now carries a canonical that follows the active language, `hreflang`
+alternates for both plus `x-default`, a full Open Graph and Twitter card, and
+`robots`. The title lost its version number: a title that changes every release
+gives a search engine a moving target for one URL.
+
+The landing page gained `twitter:image`. Twitter falls back to `og:image` when
+it is absent, but not every client does, and those showed a card with no
+picture.
+
+---
 ## [1.63.0] - 2026-08-29
 
 ### Added — `ci/parity.php`, a harness for the bug this project keeps having

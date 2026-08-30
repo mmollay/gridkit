@@ -94,4 +94,4 @@ See `lang/en.php` for all available keys.
 
 ## Questions?
 
-Open an issue or check the [Live Demo](https://gridkit.ssi.at/demo/) and [Agent Skill](GRIDKIT_SKILL.md) for reference.
+Open an issue or check the [Live Demo](https://gridkit.at/demo/) and [Agent Skill](GRIDKIT_SKILL.md) for reference.

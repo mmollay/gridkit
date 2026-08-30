@@ -24,7 +24,7 @@ $asset = static function (string $path) use ($version): string {
     return htmlspecialchars($path . '?v=' . $stamp, ENT_QUOTES, 'UTF-8');
 };
 $skillContent = file_get_contents(__DIR__ . '/GRIDKIT_SKILL.md');
-$canonicalUrl = 'https://gridkit.ssi.at';
+$canonicalUrl = 'https://gridkit.at';
 
 /**
  * Simple Markdown → HTML renderer for skill preview
@@ -176,6 +176,9 @@ $skillHtml = renderSkillMd($skillContent);
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GridKit – Agent-Ready PHP Component Framework">
     <meta name="twitter:description" content="Zero-dependency PHP framework for admin dashboards. Built for AI agents.">
+    <?php /* Twitter falls back to og:image when this is absent, but only some
+             clients do; the ones that do not showed a card with no picture. */ ?>
+    <meta name="twitter:image" content="<?= $canonicalUrl ?>/docs/social-preview.png">
 
     <!-- Favicon -->
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -878,7 +881,7 @@ $skillHtml = renderSkillMd($skillContent);
                 </p>
                 <ol class="agent-steps">
                     <li>Install it: <code>cp -r skill ~/.claude/skills/gridkit</code> &mdash; or point any
-                        assistant at <a href="/skill"><code>gridkit.ssi.at/skill</code></a></li>
+                        assistant at <a href="/skill"><code>gridkit.at/skill</code></a></li>
                     <li>Add it to your AI agent's context or project knowledge</li>
                     <li>Describe what you need: "Create a user management dashboard"</li>
                     <li>The agent generates working GridKit PHP code — tables, forms, modals, all wired up</li>
