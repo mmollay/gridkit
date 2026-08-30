@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.64.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.65.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -73,6 +73,11 @@ Everything else in that table is called on an object you constructed with `new`.
 |---|---|---|
 | `Header::render()` | `Button::render()` | `Button::icon()` |
 | `Theme::switcher()` | `Theme::attributes()` | `Layout::bodyTag()` |
+
+`Theme::density('konsole')` sets how tightly tables are set — `konsole` fits
+about a third more rows on a screen, `weit` gives them room, and the default
+leaves the rhythm alone. It names no colour, so it composes with every theme
+and both modes; an unknown value is ignored.
 | `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
 | `Lang::jsConfig()` | `Pagination::build()` | |
 
@@ -101,6 +106,7 @@ use GridKit\{Button, Form, Lang, Layout, Sidebar, StatCards, Table, Theme};
 
 Lang::set($_GET['lang'] ?? 'en');   // 'en' | 'de'
 Theme::set('indigo', 'light');      // indigo | ocean | forest | rose | amber | slate
+Theme::density('konsole');          // '' (default) | konsole (tight) | weit (roomy)
 ?>
 <!doctype html>
 <html <?= Theme::attributes() ?>>
