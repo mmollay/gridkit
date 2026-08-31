@@ -10,6 +10,20 @@ a:hover {
 }
 
 /* === M3 COLOR ROLES === */
+/* :root is a safety net, not the intended path — a page still SHOULD call
+   Theme::attributes() (or add .gk-root) so it can be themed and switch modes.
+   Without it, every custom property below resolved to nothing: a bare
+   `border: 1px solid var(--gk-outline-variant)` on an undefined variable
+   invalidates the whole shorthand, so the browser drops border AND colour
+   together, not just the one value. A form standing in that gap loses every
+   input outline and every button fill at once — silently, no console error.
+   That is what happened to /login for six months (from 01.03.2026, when an
+   automated rename stripped .gk-root off its <form> mistaking it for the old
+   grid class of the same name, to 26.08.2026, when a refactor here removed
+   the last thing standing in for it). A page that DOES set [data-gk-theme]
+   still gets that theme — themes.css loads after this file and wins by
+   cascade order, not by :root having lower priority. */
+:root,
 .gk-root,
 [data-gk-theme] {
   /* Key Colors */

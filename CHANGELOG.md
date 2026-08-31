@@ -7,6 +7,33 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.65.1] - 2026-08-31
+
+### Fixed — a page that forgets `Theme::attributes()` no longer loses every
+input outline and every button fill
+
+The base colour tokens have always lived only inside `.gk-root` or
+`[data-gk-theme]` — never on bare `:root`. A page that sets neither gets every
+custom property as an empty string; a bare `var(--gk-outline-variant)` inside
+a shorthand (`border: 1px solid var(--gk-outline-variant)`) then invalidates
+the whole shorthand, not just the missing value, so the browser drops border
+**and** colour together. Silently — no console error names the missing
+variable.
+
+Found on `panel.ssi.at/login`, broken for six months: a rename on 01.03.2026
+stripped `.gk-root` off the login `<form>`, mistaking it for GridKit's old,
+unrelated grid-system class of the same name. Nobody saw it — a 30-day
+remember-me cookie means almost nobody visits `/login`.
+
+`:root` now joins `.gk-root, [data-gk-theme]` as a third path to the same
+default (indigo, light) values — a safety net, not a replacement for calling
+`Theme::attributes()`. A page that DOES set `[data-gk-theme="ocean"]` still
+gets ocean: `themes.css` loads after this file and wins by cascade order, not
+by `:root` losing on specificity.
+
+2331 assertions pass.
+
+---
 ## [1.65.0] - 2026-08-30
 
 ### Added — density as a variant, not a decision made for everyone
