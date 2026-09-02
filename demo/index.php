@@ -631,6 +631,35 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
     </div>
 
     <div class="demo-card">
+        <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">RichText with pictures</h3>
+        <p class="demo-intro">
+            Add <code>'upload' =&gt; '/your/endpoint'</code> and the editor gains a picture button,
+            drag &amp; drop, paste, size handles and alt text. Without it nothing changes — an upload
+            button with nowhere to put the file is worse than no button.
+            <br><br>
+            Pictures render as a plain <code>&lt;img&gt;</code> inside the paragraph, carrying their size
+            as an inline <code>style</code> — deliberately <em>not</em> as <code>&lt;figure class="image"&gt;</code>,
+            so the same content survives being sent as an e-mail, where no stylesheet loads and Outlook
+            does not lay out <code>&lt;figure&gt;</code> reliably.
+            <br><br>
+            <strong>Try it:</strong> click the picture below to get the size handles and the alt-text button.
+            The upload button works too, but this public demo stores nothing and says so.
+        </p>
+        <?php
+        $demoBild = '<p>Text before the picture. A caption can simply be written around it.</p>'
+                  . '<p><img style="width:60%;" src="/demo-table-light.png" alt="A GridKit table, light theme"></p>'
+                  . '<p>And the text continues underneath.</p>';
+        (new Form('richtext_images_form'))
+            ->field('content_images', 'Newsletter body', 'richtext', [
+                'preset' => 'full',
+                'upload' => '/demo/api/upload-demo.php',
+                'value'  => $demoBild,
+            ])
+            ->render();
+        ?>
+    </div>
+
+    <div class="demo-card">
         <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">Clearable date/time fields</h3>
         <p class="demo-intro">Trash icon only appears when a value is set — disappears automatically after clearing.</p>
         <?php

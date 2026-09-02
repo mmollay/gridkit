@@ -7,6 +7,47 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.67.0] - 2026-09-02
+
+### Added — alignment that survives being e-mailed
+
+Four buttons on a selected picture: **left** and **right** (the text flows
+beside it), **own line, centred**, and **clear**. They write both of these onto
+the tag:
+
+```html
+<img style="float:left;margin:0 16px 8px 0;width:40%" align="left" src="…">
+```
+
+`float` for every modern client, `align` for Outlook, which still ignores
+`float` after twenty years. Belt and braces, because there is no stylesheet in
+a mail to fall back on. A size already set with the resize handles is carried
+over — clicking *left* no longer throws it away.
+
+### Why not CKEditor's own ImageStyle
+
+Measured against the bundled build before choosing:
+
+| approach | output |
+|---|---|
+| `ImageStyle` | `<img class="image-style-align-left">` |
+| inline `float` without GHS | `style="width:40%"` — **float and margin dropped** |
+| inline `float` **with** GHS | `style="float:left;margin:0 16px 8px 0;width:40%"` |
+
+`ImageStyle` styles from a stylesheet, so the class does nothing in a mail. And
+CKEditor strips `float`/`margin` from `style` unless `GeneralHtmlSupport` allows
+them — which is why it is now part of the picture plugin set, scoped to `img`.
+
+### Added
+
+`uploadHeaders` on a `richtext` field: extra headers for the upload request, in
+practice a CSRF token. CKEditor sends the file as a plain multipart POST, so
+without this there is no way to carry one, and an upload endpoint any other
+site can post to on a logged-in user's behalf is a hole.
+
+Four new language keys (`image.align_left` and siblings), German and English.
+
+---
 ## [1.66.0] - 2026-09-02
 
 ### Added — pictures in `richtext`, shaped so they survive being e-mailed

@@ -448,6 +448,12 @@ class Form
                 // CKEditor's SimpleUploadAdapter contract, not ours.
                 $uploadUrl = trim((string) ($f['upload'] ?? ''));
 
+                // Extra headers for the upload request — in practice a CSRF token,
+                // because an upload endpoint that any other site can post to on a
+                // logged-in user's behalf is a hole. CKEditor sends the file as a
+                // plain multipart POST; without this there is no way to carry one.
+                $uploadHeaders = is_array($f['uploadHeaders'] ?? null) ? $f['uploadHeaders'] : [];
+
                 // Deliberately ImageInline WITHOUT ImageBlock and WITHOUT ImageCaption.
                 // Those two wrap every picture in <figure class="image"> and style it
                 // through a stylesheet — which is right on a web page and wrong in an
@@ -456,9 +462,15 @@ class Form
                 // paragraph, and ImageResize writes the size as style="width:42%"
                 // directly on the tag. Both survive the trip into a mail client.
                 // Measured, not assumed — see CHANGELOG 1.66.0.
+                // GeneralHtmlSupport ist hier kein Luxus: ohne es wirft CKEditor
+                // float und margin aus dem style-Attribut, und genau die beiden
+                // lassen den Text um ein Bild fliessen. Gemessen — 'float:left;
+                // margin:0 14px 8px 0;width:40%' kam als blosses 'width:40%'
+                // zurueck. Mit GHS ueberlebt beides, ebenso das alte align-Attribut,
+                // das Outlook als einziges zuverlaessig versteht.
                 $bildPlugins = 'CK.Image,CK.ImageInline,CK.ImageToolbar,CK.ImageResize,'
                              . 'CK.ImageTextAlternative,CK.ImageUpload,CK.SimpleUploadAdapter,'
-                             . 'CK.AutoImage,CK.LinkImage';
+                             . 'CK.AutoImage,CK.LinkImage,CK.GeneralHtmlSupport,GkBildUmfluss';
                 $bildToolbar = "'uploadImage','|'";
 
                 if ($preset === 'basic') {
@@ -493,6 +505,41 @@ class Form
                 echo "var _start=function(){";
                 echo "if(_init)return;_init=true;";
                 echo "var CK=window.CKEDITOR||{};var CE=CK.ClassicEditor;if(!CE)return;";
+                if ($uploadUrl !== '') {
+                    // Ausrichtung, die eine E-Mail uebersteht.
+                    //
+                    // CKEditors eigenes ImageStyle schreibt Klassen
+                    // (class="image-style-align-left") und gestaltet sie ueber ein
+                    // Stylesheet — in einer Mail laedt keines, die Klasse bleibt
+                    // wirkungslos. Deshalb eigene Knoepfe, die BEIDES an den Tag
+                    // schreiben: float fuer moderne Programme, align fuer Outlook,
+                    // das float bis heute ignoriert.
+                    //
+                    // Die eingestellte Breite wird uebernommen, sonst verloere ein
+                    // Klick auf 'links' die vorher gezogene Groesse.
+                    echo "var GkAusricht={";
+                    echo "gkBildLinks:{l:" . json_encode(Lang::t('image.align_left')) . ",a:{align:'left'},s:{'float':'left',margin:'0 16px 8px 0'}},";
+                    echo "gkBildRechts:{l:" . json_encode(Lang::t('image.align_right')) . ",a:{align:'right'},s:{'float':'right',margin:'0 0 8px 16px'}},";
+                    echo "gkBildMitte:{l:" . json_encode(Lang::t('image.align_center')) . ",a:{},s:{display:'block',margin:'8px auto'}},";
+                    echo "gkBildOhne:{l:" . json_encode(Lang::t('image.align_none')) . ",a:{},s:{}}";
+                    echo "};";
+                    echo "function GkBildUmfluss(ed){";
+                    echo "Object.keys(GkAusricht).forEach(function(n){";
+                    echo "var d=GkAusricht[n];";
+                    echo "ed.ui.componentFactory.add(n,function(loc){";
+                    echo "var b=new CK.ButtonView(loc);";
+                    echo "b.set({label:d.l,tooltip:true,withText:true});";
+                    echo "b.on('execute',function(){";
+                    echo "ed.model.change(function(w){";
+                    echo "var el=ed.model.document.selection.getSelectedElement();if(!el)return;";
+                    echo "var vorher=el.getAttribute('htmlImgAttributes')||{};";
+                    echo "var breite=(vorher.styles||{}).width;";
+                    echo "var s={};Object.keys(d.s).forEach(function(k){s[k]=d.s[k];});";
+                    echo "if(breite)s.width=breite;";
+                    echo "w.setAttribute('htmlImgAttributes',{attributes:d.a,styles:s},el);";
+                    echo "});ed.editing.view.focus();});";
+                    echo "return b;});});}";
+                }
                 echo "var p=[{$ckPlugins}].filter(Boolean);";
                 // The editor's own language was pinned to 'de' for every user,
                 // which put lang="de" on English content — wrong for a screen
@@ -508,13 +555,17 @@ class Form
                 $bildOpts = '';
                 if ($uploadUrl !== '') {
                     $bildOpts = ',simpleUpload:{uploadUrl:' . json_encode($uploadUrl)
-                              . ',withCredentials:true}'
+                              . ',withCredentials:true'
+                              . ($uploadHeaders !== [] ? ',headers:' . json_encode($uploadHeaders) : '')
+                              . '}'
+                              . ',htmlSupport:{allow:[{name:\'img\',styles:true,attributes:true,classes:true}]}'
                               . ',image:{resizeUnit:\'%\''
                               . ',resizeOptions:[{name:\'resizeImage:original\',value:null}'
                               . ',{name:\'resizeImage:50\',value:\'50\'}'
                               . ',{name:\'resizeImage:75\',value:\'75\'}]'
-                              . ',toolbar:[\'imageTextAlternative\',\'|\','
-                              . '\'resizeImage:50\',\'resizeImage:75\',\'resizeImage:original\']}';
+                              . ',toolbar:[\'gkBildLinks\',\'gkBildMitte\',\'gkBildRechts\',\'gkBildOhne\',\'|\','
+                              . '\'resizeImage:50\',\'resizeImage:75\',\'resizeImage:original\',\'|\','
+                              . '\'imageTextAlternative\']}';
                 }
                 echo "CE.create(document.getElementById(_id),{licenseKey:'GPL',plugins:p,toolbar:[{$ckToolbar}],language:{$ckLang}{$bildOpts}})";
                 echo ".then(function(editor){";

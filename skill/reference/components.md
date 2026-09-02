@@ -1,4 +1,4 @@
-# GridKit 1.66.0 — components
+# GridKit 1.67.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -619,7 +619,7 @@ searchable select is plain `'select'`.
 | `options` | `select`, `multiselect`, `radio` | `value => label` map |
 | `rows` | `textarea` | height in rows (default `3`) |
 | `preset` | `richtext` | `'full'` (default) or `'basic'` — how much toolbar |
-| `upload` | `richtext` | a URL. Turns pictures on: an upload button, drag & drop, paste, size handles and alt text. Off without it, because an upload button with nowhere to put the file is worse than none. The endpoint takes a POST with the file under `upload` and answers `{"url":"https://…"}`, or `{"error":{"message":"…"}}` — CKEditor's SimpleUploadAdapter contract. **Return an absolute URL**: relative ones work on the page and break the moment the content is mailed. Pictures render as a plain `<img>` in the paragraph with the size as an inline `style`, deliberately not as `<figure class="image">`, so the same content survives being sent as an e-mail |
+| `upload` | `richtext` | a URL. Turns pictures on: an upload button, drag & drop, paste, **alignment** (left/right with text flowing beside it, own line centred), size handles and alt text. Off without it, because an upload button with nowhere to put the file is worse than none. The endpoint takes a POST with the file under `upload` and answers `{"url":"https://…"}`, or `{"error":{"message":"…"}}` — CKEditor's SimpleUploadAdapter contract. **Return an absolute URL**: relative ones work on the page and break the moment the content is mailed. Pictures render as a plain `<img>` in the paragraph with the size as an inline `style`, deliberately not as `<figure class="image">`, so the same content survives being sent as an e-mail |
 | `min`, `max`, `step` | `range`, `number`, `date`/`time` | bounds (`range` defaults to `0`/`100`/`1` and starts at `min`) |
 | `->cancel($label, $href)` | — | a link beside the submit button — a method, not a field |
 | `->hidden($name, $value)` | — | a hidden input — a method, not a field |
