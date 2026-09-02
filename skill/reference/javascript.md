@@ -1,4 +1,4 @@
-# GridKit 1.67.2 — JavaScript
+# GridKit 1.67.3 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 

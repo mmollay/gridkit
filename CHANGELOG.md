@@ -7,6 +7,34 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.67.3] - 2026-09-02
+
+### Fixed — the picture toolbar was empty, so nothing could be aligned
+
+A `resizeImage:<n>` entry used as a *toolbar button* must carry an `icon`.
+Without one CKEditor throws `imageresizebuttons-missing-icon` while building
+the balloon toolbar — and that exception takes the **whole** toolbar with it,
+including the four alignment buttons next to it. Selecting a picture showed an
+empty balloon, so text wrap was unreachable even though the underlying code
+was correct (measured in a browser, 02.09.).
+
+The sizes now sit in the `resizeImage` **dropdown**, which needs no icons, and
+the list gained 25 % and 33 % — a picture has to be narrow enough for text to
+fit beside it.
+
+### Fixed — aligning a picture discarded the size just chosen
+
+The wrap buttons read the width only from their own styles, never from
+CKEditor's `resizedWidth`. Picking 50 % and then „left" fell back to no width.
+Both sources are read now.
+
+### Changed — „left" and „right" set a starting width
+
+A picture at natural size fills the line; floating it changes nothing visible.
+The two wrap buttons now set 33 % when no width has been chosen yet, so one
+click does what the label promises. An existing width is kept.
+
+---
 ## [1.67.2] - 2026-09-02
 
 ### Fixed — pictures already in the text stayed blocks

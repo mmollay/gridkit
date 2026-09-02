@@ -518,8 +518,8 @@ class Form
                     // Die eingestellte Breite wird uebernommen, sonst verloere ein
                     // Klick auf 'links' die vorher gezogene Groesse.
                     echo "var GkAusricht={";
-                    echo "gkBildLinks:{l:" . json_encode(Lang::t('image.align_left')) . ",a:{align:'left'},s:{'float':'left',margin:'0 16px 8px 0'}},";
-                    echo "gkBildRechts:{l:" . json_encode(Lang::t('image.align_right')) . ",a:{align:'right'},s:{'float':'right',margin:'0 0 8px 16px'}},";
+                    echo "gkBildLinks:{l:" . json_encode(Lang::t('image.align_left')) . ",a:{align:'left'},s:{'float':'left',margin:'0 16px 8px 0'},fliess:1},";
+                    echo "gkBildRechts:{l:" . json_encode(Lang::t('image.align_right')) . ",a:{align:'right'},s:{'float':'right',margin:'0 0 8px 16px'},fliess:1},";
                     echo "gkBildMitte:{l:" . json_encode(Lang::t('image.align_center')) . ",a:{},s:{display:'block',margin:'8px auto'}},";
                     echo "gkBildOhne:{l:" . json_encode(Lang::t('image.align_none')) . ",a:{},s:{}}";
                     echo "};";
@@ -533,7 +533,15 @@ class Form
                     echo "ed.model.change(function(w){";
                     echo "var el=ed.model.document.selection.getSelectedElement();if(!el)return;";
                     echo "var vorher=el.getAttribute('htmlImgAttributes')||{};";
-                    echo "var breite=(vorher.styles||{}).width;";
+                    // Die Breite steht entweder in unseren eigenen Stilen (frueher
+                    // ausgerichtet) oder in CKEditors resizedWidth (Groessenmenue).
+                    // Nur die erste zu lesen hiesse, dass ein Klick auf 'links' die
+                    // eben gewaehlten 50 % wegwirft.
+                    echo "var breite=(vorher.styles||{}).width||el.getAttribute('resizedWidth');";
+                    // Ein Bild in Originalgroesse fuellt die Zeile — daneben passt kein
+                    // Text, der Umfluss bliebe wirkungslos. Wer ihn waehlt, bekommt
+                    // deshalb eine Startbreite; eine schon gewaehlte bleibt erhalten.
+                    echo "if(d.fliess&&!breite)breite='33%';";
                     echo "var s={};Object.keys(d.s).forEach(function(k){s[k]=d.s[k];});";
                     echo "if(breite)s.width=breite;";
                     echo "w.setAttribute('htmlImgAttributes',{attributes:d.a,styles:s},el);";
@@ -561,11 +569,18 @@ class Form
                               . ',htmlSupport:{allow:[{name:\'img\',styles:true,attributes:true,classes:true}]}'
                               . ',image:{insert:{type:\'inline\'}'
                               . ',resizeUnit:\'%\''
-                              . ',resizeOptions:[{name:\'resizeImage:original\',value:null}'
-                              . ',{name:\'resizeImage:50\',value:\'50\'}'
-                              . ',{name:\'resizeImage:75\',value:\'75\'}]'
+                              // Die Groessen kommen als AUSKLAPPMENUE in die Leiste, nicht als
+                              // einzelne Knoepfe: ein resizeImage:<n> als Knopf verlangt zwingend
+                              // ein Icon, sonst wirft CKEditor imageresizebuttons-missing-icon —
+                              // und die Ausnahme reisst die GANZE Bildleiste mit, samt der
+                              // Ausrichtungsknoepfe daneben. Genau daran scheiterte der Umfluss.
+                              . ',resizeOptions:[{name:\'resizeImage:original\',value:null,label:\'Original\'}'
+                              . ',{name:\'resizeImage:25\',value:\'25\',label:\'25 %\'}'
+                              . ',{name:\'resizeImage:33\',value:\'33\',label:\'33 %\'}'
+                              . ',{name:\'resizeImage:50\',value:\'50\',label:\'50 %\'}'
+                              . ',{name:\'resizeImage:75\',value:\'75\',label:\'75 %\'}]'
                               . ',toolbar:[\'gkBildLinks\',\'gkBildMitte\',\'gkBildRechts\',\'gkBildOhne\',\'|\','
-                              . '\'resizeImage:50\',\'resizeImage:75\',\'resizeImage:original\',\'|\','
+                              . '\'resizeImage\',\'|\','
                               . '\'imageTextAlternative\']}';
                 }
                 echo "CE.create(document.getElementById(_id),{licenseKey:'GPL',plugins:p,toolbar:[{$ckToolbar}],language:{$ckLang}{$bildOpts}})";
