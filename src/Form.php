@@ -438,12 +438,43 @@ class Form
             case 'richtext':
                 $editorId = 'gk-editor-' . self::slug($name) . '-' . substr(md5($name . microtime()), 0, 6);
                 $preset   = $f['preset'] ?? 'full'; // 'basic' | 'full'
+
+                // 'upload' => '/some/endpoint' turns on pictures. Off by default:
+                // an editor that offers an upload button with nowhere to put the
+                // file is worse than one without the button.
+                //
+                // The endpoint takes a POST with the file under `upload` and answers
+                // { "url": "https://…" } — or { "error": { "message": "…" } }. That is
+                // CKEditor's SimpleUploadAdapter contract, not ours.
+                $uploadUrl = trim((string) ($f['upload'] ?? ''));
+
+                // Deliberately ImageInline WITHOUT ImageBlock and WITHOUT ImageCaption.
+                // Those two wrap every picture in <figure class="image"> and style it
+                // through a stylesheet — which is right on a web page and wrong in an
+                // e-mail, where there is no stylesheet and Outlook does not lay out
+                // <figure> reliably. ImageInline writes a plain <img> inside the
+                // paragraph, and ImageResize writes the size as style="width:42%"
+                // directly on the tag. Both survive the trip into a mail client.
+                // Measured, not assumed — see CHANGELOG 1.66.0.
+                $bildPlugins = 'CK.Image,CK.ImageInline,CK.ImageToolbar,CK.ImageResize,'
+                             . 'CK.ImageTextAlternative,CK.ImageUpload,CK.SimpleUploadAdapter,'
+                             . 'CK.AutoImage,CK.LinkImage';
+                $bildToolbar = "'uploadImage','|'";
+
                 if ($preset === 'basic') {
                     $ckPlugins  = "CK.Essentials,CK.Paragraph,CK.Bold,CK.Italic,CK.Underline,CK.Strikethrough,CK.Link,CK.List,CK.Undo";
                     $ckToolbar  = "'bold','italic','underline','strikethrough','|','link','|','bulletedList','numberedList','|','undo','redo'";
+                    if ($uploadUrl !== '') {
+                        $ckPlugins .= ',' . $bildPlugins;
+                        $ckToolbar  = $bildToolbar . ',' . $ckToolbar;
+                    }
                 } else {
                     $ckPlugins  = "CK.Essentials,CK.Paragraph,CK.Heading,CK.Bold,CK.Italic,CK.Underline,CK.Strikethrough,CK.Link,CK.BlockQuote,CK.List,CK.Table,CK.TableToolbar,CK.TableProperties,CK.TableCellProperties,CK.Alignment,CK.Undo,CK.SourceEditing";
                     $ckToolbar  = "'heading','|','bold','italic','underline','strikethrough','|','link','blockQuote','|','bulletedList','numberedList','|','insertTable','|','alignment','|','undo','redo','|','sourceEditing'";
+                    if ($uploadUrl !== '') {
+                        $ckPlugins .= ',' . $bildPlugins;
+                        $ckToolbar  = $bildToolbar . ',' . $ckToolbar;
+                    }
                 }
                 echo "<div class=\"gk-richtext-wrap\" role=\"group\"{$composedBy}>";
                 echo "<div id=\"{$editorId}\"></div>";
@@ -468,7 +499,24 @@ class Form
                 // reader, and wrong for the toolbar as soon as a translation
                 // file for that locale is loaded.
                 $ckLang = json_encode($f['language'] ?? Lang::locale());
-                echo "CE.create(document.getElementById(_id),{licenseKey:'GPL',plugins:p,toolbar:[{$ckToolbar}],language:{$ckLang}})";
+
+                // Sizes in percent, not pixels: a mail is read on a phone as often
+                // as on a desktop, and a fixed pixel width overflows the one to fit
+                // the other. The toolbar over a selected picture offers alt text
+                // (which is what a reader sees while the picture loads, or instead
+                // of it when the client blocks images) and the size handles.
+                $bildOpts = '';
+                if ($uploadUrl !== '') {
+                    $bildOpts = ',simpleUpload:{uploadUrl:' . json_encode($uploadUrl)
+                              . ',withCredentials:true}'
+                              . ',image:{resizeUnit:\'%\''
+                              . ',resizeOptions:[{name:\'resizeImage:original\',value:null}'
+                              . ',{name:\'resizeImage:50\',value:\'50\'}'
+                              . ',{name:\'resizeImage:75\',value:\'75\'}]'
+                              . ',toolbar:[\'imageTextAlternative\',\'|\','
+                              . '\'resizeImage:50\',\'resizeImage:75\',\'resizeImage:original\']}';
+                }
+                echo "CE.create(document.getElementById(_id),{licenseKey:'GPL',plugins:p,toolbar:[{$ckToolbar}],language:{$ckLang}{$bildOpts}})";
                 echo ".then(function(editor){";
                 echo "var initial={$jsonValue};if(initial)editor.setData(initial);";
                 echo "var h=document.getElementById(_id+'-hidden');";

@@ -7,6 +7,46 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.66.0] - 2026-09-02
+
+### Added — pictures in `richtext`, shaped so they survive being e-mailed
+
+`['type' => 'richtext', 'upload' => '/your/endpoint']` turns on an upload
+button, drag & drop, paste-from-clipboard, size handles and alt text. Without
+`upload` nothing changes — an upload button with nowhere to put the file is
+worse than no button.
+
+The endpoint takes a POST with the file under `upload` and answers
+`{"url":"https://…"}` or `{"error":{"message":"…"}}`. That is CKEditor's
+SimpleUploadAdapter contract. **Return an absolute URL** — a relative one looks
+right on the page and breaks the moment the content is sent as mail.
+
+### Why no `<figure>`, and why percent
+
+`ImageBlock` and `ImageCaption` are deliberately left out. They wrap every
+picture in `<figure class="image">` and style it from a stylesheet — correct on
+a web page, wrong in an e-mail, where there is no stylesheet to load and
+Outlook does not lay out `<figure>` reliably. Measured against the bundled
+CKEditor before choosing:
+
+| plugins | output |
+|---|---|
+| `ImageInline` | `<p>text <img src="…"> text</p>` |
+| `ImageBlock` + `ImageCaption` | `<figure class="image">…</figure>` |
+| `ImageResize` | writes `style="width:42%"` onto the tag |
+
+So the shipped set is `ImageInline` + `ImageResize` + toolbar + alt text +
+upload: a plain `<img>` in the paragraph, carrying its own size as an inline
+style. Sizes are in percent rather than pixels because the same mail is read on
+a phone and on a desktop, and a fixed pixel width overflows one to fit the
+other.
+
+### Fixed
+
+`GRIDKIT_SKILL.md` was still stamped 1.65.0 after the 1.65.1 release. The
+suite caught it here.
+
+---
 ## [1.65.1] - 2026-08-31
 
 ### Fixed — a page that forgets `Theme::attributes()` no longer loses every

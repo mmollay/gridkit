@@ -2516,6 +2516,16 @@ select.gk-input {
     border-color 0.15s,
     box-shadow 0.15s;
 }
+/* A picture dropped into the editor arrives at its natural size, which for
+   anything off a phone camera is wider than the editor. Without this it pushes
+   the toolbar sideways and the writer edits in a box that scrolls. Only affects
+   what the WRITER sees — what the reader gets is the inline style="width:…%"
+   that ImageResize puts on the tag itself. */
+.gk-richtext-wrap .ck-content img,
+.gk-richtext .ck-content img {
+  max-width: 100%;
+  height: auto;
+}
 .gk-richtext:focus-within {
   border-color: var(--gk-primary);
   border-width: 2px;
