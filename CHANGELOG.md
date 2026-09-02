@@ -7,6 +7,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.67.1] - 2026-09-02
+
+### Fixed — the alignment buttons did nothing on an uploaded picture
+
+1.67.0 added them, and they worked on a picture that was already in the text —
+but not on one just uploaded. Uploading put the picture in as a **block**, and
+the buttons work on the `<img>`, so they had nothing to act on. The balloon
+toolbar did not even appear.
+
+`Image` pulls in `ImageBlock` whether you list it or not — `Image.requires`
+is `[ImageBlock, ImageInline]`, so leaving it out is not an option. Dropped
+into an empty paragraph, the block wins.
+
+Fixed with `image.insert.type: 'inline'`: a picture now always lands inside the
+paragraph. That is also what the whole feature is built around — a block
+picture is a `<figure class="image">`, which is exactly the markup that does
+nothing in an e-mail.
+
+Measured end to end: insert → `<p><img src="…"></p>`, then *right* →
+`<p><img style="float:right;margin:0 0 8px 16px" align="right" src="…"></p>`.
+
+---
 ## [1.67.0] - 2026-09-02
 
 ### Added — alignment that survives being e-mailed

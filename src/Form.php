@@ -559,7 +559,8 @@ class Form
                               . ($uploadHeaders !== [] ? ',headers:' . json_encode($uploadHeaders) : '')
                               . '}'
                               . ',htmlSupport:{allow:[{name:\'img\',styles:true,attributes:true,classes:true}]}'
-                              . ',image:{resizeUnit:\'%\''
+                              . ',image:{insert:{type:\'inline\'}'
+                              . ',resizeUnit:\'%\''
                               . ',resizeOptions:[{name:\'resizeImage:original\',value:null}'
                               . ',{name:\'resizeImage:50\',value:\'50\'}'
                               . ',{name:\'resizeImage:75\',value:\'75\'}]'
