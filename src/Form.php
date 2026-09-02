@@ -570,7 +570,32 @@ class Form
                 }
                 echo "CE.create(document.getElementById(_id),{licenseKey:'GPL',plugins:p,toolbar:[{$ckToolbar}],language:{$ckLang}{$bildOpts}})";
                 echo ".then(function(editor){";
-                echo "var initial={$jsonValue};if(initial)editor.setData(initial);";
+                // Block-Bilder aus Alt-Inhalten in Absatz-Bilder umwandeln.
+                // insert.type='inline' wirkt nur beim EINFUEGEN; was schon als
+                // <figure class="image"> im Text steht, bliebe ein Block — und
+                // dort greifen die Ausrichtungsknoepfe nicht, weil sie am <img>
+                // arbeiten. Die Breite der figure wandert dabei an das Bild:
+                // dort steht sie in einer Mail richtig, an der figure waere sie
+                // wirkungslos.
+                if ($uploadUrl !== '') {
+                    echo "function gkEntblocken(h){";
+                    echo "if(!h||h.indexOf('<figure')===-1)return h;";
+                    echo "var d=document.createElement('div');d.innerHTML=h;";
+                    echo "d.querySelectorAll('figure.image').forEach(function(f){";
+                    echo "var i=f.querySelector('img');if(!i){f.remove();return;}";
+                    echo "var b=f.style.width;if(b&&!i.style.width)i.style.width=b;";
+                    echo "i.removeAttribute('width');i.removeAttribute('height');";
+                    echo "i.style.removeProperty('aspect-ratio');";
+                    echo "var p=document.createElement('p');";
+                    echo "var c=f.querySelector('figcaption');";
+                    echo "p.appendChild(i);f.replaceWith(p);";
+                    echo "if(c&&c.textContent.trim()){var pc=document.createElement('p');";
+                    echo "pc.textContent=c.textContent.trim();p.after(pc);}});";
+                    echo "return d.innerHTML;}";
+                    echo "var initial=gkEntblocken({$jsonValue});if(initial)editor.setData(initial);";
+                } else {
+                    echo "var initial={$jsonValue};if(initial)editor.setData(initial);";
+                }
                 echo "var h=document.getElementById(_id+'-hidden');";
                 echo "if(h)h.value=editor.getData();";
                 echo "editor.model.document.on('change:data',function(){if(h)h.value=editor.getData();});";

@@ -7,6 +7,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.67.2] - 2026-09-02
+
+### Fixed — pictures already in the text stayed blocks
+
+1.67.1 forced *new* pictures inline. Anything already saved as
+`<figure class="image">` stayed a block on load, so the alignment buttons still
+had nothing to act on — which is what the reporter kept seeing.
+
+Existing content is now unwrapped before it reaches the editor: the figure's
+width moves onto the `<img>` (on the figure it does nothing in a mail, and the
+picture would arrive full size), `width`/`height`/`aspect-ratio` are dropped
+because they fight a percentage width, and a `<figcaption>` becomes the
+paragraph after the picture.
+
+Only runs when `upload` is set — a field without pictures is untouched.
+
+---
 ## [1.67.1] - 2026-09-02
 
 ### Fixed — the alignment buttons did nothing on an uploaded picture
