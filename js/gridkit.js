@@ -1555,6 +1555,15 @@
       if (!this.container) {
         this.container = document.createElement("div");
         this.container.className = "gk-toast-container";
+        /*
+         * A toast is this library's entire feedback channel — "Saved.",
+         * "Error while saving." — and it was announced to nobody at all. A
+         * live region reads it out without moving focus, which is precisely
+         * what a toast is for. Politely: it waits for a pause rather than
+         * cutting into whatever is being read.
+         */
+        this.container.setAttribute("role", "status");
+        this.container.setAttribute("aria-live", "polite");
         document.body.appendChild(this.container);
       }
     },
@@ -1570,14 +1579,26 @@
       };
       var el = document.createElement("div");
       el.className = "gk-toast gk-toast-" + type;
+      /*
+       * The markup is literal and the message is not. It used to be pasted
+       * into innerHTML, so `GK.toast.error(err.message)` — the obvious way to
+       * use this — handed whatever the server said straight to the HTML
+       * parser. Nothing in the documentation ever offered markup in a toast;
+       * every example is a sentence. Text is text.
+       *
+       * The icon is aria-hidden or the ligature is read aloud as
+       * "check_circle", and the close button had no name at all: what a
+       * screen reader met was a button called "times".
+       */
       el.innerHTML =
-        '<span class="material-icons gk-toast-icon">' +
+        '<span class="material-icons gk-toast-icon" aria-hidden="true">' +
         (icons[type] || "info") +
         "</span>" +
-        "<span>" +
-        message +
-        "</span>" +
-        '<button class="gk-toast-close">&times;</button>';
+        '<span class="gk-toast-text"></span>' +
+        '<button class="gk-toast-close" aria-label="' +
+        _gkEsc(_t("close")) +
+        '"><span aria-hidden="true">&times;</span></button>';
+      el.querySelector(".gk-toast-text").textContent = message;
       el.querySelector(".gk-toast-close").onclick = function () {
         el.classList.add("gk-toast-out");
         setTimeout(function () {
@@ -1818,12 +1839,39 @@
     hideProgress: function () {}
   };
 
-  // Confirm dialog (replaces window.confirm)
+  /*
+   * Confirm dialog (replaces window.confirm)
+   *
+   * Four things were wrong, and the last one is not an accessibility problem:
+   *
+   *   - No role, no aria-modal, no accessible name. A box on top of the page,
+   *     as far as anything reading it was concerned.
+   *   - Focus landed on the OK button, and then Tab walked straight out of the
+   *     dialog into the page behind it — the same overlay the modal and the
+   *     lightbox now hold focus inside.
+   *   - Closing gave focus back to nobody, so the next Tab started at the top
+   *     of the document, far from whatever the person had been doing.
+   *   - The Escape listener was added to `document` on every call and removed
+   *     only in the Escape branch. Answer with a button and it stayed
+   *     registered, holding the closure and the removed overlay, one more on
+   *     every confirm for as long as the page lived.
+   *
+   * The title and the message are set as text. They were pasted into
+   * innerHTML, and a confirm message is exactly where a record's name ends up
+   * — `GK.confirm('Delete ' + row.name + '?')`.
+   */
   GK.confirm = function (message, options) {
     options = options || {};
     return new Promise(function (resolve) {
+      var opener = document.activeElement;
       var overlay = document.createElement("div");
       overlay.className = "gk-confirm-overlay";
+      // Same counter idea the modal uses for its title id — two confirms in
+      // one page must not point aria-labelledby at the same heading.
+      var titleId = "gk-confirm-title-" + (GK.confirm._seq = (GK.confirm._seq || 0) + 1);
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute("aria-labelledby", titleId);
       var title = options.title || _t("confirm_title");
       var confirmText = options.confirmText || _t("confirm_ok");
       var cancelText = options.cancelText || _t("confirm_cancel");
@@ -1832,44 +1880,45 @@
         : "gk-btn gk-btn-primary";
       overlay.innerHTML =
         '<div class="gk-confirm-box">' +
-        '<div class="gk-confirm-header"><h3>' +
-        title +
-        "</h3></div>" +
-        '<div class="gk-confirm-body"><p>' +
-        message +
-        "</p></div>" +
+        '<div class="gk-confirm-header"><h3 id="' + titleId + '"></h3></div>' +
+        '<div class="gk-confirm-body"><p></p></div>' +
         '<div class="gk-confirm-footer">' +
-        '<button class="gk-btn gk-confirm-cancel">' +
-        cancelText +
-        "</button>" +
+        '<button class="gk-btn gk-confirm-cancel"></button>' +
         '<button class="' +
         confirmClass +
-        ' gk-confirm-ok">' +
-        confirmText +
-        "</button>" +
+        ' gk-confirm-ok"></button>' +
         "</div></div>";
+      overlay.querySelector("h3").textContent = title;
+      overlay.querySelector(".gk-confirm-body p").textContent = message;
+      overlay.querySelector(".gk-confirm-cancel").textContent = cancelText;
+      overlay.querySelector(".gk-confirm-ok").textContent = confirmText;
       document.body.appendChild(overlay);
-      overlay.querySelector(".gk-confirm-cancel").onclick = function () {
+
+      // One way out, so the listener cannot outlive the dialog and focus
+      // cannot be left behind on any of the four paths.
+      function close(answer) {
+        document.removeEventListener("keydown", onKey);
         overlay.remove();
-        resolve(false);
+        _gkRestoreFocus(opener);
+        resolve(answer);
+      }
+      function onKey(e) {
+        if (e.key === "Escape") close(false);
+      }
+
+      overlay.querySelector(".gk-confirm-cancel").onclick = function () {
+        close(false);
       };
       overlay.querySelector(".gk-confirm-ok").onclick = function () {
-        overlay.remove();
-        resolve(true);
+        close(true);
       };
       overlay.addEventListener("click", function (e) {
-        if (e.target === overlay) {
-          overlay.remove();
-          resolve(false);
-        }
+        if (e.target === overlay) close(false);
       });
-      document.addEventListener("keydown", function handler(e) {
-        if (e.key === "Escape") {
-          overlay.remove();
-          resolve(false);
-          document.removeEventListener("keydown", handler);
-        }
+      overlay.addEventListener("keydown", function (e) {
+        _gkTrap(overlay, e);
       });
+      document.addEventListener("keydown", onKey);
       setTimeout(function () {
         overlay.querySelector(".gk-confirm-ok").focus();
       }, 50);

@@ -566,8 +566,67 @@ return [
     // asserted a string both copies contained, so it could not have failed.
     T::eq(substr_count($js, 'function _gkRestoreFocus('), 1,
         'returning focus to the opener is defined once');
-    T::eq(substr_count($js, '_gkRestoreFocus(opener)'), 2,
-        'and both overlays call it');
+    // A count rather than a fixed number: the guard against a second copy is
+    // the definition count above. This one only records that every overlay in
+    // the library actually gives focus back — modal, lightbox and confirm when
+    // this was written, and it rose from 2 to 3 the moment confirm was fixed,
+    // which is the test doing its job rather than being wrong.
+    T::ok(substr_count($js, '_gkRestoreFocus(opener)') >= 3,
+        'every overlay gives focus back to whatever opened it');
+},
+
+/**
+ * A toast is this library's entire feedback channel — "Saved.", "Error while
+ * saving." — and it was announced to nobody: no live region, so a screen
+ * reader user got no confirmation that anything had happened at all. Its icon
+ * was not aria-hidden, so the ligature "check_circle" was read out as if it
+ * were a word, and its close button had no name — a button announced as
+ * "times".
+ *
+ * The message was also pasted into innerHTML. `GK.toast.error(err.message)` is
+ * the obvious way to use this, and it handed whatever the server said to the
+ * HTML parser. Nothing in the documentation has ever offered markup in a
+ * toast; every example is a sentence.
+ */
+'a toast is announced, named, and made of text' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+
+    T::contains($js, 'this.container.setAttribute("role", "status")',
+        'the toast area is a status region');
+    T::contains($js, 'this.container.setAttribute("aria-live", "polite")',
+        'and is read out — politely, so it waits rather than interrupting');
+    T::contains($js, 'el.querySelector(".gk-toast-text").textContent = message',
+        'the message is set as text, not parsed as HTML');
+    T::contains($js, '<span class="material-icons gk-toast-icon" aria-hidden="true">',
+        'the icon is decoration, not a word to read out');
+    T::contains($js, '\'<button class="gk-toast-close" aria-label="\'',
+        'and the close button says what it does');
+},
+
+/**
+ * The confirm dialog had no role, no aria-modal and no name; focus was placed
+ * on OK and then Tab walked straight out into the page behind it; closing
+ * returned focus to nobody.
+ *
+ * And it leaked. The Escape handler was added to `document` on every call and
+ * removed only inside the Escape branch — answer with a button and it stayed
+ * registered, holding the closure and the detached overlay, one more listener
+ * per confirmation for as long as the page lived. There is one exit now, and
+ * every path goes through it.
+ */
+'the confirm dialog is a dialog, and it cleans up after itself' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+
+    T::contains($js, 'overlay.setAttribute("aria-modal", "true")', 'it is a modal dialog');
+    T::contains($js, 'overlay.setAttribute("aria-labelledby", titleId)',
+        'named by its own heading');
+    T::contains($js, '_gkTrap(overlay, e)', 'Tab cannot leave it');
+    T::contains($js, 'document.removeEventListener("keydown", onKey);',
+        'the Escape listener is removed on every way out, not only on Escape');
+    T::contains($js, 'overlay.querySelector(".gk-confirm-body p").textContent = message',
+        'the message is text — a confirm is exactly where a record name lands');
+    T::contains($js, 'overlay.querySelector("h3").textContent = title;',
+        'and so is the title');
 },
 
 ];

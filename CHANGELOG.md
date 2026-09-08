@@ -7,6 +7,51 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.75.0] - 2026-09-09
+
+### Fixed — a toast and a confirmation put their message through the HTML parser
+
+`GK.toast.error(err.message)` is the obvious way to use a toast, and the
+message was pasted into `innerHTML` — so whatever the server said was handed to
+the HTML parser and run. The same in `GK.confirm(...)`, which is exactly where
+a record's name ends up: `GK.confirm('Delete ' + row.name + '?')`.
+
+Both set their text as text now. Nothing in the documentation has ever offered
+markup here — every example in it is a sentence — and nothing in this
+repository passed any. **If you were passing HTML on purpose, it will now show
+as the characters you typed.**
+
+Checked in a browser with `<img src=x onerror=…>` as the message: it appears as
+that literal string and the handler does not run.
+
+### Fixed — the confirmation dialog leaked a listener on every call
+
+The Escape handler was added to `document` on every `GK.confirm()` and removed
+only inside the Escape branch. Answer with a button — which is the usual answer
+— and it stayed registered, holding its closure and the detached overlay, one
+more on every confirmation for as long as the page lived. There is one exit
+now and all four ways out go through it.
+
+### Fixed — a toast was announced to nobody
+
+No live region at all, so the library's entire feedback channel — "Saved.",
+"Error while saving." — reached a screen reader as silence. The toast area is a
+polite status region now. Its icon was not `aria-hidden`, so the ligature
+"check_circle" was read out as a word, and its close button had no name: a
+button announced as "times".
+
+### Fixed — the confirmation dialog was a box on top of the page
+
+No role, no `aria-modal`, no accessible name. Focus was placed on OK and then
+Tab walked straight out into the page behind it, and closing gave focus back to
+nobody. It is a named dialog now, Tab stays inside it, and focus returns to
+whatever opened it — through the same helpers the modal and the lightbox use.
+
+Fixing it moved `_gkRestoreFocus` from two call sites to three, which failed
+the test that counted them. That was the test being right, not wrong: the count
+became a floor with the reason written next to it.
+
+---
 ## [1.74.0] - 2026-09-09
 
 ### Added — the CSS that existed but could not be found
