@@ -2468,32 +2468,88 @@
 
   // ── Tabs: <div data-gk-tabs> with <div data-gk-tabpanel="key" data-gk-tab-title="…"> ──
   // The nav buttons are generated from the panels; the first panel is active.
+  //
+  // What this generated was a row of <button class="gk-tab"> and nothing more:
+  // no tablist, no tab roles, no aria-selected, and panels that were ordinary
+  // divs shown and hidden with style.display. Which tab was current existed
+  // only as gk-tab-active — a colour and an underline. So the whole widget
+  // reached a screen reader as unrelated buttons sitting above unrelated text:
+  // nothing tied a button to the panel it reveals, nothing said which one was
+  // current, and the arrow keys — how a tablist is actually operated — did
+  // nothing at all. Since this variant builds its own markup, it can simply
+  // build the right markup.
   GK.tabs = {
+    _n: 0,
     init(root) {
+      var self = this;
       (root || document).querySelectorAll("[data-gk-tabs]").forEach(function (wrap) {
         if (wrap._gkTabs) return;
         wrap._gkTabs = true;
         var panels = Array.prototype.slice.call(wrap.querySelectorAll("[data-gk-tabpanel]"));
         if (!panels.length) return;
+        var uid = "gk-tabs-" + ++self._n;
         var nav = document.createElement("div");
         nav.className = "gk-tabs-nav";
+        nav.setAttribute("role", "tablist");
+        var tabs = [];
         panels.forEach(function (p, i) {
           var key = p.getAttribute("data-gk-tabpanel");
+          var on = i === 0;
+          // A panel may already carry an id something else on the page links
+          // to; only supply one where there is none.
+          if (!p.id) p.id = uid + "-panel-" + i;
           var b = document.createElement("button");
           b.type = "button";
-          b.className = "gk-tab" + (i === 0 ? " gk-tab-active" : "");
+          b.className = "gk-tab" + (on ? " gk-tab-active" : "");
+          b.id = uid + "-tab-" + i;
+          b.setAttribute("role", "tab");
           b.setAttribute("data-gk-tab", key);
+          b.setAttribute("aria-selected", on ? "true" : "false");
+          b.setAttribute("aria-controls", p.id);
+          // Roving tabindex: the set is ONE tab stop and the arrows move
+          // within it. Six tabs must not cost six presses to walk past.
+          b.tabIndex = on ? 0 : -1;
           b.innerHTML = p.getAttribute("data-gk-tab-title") || key;
           nav.appendChild(b);
-          p.style.display = i === 0 ? "" : "none";
+          tabs.push(b);
+          p.setAttribute("role", "tabpanel");
+          p.setAttribute("aria-labelledby", b.id);
+          p.style.display = on ? "" : "none";
         });
         wrap.insertBefore(nav, wrap.firstChild);
+
+        // One place decides what "this tab is the current one" means, so the
+        // class, the attribute, the tab stop and the panels cannot drift
+        // apart — which is exactly how the state got lost in the first place.
+        function select(b, focus) {
+          var key = b.getAttribute("data-gk-tab");
+          tabs.forEach(function (x) {
+            var on = x === b;
+            x.classList.toggle("gk-tab-active", on);
+            x.setAttribute("aria-selected", on ? "true" : "false");
+            x.tabIndex = on ? 0 : -1;
+          });
+          panels.forEach(function (p) {
+            p.style.display = p.getAttribute("data-gk-tabpanel") === key ? "" : "none";
+          });
+          if (focus) b.focus();
+        }
+
         nav.addEventListener("click", function (e) {
           var b = e.target.closest("[data-gk-tab]");
-          if (!b) return;
-          var key = b.getAttribute("data-gk-tab");
-          nav.querySelectorAll(".gk-tab").forEach(function (x) { x.classList.toggle("gk-tab-active", x === b); });
-          panels.forEach(function (p) { p.style.display = p.getAttribute("data-gk-tabpanel") === key ? "" : "none"; });
+          if (b) select(b, false);
+        });
+        nav.addEventListener("keydown", function (e) {
+          var i = tabs.indexOf(document.activeElement);
+          if (i < 0) return;
+          var to = -1;
+          if (e.key === "ArrowRight") to = (i + 1) % tabs.length;
+          else if (e.key === "ArrowLeft") to = (i - 1 + tabs.length) % tabs.length;
+          else if (e.key === "Home") to = 0;
+          else if (e.key === "End") to = tabs.length - 1;
+          if (to < 0) return;
+          e.preventDefault();
+          select(tabs[to], true);
         });
       });
     },
@@ -2516,6 +2572,7 @@
     if (GK.ajaxSelect) GK.ajaxSelect.init();
     if (GK.liveTable) GK.liveTable.init();
     if (GK.tabs) GK.tabs.init();
+    if (GK.tabsMarkup) GK.tabsMarkup.init();
     if (GK.rowPager) GK.rowPager.init();
   };
 
@@ -3089,7 +3146,65 @@
     },
   };
 
-  // === TABS ===
+  /*
+   * === TABS (authored markup) ===
+   *
+   * The second of two tab systems in this file, and the one the demo teaches:
+   * `.gk-tabs > .gk-tab-nav > .gk-tab-btn[data-tab]` with matching
+   * `.gk-tab-panel[data-tab]`. Here the page author writes the markup, so the
+   * roles cannot be built in the way GK.tabs builds its own — they have to be
+   * put on afterwards. Without them this was, to a screen reader, a row of
+   * buttons above some text with nothing connecting the two, no statement of
+   * which one is current, and no arrow-key movement.
+   *
+   * Decorating is deliberately conservative: an id is only supplied where
+   * there is none, and the click handler below touches aria-selected only on
+   * buttons this actually decorated (role="tab"). Markup inserted later and
+   * never passed through init() therefore keeps working exactly as before
+   * rather than acquiring half a set of attributes.
+   */
+  GK.tabsMarkup = {
+    _n: 0,
+    init(root) {
+      var self = this;
+      (root || document).querySelectorAll(".gk-tabs").forEach(function (wrap) {
+        var nav = wrap.querySelector(".gk-tab-nav");
+        if (!nav || nav._gkTabsA11y) return;
+        nav._gkTabsA11y = true;
+        var uid = "gk-tabs-m" + ++self._n;
+        nav.setAttribute("role", "tablist");
+        var btns = Array.prototype.slice.call(nav.querySelectorAll(".gk-tab-btn"));
+        btns.forEach(function (b, i) {
+          var panel = wrap.querySelector('.gk-tab-panel[data-tab="' + b.dataset.tab + '"]');
+          var on = b.classList.contains("gk-active");
+          if (!b.id) b.id = uid + "-tab-" + i;
+          b.setAttribute("role", "tab");
+          b.setAttribute("aria-selected", on ? "true" : "false");
+          b.tabIndex = on ? 0 : -1;
+          if (panel) {
+            if (!panel.id) panel.id = uid + "-panel-" + i;
+            b.setAttribute("aria-controls", panel.id);
+            panel.setAttribute("role", "tabpanel");
+            panel.setAttribute("aria-labelledby", b.id);
+          }
+        });
+        nav.addEventListener("keydown", function (e) {
+          var i = btns.indexOf(document.activeElement);
+          if (i < 0) return;
+          var to = -1;
+          if (e.key === "ArrowRight") to = (i + 1) % btns.length;
+          else if (e.key === "ArrowLeft") to = (i - 1 + btns.length) % btns.length;
+          else if (e.key === "Home") to = 0;
+          else if (e.key === "End") to = btns.length - 1;
+          if (to < 0) return;
+          e.preventDefault();
+          btns[to].focus();
+          btns[to].click();
+        });
+      });
+    },
+  };
+
   document.addEventListener("click", function (e) {
     var btn = e.target.closest(".gk-tab-btn");
     if (!btn) return;
@@ -3098,11 +3213,20 @@
     var target = btn.dataset.tab;
     tabs.querySelectorAll(".gk-tab-btn").forEach(function (b) {
       b.classList.remove("gk-active");
+      // Only where init() put a role on: see the note above.
+      if (b.getAttribute("role") === "tab") {
+        b.setAttribute("aria-selected", "false");
+        b.tabIndex = -1;
+      }
     });
     tabs.querySelectorAll(".gk-tab-panel").forEach(function (p) {
       p.classList.remove("gk-active");
     });
     btn.classList.add("gk-active");
+    if (btn.getAttribute("role") === "tab") {
+      btn.setAttribute("aria-selected", "true");
+      btn.tabIndex = 0;
+    }
     var panel = tabs.querySelector('.gk-tab-panel[data-tab="' + target + '"]');
     if (panel) panel.classList.add("gk-active");
   });

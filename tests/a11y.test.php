@@ -355,4 +355,35 @@ return [
         'and a restored mode is marked too, not just the server-rendered one');
 },
 
+/**
+ * Two tab systems ship in gridkit.js — GK.tabs, which generates its own nav
+ * from the panels, and the authored-markup one the demo teaches
+ * (.gk-tabs > .gk-tab-nav > .gk-tab-btn). Neither said anything at all: no
+ * tablist, no tab roles, no aria-selected, nothing tying a button to the panel
+ * it reveals, and no arrow keys — which is how a tablist is operated. To a
+ * screen reader both were a row of buttons above unrelated text.
+ *
+ * Both are public API and both are fixed; the counts below are 2 on purpose,
+ * so adding the roles to one system and forgetting the other fails here.
+ */
+'tabs are a tablist, not a row of loose buttons' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+
+    T::eq(substr_count($js, 'setAttribute("role", "tablist")'), 2,
+        'both tab systems build a tablist');
+    T::eq(substr_count($js, 'setAttribute("role", "tab")'), 2,
+        'and give every button the tab role');
+    T::eq(substr_count($js, '"tabpanel"'), 2,
+        'the panels are tabpanels in both');
+    T::eq(substr_count($js, 'setAttribute("aria-labelledby", b.id)'), 2,
+        'each panel is named by its own tab');
+    T::eq(substr_count($js, 'setAttribute("aria-controls"'), 2,
+        'and each tab points at the panel it reveals');
+    T::eq(substr_count($js, 'e.key === "End"'), 2,
+        'Home and End reach the ends of both sets');
+    T::ok(substr_count($js, 'b.tabIndex = on ? 0 : -1') >= 1
+       && substr_count($js, 'x.tabIndex = on ? 0 : -1') >= 1,
+        'a roving tabindex: the set is one tab stop, the arrows move inside it');
+},
+
 ];

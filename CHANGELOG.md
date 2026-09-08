@@ -7,6 +7,49 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.69.0] - 2026-09-08
+
+### Fixed — tabs were a row of buttons above unrelated text
+
+Two tab systems ship in `gridkit.js`, and neither said anything to assistive
+technology:
+
+- `GK.tabs` — `[data-gk-tabs]` with `[data-gk-tabpanel]` children, which builds
+  its own nav from the panels.
+- The authored-markup one the demo teaches:
+  `.gk-tabs > .gk-tab-nav > .gk-tab-btn[data-tab]` with matching
+  `.gk-tab-panel[data-tab]`.
+
+Both produced buttons whose only mark of being current was `gk-tab-active` or
+`gk-active` — a colour and an underline. There was no `tablist`, no `tab` role,
+no `aria-selected`, nothing tying a button to the panel it reveals, and the
+arrow keys, which is how a tablist is actually operated, did nothing. Six tabs
+also cost six presses to walk past, because every button was its own tab stop.
+
+Both now build the full structure: `role="tablist"` on the nav, `role="tab"`
+with `aria-selected` and `aria-controls` on each button, `role="tabpanel"` with
+`aria-labelledby` on each panel, and a roving tabindex so the set is one tab
+stop with Left/Right/Home/End moving inside it.
+
+The generated variant builds the right markup directly. The authored variant
+cannot — the page author writes that HTML — so `GK.tabsMarkup.init()` puts the
+roles on afterwards, conservatively: it supplies an id only where there is
+none, and the click handler updates `aria-selected` only on buttons that
+actually carry `role="tab"`. Markup inserted later and never passed through
+`init()` therefore behaves exactly as it did before rather than ending up with
+half a set of attributes.
+
+Checked in a browser on the live demo, which uses the authored variant: roles
+and links present, click and arrow keys moving selection, focus and panels
+together, and Right from the last tab wrapping to the first. The first attempt
+measured nothing, because that demo section is `display:none` until its
+navigation entry is chosen and a hidden element cannot take focus.
+
+The test counts these attributes and expects **2** of each — one per system.
+Adding the roles to one and forgetting the other fails it; that was verified by
+stripping the authored variant alone.
+
+---
 ## [1.68.1] - 2026-09-08
 
 ### Fixed — the theme picker pointed at the wrong colour
