@@ -377,8 +377,13 @@ return [
         'the panels are tabpanels in both');
     T::eq(substr_count($js, 'setAttribute("aria-labelledby", b.id)'), 2,
         'each panel is named by its own tab');
-    T::eq(substr_count($js, 'setAttribute("aria-controls"'), 2,
-        'and each tab points at the panel it reveals');
+    // Named precisely rather than counted: aria-controls is right for any
+    // disclosure widget, and counting every occurrence in the file made this
+    // fail the moment the accordion gained one too.
+    T::contains($js, 'b.setAttribute("aria-controls", p.id)',
+        'the generated tabs point at the panel each reveals');
+    T::contains($js, 'b.setAttribute("aria-controls", panel.id)',
+        'and so do the authored ones');
     T::eq(substr_count($js, 'e.key === "End"'), 2,
         'Home and End reach the ends of both sets');
     T::ok(substr_count($js, 'b.tabIndex = on ? 0 : -1') >= 1
@@ -464,6 +469,41 @@ return [
         'and sets it on the one just chosen');
     T::contains($js, 'o.setAttribute("aria-selected", isSelected ? "true" : "false")',
         'the multi-select keeps every option in step as they are toggled');
+},
+
+/**
+ * The accordion, and the fourth appearance of one pattern: a control whose
+ * open/closed state lives in a CSS class and nowhere else — after the sidebar
+ * groups, the theme picker and both tab systems.
+ *
+ * It also had a fault the others did not. A closed panel was hidden with
+ * `max-height: 0; overflow: hidden`, which hides it from the EYE alone: the
+ * text stayed in the accessibility tree, so a screen reader read every panel
+ * whether open or shut, and a link inside a closed one stayed in the tab
+ * order, so Tab moved focus into a zero-height box where it could not be seen.
+ *
+ * And it bound at parse time, one line below the block that defers GK.init()
+ * to DOMContentLoaded — so with the script in <head> it queried a document
+ * with no accordions in it and silently bound nothing.
+ */
+'a closed accordion panel is closed for everyone, not only for the eye' => function (): void {
+    $css = (string) file_get_contents(__DIR__ . '/../css/gridkit.css');
+    T::ok((bool) preg_match('/\.gk-accordion-content \{[^}]*visibility: hidden/s', $css),
+        'a closed panel leaves the accessibility tree and the tab order');
+    T::ok((bool) preg_match('/\.gk-accordion-item\.open \.gk-accordion-content \{[^}]*visibility: visible/s', $css),
+        'and an open one comes back');
+
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, 'trigger.setAttribute("aria-controls", content.id)',
+        'the trigger names the panel it opens');
+    T::contains($js, 'content.setAttribute("role", "region")',
+        'and the panel is a region a reader can jump to');
+    T::contains($js, 'if (t) t.setAttribute("aria-expanded", open ? "true" : "false")',
+        'one place sets open/closed — including the items single-open mode '
+        . 'closes as a side effect, which is the path that gets forgotten');
+    T::contains($js, '_gkReady(function () { GK.accordion.init(); })',
+        'and it starts through the library\'s own ready guard, not a bare '
+        . 'DOMContentLoaded that never fires for an async or injected script');
 },
 
 ];

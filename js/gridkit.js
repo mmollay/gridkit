@@ -2573,6 +2573,10 @@
     if (GK.liveTable) GK.liveTable.init();
     if (GK.tabs) GK.tabs.init();
     if (GK.tabsMarkup) GK.tabsMarkup.init();
+    // Defined further down, so it is absent on the very first GK.init() of an
+    // already-loaded document; the ready-aware call beside its definition
+    // covers that pass, and this one covers everything added later.
+    if (GK.accordion) GK.accordion.init();
     if (GK.rowPager) GK.rowPager.init();
   };
 
@@ -3468,23 +3472,89 @@
     GK.belegModal._init();
   }
 
-  // === ACCORDION ===
-  document.querySelectorAll(".gk-accordion").forEach(function (acc) {
-    acc.querySelectorAll(".gk-accordion-trigger").forEach(function (trigger) {
-      trigger.addEventListener("click", function () {
-        var item = this.closest(".gk-accordion-item");
-        var isOpen = item.classList.contains("open");
-        // Optional: close others (single-open mode)
-        if (acc.dataset.gkSingle !== undefined) {
-          acc.querySelectorAll(".gk-accordion-item.open").forEach(function (i) {
-            i.classList.remove("open");
-          });
+  /*
+   * === ACCORDION ===
+   *
+   * Three faults, and the third is why the first two survived so long.
+   *
+   * 1. No state anywhere but the `open` class. The trigger is a real <button>
+   *    that opens and closes a panel and it said neither whether it was open
+   *    nor what it controls — the fourth disclosure widget in this file with
+   *    that same gap, after the sidebar groups, the theme picker and the tabs.
+   *
+   * 2. A closed panel was hidden with `max-height: 0; overflow: hidden`, which
+   *    hides it from the EYE only. The text stayed in the accessibility tree,
+   *    so a screen reader read every panel whether open or shut and the
+   *    accordion did nothing for it at all; and any link or button inside a
+   *    closed panel stayed in the tab order, so Tab moved focus into a
+   *    zero-height box and it vanished. css/gridkit.css now carries
+   *    `visibility` alongside the max-height, which takes closed content out
+   *    of both. It flips at the end of the closing animation and immediately
+   *    on opening, so nothing about the movement changes.
+   *
+   * 3. This ran at parse time, one line below the block that defers GK.init()
+   *    until DOMContentLoaded — so with the script in <head> it queried a
+   *    document that had no accordions in it yet and bound nothing, silently.
+   *    Markup added later (a live reload, a modal) got nothing either, for the
+   *    same reason. It is an init() now, called when the document is ready and
+   *    again from GK.init(), and it is idempotent so both is fine.
+   */
+  GK.accordion = {
+    _n: 0,
+    init(root) {
+      var self = this;
+      (root || document).querySelectorAll(".gk-accordion").forEach(function (acc) {
+        if (acc._gkAccordion) return;
+        acc._gkAccordion = true;
+        var uid = "gk-acc-" + ++self._n;
+
+        acc.querySelectorAll(".gk-accordion-item").forEach(function (item, i) {
+          var trigger = item.querySelector(".gk-accordion-trigger");
+          var content = item.querySelector(".gk-accordion-content");
+          if (!trigger) return;
+          var open = item.classList.contains("open");
+          if (!trigger.id) trigger.id = uid + "-trigger-" + i;
+          trigger.setAttribute("aria-expanded", open ? "true" : "false");
+          if (content) {
+            if (!content.id) content.id = uid + "-panel-" + i;
+            trigger.setAttribute("aria-controls", content.id);
+            content.setAttribute("role", "region");
+            content.setAttribute("aria-labelledby", trigger.id);
+          }
+        });
+
+        // One place decides what "this item is open" means, so the class and
+        // the attribute cannot part company — including on the items that
+        // single-open mode closes as a side effect, which is exactly the kind
+        // of second path that gets forgotten.
+        function setOpen(item, open) {
+          item.classList.toggle("open", open);
+          var t = item.querySelector(".gk-accordion-trigger");
+          if (t) t.setAttribute("aria-expanded", open ? "true" : "false");
         }
-        if (!isOpen) item.classList.add("open");
-        else item.classList.remove("open");
+
+        acc.querySelectorAll(".gk-accordion-trigger").forEach(function (trigger) {
+          trigger.addEventListener("click", function () {
+            var item = this.closest(".gk-accordion-item");
+            var isOpen = item.classList.contains("open");
+            // Optional: close others (single-open mode)
+            if (acc.dataset.gkSingle !== undefined) {
+              acc.querySelectorAll(".gk-accordion-item.open").forEach(function (i) {
+                setOpen(i, false);
+              });
+            }
+            setOpen(item, !isOpen);
+          });
+        });
       });
-    });
-  });
+    },
+  };
+
+  // _gkReady, not a bare listener: the library already has this helper and a
+  // test enforces its use, because a plain DOMContentLoaded never fires for a
+  // script loaded with `async` or pulled in by an AJAX fragment. Writing the
+  // guard out by hand here is precisely what that test caught.
+  _gkReady(function () { GK.accordion.init(); });
 
   // === GALLERY LAZY LOADING ===
   if ("IntersectionObserver" in window) {

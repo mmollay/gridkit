@@ -4414,13 +4414,32 @@ a.gk-stat-card:hover {
 .gk-accordion-item.open .gk-accordion-trigger .material-icons {
   transform: rotate(180deg);
 }
+/*
+ * max-height alone hides a closed panel from the EYE and from nothing else.
+ * The text stayed in the accessibility tree, so a screen reader read every
+ * panel whether open or shut; and a link inside a closed panel stayed in the
+ * tab order, so Tab moved focus into a zero-height overflow box and it
+ * disappeared. visibility takes it out of both.
+ *
+ * The delay is what keeps the movement unchanged: closing waits the length of
+ * the max-height transition before going hidden, opening switches to visible
+ * at once. Without the delay a panel would blink out before it had finished
+ * folding up.
+ */
 .gk-accordion-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height var(--gk-dur-3) ease;
+  visibility: hidden;
+  transition:
+    max-height var(--gk-dur-3) ease,
+    visibility 0s linear var(--gk-dur-3);
 }
 .gk-accordion-item.open .gk-accordion-content {
   max-height: 500px;
+  visibility: visible;
+  transition:
+    max-height var(--gk-dur-3) ease,
+    visibility 0s;
 }
 .gk-accordion-body {
   padding: 0 20px 16px;

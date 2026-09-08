@@ -7,6 +7,50 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.71.0] - 2026-09-08
+
+### Fixed — a closed accordion panel was closed for the eye only
+
+`max-height: 0; overflow: hidden` does exactly one thing: it stops you seeing
+the panel. The text stayed in the accessibility tree, so a screen reader read
+every panel whether open or shut and the accordion did nothing whatsoever for
+it. Worse, anything focusable inside a closed panel stayed in the tab order —
+Tab moved focus into a zero-height overflow box, where the focus ring cannot be
+seen and the page appears to have swallowed the keyboard.
+
+`visibility` now travels with the max-height, which takes closed content out of
+both the tree and the tab order. The movement is unchanged: closing waits out
+the max-height transition before going hidden, opening switches to visible at
+once, so nothing blinks.
+
+### Fixed — the trigger said neither whether it was open nor what it opens
+
+The fourth disclosure widget in this library whose state was a CSS class and
+nothing else, after the sidebar groups (1.68.0), the theme picker (1.68.1) and
+both tab systems (1.69.0). The trigger now carries `aria-expanded` and
+`aria-controls`, and the panel is a `region` named by its trigger.
+
+One function sets open/closed, which matters here more than elsewhere: in
+single-open mode the items that close are closed as a *side effect* of opening
+another. That second path is exactly the one a fix written at the click site
+forgets, and the test names it.
+
+### Fixed — the accordion bound at parse time and could bind nothing
+
+It ran one line below the block that defers `GK.init()` to `DOMContentLoaded`.
+With the script in `<head>` it queried a document that had no accordions in it
+yet, bound nothing, and said nothing. Markup arriving later — a live reload, a
+modal — got nothing either. It is `GK.accordion.init()` now, started through
+the library's own `_gkReady` helper and called again from `GK.init()`, and it
+is idempotent so both is fine.
+
+Writing that guard out by hand instead of using `_gkReady` was caught by an
+existing test that exists for this precise mistake. Verified in a browser
+afterwards: a link placed in a closed panel cannot be focused, becomes
+focusable when the panel opens, and the panel closed as a side effect in
+single-open mode reports `aria-expanded="false"`.
+
+---
 ## [1.70.0] - 2026-09-08
 
 ### Fixed — the select was announced as an empty listbox
