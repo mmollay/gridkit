@@ -1,4 +1,4 @@
-# GridKit 1.73.1 — CSS
+# GridKit 1.74.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -32,6 +32,16 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-tabs-nav` `gk-tab` | Tabs, generated nav (state class: `gk-tab-active`) |
 | `gk-accordion` `gk-accordion-item` `gk-accordion-trigger` `gk-accordion-content` `gk-accordion-body` | Accordion (state class: `open` on the item) |
 | `gk-gallery` `gk-gallery-item` `gk-gallery-overlay` | Image gallery |
+| `gk-card-elevated` `gk-card-flat` | Card with a shadow / with a hairline border instead |
+| `gk-card-image` | A picture flush with the top of a card (rounds the two upper corners) |
+| `gk-card-title` `gk-card-actions` | Heading inside a card / a right-aligned row of buttons in its header |
+| `gk-field-hint` `gk-field-has-error` | Help text under a field / colours a label to match its error |
+| `gk-checkbox-label` `gk-radio-label` | Label sitting beside its own box or dot |
+| `gk-form-page` `gk-form-wide` | A form capped at 800 px / one with no cap at all |
+| `gk-toolbar-row` `gk-toolbar-row-search` `gk-toolbar-row-filters` | Wrapping toolbar; the search half grows, the filter half does not |
+| `gk-accordion-flush` | Accordion without its own border or rounding, for one already inside a card |
+| `gk-richtext-toolbar` `gk-richtext-content` `gk-richtext-btn` | The rich-text field's own parts |
+| `gk-skeleton` | Grey shimmer standing in for text that has not arrived |
 
 ### Tabs
 
@@ -184,8 +194,10 @@ layout, typography, or semantic colors. **Spacing scale: 0/1/2/3/4/5/6 = 0/4/8/1
 | Text-Color | `gk-text-{primary,success,danger,warning,muted,on-surface}` |
 | Background | `gk-bg-{surface,muted,primary-soft,success-soft,danger-soft,warning-soft}` |
 | Border-Radius | `gk-rounded-{none,sm,md,lg,xl,full}` → 0/6/8/10/14/999 px |
-| Width / Height | `gk-w-{full,auto}` `gk-h-{full,auto}` |
-| Misc | `gk-clickable` `gk-overflow-{x,y}-auto` `gk-font-mono` `gk-no-decoration` `gk-truncate` `gk-break-word` |
+| Width / Height | `gk-w-{full,auto}` `gk-h-{full,auto}` — plus `gk-w-{1..16}`, the same sixteenths the form grid uses (6.25 % a step, so `gk-w-8` is half and `gk-w-16` is full) |
+| Spacer | `gk-spacer` (16 px) `gk-spacer-{sm,md,lg,xl}` → 8/20/24/32 px (note `-md` is 20, one step above the bare `gk-spacer`) of vertical air, for when a margin would collapse |
+| Grid | `gk-grid` (grid, 16 px gap) with `gk-grid-2` or `gk-grid-4` — auto-fit columns of at least 280 px / 200 px, so they reflow on their own |
+| Misc | `gk-clickable` `gk-not-clickable` `gk-disabled` (dimmed and inert) `gk-nowrap` `gk-overflow-{x,y}-auto` `gk-font-mono` `gk-no-decoration` `gk-truncate` `gk-break-word` |
 
 ```html
 <!-- Don't: -->

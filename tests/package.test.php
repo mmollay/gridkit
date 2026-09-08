@@ -314,4 +314,51 @@ return [
     }
 },
 
+/**
+ * The utility table states numbers — "4/6/8/12/16/20 px" — and nothing had
+ * ever checked them against the stylesheet they describe. A scale is exactly
+ * the kind of thing that gets nudged in CSS by someone who never opens the
+ * documentation, and a table of wrong pixel values is worse than no table:
+ * it is believed.
+ *
+ * The claims are read out of the document rather than restated here, so the
+ * test cannot drift from the thing it checks. Writing this found one wrong
+ * number that had just been added by hand — `gk-spacer-md` documented as 16 px
+ * where the rule says 20.
+ */
+'the numbers the utility table states are the numbers in the stylesheet' => function (): void {
+    $doc = (string) file_get_contents(ROOT . '/GRIDKIT_SKILL.md');
+    $css = (string) file_get_contents(ROOT . '/css/gridkit.css');
+
+    preg_match_all('/`gk-([a-z-]+)-\{([^}]+)\}`\s*→\s*([0-9\/]+)\s*px/u', $doc, $rows, PREG_SET_ORDER);
+    // A pattern that stops matching would check nothing and report green.
+    T::ok(count($rows) >= 3,
+        'found ' . count($rows) . ' scales stated in the utility table; there were 4 '
+        . 'when this was written, so a much smaller number means the pattern broke');
+
+    foreach ($rows as [, $prefix, $keyList, $numList]) {
+        $keys = array_map('trim', explode(',', $keyList));
+        $nums = explode('/', $numList);
+        T::eq(count($nums), count($keys),
+            "gk-$prefix-{...} lists " . count($keys) . ' names and ' . count($nums)
+            . ' numbers — the table cannot be read as pairs');
+        if (count($nums) !== count($keys)) continue;
+
+        foreach ($keys as $i => $key) {
+            $cls = "gk-$prefix-$key";
+            if (!preg_match('/\.' . preg_quote($cls, '/') . '\s*\{([^}]*)\}/', $css, $rule)) {
+                T::ok(false, "the table names .$cls; css/gridkit.css has no such rule");
+                continue;
+            }
+            $want = $nums[$i];
+            $body = trim(preg_replace('/\s+/', ' ', $rule[1]));
+            // 0 is written without a unit in CSS, everything else with px.
+            $ok = $want === '0'
+                ? (bool) preg_match('/:\s*0\s*;/', $rule[1])
+                : str_contains($rule[1], $want . 'px');
+            T::ok($ok, ".$cls is documented as {$want}px, but its rule reads: $body");
+        }
+    }
+},
+
 ];

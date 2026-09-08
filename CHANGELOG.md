@@ -7,6 +7,45 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.74.0] - 2026-09-09
+
+### Added — the CSS that existed but could not be found
+
+An audit of every `.gk-*` rule against everything that could reference one —
+the components, the browser code, the demo and the documentation — turned up a
+body of working, styled classes that GridKit itself never writes and no
+document mentions. They are not dead: they are for the page author, and the
+page author had no way to learn they exist.
+
+Newly written down: the sixteenths width scale `gk-w-{1..16}` (only `full` and
+`auto` had been listed), `gk-spacer` and its sizes, `gk-grid` with `gk-grid-2`
+/ `gk-grid-4`, the card variants (`elevated`, `flat`, `image`, `title`,
+`actions`), `gk-field-hint` and `gk-field-has-error`, the checkbox and radio
+labels, `gk-form-page` / `gk-form-wide`, the toolbar row and its two halves,
+`gk-accordion-flush`, the rich-text field's own parts, `gk-skeleton`, and
+`gk-not-clickable` / `gk-disabled` / `gk-nowrap`.
+
+Nothing was deleted. These ship in the stylesheet and somebody may already be
+using them; removing a class from a released stylesheet breaks a page that
+looked fine yesterday.
+
+### Added — the numbers in the utility table are checked against the stylesheet
+
+The table has always stated scales — "4/6/8/12/16/20 px" — and nothing had ever
+compared them with the CSS they describe. A scale is exactly what gets nudged
+by someone who never opens the documentation, and a table of wrong pixel values
+is worse than no table, because it is believed.
+
+The test reads the claims out of the document rather than restating them, so it
+cannot drift from what it checks, and it asserts it found at least three scales
+— a pattern that stops matching would otherwise check nothing and report green.
+Both directions were verified by breaking them on purpose: a changed rule, and
+a changed number in the table.
+
+It found a wrong number immediately, in a row added by hand minutes earlier:
+`gk-spacer-md` documented as 16 px where the rule says 20.
+
+---
 ## [1.73.1] - 2026-09-09
 
 ### Fixed — the website's Apache configuration shipped inside the package
