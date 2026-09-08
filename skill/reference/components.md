@@ -1,4 +1,4 @@
-# GridKit 1.72.0 — components
+# GridKit 1.73.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -971,36 +971,6 @@ New CSS classes:
 Action item options: `icon`, `label`, `href`, `onclick`, `title`, `variant`, `color`, `size`,
 `pill`, `disabled`, `showIf`, `class`.
 
-## Utility Classes (since v1.14.0)
-
-Tailwind-style utilities so consumers never need inline `style="…"` for spacing,
-layout, typography, or semantic colors. **Spacing scale: 0/1/2/3/4/5/6 = 0/4/8/12/16/20/24 px** (MD3 8-grid with half-steps).
-
-| Group | Classes |
-|---|---|
-| Display | `gk-hidden` `gk-block` `gk-inline` `gk-inline-block` |
-| Flex | `gk-flex` `gk-inline-flex` `gk-flex-col` `gk-flex-wrap` `gk-flex-1` `gk-flex-center` `gk-flex-between` |
-| Items / Justify | `gk-items-{start,center,end,baseline}` `gk-justify-{start,center,end,between}` |
-| Gap | `gk-gap-{xs,sm,md,lg,xl,2xl}` → 4/6/8/12/16/20 px |
-| Margin | `gk-m-{0..6}` `gk-mt-{0..6}` `gk-mb-{0..6}` `gk-ml-{0..4,auto}` `gk-mr-{0..4,auto}` `gk-mx-auto` |
-| Padding | `gk-p-{0..6}` `gk-px-{0..6}` `gk-py-{0..6}` |
-| Font-Size | `gk-fs-{xs,sm,md,base,lg,xl,2xl}` → 11/12/13/14/16/18/20 px |
-| Font-Weight | `gk-fw-{normal,medium,semibold,bold}` |
-| Text-Align | `gk-text-{left,center,right}` |
-| Text-Color | `gk-text-{primary,success,danger,warning,muted,on-surface}` |
-| Background | `gk-bg-{surface,muted,primary-soft,success-soft,danger-soft,warning-soft}` |
-| Border-Radius | `gk-rounded-{none,sm,md,lg,xl,full}` → 0/6/8/10/14/999 px |
-| Width / Height | `gk-w-{full,auto}` `gk-h-{full,auto}` |
-| Misc | `gk-clickable` `gk-overflow-{x,y}-auto` `gk-font-mono` `gk-no-decoration` `gk-truncate` `gk-break-word` |
-
-```html
-<!-- Don't: -->
-<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gk-text-muted)">…</div>
-
-<!-- Do: -->
-<div class="gk-flex-center gk-gap-md gk-fs-md gk-text-muted">…</div>
-```
-
 ## Purpose
 
 You are building or maintaining a web application using **GridKit**, a lightweight PHP component framework for admin dashboards. This skill is the authoritative reference for correct GridKit usage.
@@ -1043,4 +1013,8 @@ next update and split the codebase in two.
 | ActionGroup | `GridKit\ActionGroup` | Container for action buttons inside table columns (since v1.16.0) |
 | SortLink | `GridKit\SortLink` | Sortable column headers for hand-built tables (server-side sort) |
 | Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
+| Tabs (JS) | `.gk-tabs` / `[data-gk-tabs]` | Tab navigation, two shapes — full tablist semantics and arrow keys since 1.69.0 |
+| Accordion (JS) | `.gk-accordion` | Collapsible sections, optional single-open (`data-gk-single`) |
+| Tooltips (JS/CSS) | `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` | Hint popups — plain, CSS-only, or with HTML in them |
+| Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |

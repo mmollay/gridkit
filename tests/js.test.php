@@ -249,4 +249,54 @@ return [
         'the server still wraps too — this test exists because the two disagreed');
 },
 
+/**
+ * A markup hook the page author has to type must be taught somewhere they can
+ * read it.
+ *
+ * Most `data-gk-*` attributes are written by GridKit's own PHP — nobody hand-
+ * types `data-gk-select-search`, `Form` emits it — and those need no entry of
+ * their own. The ones that matter are the hooks NO component writes, because
+ * then the author is the only possible source, and if the skill document does
+ * not show them the feature might as well not exist. That is derivable rather
+ * than a list somebody has to remember to extend, which is the point: a widget
+ * added tomorrow with markup nobody documents fails here on its own.
+ *
+ * When this was written, three hooks qualified — `data-gk-tabs`,
+ * `data-gk-tabpanel` and `data-gk-tooltip-rich` — and NONE of the three was
+ * documented. Tabs and the rich tooltip were shipped, demonstrated on the
+ * landing page, announced in the changelog, and absent from the one file an
+ * agent reads to learn this library.
+ */
+'a markup hook only the page author can write is documented' => function (): void {
+    $js  = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    $doc = (string) file_get_contents(__DIR__ . '/../GRIDKIT_SKILL.md');
+
+    $php = '';
+    foreach (glob(__DIR__ . '/../src/*.php') as $f) {
+        $php .= (string) file_get_contents($f);
+    }
+
+    preg_match_all('/querySelectorAll?\(\s*[\'"]\[(data-gk-[a-z-]+)/', $js, $m);
+    $hooks = array_values(array_unique($m[1]));
+
+    $handWritten = 0;
+    foreach ($hooks as $hook) {
+        // A component writes it, so the author never types it.
+        if (str_contains($php, $hook)) continue;
+        $handWritten++;
+        T::ok(str_contains($doc, $hook),
+            "the library binds to [$hook], no src/ component writes it, and "
+            . 'GRIDKIT_SKILL.md never mentions it — so it can only be written '
+            . 'by hand, by someone with no way to learn it exists');
+    }
+
+    // Without this the whole test passes by finding nothing: change how the
+    // library queries its hooks and the loop above quietly checks zero of them
+    // while still reporting green.
+    T::ok($handWritten >= 3,
+        "the scan found $handWritten hand-written hooks; it found 3 when this "
+        . 'was written, so 0 means the pattern stopped matching, not that the '
+        . 'library stopped having them');
+},
+
 ];

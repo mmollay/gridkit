@@ -3605,31 +3605,50 @@
   // guard out by hand here is precisely what that test caught.
   _gkReady(function () { GK.accordion.init(); });
 
-  // === GALLERY LAZY LOADING ===
-  if ("IntersectionObserver" in window) {
-    var galleryObs = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) {
-            var img = e.target.querySelector("img[data-src]");
-            if (img) {
-              img.src = img.dataset.src;
-              img.onload = function () {
-                e.target.classList.add("loaded");
-              };
+  /*
+   * === GALLERY LAZY LOADING ===
+   *
+   * A tile marked data-lazy carries its picture in `data-src` and gets a real
+   * `src` only when it comes near the viewport. That means the observer is not
+   * an optimisation the page can do without: a tile nobody observes never
+   * loads its image at all, and the gallery stays empty.
+   *
+   * Which is what happened when the script sat in <head>. This collected the
+   * tiles at parse time, one block below the accordion — the same fault, but
+   * with a visible consequence rather than a quiet one. It runs when the
+   * document is ready now, and again from GK.init() for galleries that arrive
+   * later; observe() on an element already being observed does nothing, so
+   * running twice is harmless.
+   */
+  var galleryObs = null;
+  function _gkGalleryLazy(root) {
+    if (!("IntersectionObserver" in window)) return;
+    if (!galleryObs) {
+      galleryObs = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) {
+              var img = e.target.querySelector("img[data-src]");
+              if (img) {
+                img.src = img.dataset.src;
+                img.onload = function () {
+                  e.target.classList.add("loaded");
+                };
+              }
+              galleryObs.unobserve(e.target);
             }
-            galleryObs.unobserve(e.target);
-          }
-        });
-      },
-      { rootMargin: "200px" },
-    );
-    document
+          });
+        },
+        { rootMargin: "200px" },
+      );
+    }
+    (root || document)
       .querySelectorAll(".gk-gallery-item[data-lazy]")
       .forEach(function (item) {
         galleryObs.observe(item);
       });
   }
+  _gkReady(function () { _gkGalleryLazy(); });
 
   // === LIGHTBOX ===
   (function () {
@@ -3756,6 +3775,10 @@
      * way a button does.
      */
     function decorate(root) {
+      // A gallery that arrives later needs both halves: its tiles made
+      // operable AND its pictures observed. One call does both, so a caller
+      // cannot remember one and forget the other.
+      _gkGalleryLazy(root);
       (root || document)
         .querySelectorAll(".gk-gallery-item[data-lightbox]")
         .forEach(function (item) {
@@ -3843,12 +3866,37 @@ function _gkReady(fn) {
 GK.tooltip = {
   init() {
     document.querySelectorAll("[data-gk-tooltip-rich]").forEach((el) => {
+      if (el._gkTipRich) return;
+      el._gkTipRich = true;
       const targetId = el.getAttribute("data-gk-tooltip-rich");
       const tip = document.querySelector(targetId);
       if (!tip) return;
       tip.classList.add("gk-tooltip-content");
 
-      el.addEventListener("mouseenter", () => {
+      /*
+       * mouseenter and mouseleave were the only two events here, so the rich
+       * tooltip existed for pointers and for nobody else: with a keyboard you
+       * could never see it, and there was nothing joining the trigger to the
+       * text — a screen reader was never told the description was there at
+       * all. Three things fix that, and the third is a rule people forget:
+       * content shown on hover or focus has to be dismissible without moving
+       * away from it, which is what Escape is for.
+       */
+      if (tip.id) {
+        const described = (el.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean);
+        if (described.indexOf(tip.id) === -1) {
+          described.push(tip.id);
+          el.setAttribute("aria-describedby", described.join(" "));
+        }
+      }
+      // A trigger a keyboard cannot land on cannot show a tooltip on focus.
+      // Same call as the gallery tile: make the element the markup already
+      // treats as interactive actually reachable.
+      if (!el.hasAttribute("tabindex") && !el.matches("a[href], button, input, select, textarea")) {
+        el.tabIndex = 0;
+      }
+
+      const show = () => {
         const rect = el.getBoundingClientRect();
         tip.style.position = "fixed";
         tip.style.left = rect.left + "px";
@@ -3863,21 +3911,25 @@ GK.tooltip = {
         if (tipRect.bottom > window.innerHeight - 8) {
           tip.style.top = rect.top - tipRect.height - 6 + "px";
         }
-      });
+      };
+      const hide = () => tip.classList.remove("visible");
 
-      el.addEventListener("mouseleave", (e) => {
+      el.addEventListener("mouseenter", show);
+      el.addEventListener("focus", show);
+
+      el.addEventListener("mouseleave", () => {
         // Keep visible if mouse moves to tooltip itself
         setTimeout(() => {
-          if (!tip.matches(":hover") && !el.matches(":hover")) {
-            tip.classList.remove("visible");
-          }
+          if (!tip.matches(":hover") && !el.matches(":hover")) hide();
         }, 100);
+      });
+      el.addEventListener("blur", hide);
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") hide();
       });
 
       tip.addEventListener("mouseleave", () => {
-        if (!el.matches(":hover")) {
-          tip.classList.remove("visible");
-        }
+        if (!el.matches(":hover")) hide();
       });
     });
   },

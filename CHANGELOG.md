@@ -7,6 +7,58 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.73.0] - 2026-09-08
+
+### Fixed — the gallery could stay empty
+
+A tile marked `data-lazy` carries its picture in `data-src` and gets a real
+`src` only when it nears the viewport, so the observer is not an optimisation
+the page can do without: a tile nobody observes never loads its image at all.
+The tiles were collected at parse time, one block below the accordion — the
+same fault as 1.71.0 but with a visible consequence rather than a quiet one.
+With the script in `<head>` the gallery rendered empty frames. It runs when the
+document is ready now, and again from `GK.init()` for galleries that arrive
+later.
+
+### Fixed — the rich tooltip existed for pointers and for nobody else
+
+`data-gk-tooltip-rich` bound `mouseenter` and `mouseleave` and nothing else: no
+keyboard could ever see it, and nothing joined the trigger to its text, so a
+screen reader was never told a description was there. It opens on focus as well
+as hover, the trigger is joined to the popup with `aria-describedby`, the
+trigger becomes focusable when it is not already, and **Escape** dismisses it —
+content shown on hover or focus has to be dismissible without moving the
+pointer away from it.
+
+### Added — Tabs, Accordion, Gallery/Lightbox and Tooltips are documented
+
+None of them appeared anywhere in `GRIDKIT_SKILL.md`. Not in the component
+table, not in the CSS reference, not in the JavaScript API. Tabs and the rich
+tooltip were shipped, demonstrated on the landing page and announced in the
+changelog, while the one file an agent reads to learn this library did not know
+they existed — so an agent asked for tabs would invent markup nothing here
+binds to.
+
+Each section states the markup contract, including the parts that bite: the
+`data-tab` values must pair up, `.gk-accordion-content` clips at 500 px, and a
+`data-lazy` tile puts its picture in `data-src` rather than `src`.
+
+### Added — a test that finds the next undocumented widget by itself
+
+Most `data-gk-*` hooks are written by GridKit's own PHP; nobody hand-types
+`data-gk-select-search`. The interesting ones are those **no** component
+writes, because then the page author is the only possible source — and if the
+skill document does not show them, the feature might as well not exist. The
+test derives that set rather than keeping a list somebody must remember to
+extend, so a widget added tomorrow with undocumented markup fails on its own.
+
+When it was written, three hooks qualified and none was documented.
+
+It also asserts that it found at least three, because a scan that silently
+matches nothing reports green: verified by breaking the pattern on purpose and
+watching the count assertion catch it.
+
+---
 ## [1.72.0] - 2026-09-08
 
 ### Fixed — the lightbox could not be opened by keyboard at all
