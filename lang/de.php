@@ -149,6 +149,7 @@ return [
     'pagesize.label'           => 'Zeilen',
     'select.placeholder'       => '— Wählen —',
     'select.search'            => 'Suchen…',
+    'select.remove'            => '{label} entfernen',
     'tableheader.advanced'     => 'Erweiterte Filter',
     'tableheader.reset'        => 'Filter zurücksetzen',
     'yearfilter.label'      => 'Jahr',

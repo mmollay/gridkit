@@ -7,6 +7,51 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.70.0] - 2026-09-08
+
+### Fixed — the select was announced as an empty listbox
+
+The searchable select is where a form spends most of its time, and it did not
+survive being read aloud.
+
+`Select::searchable()` put `role="listbox"` on the options container and left
+the options themselves as plain `<div>`s. That is worse than carrying no role
+at all: a listbox IS announced, and one with no options inside is announced as
+having none — so the entire list vanished. Which option was current lived in
+the `selected` class, a tick and a tint.
+
+`Form`'s select — the path every doc and the demo actually use — had the
+mirror-image fault. Its combobox promised `aria-haspopup="listbox"` and never
+said which element that listbox was, and the container it would have pointed at
+carried no role either. One widget, two renderers, drifted apart in opposite
+directions; the same divergence the parity harness exists to catch, in a place
+that harness does not reach.
+
+Both render the full pairing now: `role="listbox"` with an id, `aria-controls`
+on the combobox naming it, and `role="option"` with `aria-selected` on every
+entry. The multi-select adds `aria-multiselectable="true"`, which is simply
+true of it.
+
+`gridkit.js` moves `aria-selected` with the class in both variants. Without
+that half, choosing an option would have left the listbox reporting whatever
+the page loaded with — the same lie 1.68.1 removed from the theme picker,
+which is three components in a row now where state was a class and nothing
+else.
+
+### Fixed — every chip in a multi-select had the same nameless remove button
+
+`<button class="gk-chip-remove">&times;</button>` — no accessible name at all.
+A screen reader met a run of identical unlabelled buttons with no way to tell
+which chip any of them would drop. Each now says what it removes, from a new
+`select.remove` string ("Remove {label}" / "{label} entfernen"). A locale that
+does not ship the key falls back to English, as every other string does.
+
+Verified in a browser on the live demo: the combobox resolves through
+`aria-controls` to a real listbox, every entry carries the option role,
+choosing one moves `aria-selected` with zero class/attribute mismatches, and
+the chips read "Remove Webdesign" and "Remove SEO".
+
+---
 ## [1.69.0] - 2026-09-08
 
 ### Fixed — tabs were a row of buttons above unrelated text

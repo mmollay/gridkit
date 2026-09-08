@@ -386,4 +386,84 @@ return [
         'a roving tabindex: the set is one tab stop, the arrows move inside it');
 },
 
+/**
+ * The searchable select is the component a form spends most of its time in,
+ * and it was announced as an empty listbox.
+ *
+ * `Select::searchable()` put `role="listbox"` on the options container and
+ * left the options themselves as plain `<div>`s. That is worse than no role:
+ * a listbox IS announced, and a listbox with no options in it is announced as
+ * having none, so the whole list disappeared. Which option was chosen lived in
+ * the `selected` class — a tick and a tint.
+ *
+ * `Form`'s select, the one every doc and the demo actually use, had the
+ * mirror-image problem: its combobox promised `aria-haspopup="listbox"` and
+ * never said which element that was, and the element it would have pointed at
+ * had no listbox role at all. Two renderers of one widget, drifted apart in
+ * opposite directions.
+ */
+'the searchable select is a listbox with options in it' => function (): void {
+    Lang::set('en');
+
+    $html = GridKit\Select::searchable('fruit', ['a' => 'Apple', 'b' => 'Banana'], ['selected' => 'b']);
+    T::eq(substr_count($html, 'role="option"'), 2, 'every entry is an option');
+    T::contains($html, 'role="option" aria-selected="true" data-value="b"',
+        'the chosen one says so');
+    T::eq(substr_count($html, 'aria-selected="true"'), 1, 'and only it does');
+
+    // The same widget built through Form, which is the path the docs teach.
+    $form = T::capture(fn() => (new GridKit\Form('f_sel'))
+        ->field('fruit', 'Fruit', 'select', ['options' => ['a' => 'Apple', 'b' => 'Banana'], 'value' => 'b'])
+        ->render());
+
+    T::ok((bool) preg_match('/<div class="gk-select-options" id="([^"]+)" role="listbox"/', $form, $m),
+        'the options container is a listbox and has an id to be pointed at');
+    T::contains($form, 'aria-controls="' . $m[1] . '"',
+        'and the combobox points at exactly that id');
+    T::eq(substr_count($form, 'role="option"'), 2, 'its entries are options too');
+    T::contains($form, 'aria-selected="true"', 'and the current one is stated');
+},
+
+/**
+ * The multi-select had the same gap plus one of its own: each chip carried a
+ * remove button that was a bare &times; and nothing else. No name — so what a
+ * screen reader met was a run of identical unlabelled buttons with no way to
+ * tell which chip any of them would drop.
+ */
+'the multi-select names what each chip removes' => function (): void {
+    Lang::set('en');
+    $html = T::capture(fn() => (new GridKit\Form('f_multi'))
+        ->field('tags', 'Tags', 'multiselect', [
+            'options' => ['a' => 'Apple', 'b' => 'Banana', 'c' => 'Cherry'],
+            'value'   => 'a,c',
+        ])
+        ->render());
+
+    T::contains($html, 'aria-multiselectable="true"',
+        'more than one option may be chosen, and the listbox says so');
+    T::eq(substr_count($html, 'role="option"'), 3, 'every entry is an option');
+    T::eq(substr_count($html, 'aria-selected="true"'), 2, 'both chosen ones are marked');
+    T::contains($html, 'aria-label="Remove Apple"',
+        'the remove button says what it removes');
+    T::ok(!(bool) preg_match('/<button[^>]*class="gk-chip-remove"[^>]*>&times;/', $html),
+        'the bare glyph is no longer the button\'s only content');
+
+    Lang::set('de');
+    $de = T::capture(fn() => (new GridKit\Form('f_multi_de'))
+        ->field('tags', 'Tags', 'multiselect', ['options' => ['a' => 'Apfel'], 'value' => 'a'])
+        ->render());
+    T::contains($de, 'aria-label="Apfel entfernen"', 'and says it in the active language');
+    Lang::set('en');
+},
+
+'choosing an option moves aria-selected, not just the class' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, 'o.setAttribute("aria-selected", "false")',
+        'the single select clears the attribute from the others');
+    T::contains($js, 'this.setAttribute("aria-selected", "true")',
+        'and sets it on the one just chosen');
+    T::contains($js, 'o.setAttribute("aria-selected", isSelected ? "true" : "false")',
+        'the multi-select keeps every option in step as they are toggled');
+},
+
 ];

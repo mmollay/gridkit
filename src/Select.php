@@ -51,9 +51,15 @@ class Select
             $isSel = $selectedStr !== '' && $opt['value'] === $selectedStr;
             if ($isSel) $displayLabel = $opt['label'];
             $cls = 'gk-select-option' . ($isSel ? ' selected' : '');
+            // The container below declares role="listbox". A listbox whose
+            // children are plain divs is worse than one with no role at all:
+            // it is announced, and announced as empty, so the options simply
+            // are not there. Which one is chosen was the `selected` class —
+            // a tick and a tint.
             $optionsHtml .= sprintf(
-                '<div class="%s" data-value="%s">%s</div>',
+                '<div class="%s" role="option" aria-selected="%s" data-value="%s">%s</div>',
                 $cls,
+                $isSel ? 'true' : 'false',
                 htmlspecialchars($opt['value'], ENT_QUOTES, 'UTF-8'),
                 htmlspecialchars($opt['label'], ENT_QUOTES, 'UTF-8'),
             );

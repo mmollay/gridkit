@@ -2834,8 +2834,16 @@
             opt.addEventListener("click", function () {
               hidden.value = this.dataset.value;
               valueSpan.textContent = this.textContent;
-              options.forEach((o) => o.classList.remove("selected"));
+              // aria-selected as well as the class. The server renders both;
+              // choosing here moved only the class, so from the first pick
+              // onwards the listbox went on reporting the option the page had
+              // loaded with instead of the one the person had just chosen.
+              options.forEach((o) => {
+                o.classList.remove("selected");
+                o.setAttribute("aria-selected", "false");
+              });
               this.classList.add("selected");
+              this.setAttribute("aria-selected", "true");
               setOpen(false);
               hidden.dispatchEvent(new Event("change", { bubbles: true }));
             });
@@ -2921,6 +2929,7 @@
             allOptions.forEach((o) => {
               var isSelected = vals.includes(o.dataset.value);
               o.classList.toggle("selected", isSelected);
+              o.setAttribute("aria-selected", isSelected ? "true" : "false");
               // Update check icon
               var check = o.querySelector(".material-icons");
               if (isSelected && !check) {

@@ -240,7 +240,15 @@ class Form
                     // $describe as well as $nameAttr: this is the element a
                     // keyboard lands on, so it is the one that has to carry the
                     // error. The value carrier behind it is aria-hidden.
-                    echo '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false"' . $nameAttr . $describe . '>';
+                    // aria-haspopup promised a listbox, aria-controls never
+                    // said which one, and the container it would have pointed
+                    // at carried no listbox role either. Select::searchable()
+                    // has both; this path — the one every doc and the demo
+                    // actually use — had neither. Same widget, two renderers,
+                    // only one of them right.
+                    $listId = preg_replace('/[^A-Za-z0-9_-]/', '-', $name) . '-list';
+                    echo '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox"'
+                       . ' aria-expanded="false" aria-controls="' . $e($listId) . '"' . $nameAttr . $describe . '>';
                     echo '<span class="gk-select-value">' . $e($displayValue) . '</span>';
                     echo '<span class="material-icons gk-select-arrow" aria-hidden="true">expand_more</span>';
                     echo '</div>';
@@ -250,10 +258,12 @@ class Form
                         echo "<input type=\"text\" placeholder=\"{$e($placeholder)}\" autocomplete=\"off\">";
                         echo '</div>';
                     }
-                    echo '<div class="gk-select-options">';
+                    echo '<div class="gk-select-options" id="' . $e($listId) . '" role="listbox">';
                     foreach ($options as $k => $v) {
-                        $sel = (string)$k === (string)$value ? ' selected' : '';
-                        echo "<div class=\"gk-select-option{$sel}\" data-value=\"{$e($k)}\">{$e($v)}</div>";
+                        $isSel   = (string)$k === (string)$value;
+                        $sel     = $isSel ? ' selected' : '';
+                        $ariaSel = $isSel ? 'true' : 'false';
+                        echo "<div class=\"gk-select-option{$sel}\" role=\"option\" aria-selected=\"{$ariaSel}\" data-value=\"{$e($k)}\">{$e($v)}</div>";
                     }
                     echo '</div></div></div>';
                 } else {
@@ -276,12 +286,21 @@ class Form
                 // Same reason as the select above: required on a hidden input
                 // is inert, so the star was the only sign the field mattered.
                 echo "<input type=\"text\" class=\"gk-select-value-input\" tabindex=\"-1\" aria-hidden=\"true\" name=\"{$e($name)}\" value=\"{$e(implode(',', $selectedValues))}\"{$req}>";
-                echo '<div class="gk-multiselect-display" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false"'
+                $listId = preg_replace('/[^A-Za-z0-9_-]/', '-', $name) . '-list';
+                echo '<div class="gk-multiselect-display" tabindex="0" role="combobox" aria-haspopup="listbox"'
+                   . ' aria-expanded="false" aria-controls="' . $e($listId) . '"'
                    . (($showLabel && !isset($f['aria'])) ? ' aria-labelledby="' . $labelId . '"' : ' aria-label="' . $e($f['aria'] ?? $label ?: $placeholder) . '"') . '>';
                 echo '<div class="gk-multiselect-chips">';
                 foreach ($selectedValues as $sv) {
                     if (isset($options[$sv])) {
-                        echo "<span class=\"gk-chip-selected\" data-value=\"{$e($sv)}\">{$e($options[$sv])} <button type=\"button\" class=\"gk-chip-remove\">&times;</button></span>";
+                        // The remove button was a bare &times; and nothing
+                        // else — no name at all — so what a screen reader met
+                        // was a run of identical unlabelled buttons with no way
+                        // to tell which chip each one drops.
+                        $rm = $e(Lang::t('select.remove', ['label' => $options[$sv]]));
+                        echo "<span class=\"gk-chip-selected\" data-value=\"{$e($sv)}\">{$e($options[$sv])} "
+                           . "<button type=\"button\" class=\"gk-chip-remove\" aria-label=\"{$rm}\" title=\"{$rm}\">"
+                           . "<span aria-hidden=\"true\">&times;</span></button></span>";
                     }
                 }
                 if ($searchable) {
@@ -290,11 +309,14 @@ class Form
                 echo '</div>';
                 echo '<span class="material-icons gk-select-arrow" aria-hidden="true">expand_more</span>';
                 echo '</div>';
-                echo '<div class="gk-select-dropdown"><div class="gk-select-options">';
+                echo '<div class="gk-select-dropdown"><div class="gk-select-options" id="' . $e($listId) . '"'
+                   . ' role="listbox" aria-multiselectable="true">';
                 foreach ($options as $k => $v) {
-                    $sel = in_array((string)$k, array_map('strval', $selectedValues)) ? ' selected' : '';
-                    $check = $sel ? '<span class="material-icons" style="font-size:16px;" aria-hidden="true">check</span> ' : '';
-                    echo "<div class=\"gk-select-option{$sel}\" data-value=\"{$e($k)}\">{$check}{$e($v)}</div>";
+                    $isSel   = in_array((string)$k, array_map('strval', $selectedValues), true);
+                    $sel     = $isSel ? ' selected' : '';
+                    $ariaSel = $isSel ? 'true' : 'false';
+                    $check = $isSel ? '<span class="material-icons" style="font-size:16px;" aria-hidden="true">check</span> ' : '';
+                    echo "<div class=\"gk-select-option{$sel}\" role=\"option\" aria-selected=\"{$ariaSel}\" data-value=\"{$e($k)}\">{$check}{$e($v)}</div>";
                 }
                 echo '</div></div></div>';
                 break;
