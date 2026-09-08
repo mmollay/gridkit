@@ -506,4 +506,68 @@ return [
         . 'DOMContentLoaded that never fires for an async or injected script');
 },
 
+/**
+ * The lightbox is a full-screen dialog and was not built as one. It had no
+ * role and no aria-modal, so it was a div lying on the page with everything
+ * behind it still readable. It had no focus handling, so opening a picture
+ * left focus on the page underneath and Tab walked through controls hidden
+ * behind the image. Its three buttons had no name, and their icon spans were
+ * not aria-hidden, so what was announced was the ligature text — "close",
+ * "chevron_left", "chevron_right". The <img> had no alt, so the one thing the
+ * dialog exists to show was the one thing not described.
+ *
+ * And the tile that opens it is a <div>: no tab stop, no activation. The
+ * lightbox could not be opened by keyboard at all — only a mouse ever reached
+ * it.
+ */
+'the lightbox is a dialog you can open and leave by keyboard' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+
+    T::contains($js, 'lb.setAttribute("aria-modal", "true")',
+        'it is a modal dialog and says so');
+    T::contains($js, '_gkTrap(lb, e)', 'Tab cannot walk out of it');
+    T::contains($js, '_gkFocusInto(lb)', 'focus starts inside it');
+    // Named for the lightbox alone: the modal restores focus to a variable of
+    // the same name, so an assertion on the shared call would have passed on
+    // the modal's copy and told us nothing about this one.
+    T::contains($js, 'opener = galleryItem;',
+        'the tile it was opened from is remembered');
+
+    T::contains($js, 'item.setAttribute("role", "button")',
+        'a gallery tile is presented as the control it is');
+    T::contains($js, 'if (!item.hasAttribute("tabindex")) item.tabIndex = 0',
+        'and is a tab stop, so a keyboard can reach it');
+    T::contains($js, 'if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return',
+        'Enter and Space open it, the way a button does');
+
+    T::contains($js, 'img.alt = item.caption', 'the picture is described');
+    T::ok(substr_count($js, '<span class="material-icons" aria-hidden="true">chevron_left</span>') >= 1,
+        'the arrow glyphs are decoration, not the button name');
+},
+
+/**
+ * The focus helpers were methods on GK.modal, written when the modal was the
+ * only overlay in the library. It is not — the lightbox is one too, and had
+ * none of it. The fix could have been a second copy; the two would then have
+ * drifted, which is the failure this project keeps finding in itself. There is
+ * one implementation, and this counts it.
+ */
+'there is one focus trap in the library, not one per overlay' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+
+    T::eq(substr_count($js, 'a[href], button:not([disabled])'), 1,
+        'the list of what a keyboard can reach is defined once');
+    T::contains($js, 'function _gkFocusable(root)', 'at module level, where both overlays see it');
+    T::contains($js, 'return _gkFocusable(root);',
+        'and GK.modal points at it rather than keeping its own');
+    // Giving focus back to whatever opened an overlay was written out twice,
+    // and the two copies already differed — isConnected in one,
+    // document.contains in the other. An earlier version of the test above
+    // asserted a string both copies contained, so it could not have failed.
+    T::eq(substr_count($js, 'function _gkRestoreFocus('), 1,
+        'returning focus to the opener is defined once');
+    T::eq(substr_count($js, '_gkRestoreFocus(opener)'), 2,
+        'and both overlays call it');
+},
+
 ];

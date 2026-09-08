@@ -57,6 +57,96 @@
     );
   }
 
+  /*
+   * Focus handling for anything that lies on top of the page.
+   *
+   * These lived as methods on GK.modal, which was fine while the modal was the
+   * only overlay in the library. It is not: the lightbox is a full-screen
+   * dialog too, and it had none of this — open an image and your focus stayed
+   * on the page underneath, tabbing through controls hidden behind the
+   * picture. Rather than a second copy that would drift from the first, one
+   * set here and both overlays use it.
+   */
+
+  /** Everything inside `root` a keyboard can reach, in document order. */
+  function _gkFocusable(root) {
+    return Array.prototype.filter.call(
+      root.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]),' +
+          " select:not([disabled]), textarea:not([disabled]), [tabindex]",
+      ),
+      function (el) {
+        return (
+          el.getAttribute("tabindex") !== "-1" &&
+          el.offsetParent !== null &&
+          !el.closest('[aria-hidden="true"]')
+        );
+      },
+    );
+  }
+
+  /*
+   * Tab must not leave the dialog. Without this the focus ring walked out of
+   * the overlay into the page behind it — which the overlay covers, so the
+   * user was tabbing through controls they could neither see nor click, with
+   * no way back except Escape.
+   */
+  function _gkTrap(ov, e) {
+    if (e.key !== "Tab") return;
+    var items = _gkFocusable(ov);
+    if (!items.length) {
+      e.preventDefault();
+      return;
+    }
+    var first = items[0];
+    var last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  /*
+   * Back to whatever opened the overlay — but only if it is still on the page
+   * and still focusable; a row button whose table has reloaded is not. Left
+   * out, the focus ring stays on a control inside a dialog that is no longer
+   * on screen and the next Tab restarts at the top of the document.
+   *
+   * The modal and the lightbox both need this and both had written it out;
+   * the wording differed already (isConnected here, document.contains there),
+   * which is how two copies begin to answer differently.
+   */
+  function _gkRestoreFocus(el) {
+    if (!el || !el.isConnected || typeof el.focus !== "function") return;
+    try {
+      el.focus({ preventScroll: true });
+    } catch (err) {
+      el.focus();
+    }
+  }
+
+  /*
+   * Focus starts inside the dialog, on the first thing that can take it. It
+   * used to stay on whatever opened it, which sits behind the overlay: press
+   * Tab and you were walking the page underneath.
+   */
+  function _gkFocusInto(ov, fallbackSelector) {
+    var items = _gkFocusable(ov);
+    var target = items[0] || (fallbackSelector ? ov.querySelector(fallbackSelector) : ov);
+    if (!target) return;
+    if (!items.length && !target.hasAttribute("tabindex")) {
+      target.setAttribute("tabindex", "-1");
+    }
+    try {
+      target.focus({ preventScroll: true });
+    } catch (err) {
+      target.focus();
+    }
+  }
+
   const GK = {
     // === MODAL ===
     modal: {
@@ -100,19 +190,7 @@
       },
       /** Everything inside `root` a keyboard can reach, in document order. */
       _focusable(root) {
-        return Array.prototype.filter.call(
-          root.querySelectorAll(
-            'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]),' +
-              " select:not([disabled]), textarea:not([disabled]), [tabindex]",
-          ),
-          function (el) {
-            return (
-              el.getAttribute("tabindex") !== "-1" &&
-              el.offsetParent !== null &&
-              !el.closest('[aria-hidden="true"]')
-            );
-          },
-        );
+        return _gkFocusable(root);
       },
 
       /*
@@ -122,21 +200,7 @@
        * with no way back except Escape.
        */
       _trap(ov, e) {
-        if (e.key !== "Tab") return;
-        var items = this._focusable(ov);
-        if (!items.length) {
-          e.preventDefault();
-          return;
-        }
-        var first = items[0];
-        var last = items[items.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
+        _gkTrap(ov, e);
       },
 
       /*
@@ -146,17 +210,7 @@
        * you were walking the page underneath.
        */
       _focusInto(ov) {
-        var items = this._focusable(ov);
-        var target = items[0] || ov.querySelector("[data-gk-modal-container]");
-        if (!target) return;
-        if (!items.length && !target.hasAttribute("tabindex")) {
-          target.setAttribute("tabindex", "-1");
-        }
-        try {
-          target.focus({ preventScroll: true });
-        } catch (err) {
-          target.focus();
-        }
+        _gkFocusInto(ov, "[data-gk-modal-container]");
       },
 
       open(title, url, params, size) {
@@ -218,15 +272,7 @@
         var ov = this.stack.pop();
         var opener = ov._gkOpener;
         ov.remove();
-        // Back to whatever opened it — but only if that is still on the page
-        // and still focusable; a row button whose table has reloaded is not.
-        if (opener && opener.isConnected && typeof opener.focus === "function") {
-          try {
-            opener.focus({ preventScroll: true });
-          } catch (err) {
-            opener.focus();
-          }
-        }
+        _gkRestoreFocus(opener);
       },
       closeAll() {
         while (this.stack.length) this.close();
@@ -2577,6 +2623,9 @@
     // already-loaded document; the ready-aware call beside its definition
     // covers that pass, and this one covers everything added later.
     if (GK.accordion) GK.accordion.init();
+    // Same story as the accordion: defined below the first bootstrap, so its
+    // own _gkReady call covers that pass and this one covers later content.
+    if (GK.lightbox && GK.lightbox.init) GK.lightbox.init();
     if (GK.rowPager) GK.rowPager.init();
   };
 
@@ -3586,19 +3635,47 @@
   (function () {
     var lb = null,
       items = [],
-      current = 0;
+      current = 0,
+      // What the lightbox was opened from, so focus can go back to it.
+      opener = null;
 
+    /*
+     * The lightbox is a full-screen dialog and was not built as one.
+     *
+     *   - No role and no aria-modal: to a screen reader it was a div lying on
+     *     the page, and everything behind it stayed readable.
+     *   - No focus handling at all. Opening an image left focus on the page
+     *     underneath, so Tab walked through controls hidden behind the
+     *     picture, invisible and unclickable, with no way back but Escape.
+     *   - The three buttons had no accessible name. Their material-icons spans
+     *     were not aria-hidden either, so what was announced was the ligature
+     *     text: "close", "chevron_left", "chevron_right".
+     *   - The <img> had no alt, so the one thing the dialog exists to show was
+     *     the one thing that was not described.
+     *
+     * The focus helpers are the same ones the modal uses — see _gkFocusable
+     * above — rather than a second copy that would drift from the first.
+     */
     function createLightbox() {
       if (lb) return;
       lb = document.createElement("div");
       lb.className = "gk-lightbox";
+      lb.setAttribute("role", "dialog");
+      lb.setAttribute("aria-modal", "true");
+      lb.setAttribute("aria-label", _t("lightbox_title"));
+      lb.tabIndex = -1;
       lb.innerHTML =
-        '<button class="gk-lightbox-close"><span class="material-icons">close</span></button>' +
-        '<button class="gk-lightbox-nav gk-lightbox-prev"><span class="material-icons">chevron_left</span></button>' +
-        '<img class="gk-lightbox-img" src="">' +
-        '<button class="gk-lightbox-nav gk-lightbox-next"><span class="material-icons">chevron_right</span></button>' +
-        '<div class="gk-lightbox-caption"></div>' +
-        '<div class="gk-lightbox-counter"></div>';
+        '<button class="gk-lightbox-close" aria-label="' + _gkEsc(_t("close")) + '">' +
+        '<span class="material-icons" aria-hidden="true">close</span></button>' +
+        '<button class="gk-lightbox-nav gk-lightbox-prev" aria-label="' + _gkEsc(_t("lightbox_prev")) + '">' +
+        '<span class="material-icons" aria-hidden="true">chevron_left</span></button>' +
+        '<img class="gk-lightbox-img" src="" alt="">' +
+        '<button class="gk-lightbox-nav gk-lightbox-next" aria-label="' + _gkEsc(_t("lightbox_next")) + '">' +
+        '<span class="material-icons" aria-hidden="true">chevron_right</span></button>' +
+        // The caption and the counter change as you page through, and nothing
+        // said so. Announced politely, they now read out on each step.
+        '<div class="gk-lightbox-caption" aria-live="polite"></div>' +
+        '<div class="gk-lightbox-counter" aria-live="polite"></div>';
       document.body.appendChild(lb);
       lb.querySelector(".gk-lightbox-close").addEventListener("click", closeLb);
       lb.querySelector(".gk-lightbox-prev").addEventListener(
@@ -3616,6 +3693,9 @@
       lb.addEventListener("click", function (e) {
         if (e.target === lb) closeLb();
       });
+      lb.addEventListener("keydown", function (e) {
+        _gkTrap(lb, e);
+      });
       document.addEventListener("keydown", function (e) {
         if (!lb.classList.contains("open")) return;
         if (e.key === "Escape") closeLb();
@@ -3624,41 +3704,77 @@
       });
     }
 
-    function showLb(idx) {
-      createLightbox();
-      current = idx;
+    /*
+     * One place puts a picture on screen. showLb() and navigate() each carried
+     * their own copy of these four lines, which is how the <img> came to have
+     * no alt in either of them.
+     */
+    function render() {
       var item = items[current];
-      lb.querySelector(".gk-lightbox-img").src = item.src;
+      var img = lb.querySelector(".gk-lightbox-img");
+      img.src = item.src;
+      // The caption if there is one, otherwise at least which picture this is.
+      img.alt = item.caption || _t("lightbox_image", { n: current + 1, m: items.length });
       lb.querySelector(".gk-lightbox-caption").textContent = item.caption || "";
       lb.querySelector(".gk-lightbox-counter").textContent =
         current + 1 + " / " + items.length;
+    }
+
+    function showLb(idx) {
+      createLightbox();
+      current = idx;
+      render();
       lb.querySelector(".gk-lightbox-prev").style.display =
         items.length > 1 ? "" : "none";
       lb.querySelector(".gk-lightbox-next").style.display =
         items.length > 1 ? "" : "none";
       lb.classList.add("open");
       document.body.style.overflow = "hidden";
+      _gkFocusInto(lb);
     }
 
     function closeLb() {
       if (lb) lb.classList.remove("open");
       document.body.style.overflow = "";
+      // Back to the thumbnail it was opened from.
+      _gkRestoreFocus(opener);
+      opener = null;
     }
 
     function navigate(dir) {
       current = (current + dir + items.length) % items.length;
-      var item = items[current];
-      lb.querySelector(".gk-lightbox-img").src = item.src;
-      lb.querySelector(".gk-lightbox-caption").textContent = item.caption || "";
-      lb.querySelector(".gk-lightbox-counter").textContent =
-        current + 1 + " / " + items.length;
+      render();
     }
 
-    // Click on gallery items
-    document.addEventListener("click", function (e) {
-      var galleryItem = e.target.closest(".gk-gallery-item[data-lightbox]");
-      if (!galleryItem) return;
-      e.preventDefault();
+    /*
+     * A gallery tile is a <div>: not focusable, not operable, so the lightbox
+     * could not be opened by keyboard AT ALL. Only a mouse ever reached it.
+     *
+     * The markup is written by the page author, so the tile is made operable
+     * here rather than demanded of them: role, a tab stop, and a name taken
+     * from the caption it already carries. Enter and Space then open it, the
+     * way a button does.
+     */
+    function decorate(root) {
+      (root || document)
+        .querySelectorAll(".gk-gallery-item[data-lightbox]")
+        .forEach(function (item) {
+          if (item._gkGallery) return;
+          item._gkGallery = true;
+          if (!item.hasAttribute("role")) item.setAttribute("role", "button");
+          if (!item.hasAttribute("tabindex")) item.tabIndex = 0;
+          if (!item.hasAttribute("aria-label")) {
+            var img = item.querySelector("img");
+            var name = item.dataset.caption || (img ? img.alt : "") || "";
+            item.setAttribute(
+              "aria-label",
+              name ? _t("lightbox_open_named", { name: name }) : _t("lightbox_open"),
+            );
+          }
+        });
+    }
+
+    function openFrom(galleryItem) {
       var gallery = galleryItem.closest(".gk-gallery, .gk-gallery-masonry");
       if (!gallery) return;
       var allItems = gallery.querySelectorAll(
@@ -3676,12 +3792,37 @@
         });
         if (item === galleryItem) clickIdx = i;
       });
+      opener = galleryItem;
       showLb(clickIdx);
+    }
+
+    // Click on gallery items
+    document.addEventListener("click", function (e) {
+      var galleryItem = e.target.closest(".gk-gallery-item[data-lightbox]");
+      if (!galleryItem) return;
+      e.preventDefault();
+      openFrom(galleryItem);
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      var galleryItem = e.target.closest
+        ? e.target.closest(".gk-gallery-item[data-lightbox]")
+        : null;
+      if (!galleryItem) return;
+      // Space scrolls the page otherwise, which is the wrong answer to
+      // "activate the thing I have focused".
+      e.preventDefault();
+      openFrom(galleryItem);
+    });
+
+    _gkReady(function () {
+      decorate();
     });
 
     // Expose for external use
     window.GK = window.GK || {};
-    GK.lightbox = { open: showLb, close: closeLb };
+    GK.lightbox = { open: showLb, close: closeLb, init: decorate };
   })();
 })();
 

@@ -7,6 +7,58 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.72.0] - 2026-09-08
+
+### Fixed — the lightbox could not be opened by keyboard at all
+
+A gallery tile is a `<div>`: no tab stop, nothing to activate. Only a mouse
+ever reached the lightbox. The markup is written by the page author, so the
+tile is made operable by the library rather than demanded of them — `role`, a
+tab stop, and a name taken from the caption it already carries, with Enter and
+Space opening it the way a button does.
+
+### Fixed — the lightbox was a dialog that was not built as one
+
+- No `role`, no `aria-modal`: a div lying on the page, with everything behind
+  it still readable.
+- No focus handling whatsoever. Opening a picture left focus on the page
+  underneath, so Tab walked through controls hidden behind the image —
+  invisible and unclickable, with no way back but Escape.
+- The three buttons had no accessible name, and their icon spans were not
+  `aria-hidden`, so what was announced was the ligature text: "close",
+  "chevron_left", "chevron_right".
+- The `<img>` had no `alt`. The one thing the dialog exists to show was the one
+  thing not described. `showLb()` and `navigate()` each carried their own copy
+  of the four lines that put a picture on screen, which is how it came to be
+  missing from both; there is one `render()` now.
+
+Caption and counter are `aria-live="polite"`, so paging through announces where
+you are.
+
+### Changed — one focus trap in the library, not one per overlay
+
+`_focusable`, `_trap` and `_focusInto` were methods on `GK.modal`, written when
+the modal was the only overlay here. It is not. Rather than a second copy for
+the lightbox — which would have drifted, the failure this project keeps finding
+in itself — they are module-level functions and `GK.modal` delegates to them.
+
+Returning focus to whatever opened an overlay was written out twice as well,
+and the two copies **already differed**: `opener.isConnected` in the modal,
+`document.contains(opener)` in the new lightbox code. One `_gkRestoreFocus()`
+now, called by both.
+
+That duplication also produced a test that could not fail: the first version
+asserted `opener.focus({ preventScroll: true })`, a string the modal's copy
+contained too, so it would have passed with the lightbox's focus handling
+removed entirely. Caught by reverting it and watching the suite stay green. The
+assertion is now named for the lightbox alone, and a second one counts the
+shared helper's call sites.
+
+Verified in a browser: a tile takes focus, Enter opens the dialog, focus lands
+inside it, Tab wraps at the last control instead of leaving, Escape closes and
+focus returns to the tile — and the modal still works through the same helpers.
+
+---
 ## [1.71.0] - 2026-09-08
 
 ### Fixed — a closed accordion panel was closed for the eye only

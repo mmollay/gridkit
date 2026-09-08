@@ -202,8 +202,13 @@ return [
     $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
     T::contains($js, '_focusInto(ov)', 'focus starts inside the dialog');
     T::contains($js, 'ov._gkOpener = opener', 'the opener is remembered');
-    T::contains($js, 'opener.isConnected',
+    // The guard moved into _gkRestoreFocus when the lightbox turned out to
+    // need the same thing; the requirement is unchanged, so this points at
+    // where it lives now rather than being dropped.
+    T::contains($js, 'if (!el || !el.isConnected || typeof el.focus !== "function") return;',
         'and only refocused if it still exists — a reloaded table has replaced its rows');
+    T::contains($js, '_gkRestoreFocus(opener);',
+        'which the modal calls when it closes');
 },
 
 'a failed field is marked invalid and unmarked when fixed' => function (): void {
