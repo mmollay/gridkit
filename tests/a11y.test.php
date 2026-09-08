@@ -241,4 +241,65 @@ return [
         '"Invoices 3" says three of what; the hidden word answers it');
 },
 
+/**
+ * Pagination.php is the standalone server-side pager — the one the docblock
+ * calls "ONE uniform pager for the whole system". Table.php's built-in pager,
+ * the client-side pager in gridkit.js and both Sidebar levels all marked the
+ * current entry with aria-current. This file did not, so the component whose
+ * whole purpose is that every pager behaves alike was the only one that
+ * behaved differently.
+ */
+'the standalone pager states the page you are on' => function (): void {
+    Lang::set('en');
+    $html = GridKit\Pagination::build([
+        'page' => 3, 'totalPages' => 7, 'total' => 140, 'baseUrl' => '/x',
+    ]);
+
+    T::ok((bool) preg_match('/<a class="gk-pg gk-pg-active"[^>]*aria-current="page"/', $html),
+        'the page you are on is stated, not only coloured');
+    T::ok(substr_count($html, 'aria-current="page"') === 1,
+        'and exactly once — the other page links are plain links');
+},
+
+/**
+ * A collapsible sidebar group carried its open/closed state in a CSS class and
+ * nowhere else, on the server and in the browser alike. The button announced
+ * no state and never said what it controls: to a screen reader every group
+ * looked shut, or looked like nothing at all.
+ */
+'a collapsible sidebar group reports whether it is open' => function (): void {
+    Lang::set('en');
+    ob_start();
+    (new GridKit\Sidebar('s'))
+        ->item('Sales', '#', 'sell', ['id' => 'grp-sales', 'children' => [
+            ['label' => 'Open items', 'href' => '?o', 'active' => true],
+        ]])
+        ->item('Archive', '#', 'inventory', ['id' => 'grp-arch', 'children' => [
+            ['label' => 'Last year', 'href' => '?x'],
+        ]])
+        ->render();
+    $html = (string) ob_get_clean();
+
+    T::ok((bool) preg_match('/gk-sidebar-group-toggle active"\s+aria-expanded="true"\s+aria-controls="grp-sales"/', $html),
+        'the group holding the current page is open, and says so');
+    T::ok((bool) preg_match('/aria-expanded="false"\s+aria-controls="grp-arch"/', $html),
+        'and a shut group says the opposite rather than staying silent');
+    T::contains($html, 'id="grp-sales"',
+        'aria-controls names an element that is actually there');
+},
+
+/**
+ * The half that is easy to forget: the browser remembers which groups the
+ * visitor closed. Restoring that state by class alone would leave a button
+ * rendered as aria-expanded="true" sitting over a submenu that is shut — a
+ * lying attribute is worse than a missing one, because nothing looks wrong.
+ */
+'the sidebar toggle keeps its state attribute in step' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, 'btn.setAttribute("aria-expanded", collapsed ? "false" : "true")',
+        'clicking the toggle moves the attribute together with the class');
+    T::ok(substr_count($js, 'btn.setAttribute("aria-expanded"') >= 3,
+        'and the restore-from-localStorage path sets it on both branches');
+},
+
 ];

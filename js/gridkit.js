@@ -1578,6 +1578,7 @@
           if (!sub) return;
           var collapsed = sub.classList.toggle("collapsed");
           btn.classList.toggle("collapsed", collapsed);
+          btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
           try {
             localStorage.setItem("gk-nav-" + id, collapsed ? "closed" : "open");
           } catch (e) {}
@@ -1587,12 +1588,19 @@
         var sub = document.getElementById(id);
         if (!sub) return;
         var stored = localStorage.getItem("gk-nav-" + id);
+        // The restore path is where the attribute drifts. The server renders
+        // aria-expanded from the active page, localStorage remembers what this
+        // visitor last did, and the two disagree the moment someone closes a
+        // group and comes back. Setting only the class here would leave a
+        // button that says "expanded" over a submenu that is shut.
         if (stored === "closed") {
           sub.classList.add("collapsed");
           btn.classList.add("collapsed");
+          btn.setAttribute("aria-expanded", "false");
         } else if (stored === "open") {
           sub.classList.remove("collapsed");
           btn.classList.remove("collapsed");
+          btn.setAttribute("aria-expanded", "true");
         }
       });
     },

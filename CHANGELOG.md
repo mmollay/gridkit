@@ -7,6 +7,45 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.68.0] - 2026-09-08
+
+### Fixed — the standalone pager never said which page you were on
+
+`Pagination.php` opens with the claim that it is "ONE uniform pager for the
+whole system", replacing every bespoke variant. Every *other* pager kept that
+promise: `Table.php` marks the active page with `aria-current="page"`, so does
+the client-side pager in `gridkit.js`, and so do both levels of `Sidebar`. This
+file marked it with the `gk-pg-active` class and nothing else — a colour. A
+screen reader read the same row of digits on page 1 as on page 7, in the one
+component written specifically so that no pager would behave differently from
+another.
+
+### Fixed — a collapsible sidebar group announced no state
+
+`gk-sidebar-group-toggle` is a real `<button>` that opens and closes a submenu,
+and its state existed only as a CSS class — on the server and in the browser
+alike. It reached the eye as a rotated chevron and reached assistive technology
+not at all: the button never said whether it was open, and never named what it
+controls. It now carries `aria-expanded` and `aria-controls`, and `gridkit.js`
+moves the attribute with the class.
+
+That second half is the part worth stating. The browser remembers which groups
+a visitor closed, and the restore path ran before this change on the class
+alone. Had only the server been fixed, a remembered-closed group would have
+rendered a button claiming `aria-expanded="true"` above a shut submenu — an
+attribute that lies is worse than one that is missing, because nothing about
+the page looks wrong. The test asserts both branches for exactly that reason,
+and was checked by reverting the restore path alone.
+
+### Fixed — the test suite printed a deprecation notice on every run
+
+`ReflectionMethod::setAccessible()` has done nothing since PHP 8.1 and is
+deprecated in 8.5. `tests/ajax.test.php` had already dropped it and left a note
+saying why; the identical call in `tests/fields.test.php` was missed, so every
+run of the suite emitted two notices that had nothing to do with the code under
+test.
+
+---
 ## [1.67.3] - 2026-09-02
 
 ### Fixed — the picture toolbar was empty, so nothing could be aligned

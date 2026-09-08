@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.67.3 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.68.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose

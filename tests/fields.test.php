@@ -116,8 +116,10 @@ return [
     // could 500 every guarded page by setting one cookie, and keep it that
     // way, because logout crashed on the same line and never cleared it.
     $before = $_COOKIE['gk_remember'] ?? null;
+    // No setAccessible(): a no-op since PHP 8.1 and deprecated in 8.5.
+    // ajax.test.php dropped it and said so; this call site was missed, so
+    // every run of the suite printed two deprecation notices.
     $r = new ReflectionMethod(Auth::class, 'checkRememberCookie');
-    $r->setAccessible(true);
 
     foreach ([['a' => 'b'], [], '', 'no-colon', ':', 'x:'] as $value) {
         $_COOKIE['gk_remember'] = $value;

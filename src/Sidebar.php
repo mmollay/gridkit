@@ -198,7 +198,17 @@ class Sidebar
             }
 
             echo '<div class="gk-sidebar-group">';
-            echo '<button class="gk-sidebar-item gk-sidebar-group-toggle' . ($isOpen ? ' active' : '') . '" data-gk-toggle="' . $e($groupId) . '" data-label="' . $e($item['label']) . '">';
+            // The open/closed state of a submenu lived in a CSS class on both
+            // sides, so it reached the eye as a rotated chevron and reached a
+            // screen reader not at all: the button announced no state and never
+            // said what it opens. gridkit.js keeps aria-expanded in step on
+            // click AND when restoring the remembered state — without that
+            // second half the attribute rendered here would start lying the
+            // moment a visitor returned to a page with a closed group.
+            echo '<button class="gk-sidebar-item gk-sidebar-group-toggle' . ($isOpen ? ' active' : '') . '"'
+                . ' aria-expanded="' . ($isOpen ? 'true' : 'false') . '"'
+                . ' aria-controls="' . $e($groupId) . '"'
+                . ' data-gk-toggle="' . $e($groupId) . '" data-label="' . $e($item['label']) . '">';
             if ($item['icon'] !== '') {
                 echo '<span class="material-icons gk-sidebar-icon" aria-hidden="true">' . $e($item['icon']) . '</span>';
             }

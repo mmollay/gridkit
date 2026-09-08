@@ -114,7 +114,15 @@ final class Pagination
             $prev = 0;
             foreach ($set as $p) {
                 if ($prev && $p - $prev > 1) $inner .= '<span class="gk-pg-gap">…</span>';
-                $inner .= '<a class="gk-pg' . ($p === $page ? ' gk-pg-active' : '') . '" href="' . $url($p) . '">' . $p . '</a>';
+                // Which page you are on was carried by the gk-pg-active class
+                // and nothing else — a colour. Table.php's pager, the client
+                // pager in gridkit.js and both Sidebar levels all set
+                // aria-current; this file, whose entire purpose is that every
+                // pager in the system behaves the same, was the one that did
+                // not. A screen reader read the same row of numbers on page 1
+                // and on page 7.
+                $inner .= '<a class="gk-pg' . ($p === $page ? ' gk-pg-active' : '') . '" href="' . $url($p) . '"'
+                    . ($p === $page ? ' aria-current="page"' : '') . '>' . $p . '</a>';
                 $prev = $p;
             }
             $inner .= $icon('chevron_right', $page + 1, Lang::t('pagination.next'), $page < $totalPages);
