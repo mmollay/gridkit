@@ -302,4 +302,57 @@ return [
         'and the restore-from-localStorage path sets it on both branches');
 },
 
+/**
+ * Theme.php renders aria-pressed on the swatch that is on. Nothing ever moved
+ * it again: both GK.theme.set() (the click) and GK.theme.restore() (page load)
+ * carried two copies of the same loop, and both copies toggled the CSS class
+ * alone. So the picker started lying at the first colour change — and with a
+ * stored preference it was already lying before anyone touched it, on every
+ * page load. Two copies of one decision is how the attribute came to be
+ * missing from both; there is one copy now.
+ */
+'the theme picker marks the swatch that is really on' => function (): void {
+    Lang::set('en');
+    GridKit\Theme::set('ocean', 'light');
+    $html = GridKit\Theme::switcher();
+
+    T::ok((bool) preg_match('/gk-theme-dot gk-theme-active"[^>]*aria-pressed="true"/', $html),
+        'the chosen colour is stated, not only shown');
+    T::ok(substr_count($html, 'aria-pressed="true"') === 1,
+        'and exactly one swatch claims it');
+
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, 'b.setAttribute("aria-pressed", on ? "true" : "false")',
+        'the browser moves the attribute together with the class');
+    T::ok(substr_count($js, 'b.classList.toggle("gk-theme-active"') === 1,
+        'one place decides which swatch is on — click and restore both use it');
+    T::contains($js, 'this._mark(document.body.dataset.gkTheme',
+        'including the restore path, where a stored theme overrides the server');
+
+    GridKit\Theme::set('indigo', 'light');
+},
+
+/**
+ * The light/dark button holds both glyphs at once and CSS shows one of them.
+ * Both are aria-hidden — correctly, or the pair reads as "light_modedark_mode"
+ * — which left the single control that switches mode announcing no state
+ * whatsoever. Dark is its pressed state.
+ */
+'the light and dark button says which mode it is in' => function (): void {
+    Lang::set('en');
+    GridKit\Theme::set('indigo', 'dark');
+    T::contains(GridKit\Theme::switcher(), 'data-gk-toggle-mode aria-pressed="true"',
+        'dark is the pressed state');
+
+    GridKit\Theme::set('indigo', 'light');
+    T::contains(GridKit\Theme::switcher(), 'data-gk-toggle-mode aria-pressed="false"',
+        'and light is not');
+
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, 'this._markMode(mode)',
+        'toggling the mode moves the attribute with it');
+    T::contains($js, 'this._markMode(document.body.dataset.gkMode',
+        'and a restored mode is marked too, not just the server-rendered one');
+},
+
 ];

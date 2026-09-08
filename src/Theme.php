@@ -58,7 +58,12 @@ class Theme {
         // Both glyphs sit in the button at once and CSS shows one. Exposed,
         // a screen reader read the pair as "light_modedark_mode".
         $modeName = htmlspecialchars(Lang::t('theme.toggle_mode'), ENT_QUOTES, 'UTF-8');
-        $html .= '<button class="gk-mode-toggle" data-gk-toggle-mode aria-label="' . $modeName . '" title="' . $modeName . '">';
+        // Which mode is on was readable from the icon and nowhere else, and
+        // both icons are aria-hidden — so the one control that switches light
+        // and dark announced no state at all. Dark is the pressed state.
+        $html .= '<button class="gk-mode-toggle" data-gk-toggle-mode'
+               . ' aria-pressed="' . (self::$mode === 'dark' ? 'true' : 'false') . '"'
+               . ' aria-label="' . $modeName . '" title="' . $modeName . '">';
         $html .= '<span class="material-icons gk-mode-light" aria-hidden="true">light_mode</span>';
         $html .= '<span class="material-icons gk-mode-dark" aria-hidden="true">dark_mode</span>';
         $html .= '</button>';

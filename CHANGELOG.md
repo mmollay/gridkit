@@ -7,6 +7,34 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.68.1] - 2026-09-08
+
+### Fixed — the theme picker pointed at the wrong colour
+
+`Theme::switcher()` renders `aria-pressed="true"` on the swatch that is on.
+Nothing in the browser ever moved it again. `GK.theme.set()` (the click) and
+`GK.theme.restore()` (page load) each carried their own copy of the same loop,
+and both copies toggled the `gk-theme-active` class alone — so from the first
+colour change onwards the picker announced a different colour than the one in
+effect, and for anyone with a stored preference it was already wrong on every
+page load, before they had touched anything.
+
+Two copies of one decision is how the attribute came to be missing from both.
+There is one copy now, `_mark()`, and the test asserts there is only one.
+
+### Fixed — the light/dark button announced no state at all
+
+Both glyphs sit in `gk-mode-toggle` at once and CSS shows one of them; both are
+`aria-hidden`, correctly, or the pair reads as "light_modedark_mode". That left
+the single control that switches mode with a name and no state. Dark is now its
+pressed state, rendered by PHP and kept in step by `_markMode()`.
+
+Verified in a browser against the live demo, not only in the source: clicking a
+swatch moves class and attribute together, and a group closed before a reload
+comes back as `aria-expanded="false"` — the 1.68.0 restore path, confirmed end
+to end.
+
+---
 ## [1.68.0] - 2026-09-08
 
 ### Fixed — the standalone pager never said which page you were on

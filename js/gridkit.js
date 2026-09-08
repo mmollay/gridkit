@@ -2616,14 +2616,32 @@
       return this.scope ? name + ":" + this.scope : name;
     },
 
+    /**
+     * Mark the swatch that is in effect — the class AND aria-pressed, in one
+     * place. Theme.php renders aria-pressed on the active dot; nothing here
+     * ever moved it again. Both the click and the restore-on-load moved only
+     * the class, so from the first colour change onwards the picker told a
+     * screen reader that a different colour was selected than the one that
+     * was — and a stored preference made it wrong on every single page load,
+     * before anyone had touched anything.
+     *
+     * The two call sites below ran the same loop in two copies. That is how
+     * the attribute came to be missing from both.
+     */
+    _mark(theme) {
+      document.querySelectorAll("[data-gk-set-theme]").forEach(function (b) {
+        var on = b.dataset.gkSetTheme === theme;
+        b.classList.toggle("gk-theme-active", on);
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    },
+
     set(theme) {
       document.body.dataset.gkTheme = theme;
       try {
         localStorage.setItem(this._key("gk-theme"), theme);
       } catch (e) {}
-      document.querySelectorAll("[data-gk-set-theme]").forEach((b) => {
-        b.classList.toggle("gk-theme-active", b.dataset.gkSetTheme === theme);
-      });
+      this._mark(theme);
     },
     toggleMode() {
       var mode = document.body.dataset.gkMode === "dark" ? "light" : "dark";
@@ -2631,6 +2649,14 @@
       try {
         localStorage.setItem(this._key("gk-mode"), mode);
       } catch (e) {}
+      this._markMode(mode);
+    },
+
+    /** Dark is the pressed state of the one button that switches between them. */
+    _markMode(mode) {
+      document.querySelectorAll("[data-gk-toggle-mode]").forEach(function (b) {
+        b.setAttribute("aria-pressed", mode === "dark" ? "true" : "false");
+      });
     },
     restore() {
       try {
@@ -2647,10 +2673,8 @@
 
         // Mark the swatch matching whatever is actually in effect, which may
         // be the server's choice rather than a stored one.
-        var active = document.body.dataset.gkTheme || "";
-        document.querySelectorAll("[data-gk-set-theme]").forEach(function (b) {
-          b.classList.toggle("gk-theme-active", b.dataset.gkSetTheme === active);
-        });
+        this._mark(document.body.dataset.gkTheme || "");
+        this._markMode(document.body.dataset.gkMode || "light");
       } catch (e) {}
     },
   };
