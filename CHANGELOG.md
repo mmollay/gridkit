@@ -7,6 +7,42 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.75.1] - 2026-09-09
+
+### Fixed — two more places in the global search that parsed what they were given
+
+A sweep for the fault behind 1.75.0 — a value reaching `innerHTML` — found two
+more in `GK.search`:
+
+- The overlay's placeholder went straight into an attribute. One double quote
+  in it ended the attribute and everything after became markup. The module has
+  had its own `esc()` all along, four methods further down.
+- `showNotice()` pasted its argument as HTML. That was safe only because every
+  caller happened to pass a config string — until someone fills `error` from
+  what the search endpoint replied. One caller genuinely wanted an element, the
+  loading spinner, so it has its own `showSpinner()` rather than a shared door
+  left open on its behalf.
+
+The same sweep confirmed the modal title is already set with `textContent`, and
+that the remaining two `innerHTML` blocks interpolate only a counter and the
+translation catalogue.
+
+### Added — escaping tests for six components that had none
+
+`tests/escaping.test.php` covered tables, forms, headers, stat cards, buttons
+and the pager URL. It did not cover Sidebar, FilterChips, YearFilter,
+ActionGroup, Icon or the pager's entry label — and navigation is exactly where
+a label arrives straight out of a database row.
+
+All of them were probed by hand with both payloads first, and every one held.
+These assertions fix nothing; they stop it from being undone. Two were checked
+by removing the escaping and watching them fail.
+
+Worth recording: the first probe reported everything tight while injecting
+empty strings, because the payload variables were out of scope. PHP's undefined
+variable warning is the only reason that was noticed.
+
+---
 ## [1.75.0] - 2026-09-09
 
 ### Fixed — a toast and a confirmation put their message through the HTML parser

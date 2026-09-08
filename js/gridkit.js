@@ -4177,7 +4177,10 @@ GK.search = {
       '<div class="gk-search-box" role="combobox" aria-expanded="true" aria-haspopup="listbox">' +
       '<input class="gk-search gk-search-feld" type="search" autocomplete="off" spellcheck="false"' +
       ' aria-autocomplete="list" aria-controls="gk-search-liste"' +
-      ' placeholder="' + this.cfg.placeholder + '">' +
+      // Straight into an attribute. A placeholder holding a double quote
+      // ended the attribute and everything after it became markup — the
+      // module has had its own esc() all along, four methods further down.
+      ' placeholder="' + this.esc(this.cfg.placeholder) + '">' +
       '<div class="gk-search-liste" id="gk-search-liste" role="listbox"></div>' +
       "</div>";
     document.body.appendChild(ov);
@@ -4242,7 +4245,7 @@ GK.search = {
     // Abort a request already in flight — otherwise an old response overtakes the new one.
     if (this.controller) this.controller.abort();
     this.controller = new AbortController();
-    this.showNotice('<span class="gk-search-laedt"></span>');
+    this.showSpinner();
 
     fetch(this.cfg.url + (this.cfg.url.indexOf("?") >= 0 ? "&" : "?") + "q=" + encodeURIComponent(q), {
       headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -4309,10 +4312,30 @@ GK.search = {
     });
   },
 
+  /*
+   * A notice is a sentence: the hint, the empty result, the error. It was
+   * pasted into innerHTML, which was safe only because every caller happened
+   * to pass a config string — until the day someone sets `error` from what the
+   * search endpoint replied. Text is text.
+   *
+   * The spinner is the one caller that genuinely wants an element, so it has
+   * its own method instead of a shared door left open for it.
+   */
   showNotice(text) {
     this.hits = [];
     this.active = -1;
-    if (this.list) this.list.innerHTML = '<div class="gk-search-hinweis">' + text + "</div>";
+    if (!this.list) return;
+    this.list.innerHTML = '<div class="gk-search-hinweis"></div>';
+    this.list.firstChild.textContent = text;
+  },
+
+  showSpinner() {
+    this.hits = [];
+    this.active = -1;
+    if (this.list) {
+      this.list.innerHTML =
+        '<div class="gk-search-hinweis"><span class="gk-search-laedt"></span></div>';
+    }
   },
 
   esc(s) {

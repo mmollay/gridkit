@@ -9,7 +9,8 @@
 
 declare(strict_types=1);
 
-use GridKit\{Lang, Table, Form, Select, TableHeader, Header, PageSize, StatCards, Button};
+use GridKit\{Lang, Table, Form, Select, TableHeader, Header, PageSize, StatCards, Button,
+            Sidebar, FilterChips, YearFilter, ActionGroup, Icon, Pagination};
 
 const XSS = '<script>alert(1)</script>';
 const ATTR_BREAK = '" onmouseover="alert(1)';
@@ -103,6 +104,67 @@ return [
 'title(raw: true) is the documented, deliberate exception' => function (): void {
     $html = (new Header())->title('<em>ok</em>', true)->render();
     T::contains($html, '<em>ok</em>', 'raw mode must pass markup through unchanged');
+},
+
+/**
+ * The components below were never in this file. They were checked by hand
+ * against both payloads and every one of them held — so these assertions do
+ * not fix anything; they stop it from being undone. Navigation in particular
+ * is where a label comes straight out of a database row.
+ */
+'the sidebar escapes labels, links, groups, badges and submenus' => function (): void {
+    Lang::set('en');
+    assertEscaped(T::capture(fn() => (new Sidebar('s'))->item(XSS, '#')->render()),
+        'sidebar item label');
+    assertEscaped(T::capture(fn() => (new Sidebar('s'))->item('A', ATTR_BREAK)->render()),
+        'sidebar item href');
+    assertEscaped(T::capture(fn() => (new Sidebar('s'))->group(XSS)->item('A', '#')->render()),
+        'sidebar group label');
+    assertEscaped(T::capture(fn() => (new Sidebar('s'))->item('A', '#', '', ['badge' => XSS])->render()),
+        'sidebar badge');
+    assertEscaped(T::capture(fn() => (new Sidebar('s'))
+        ->item('A', '#', '', ['children' => [['label' => XSS, 'href' => ATTR_BREAK]]])->render()),
+        'sidebar submenu entry');
+},
+
+'filter chips and the year filter escape what they are given' => function (): void {
+    Lang::set('en');
+    assertEscaped(T::capture(fn() => (new FilterChips('f'))->chip('v', XSS)->render()),
+        'chip label');
+    assertEscaped(T::capture(fn() => (new FilterChips('f'))->chip(ATTR_BREAK, 'L')->render()),
+        'chip value');
+    assertEscaped(T::capture(fn() => (new FilterChips('f'))->baseUrl(ATTR_BREAK)->chip('v', 'L')->render()),
+        'chip base url');
+    assertEscaped(T::capture(fn() => (new FilterChips('f'))->preserve(['q' => ATTR_BREAK])->chip('v', 'L')->render()),
+        'chip preserved parameter');
+    assertEscaped(T::capture(fn() => (new YearFilter('y'))->baseUrl(ATTR_BREAK)->range(2024, 2026)->render()),
+        'year filter base url');
+    assertEscaped(T::capture(fn() => (new YearFilter('y'))->preserve(['q' => ATTR_BREAK])->range(2024, 2026)->render()),
+        'year filter preserved parameter');
+},
+
+'row actions, icons and the pager label escape their input' => function (): void {
+    Lang::set('en');
+    assertEscaped(T::capture(fn() => ActionGroup::render([
+        ['label' => XSS, 'onclick' => 'x()', 'title' => ATTR_BREAK],
+    ])), 'action group label and title');
+    assertEscaped(Icon::svg(XSS, 16), 'icon name');
+    assertEscaped(Pagination::build([
+        'page' => 1, 'totalPages' => 3, 'total' => 9, 'label' => XSS, 'baseUrl' => '/x',
+    ]), 'pager entry label');
+},
+
+/**
+ * The chip's remove button takes its accessible name from the option label —
+ * added in 1.70.0, and an aria-label is an attribute like any other.
+ */
+'the multi-select chip escapes the name it gives its remove button' => function (): void {
+    Lang::set('en');
+    $html = T::capture(fn() => (new Form('f'))
+        ->field('t', 'T', 'multiselect', ['options' => ['a' => ATTR_BREAK], 'value' => 'a'])
+        ->render());
+    assertEscaped($html, 'multiselect chip');
+    T::contains($html, 'aria-label="Remove', 'the button is still named');
 },
 
 ];
