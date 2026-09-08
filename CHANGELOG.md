@@ -7,6 +7,52 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.75.2] - 2026-09-09
+
+### Fixed — six stylesheet rules that could never apply
+
+Two of them stated a value the file then contradicted three lines later:
+
+- `.gk-modal-large` was declared twice, `max-width: 860px` and then `900px`.
+- `.gk-field` was declared twice, `margin-bottom: 20px` and then `16px`.
+
+Both come from changing a value by adding a rule instead of editing the one
+already there, which leaves the stylesheet stating two answers where only the
+second is true. Anyone reading the first one is reading a fact about this
+library that is not so.
+
+The other four were redundant rather than contradictory: a second
+`margin: 0 auto` on the collapsed sidebar's collapse button that the rule three
+lines above already set, an exact duplicate of `display: none` for the mobile
+close button, and five declarations on the collapsed sidebar label — opacity,
+width, overflow, padding, margin — sitting under a later rule that sets
+`display: none !important` on the same selector. None of the five could apply,
+and reading them suggested the label folds away when it simply stops existing.
+
+Rendering is unchanged, and that was measured rather than assumed: computed
+styles for every affected element were read in a browser before and after, in
+both the collapsed and the expanded state. The two values that do differ —
+`opacity` and `width` on the collapsed label — are on an element that generates
+no box.
+
+The file got very slightly **larger**. The removed rules were shorter than the
+comments explaining why they are gone.
+
+### Added — a check for rules that cannot apply
+
+For any selector that opens a top-level rule more than once, a later rule may
+not set every property an earlier one sets. Duplicates as such are fine and
+there are a dozen deliberate ones here, each adding something the first did not
+and each carrying a comment; what this forbids is the pointless kind, so it
+needs no list of exceptions to keep current.
+
+It reads only single-selector rules opened at column 0 — an indented rule, a
+comma-separated list or one inside a media query is invisible to it. That is a
+real limit, stated in the test, and it is enough for the shape that actually
+occurred. Verified from both sides: putting the dead `.gk-field` rule back
+fails it, and adding a duplicate that contributes a new property does not.
+
+---
 ## [1.75.1] - 2026-09-09
 
 ### Fixed — two more places in the global search that parsed what they were given

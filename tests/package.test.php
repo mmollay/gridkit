@@ -361,4 +361,74 @@ return [
     }
 },
 
+/**
+ * A rule that can never apply.
+ *
+ * Twice in this stylesheet the same selector opened a rule twice at the top
+ * level and the later one set every property the earlier one did — so the
+ * earlier was dead, and the file stated two different answers with only the
+ * second being true. `.gk-modal-large` said 860px and then 900px three lines
+ * later; `.gk-field` said `margin-bottom: 20px` and then 16px. Both came from
+ * changing a value by adding a rule instead of editing the one already there.
+ *
+ * Duplicates as such are fine and there are a dozen deliberate ones — a later
+ * block that adds a border, a dark-mode block, a layout override, each with a
+ * comment saying why. What this forbids is the pointless kind, so it needs no
+ * list of exceptions to keep up to date.
+ *
+ * It reads only single-selector rules opened at column 0. That is a real
+ * limit: an indented rule, a comma-separated selector list or one inside a
+ * media query is invisible to it. It is enough to catch the shape that
+ * actually occurred, and a parser that pretended to more would be lying.
+ */
+'no stylesheet rule is fully overridden by a later copy of itself' => function (): void {
+    $lines = explode("\n", (string) file_get_contents(ROOT . '/css/gridkit.css'));
+
+    $rules = [];   // selector => list of [line, [property, ...]]
+    $open = null;
+    $props = [];
+    $startLine = 0;
+
+    foreach ($lines as $i => $line) {
+        if ($open === null) {
+            if (preg_match('/^([.#\[][^{},]*?)\s*\{\s*$/', $line, $m)) {
+                $open = trim($m[1]);
+                $props = [];
+                $startLine = $i + 1;
+            }
+            continue;
+        }
+        if (preg_match('/^\}/', $line)) {
+            $rules[$open][] = [$startLine, $props];
+            $open = null;
+            continue;
+        }
+        if (preg_match('/^\s*([a-z-]+)\s*:/', $line, $m)) {
+            $props[] = $m[1];
+        }
+    }
+
+    // A pattern that stops matching would check nothing at all.
+    T::ok(count($rules) > 300,
+        'parsed ' . count($rules) . ' top-level rules out of gridkit.css; there were '
+        . 'well over 300 when this was written, so a much smaller number means the '
+        . 'pattern broke rather than the stylesheet shrinking');
+
+    foreach ($rules as $selector => $blocks) {
+        if (count($blocks) < 2) continue;
+        for ($a = 0; $a < count($blocks) - 1; $a++) {
+            [$lineA, $propsA] = $blocks[$a];
+            if ($propsA === []) continue;
+            for ($b = $a + 1; $b < count($blocks); $b++) {
+                [$lineB, $propsB] = $blocks[$b];
+                $survives = array_diff($propsA, $propsB);
+                T::ok($survives !== [],
+                    "$selector at line $lineA sets " . implode(', ', $propsA)
+                    . " and nothing else; the same selector at line $lineB sets all of "
+                    . 'them again, so the first rule can never apply');
+            }
+        }
+    }
+},
+
 ];

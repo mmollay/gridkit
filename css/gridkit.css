@@ -1667,9 +1667,11 @@ td.gk-table-meta {
   gap: 16px;
   flex-wrap: wrap;
 }
-.gk-field {
-  margin-bottom: 20px;
-}
+/* The field spacing lives further down, at 16px, together with the rule that
+   removes it from the last field. A second `.gk-field { margin-bottom: 20px }`
+   stood here and never applied — the same shape as the two .gk-modal-large
+   rules: a value changed by adding a rule instead of editing the one that
+   was already there, leaving the file stating two spacings. */
 .gk-w-1 {
   width: 6.25%;
 }
@@ -2616,9 +2618,9 @@ select.gk-input {
 .gk-modal-medium {
   max-width: 640px;
 }
-.gk-modal-large {
-  max-width: 860px;
-}
+/* Was two rules three lines apart, 860px then 900px. The first never applied
+   — someone changed the size by adding a rule instead of editing one, and the
+   file then stated two different widths with only the second being true. */
 .gk-modal-large {
   max-width: 900px;
 }
@@ -3039,13 +3041,10 @@ a.gk-stat-card:hover {
   text-overflow: ellipsis;
   transition: opacity var(--gk-dur-2) ease;
 }
-.gk-sidebar.collapsed .gk-sidebar-label {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
-  padding: 0;
-  margin: 0;
-}
+/* Five declarations used to stand here — opacity, width, overflow, padding,
+   margin — under a later rule that sets `display: none !important` on the same
+   selector. None of them could ever apply, and reading them suggested the
+   label folds away when in fact it simply stops existing. */
 /* Sidebar groups with subitems */
 .gk-sidebar-group-toggle {
   width: 100%;
@@ -3202,9 +3201,6 @@ a.gk-stat-card:hover {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.07);
 }
-.gk-sidebar.collapsed .gk-sidebar-collapse-btn {
-  margin: 0 auto;
-}
 .gk-sidebar.collapsed .gk-sidebar-item {
   justify-content: center !important;
   padding: 10px 0 !important;
@@ -3228,9 +3224,6 @@ a.gk-stat-card:hover {
 .gk-sidebar.collapsed .gk-sidebar-nav {
   padding: 8px 4px;
   gap: 2px;
-}
-.gk-sidebar.collapsed .gk-sidebar-close-mobile {
-  display: none;
 }
 .gk-sidebar-collapse-btn {
   display: flex;
