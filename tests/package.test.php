@@ -259,4 +259,59 @@ return [
     }
 },
 
+/**
+ * Nothing that is not the library may ride along into `vendor/`.
+ *
+ * `.htaccess` was doing exactly that, and its own first line says "GridKit —
+ * the public site". It sets a cache policy for the whole directory it sits in,
+ * rewrites /skill, and answers 403 for /tests, /ci and /.design — paths that
+ * belong to whoever's site is serving it. Dropped into somebody's application,
+ * those are their rules now. index.php, sitemap.xml, robots.txt and
+ * favicon.ico had all been excluded for precisely this reason; .htaccess and
+ * llms.txt were missed.
+ *
+ * The check reads .gitattributes rather than running `git archive`: the answer
+ * is a decision recorded in a file, and reading the file needs no tar. Note
+ * that `git check-attr` is NOT a substitute — it matches path patterns, while
+ * archive prunes an entire directory when the directory itself is ignored, so
+ * check-attr calls tests/foo.php "unspecified" for a file that never ships.
+ */
+'nothing outside the library ships to a composer require' => function (): void {
+    $out = [];
+    exec('git -C ' . escapeshellarg(ROOT) . ' ls-files 2>/dev/null', $out);
+    T::ok($out !== [], 'git ls-files returned nothing — is this a checkout?');
+
+    $ignored = [];
+    foreach (explode("\n", (string) file_get_contents(ROOT . '/.gitattributes')) as $line) {
+        if (preg_match('~^/(\S+)\s+export-ignore~', trim($line), $m)) {
+            $ignored[$m[1]] = true;
+        }
+    }
+    // Without this the loop below has nothing to compare against and passes on
+    // everything: a broken pattern would read as "all clear".
+    T::ok(count($ignored) > 5,
+        'parsed ' . count($ignored) . ' export-ignore paths out of .gitattributes — '
+        . 'too few to be the real file, so the pattern broke rather than the rules');
+
+    // What a `composer require mmollay/gridkit` is allowed to contain. A new
+    // entry at the repo root does not join this list by accident.
+    $library = [
+        'src', 'css', 'js', 'lang', 'skill',
+        'autoload.php', 'composer.json', 'LICENSE',
+        'README.md', 'CHANGELOG.md', 'GRIDKIT_SKILL.md', 'VERSION', 'skeleton.php',
+    ];
+
+    $tops = [];
+    foreach ($out as $path) {
+        $tops[explode('/', $path)[0]] = true;
+    }
+
+    foreach (array_keys($tops) as $top) {
+        if (in_array($top, $library, true)) continue;
+        T::ok(isset($ignored[$top]),
+            "`$top` is tracked, is not part of the library, and carries no "
+            . 'export-ignore — so it ships into every vendor/mmollay/gridkit');
+    }
+},
+
 ];

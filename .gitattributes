@@ -24,6 +24,14 @@
 /.CLAUDE.md       export-ignore
 /.gitattributes   export-ignore
 /.gitignore       export-ignore
+# The site's Apache configuration, and it says so in its own first line. It
+# sets a cache policy for the whole directory, rewrites /skill, and answers 403
+# for /tests, /ci and /.design — paths belonging to whoever's site is serving
+# it, not to GridKit. Shipped inside a package, those rules land in somebody
+# else's application. index.php, sitemap.xml, robots.txt and favicon.ico were
+# excluded for exactly this reason; these two were missed.
+/.htaccess        export-ignore
+/llms.txt         export-ignore
 
 # CKEditor 5 is bundled for the rich-text field, which is optional. At 1.7 MB it
 # would otherwise dominate every install of a framework that advertises zero

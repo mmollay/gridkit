@@ -7,6 +7,44 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.73.1] - 2026-09-09
+
+### Fixed — the website's Apache configuration shipped inside the package
+
+`.htaccess` begins with the words "GridKit — the public site", and that is what
+it is: a cache policy for the whole directory it sits in, a rewrite for
+`/skill`, and `RedirectMatch 403` for `/tests`, `/ci` and `/.design`. Those
+paths belong to whoever's site is serving the file. Delivered inside a Composer
+package, into a directory Apache reads, they become that project's rules —
+GridKit quietly answering 403 for a `/tests` route that is not GridKit's.
+
+`index.php`, `sitemap.xml`, `robots.txt` and `favicon.ico` had all been given
+`export-ignore` for exactly this reason. `.htaccess` and `llms.txt` were
+missed. They are excluded now; both stay in the repository, so the live site
+and a git clone are unchanged.
+
+The package is 40 files. It was 42.
+
+### Added — a check that the package stays the library
+
+Every tracked top-level entry must either be on a short list of what the
+library *is*, or carry `export-ignore`. A new file at the repo root therefore
+cannot reach `vendor/` without someone naming it deliberately.
+
+It reads `.gitattributes` rather than running `git archive`, because the answer
+is a decision recorded in a file and reading a file needs no `tar`. Worth
+noting for anyone tempted to simplify it: `git check-attr` is **not** a
+substitute. It matches path patterns, while `archive` prunes an entire
+directory when the directory itself is ignored — ask `check-attr` about
+`tests/foo.php` and it says "unspecified" for a file that has never shipped.
+That mistake was made while writing this and caught by comparing its answer
+against a real archive.
+
+The test also asserts it parsed more than five ignore rules, because a broken
+pattern would otherwise find nothing and report all clear. Verified by breaking
+the pattern on purpose.
+
+---
 ## [1.73.0] - 2026-09-08
 
 ### Fixed — the gallery could stay empty
