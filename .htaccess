@@ -49,6 +49,19 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # One hostname, not two.
+    #
+    # www.gridkit.at and gridkit.at both answered 200 with byte-identical
+    # pages. To a search engine that is two sites carrying the same content,
+    # and the two split whatever standing either would have had. The canonical
+    # tag pointed at the right one, but a canonical is a hint a crawler may
+    # weigh against other signals; a 301 is not.
+    #
+    # Only this one host: gridkit.ssi.at serves the same directory and must
+    # keep working under its own name.
+    RewriteCond %{HTTP_HOST} ^www\.gridkit\.at$ [NC]
+    RewriteRule ^(.*)$ https://gridkit.at/$1 [R=301,L]
+
     # /skill — the whole API in one document, for an AI assistant to read.
     # Served as text/markdown so a fetch gets the source, not a download.
     RewriteRule ^skill/?$ GRIDKIT_SKILL.md [L]

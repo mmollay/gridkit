@@ -7,6 +7,26 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.79.1] - 2026-09-09
+
+### Fixed — the site answered under two hostnames with identical pages
+
+`www.gridkit.at` and `gridkit.at` both returned 200, byte for byte the same
+document. To a search engine that is two sites carrying the same content, and
+the two split whatever standing either would have had — on a domain Googlebot
+had visited nine times in total. The canonical tag named the right one, but a
+canonical is a hint a crawler weighs against other signals; a 301 is not.
+
+`www` now redirects permanently. The rule names that one host on purpose:
+`gridkit.ssi.at` serves the same directory, already redirects from its own
+vhost, and a broader rule would have caught hosts nobody had checked.
+
+The homepage also named itself without its trailing slash — `https://gridkit.at`
+as the canonical of a page served at `https://gridkit.at/`. The same document
+by every rule a browser follows, and one more thing to reconcile for a crawler
+that has nothing else to go on yet.
+
+---
 ## [1.79.0] - 2026-09-09
 
 ### Fixed — the landing page was unreadable to anyone who pressed its own dark button

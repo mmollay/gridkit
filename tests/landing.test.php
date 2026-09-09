@@ -184,4 +184,34 @@ return [
         . 'each pair escapes the scope it was meant to get');
 },
 
+/**
+ * One hostname, not two.
+ *
+ * www.gridkit.at and gridkit.at both answered 200 with byte-identical pages.
+ * To a search engine that is two sites carrying the same content, splitting
+ * whatever standing either would have had — on a domain Googlebot had visited
+ * nine times in total. The canonical tag named the right one, but a canonical
+ * is a hint a crawler weighs against other signals; a 301 is not.
+ *
+ * The rule names one host on purpose: gridkit.ssi.at serves the same directory
+ * and already redirects from its own vhost, and a broader rule would have
+ * caught hosts nobody checked.
+ */
+'the site answers under one hostname' => function (): void {
+    $ht = (string) file_get_contents(__DIR__ . '/../.htaccess');
+
+    T::contains($ht, 'RewriteCond %{HTTP_HOST} ^www\\.gridkit\\.at$ [NC]',
+        'www.gridkit.at is served as a second copy of the site rather than redirected');
+    T::contains($ht, 'RewriteRule ^(.*)$ https://gridkit.at/$1 [R=301,L]',
+        'the redirect is missing or is not a permanent one');
+
+    // The homepage names itself exactly. Without the slash the tag pointed at
+    // https://gridkit.at while the page it sits on is https://gridkit.at/.
+    $src = (string) file_get_contents(LANDING);
+    T::contains($src, '$canonicalSelf = $canonicalUrl . \'/\';',
+        'the homepage canonical drops the trailing slash the page actually has');
+    T::contains($src, '<link rel="canonical" href="<?= $canonicalSelf ?>">',
+        'the canonical tag does not use it');
+},
+
 ];

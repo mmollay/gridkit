@@ -24,7 +24,13 @@ $asset = static function (string $path) use ($version): string {
     return htmlspecialchars($path . '?v=' . $stamp, ENT_QUOTES, 'UTF-8');
 };
 $skillContent = file_get_contents(__DIR__ . '/GRIDKIT_SKILL.md');
+// Without the trailing slash this pointed at https://gridkit.at while the page
+// it sits on is https://gridkit.at/ — the same document by every rule a browser
+// follows, and one more thing for a crawler to reconcile on a domain that has
+// nothing else going for it yet. The other pages append their own path, so the
+// slash lives with the page rather than in the base.
 $canonicalUrl = 'https://gridkit.at';
+$canonicalSelf = $canonicalUrl . '/';
 
 /**
  * Simple Markdown → HTML renderer for skill preview
@@ -248,13 +254,13 @@ if (isset($_GET['skill-html'])) {
     <meta name="keywords" content="PHP framework, admin dashboard, CRUD, AI agent, component framework, Material Design, open source">
     <meta name="author" content="Martin Mollay">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="<?= $canonicalUrl ?>">
+    <link rel="canonical" href="<?= $canonicalSelf ?>">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="GridKit – Agent-Ready PHP Component Framework">
     <meta property="og:description" content="Zero-dependency PHP framework for admin dashboards. 16 components, built for AI agents. Open Source.">
-    <meta property="og:url" content="<?= $canonicalUrl ?>">
+    <meta property="og:url" content="<?= $canonicalSelf ?>">
     <meta property="og:site_name" content="GridKit">
     <meta property="og:image" content="<?= $canonicalUrl ?>/docs/social-preview.png">
 
