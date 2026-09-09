@@ -151,6 +151,27 @@ function renderSkillMd(string $md): string {
 }
 
 $skillHtml = renderSkillMd($skillContent);
+
+/*
+ * The skill document, on demand.
+ *
+ * It used to be delivered inline, twice: 111 KB of rendered HTML inside a
+ * collapsed toggle, and another 68 KB of the same text in a hidden textarea so
+ * the copy button had something to read. Together that was 71 % of this page —
+ * a manual nobody sees until they ask for it, on every visit, ahead of the
+ * hero. It also put 44 of its own headings into the landing page's outline,
+ * which is what a screen reader walks and what a search engine indexes: the
+ * page read as the manual with a landing page attached.
+ *
+ * Both are fetched now. The raw text already has a route — /skill — so only
+ * the rendered form needs one.
+ */
+if (isset($_GET['skill-html'])) {
+    header('Content-Type: text/html; charset=utf-8');
+    header('Cache-Control: public, max-age=300');
+    echo $skillHtml;
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -928,8 +949,9 @@ $skillHtml = renderSkillMd($skillContent);
                 Add this file to your AI agent's project context. It contains complete documentation for all 16 components,
                 code patterns, JavaScript API reference, and common recipes.
             </p>
-            <div class="skill-preview collapsed" id="skill-preview"><?= $skillHtml ?></div>
-            <button class="skill-toggle" id="skill-toggle" onclick="toggleSkill()">Show full document</button>
+            <div class="skill-preview collapsed" id="skill-preview" data-src="?skill-html=1"></div>
+            <button class="skill-toggle" id="skill-toggle" onclick="toggleSkill()"
+                        aria-expanded="false" aria-controls="skill-preview">Show full document</button>
         </div>
     </div>
 </section>
@@ -1084,7 +1106,9 @@ $skillHtml = renderSkillMd($skillContent);
 </footer>
 
 <!-- Hidden skill content for copy -->
-<textarea id="skill-content" style="position:absolute;left:-9999px" aria-hidden="true"><?= htmlspecialchars($skillContent) ?></textarea>
+<!-- The raw document used to sit here in a hidden textarea, 68 KB on every
+     page load, so that one button could read it. It is fetched from /skill
+     when that button is pressed. -->
 
 <script>
 // Demo scenarios
@@ -1243,12 +1267,52 @@ function escapeHtml(text) {
 function toggleSkill() {
     const preview = document.getElementById('skill-preview');
     const btn = document.getElementById('skill-toggle');
+    const opening = preview.classList.contains('collapsed');
+
+    // Fetched the first time it is opened, and only then. aria-expanded on the
+    // button because it is a disclosure: it used to say nothing about the state
+    // it controls, which is the same gap the library's own components had.
+    if (opening && !preview.dataset.loaded) {
+        preview.dataset.loaded = '1';
+        btn.disabled = true;
+        fetch(preview.dataset.src)
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+            .then(html => { preview.innerHTML = html; })
+            .catch(() => {
+                // Say so, and leave the way out: the document is one link away.
+                preview.innerHTML = '<p class="skill-para">The document could not be loaded. '
+                    + '<a href="/skill">Open it directly</a>.</p>';
+                preview.dataset.loaded = '';
+            })
+            .finally(() => { btn.disabled = false; });
+    }
+
     preview.classList.toggle('collapsed');
-    btn.textContent = preview.classList.contains('collapsed') ? 'Show full document' : 'Collapse';
+    const open = !preview.classList.contains('collapsed');
+    btn.textContent = open ? 'Collapse' : 'Show full document';
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 
 function copySkill() {
-    const content = document.getElementById('skill-content').value;
+    const btn0 = document.getElementById('copy-btn');
+    btn0.disabled = true;
+    // /skill serves GRIDKIT_SKILL.md as text/markdown — the same document the
+    // page used to carry in a hidden field for this one button.
+    // With the slash: /skill answers 301 to /skill/ (Apache resolves the
+    // directory), and one redirect per click is one round trip too many.
+    fetch('/skill/')
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+        .then(content => copySkillText(content))
+        .catch(() => {
+            btn0.innerHTML = '<span class="material-icons" style="font-size:16px" aria-hidden="true">error</span> Not available';
+            setTimeout(() => {
+                btn0.innerHTML = '<span class="material-icons" style="font-size:16px" aria-hidden="true">content_copy</span> Copy Skill';
+            }, 2500);
+        })
+        .finally(() => { btn0.disabled = false; });
+}
+
+function copySkillText(content) {
     navigator.clipboard.writeText(content).then(() => {
         const btn = document.getElementById('copy-btn');
         btn.innerHTML = '<span class="material-icons" style="font-size:16px" aria-hidden="true">check</span> Copied!';

@@ -97,4 +97,43 @@ return [
         'and that container scrolls rather than clipping');
 },
 
+/**
+ * The manual does not ride along on the landing page.
+ *
+ * GRIDKIT_SKILL.md used to be delivered inline twice on every visit: 111 KB of
+ * rendered HTML inside a collapsed toggle nobody had opened, and another 68 KB
+ * of the same text in a hidden textarea so that one copy button had something
+ * to read. Together, 71 % of a 254 KB page. It also put 44 of its own headings
+ * into the outline a screen reader walks and a search engine indexes, so the
+ * page read as the manual with a landing page attached — and competed with
+ * /skill, which serves exactly that document.
+ *
+ * Both are fetched on demand now. The page is 74 KB and has 27 headings, all
+ * of them its own.
+ */
+'the landing page does not carry the skill document inline' => function (): void {
+    $src = (string) file_get_contents(LANDING);
+
+    T::ok(!preg_match('/<textarea[^>]*id="skill-content"/', $src),
+        'the raw document is back in a hidden textarea — 68 KB on every page load '
+        . 'so that one button can read it');
+    T::ok(!preg_match('/id="skill-preview"[^>]*>\s*<\?=\s*\$skillHtml/', $src),
+        'the rendered document is back inside the collapsed preview — 111 KB '
+        . 'nobody sees until they ask for it');
+
+    // And the two ways of asking are still wired up.
+    T::contains($src, "isset(\$_GET['skill-html'])",
+        'the rendered document has no endpoint to be fetched from');
+    T::contains($src, "fetch(preview.dataset.src)",
+        'the toggle does not fetch the preview');
+    T::contains($src, "fetch('/skill/')",
+        'the copy button does not fetch the raw document');
+
+    // A disclosure states what it controls and whether it is open — the same
+    // rule the library's own components had to learn.
+    T::ok((bool) preg_match('/id="skill-toggle"[^>]*aria-expanded="false"/s', $src)
+       || (bool) preg_match('/id="skill-toggle"[\s\S]{0,200}aria-expanded="false"/', $src),
+        'the toggle does not say whether it is open');
+},
+
 ];

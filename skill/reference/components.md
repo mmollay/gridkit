@@ -1,4 +1,4 @@
-# GridKit 1.76.0 — components
+# GridKit 1.77.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 

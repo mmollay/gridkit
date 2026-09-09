@@ -7,6 +7,42 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.77.0] - 2026-09-09
+
+### Fixed — the landing page carried the whole manual, twice, on every visit
+
+`GRIDKIT_SKILL.md` was delivered inline in two forms at once: 111 KB of
+rendered HTML inside a collapsed toggle nobody had opened, and another 68 KB of
+the same text in a hidden `<textarea>` so that one copy button had something to
+read. Together that was **71 % of a 254 KB page** — a 67 KB manual sent ahead
+of the hero to every visitor, almost none of whom will ask for it.
+
+It cost more than bytes. The document brought 44 of its own headings into the
+landing page's outline, which is what a screen reader walks and what a search
+engine indexes: the page read as the manual with a landing page attached, and
+it competed with `/skill`, which exists to serve exactly that document.
+
+Both are fetched on demand now — the rendered form from a new `?skill-html=1`
+endpoint, the raw text from `/skill/`, which already had a route. Nothing about
+the page changes for someone who does press the button, except that the
+document arrives when they ask instead of before.
+
+| | before | after |
+|---|---|---|
+| HTML | 254 KB | **74 KB** |
+| transferred (gzip) | 56 KB | **17 KB** |
+| headings in the outline | 40 | **27**, all its own |
+
+The toggle also gained `aria-expanded` and `aria-controls`. It is a disclosure
+button, and it had been announcing nothing — the same gap this library spent
+1.68.0 to 1.72.0 removing from its own components, sitting on its own front
+page the whole time.
+
+Verified in a browser: the preview ships empty, arrives on the first open,
+is not fetched again on the second, and the copy button puts the same 69,913
+characters on the clipboard that the hidden field used to hold.
+
+---
 ## [1.76.0] - 2026-09-09
 
 ### Changed — the select widget has one renderer
