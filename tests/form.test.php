@@ -154,4 +154,31 @@ return [
     T::contains($html, 'name="p"', 'and the field is still there');
 },
 
+/**
+ * A rich-text field that gives up on an editor still loading.
+ *
+ * The generated bootstrap set its one-shot flag BEFORE checking for CKEditor:
+ *
+ *     if(_init)return;_init=true;
+ *     var CE=(window.CKEDITOR||{}).ClassicEditor;if(!CE)return;
+ *
+ * So a field coming into view while the bundle was still on its way marked
+ * itself done and returned, and could never run again. The textarea stayed a
+ * textarea, with nothing logged anywhere. It never showed up because the one
+ * page using it loaded CKEditor from a blocking script in the head — which is
+ * precisely the 1.66 MB this makes avoidable.
+ */
+'a rich-text field waits for an editor that has not arrived yet' => function (): void {
+    Lang::set('en');
+    $html = field('richtext');
+
+    T::ok(!str_contains($html, 'if(_init)return;_init=true;'),
+        'the one-shot flag is set before the editor is checked for, so a field '
+        . 'that comes into view too early can never initialise');
+    T::contains($html, 'if(!CE){if(_warten++<140){setTimeout(_start,150);}return;}',
+        'a missing editor is waited for, within a bound');
+    T::ok(strpos($html, '_init=true') > strpos($html, 'var CE=CK.ClassicEditor'),
+        'the flag is only set once the editor is really there');
+},
+
 ];

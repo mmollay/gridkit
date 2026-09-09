@@ -183,4 +183,31 @@ return [
     T::contains($html, 'the-example', 'and the listing contains the source that produced it');
 },
 
+/**
+ * The demo did not block on 1.66 MB of somebody else's editor.
+ *
+ * CKEditor is 1446 KB of script and 217 KB of stylesheet, and it backs exactly
+ * one card, in one of eleven sections, ten of which are hidden when the page
+ * opens. It used to load from a blocking `<script>` in the head: every visitor
+ * paid for the editor before anything rendered, on the page that exists to
+ * show what a zero-dependency framework looks like.
+ *
+ * The paragraph beside that card has always advertised "Initialization via
+ * IntersectionObserver". That was true of the initialisation and never of the
+ * download.
+ */
+'the demo does not load the editor before anyone asks for it' => function (): void {
+    $src = (string) file_get_contents(__DIR__ . '/../demo/index.php');
+
+    T::ok(!preg_match('/<script[^>]+src="[^"]*ckeditor5\.umd\.js"/', $src),
+        'the demo loads CKEditor from a blocking script tag again — 1.4 MB before first paint');
+    T::ok(!preg_match('/<link[^>]+href="[^"]*ckeditor5\.css"/', $src),
+        'the demo links the CKEditor stylesheet up front again');
+
+    T::contains($src, "document.querySelector('.gk-richtext-wrap')",
+        'nothing watches for a rich-text field, so the bundle would never arrive');
+    T::contains($src, 'new IntersectionObserver',
+        'the bundle is not tied to the field coming into view');
+},
+
 ];

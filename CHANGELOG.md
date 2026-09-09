@@ -7,6 +7,54 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.78.0] - 2026-09-09
+
+### Fixed — a rich-text field gave up on an editor that was still loading
+
+The generated bootstrap set its one-shot flag **before** checking whether
+CKEditor was there:
+
+```js
+if (_init) return; _init = true;
+var CE = (window.CKEDITOR || {}).ClassicEditor; if (!CE) return;
+```
+
+A field that came into view while the bundle was still on its way therefore
+marked itself done and returned, and could never run again. The textarea stayed
+a textarea, and nothing was logged anywhere. It never showed up in practice
+because the one page that uses this loaded CKEditor from a blocking `<script>`
+in the head — which is exactly the cost the fix makes avoidable. The flag is
+set only once the editor is really there, and a missing editor is now waited
+for within a bound: every 150 ms for twenty seconds, then it stops asking and
+leaves a usable textarea behind.
+
+A bounded wait rather than an event, because there is no event to agree on:
+CKEditor is supplied by the page, in whatever way that page chooses.
+
+### Fixed — the demo blocked first paint on 1.66 MB of somebody else's editor
+
+1446 KB of script and 217 KB of stylesheet, in the head, on every visit — for
+one card, in one of eleven sections, ten of which are hidden when the page
+opens. On the page whose job is to show what a framework advertising *zero
+dependencies* looks like.
+
+The paragraph beside that card has always said "Initialization via
+IntersectionObserver". That was true of the initialisation and never of the
+download. Now both wait for a rich-text field to actually come into view.
+
+Verified in a browser: nothing CKEditor-shaped is requested on load, and
+`window.CKEDITOR` is `undefined`; showing the section fetches both files
+(408 KB over the wire) and the editor builds itself.
+
+### Note — the demo's hidden sections are deliberate
+
+Ten of eleven sections are `display: none` at load, holding 195 KB of the
+page's 280 KB. That is not the same fault as the landing page's: those sections
+**are** the thing being demonstrated, and switching between them without a
+round trip is the point. 49 KB over the wire is a fair price for that, and it
+was left alone.
+
+---
 ## [1.77.0] - 2026-09-09
 
 ### Fixed — the landing page carried the whole manual, twice, on every visit

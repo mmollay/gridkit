@@ -154,8 +154,53 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
     <link rel="stylesheet" href="<?= Layout::asset('../css/gridkit.css') ?>">
     <link rel="stylesheet" href="<?= Layout::asset('../css/themes.css') ?>">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="../assets/ckeditor5/ckeditor5.css">
-    <script src="../assets/ckeditor5/ckeditor5.umd.js"></script>
+    <script>
+    /*
+     * CKEditor is 1.66 MB — 1446 KB of script and 217 KB of stylesheet — and
+     * it backs exactly one card, in one of eleven sections, ten of which are
+     * hidden when this page opens. It used to sit right here as a blocking
+     * <script> in the head: every visitor to the demo paid for the editor
+     * before anything rendered, and almost none of them ever scrolled to it.
+     *
+     * The paragraph beside that card has always said "Initialization via
+     * IntersectionObserver". That was true of the initialisation and never of
+     * the download.
+     *
+     * It is fetched the first time a rich-text field actually comes into view.
+     * GridKit's own field waits for the bundle instead of giving up on it
+     * (1.78.0) — before that, arriving late meant the field stayed a plain
+     * textarea for good, which is why this had to block in the first place.
+     */
+    (function () {
+      var geladen = false;
+      function laden() {
+        if (geladen) return;
+        geladen = true;
+        var l = document.createElement('link');
+        l.rel = 'stylesheet';
+        l.href = '../assets/ckeditor5/ckeditor5.css';
+        document.head.appendChild(l);
+        var s = document.createElement('script');
+        s.src = '../assets/ckeditor5/ckeditor5.umd.js';
+        document.head.appendChild(s);
+      }
+      function beobachten() {
+        var el = document.querySelector('.gk-richtext-wrap');
+        if (!el) return;
+        // No observer: load it rather than leave the field dead.
+        if (typeof IntersectionObserver === 'undefined') { laden(); return; }
+        var o = new IntersectionObserver(function (e) {
+          if (e[0].isIntersecting) { laden(); o.disconnect(); }
+        }, { threshold: 0 });
+        o.observe(el);
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', beobachten);
+      } else {
+        beobachten();
+      }
+    })();
+    </script>
     <style>
         body { margin:0; padding:0; background:var(--gk-surface-container, #f0f1f3); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:var(--gk-on-surface, #1f2937); }
         .demo-section { max-width:1100px; margin:24px auto; padding:0 24px; display:none; }

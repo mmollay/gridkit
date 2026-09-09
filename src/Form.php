@@ -513,10 +513,28 @@ class Form
                 $jsonValue = json_encode($value ?? '');
                 echo "<script>(function(){";
                 echo "var _id='{$editorId}';";
-                echo "var _init=false;";
+                echo "var _init=false;var _warten=0;";
                 echo "var _start=function(){";
-                echo "if(_init)return;_init=true;";
-                echo "var CK=window.CKEDITOR||{};var CE=CK.ClassicEditor;if(!CE)return;";
+                /*
+                 * The one-shot flag used to be set BEFORE the check for
+                 * CKEditor, so a field that came into view while the editor
+                 * was still loading marked itself done and returned — and
+                 * could never run again. The textarea stayed a textarea, with
+                 * no error anywhere. It never showed because the page that
+                 * uses this loads CKEditor with a blocking <script> in the
+                 * head, which is exactly the cost this makes avoidable: with
+                 * the flag set only once the editor is actually there, the
+                 * bundle may arrive late, deferred, or be injected on demand.
+                 *
+                 * A bounded wait rather than an event, because there is no
+                 * event to agree on: CKEditor is supplied by the page, in
+                 * whatever way that page chooses. Twenty seconds, then it
+                 * stops asking and leaves a usable textarea behind.
+                 */
+                echo "if(_init)return;";
+                echo "var CK=window.CKEDITOR||{};var CE=CK.ClassicEditor;";
+                echo "if(!CE){if(_warten++<140){setTimeout(_start,150);}return;}";
+                echo "_init=true;";
                 if ($uploadUrl !== '') {
                     // Ausrichtung, die eine E-Mail uebersteht.
                     //
