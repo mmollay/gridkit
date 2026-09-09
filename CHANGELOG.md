@@ -7,6 +7,65 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.79.0] - 2026-09-09
+
+### Fixed — the landing page was unreadable to anyone who pressed its own dark button
+
+The dark palette sat behind `@media (prefers-color-scheme: dark)` and nothing
+else — that is, behind the visitor's **system** setting. The page also carries
+a moon button, and that button sets `data-gk-mode="dark"` on the body, which no
+media query can see. Press it on a machine set to light and the ground went
+dark while every text colour stayed where it was:
+
+| | before | after |
+|---|---|---|
+| hero subline | **1.93:1** | 6.96:1 |
+| section subtitles | **2.36:1** | 5.71:1 |
+| body text | **1.93:1** | 6.96:1 |
+
+4.5:1 is the requirement. A page nobody can read, reached by pressing the
+button the page offers.
+
+Worth naming why it happened here and nowhere else: `css/gridkit.css` and
+`css/themes.css` use `data-gk-mode` for all 118 of their dark rules, and so
+does the demo. The landing page — the one advertising that library — was the
+only file that chose the other mechanism, while its own toggle spoke the
+library's language.
+
+There are three states, not two: system-dark with no choice made, an explicit
+dark choice, and an explicit light choice that must win even on a dark machine.
+All three are now covered and all three were measured. The palette is written
+once in PHP and applied to both selectors, so the pair cannot drift.
+
+Found while measuring the contrast of a section added minutes earlier — the
+first reading looked like a broken measurement rather than a broken page.
+
+### Added — a FAQ, written in the words people actually search for
+
+"GridKit" is a contested name: a power-grid extraction toolkit, a WordPress
+gallery plugin and a GitHub organisation all have it, and all of them outrank a
+three-week-old domain. A search for the name will not arrive here. A search for
+the task might — "php admin dashboard without a javascript framework", "php
+sortable table with pagination", "php admin panel without npm" — and the page
+had been describing itself in its own vocabulary: agent-ready, zero-dependency,
+Material Design 3. None of which anybody types.
+
+Ten questions with honest answers, and the title and description rewritten to
+lead with what the thing does rather than what it is called.
+
+The questions live in one PHP array that renders both the visible section and
+the `FAQPage` structured data. Two copies is the usual arrangement and the
+usual mistake: search engines compare the markup against the text and distrust
+the pair when they drift, which is what a hand-kept second copy eventually
+does.
+
+### Note — none of this is why it is not indexed
+
+Googlebot has made **nine** requests to gridkit.at, across every log this
+server still holds. Applebot made 246. The site is not indexed because almost
+nothing links to it, and no amount of markup fixes that.
+
+---
 ## [1.78.0] - 2026-09-09
 
 ### Fixed — a rich-text field gave up on an editor that was still loading

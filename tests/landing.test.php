@@ -136,4 +136,52 @@ return [
         'the toggle does not say whether it is open');
 },
 
+/**
+ * A dark colour that only the operating system can reach.
+ *
+ * The landing page kept its dark palette behind
+ * `@media (prefers-color-scheme: dark)` — the visitor's SYSTEM setting — and
+ * nothing else. But the page also carries a moon button, and that button sets
+ * `data-gk-mode="dark"` on the body, which no media query can see. Press it on
+ * a machine set to light and the ground went dark while every text colour
+ * stayed where it was: the hero subline, the section subtitles and all body
+ * text came out at **1.93:1** where 4.5:1 is required. A page nobody can read,
+ * reached by pressing the button the page offers.
+ *
+ * It is worth naming why it happened here and nowhere else: css/gridkit.css
+ * and css/themes.css use `data-gk-mode` for all 118 of their dark rules, and
+ * so does the demo. The landing page — the one advertising that library — was
+ * the only file that chose the other mechanism, and its own toggle spoke the
+ * library's language.
+ *
+ * Three states, not two: system-dark with no choice made, an explicit dark
+ * choice, and an explicit light choice that has to win even on a dark machine.
+ * The `:not([data-gk-mode="light"])` is what makes the third one work.
+ */
+'the landing page dark palette reaches its own toggle, not only the system' => function (): void {
+    $src = (string) file_get_contents(LANDING);
+
+    // The shape of the original fault: variables redefined for the system
+    // setting alone.
+    T::ok(!preg_match('/@media \(prefers-color-scheme: dark\)\s*\{\s*:root\s*\{/', $src),
+        'the dark palette is defined on :root behind the media query alone, so the '
+        . "page's own toggle changes the ground and leaves the text where it was");
+
+    $system = substr_count($src, 'body:not([data-gk-mode="light"])');
+    $gewaehlt = substr_count($src, 'body[data-gk-mode="dark"]');
+    T::ok($system >= 2,
+        "found $system system-dark selectors; a much smaller number means the pattern "
+        . 'broke rather than the page losing its dark mode');
+    T::ok($gewaehlt >= 2,
+        "the dark palette is applied for the system setting ($system places) but not "
+        . "for an explicit dark choice ($gewaehlt) — which is what the moon button sets");
+
+    // Every selector after a comma needs the prefix too. The first version of
+    // the helper prefixed the line, so `.a code, .b code` left the second half
+    // loose inside the media query.
+    T::contains($src, "explode(',', trim(\$sel))",
+        'the prefixing helper does not split comma-separated selectors, so half of '
+        . 'each pair escapes the scope it was meant to get');
+},
+
 ];

@@ -150,6 +150,71 @@ function renderSkillMd(string $md): string {
     return $html;
 }
 
+/*
+ * The questions, once.
+ *
+ * They are rendered as the visible section AND as FAQPage structured data
+ * further down. Two copies would be the usual arrangement and the usual
+ * mistake: search engines compare the markup against the text on the page and
+ * distrust the pair when they drift, which is exactly what two copies do.
+ *
+ * They are also written in the words a person types, not the words this
+ * project uses about itself. "GridKit" is a contested name — a power-grid
+ * toolkit, a WordPress plugin and a GitHub organisation all have it — so a
+ * search for the name will not arrive here. What can arrive is a search for
+ * the task.
+ */
+$faq = [
+    ['Can I build a PHP admin dashboard without a JavaScript framework?',
+     'Yes — that is what GridKit is for. You write PHP; it renders the table, the form and the '
+     . 'layout as plain HTML, and one JavaScript file handles sorting, searching, filtering and '
+     . 'paging over AJAX. There is no React, no Vue and no client-side state to keep in step with '
+     . 'your database.'],
+    ['Does it need npm, a build step or a bundler?',
+     'No. GridKit is one CSS file and one JavaScript file, both ready to serve. A git clone is a '
+     . 'working install; <code>composer require mmollay/gridkit</code> is the same thing without '
+     . 'the demo. Nothing compiles, nothing is generated, and there is no lock file to keep '
+     . 'current.'],
+    ['How do I make a sortable, searchable table with pagination in PHP?',
+     'Four chained calls: <code>(new Table(\'invoices\'))-&gt;setData($rows)-&gt;search([\'number\', '
+     . '\'customer\'])-&gt;column(\'number\', \'No.\', [\'sortable\' =&gt; true])-&gt;paginate(25)'
+     . '-&gt;render();</code> The search box, the filter dropdowns, the sort and the pager are '
+     . 'wired up and work over AJAX without a page reload. The same table also renders '
+     . 'server-side for the first paint, so it is there before any script runs.'],
+    ['Does it work with my existing project, router and database?',
+     'It has no opinion about any of them. GridKit is not a framework in the routing-and-ORM '
+     . 'sense: no router, no ORM, no service container, no bootstrapping. You hand it arrays or a '
+     . 'PDO connection and it renders. It sits inside Laravel, Symfony, CodeIgniter or a folder '
+     . 'of PHP files equally well, because it never asks what is around it.'],
+    ['What does "built for AI agents" actually mean?',
+     'One document, <a href="/skill/">GRIDKIT_SKILL.md</a>, describes the entire API in a form an '
+     . 'assistant can read in a single pass: every component, every option, the markup contracts '
+     . 'and the mistakes people make with them. Put it in your agent\'s context and it writes '
+     . 'GridKit code that runs instead of inventing method names. The document is built from the '
+     . 'same source as the library, and a test fails when it falls out of date.'],
+    ['How is this different from a Bootstrap or Tailwind admin template?',
+     'A template gives you markup to copy. GridKit gives you PHP objects that produce the markup, '
+     . 'so a table is one call rather than forty lines of HTML you then maintain by hand. It also '
+     . 'brings the behaviour — sorting, filtering, paging, modals, confirmations, toasts — which '
+     . 'a CSS template leaves to you. And there is no utility-class build step: the stylesheet is '
+     . 'finished when you download it.'],
+    ['Is it responsive, and does it have a dark mode?',
+     'Yes to both. Six colour themes, light and dark, switched with one attribute on the body and '
+     . 'remembered per user. Tables collapse to cards on a phone or scroll sideways, whichever '
+     . 'you choose per table. The sidebar folds to icons and opens as a drawer on small screens.'],
+    ['What does it cost, and what licence is it under?',
+     'Nothing, and MIT. Use it commercially, change it, ship it inside a closed-source product — '
+     . 'the licence asks only that the copyright notice travels with the code.'],
+    ['Which PHP version does it need?',
+     'PHP 8.2 or newer. The only optional extension is <code>mbstring</code>, and the library '
+     . 'works without it — which is checked by a test rather than promised in a readme.'],
+    ['Is it accessible to screen readers and keyboard users?',
+     'It is built to be, and it is measured rather than claimed: tables carry column headers and '
+     . 'their sort state, dialogs hold focus and hand it back, disclosure controls announce '
+     . 'whether they are open, and every icon-only button has a name. Each of those is asserted '
+     . 'by a test that was checked by breaking it first.'],
+];
+
 $skillHtml = renderSkillMd($skillContent);
 
 /*
@@ -178,8 +243,8 @@ if (isset($_GET['skill-html'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GridKit – Agent-Ready PHP Component Framework for Admin Dashboards</title>
-    <meta name="description" content="GridKit is a zero-dependency PHP framework for building admin dashboards. 16 components, 1 CSS + 1 JS file, built for AI agents. Open Source on GitHub.">
+    <title>GridKit — PHP components for admin dashboards, built for AI agents</title>
+    <meta name="description" content="Build admin dashboards in plain PHP: sortable, searchable, paginated tables, 16-column forms, modals, six themes and dark mode. No npm, no build step, no dependencies — one CSS and one JS file. PHP 8.2+, MIT.">
     <meta name="keywords" content="PHP framework, admin dashboard, CRUD, AI agent, component framework, Material Design, open source">
     <meta name="author" content="Martin Mollay">
     <meta name="robots" content="index, follow">
@@ -223,6 +288,26 @@ if (isset($_GET['skill-html'])) {
         "applicationCategory": "DeveloperApplication"
     }
     </script>
+    <?php
+    /*
+     * FAQPage, built from the same $faq array the visible section renders
+     * from. Search engines compare the two and distrust the pair when they
+     * disagree — which is what a second, hand-kept copy eventually does. The
+     * answers are stripped of their markup here because this field is text.
+     */
+    $faqLd = ['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => []];
+    foreach ($faq as [$frage, $antwort]) {
+        $faqLd['mainEntity'][] = [
+            '@type' => 'Question',
+            'name' => $frage,
+            'acceptedAnswer' => [
+                '@type' => 'Answer',
+                'text'  => html_entity_decode(strip_tags($antwort), ENT_QUOTES, 'UTF-8'),
+            ],
+        ];
+    }
+    ?>
+    <script type="application/ld+json"><?= json_encode($faqLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
 
     <!--
         GridKit's own stylesheets, for the live table under the hero.
@@ -289,8 +374,26 @@ if (isset($_GET['skill-html'])) {
             --gk-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #2563eb 100%);
         }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
+        <?php
+        /*
+         * The dark palette, written once and applied to two different
+         * situations that are easy to mistake for one.
+         *
+         * It stood behind `@media (prefers-color-scheme: dark)` alone — that
+         * is, behind the VISITOR'S SYSTEM SETTING. But this page also has a
+         * moon button, and that button sets data-gk-mode="dark" on the body,
+         * which the media query cannot see. Press it on a machine set to
+         * light and the ground went dark while every text colour stayed where
+         * it was: the hero subline, the section subtitles and all body text
+         * came out at 1.93:1 against 4.5:1 required — a page a person cannot
+         * read, reached by pressing the button the page offers.
+         *
+         * Three states, not two: system-dark with no choice made, an explicit
+         * dark choice, and an explicit light choice that must win even on a
+         * dark machine. The :not([data-gk-mode="light"]) is what makes the
+         * third one work.
+         */
+        $dunkel = <<<CSS
                 --gk-surface: #0f172a;
                 --gk-surface-dim: #1e293b;
                 --gk-surface-container: #1e293b;
@@ -300,7 +403,17 @@ if (isset($_GET['skill-html'])) {
                 --gk-border: #334155;
                 --gk-code-bg: #0f172a;
                 --gk-code-text: #e2e8f0;
+        CSS;
+        ?>
+        @media (prefers-color-scheme: dark) {
+            body:not([data-gk-mode="light"]) {
+<?= $dunkel ?>
+
             }
+        }
+        body[data-gk-mode="dark"] {
+<?= $dunkel ?>
+
         }
 
         html { scroll-behavior: smooth; }
@@ -321,8 +434,9 @@ if (isset($_GET['skill-html'])) {
             transition: all 0.3s;
         }
         @media (prefers-color-scheme: dark) {
-            .nav { background: rgba(15,23,42,0.85); }
+            body:not([data-gk-mode="light"]) .nav { background: rgba(15,23,42,0.85); }
         }
+        body[data-gk-mode="dark"] .nav { background: rgba(15,23,42,0.85); }
         .nav-inner {
             max-width: 1200px; margin: 0 auto; padding: 0 24px;
             display: flex; align-items: center; justify-content: space-between; height: 64px;
@@ -432,6 +546,31 @@ if (isset($_GET['skill-html'])) {
             color: var(--gk-primary); margin-bottom: 20px;
         }
         .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+
+        /* FAQ. Two columns on a wide screen, one on a narrow one — an answer
+           is prose, so the measure is capped rather than left to the column. */
+        .faq-list {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 28px 40px; max-width: 1000px; margin: 0 auto;
+        }
+        .faq-item { border-top: 1px solid var(--gk-border); padding-top: 20px; }
+        .faq-q {
+            font-size: 17px; font-weight: 700; margin-bottom: 10px;
+            letter-spacing: -0.01em; line-height: 1.35;
+        }
+        .faq-a {
+            font-size: 15px; line-height: 1.65; color: var(--gk-text-secondary);
+            max-width: 62ch;
+        }
+        .faq-a code {
+            font-family: var(--gk-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+            font-size: 13px; background: var(--gk-code-inline-bg, rgba(15,23,42,0.06));
+            padding: 2px 5px; border-radius: 5px; word-break: break-word;
+        }
+        .faq-a a { color: var(--gk-primary); text-decoration: underline; text-underline-offset: 2px; }
+        @media (max-width: 900px) {
+            .faq-list { grid-template-columns: 1fr; gap: 24px; }
+        }
         .feature-card p { font-size: 14px; color: var(--gk-text-secondary); line-height: 1.6; }
 
         /* --- AGENT SECTION --- */
@@ -611,14 +750,44 @@ if (isset($_GET['skill-html'])) {
             padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px;
             line-height: 1.6; color: var(--gk-code-text); overflow-x: auto; margin: 0;
         }
-        @media (prefers-color-scheme: dark) {
+        <?php
+        // Same again for the preview's own colours.
+        $dunkelVorschau = <<<CSS
             .skill-preview { background: #1e293b; border-color: #334155; }
             .skill-preview.collapsed::after { background: linear-gradient(transparent, #1e293b); }
             .skill-para code, .skill-list code { background: #334155; color: #818cf8; }
             .skill-table { border-color: #334155; }
             .skill-table-row { border-bottom-color: #334155; }
             .skill-table-row:nth-child(even) { background: rgba(255,255,255,0.03); }
+        CSS;
+        /*
+         * Prefixes EVERY selector, including the ones after a comma. The first
+         * version prefixed the line, so `.skill-para code, .skill-list code`
+         * came out with only the first half scoped and the second half loose
+         * inside the media query — applying to a visitor who had explicitly
+         * chosen light on a dark machine, which is the one case the :not() is
+         * there to protect.
+         */
+        $mitPraefix = static function (string $css, string $p): string {
+            $aus = [];
+            foreach (explode("\n", $css) as $zeile) {
+                if (trim($zeile) === '' || !str_contains($zeile, '{')) { $aus[] = $zeile; continue; }
+                [$sel, $rest] = explode('{', $zeile, 2);
+                $teile = array_map(
+                    static fn(string $t): string => $p . ' ' . trim($t),
+                    explode(',', trim($sel))
+                );
+                $aus[] = '            ' . implode(', ', $teile) . ' {' . $rest;
+            }
+            return implode("\n", $aus);
+        };
+        ?>
+        @media (prefers-color-scheme: dark) {
+<?= $mitPraefix($dunkelVorschau, 'body:not([data-gk-mode="light"])') ?>
+
         }
+<?= $mitPraefix($dunkelVorschau, 'body[data-gk-mode="dark"]') ?>
+
 
         /* --- COMPONENTS PREVIEW --- */
         .components-preview {
@@ -684,6 +853,7 @@ if (isset($_GET['skill-html'])) {
             <a href="#features">Features</a>
             <a href="#agent">Agent Skill</a>
             <a href="#components">Components</a>
+            <a href="#faq">FAQ</a>
             <a href="/demo/">Demo</a>
             <a href="https://github.com/mmollay/gridkit" class="nav-cta" target="_blank" rel="noopener">
                 GitHub
@@ -1048,6 +1218,24 @@ if (isset($_GET['skill-html'])) {
                 <h3>YearFilter</h3>
                 <p>Year navigation filter</p>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ. Rendered from $faq, which the structured data below also uses. -->
+<section class="section" id="faq">
+    <div class="container">
+        <div class="section-header">
+            <h2>Questions people ask</h2>
+            <p>Short answers. The long ones are in <a href="/skill/">the API document</a>.</p>
+        </div>
+        <div class="faq-list">
+<?php foreach ($faq as [$frage, $antwort]): ?>
+            <div class="faq-item">
+                <h3 class="faq-q"><?= htmlspecialchars($frage) ?></h3>
+                <div class="faq-a"><?= $antwort ?></div>
+            </div>
+<?php endforeach; ?>
         </div>
     </div>
 </section>
