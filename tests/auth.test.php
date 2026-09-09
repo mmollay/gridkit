@@ -177,8 +177,30 @@ return [
     // where 'css/' would resolve to /demo/css/.
     T::ok(str_starts_with($cssOf(), '/'), 'a derived path is absolute');
 
-    $_SERVER['DOCUMENT_ROOT'] = sys_get_temp_dir();
-    T::eq($cssOf(), 'css/gridkit.css', 'outside the document root it falls back');
+    /*
+     * A document root that provably does not contain this checkout — chosen,
+     * not assumed. This line used to read sys_get_temp_dir(), which is only
+     * "outside" as long as nobody checks the repository out under /tmp. Do
+     * that — a git worktree for a one-off comparison is enough — and the
+     * fallback branch never runs, the derived path comes back instead, and
+     * the suite fails on a machine where nothing is wrong. A test that
+     * depends on where you cloned to is a trap for whoever hits it next.
+     */
+    $outside = null;
+    foreach ([sys_get_temp_dir(), '/usr', '/etc', '/var'] as $candidate) {
+        $real = realpath($candidate);
+        if ($real !== false && !str_starts_with($root, $real)) {
+            $outside = $real;
+            break;
+        }
+    }
+    T::ok($outside !== null,
+        'no directory on this machine could be used as a document root that '
+        . 'does not contain the checkout — the case below cannot be tested');
+    if ($outside !== null) {
+        $_SERVER['DOCUMENT_ROOT'] = $outside;
+        T::eq($cssOf(), 'css/gridkit.css', "outside the document root ($outside) it falls back");
+    }
 
     unset($_SERVER['DOCUMENT_ROOT']);
     T::eq($cssOf(), 'css/gridkit.css', "realpath('') is the working directory, not a document root");

@@ -629,4 +629,46 @@ return [
         'and so is the title');
 },
 
+/**
+ * The AJAX select — the one that fetches its options — had every gap the
+ * static select had, plus one of its own.
+ *
+ * Its combobox promised `aria-haspopup="listbox"` and never named the element;
+ * that element carried no listbox role; the results the browser built were
+ * plain divs with no option role; the clear button was a bare &times; with no
+ * name; and `aria-expanded`, written once by PHP, was never touched again
+ * while SIX places changed the dropdown's visibility — so it said "closed"
+ * with a list of results on screen.
+ *
+ * It is deliberately NOT folded into Select::searchable(): its search box sits
+ * inside the display rather than in the dropdown, it has a clear button and a
+ * loading row, and it has no options until something is typed. Sharing one
+ * function would have meant a switch at every second line. Sharing the *fixes*
+ * is the part that matters.
+ */
+'the ajax select is a combobox that says what it controls' => function (): void {
+    Lang::set('en');
+    $html = T::capture(fn() => (new GridKit\Form('f_ajax'))
+        ->field('customer', 'Customer', 'ajaxselect', ['url' => '/api/customers'])
+        ->render());
+
+    T::ok((bool) preg_match('/<div class="gk-select-options" id="([^"]+)" role="listbox">/', $html, $m),
+        'the results container is a listbox with an id to be pointed at');
+    T::contains($html, 'aria-controls="' . ($m[1] ?? 'x') . '"',
+        'and the combobox points at exactly that id');
+    T::contains($html, 'class="gk-ajax-clear" aria-label=',
+        'the clear button says what it does instead of being announced as "times"');
+
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, 'opt.setAttribute("role", "option")',
+        'a fetched result is an option, not a div in a listbox');
+    T::contains($js, 'input.setAttribute("aria-activedescendant", opts[activeIdx].id)',
+        'and the arrow keys say which one is active, not only shade it grey');
+    T::contains($js, 'display.setAttribute("aria-expanded", open ? "true" : "false")',
+        'opening and closing moves the attribute');
+    T::eq(substr_count($js, 'dropdown.style.display = '), 1,
+        'exactly one place decides whether the list is open — there were six, '
+        . 'and that is why the attribute could not keep up with them');
+},
+
 ];

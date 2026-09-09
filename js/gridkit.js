@@ -3137,19 +3137,37 @@
           var minChars = parseInt(wrap.dataset.minChars) || 2;
           var searchParam = wrap.dataset.searchParam || "q";
           var timer;
+          var display = wrap.querySelector(".gk-select-display");
+          var activeIdx = -1;
+
+          /*
+           * aria-expanded was written once, by PHP, and six places in here changed
+           * the dropdown's visibility without touching it — so the combobox
+           * reported "closed" with a list of results on screen. One place decides
+           * now, and it also clears the active option, which three of those six
+           * sites had to remember separately.
+           */
+          function setOpen(open) {
+            dropdown.style.display = open ? "block" : "none";
+            if (display) display.setAttribute("aria-expanded", open ? "true" : "false");
+            if (!open) {
+              activeIdx = -1;
+              input.removeAttribute("aria-activedescendant");
+            }
+          }
 
           input.addEventListener("input", function () {
             var q = this.value.trim();
             clearBtn.style.display = q ? "" : "none";
             if (q.length < minChars) {
-              dropdown.style.display = "none";
+              setOpen(false);
               return;
             }
             clearTimeout(timer);
             timer = setTimeout(function () {
               loading.style.display = "";
               optionsContainer.innerHTML = "";
-              dropdown.style.display = "block";
+              setOpen(true);
               fetch(url + "?" + searchParam + "=" + encodeURIComponent(q))
                 .then((r) => r.json())
                 .then((data) => {
@@ -3161,9 +3179,15 @@
                       "</div>";
                     return;
                   }
-                  data.forEach((item) => {
+                  data.forEach((item, i) => {
                     var opt = document.createElement("div");
                     opt.className = "gk-select-option";
+                    // The container is a listbox; its children were plain
+                    // divs, so it was announced as a listbox with nothing in
+                    // it. The id is what aria-activedescendant points at.
+                    opt.setAttribute("role", "option");
+                    opt.setAttribute("aria-selected", "false");
+                    opt.id = (optionsContainer.id || "gk-ajax") + "-opt-" + i;
                     opt.dataset.value = item[valueField];
                     opt.dataset.json = JSON.stringify(item);
                     var label = item[labelField] || "";
@@ -3188,18 +3212,29 @@
             }, 300);
           });
 
-          var activeIdx = -1;
-
           function getOptions() {
             return Array.from(optionsContainer.querySelectorAll(".gk-select-option"));
           }
 
+          /*
+           * Arrow keys moved a grey bar and nothing else: the active option was a
+           * background colour, which a screen reader does not see. The global search
+           * has always announced its active result with aria-activedescendant; this
+           * one never did.
+           */
           function highlightOption(opts) {
             opts.forEach(function (el, i) {
-              el.style.background = i === activeIdx ? "var(--gk-surface-container, #f1f5f9)" : "";
-              el.style.fontWeight = i === activeIdx ? "600" : "";
+              var on = i === activeIdx;
+              el.style.background = on ? "var(--gk-surface-container, #f1f5f9)" : "";
+              el.style.fontWeight = on ? "600" : "";
+              el.setAttribute("aria-selected", on ? "true" : "false");
             });
-            if (opts[activeIdx]) opts[activeIdx].scrollIntoView({ block: "nearest" });
+            if (opts[activeIdx]) {
+              opts[activeIdx].scrollIntoView({ block: "nearest" });
+              input.setAttribute("aria-activedescendant", opts[activeIdx].id);
+            } else {
+              input.removeAttribute("aria-activedescendant");
+            }
           }
 
           function selectOption(opt) {
@@ -3207,8 +3242,7 @@
             var item = JSON.parse(opt.dataset.json);
             hidden.value = opt.dataset.value;
             input.value = item[labelField] || opt.querySelector("div").textContent;
-            dropdown.style.display = "none";
-            activeIdx = -1;
+            setOpen(false);
             clearBtn.style.display = "";
             hidden.dispatchEvent(new Event("change", { bubbles: true }));
             wrap.dispatchEvent(new CustomEvent("gk-select", { detail: item }));
@@ -3235,8 +3269,7 @@
               e.preventDefault();
               selectOption(opts[activeIdx]);
             } else if (e.key === "Escape") {
-              dropdown.style.display = "none";
-              activeIdx = -1;
+              setOpen(false);
             }
           });
 
@@ -3245,13 +3278,12 @@
               hidden.value = "";
               input.value = "";
               clearBtn.style.display = "none";
-              dropdown.style.display = "none";
-              activeIdx = -1;
+              setOpen(false);
               hidden.dispatchEvent(new Event("change", { bubbles: true }));
             });
 
           document.addEventListener("click", function (e) {
-            if (!wrap.contains(e.target)) { dropdown.style.display = "none"; activeIdx = -1; }
+            if (!wrap.contains(e.target)) setOpen(false);
           });
         });
     },

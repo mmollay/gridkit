@@ -223,4 +223,40 @@ return [
     T::contains($html, '2026-03-09', 'per-column date format wins');
 },
 
+/**
+ * A key written twice in the same catalogue.
+ *
+ * PHP takes the last one and says nothing. So a second `'form.clear' => …`
+ * added further down does not fail, does not warn, and does not apply: the
+ * value that wins is the one already there, and whoever added the new line
+ * gets the old text with no hint why. It happened while writing 1.76.0 — the
+ * key existed, the new line was silently discarded, and the only reason it
+ * came out was that the suite's assertion count failed to move.
+ *
+ * Both files are read as text rather than through require(), because require()
+ * is what performs the swallowing.
+ */
+'no language file defines the same key twice' => function (): void {
+    foreach (glob(__DIR__ . '/../lang/*.php') ?: [] as $file) {
+        $name = basename($file);
+        preg_match_all("/^\\s*'([a-z0-9_.]+)'\\s*=>/mi", (string) file_get_contents($file), $m);
+        $keys = $m[1];
+
+        // A pattern that matches nothing would report every file as clean.
+        T::ok(count($keys) > 50,
+            "$name: read " . count($keys) . ' keys — too few to be the real catalogue, '
+            . 'so the pattern broke rather than the file shrinking');
+
+        $seen = [];
+        $twice = [];
+        foreach ($keys as $k) {
+            if (isset($seen[$k])) $twice[$k] = true;
+            $seen[$k] = true;
+        }
+        T::ok($twice === [],
+            "$name defines these keys more than once, and PHP keeps the last "
+            . 'one silently: ' . implode(', ', array_keys($twice)));
+    }
+},
+
 ];

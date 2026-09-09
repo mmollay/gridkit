@@ -7,6 +7,68 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.76.0] - 2026-09-09
+
+### Changed — the select widget has one renderer
+
+`Form`'s `select` field built the same markup `Select::searchable()` builds, a
+second time, in a second file. The two drifted twice and each time it was a
+screen reader that found it: 1.70.0 fixed options with no `role="option"` on
+one side and a combobox with no `aria-controls` on the other. Whatever a form
+field needs on top — the visible label, the error, the disabled state, the
+filter box appearing only once the list is long — is an option on the shared
+function now rather than a reason to write the markup again.
+
+The output is unchanged. That was established before the change, not asserted
+after it: twelve configurations were rendered and kept — with and without a
+value, few and many options, forced search, required, disabled, with an error,
+with an overridden name, without a label, with a custom placeholder, with a
+payload in the option text, with `tags[]` as the field name — and compared
+afterwards with attribute order normalised. All twelve identical, and the
+comparator was shown to notice a single flipped `aria-selected` before that
+result was believed.
+
+### Fixed — the AJAX select had every gap the static one had, and one of its own
+
+It is deliberately **not** folded into the shared function: its search box sits
+inside the display rather than in the dropdown, it has a clear button and a
+loading row, and it has no options until something is typed. Sharing one
+function would have meant a switch at every second line. Sharing the fixes is
+the part that matters:
+
+- The combobox promised a listbox and never named it; the container it meant
+  carried no role; the results the browser builds were plain `<div>`s in it.
+- The clear button was a bare `&times;` with no name — announced as "times",
+  the third button in this library with that exact fault.
+- `aria-expanded` was written once by PHP and never touched again while **six**
+  places changed the dropdown's visibility, so it said "closed" with a list of
+  results on screen. One `setOpen()` now, and the test counts the direct
+  assignments to make sure it stays one.
+- Arrow keys moved a grey bar and nothing else. The active result is announced
+  with `aria-activedescendant`, the way the global search has always done it.
+
+### Fixed — a language file could define the same key twice and say nothing
+
+PHP keeps the last value and issues no warning, so a second
+`'form.clear' => …` further down does not fail, does not warn, and does not
+apply: the text that wins is the one already there. This happened while writing
+this very release — the key existed, the new line was silently discarded, and
+the only reason it surfaced is that the suite's assertion count failed to move
+when it should have. Both catalogues are now read as text and checked for
+repeats.
+
+### Fixed — the test suite depended on where the repository was checked out
+
+`auth/the asset path is worked out, not guessed` set the document root to
+`sys_get_temp_dir()` and assumed GridKit could not be underneath it. Check the
+repository out under `/tmp` — a throwaway `git worktree` is enough — and the
+fallback branch never runs, the derived path comes back, and the suite fails on
+a machine where nothing is wrong. The document root is now *chosen* from
+candidates that provably do not contain the checkout, and the test asserts one
+was found. Verified by running the suite from a `/tmp` worktree, which is what
+exposed it.
+
+---
 ## [1.75.2] - 2026-09-09
 
 ### Fixed — six stylesheet rules that could never apply

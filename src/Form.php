@@ -217,55 +217,32 @@ class Form
 
             case 'select':
                 if (empty($f['native'])) {
-                    // Default: GridKit styled select (gk-select-search)
-                    $options = $f['options'] ?? [];
+                    /*
+                     * One renderer, in Select. The same markup used to be built
+                     * a second time right here, and the two copies drifted twice
+                     * without anyone noticing: the options lost role="option" on
+                     * one side, the combobox lost aria-controls on the other,
+                     * and each was found only when a screen reader met it. What
+                     * a form field needs on top — the visible label, the error,
+                     * the disabled state, the filter box only once the list is
+                     * long — is passed in rather than written out again.
+                     */
                     $placeholder = $f['placeholder'] ?? Lang::t('form.select');
-                    $displayValue = isset($options[$value]) ? $options[$value] : $placeholder;
-                    $disabled = !empty($f['disabled']) ? ' gk-select-disabled' : '';
-                    echo "<div class=\"gk-select-search{$disabled}\" data-gk-select-search" . (!empty($f['disabled']) ? ' data-disabled' : '') . ">";
-                    // The value carrier must be a control the browser will
-                    // validate. type="hidden" is barred from constraint
-                    // validation, so ['required' => true] printed the red star
-                    // beside the label and did nothing else — the form
-                    // submitted empty. 1.42.0 fixed this in Select::searchable,
-                    // which nothing outside the tests calls; every doc, the
-                    // demo and SPEC.md build a select through here.
-                    $ariaName = $e($f['aria'] ?? $label ?: $placeholder);
-                    // The visible label names it when there is one — a name a
-                    // person can also read is better than a duplicate string.
-                    $nameAttr = ($showLabel && !isset($f['aria']))
-                        ? ' aria-labelledby="' . $labelId . '"'
-                        : ' aria-label="' . $ariaName . '"';
-                    echo "<input type=\"text\" class=\"gk-select-value-input\" tabindex=\"-1\" aria-hidden=\"true\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"{$e($value)}\"{$req}>";
-                    // $describe as well as $nameAttr: this is the element a
-                    // keyboard lands on, so it is the one that has to carry the
-                    // error. The value carrier behind it is aria-hidden.
-                    // aria-haspopup promised a listbox, aria-controls never
-                    // said which one, and the container it would have pointed
-                    // at carried no listbox role either. Select::searchable()
-                    // has both; this path — the one every doc and the demo
-                    // actually use — had neither. Same widget, two renderers,
-                    // only one of them right.
-                    $listId = preg_replace('/[^A-Za-z0-9_-]/', '-', $name) . '-list';
-                    echo '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox"'
-                       . ' aria-expanded="false" aria-controls="' . $e($listId) . '"' . $nameAttr . $describe . '>';
-                    echo '<span class="gk-select-value">' . $e($displayValue) . '</span>';
-                    echo '<span class="material-icons gk-select-arrow" aria-hidden="true">expand_more</span>';
-                    echo '</div>';
-                    echo '<div class="gk-select-dropdown">';
-                    if (count($options) > 6 || !empty($f['searchable'])) {
-                        echo '<div class="gk-select-search-input"><span class="material-icons" aria-hidden="true">search</span>';
-                        echo "<input type=\"text\" placeholder=\"{$e($placeholder)}\" autocomplete=\"off\">";
-                        echo '</div>';
-                    }
-                    echo '<div class="gk-select-options" id="' . $e($listId) . '" role="listbox">';
-                    foreach ($options as $k => $v) {
-                        $isSel   = (string)$k === (string)$value;
-                        $sel     = $isSel ? ' selected' : '';
-                        $ariaSel = $isSel ? 'true' : 'false';
-                        echo "<div class=\"gk-select-option{$sel}\" role=\"option\" aria-selected=\"{$ariaSel}\" data-value=\"{$e($k)}\">{$e($v)}</div>";
-                    }
-                    echo '</div></div></div>';
+                    echo Select::searchable($name, $f['options'] ?? [], [
+                        'id'                => $name,
+                        'selected'          => $value,
+                        'placeholder'       => $placeholder,
+                        'searchPlaceholder' => $placeholder,
+                        'required'          => $isRequired,
+                        'disabled'          => !empty($f['disabled']),
+                        'search'            => !empty($f['searchable']) ? true : 'auto',
+                        // A label a person can read beats a duplicate string,
+                        // so the visible one wins when there is one.
+                        'labelledby'        => ($showLabel && !isset($f['aria'])) ? $labelId : null,
+                        'aria'              => $f['aria'] ?? ($label !== '' ? $label : $placeholder),
+                        'describedby'       => $errorId,
+                        'invalid'           => $hasError,
+                    ]);
                 } else {
                     // native: true → plain <select> (e.g. for toolbar filters)
                     echo "<select name=\"{$e($name)}\" id=\"{$e($name)}\" class=\"gk-input\"{$req}>";
@@ -332,13 +309,26 @@ class Form
                 $searchParam = $f['searchParam'] ?? 'q';
                 echo "<div class=\"gk-ajax-select\" data-gk-ajax-select data-url=\"{$e($url)}\" data-label-field=\"{$e($labelField)}\" data-value-field=\"{$e($valueField)}\" data-subtext-field=\"{$e($subtextField)}\" data-min-chars=\"{$e($minChars)}\" data-search-param=\"{$e($searchParam)}\">";
                 echo "<input type=\"text\" class=\"gk-select-value-input\" tabindex=\"-1\" aria-hidden=\"true\" name=\"{$e($name)}\" value=\"{$e($value)}\"{$req}>";
-                echo '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false"' . $composedBy . '>';
+                /*
+                 * The same three gaps the static select had, in the variant
+                 * that fetches its options: the combobox promised a listbox
+                 * and never said which element, the container it meant carried
+                 * no role, and aria-expanded was written here once while six
+                 * places in gridkit.js change the dropdown's visibility.
+                 */
+                $listId = preg_replace('/[^A-Za-z0-9_-]/', '-', $name) . '-list';
+                echo '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox"'
+                   . ' aria-expanded="false" aria-controls="' . $e($listId) . '"' . $composedBy . '>';
                 echo '<span class="material-icons gk-select-icon" aria-hidden="true">search</span>';
                 $clearStyle = $value ? '' : ' style="display:none;"';
                 echo "<input type=\"text\" class=\"gk-ajax-search-input\" value=\"{$e($displayValue)}\" placeholder=\"{$e($placeholder)}\" autocomplete=\"off\">";
-                echo "<button type=\"button\" class=\"gk-ajax-clear\"{$clearStyle}>&times;</button>";
+                // Was a bare &times; with no name — a button announced as
+                // "times", exactly like the chip and the toast close button.
+                $clearLabel = $e(Lang::t('form.clear'));
+                echo "<button type=\"button\" class=\"gk-ajax-clear\" aria-label=\"{$clearLabel}\" title=\"{$clearLabel}\"{$clearStyle}>"
+                   . "<span aria-hidden=\"true\">&times;</span></button>";
                 echo '</div>';
-                echo '<div class="gk-select-dropdown"><div class="gk-select-options"></div>';
+                echo '<div class="gk-select-dropdown"><div class="gk-select-options" id="' . $e($listId) . '" role="listbox"></div>';
                 echo '<div class="gk-select-loading" style="display:none;"><span class="material-icons gk-spin" aria-hidden="true">sync</span> ' . $e(Lang::t('form.loading')) . '</div>';
                 echo '</div></div>';
                 break;
