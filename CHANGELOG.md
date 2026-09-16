@@ -7,6 +7,29 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.80.0] - 2026-09-16
+
+### Added — `FilterChips::current()`, for pages whose default filter is not "all"
+
+A page that opens on a filter — "show the disturbed sites", "show open items" —
+was reached without a query parameter, so `FilterChips` read an empty string out
+of the URL and lit no chip at all. The list was filtered, nothing said which
+filter it was, and the row of chips read as decoration rather than as the
+control it is.
+
+`current('gestoert')` names the filter the page falls back to. It only applies
+when the URL carries no value of its own, so a click on any chip still wins.
+
+```php
+(new FilterChips('ww-filter', 'zeigen'))
+    ->baseUrl('/monitoring/webseiten')
+    ->current('gestoert')                    // what the page shows without a parameter
+    ->chip('gestoert', 'Gestört', ['count' => 53])
+    ->chip('alle', 'Alle', ['count' => 213])
+    ->render();
+```
+
+---
 ## [1.79.1] - 2026-09-09
 
 ### Fixed — the site answered under two hostnames with identical pages

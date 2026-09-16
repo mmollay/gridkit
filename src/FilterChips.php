@@ -20,6 +20,23 @@ class FilterChips
         $this->currentValue = $_GET[$paramName] ?? '';
     }
 
+    /**
+     * Which chip is active, when the page's default is not the empty value.
+     *
+     * The constructor reads the parameter out of the URL, and a page reached
+     * without that parameter therefore highlights nothing — even though it is
+     * showing one of the filters. The SSI Panel's website watch defaults to
+     * "disturbed only": the list was filtered, no chip was lit, and the filter
+     * row read as decoration (Martin, 16.09.2026).
+     */
+    public function current(string $value): static
+    {
+        if (($_GET[$this->paramName] ?? '') === '') {
+            $this->currentValue = $value;
+        }
+        return $this;
+    }
+
     public function baseUrl(string $url): static
     {
         $this->baseUrl = $url;
