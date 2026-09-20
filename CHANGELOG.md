@@ -7,6 +7,44 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.80.2] - 2026-09-20
+
+Three reviewers were set on 1.80.1 the hour it shipped. What they found:
+
+### Fixed — the dark values of 1.80.1 were right for the bare stylesheet only
+
+`--gk-surface-variant` was written as `#21262d`. `themes.css` moves the dark
+surfaces to `#1e293b`, and the literal then sat 1.04:1 on its own ground — the
+hovered page number that 1.80.1 set out to fix stayed invisible under every
+theme. Both new tokens are now derived from their roles in the dark block
+(`--gk-surface-container-high`, `--gk-on-surface-variant`): 1.10:1 on the page,
+1.30:1 on a card, and they follow whatever theme is loaded.
+
+Also wrong in the 1.80.1 notes: "nothing moves in the light scheme" holds for
+GridKit's own rules. A consumer that read the tokens with a fallback of its own
+now gets GridKit's value instead.
+
+### Fixed — `FilterChips::current()` left the row dark for a value no chip carries
+
+`?status=nonsense`, or `?status=` on a row without an "All" chip: the controller
+falls back to its default, the row lit nothing. The default now also applies when
+the URL names a value that is not among the chips. The skill told every page to
+read the parameter with `($_GET['status'] ?? '') !== ''` — on a page with
+`current()` that filters by the default while the All chip is lit; the exception
+is documented.
+
+### Fixed — `GK.liveTable` still inserted a login page that arrived with status 200
+
+A backend that answers an expired session with a redirect hands `fetch` a login
+page and `ok: true`. A response that was redirected to another path is now
+treated like a 401: the page reloads.
+
+### Fixed — the scratch cleanup of the tests followed a link given with a trailing slash
+
+`is_link('link/')` is false and `is_dir('link/')` is true. No caller passes such a
+path today; the function promises "never", so it trims first.
+
+---
 ## [1.80.1] - 2026-09-20
 
 First round of the SSI Panel's self-maintenance loop: five read-only reviewers,

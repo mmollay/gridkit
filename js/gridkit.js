@@ -2414,10 +2414,18 @@
       };
       fetch(fetchUrl, { headers: { "X-Requested-With": "XMLHttpRequest" } })
         .then(function (r) {
-          if (!r.ok) {
+          // A backend that answers an expired session with a redirect hands
+          // fetch a login page with status 200. It is not the list either.
+          var strayed = false;
+          if (r.redirected) {
+            try {
+              strayed = new URL(r.url).pathname !== new URL(fetchUrl, window.location.href).pathname;
+            } catch (e) { strayed = false; }
+          }
+          if (!r.ok || strayed) {
             var error = new Error("HTTP " + r.status);
             error.gkTransport = true;
-            error.status = r.status;
+            error.status = strayed ? 401 : r.status;
             throw error;
           }
           return r.text();

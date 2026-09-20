@@ -5069,10 +5069,13 @@ a.gk-stat-card:hover {
   --gk-text-muted: #8b949e;
   --gk-text-subtle: #484f58;
   --gk-border: rgba(255, 255, 255, 0.08);
-  /* One step above the page (#0d1117) and the cards (#161b22), or a hovered
-     page number would not show at all. */
-  --gk-surface-variant: #21262d;
-  --gk-text-secondary: #8b949e;
+  /* Derived, not literal. 1.80.1 wrote #21262d / #8b949e here — right for the
+     bare stylesheet, but themes.css moves the dark surfaces (#1e293b), and the
+     literal then sat 1.04:1 on its own ground: the hovered page number this was
+     meant to fix stayed invisible under every theme. Restated in this block
+     because an alias on :root resolves with the light values. */
+  --gk-surface-variant: var(--gk-surface-container-high);
+  --gk-text-secondary: var(--gk-on-surface-variant);
 
   /* Legacy dark overrides */
   /* Hover steps: the @supports block at the end of the file derives them from

@@ -1,4 +1,4 @@
-# GridKit 1.80.1 — components
+# GridKit 1.80.2 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -394,11 +394,16 @@ you. Reach for `Select::searchable()` only outside one.
 
 Active chip is auto-detected from `$_GET`. Color options: `success`, `danger`, `warning`, `primary`.
 `FilterChips::current()` is for a page whose default view is already filtered: reached without the
-parameter, the list shows one filter and no chip is lit, so the row reads as decoration. It applies only
-while the parameter is absent — `?status=` (the "All" chip) and any chosen value win over it.
+parameter, the list shows one filter and no chip is lit, so the row reads as decoration. The default is
+lit while the parameter is absent, and when it names a value no chip carries; `?status=` (the "All"
+chip) and any chosen value win over it.
 The param is always present in the URL, the "All" chip included (`?status=`) — this empty query string is what stops
 `GK.liveTable.restoreSession` from jumping back to the last remembered filter. Read it with
 `($_GET['status'] ?? '') !== ''`, never with `isset($_GET['status'])`.
+
+A page with `current()` is the one exception: there "absent" means the default and "empty" means All, so
+the controller has to tell them apart — `$status = is_string($_GET['status'] ?? null) ? $_GET['status'] : 'open';`.
+Read the usual way, `?status=` would filter the list by the default while the All chip is lit.
 
 ### YearFilter
 

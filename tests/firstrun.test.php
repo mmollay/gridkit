@@ -42,6 +42,10 @@ function runPhp(string $file, string $cwd, array $get = []): array
  */
 function removeTree(string $path): void
 {
+    // "link/" is not a link to is_link() but a directory to is_dir() — with a
+    // trailing slash the loop below would walk into the target after all.
+    $path = rtrim($path, '/');
+    if ($path === '') return;
     if (is_link($path) || is_file($path)) { @unlink($path); return; }
     if (!is_dir($path)) return;
     foreach (scandir($path) ?: [] as $entry) {

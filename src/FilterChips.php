@@ -10,6 +10,7 @@ class FilterChips
     private string $paramName;
     private array $chips = [];
     private string $currentValue = '';
+    private ?string $defaultValue = null;
     private string $baseUrl = '';
     private array $preserveParams = [];
 
@@ -34,12 +35,9 @@ class FilterChips
      */
     public function current(string $value): static
     {
-        // Absent, not empty: the "All" chip links to ?status= on purpose, and
-        // reading that as "no filter named" made All impossible to select on
-        // any page that has a default.
-        if (!is_string($_GET[$this->paramName] ?? null)) {
-            $this->currentValue = $value;
-        }
+        // Decided in render(), once every chip is known: the call may come
+        // before the chips, and whether the URL's value is one of them matters.
+        $this->defaultValue = $value;
         return $this;
     }
 
@@ -66,9 +64,21 @@ class FilterChips
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
         echo '<div class="gk-filter-chips" data-gk-chips="' . $e($this->id) . '">';
+        // The page default is lit while the URL names no filter — and also when it
+        // names one no chip carries: a controller falls back to its default for a
+        // value it does not know, and a row with nothing lit would contradict the
+        // list below it. "Names" means present: the "All" chip links to ?status=
+        // on purpose, and reading empty as absent made All impossible to select.
+        $active = $this->currentValue;
+        if ($this->defaultValue !== null) {
+            $named = is_string($_GET[$this->paramName] ?? null);
+            $known = in_array($active, array_column($this->chips, 'value'), true);
+            if (!$named || !$known) $active = $this->defaultValue;
+        }
+
         foreach ($this->chips as $chip) {
             $val = $chip['value'];
-            $isActive = $this->currentValue === $val;
+            $isActive = $active === $val;
             $cls = 'gk-chip';
             if ($isActive) $cls .= ' gk-chip-active';
             if (isset($chip['color'])) $cls .= ' gk-chip-' . $chip['color'];

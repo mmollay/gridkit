@@ -250,6 +250,10 @@ return [
     preg_match('/\[data-gk-mode="dark"\],\s*\.gk-dark\s*\{(.*?)\n\}/s', css(), $dark);
     foreach (['--gk-surface-variant', '--gk-text-secondary'] as $token) {
         T::contains($dark[1] ?? '', $token . ':', "$token has no dark value");
+        // A literal is right for one ground only. themes.css moves the dark
+        // surfaces, and 1.80.1's #21262d then sat 1.04:1 on its own ground.
+        T::ok((bool) preg_match('/' . preg_quote($token, '/') . ':\s*var\(--gk-/', $dark[1] ?? ''),
+            "$token is a literal in dark mode — it has to follow the theme");
     }
 },
 

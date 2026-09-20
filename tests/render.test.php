@@ -168,6 +168,15 @@ return [
         // absent parameter made the All chip impossible to select.
         $_GET = ['status' => ''];
         T::eq($active(T::capture($chips)), 'All', 'an explicit empty value selects the All chip');
+        // A controller falls back to its default for a value it does not know;
+        // a chip row with nothing lit would say the opposite of the list.
+        $_GET = ['status' => 'nonsense'];
+        T::eq($active(T::capture($chips)), 'Open', 'a value no chip carries falls back to the default');
+        // The same on a row without an All chip: ?status= names nothing there.
+        $_GET = ['status' => ''];
+        T::eq($active(T::capture(fn() => (new FilterChips('f', 'status'))
+            ->current('open')->chip('open', 'Open')->chip('done', 'Done')->render())), 'Open',
+            'an empty value on a row without an All chip falls back to the default');
     } finally {
         $_GET = $saved;
     }
