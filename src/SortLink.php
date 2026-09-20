@@ -82,6 +82,13 @@ class SortLink
             . ' class="' . htmlspecialchars($linkCls, ENT_QUOTES, 'UTF-8') . '">'
             . htmlspecialchars($label, ENT_QUOTES, 'UTF-8')
             . '<span class="material-icons ' . $iconCls . '" aria-hidden="true">' . $iconName . '</span>'
+            // The arrow is aria-hidden and was the only thing that said which
+            // way the column is sorted. The <th> belongs to the page, so
+            // aria-sort is out of reach from here; words inside the link are not.
+            . ($isActive
+                ? '<span class="gk-sr-only">, ' . htmlspecialchars(
+                    Lang::t($currentDir === 'asc' ? 'table.sorted_asc' : 'table.sorted_desc'), ENT_QUOTES, 'UTF-8') . '</span>'
+                : '')
             . '</a>';
     }
 

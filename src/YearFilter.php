@@ -155,7 +155,8 @@ class YearFilter
                       . ($allVal === $this->currentYear ? ' gk-chip-active' : '');
             $allParams = $params;
             $allParams[$this->paramName] = $allVal;
-            echo '<a href="' . $e($base . '?' . http_build_query($allParams)) . '" class="' . $cls . '">'
+            echo '<a href="' . $e($base . '?' . http_build_query($allParams)) . '" class="' . $cls . '"'
+               . ($allVal === $this->currentYear ? ' aria-current="true"' : '') . '>'
                . $e($this->allOption['label']) . '</a>';
         }
 
@@ -168,7 +169,7 @@ class YearFilter
             $params[$this->paramName] = $year;
             $url = $base . '?' . http_build_query($params);
 
-            echo '<a href="' . $e($url) . '" class="' . $cls . '">' . $year . '</a>';
+            echo '<a href="' . $e($url) . '" class="' . $cls . '"' . ($isActive ? ' aria-current="true"' : '') . '>' . $year . '</a>';
         }
         echo '</div>';
     }

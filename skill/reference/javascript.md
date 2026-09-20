@@ -1,4 +1,4 @@
-# GridKit 1.80.2 — JavaScript
+# GridKit 1.80.3 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -19,7 +19,19 @@ GK.modal.close();
 // Returns false when no table with that id is on the page.
 GK.table.refresh('table-id');
 GK.table.refreshAll();          // every table on the page
+
+// Ask before something irreversible. Resolves true or false; the dialog traps
+// focus, answers Escape with "cancel" and hands focus back afterwards.
+// Use it instead of the browser's confirm() — that one cannot be styled, named
+// or translated, and it blocks the page.
+GK.confirm('Delete this invoice?', { title: 'Delete', confirmText: 'Delete', danger: true })
+  .then(function (yes) { if (yes) removeInvoice(); });
 ```
+
+An AJAX form (`Form::ajax()`) reports its own outcome: `{ok: true, message: '…'}` closes the modal, refreshes
+the tables and shows the message as a success toast; `{ok: false, errors: {field: '…'}}` marks the fields;
+`{ok: false, error: '…'}` (or `message`) shows an error toast. Anything that is not JSON shows the generic
+error toast (language key `js.error_saving`).
 
 ### Global search (`GK.search`)
 
@@ -61,8 +73,8 @@ AJAX-filtered tables: search, filter, sort and paging with no full page reload.
 The caret stays put while typing; the URL is kept in step via `history.replaceState`.
 
 ```html
-<!-- Inputs: beliebig ausserhalb des Containers -->
-<input data-gk-live-input="my-tbl" name="q" placeholder="Suche">
+<!-- Inputs: anywhere outside the container -->
+<input data-gk-live-input="my-tbl" name="q" placeholder="Search" aria-label="Search">
 <select data-gk-live-input="my-tbl" name="status">...</select>
 
 <!-- Container: swapped over AJAX -->
@@ -85,6 +97,19 @@ Features:
 - **Link interception**: an `<a href>` inside the container pointing at the same endpoint is followed over AJAX-Reload (Sort-Header, Pagination).
 - **`patchNavSelects()`**: overrides `onchange` on `<select data-gk-years>` so they build on `window.location.search`. Keeps the current search when the year changes.
 - The `gk-live-reloaded` event fires on the container after every swap — bind your own re-initialisation to it.
+- **A failed request leaves the rows alone.** A 4xx/5xx answer, a network error, or a whole page where a
+  fragment (or, in self mode, the container) should be: the old rows stay, an error toast appears and `gk-table-error` fires on the container
+  (`event.detail.error`). A 401 — or an answer that was redirected to another path, which is how many
+  backends say "log in again" — reloads the page instead. Of two requests in flight only the newer one writes.
+
+**No partial branch? Use self mode.** Add `data-gk-live-self` to the container and the controller needs no
+change at all: the answer is the whole page, and GridKit cuts the element with the same `id` out of it.
+
+```html
+<div id="my-tbl" data-gk-live-table="/my-list" data-gk-live-self> … </div>
+```
+
+`TableHeader::search('q', $q, 'Search…', ['live' => 'my-tbl'])` renders the bound input for you.
 
 ### AJAX Navigation (SPA-lite)
 
@@ -102,9 +127,9 @@ $sidebar->ajaxNav(true);
 
 Features:
 - Sidebar links load content with fetch(), no page reload
-- Ladebalken am oberen Bildschirmrand
+- A loading bar along the top edge of the screen
 - Browser back/forward works through pushState
-- Automatische Re-Initialisierung von Table, Tooltip etc.
+- Tables, tooltips and the receipt overlay are re-initialised after each swap
 - Falls back to a normal page load on error
 - External links and Ctrl/Cmd-click are left alone
 

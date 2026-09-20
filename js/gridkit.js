@@ -147,13 +147,31 @@
     }
   }
 
+  // Is something open ON TOP of the modal? Each of these closes itself on
+  // Escape through a listener of its own; the modal must then stay. Only layers
+  // whose listener is registered AFTER the modal's belong here — they still
+  // stand when this is asked. The header dropdown's listener is older: it has
+  // already closed by then, so it claims the key with preventDefault instead.
+  function _gkLayerAbove() {
+    return !!document.querySelector(
+      '.gk-confirm-overlay, .gk-lightbox.open, #gk-beleg-modal.is-open, .gk-search-overlay',
+    );
+  }
+
   const GK = {
     // === MODAL ===
     modal: {
       stack: [],
       init() {
         document.addEventListener("keydown", (e) => {
-          if (e.key === "Escape" && this.stack.length) this.close();
+          // It used to ask only "is a modal open?": Escape in a searchable select
+          // closed the list AND the modal with everything typed into it, and
+          // Escape on a GK.confirm over a modal answered "cancel" and took the
+          // modal along. defaultPrevented covers widgets inside the modal that
+          // handled the key themselves; the layer check covers what lies above.
+          if (e.key !== "Escape" || !this.stack.length) return;
+          if (e.defaultPrevented || _gkLayerAbove()) return;
+          this.close();
         });
       },
       _createOverlay() {
@@ -242,7 +260,11 @@
           body: fd,
           headers: { "X-Requested-With": "XMLHttpRequest" },
         })
-          .then((r) => r.text())
+          .then((r) => {
+            // The body of a 500 or of a firewall's 403 is not the form.
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            return r.text();
+          })
           .then((html) => {
             body.classList.remove("gk-loading");
             body.innerHTML = html;
@@ -325,6 +347,8 @@
             if (data.ok) {
               GK.modal.close();
               GK.table.refreshAll();
+              // The skill has promised this toast since 1.10; nothing showed it.
+              if (data.message) GK.toast.success(data.message);
             } else if (data.errors) {
               Object.entries(data.errors).forEach(([field, msg]) => {
                 const errEl = form.querySelector(`[data-gk-error="${field}"]`);
@@ -346,9 +370,13 @@
               if (firstBad && typeof firstBad.focus === "function") {
                 firstBad.focus();
               }
+            } else {
+              // {ok:false, error:"…"} used to change nothing on screen: the
+              // button came back, and neither that nor why it failed was said.
+              GK.toast.error(data.error || data.message || _t("error_saving"));
             }
           })
-          .catch(() => alert(_t("error_saving")))
+          .catch(() => GK.toast.error(_t("error_saving")))
           .finally(() => {
             if (btn) {
               btn.disabled = false;
@@ -934,7 +962,10 @@
         let html = '<table class="gk-table"><thead><tr>';
         if (selectable)
           html +=
-            '<th class="gk-cb-col"><input type="checkbox" data-gk-select-all></th>';
+            // Same names and scope as Table.php writes — the first sort or
+            // search rebuilds the table, and until 1.80.3 it took them away.
+            '<th scope="col" class="gk-cb-col"><input type="checkbox" data-gk-select-all aria-label="' +
+            e(_lang["select_all"] || "Select all") + '" title="' + e(_lang["select_all"] || "Select all") + '"></th>';
         for (const [key, col] of Object.entries(columns)) {
           const style = col.width ? ' style="width:' + e(col.width) + '"' : "";
           const sortable = col.sortable || false;
@@ -1188,7 +1219,8 @@
               : "<tr>";
             if (selectable)
               html +=
-                '<td class="gk-cb-col"><input type="checkbox"' +
+                '<td class="gk-cb-col"><input type="checkbox" aria-label="' +
+                e(_lang["select_row"] || "Select row") + '"' +
                 (selSet.has(rid) ? " checked" : "") +
                 "></td>";
             if (hasLeft)
@@ -2371,16 +2403,32 @@
     // swap only its content. That makes every list live without rebuilding
     // partials/controllers — the search input sits outside the container and so
     // keeps the focus.
+    // Returns false when there is nothing sensible to insert.
     applyHtml: function (container, html) {
+      // A response that STARTS as a whole document is a page, not a list.
+      var wholePage = /^\s*(<!doctype|<html[\s>])/i.test(html);
       if (container.hasAttribute("data-gk-live-self")) {
         try {
           var doc = new DOMParser().parseFromString(html, "text/html");
           var fresh = container.id ? doc.getElementById(container.id) : null;
+          // A whole page without our container is some OTHER page — an error
+          // page, a login, a redirect target. It used to be written into the
+          // list, sidebar and all. A bare fragment is still inserted: a
+          // controller with a partial branch may answer with one.
+          if (!fresh && wholePage) return false;
           container.innerHTML = fresh ? fresh.innerHTML : html;
-          return;
+          return true;
         } catch (e) {}
       }
+      // Partial mode expects a fragment. A whole page means the controller has
+      // no partial branch (use data-gk-live-self) or answered with another page.
+      if (wholePage) {
+        if (window.console) console.error("GridKit: " + (container.dataset.gkLiveTable || "the live table") +
+          " answered with a whole page instead of a fragment — add a partial branch or data-gk-live-self.");
+        return false;
+      }
       container.innerHTML = html;
+      return true;
     },
     loadUrl: function (container, urlObj) {
       var fetchParams = new URLSearchParams(urlObj.searchParams);
@@ -2434,8 +2482,13 @@
           throw networkError;
         })
         .then(function (html) {
+          if (container._gkRun !== run) return; // overtaken by a newer request
+          if (GK.liveTable.applyHtml(container, html) === false) {
+            var error = new Error("the response is a page without #" + container.id);
+            error.gkTransport = true;
+            throw error;
+          }
           if (!finish()) return;
-          GK.liveTable.applyHtml(container, html);
           GK.liveTable.hoistPager(container);
           window.history.replaceState(null, "", displayUrl);
           GK.liveTable.saveSession(container);
@@ -2762,6 +2815,8 @@
     if (e.key === "Escape") {
       var open = document.querySelector("[data-gk-dropdown].open");
       if (open) {
+        // Claimed: a modal underneath must not close along with the menu.
+        e.preventDefault();
         _gkDropdownSet(open, false);
         if (typeof open.focus === "function") open.focus();
       }
@@ -3147,6 +3202,17 @@
             });
           }
 
+          // The multi select had no key handling at all: Escape with its list
+          // open went straight to the modal underneath and closed that, with
+          // the list still hanging open. Only an OPEN list claims the key, so a
+          // closed one leaves Escape to the modal.
+          wrap.addEventListener("keydown", function (e) {
+            if (e.key !== "Escape" || !display.classList.contains("open")) return;
+            e.preventDefault();
+            display.classList.remove("open");
+            if (typeof display.focus === "function") display.focus();
+          });
+
           document.addEventListener("click", function (e) {
             if (!wrap.contains(e.target)) display.classList.remove("open");
           });
@@ -3192,7 +3258,11 @@
            * now, and it also clears the active option, which three of those six
            * sites had to remember separately.
            */
+          // A flag, not a guess from the inline style: the list is hidden by
+          // CSS until first use, so style.display starts as "" — not "none".
+          var isOpen = false;
           function setOpen(open) {
+            isOpen = !!open;
             dropdown.style.display = open ? "block" : "none";
             if (display) display.setAttribute("aria-expanded", open ? "true" : "false");
             if (!open) {
@@ -3299,7 +3369,15 @@
           });
 
           input.addEventListener("keydown", function (e) {
-            if (dropdown.style.display === "none") return;
+            if (!isOpen) return;
+            // Before the options are asked for: a list showing "loading" or "no
+            // results" has none, and Escape never reached its branch below.
+            // preventDefault tells a modal underneath that the key is taken.
+            if (e.key === "Escape") {
+              e.preventDefault();
+              setOpen(false);
+              return;
+            }
             var opts = getOptions();
             if (!opts.length) return;
             if (e.key === "ArrowDown") {
@@ -3313,8 +3391,6 @@
             } else if (e.key === "Enter" && activeIdx >= 0) {
               e.preventDefault();
               selectOption(opts[activeIdx]);
-            } else if (e.key === "Escape") {
-              setOpen(false);
             }
           });
 
@@ -4271,11 +4347,20 @@ GK.search = {
     ov.addEventListener("click", function (e) { if (e.target === ov) self.close(); });
     this.input.addEventListener("input", function () { self.entprellt(); });
     this.input.addEventListener("keydown", function (e) { self.onKey(e); });
+    // With the focus outside the input (a click on the hit list) nothing heard
+    // Escape any more — except a modal underneath, which closed instead.
+    this._esc = function (e) {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      e.preventDefault();
+      self.close();
+    };
+    document.addEventListener("keydown", this._esc);
     setTimeout(function () { self.input.focus(); }, 20);
   },
 
   close() {
     if (!this.overlay) return;
+    if (this._esc) { document.removeEventListener("keydown", this._esc); this._esc = null; }
     if (this.controller) { this.controller.abort(); this.controller = null; }
     clearTimeout(this.timer);
     this.overlay.remove();

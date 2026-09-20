@@ -2860,8 +2860,11 @@ a.gk-stat-card:hover {
   color: var(--gk-text);
   line-height: 1.2;
 }
+/* Figures are text, so they take the TEXT variants of the semantic colours.
+   The fills measured 3.67:1 (danger), 2.54:1 (success) and 2.15:1 (warning) on
+   the white card; the text variants are 5.0:1 and better and follow the theme. */
 .gk-stat-highlight {
-  color: var(--gk-danger);
+  color: var(--gk-danger-text);
 }
 
 /* Trend indicator on a KPI tile. --gk-success and --gk-error are both
@@ -2882,19 +2885,19 @@ a.gk-stat-card:hover {
   color: var(--gk-danger);
 }
 .gk-stat-danger .gk-stat-value {
-  color: var(--gk-danger);
+  color: var(--gk-danger-text);
 }
 .gk-stat-success .gk-stat-icon {
   color: var(--gk-success);
 }
 .gk-stat-success .gk-stat-value {
-  color: var(--gk-success);
+  color: var(--gk-success-text);
 }
 .gk-stat-warning .gk-stat-icon {
   color: var(--gk-warning);
 }
 .gk-stat-warning .gk-stat-value {
-  color: var(--gk-warning);
+  color: var(--gk-warning-text);
 }
 .gk-stat-blue .gk-stat-icon {
   color: var(--gk-primary);
@@ -5174,10 +5177,10 @@ a.gk-stat-card:hover {
 .gk-dark .gk-stat-label {
   color: var(--gk-on-surface-variant);
 }
-[data-gk-mode="dark"] .gk-stat-value,
-.gk-dark .gk-stat-value {
-  color: #f0f6fc;
-}
+/* A rule stood here that painted .gk-stat-value #f0f6fc in dark mode. It had
+   the specificity of ".gk-stat-danger .gk-stat-value" and came later, so red,
+   green and amber figures all turned white. The base rule reads --gk-text,
+   which already flips with the mode. */
 
 [data-gk-mode="dark"] .gk-chip,
 .gk-dark .gk-chip {

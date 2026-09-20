@@ -12,7 +12,7 @@
 
 declare(strict_types=1);
 
-use GridKit\{Lang, Table};
+use GridKit\{FilterChips, Form, Lang, Select, SortLink, Table, YearFilter};
 
 /** @return array<string,callable> */
 function tableHtml(array $extra = []): string
@@ -669,6 +669,77 @@ return [
     T::eq(substr_count($js, 'dropdown.style.display = '), 1,
         'exactly one place decides whether the list is open — there were six, '
         . 'and that is why the attribute could not keep up with them');
+},
+
+'the chosen filter is announced, not only coloured' => function (): void {
+    // Pagination, Sidebar and Theme say which entry is current; the chip rows
+    // marked theirs with a class — a colour. A screen reader heard the same row
+    // of links whatever was selected.
+    Lang::set('en');
+    $saved = $_GET;
+    try {
+        $_GET = ['status' => 'paid', 'year' => '2026'];
+        $chips = T::capture(fn() => (new FilterChips('f', 'status'))
+            ->chip('', 'All')->chip('paid', 'Paid')->render());
+        T::ok((bool) preg_match('/<a[^>]*gk-chip-active[^>]*aria-current="true"[^>]*>\s*Paid/', $chips),
+            'the active chip carries aria-current');
+        T::eq(substr_count($chips, 'aria-current'), 1, 'and only the active one');
+
+        $years = T::capture(fn() => (new YearFilter('y', 'year'))->range(2025, 2026)->render());
+        T::ok((bool) preg_match('/<a[^>]*aria-current="true"[^>]*>2026</', $years), 'the active year carries aria-current');
+        T::eq(substr_count($years, 'aria-current'), 1, 'and only the active one');
+    } finally {
+        $_GET = $saved;
+    }
+},
+
+'a sort link says which way it is sorted' => function (): void {
+    // The direction was an icon with aria-hidden and nothing else.
+    Lang::set('en');
+    $opts = ['base_url' => '/x', 'current_sort' => 'date', 'current_dir' => 'desc'];
+    $active = SortLink::header('date', 'Date', $opts);
+    T::contains($active, 'class="gk-sr-only"', 'the active link has no text for the direction');
+    T::contains($active, 'sorted descending', 'the direction is not named');
+    $idle = SortLink::header('name', 'Name', $opts);
+    T::notContains($idle, 'gk-sr-only', 'a column that is not sorted claims a direction');
+},
+
+'every checkbox of a selectable table has a name' => function (): void {
+    Lang::set('en');
+    $html = T::capture(fn() => (new Table('t'))
+        ->setData([['id' => 7, 'name' => 'Widget']])
+        ->column('name', 'Product')
+        ->selectable()
+        ->render());
+    T::ok((bool) preg_match('/<td class="gk-cb-col"><input type="checkbox"[^>]*aria-label="Select row"/', $html),
+        'a row checkbox is announced as "checkbox" and nothing else');
+    // The client rebuilds the table on the first sort or search; what it
+    // writes has to carry the same names, or they are gone after one click.
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::ok((bool) preg_match('/<th scope="col" class="gk-cb-col"><input type="checkbox" data-gk-select-all aria-label="/', $js),
+        'the rebuilt header checkbox loses its name and its scope');
+    T::ok((bool) preg_match('/<td class="gk-cb-col"><input type="checkbox" aria-label="/', $js),
+        'the rebuilt row checkboxes lose their name');
+},
+
+'a placeholder is not a name: select search, colour hex, range' => function (): void {
+    Lang::set('en');
+    $options = [];
+    foreach (range(1, 8) as $i) $options["v$i"] = "Option $i";
+    $select = Select::searchable('country', $options);   // returns, does not echo
+    T::ok((bool) preg_match('/class="gk-select-search-input">.*?<input type="text"[^>]*aria-label="[^"]+"/s', $select),
+        'the filter field inside a searchable select has only a placeholder');
+
+    $form = T::capture(fn() => (new Form('f', '/save'))
+        ->field('tint', 'Tint', 'color', ['error' => 'Pick one'])
+        ->field('level', 'Level', 'range', ['min' => 0, 'max' => 10, 'error' => 'Too high'])
+        ->render());
+    T::ok((bool) preg_match('/<input[^>]*gk-color-hex[^>]*aria-labelledby="[^"]+"/', $form)
+        || (bool) preg_match('/<input[^>]*aria-labelledby="[^"]+"[^>]*gk-color-hex/', $form),
+        'the hex field of a colour input has only a placeholder');
+    T::ok((bool) preg_match('/<input[^>]*type="range"[^>]*aria-describedby="[^"]+"/', $form),
+        'an error on a range field is never announced');
+    T::ok(!preg_match('/<input[^>]*type="range"[^>]*\srequired/', $form), 'range must not become required');
 },
 
 ];

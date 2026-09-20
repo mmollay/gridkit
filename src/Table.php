@@ -608,7 +608,9 @@ class Table
             $rowIdAttr = $this->selectable ? ' data-gk-row-id="' . $rowId . '"' : '';
             echo '<tr' . $rowIdAttr . '>';
             if ($this->selectable) {
-                echo '<td class="gk-cb-col"><input type="checkbox" value="' . $rowId . '"></td>';
+                // Named like the one in the header: unnamed, every row read as
+                // "checkbox" and nothing else.
+                echo '<td class="gk-cb-col"><input type="checkbox" aria-label="' . $e(Lang::t('table.select_row')) . '" value="' . $rowId . '"></td>';
             }
             if ($leftButtons) {
                 echo '<td class="gk-actions gk-actions-left"><div class="gk-btn-group">';

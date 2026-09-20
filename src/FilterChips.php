@@ -101,7 +101,9 @@ class FilterChips
                 $url .= '?' . http_build_query($params);
             }
 
-            echo '<a href="' . $e($url) . '" class="' . $cls . '">';
+            // A class is a colour. aria-current says the same thing to a screen
+            // reader — "true", not "page": a filter is not a page.
+            echo '<a href="' . $e($url) . '" class="' . $cls . '"' . ($isActive ? ' aria-current="true"' : '') . '>';
             if (isset($chip['icon'])) {
                 echo '<span class="gk-chip-icon material-icons" aria-hidden="true">' . $e($chip['icon']) . '</span>';
             }

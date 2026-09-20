@@ -280,4 +280,23 @@ return [
     T::contains(css(), '.gk-pg-active:hover', 'the active page has no hover rule of its own');
 },
 
+'a coloured key figure is still a readable one' => function (): void {
+    // StatCards painted their numbers in the FILL colours: success 2.54:1 and
+    // warning 2.15:1 on the white card — under 3:1 even for large type. The
+    // stylesheet has carried text variants of all three for exactly this since
+    // the labels were fixed; the key figures never picked them up. And in dark
+    // mode a later rule of equal specificity turned every value white, so a red
+    // figure stopped being red precisely where it mattered.
+    foreach (['danger', 'success', 'warning'] as $tone) {
+        preg_match('/\.gk-stat-' . $tone . ' \.gk-stat-value\s*\{([^}]*)\}/', css(), $m);
+        T::contains($m[1] ?? '', 'var(--gk-' . $tone . '-text)', "the $tone figure is painted in a fill colour");
+        $c = gkContrast(gkToken('gk-' . $tone . '-text'), '#ffffff');
+        T::ok($c >= 4.5, sprintf('%s-text on a white card is %.2f:1', $tone, $c));
+    }
+    preg_match('/\.gk-stat-highlight\s*\{([^}]*)\}/', css(), $h);
+    T::contains($h[1] ?? '', 'var(--gk-danger-text)', 'the highlighted figure is painted in a fill colour');
+    T::ok(!preg_match('/\[data-gk-mode="dark"\] \.gk-stat-value,/', css()),
+        'a dark rule still paints every figure white, the coloured ones included');
+},
+
 ];

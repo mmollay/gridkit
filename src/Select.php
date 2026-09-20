@@ -105,7 +105,9 @@ class Select
         $showSearch = $search === 'auto' ? count($normalised) > 6 : (bool) $search;
         $searchBox = $showSearch
             ? '<div class="gk-select-search-input"><span class="material-icons" aria-hidden="true">search</span>'
-              . '<input type="text" placeholder="' . $e($searchPh) . '" autocomplete="off"></div>'
+              // A placeholder is not an accessible name — fixed in Table, Header
+              // and TableHeader long ago; this fourth copy was left behind.
+              . '<input type="text" placeholder="' . $e($searchPh) . '" aria-label="' . $e($searchPh) . '" autocomplete="off"></div>'
             : '';
 
         return '<div class="' . $wrapClass . '" data-gk-select-search' . ($disabled ? ' data-disabled' : '') . '>'

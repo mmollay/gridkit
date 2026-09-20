@@ -311,6 +311,57 @@ return [
     T::contains($live, '_gkRun', 'an older answer may still overwrite a newer one');
     T::contains($live, 'gk-table-error', 'a failed request tells nobody');
     T::ok(!preg_match('/\.catch\(function \(\) \{\}\)/', $live), 'errors are swallowed by an empty catch');
+    // Self mode cuts its container out of a whole page. A whole page WITHOUT
+    // that container is some other page, and used to be inserted sidebar and all.
+    T::contains($live, '<!doctype', 'a whole page is still inserted where a list belongs');
+},
+
+'escape closes the layer on top, not the modal underneath it' => function (): void {
+    // The modal's handler hangs on document and used to ask only "is a modal
+    // open?". Escape in a searchable select inside a modal closed the list AND
+    // the modal with everything typed into it; Escape on a GK.confirm over a
+    // modal answered "cancel" and closed the modal as well.
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::ok((bool) preg_match('/modal:\s*\{\s*stack: \[\],\s*init\(\) \{(.*?)\n      \},/s', $js, $m), 'GK.modal.init was not found');
+    T::contains($m[1] ?? '', 'defaultPrevented', 'a widget that already handled the key is ignored');
+    T::contains($m[1] ?? '', '_gkLayerAbove()', 'nothing checks whether another layer lies on top');
+    T::ok((bool) preg_match('/function _gkLayerAbove\(\) \{(.*?)\n  \}/s', $js, $layer), '_gkLayerAbove() is missing');
+    foreach (['.gk-confirm-overlay', '.gk-lightbox.open', '#gk-beleg-modal.is-open', '.gk-search-overlay'] as $sel) {
+        T::contains($layer[1] ?? '', $sel, "the layer check does not know $sel");
+    }
+    // The header dropdown's listener is OLDER than the modal's: by the time the
+    // modal asks, the menu is closed. A selector cannot see that — the dropdown
+    // has to claim the key. (1.80.3 first shipped the selector; it never matched.)
+    T::ok((bool) preg_match('/\[data-gk-dropdown\]\.open"\);\s*if \(open\) \{\s*(\/\/[^\n]*\s*)*e\.preventDefault\(\);/', $js),
+        'the header dropdown closes on Escape without claiming the key');
+    // The multi select had no key handling at all.
+    T::ok((bool) preg_match('/GK\.multiSelect = \{(.*?)\n  \};/s', $js, $multi), 'GK.multiSelect was not found');
+    T::contains($multi[1] ?? '', 'e.key !== "Escape"', 'the multi select still leaves Escape to the modal underneath');
+    // The AJAX select returned early on an empty or loading list, so its Escape
+    // branch was never reached exactly when the list showed "no results".
+    T::ok((bool) preg_match('/GK\.ajaxSelect = \{(.*?)\n  \};/s', $js, $ajax), 'GK.ajaxSelect was not found');
+    $esc  = strpos($ajax[1] ?? '', 'e.key === "Escape"');
+    $gate = strpos($ajax[1] ?? '', 'if (!opts.length) return;');
+    T::ok($esc !== false && $gate !== false && $esc < $gate, 'the AJAX select asks for its options before it looks at Escape');
+    // Its list is hidden by CSS until first use: style.display is "" then, not
+    // "none", and a guard reading the inline style let a never-opened list
+    // swallow the first Escape in a modal.
+    T::notContains($ajax[1] ?? '', 'dropdown.style.display === "none"', 'the AJAX select guesses its open state from the inline style');
+},
+
+'an AJAX form says what happened' => function (): void {
+    // {ok:false, error:"…"} changed nothing on screen: the button came back and
+    // that was all. The skill promised a toast for {ok:true, message:"…"} that
+    // no code ever showed, and a non-JSON answer raised a native alert().
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::ok((bool) preg_match('/\n      submit\(form\) \{(.*?)\n      \},\n    \},/s', $js, $m), 'GK.form.submit was not found');
+    $submit = $m[1] ?? '';
+    T::contains($submit, 'GK.toast.success(data.message)', 'a success message is never shown');
+    T::contains($submit, 'data.error || data.message', 'a general error is never shown');
+    T::notContains($submit, 'alert(', 'a failure still raises a native alert');
+    // The modal loader put the body of an error response where the form belongs.
+    T::ok((bool) preg_match('/\n      open\(title, url, params, size\) \{(.*?)\n      close\(\)/s', $js, $l), 'GK.modal.open was not found');
+    T::contains($l[1] ?? '', 'r.ok', 'the modal loader never looks at the status');
 },
 
 ];

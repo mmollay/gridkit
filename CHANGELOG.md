@@ -7,6 +7,76 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.80.3] - 2026-09-20
+
+Second round of the SSI Panel's self-maintenance loop. Found by read-only
+reviewers, each finding attacked by a second one, the finished diff reviewed by
+three more before release. The Escape cases were run in a real browser.
+
+### Fixed — Escape closed the modal underneath whatever it was meant for
+
+The modal's handler asked one thing: "is a modal open?" Escape in a searchable
+select closed the list **and** the modal with everything typed into it; Escape
+on a `GK.confirm` over a modal answered "cancel" and took the modal along; so
+did the lightbox, the receipt overlay, the header dropdown and the quick search.
+The handler now steps aside when the key was already claimed
+(`defaultPrevented`) or another layer lies on top.
+
+- The header dropdown claims the key when it really closed a menu — its listener
+  is older than the modal's, so a selector could never have seen it open.
+- The AJAX select looked at Escape only after asking for its options, so a list
+  showing "loading" or "no results" never reached that branch. Its open state is
+  a flag now: the list is hidden by CSS until first use, `style.display` is `""`
+  then, and a guard reading the inline style would have let a never-opened list
+  swallow the first Escape.
+- The multi select had no key handling at all.
+- The quick search heard Escape only while its input had the focus.
+
+### Fixed — an AJAX form said nothing when it failed
+
+`{ok: false, error: '…'}` changed nothing on screen: the button came back, and
+that was all. The skill has promised a toast for `{ok: true, message: '…'}`
+since 1.10 and no code showed one; a non-JSON answer raised a native `alert()`.
+All three are toasts now. `GK.modal.open` checks the status, so the body of a
+500 no longer appears where the form belongs. No form on the SSI servers uses
+`Form::ajax()` yet — a correction of behaviour and documentation, not a rescue.
+
+### Fixed — state that only a colour announced
+
+- The active chip of `FilterChips` and `YearFilter` carries `aria-current="true"`.
+- `SortLink` says the direction in words (`.gk-sr-only`); the arrow is
+  `aria-hidden` and was the only thing that did.
+- Every row checkbox of a selectable table is named, and the client-side rebuild
+  keeps the names and `scope="col"` — it used to drop them on the first sort.
+- The filter field inside a searchable select and the hex field of a colour input
+  had a placeholder for a name. An error on a range field is announced.
+- New language keys: `table.select_row`, `table.sorted_asc`, `table.sorted_desc`,
+  `js.select_all`, `js.select_row`.
+
+### Changed — coloured key figures use the text variants of their colours
+
+`StatCards` painted figures in the fill colours: success 2.54:1 and warning
+2.15:1 on the white card, under 3:1 even for large type. They now use
+`--gk-success-text`, `--gk-warning-text` and `--gk-danger-text` (5.0:1 and
+better). **Visible:** green, amber and red figures are a shade darker. In dark
+mode a later rule of equal specificity had turned every figure white, so a red
+figure stopped being red exactly where it mattered; that rule is gone and the
+figures are 9:1 and better on a dark card.
+
+### Fixed — `GK.liveTable` inserted a whole page where a list belongs
+
+A response that starts as a whole document is refused in both modes: in self
+mode when the container is missing from it, in partial mode always — with a
+console hint naming the endpoint, because it usually means the controller has
+no partial branch. The old rows stay; the failure is reported like any other.
+
+### Docs
+
+`GK.confirm`, the outcomes of an AJAX form, self mode (`data-gk-live-self`) and
+what a live table does when a request fails are in the skill now. Four German
+leftovers in the English document are gone.
+
+---
 ## [1.80.2] - 2026-09-20
 
 Three reviewers were set on 1.80.1 the hour it shipped. What they found:

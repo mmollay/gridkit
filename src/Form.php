@@ -372,7 +372,7 @@ class Form
                 $step = $f['step'] ?? 1;
                 $val = $value !== '' ? $value : $min;
                 echo "<div class=\"gk-range-wrap\">";
-                echo "<input type=\"range\" name=\"{$e($name)}\" id=\"{$e($name)}\" class=\"gk-range\" min=\"{$e($min)}\" max=\"{$e($max)}\" step=\"{$e($step)}\" value=\"{$e($val)}\">";
+                echo "<input type=\"range\" name=\"{$e($name)}\" id=\"{$e($name)}\" class=\"gk-range\" min=\"{$e($min)}\" max=\"{$e($max)}\" step=\"{$e($step)}\" value=\"{$e($val)}\"{$describe}>";
                 echo "<output class=\"gk-range-value\" for=\"{$e($name)}\">{$e($val)}</output>";
                 echo "</div>";
                 break;
@@ -435,7 +435,7 @@ class Form
                 echo "<div class=\"gk-color-swatch\">";
                 echo "<input type=\"color\" id=\"{$colorId}\" value=\"{$e($colorVal)}\" name=\"{$e($name)}\"{$composedBy}>";
                 echo "</div>";
-                echo "<input type=\"text\" id=\"{$hexId}\" class=\"gk-color-hex\" maxlength=\"7\" value=\"" . strtoupper($e($colorVal)) . "\" placeholder=\"#RRGGBB\" pattern=\"#[0-9A-Fa-f]{6}\">";
+                echo "<input type=\"text\" id=\"{$hexId}\" class=\"gk-color-hex\" maxlength=\"7\" value=\"" . strtoupper($e($colorVal)) . "\" placeholder=\"#RRGGBB\" pattern=\"#[0-9A-Fa-f]{6}\"{$composedBy}>";
                 echo "</div>";
                 echo "<script>(function(){";
                 echo "var sw=document.getElementById('{$colorId}');";
