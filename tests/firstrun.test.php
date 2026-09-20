@@ -22,18 +22,63 @@ function runPhp(string $file, string $cwd, array $get = []): array
     // the file — which is also closer to what a front controller does.
     $boot = '$_GET = ' . var_export($get, true) . '; $_SERVER["REQUEST_METHOD"]="GET"; '
           . 'include ' . var_export($file, true) . ';';
+    // Per process, inside a scratch directory: a fixed /tmp/gk-firstrun-err was
+    // shared by every run on the machine, so two suites at once read each
+    // other's errors — and it was never removed.
+    $errFile = scratch('err') . '/stderr';
     $cmd = 'cd ' . escapeshellarg($cwd) . ' && php -r ' . escapeshellarg($boot)
-         . ' 2>/tmp/gk-firstrun-err';
+         . ' 2>' . escapeshellarg($errFile);
     $out = shell_exec($cmd) ?? '';
-    $err = @file_get_contents('/tmp/gk-firstrun-err') ?: '';
+    $err = @file_get_contents($errFile) ?: '';
     return [$out, $err];
 }
 
-/** A scratch directory that is removed when the test ends. */
+/**
+ * Delete a tree without ever following a link.
+ *
+ * The "copy" scratch holds a symlink to the live source tree. is_dir() is true
+ * for such a link, so a loop that asks is_dir() first walks straight into the
+ * repository and empties it. Hence is_link() comes first, always.
+ */
+function removeTree(string $path): void
+{
+    if (is_link($path) || is_file($path)) { @unlink($path); return; }
+    if (!is_dir($path)) return;
+    foreach (scandir($path) ?: [] as $entry) {
+        if ($entry === '.' || $entry === '..') continue;
+        removeTree($path . '/' . $entry);
+    }
+    @rmdir($path);
+}
+
+/**
+ * Remember a directory this run created, and remove them all when it ends.
+ *
+ * The comment on scratch() promised that since 1.44.0 and nothing did it: by
+ * September 2026 one server held 1,380 leftovers and 340 MB.
+ */
+function removeAtExit(string $dir): void
+{
+    static $dirs = null;
+    if ($dirs === null) {
+        $dirs = new ArrayObject();
+        register_shutdown_function(static function () use ($dirs): void {
+            $ours = rtrim(sys_get_temp_dir(), '/') . '/gk-';
+            foreach ($dirs as $d) {
+                // Only ever our own names under the temp directory.
+                if (str_starts_with($d, $ours)) removeTree($d);
+            }
+        });
+    }
+    $dirs[$dir] = $dir;
+}
+
+/** A scratch directory that is removed when the run ends. */
 function scratch(string $name): string
 {
     $dir = sys_get_temp_dir() . '/gk-firstrun-' . getmypid() . '-' . $name;
     if (!is_dir($dir)) mkdir($dir, 0700, true);
+    removeAtExit($dir);
     return $dir;
 }
 
@@ -215,6 +260,7 @@ return [
     // Composer would generate, and see whether the documented asset path
     // resolves. That path is the one thing a plain clone never exercises.
     $base = sys_get_temp_dir() . '/gk-composer-' . getmypid();
+    removeAtExit($base);
     $pkg  = $base . '/vendor/mmollay/gridkit';
     @mkdir($pkg, 0700, true);
 

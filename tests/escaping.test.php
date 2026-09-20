@@ -167,4 +167,17 @@ return [
     T::contains($html, 'aria-label="Remove', 'the button is still named');
 },
 
+'the table footer escapes its cells like every other cell' => function (): void {
+    // The documentation calls a footer cell "a plain string". A totals row built
+    // from a customer name was an open door.
+    Lang::set('en');
+    $html = T::capture(fn() => (new Table('t'))
+        ->setData([['id' => 1, 'name' => 'Widget']])
+        ->column('name', 'Product')
+        ->footer([XSS, ['text' => '5 < 7 & more', 'align' => 'right' . ATTR_BREAK]])
+        ->render());
+    assertEscaped($html, 'table footer');
+    T::contains($html, '5 &lt; 7 &amp; more', 'footer text is escaped, not dropped');
+},
+
 ];

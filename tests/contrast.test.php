@@ -233,4 +233,47 @@ return [
     }
 },
 
+'every token the stylesheet reads is a token it defines' => function (): void {
+    // --gk-surface-variant and --gk-text-secondary were read in a dozen places
+    // and defined in none. The fallback after the comma is a light colour, so
+    // in dark mode a hovered page number became near-white text on #f1f5f9 —
+    // 1.08:1 — and consumers who trusted the names got light patches in dark.
+    $all = css() . themesCss();
+    preg_match_all('/(--gk-[a-z0-9-]+)\s*:/', $all, $def);
+    preg_match_all('/var\(\s*(--gk-[a-z0-9-]+)/', $all, $use);
+    // Hooks a page may set and GridKit never does; each is read with a fallback.
+    $hooks = ['--gk-inverse-surface', '--gk-on-inverse-surface', '--gk-primary-rgb'];
+    $missing = array_values(array_diff(array_unique($use[1]), array_unique($def[1]), $hooks));
+    T::eq($missing, [], 'tokens read but never defined');
+
+    // An alias on :root resolves with the light values; dark needs its own line.
+    preg_match('/\[data-gk-mode="dark"\],\s*\.gk-dark\s*\{(.*?)\n\}/s', css(), $dark);
+    foreach (['--gk-surface-variant', '--gk-text-secondary'] as $token) {
+        T::contains($dark[1] ?? '', $token . ':', "$token has no dark value");
+    }
+},
+
+'dark rules hang on the attribute GridKit sets' => function (): void {
+    // Theme::bodyAttrs() writes data-gk-mode. Two rules waited for data-theme,
+    // which nothing sets: the marked part of a search hit stayed #fef08a under
+    // inherited near-white text, 1.02:1.
+    T::notContains(css(), '[data-theme=', 'a rule waits for an attribute nobody sets');
+    T::contains(css(), '[data-gk-mode="dark"] .gk-search-treffer mark', 'search hits have no dark rule');
+},
+
+'the alignment classes exist and win inside a table' => function (): void {
+    // .gk-text-right was recommended by the skill and by SortLink and had never
+    // been defined; in a table even a defined class lost to
+    // ".gk-table td { text-align: left }" on specificity.
+    T::ok((bool) preg_match('/(^|\n)\.gk-text-right\s*\{\s*text-align:\s*right/', css()), '.gk-text-right is not defined');
+    foreach (['.gk-table td.gk-text-right', '.gk-table th.gk-text-right', '.gk-table td.gk-text-center', '.gk-table td.gk-actions-right'] as $sel) {
+        T::contains(css(), $sel, "$sel is missing, so the base rule of the table wins");
+    }
+},
+
+'the current page number keeps its colours under the pointer' => function (): void {
+    // .gk-pg:hover (0,2,0) beat .gk-pg-active (0,1,0): white on #f1f5f9.
+    T::contains(css(), '.gk-pg-active:hover', 'the active page has no hover rule of its own');
+},
+
 ];

@@ -127,4 +127,67 @@ return [
     T::contains($html, '<table', 'a table element is produced');
 },
 
+'a parameter sent as an array does not take the page down' => function (): void {
+    // ?gk_sort[]=x is one link anybody can type. Until 1.80.1 the constructor
+    // assigned it to a string property and the page died with a TypeError.
+    Lang::set('en');
+    $saved = $_GET;
+    try {
+        $_GET = ['gk_sort' => ['x'], 'gk_search' => ['x'], 'gk_filter_status' => ['x'], 'status' => ['x']];
+        $table = strictRender(fn() => (new Table('t'))
+            ->setData([['id' => 1, 'name' => 'Widget', 'status' => 'active']])
+            ->column('name', 'Product')
+            ->column('status', 'Status')
+            ->filter('status', 'select', ['options' => ['active' => 'Active']])
+            ->search(['name'])
+            ->render());
+        T::contains($table, 'Widget', 'the table still renders its rows');
+
+        $chips = strictRender(fn() => (new FilterChips('f', 'status'))
+            ->chip('', 'All')->chip('active', 'Active')->current('active')->render());
+        T::contains($chips, 'Active', 'the chips still render');
+    } finally {
+        $_GET = $saved;
+    }
+},
+
+'a chip row lights its default only while the url names no filter' => function (): void {
+    Lang::set('en');
+    $saved = $_GET;
+    $active = static function (string $html): string {
+        return preg_match('/<a[^>]*gk-chip-active[^>]*>\s*([^<]+)/', $html, $m) ? trim($m[1]) : '';
+    };
+    $chips = static fn() => (new FilterChips('f', 'status'))
+        ->chip('', 'All')->chip('open', 'Open')->chip('done', 'Done')->current('open')->render();
+    try {
+        $_GET = [];
+        T::eq($active(T::capture($chips)), 'Open', 'no parameter: the page default is lit');
+        $_GET = ['status' => 'done'];
+        T::eq($active(T::capture($chips)), 'Done', 'a chosen filter wins over the default');
+        // "All" links to ?status= — present but empty. Treating that like an
+        // absent parameter made the All chip impossible to select.
+        $_GET = ['status' => ''];
+        T::eq($active(T::capture($chips)), 'All', 'an explicit empty value selects the All chip');
+    } finally {
+        $_GET = $saved;
+    }
+},
+
+'one invalid byte does not silence a whole static table' => function (): void {
+    // json_encode() answers false for malformed UTF-8; the data block came out
+    // empty, the client had no rows, and sort, search and paging went dead
+    // without a word. Latin-1 leftovers in imported data are enough.
+    Lang::set('en');
+    $html = strictRender(fn() => (new Table('t'))
+        ->setData([['id' => 1, 'name' => "M\xfcller <!--<script"], ['id' => 2, 'name' => 'Huber']])
+        ->column('name', 'Name')
+        ->render());
+    T::ok((bool) preg_match('~<script type="application/json" data-gk-data>(.*?)</script>~s', $html, $m),
+        'the data block is there');
+    $data = json_decode($m[1] ?? '', true);
+    T::ok(is_array($data) && count($data['rows'] ?? []) === 2, 'the data block is valid JSON with both rows');
+    T::notContains($m[1] ?? '', '<!--', 'a comment opener in the data cannot reach the HTML parser');
+    T::contains($html, "M\u{FFFD}ller", 'the damaged cell shows a replacement character, not nothing');
+},
+
 ];

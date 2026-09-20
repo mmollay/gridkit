@@ -41,10 +41,24 @@ class Table
     public function __construct(string $id)
     {
         $this->id = $id;
-        $this->sortCol = $_GET['gk_sort'] ?? '';
+        $this->sortCol = self::param('gk_sort');
         $this->sortDir = ($_GET['gk_dir'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
         $this->currentPage = max(1, (int)($_GET['gk_page'] ?? 1));
-        $this->searchQuery = trim($_GET['gk_search'] ?? '');
+        $this->searchQuery = trim(self::param('gk_search'));
+    }
+
+    /**
+     * A GET parameter as text — and nothing else.
+     *
+     * ?gk_sort[]=x arrives as an array. Assigned to a string property it threw
+     * a TypeError, so any page with a table could be turned into a server error
+     * by one hand-typed link; cast with (string) it became the word "Array" and
+     * was bound into the query as a filter value.
+     */
+    private static function param(string $name): string
+    {
+        $value = $_GET[$name] ?? '';
+        return is_string($value) ? $value : '';
     }
 
     public function query(\mysqli $db, string $sql): static
@@ -244,7 +258,7 @@ class Table
         // into the URL and was then ignored by the query — the list simply did
         // not change. Static tables were unaffected: the client filters those.
         foreach (array_keys($this->filters) as $col) {
-            $value = (string) ($_GET['gk_filter_' . $col] ?? '');
+            $value = self::param('gk_filter_' . $col);
             if ($value === '') continue;
             $where[]  = "`$col` = ?";
             $params[] = $value;
@@ -351,7 +365,7 @@ class Table
             return;
         }
 
-        $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+        $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $staticAttr    = $this->isStatic   ? ' data-gk-static'    : '';
         $selectAttr    = $this->selectable ? ' data-gk-selectable' : '';
         $wrapClasses   = 'gk-table-wrap';
@@ -391,7 +405,11 @@ class Table
                     'column' => $this->groupCol,
                     'labels' => $this->groupLabels,
                 ],
-            ], JSON_UNESCAPED_UNICODE) . '</script>';
+            // SUBSTITUTE: one malformed byte made json_encode() answer false, the
+            // block came out empty and sort, search and paging died silently.
+            // HEX_TAG: "<!--<script" inside a cell puts the HTML parser into
+            // its double-escaped state and the block swallows the rest of the page.
+            ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_HEX_TAG) . '</script>';
         }
 
         // Toolbar
@@ -413,7 +431,7 @@ class Table
             // dropdown snaps to "All" on every full page load while the table
             // below it still shows filtered rows — which is what a shared link
             // or a plain reload does.
-            $active = (string) ($_GET['gk_filter_' . $col] ?? '');
+            $active = self::param('gk_filter_' . $col);
             $sel = static fn(string $value): string => $value === $active ? ' selected' : '';
 
             $filterLabel = $f['label']
@@ -468,7 +486,7 @@ class Table
 
     private function renderInner(): void
     {
-        $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+        $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
         $tableClass = 'gk-table' . ($this->globalNowrap ? ' gk-table-nowrap' : '');
         /*
@@ -654,7 +672,9 @@ class Table
                     $style = 'text-align:' . $align . ';';
                     if ($bold) $style .= 'font-weight:600;';
                     if ($align === 'right') $style .= 'color:var(--gk-primary);';
-                    echo '<td colspan="' . $colspan . '" style="' . $style . '">' . ($cell['text'] ?? '') . '</td>';
+                    // Escaped like every other cell. Until 1.80.1 both went out raw,
+                    // although the documentation calls a footer cell "a plain string".
+                    echo '<td colspan="' . $colspan . '" style="' . $e($style) . '">' . $e($cell['text'] ?? '') . '</td>';
                     $usedCols += $colspan;
                 }
                 // Remaining columns + load time
@@ -870,12 +890,12 @@ class Table
             ? number_format((float) $val, $decimals,
                 Lang::t('format.decimal'), Lang::t('format.thousands'))
             : (string) $val;
-        return '<span class="gk-num">' . htmlspecialchars($text, ENT_QUOTES, 'UTF-8') . '</span>';
+        return '<span class="gk-num">' . htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</span>';
     }
 
     private function format(mixed $val, array $col): string
     {
-        $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+        $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $fmt = $col['format'] ?? null;
         if ($fmt === null) return $e($val);
 
@@ -936,7 +956,7 @@ class Table
     {
         if ($this->searchQuery !== '' && $this->searchCols) return true;
         foreach (array_keys($this->filters) as $col) {
-            if (($_GET['gk_filter_' . $col] ?? '') !== '') return true;
+            if (self::param('gk_filter_' . $col) !== '') return true;
         }
         return false;
     }
@@ -948,7 +968,7 @@ class Table
      */
     private function renderEmpty(int $colspan): string
     {
-        $e = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES, 'UTF-8');
+        $e = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $filtered = $this->isFiltered();
         $empty = $this->emptyState;
 
@@ -978,7 +998,7 @@ class Table
 
     private function renderLabel(mixed $val, array $custom): string
     {
-        $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+        $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $v = strtolower(trim((string)$val));
         // The list used to know only the German forms: 'active' and 'inactive'
         // both fell through to 'gray', which left the most important distinction

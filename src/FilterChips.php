@@ -17,7 +17,10 @@ class FilterChips
     {
         $this->id = $id;
         $this->paramName = $paramName;
-        $this->currentValue = $_GET[$paramName] ?? '';
+        // is_string: ?status[]=x is an array, and assigning that to a string
+        // property is a TypeError — one hand-typed link, one server error.
+        $value = $_GET[$paramName] ?? '';
+        $this->currentValue = is_string($value) ? $value : '';
     }
 
     /**
@@ -31,7 +34,10 @@ class FilterChips
      */
     public function current(string $value): static
     {
-        if (($_GET[$this->paramName] ?? '') === '') {
+        // Absent, not empty: the "All" chip links to ?status= on purpose, and
+        // reading that as "no filter named" made All impossible to select on
+        // any page that has a default.
+        if (!is_string($_GET[$this->paramName] ?? null)) {
             $this->currentValue = $value;
         }
         return $this;

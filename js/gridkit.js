@@ -2388,10 +2388,45 @@
       var displayParams = new URLSearchParams(urlObj.searchParams);
       displayParams.delete("partial");
       var displayUrl = urlObj.pathname + (displayParams.toString() ? "?" + displayParams.toString() : "");
+      GK.liveTable.request(container, urlObj.pathname + "?" + fetchParams.toString(), displayUrl);
+    },
+    // The one request path of the live table; loadUrl and reload differ only in
+    // how they build the two addresses.
+    //
+    // Until 1.80.1 both wrote whatever came back into the container: the 401
+    // JSON of an expired session showed up as raw text where the invoices had
+    // been, a 500 or a firewall's 403 page landed inside the list, a network
+    // failure did nothing at all, and an older answer could overwrite a newer
+    // one. GK.table.reload has handled all four for a long time — same rules.
+    request: function (container, fetchUrl, displayUrl) {
       container.classList.add("gk-live-loading");
-      fetch(urlObj.pathname + "?" + fetchParams.toString(), { headers: { "X-Requested-With": "XMLHttpRequest" } })
-        .then(function (r) { return r.text(); })
+      container.setAttribute("aria-busy", "true");
+      // One counter per container, shared by every caller: a pager click must
+      // not be overtaken by the filter request that was sent before it.
+      var run = (container._gkRun = (container._gkRun || 0) + 1);
+      var settled = false;
+      var finish = function () {
+        if (container._gkRun !== run || settled) return false;
+        settled = true;
+        container.classList.remove("gk-live-loading");
+        container.removeAttribute("aria-busy");
+        return true;
+      };
+      fetch(fetchUrl, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+        .then(function (r) {
+          if (!r.ok) {
+            var error = new Error("HTTP " + r.status);
+            error.gkTransport = true;
+            error.status = r.status;
+            throw error;
+          }
+          return r.text();
+        }, function (networkError) {
+          networkError.gkTransport = true;
+          throw networkError;
+        })
         .then(function (html) {
+          if (!finish()) return;
           GK.liveTable.applyHtml(container, html);
           GK.liveTable.hoistPager(container);
           window.history.replaceState(null, "", displayUrl);
@@ -2399,8 +2434,22 @@
           container.dispatchEvent(new CustomEvent("gk-live-reloaded", { bubbles: true }));
           GK.liveTable.init(container);
         })
-        .catch(function () {})
-        .finally(function () { container.classList.remove("gk-live-loading"); });
+        .catch(function (err) {
+          // Only a transport error means "not loaded". If inserting throws
+          // (Safari throttles history.replaceState), the rows are already in.
+          if (!err || !err.gkTransport) {
+            finish();
+            if (window.console) console.error("GridKit: failed to insert the live table", err);
+            return;
+          }
+          if (!finish()) return;
+          // The session is gone: a full load is what takes the user to the
+          // login page — and back to this list afterwards.
+          if (err.status === 401) { window.location.reload(); return; }
+          // The old rows stay; they are better than an error page in their place.
+          GK.toast.error(_lang["load_error"] || "The table could not be loaded.");
+          container.dispatchEvent(new CustomEvent("gk-table-error", { bubbles: true, detail: { error: err } }));
+        });
     },
     bindInput: function (input) {
       if (input._gkLiveBound) return;
@@ -2469,19 +2518,7 @@
       var displayUrl = baseUrl + "?" + new URLSearchParams(
         Array.from(params.entries()).filter(function (pair) { return pair[0] !== "partial"; })
       ).toString();
-      container.classList.add("gk-live-loading");
-      fetch(fetchUrl, { headers: { "X-Requested-With": "XMLHttpRequest" } })
-        .then(function (r) { return r.text(); })
-        .then(function (html) {
-          GK.liveTable.applyHtml(container, html);
-          GK.liveTable.hoistPager(container);
-          window.history.replaceState(null, "", displayUrl);
-          GK.liveTable.saveSession(container);
-          container.dispatchEvent(new CustomEvent("gk-live-reloaded", { bubbles: true }));
-          GK.liveTable.init(container);
-        })
-        .catch(function () {})
-        .finally(function () { container.classList.remove("gk-live-loading"); });
+      GK.liveTable.request(container, fetchUrl, displayUrl);
     },
   };
 

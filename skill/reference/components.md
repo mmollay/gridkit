@@ -1,4 +1,4 @@
-# GridKit 1.79.1 — components
+# GridKit 1.80.1 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -388,10 +388,14 @@ you. Reach for `Select::searchable()` only outside one.
     ->chip('won',    'Won',  ['color' => 'success'])
     ->chip('lost',   'Lost', ['color' => 'danger'])
     ->preserve(['year'])                   // keep other GET params on click
+    ->current('active')                    // optional: the chip to light while the URL names none
     ->render();
 ```
 
 Active chip is auto-detected from `$_GET`. Color options: `success`, `danger`, `warning`, `primary`.
+`FilterChips::current()` is for a page whose default view is already filtered: reached without the
+parameter, the list shows one filter and no chip is lit, so the row reads as decoration. It applies only
+while the parameter is absent — `?status=` (the "All" chip) and any chosen value win over it.
 The param is always present in the URL, the "All" chip included (`?status=`) — this empty query string is what stops
 `GK.liveTable.restoreSession` from jumping back to the last remembered filter. Read it with
 `($_GET['status'] ?? '') !== ''`, never with `isset($_GET['status'])`.

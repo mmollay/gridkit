@@ -7,6 +7,80 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.80.1] - 2026-09-20
+
+First round of the SSI Panel's self-maintenance loop: five read-only reviewers,
+each finding attacked by a second one before anything was changed. Every fix
+below came with the test that shows the fault.
+
+### Fixed — 1.80.0 shipped with a red suite
+
+The release touched `VERSION`, the changelog and one class, and not the header of
+`GRIDKIT_SKILL.md` nor the generated `skill/`. `ci/build-skill.sh` now stamps the
+header from `VERSION` itself, so it is the one step a release has to remember.
+`FilterChips::current()` was missing from the document as well; the check that
+should have caught it is satisfied by any `->current(` on the page, and
+`YearFilter` has one.
+
+### Fixed — `FilterChips::current()` made the "All" chip impossible to select
+
+It treated an empty value like an absent parameter. The "All" chip links to
+`?status=` on purpose, so on a page with a default the default stayed lit
+whatever was clicked. It now applies only while the parameter is absent. The
+method had shipped without a test.
+
+### Fixed — one hand-typed link turned any page with a table into a server error
+
+`?gk_sort[]=x` arrives as an array and was assigned to a string property:
+`TypeError`, 500. The same for `gk_search` and for the parameter of a chip row;
+`gk_filter_<column>` became the word "Array" and was bound into the query.
+Parameters are now read as text or not at all.
+
+### Fixed — `Table::footer()` wrote its cells unescaped
+
+The documentation calls a footer cell "a plain string"; text and `align` both
+went out raw. **Behaviour change:** markup or entities in a footer cell are now
+shown as text. No caller on the SSI servers relied on it.
+
+### Fixed — one invalid byte silenced a whole static table
+
+`json_encode()` answers `false` for malformed UTF-8. The data block came out
+empty, the client had no rows, and sort, search and paging went dead without a
+word; the cell itself rendered empty. Both now substitute U+FFFD. The block is
+also encoded with `JSON_HEX_TAG` — `<!--<script` inside a cell could otherwise
+swallow the rest of the page.
+
+### Fixed — `GK.liveTable` put error pages where the rows had been
+
+It wrote whatever came back into the container: the 401 JSON of an expired
+session as raw text, a 500 or a firewall's 403 page inside the list; a network
+failure did nothing, and an older answer could overwrite a newer one.
+`loadUrl()` and `reload()` now share one request path with the rules
+`GK.table.reload` has had for a long time: status checked, one run counter per
+container, the old rows stay, a toast and `gk-table-error` report the failure,
+and a 401 reloads the page so the user reaches the login.
+
+### Fixed — stylesheet
+
+- `--gk-surface-variant` and `--gk-text-secondary` were read in a dozen places
+  and defined in none, so the light fallback always won: a hovered page number
+  in dark mode was 1.08:1. Both are defined now, with explicit dark values. The
+  light values equal the old fallbacks — nothing moves in the light scheme.
+- `.gk-text-right` was recommended by the skill and by `SortLink` and had never
+  existed. Inside a table it, `.gk-text-center` and `.gk-actions-right` now also
+  beat `.gk-table td { text-align: left }`.
+- Two dark rules of the quick search waited for `data-theme`, which nothing
+  sets. The marked part of a hit was 1.02:1 in dark mode.
+- The current page number turned white-on-grey under the pointer.
+
+### Fixed — every test run left directories behind in the temp folder
+
+`scratch()` has promised "removed when the test ends" since 1.44.0 and removed
+nothing: 1,380 leftovers and 340 MB on one server. They are removed now —
+link-safe, because one of them holds a symlink to the live source tree and a
+loop built on `is_dir()` would have walked into it.
+
+---
 ## [1.80.0] - 2026-09-16
 
 ### Added — `FilterChips::current()`, for pages whose default filter is not "all"

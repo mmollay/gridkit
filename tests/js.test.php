@@ -299,4 +299,18 @@ return [
         . 'library stopped having them');
 },
 
+'the live table does not put an error page where the rows were' => function (): void {
+    // GK.liveTable wrote whatever came back into the container: the 401 JSON of
+    // an expired session, a 500 page, the 403 of a firewall. GK.table.reload had
+    // handled all of that for a long time; its sibling never did.
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::ok((bool) preg_match('/GK\.liveTable\s*=\s*\{(.*?)\n  \};/s', $js, $m), 'GK.liveTable was not found');
+    $live = $m[1] ?? '';
+    T::eq(substr_count($live, 'fetch('), 1, 'loadUrl and reload share one request path');
+    T::contains($live, 'r.ok', 'the status of the answer is never looked at');
+    T::contains($live, '_gkRun', 'an older answer may still overwrite a newer one');
+    T::contains($live, 'gk-table-error', 'a failed request tells nobody');
+    T::ok(!preg_match('/\.catch\(function \(\) \{\}\)/', $live), 'errors are swallowed by an empty catch');
+},
+
 ];

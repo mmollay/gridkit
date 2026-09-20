@@ -80,6 +80,11 @@ a:hover {
   --gk-text-muted: var(--gk-on-surface-variant);
   --gk-text-subtle: var(--gk-outline);
   --gk-border: var(--gk-outline-variant);
+  /* Read in a dozen places since the early versions and defined in none, so the
+     literal after the comma always won — a light one, in dark mode too. The
+     light values equal those literals: nothing moves in the light scheme. */
+  --gk-surface-variant: var(--gk-surface-container);
+  --gk-text-secondary: var(--gk-on-surface-variant);
   --gk-warning: #f59e0b;
   --gk-danger: var(--gk-error);
   --gk-info: #0ea5e9;
@@ -630,6 +635,9 @@ a:hover {
    the scale (L 0.80), so white on white measured 1.8:1 across every theme. The
    role colour flips with the mode; the literal did not. */
 .gk-pg-active { background: var(--gk-primary); border-color: var(--gk-primary); color: var(--gk-on-primary); cursor: default; }
+/* .gk-pg:hover is 0,2,0 and beat the line above (0,1,0): the current page
+   turned white-on-#f1f5f9 under the pointer. */
+.gk-pg-active:hover { background: var(--gk-primary); }
 .gk-pg-icon { padding: 0; }
 .gk-pg-icon .material-icons { font-size: 18px; }
 .gk-pg-off { opacity: .4; pointer-events: none; }
@@ -5061,6 +5069,10 @@ a.gk-stat-card:hover {
   --gk-text-muted: #8b949e;
   --gk-text-subtle: #484f58;
   --gk-border: rgba(255, 255, 255, 0.08);
+  /* One step above the page (#0d1117) and the cards (#161b22), or a hovered
+     page number would not show at all. */
+  --gk-surface-variant: #21262d;
+  --gk-text-secondary: #8b949e;
 
   /* Legacy dark overrides */
   /* Hover steps: the @supports block at the end of the file derives them from
@@ -6365,7 +6377,15 @@ a.gk-stat-card:hover {
 /* — Text-Align — */
 .gk-text-left   { text-align: left; }
 .gk-text-center { text-align: center; }
-/* .gk-text-right already exists further up — do not define it again */
+/* The comment that stood here said .gk-text-right "already exists further up".
+   It never did — the skill and SortLink recommended a class with no rule, and
+   the SSI Panel carried its own copy. */
+.gk-text-right  { text-align: right; }
+/* Inside a table the base rule ".gk-table td { text-align: left }" is 0,1,1 and
+   beats a bare utility class. The card view keeps its own !important left. */
+.gk-table th.gk-text-right,  .gk-table td.gk-text-right,
+.gk-table td.gk-actions-right { text-align: right; }
+.gk-table th.gk-text-center, .gk-table td.gk-text-center { text-align: center; }
 
 /* — Text-Color (semantic) — */
 .gk-text-primary { color: var(--gk-primary, #6366f1); }
@@ -6600,8 +6620,13 @@ a.gk-stat-card:hover {
   }
   .gk-search-laedt { animation-duration: 2s !important; }
 }
-[data-theme="dark"] .gk-search-treffer mark { background: #854d0e; color: #fef9c3; }
-[data-theme="dark"] .gk-search-overlay { background: rgba(0, 0, 0, 0.6); }
+/* These two waited for data-theme, which nothing sets — the mode lives in
+   data-gk-mode (Theme::bodyAttrs) or .gk-dark. Until 1.80.1 the marked part of
+   a hit stayed #fef08a under inherited near-white text: 1.02:1. */
+[data-gk-mode="dark"] .gk-search-treffer mark,
+.gk-dark .gk-search-treffer mark { background: #854d0e; color: #fef9c3; }
+[data-gk-mode="dark"] .gk-search-overlay,
+.gk-dark .gk-search-overlay { background: rgba(0, 0, 0, 0.6); }
 
 /* ===================================================================
    DERIVED STATE COLORS

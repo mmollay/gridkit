@@ -19,6 +19,14 @@ import os, re, shutil
 src = open('GRIDKIT_SKILL.md', encoding='utf-8').read()
 version = open('VERSION').read().strip()
 
+# The header of the source carries the version too. 1.80.0 shipped without
+# anyone touching it and the suite went red; stamped here, this script is the
+# one step a release has to remember.
+stamped = re.sub(r'(?m)^(> \*\*Version:\*\* )\S+', lambda m: m.group(1) + version, src, count=1)
+if stamped != src:
+    open('GRIDKIT_SKILL.md', 'w', encoding='utf-8').write(stamped)
+    src = stamped
+
 # Split on level-2 headings, keeping each heading with its body.
 parts = re.split(r'\n(?=## )', src)
 head, sections = parts[0], parts[1:]
