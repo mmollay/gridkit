@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.80.3 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.81.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -226,8 +226,12 @@ use GridKit\{Table, Form, StatCards, FilterChips, Button};
     ->button('edit',   ['icon' => 'edit',   'params' => ['id' => 'id']])
     ->button('delete', ['icon' => 'delete', 'params' => ['id' => 'id'], 'color' => 'danger'])
     ->paginate(25)
+    ->caption('Customers')                    // what it is a table of — for screen readers only
     ->render();
 ```
+
+Give every table a `caption()` when a page has more than one: the heading above a table is
+not associated with it, and without a caption a screen reader announces "table" twice.
 
 Server-side, straight from MySQL — GridKit builds the `LIKE`, the `WHERE` for
 every declared filter, the `ORDER BY`, the `COUNT` and the `LIMIT`:
@@ -356,7 +360,7 @@ Three ways to get data into a table, in order of how much GridKit does for you:
                               // WHERE for every declared filter, ORDER BY,
                               // COUNT and LIMIT. mysqli only.
 
-->rows($pageRows, $total)     // you ran the query. PDO, SQLite, Postgres, an
+->rows($pageRows, $total)     // Table::rows() — you ran the query. PDO, SQLite, Postgres, an
                               // HTTP API, an array — anything. Hand over one
                               // page plus the total before LIMIT.
 ```
@@ -454,6 +458,13 @@ echo Button::render('Label', [
 
 // A floating action button — round, fixed, bottom right.
 echo Button::fab('add', ['color' => 'primary', 'extended' => true, 'label' => 'New']);
+
+// Several buttons as one joined group. Button::group() takes finished button
+// strings and returns the wrapper — it renders nothing of its own.
+echo Button::group([
+    Button::render('Day',  ['variant' => 'outlined', 'size' => 'sm']),
+    Button::render('Week', ['variant' => 'outlined', 'size' => 'sm']),
+]);
 
 // Icon-only: pass an empty label. GridKit gives it an accessible name from
 // the icon, translated for the active locale, so a screen reader does not
@@ -754,6 +765,8 @@ CSS classes (all auto-applied): `gk-tableheader`, `gk-tableheader-status`, `gk-t
 **Colors:** `primary`, `success`, `danger`, `warning`, `info`
 **Formats:** `currency`, `number`, `percent` — each follows the active locale,
 so `12450.80` is `€12,450.80` under `en` and `12.450,80 €` under `de`.
+`number` rounds to whole numbers like the table column does; pass `'decimals' => 2`
+to keep some (`percent` takes it too).
 
 **`trend`** is printed verbatim, exactly as you pass it — GridKit does no
 rounding, no sign and no percent sign of its own. A leading `-` colours it as a
@@ -799,6 +812,8 @@ compatibility rule catches the old shape.
     ->action('/api/save-user')
     ->method('POST')
     ->ajax()                    // REQUIRED for AJAX — without it the form does a native POST
+    ->card()                    // optional: wrap the form in a gk-card. Leave it out inside a
+                                // modal or an existing card — Form::card() is off by default
     ->row()
         ->field('first_name', 'First name', 'text', ['width' => 8, 'required' => true])
         ->field('last_name',  'Last name',  'text', ['width' => 8, 'required' => true])
@@ -1157,6 +1172,8 @@ PageSize::make('per_page')          // the query parameter
     ->preserve(['year', 'sort'])    // names, read from $_GET …
     ->preserve(['year' => 2024])    // … or a name => value map
     ->live('exp-live')              // AJAX instead of a full navigation
+    ->selectClass('gk-filter')      // PageSize::selectClass(): the class of the <select>;
+                                    // default 'gk-filter gk-pagesize-select'
     ->render();
 ```
 
@@ -1278,7 +1295,14 @@ Features:
 - Sidebar links load content with fetch(), no page reload
 - A loading bar along the top edge of the screen
 - Browser back/forward works through pushState
-- Tables, tooltips and the receipt overlay are re-initialised after each swap
+- Tables, tooltips and the receipt overlay are re-initialised after each swap, and hand-written
+  modals are given a dialog role and a named close button (`GK.modal.upgradeStatic(root)` — call it
+  yourself after inserting an overlay you built in JavaScript)
+- **The target page's own styles come along.** A `<link rel="stylesheet">` or `<style>` in the new
+  page's `<head>` that the current document lacks is added and awaited before the content is swapped,
+  and removed again when you navigate on. GridKit marks what it added with `data-gk-nav-asset` — do
+  not write that attribute yourself. Scripts in `<head>` are NOT brought along: put a page's script
+  inside `[data-gk-content]`, where it is re-executed on every swap.
 - Falls back to a normal page load on error
 - External links and Ctrl/Cmd-click are left alone
 

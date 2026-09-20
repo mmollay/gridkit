@@ -1,4 +1,4 @@
-# GridKit 1.80.3 — JavaScript
+# GridKit 1.81.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -129,7 +129,14 @@ Features:
 - Sidebar links load content with fetch(), no page reload
 - A loading bar along the top edge of the screen
 - Browser back/forward works through pushState
-- Tables, tooltips and the receipt overlay are re-initialised after each swap
+- Tables, tooltips and the receipt overlay are re-initialised after each swap, and hand-written
+  modals are given a dialog role and a named close button (`GK.modal.upgradeStatic(root)` — call it
+  yourself after inserting an overlay you built in JavaScript)
+- **The target page's own styles come along.** A `<link rel="stylesheet">` or `<style>` in the new
+  page's `<head>` that the current document lacks is added and awaited before the content is swapped,
+  and removed again when you navigate on. GridKit marks what it added with `data-gk-nav-asset` — do
+  not write that attribute yourself. Scripts in `<head>` are NOT brought along: put a page's script
+  inside `[data-gk-content]`, where it is re-executed on every swap.
 - Falls back to a normal page load on error
 - External links and Ctrl/Cmd-click are left alone
 

@@ -58,3 +58,19 @@ bash ci/release-notes.sh --since 1.4.0   # one catch-up release covering
 Then: **Releases → Draft a new release**, pick the tag, paste, publish. It
 refuses a version `CHANGELOG.md` does not know, rather than printing the whole
 file — which is what its first version did.
+
+## Behaviour in a real browser
+
+`php tests/run.php` executes no JavaScript; every check of `js/gridkit.js` in it
+compares strings. `ci/browser.js` drives real component markup in headless
+Chromium instead — which layer Escape closes, what the client-side rebuild of a
+table keeps, what a hand-written modal is given:
+
+```bash
+node ci/browser.js                     # needs the "playwright" package
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser.js
+```
+
+Like `ci/parity.php` it stays outside the suite: GridKit has no dependencies,
+and the suite keeps that promise. Run it when touching `js/gridkit.js`.
+

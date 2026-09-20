@@ -147,6 +147,17 @@
     }
   }
 
+  // Where a header cell stands: an explicit align wins, a number or currency
+  // column is right-aligned without one. Table::headerAlignClass() in PHP is the
+  // same rule — keep them in step, or the head jumps on the first sort.
+  function thAlignClass(col) {
+    var align = col.align || "";
+    if (align === "right") return "gk-text-right";
+    if (align === "center") return "gk-text-center";
+    if (align) return "";
+    return col.format === "number" || col.format === "currency" ? "gk-td-num" : "";
+  }
+
   // Is something open ON TOP of the modal? Each of these closes itself on
   // Escape through a listener of its own; the modal must then stay. Only layers
   // whose listener is registered AFTER the modal's belong here — they still
@@ -205,6 +216,47 @@
         });
         document.body.appendChild(ov);
         return ov;
+      },
+      /**
+       * Hand-written modals get what _createOverlay() builds in.
+       *
+       * Many pages write `<div class="gk-modal-overlay"><div class="gk-modal">`
+       * themselves and show it with style.display. They got none of the above:
+       * the close button — usually a bare &times; — was read as "multiplication
+       * sign", and nothing said a dialog had opened. Idempotent; only fills in
+       * what the page left out. No aria-modal: these dialogs do not take the
+       * focus, and declaring the rest of the page out of bounds while the focus
+       * is still in it strands screen reader users.
+       */
+      upgradeStatic(root) {
+        var scope = root && root.querySelectorAll ? root : document;
+        scope.querySelectorAll(".gk-modal-close").forEach(function (btn) {
+          if (btn.hasAttribute("aria-label") || btn.hasAttribute("title")) return;
+          // A button that SAYS something keeps its own words: an aria-label
+          // differing from the visible text breaks voice control (WCAG 2.5.3).
+          // Only a bare cross or an icon ligature has nothing to say.
+          var text = btn.cloneNode(true);
+          text.querySelectorAll(".material-icons, [aria-hidden=true]").forEach(function (i) { i.remove(); });
+          var words = text.textContent.replace(/[×✕✖]/g, "").trim();
+          if (words !== "") return;
+          btn.setAttribute("aria-label", _t("close"));
+        });
+        scope.querySelectorAll(".gk-modal-overlay > .gk-modal").forEach(function (box) {
+          if (box.hasAttribute("role")) return;
+          // The name first. A dialog without one is worse than the neutral div
+          // it was: the role announces "dialog" and then has nothing to add.
+          var named = box.hasAttribute("aria-label") || box.hasAttribute("aria-labelledby");
+          if (!named) {
+            // Pages put their heading in a header of their own making as often
+            // as in .gk-modal-header — so any heading inside counts.
+            var heading = box.querySelector(".gk-modal-title, .gk-modal-header h1, .gk-modal-header h2, .gk-modal-header h3, .gk-modal-header h4")
+              || box.querySelector("h1, h2, h3, h4, h5, h6");
+            if (!heading) return;
+            if (!heading.id) heading.id = "gk-static-modal-title-" + (GK.modal._seq = (GK.modal._seq || 0) + 1);
+            box.setAttribute("aria-labelledby", heading.id);
+          }
+          box.setAttribute("role", "dialog");
+        });
       },
       /** Everything inside `root` a keyboard can reach, in document order. */
       _focusable(root) {
@@ -959,7 +1011,10 @@
         const rowIdField = data.rowId || "id";
         const selSet = wrap._gkSelected || new Set();
 
-        let html = '<table class="gk-table"><thead><tr>';
+        let html =
+          '<table class="gk-table">' +
+          (data.caption ? '<caption class="gk-sr-only">' + e(data.caption) + "</caption>" : "") +
+          "<thead><tr>";
         if (selectable)
           html +=
             // Same names and scope as Table.php writes — the first sort or
@@ -1015,6 +1070,14 @@
               "</span>";
           } else if (col.hideOnMobile) {
             cls = ' class="gk-hide-mobile"';
+          }
+          // Same rule as Table::headerAlignClass(): the header stands where its
+          // column stands.
+          const alignCls = thAlignClass(col);
+          if (alignCls) {
+            cls = cls
+              ? cls.replace(/"$/, " " + alignCls + '"')
+              : ' class="' + alignCls + '"';
           }
           const label = e(col.label) + sortIcon;
             // scope="col", the same as the server writes. Without it here the
@@ -1794,10 +1857,80 @@
         var res = { ok: xhr.status >= 200 && xhr.status < 400, text: function () { return xhr.responseText; } };
         if (!res.ok) { self.hideProgress(); location.href = url; return; }
         var html = xhr.responseText;
-        self._render(html, url, content, pushState);
+        // The styles first, the content after: _render stays synchronous on
+        // purpose — consumers wrap it to re-initialise their own widgets.
+        self._syncHead(html, function (cleanUp) {
+          self._render(html, url, content, pushState);
+          cleanUp();
+        });
       };
       xhr.onerror = function () { self.hideProgress(); };
       xhr.send();
+    },
+
+    /**
+     * Bring the target page's own styles along.
+     *
+     * Navigation swaps [data-gk-content] and the title — nothing else. A page
+     * that links a stylesheet of its own in <head> arrived without it: reached
+     * through the sidebar it was unstyled, reached by reload it was fine, which
+     * is exactly the kind of fault nobody can reproduce on request. The SSI
+     * Panel has 24 such pages.
+     *
+     * Missing stylesheets and <style> blocks from the new document's head are
+     * added and awaited (1.5 s at most) BEFORE the content is swapped, so there
+     * is no flash. What an earlier navigation added and the new page does not
+     * carry is removed afterwards. Nothing else in <head> is touched: scripts
+     * inject styles of their own there (editors, maps), and those must stay.
+     */
+    _syncHead: function (html, done) {
+      var wanted = [], pending = 0, finished = false, timer = null;
+      // By path, not by full address: consumers hang a cache key on their
+      // stylesheets (?v=<mtime>). Compared in full, a file saved while a tab was
+      // open counted as missing — a second copy went to the END of <head>, behind
+      // stylesheets it is meant to precede, and the cascade tipped over. A tab
+      // keeps the version it loaded until it reloads, as it always has.
+      var key = function (el) {
+        if (el.tagName !== 'LINK') return 'style:' + el.textContent;
+        var u = new URL(el.getAttribute('href'), location.href);
+        return 'link:' + u.origin + u.pathname;
+      };
+      var cleanUp = function () {
+        document.head.querySelectorAll('[data-gk-nav-asset]').forEach(function (el) {
+          if (wanted.indexOf(key(el)) === -1) el.remove();
+        });
+      };
+      var go = function () {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        done(cleanUp);
+      };
+      try {
+        var doc = new DOMParser().parseFromString(html || '', 'text/html');
+        var have = {};
+        document.head.querySelectorAll('link[rel~="stylesheet"][href], style').forEach(function (el) { have[key(el)] = true; });
+        doc.head.querySelectorAll('link[rel~="stylesheet"][href], style').forEach(function (el) {
+          var k = key(el);
+          wanted.push(k);
+          if (have[k]) return;
+          have[k] = true;
+          var copy = document.createElement(el.tagName.toLowerCase());
+          Array.from(el.attributes).forEach(function (a) { copy.setAttribute(a.name, a.value); });
+          copy.setAttribute('data-gk-nav-asset', '');
+          if (el.tagName === 'STYLE') {
+            copy.textContent = el.textContent;
+          } else {
+            pending++;
+            copy.onload = copy.onerror = function () { if (--pending === 0) go(); };
+          }
+          document.head.appendChild(copy);
+        });
+      } catch (e) {
+        if (window.console) console.warn('GK.navigate: head sync', e);
+      }
+      if (pending === 0) go();
+      else timer = setTimeout(go, 1500);
     },
 
     _render: function (html, url, content, pushState) {
@@ -1836,6 +1969,7 @@
         try {
           if (typeof GK.table !== 'undefined' && GK.table.init) GK.table.init();
           if (typeof GK.tooltip !== 'undefined' && GK.tooltip.init) GK.tooltip.init();
+          GK.modal.upgradeStatic(content);
           // BelegModal sits inside [data-gk-content] and is re-rendered on the
           // swap → the close button loses its listener. Bind it again.
           if (typeof GK.belegModal !== 'undefined' && GK.belegModal._init) GK.belegModal._init();
@@ -2752,6 +2886,7 @@
   document.addEventListener("gk-live-reloaded", function (e) {
     if (GK.rowPager) GK.rowPager.init(e.target || document);
     if (GK.table) GK.table.init(e.target || document);
+    GK.modal.upgradeStatic(e.target || document);
   });
 
   var _origInit = GK.init;
@@ -2774,6 +2909,7 @@
     // own _gkReady call covers that pass and this one covers later content.
     if (GK.lightbox && GK.lightbox.init) GK.lightbox.init();
     if (GK.rowPager) GK.rowPager.init();
+    GK.modal.upgradeStatic(document);
   };
 
   /*

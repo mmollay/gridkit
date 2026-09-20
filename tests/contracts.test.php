@@ -445,4 +445,26 @@ return [
     T::contains($m[0], 'aria-label', 'the year select announces what it filters');
 },
 
+'a key figure and the column under it show the same number' => function (): void {
+    // StatCards promises in its own comment that a card and the column below it
+    // "never disagree". They did: the card cut a number off with (int) where the
+    // table rounds, knew no 'decimals', and printed a percentage with a dot
+    // under every locale.
+    Lang::set('de');
+    $card = static fn(mixed $v, array $o): string => preg_match(
+        '/gk-stat-value[^>]*>([^<]*)</',
+        T::capture(fn() => (new StatCards('s'))->card('L', $v, $o)->render()), $m) ? html_entity_decode($m[1]) : 'MISSING';
+    $cell = static fn(mixed $v, array $o): string => preg_match(
+        '/<td[^>]*>(?:<span[^>]*>)?([^<]*)</',
+        T::capture(fn() => (new Table('t'))->setData([['id' => 1, 'v' => $v]])->column('v', 'V', $o)->render()), $m) ? html_entity_decode($m[1]) : 'MISSING';
+
+    T::eq($card(1999.9, ['format' => 'number']), $cell(1999.9, ['format' => 'number']), 'number: the card cuts off where the table rounds');
+    T::eq($card(1999.9, ['format' => 'number']), '2.000', 'number rounds');
+    T::eq($card(12.345, ['format' => 'number', 'decimals' => 2]), $cell(12.345, ['format' => 'number', 'decimals' => 2]), 'number with decimals');
+    T::eq($card(1284, ['format' => 'number']), '1.284', 'a whole number is unchanged');
+    T::eq($card(12.5, ['format' => 'percent']), '12,5 %', 'a percentage follows the locale like the skill says');
+    T::eq($card(78, ['format' => 'percent']), '78 %', 'a whole percentage is unchanged');
+    Lang::set('en');
+},
+
 ];

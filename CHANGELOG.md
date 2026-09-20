@@ -7,6 +7,85 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.81.0] - 2026-09-20
+
+Third round of the SSI Panel's self-maintenance loop. For the first time the work
+was done in a separate working tree and entered the served source in one step —
+in round two an unfinished state was live for an hour under the old cache key.
+
+### Added — `Table::caption()`
+
+What a table is a table of, for screen readers: `<caption class="gk-sr-only">`.
+Two tables on one page were indistinguishable — "table, four columns", twice. The
+caption travels in the data block, so the client-side rebuild writes it again.
+
+### Added — `GK.modal.upgradeStatic()`: hand-written modals get what `GK.modal` has
+
+`GK.modal.open()` builds `role="dialog"`, a name and a named close button. Pages
+that write `<div class="gk-modal-overlay"><div class="gk-modal">` themselves got
+none of it: the close button — usually a bare `&times;` — was read as
+"multiplication sign", and nothing said a dialog had opened. The SSI Panel alone
+has 87 such overlays and 56 unnamed close buttons. They are now given
+`role="dialog"` and `aria-labelledby` from a heading inside them — any heading,
+pages put theirs in headers of their own making — and the close button an
+`aria-label`, on page load, after AJAX navigation and after a live reload. Only
+what the page left out: a dialog with no heading stays the neutral `div` it was
+rather than become a nameless dialog, and a close button that says something
+keeps its words. No `aria-modal`: these dialogs do not take the focus. An overlay
+a page builds in JavaScript is not seen — call `GK.modal.upgradeStatic(overlay)`
+after inserting it.
+
+### Fixed — a page reached through the sidebar arrived without its own stylesheet
+
+AJAX navigation swaps `[data-gk-content]` and the title, nothing else. A page that
+links a stylesheet of its own in `<head>` was unstyled when reached through the
+sidebar and fine after a reload — the kind of fault nobody can reproduce on
+request. The SSI Panel has 24 such pages. Stylesheets and `<style>` blocks from the
+new page's head are now added and awaited (1.5 s at most) before the content is
+swapped, and removed again on the next navigation. Nothing else in `<head>` is
+touched: editors and maps inject styles of their own there. A stylesheet is
+recognised by its path, not its cache key — a file saved while a tab is open does
+not arrive as a second copy behind the stylesheets it is meant to precede.
+
+### Fixed — a header stands where its column stands
+
+Number and currency cells carry `.gk-td-num` and were meant to be right-aligned;
+the rule lost to `.gk-table td { text-align: left }`. Fixing the cell alone would
+have put every figure on the right and its heading on the left, because the header
+never received an alignment at all — not from the format, not from `'align'`.
+Both now follow the same rule in PHP (`Table::headerAlignClass`) and in the
+client-side rebuild (`thAlignClass`), and a sortable header moves its label with
+`justify-content`, since `text-align` does not reach an inline-flex button.
+**Visible:** headings of right-aligned and centred columns move over their cells;
+number and currency columns without an `'align'` are right-aligned.
+
+### Fixed — a key figure and the column under it disagreed
+
+`StatCards` cut a `number` off with `(int)` where `Table` rounds — 1999.9 read
+"1.999" on the card and "2.000" below it — and knew no `'decimals'`. `number` now
+rounds and takes `'decimals'`; whole numbers are unchanged.
+
+A `percent` on a card was printed with a dot under every locale, although the
+skill says all three formats follow it; it now uses the locale's decimal sign
+(numeric values only) and takes `'decimals'`. **Still different:** a `percent`
+column in `Table` cuts to a whole number and writes no space — "12%" under a card
+saying "12,5 %". Aligning the two changes every percent column in every system
+and is left for a release of its own.
+
+### Tests
+
+- `ci/browser.js` drives real component markup in headless Chromium: sixteen cases —
+  which layer Escape closes, what a hand-written modal is given, that headers, caption
+  and checkbox names survive a client-side sort, and that navigation brings styles along. Outside the suite, like
+  `ci/parity.php`; the suite still has no dependencies.
+- The check "the skill names every public method" accepted any `->name(` anywhere
+  in the document, so `FilterChips::current()` shipped undocumented in 1.80.0
+  behind `YearFilter`'s. A chained call now counts only under a heading that names
+  the class. And "VERSION has an entry in the changelog" was satisfied by any older
+  entry; the newest one has to match. Four methods were covered by a namesake alone and are documented:
+  `Button::group()`, `Form::card()`, `PageSize::selectClass()`, `Table::rows()`.
+
+---
 ## [1.80.3] - 2026-09-20
 
 Second round of the SSI Panel's self-maintenance loop. Found by read-only

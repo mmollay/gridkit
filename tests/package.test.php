@@ -188,6 +188,12 @@ return [
 
     $changelog = (string) file_get_contents(ROOT . '/CHANGELOG.md');
     T::contains($changelog, $version, "CHANGELOG.md has no entry for $version");
+    // The NEWEST entry, not any entry. "Contains" was satisfied by an older
+    // release further down: a branch carrying the notes for 1.81.0 and a
+    // VERSION of 1.80.3 was green — and merged like that, the new script and
+    // stylesheet would have stayed behind the old cache key for a year.
+    T::ok((bool) preg_match('/^## \[(\d+\.\d+\.\d+)\]/m', $changelog, $newest), 'CHANGELOG.md has no release heading');
+    T::eq($newest[1] ?? '', $version, 'the newest CHANGELOG entry and VERSION name different releases');
 },
 
 'composer.json is valid and describes this package' => function (): void {

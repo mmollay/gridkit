@@ -36,6 +36,7 @@ class Table
     private ?int $loadTimeMs = null;
     private array $footerCells = [];
     private string $groupCol = '';
+    private string $caption = '';
     private array $groupLabels = [];
 
     public function __construct(string $id)
@@ -59,6 +60,20 @@ class Table
     {
         $value = $_GET[$name] ?? '';
         return is_string($value) ? $value : '';
+    }
+
+    /**
+     * The class that puts a header where its cells are: an explicit 'align' wins,
+     * a number or currency column is right-aligned without one.
+     * js/gridkit.js carries the same rule as thAlignClass() — keep them in step.
+     */
+    private static function headerAlignClass(array $col): string
+    {
+        $align = (string) ($col['align'] ?? '');
+        if ($align === 'right')  return 'gk-text-right';
+        if ($align === 'center') return 'gk-text-center';
+        if ($align !== '')       return '';
+        return in_array($col['format'] ?? '', ['currency', 'number'], true) ? 'gk-td-num' : '';
     }
 
     public function query(\mysqli $db, string $sql): static
@@ -211,6 +226,19 @@ class Table
     public function filter(string $column, string $type, array $opts = []): static
     {
         $this->filters[$column] = ['type' => $type, ...$opts];
+        return $this;
+    }
+
+    /**
+     * What this is a table of — for screen readers, not shown on screen.
+     *
+     * Without it two tables on one page are indistinguishable: a reader hears
+     * "table, 4 columns" twice. The visible heading above a table is not
+     * associated with it; a caption is.
+     */
+    public function caption(string $text): static
+    {
+        $this->caption = trim($text);
         return $this;
     }
 
@@ -401,6 +429,8 @@ class Table
                 // and the markup of an HTML column matched instead.
                 'search'  => array_values($this->searchCols),
                 'buttons' => $this->buttons,
+                // Rewritten by the client on every rebuild, like everything else here.
+                'caption' => $this->caption,
                 'groupBy' => $this->groupCol === '' ? null : [
                     'column' => $this->groupCol,
                     'labels' => $this->groupLabels,
@@ -502,7 +532,9 @@ class Table
         echo '<div class="gk-sr-only" role="status" aria-live="polite"'
            . ' data-gk-table-status="' . $e($this->id) . '"></div>';
 
-        echo '<table class="' . $tableClass . '"><thead><tr>';
+        echo '<table class="' . $tableClass . '">'
+           . ($this->caption !== '' ? '<caption class="gk-sr-only">' . $e($this->caption) . '</caption>' : '')
+           . '<thead><tr>';
         if ($this->selectable) {
             // aria-label, not title alone: a title is announced inconsistently
             // and never on touch, so this control read as an unnamed checkbox.
@@ -522,6 +554,10 @@ class Table
             $clsList = [];
             if ($sortable) $clsList[] = 'gk-sortable';
             if (!empty($col['hideOnMobile'])) $clsList[] = 'gk-hide-mobile';
+            // A header stands where its column stands. The cells have carried
+            // 'align' and the numeric class all along; the header got neither, so
+            // a right-aligned column of figures sat under a left-aligned heading.
+            if (($alignCls = self::headerAlignClass($col)) !== '') $clsList[] = $alignCls;
             $attrs = '';
             $sortBtn = null;
             if ($sortable) {

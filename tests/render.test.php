@@ -199,4 +199,40 @@ return [
     T::contains($html, "M\u{FFFD}ller", 'the damaged cell shows a replacement character, not nothing');
 },
 
+'a header stands where its column stands' => function (): void {
+    // Numbers are right-aligned — the cell had the class since early on, but the
+    // rule lost to ".gk-table td { text-align: left }", and the header never got
+    // anything: fixing the cell alone would have put every figure on the right
+    // and its heading on the left.
+    Lang::set('en');
+    $html = T::capture(fn() => (new Table('t'))
+        ->setData([['id' => 1, 'name' => 'Widget', 'price' => 12.5, 'qty' => 3, 'state' => 'ok', 'note' => 'x']])
+        ->column('name',  'Product')
+        ->column('price', 'Price', ['format' => 'currency', 'sortable' => true])
+        ->column('qty',   'Qty',   ['format' => 'number', 'align' => 'left'])
+        ->column('state', 'State', ['align' => 'center'])
+        ->column('note',  'Note',  ['align' => 'right'])
+        ->render());
+    $th = static function (string $label) use ($html): string {
+        return preg_match('/<th\b([^>]*)>(?:<button[^>]*>)?' . preg_quote($label, '/') . '/', $html, $m) ? $m[1] : 'MISSING';
+    };
+    T::contains($th('Price'), 'gk-td-num', 'the header of a numeric column is not marked numeric');
+    T::notContains($th('Qty'), 'gk-td-num', 'an explicit align=left on a numeric column is ignored by its header');
+    T::contains($th('State'), 'gk-text-center', 'align=center does not reach the header');
+    T::contains($th('Note'), 'gk-text-right', 'align=right does not reach the header');
+    T::notContains($th('Product'), 'gk-t', 'a plain column got an alignment class');
+
+    $css = (string) file_get_contents(__DIR__ . '/../css/gridkit.css');
+    T::contains($css, '.gk-table td.gk-td-num', 'the numeric cell still loses to the base rule of the table');
+    T::contains($css, '.gk-table th.gk-td-num', 'the numeric header has no rule');
+    // The sort control is an inline-flex button of full width; text-align on
+    // the th does not move its label.
+    T::ok((bool) preg_match('/th\.gk-td-num \.gk-sort-btn[^{]*\{[^}]*justify-content:\s*flex-end/s', $css),
+        'a sortable numeric header keeps its label on the left');
+
+    // The browser rebuilds the head on the first sort — same classes or it drifts.
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, 'thAlignClass(col)', 'the client-side rebuild does not align its headers');
+},
+
 ];

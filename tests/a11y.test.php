@@ -742,4 +742,25 @@ return [
     T::ok(!preg_match('/<input[^>]*type="range"[^>]*\srequired/', $form), 'range must not become required');
 },
 
+'a table can be told what it is a table of' => function (): void {
+    // Two tables on one page were indistinguishable to a screen reader: neither
+    // had a caption nor a label, and there was no method to give it one.
+    Lang::set('en');
+    $html = T::capture(fn() => (new Table('t'))
+        ->setData([['id' => 1, 'name' => 'Widget']])
+        ->column('name', 'Product')
+        ->caption('Open invoices <2026>')
+        ->render());
+    T::ok((bool) preg_match('~<table[^>]*>\s*<caption class="gk-sr-only">Open invoices &lt;2026&gt;</caption>\s*<thead~', $html),
+        'the caption is the first child of the table, escaped, and visually hidden');
+    $plain = T::capture(fn() => (new Table('t'))->setData([['id' => 1, 'name' => 'W']])->column('name', 'P')->render());
+    T::notContains($plain, '<caption', 'a table without a caption gets an empty one');
+    // The browser rebuilds the table on the first sort: the caption travels in
+    // the data block and is written again, or it is gone after one click.
+    T::ok((bool) preg_match('~data-gk-data>(.*?)</script>~s', $html, $m) && (json_decode($m[1], true)['caption'] ?? '') === 'Open invoices <2026>',
+        'the caption does not reach the client');
+    T::contains((string) file_get_contents(__DIR__ . '/../js/gridkit.js'), '<caption class="gk-sr-only">',
+        'the client-side rebuild drops the caption');
+},
+
 ];

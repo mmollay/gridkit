@@ -51,8 +51,16 @@ class StatCards
                         number_format((float) $val, 2, $dec, $thou),
                         $card['currency'] ?? Lang::t('format.currency')
                     ),
-                    'number'  => number_format((int) $val, 0, $dec, $thou),
-                    'percent' => $val . ' %',
+                    // (float) and 'decimals', as Table does it. This cut the value
+                    // off with (int): 1999.9 read "1.999" on the card and "2.000"
+                    // in the column under it.
+                    'number'  => number_format((float) $val, (int) ($card['decimals'] ?? 0), $dec, $thou),
+                    // The decimal sign follows the locale, as the skill says of all
+                    // three formats; it used to be a dot under every locale. Without
+                    // 'decimals' the digits stay exactly as passed.
+                    'percent' => (isset($card['decimals'])
+                        ? number_format((float) $val, (int) $card['decimals'], $dec, $thou)
+                        : (is_numeric($val) ? str_replace('.', $dec, (string) $val) : (string) $val)) . ' %',
                     default   => (string) $val,
                 };
             }

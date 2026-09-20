@@ -68,6 +68,13 @@ function skipReason(string $code): ?string
     return null;
 }
 
+/** Everything under the headings (## to ####) that name the class, up to the next ## or ###. */
+function self_section(string $md, string $class): string
+{
+    return preg_match_all('/^#{2,4} [^\n]*\b' . preg_quote($class, '/') . '\b[^\n]*\n(.*?)(?=^#{2,3} |\z)/ms', $md, $m)
+        ? implode("\n", $m[1]) : '';
+}
+
 /** @return array<string,callable> */
 return [
 
@@ -200,14 +207,20 @@ return [
     ];
 
     $gaps = [];
+    $sections = [];
     foreach (glob(__DIR__ . '/../src/*.php') as $file) {
         $class = basename($file, '.php');
         $ref   = new ReflectionClass('GridKit\\' . $class);
         foreach ($ref->getMethods(ReflectionMethod::IS_PUBLIC) as $m) {
             if ($m->class !== $ref->getName() || $m->name === '__construct') continue;
             if (in_array("$class::{$m->name}", $exempt, true)) continue;
+            // "->current(" anywhere used to be enough, and YearFilter has one: so
+            // FilterChips::current() shipped undocumented in 1.80.0 and this test
+            // stayed green. Four methods were covered only by a namesake of another
+            // class. A chained call counts inside a section whose heading names
+            // the class; anywhere else the method has to be written Class::method.
             $named = str_contains($md, "$class::{$m->name}")
-                  || str_contains($md, "->{$m->name}(");
+                  || str_contains($sections[$class] ??= self_section($md, $class), "->{$m->name}(");
             if (!$named) $gaps[] = "$class::{$m->name}()";
         }
     }

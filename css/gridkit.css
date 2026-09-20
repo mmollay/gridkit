@@ -6392,6 +6392,14 @@ a.gk-stat-card:hover {
 .gk-table th.gk-text-right,  .gk-table td.gk-text-right,
 .gk-table td.gk-actions-right { text-align: right; }
 .gk-table th.gk-text-center, .gk-table td.gk-text-center { text-align: center; }
+/* Numbers: the cell has carried .gk-td-num since early on and lost to the same
+   base rule; since 1.81.0 the header carries it too, so both move together. */
+.gk-table th.gk-td-num, .gk-table td.gk-td-num { text-align: right; }
+/* The sort control is an inline-flex button of full width — text-align on the
+   th does not move its label, justify-content does. */
+.gk-table th.gk-text-right .gk-sort-btn,
+.gk-table th.gk-td-num .gk-sort-btn { justify-content: flex-end; }
+.gk-table th.gk-text-center .gk-sort-btn { justify-content: center; }
 
 /* — Text-Color (semantic) — */
 .gk-text-primary { color: var(--gk-primary, #6366f1); }

@@ -364,4 +364,38 @@ return [
     T::contains($l[1] ?? '', 'r.ok', 'the modal loader never looks at the status');
 },
 
+'a hand-written modal gets what a GK.modal has' => function (): void {
+    // GK.modal.open() builds role="dialog", a name and a named close button.
+    // Pages that write the same markup by hand got none of it: a screen reader
+    // read the close button as "multiplication sign" and walked past the dialog.
+    // The SSI Panel alone has 87 such overlays and 56 unnamed close buttons.
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::ok((bool) preg_match('/\n      upgradeStatic\(root\) \{(.*?)\n      \},/s', $js, $m), 'GK.modal.upgradeStatic was not found');
+    $fn = $m[1] ?? '';
+    T::contains($fn, '_t("close")', 'close buttons are not named');
+    T::contains($fn, '"role", "dialog"', 'the dialog role is not set');
+    T::contains($fn, 'aria-labelledby', 'the dialog is not named by its heading');
+    // Static modals are shown with style.display and never receive the focus;
+    // aria-modal would declare the rest of the page out of bounds while the
+    // focus is still in it, and VoiceOver users get stuck.
+    T::notContains($fn, 'aria-modal', 'aria-modal on a dialog that does not take the focus');
+    // Content arrives three ways: page load, AJAX navigation, live reload.
+    T::ok(substr_count($js, 'GK.modal.upgradeStatic(') >= 3, 'not every way content arrives is covered');
+},
+
+'AJAX navigation brings the page\'s own styles along' => function (): void {
+    // It swapped the content and the title. A page linking a stylesheet of its
+    // own in <head> arrived unstyled when reached through the sidebar — and fine
+    // after a reload. ci/browser.js shows the behaviour; this guards the wiring.
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::ok((bool) preg_match('/\n    _syncHead: function \(html, done\) \{(.*?)\n    \},\n/s', $js, $m), 'GK.navigate._syncHead was not found');
+    T::contains($m[1] ?? '', 'link[rel~="stylesheet"][href], style', 'head stylesheets and style blocks are not collected');
+    T::contains($m[1] ?? '', 'data-gk-nav-asset', 'added styles are not marked, so they can never be removed again');
+    T::contains($m[1] ?? '', 'setTimeout(go', 'a stylesheet that never loads would block navigation for good');
+    // _render has to stay synchronous: the SSI Panel wraps it to re-initialise
+    // its own widgets right after the swap.
+    T::ok((bool) preg_match('/self\._syncHead\(html, function \(cleanUp\) \{\s*self\._render\(html, url, content, pushState\);/', $js),
+        'the styles are not synced before the content is rendered');
+},
+
 ];
