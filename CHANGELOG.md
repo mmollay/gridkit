@@ -7,6 +7,57 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.85.0] - 2026-09-21
+
+Seventh round of the SSI Panel's self-maintenance loop: the three differences
+1.84.0 left behind, so a sorted table is the same table.
+
+### Fixed — a status label changed colour, and sometimes its text, on the first sort
+
+The colour table lived twice: once in PHP and once, shorter, in JavaScript. The
+copy knew no `blue` and about half the words, so `active` was green until the
+first sort and grey afterwards. It also could not read the
+`['color' => …, 'text' => …]` form of a `labels` entry at all — a column that
+shows "bezahlt" for a stored `paid` fell back to the stored value.
+
+There is one table now. It travels in the data block, and only for a table that
+actually shows labels, so nothing else grew.
+
+### Fixed — a rebuilt row lost the checkbox value, and eight icons it never had
+
+`<input type="checkbox" value="7">` is what the server writes for a selectable
+row; the client wrote no value, so page code reading the checked boxes out of
+the DOM got empty strings after a sort.
+
+The client's copy of the icon set was also short: fourteen of the twenty-two
+kinds PHP draws, and none of them with `stroke-linecap` / `stroke-linejoin`. A
+button with `refresh`, `send`, `check`, `close`, `arrow_back`, `lock_open`,
+`attach_file` or `link_off` turned into a Material Icons span — the bare word,
+where that font is not loaded — the moment the table was sorted, and the rest
+grew square corners. All thirty-six names now render byte for byte what
+`GridKit\Icon::svg()` renders, and `tests/js.test.php` compares the two lists,
+in both directions, so the next gap is caught where it is made.
+
+### Fixed — four ways the shared lookup went wrong
+
+The table is one now, but the key it is looked up by was not:
+
+- `strtolower()` has been ASCII-only since PHP 8.2, so `Überfällig` stayed
+  upper-case on the server and was folded in the browser: grey before the first
+  sort, red after it. Both sides fold the same way now, and a non-breaking space
+  counts as a space on both (PHP's `trim()` does not know it).
+- `'text' => null` in a `labels` entry meant "no text of its own" on the server
+  and "empty label" in the browser.
+- `'color' => false` produced the class `gk-label-` and a label with no styling
+  at all (`??` where `?:` was meant).
+
+A parity run now reports two shapes per side on every case (three on `sortable`)
+— all of them on the harness's benign list, which gained two entries during this
+round's acceptance: the pager wraps its page numbers in a `<span>` on the server
+only, and a disabled "Previous" button carries a different `data-gk-page` on
+each side. Both are older than this release and neither is ever read.
+
+---
 ## [1.84.0] - 2026-09-21
 
 Sixth round of the SSI Panel's self-maintenance loop.

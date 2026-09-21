@@ -345,6 +345,30 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
                // gk:rowaction on top of the navigation).
                // Collected and sorted: a sort puts a different row first, so the
                // set is what has to stay the same, not the first one.
+               // The label colour comes from the server's table now, and a
+               // column's own labels may carry a text of their own. Both used to
+               // change on the first sort: green turned grey, the text vanished.
+               labels: [...document.querySelectorAll('[data-gk-table="prices"] .gk-label')]
+                 .map((l) => l.className.replace("gk-label ", "") + ":" + l.textContent.trim()).sort().join("|"),
+               // The row checkbox carries the row id, as the server writes it.
+               cbWerte: [...document.querySelectorAll('[data-gk-table="prices"] tbody .gk-cb-col input')]
+                 .map((c) => c.value).sort().join(","),
+               // The icons this table actually shows keep their round joins.
+               // That every KIND matches PHP is checked in tests/js.test.php,
+               // which compares the two lists — a browser page only ever shows
+               // the handful of icons its own buttons use.
+               iconRund: (() => {
+                 const alle = [...document.querySelectorAll('[data-gk-table="prices"] .gk-btn svg')];
+                 const rund = alle.filter((s) => s.getAttribute("stroke-linecap") === "round"
+                   && s.getAttribute("stroke-linejoin") === "round").length;
+                 return alle.length + ":" + rund;
+               })(),
+               // The label text is escaped — a row value is application data.
+               labelRoh: (() => {
+                 const l = [...document.querySelectorAll('[data-gk-table="prices"] .gk-label')]
+                   .find((x) => x.textContent.indexOf("<b>") > -1);
+                 return l ? l.innerHTML : "kein roher Text";
+               })(),
                // The refused href: a plain button on both sides, never a link.
                boese: (() => {
                  const el = document.querySelector('[data-gk-table="prices"] [aria-label="Evil"]');
@@ -376,19 +400,23 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
       && h.heads.State.align === "center" && h.heads.Product.align !== "right"
       && h.caption === "Price list" && h.rowBox === "Select row" && h.allBox === "Select all"
       && h.nowrap && h.footer === "111,50 €"
-      && h.meta === "38 ms" && h.share === "|12.5 %" && h.numWrap === "nowrap"
+      && h.meta === "38 ms" && h.share === "|0.5 %|12.5 %" && h.numWrap === "nowrap"
       && h.boese === "BUTTON:-"
+      && h.labels === "gk-label-blue:Sonderfall|gk-label-gray:<b>kaputt</b>|gk-label-green:active"
+      && h.cbWerte === "1,2,3"
+      && h.iconRund === "9:9"
+      && h.labelRoh === "&lt;b&gt;kaputt&lt;/b&gt;"
       && h.notiz === "gk-btn gk-btn-icon-text gk-btn-text gk-btn-danger"
       && h.ausbruch === "aria-label,class,data-gk-params,href"
-      && h.link.tags === "A,A" && !h.link.aktion
-      && h.link.hrefs === "/artikel/a%21b%27c%28d%29%20e%2Af|/artikel/plain"
-      && h.link.params === '{"id":1}|{"id":2}';
+      && h.link.tags === "A,A,A" && !h.link.aktion
+      && h.link.hrefs === "/artikel/a%21b%27c%28d%29%20e%2Af|/artikel/clamp|/artikel/plain"
+      && h.link.params === '{"id":1}|{"id":2}|{"id":3}';
     const before = await heads();
     check("server-rendered table: numeric header and cell right, centred column centred, caption, checkbox names, nowrap, totals row, load time, percent cells", good(before));
     await page.click('[data-gk-table="prices"] [data-gk-sort="price"]');
     const after = await heads();
     check("after a client-side sort all of that is still true — and the sort really happened",
-      good(after) && after.rebuilt && after.sort === "ascending" && before.first === "Anvil" && after.first === "Widget"
+      good(after) && after.rebuilt && after.sort === "ascending" && before.first === "Anvil" && after.first === "Clamp"
       && after.footerCells === before.footerCells);
     if (!good(before) || !good(after)) console.log(JSON.stringify({ before, after }));
     // A question before following a link: the delegated handler has to stop the

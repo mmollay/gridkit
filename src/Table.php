@@ -423,6 +423,15 @@ class Table
                 // could not answer.
                 'perPage' => $this->perPage,
                 'columns' => $colConfig,
+                // The label colour table, but only for a table that shows labels:
+                // the client used to carry a shorter copy of it and a sorted
+                // table changed its colours.
+                'labelColors' => array_reduce(
+                    $this->columns,
+                    static fn (?array $c, array $col): ?array =>
+                        $c ?? (($col['format'] ?? '') === 'label' ? self::labelColors() : null),
+                    null
+                ),
                 // The keys search() was told to use. Without them the client
                 // fell back to every rendered column, so a declared search key
                 // that is not itself a column was silently never searched —
@@ -1144,14 +1153,20 @@ class Table
         return $html . '</div></td></tr>';
     }
 
-    private function renderLabel(mixed $val, array $custom): string
+    /**
+     * Which value gets which label colour. ONE list: it travels in the data
+     * block, so the client uses this very table instead of a copy of it. The
+     * copy it had was shorter — it knew no 'blue' and half the words — so a
+     * status label turned from green to grey on the first sort.
+     *
+     * @return array<string,list<string>>
+     */
+    private static function labelColors(): array
     {
-        $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $v = strtolower(trim((string)$val));
         // The list used to know only the German forms: 'active' and 'inactive'
         // both fell through to 'gray', which left the most important distinction
         // of a status column without a color.
-        $map = [
+        return [
             'green' => ['aktiv', 'active', 'bezahlt', 'paid', 'ja', 'yes', '1', 'true',
                         'gesendet', 'delivered', 'erledigt', 'done', 'abgeschlossen',
                         'completed', 'freigegeben', 'approved', 'online'],
@@ -1164,6 +1179,18 @@ class Table
             'gray' => ['inaktiv', 'inactive', 'deaktiviert', 'disabled', 'archiviert',
                        'archived', 'gesperrt', 'blocked', '0', 'false', 'nein', 'no', 'offline'],
         ];
+    }
+
+    private function renderLabel(mixed $val, array $custom): string
+    {
+        $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        // The table is shared with the client now, so the lookup key has to be
+        // too. strtolower() has been ASCII-only since PHP 8.2 and left "Ü"
+        // standing, while JavaScript's toLowerCase() folds it: "Überfällig" was
+        // grey on the server and red after the first sort. Same for the space —
+        // PHP's trim() does not touch U+00A0, JavaScript's does.
+        $v = self::labelKey((string) $val);
+        $map = self::labelColors();
         // A `labels` entry is either a colour, as it has always been:
         //     'labels' => ['paid' => 'green']
         // or a colour together with the text to show, which is what a status
@@ -1176,7 +1203,12 @@ class Table
 
         if (is_array($entry)) {
             $color = $entry['color'] ?? null;
-            $text  = (string) ($entry['text'] ?? $val);
+            // array_key_exists, not ??: a 'text' => null in a table built from a
+            // database column meant "no text", and the cell came out empty on one
+            // side and with the raw value on the other.
+            $text  = array_key_exists('text', $entry) && $entry['text'] !== null
+                ? (string) $entry['text']
+                : (string) $val;
         } elseif (is_string($entry) && $entry !== '') {
             $color = $entry;
         }
@@ -1187,8 +1219,22 @@ class Table
             }
         }
 
-        return '<span class="gk-label gk-label-' . $e($color ?? 'gray') . '">'
+        // ?: not ??: a 'color' => false or '' left the class as "gk-label-",
+        // and the label lost every bit of its styling.
+        return '<span class="gk-label gk-label-' . $e($color ?: 'gray') . '">'
              . $e($text) . '</span>';
+    }
+
+    /**
+     * The key a label value is looked up by — the same one on both sides.
+     * mb_strtolower where mbstring is there (it always is on the SSI servers),
+     * and NBSP counts as space, which PHP's own trim() does not know.
+     */
+    private static function labelKey(string $val): string
+    {
+        $v = trim(str_replace("\xc2\xa0", ' ', $val));
+
+        return function_exists('mb_strtolower') ? mb_strtolower($v, 'UTF-8') : strtolower($v);
     }
 
 }

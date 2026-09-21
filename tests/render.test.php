@@ -284,6 +284,33 @@ return [
     T::contains($zeile(['href' => '/a/{id}', 'onclick' => 'boom({id})']), 'onclick=', 'href swallowed the onclick');
 },
 
+'the label colour table travels to the client, and only when it is needed' => function (): void {
+    // It used to live twice — the client's copy was shorter, so a green status
+    // turned grey on the first sort. ci/browser.js proves the behaviour; this
+    // holds the wiring, because CI runs the suite and not the browser cases.
+    Lang::set('en');
+    $mit = T::capture(fn () => (new Table('t'))->setData([['id' => 1, 's' => 'active']])
+        ->column('id', 'Id')->column('s', 'S', ['format' => 'label'])->render());
+    T::contains($mit, '"labelColors":{', 'the colour table does not reach the client');
+    T::contains($mit, '"green":[', 'the table reaches the client without its colours');
+
+    $ohne = T::capture(fn () => (new Table('t'))->setData([['id' => 1, 's' => 'active']])
+        ->column('id', 'Id')->column('s', 'S')->render());
+    T::contains($ohne, '"labelColors":null', 'a table without labels carries the table anyway');
+
+    // The lookup key is shared, so it has to fold the same way on both sides.
+    $zelle = static fn (mixed $v, array $opt = []): string => T::capture(fn () => (new Table('t'))
+        ->setData([['id' => 1, 's' => $v]])->column('s', 'S', ['format' => 'label'] + $opt)->render());
+    T::contains($zelle('Überfällig'), 'gk-label-red', 'an upper-case umlaut value loses its colour');
+    T::contains($zelle("Paid\xc2\xa0"), 'gk-label-green', 'a non-breaking space is not trimmed');
+    // A colour that is falsy but not null must not produce class "gk-label-".
+    T::contains($zelle('x', ['labels' => ['x' => ['color' => false, 'text' => 'X']]]), 'gk-label-gray',
+        'a false colour leaves the label unstyled');
+    // text => null means "no text of its own", not "empty".
+    T::contains($zelle('x', ['labels' => ['x' => ['color' => 'green', 'text' => null]]]), '>x</span>',
+        'text => null empties the label instead of showing the value');
+},
+
 'the client-side rebuild keeps nowrap and the totals row' => function (): void {
     // The rebuild wrote a bare <table class="gk-table"> and no <tfoot>: the first
     // sort of a static table unwrapped its cells and took its totals row away.

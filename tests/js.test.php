@@ -385,6 +385,41 @@ return [
     T::contains($js, 'GK.modal.upgradeStatic(e.target || document);', 'a live reload does not upgrade static modals');
 },
 
+'the client draws the same icons as PHP, all of them' => function (): void {
+    // A row button redrawn in the browser used its own copy of the icon set.
+    // The copy was short — 14 of 22 kinds — so a button with, say, 'refresh'
+    // turned into the bare word after the first sort, and all of them lost
+    // their round line ends. One list is not possible here (PHP and JS are two
+    // files), so the test compares them.
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    $von = strpos($js, 'iconSvg(name) {');
+    $block = substr($js, $von, strpos($js, "\n      },", $von) - $von);
+    T::ok($von !== false && $block !== '', 'GK.table.iconSvg was not found');
+
+    preg_match_all('/case "([a-z_]+)"/', $block, $namen);
+    T::ok(count($namen[1]) > 20, 'the client knows suspiciously few icons: ' . count($namen[1]));
+
+    $fehlen = $anders = [];
+    foreach ($namen[1] as $name) {
+        $php = \GridKit\Icon::svg($name, 16, false);
+        if ($php === '') { $fehlen[] = $name; continue; }
+        $gefunden = preg_match('/case "' . preg_quote($name, '/') . '":\n(?:\s*case "[a-z_]+":\n)*\s*return \'(<svg.*?)\';/s', $block, $m);
+        if (!$gefunden || $m[1] !== $php) { $anders[] = $name; }
+    }
+    T::eq($fehlen, [], 'the client draws icons PHP does not know: ' . implode(', ', $fehlen));
+    T::eq($anders, [], 'client and PHP draw these differently: ' . implode(', ', $anders));
+
+    // And the other way round: every icon PHP knows has to be redrawable.
+    $ikone = (string) file_get_contents(__DIR__ . '/../src/Icon.php');
+    preg_match_all("/\n\s{12}'([a-z_, ']+)'\s*\n?\s*=>/", $ikone, $pm);
+    $phpNamen = [];
+    foreach ($pm[1] as $gruppe) {
+        foreach (explode(',', $gruppe) as $n) { $n = trim($n, " '"); if ($n !== '') { $phpNamen[] = $n; } }
+    }
+    T::eq(array_values(array_diff($phpNamen, $namen[1])), [],
+        'PHP draws icons the client falls back to a font for: ' . implode(', ', array_diff($phpNamen, $namen[1])));
+},
+
 'a modal already on the page is opened and closed, never removed' => function (): void {
     // Pages wrote open/close, Escape, the backdrop click and the focus by hand —
     // the SSI Panel alone had 83 such overlays, none with a focus trap. show()

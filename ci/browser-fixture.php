@@ -36,8 +36,10 @@ ob_start();
         // The slug carries an apostrophe (which used to break out of the
         // single-quoted data-gk-params), a space (rawurlencode writes %20 where
         // urlencode writes +) and the five characters the two encoders disagree on.
-        ['id' => 1, 'name' => 'Anvil',  'price' => 99.0, 'qty' => 2, 'state' => 'ok', 'share' => null,  'slug' => "a!b'c(d) e*f"],
-        ['id' => 2, 'name' => 'Widget', 'price' => 12.5, 'qty' => 7, 'state' => 'ok', 'share' => 12.5, 'slug' => 'plain'],
+        ['id' => 1, 'name' => 'Anvil',  'price' => 99.0, 'qty' => 2, 'state' => 'active',      'share' => null,  'slug' => "a!b'c(d) e*f"],
+        ['id' => 2, 'name' => 'Widget', 'price' => 12.5, 'qty' => 7, 'state' => 'sonderfall', 'share' => 12.5, 'slug' => 'plain'],
+        // A label value that is markup: it must arrive as text, not as markup.
+        ['id' => 3, 'name' => 'Clamp',  'price' => 5.0,  'qty' => 1, 'state' => '<b>kaputt</b>', 'share' => 0.5, 'slug' => 'clamp'],
     ])
     ->caption('Price list')
     ->nowrap()
@@ -47,7 +49,10 @@ ob_start();
     ->column('name',  'Product', ['sortable' => true])
     ->column('price', 'Price',   ['format' => 'currency', 'sortable' => true])
     ->column('qty',   'Qty',     ['format' => 'number', 'hideOnMobile' => true])   // the branch with no sort class
-    ->column('state', 'State',   ['align' => 'center'])
+    // A status column: 'active' is green from the shared table, 'sonderfall'
+    // gets its colour and its text from the column's own labels.
+    ->column('state', 'State', ['align' => 'center', 'format' => 'label',
+        'labels' => ['sonderfall' => ['color' => 'blue', 'text' => 'Sonderfall']]])
     ->column('share', 'Share',   ['format' => 'percent', 'decimals' => 1])   // 12.5 and nothing — as the server writes them
     // A row button that is a real link, with the five characters where PHP and
     // JavaScript encode differently, plus one with a question before it.
