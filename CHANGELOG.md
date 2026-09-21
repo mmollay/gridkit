@@ -13,12 +13,12 @@ Fourth round of the SSI Panel's self-maintenance loop.
 
 ### Fixed — a page reached through the sidebar arrived with dead widgets
 
-AJAX navigation re-bound tables and tooltips and nothing else. On a page reached
+AJAX navigation re-bound tables, tooltips and hand-written modals, nothing else. On a page reached
 through the sidebar a searchable select did not open, an AJAX form posted natively
 and showed its JSON as a page, the client-side pager was missing — until a reload.
 `GK.initContent(root)` is now the one list of widget inits, used on page load, for
 a modal's body and after every swap; every init in it is idempotent. The
-`gk-ajax-nav` event the skill has described since 1.9 fires for the first time.
+`gk-ajax-nav` event the skill now describes fires for the first time.
 
 ### Fixed — the first sort of a static table unwrapped its cells and lost its totals row
 
@@ -38,7 +38,7 @@ The client-side rebuild now writes the `loadTime()` meta cell ("2 entries · 38
 ms", or the time in the columns the footer cells leave), `white-space:nowrap` on
 a column with `nowrap` and on every number or currency cell — the same three
 things `Table::render()` writes. `_gkNumber()` no longer writes "-0,00" for a
-value that rounds to zero; `number_format()` never did.
+value that rounds to zero; `number_format()` has not since PHP 8.0.
 
 ### Changed — a live table with a remembered filter no longer fires `gk-ajax-nav`
 
@@ -57,7 +57,8 @@ asked, a space before the sign. Nothing, a placeholder without a digit ("–")
 and a value that already ends in % come back as they are; text with a digit
 that is not a number ("12,5") only gets the sign. **Visible** in every percent
 column of every system: "12%" becomes "12 %", "12.5" is no longer cut to "12",
-an empty cell stays empty instead of reading " %".
+an empty cell no longer reads "0%" — it stays empty — and a placeholder ("–")
+is no longer cut to "0%".
 
 ---
 ## [1.81.0] - 2026-09-20

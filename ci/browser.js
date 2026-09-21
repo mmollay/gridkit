@@ -164,6 +164,14 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
       good(after) && after.rebuilt && after.sort === "ascending" && before.first === "Anvil" && after.first === "Widget"
       && after.footerCells === before.footerCells);
     if (!good(before) || !good(after)) console.log(JSON.stringify({ before, after }));
+    // loadTime() without footer cells: "N entries · 1.23 s", before and after a rebuild.
+    const meta = () => page.evaluate(() => ((document.querySelector('[data-gk-table="timed"] tfoot td.gk-table-meta') || {}).textContent || "").trim());
+    const metaBefore = await meta();
+    await page.click('[data-gk-table="timed"] [data-gk-sort="n"]');
+    const metaAfter = await meta();
+    check('a table with loadTime() alone keeps its "2 entries · 1.23 s" row through a client-side sort',
+      metaBefore === "2 entries · 1.23 s" && metaAfter === metaBefore);
+    if (metaAfter !== metaBefore) console.log(JSON.stringify({ metaBefore, metaAfter }));
 
     // ── AJAX navigation brings the target page's own stylesheet along ─────
     // Served from memory: XHR does not work on file://.

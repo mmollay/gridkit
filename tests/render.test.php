@@ -243,13 +243,15 @@ return [
         ->setData([['id' => 1, 'name' => 'Widget', 'price' => 12.5]])
         ->column('name', 'Product')->column('price', 'Price', ['format' => 'currency'])
         ->nowrap()
+        ->loadTime(38)
         ->footer(['Total', ['text' => '12,50 €', 'align' => 'right', 'bold' => true]])
         ->render());
     T::ok((bool) preg_match('~data-gk-data>(.*?)</script>~s', $html, $m), 'the data block is there');
     $data = json_decode($m[1] ?? '', true) ?: [];
     T::eq($data['nowrap'] ?? null, true, 'nowrap does not reach the client');
     T::eq($data['footer'][1]['align'] ?? null, 'right', 'the footer does not reach the client');
-    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::eq($data['loadTimeMs'] ?? null, 38, 'loadTime() does not reach the client');
+    T::contains($js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js'), 'class="gk-table-meta">', 'the rebuild writes no meta cell');
     T::contains($js, 'data.nowrap ? " gk-table-nowrap"', 'the rebuild drops gk-table-nowrap');
     T::contains($js, "'<tfoot><tr class=\"gk-table-footer\">'", 'the rebuild writes no tfoot');
 },

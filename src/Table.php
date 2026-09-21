@@ -431,10 +431,10 @@ class Table
                 // nowrap() and footer(), so the client-side rebuild keeps both — it
                 // used to write a bare <table class="gk-table"> without a <tfoot>.
                 'nowrap'  => $this->globalNowrap,
-                // loadTime() and the count for its meta cell: the rebuild writes that
-                // cell too now — a loadTime() row on its own vanished on the first sort.
+                // loadTime(): the rebuild writes its meta cell too now — a loadTime()
+                // row on its own vanished on the first sort. The count beside it is
+                // the client's own (rows after search, before the page slice).
                 'loadTimeMs' => $this->loadTimeMs,
-                'totalRows'  => $this->totalRows,
                 'footer'  => array_map(static fn ($c): array => is_string($c) ? ['text' => $c] : (array) $c, $this->footerCells),
                 'buttons' => $this->buttons,
                 // Rewritten by the client on every rebuild, like everything else here.
@@ -929,11 +929,14 @@ class Table
      * Nothing, a placeholder without a digit ("–") and a value that already ends
      * in % come back as they are; text with a digit that is not a number ("12,5")
      * only gets the sign. js/gridkit.js carries the same rule as _gkPercent() —
-     * keep them in step.
+     * keep them in step. Halves: number_format() and toFixed() can round an exact
+     * .5 differently once binary floats are involved (1.005 → "1,01" here, "1,00"
+     * there) — a known hairline, not worth a second rounding routine.
      */
     public static function percent(mixed $val, ?int $decimals = null): string
     {
         $s = trim((string) ($val ?? ''));
+        $s = $s === '-0' ? '0' : $s;   // (string) -0.0 — the client says "0"
         if ($s === '' || str_ends_with($s, '%') || preg_match('/\d/', $s) !== 1) {
             return $s;
         }

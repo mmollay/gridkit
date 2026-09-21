@@ -1042,9 +1042,11 @@
             '<th scope="col" class="gk-cb-col"><input type="checkbox" data-gk-select-all aria-label="' +
             e(_lang["select_all"] || "Select all") + '" title="' + e(_lang["select_all"] || "Select all") + '"></th>';
         for (const [key, col] of Object.entries(columns)) {
-          // width and nowrap, as Table.php writes them on a header cell.
+          // width, min-width, max-width and nowrap, as Table.php writes them on a header cell.
           const thStyles = [];
           if (col.width && col.width !== "auto") thStyles.push("width:" + e(col.width));
+          if (col.minWidth) thStyles.push("min-width:" + e(col.minWidth));
+          if (col.maxWidth) thStyles.push("max-width:" + e(col.maxWidth));
           if (col.nowrap) thStyles.push("white-space:nowrap");
           const style = thStyles.length ? ' style="' + thStyles.join(";") + '"' : "";
           const sortable = col.sortable || false;
@@ -1321,6 +1323,9 @@
               // column's own nowrap, and a number or currency cell never wraps.
               const tdStyles = [];
               if (col.align) tdStyles.push("text-align:" + e(col.align));
+              if (col.width && col.width !== "auto") tdStyles.push("width:" + e(col.width));
+              if (col.minWidth) tdStyles.push("min-width:" + e(col.minWidth));
+              if (col.maxWidth) tdStyles.push("max-width:" + e(col.maxWidth));
               if (col.nowrap || col.format === "number" || col.format === "currency") tdStyles.push("white-space:nowrap");
               const align = tdStyles.length ? ' style="' + tdStyles.join(";") + '"' : "";
               const tdCls = [];
@@ -2026,6 +2031,9 @@
         var anchor = frag ? document.getElementById(frag) : null;
         if (anchor) anchor.scrollIntoView(); else window.scrollTo(0, 0);
         try {
+          // Each swap decides anew: a redirect that never navigated (a host's
+          // beforeunload dialog, an iframe) must not mute every later swap.
+          if (typeof GK.liveTable !== 'undefined') GK.liveTable._redirecting = false;
           // Every widget, tables and tooltips included — defined below this
           // point, hence the guard.
           if (typeof GK.initContent === 'function') GK.initContent(content);

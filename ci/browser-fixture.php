@@ -49,6 +49,15 @@ ob_start();
     ->render();
 $table = ob_get_clean();
 
+// A table with loadTime() and no footer cells: the meta cell on its own, in seconds.
+ob_start();
+(new Table('timed'))
+    ->setData([['id' => 1, 'n' => 'b'], ['id' => 2, 'n' => 'a']])
+    ->loadTime(1234)
+    ->column('n', 'Name', ['sortable' => true])
+    ->render();
+$timed = ob_get_clean();
+
 // A searchable select on its own, for the navigation case in ci/browser.js.
 if (isset($argv[1]) && $argv[1] === '--select') {
     echo Select::searchable('country', $options);
@@ -61,6 +70,7 @@ echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>GridKit 
    . Lang::jsConfig()
    . '<button id="menu" data-gk-dropdown aria-expanded="false">Menu<div class="gk-dropdown-menu"><a href="#">x</a></div></button>'
    . $table
+   . $timed
    // A modal written by hand, the way many pages do it: no role, a bare &times;.
    . '<div class="gk-modal-overlay" id="static" style="display:none"><div class="gk-modal">'
    . '<div class="gk-modal-header"><h3>Rename</h3><button class="gk-modal-close">&times;</button></div>'

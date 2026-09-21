@@ -416,7 +416,7 @@ return [
     T::contains($js, "if (typeof GK.liveTable !== 'undefined' && GK.liveTable._redirecting) return;", 'gk-ajax-nav fires on a page that is being replaced');
     // GK.init and the modal body go through the same list — one list, or they drift.
     T::contains($js, 'GK.initContent(document);', 'GK.init keeps a list of its own');
-    T::contains($js, 'GK.initContent(body);', 'the modal body keeps a list of its own');
+    // The modal body is asserted in fields.test.php (where the modal form lives).
     T::ok(!preg_match('/GK\.table\.init\(body\)/', $js), 'the modal body still binds tables beside the list');
 },
 
