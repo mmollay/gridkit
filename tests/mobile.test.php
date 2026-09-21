@@ -38,6 +38,28 @@ function mobileCss(): string
     return $css = $out;
 }
 
+/**
+ * Nur der 768-px-Block. mobileCss() wirft den 480-px-Block mit hinein, und eine
+ * Regel, die dorthin rutscht, gilt für Telefone zwischen 481 und 768 px nicht
+ * mehr — im gemeinsamen Text sähe sie trotzdem richtig aus.
+ */
+function telefonCss(): string
+{
+    $lines = explode("\n", (string) file_get_contents(__DIR__ . '/../css/gridkit.css'));
+    $out   = '';
+    for ($i = 0; $i < count($lines); $i++) {
+        if (!str_contains($lines[$i], '@media (max-width: 768px)')) continue;
+        $depth = 0;
+        for ($j = $i; $j < count($lines); $j++) {
+            $depth += substr_count($lines[$j], '{') - substr_count($lines[$j], '}');
+            $out   .= $lines[$j] . "\n";
+            if ($depth === 0 && $j > $i) break;
+        }
+    }
+
+    return $out;
+}
+
 /** @return array<string,callable> */
 return [
 
@@ -85,6 +107,48 @@ return [
     // They rendered at 26x25 px, under every touch-target guideline.
     T::ok((bool) preg_match('/\.gk-actions \.gk-btn-icon-only[^{]*\{[^}]*min-height:\s*(4[0-9]|[5-9][0-9])px/s', $css),
         'and are at least 40px tall');
+},
+
+'tapping a field does not zoom the page in' => function (): void {
+    // Safari on iOS zooms the whole page into any input whose font is smaller
+    // than 16px, the moment it is tapped — and it stays zoomed. Everything in
+    // GridKit is 14px, so every field a user types into did it.
+    //
+    // The 768px block, NOT mobileCss(): a rule that slipped into the 480px block
+    // would look right in the combined text and leave every phone between 481
+    // and 768px zooming. ci/browser.js measures the rendered size at 390px —
+    // this only guards the wiring.
+    $css = telefonCss();
+
+    foreach ([
+        '.gk-input', '.gk-search', '.gk-filter', 'textarea.gk-input',
+        '.gk-select-search-input input', '.gk-multiselect-input',
+        '.gk-ajax-search-input', '.gk-color-hex', '.gk-form-compact .gk-input',
+    ] as $sel) {
+        $q = preg_quote($sel, '/');
+        // 16px or 1rem — the same size, and a rewrite from one to the other is
+        // not a regression. What the field actually renders at is measured in
+        // ci/browser.js; this only guards that the rule exists and is in reach.
+        T::ok((bool) preg_match('/' . $q . '[,\s][^{]*\{[^}]*font-size:\s*(16px|1rem)/s', $css),
+            $sel . ' keeps a font iOS zooms into');
+    }
+
+    // And nothing later in the same block may take it back: a rule with higher
+    // specificity further down would undo all of the above silently.
+    $nach = substr($css, (int) strpos($css, 'font-size: 16px') ?: (int) strpos($css, 'font-size: 1rem'));
+    T::ok(!preg_match('/\.gk-(input|search|filter)[^{]*\{[^}]*font-size:\s*1[0-5]px/s', $nach),
+        'a later rule in the same block puts the small font back');
+},
+
+'the page title has an action area to put things in' => function (): void {
+    // The skill has called .gk-page-header "page title + action area" since 1.9,
+    // but the class for that area existed in no stylesheet: the SSI Panel wrote
+    // it itself and uses it in 41 views. Every other system had to invent it.
+    $css = (string) file_get_contents(__DIR__ . '/../css/gridkit.css');
+    T::ok((bool) preg_match('/\.gk-page-header-actions \{[^}]*display:\s*flex/s', $css),
+        '.gk-page-header-actions is not defined');
+    T::ok((bool) preg_match('/\.gk-page-header-actions \{[^}]*flex-wrap:\s*wrap/s', $css),
+        'a long title squeezes the buttons instead of wrapping them');
 },
 
 'the header can shrink instead of pushing controls off-screen' => function (): void {

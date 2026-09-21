@@ -5839,6 +5839,23 @@ a.gk-stat-card:hover {
   gap: 12px;
   margin-bottom: 20px;
 }
+/* The action area beside the page title. The skill has described it since 1.9
+   ("page title + action area"), but the class existed in no stylesheet — the SSI
+   Panel defined it itself and uses it in 41 views, and every other system using
+   GridKit had to do the same. Wrapping is its own: a long title pushes the
+   buttons to the next line instead of squeezing them. */
+.gk-page-header-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+/* Deliberately no align-items here. This rule stands outside every media query,
+   so it beats any equally specific rule a host application loads BEFORE
+   gridkit.css — and the SSI Panel does exactly that, with its own mobile layout
+   for this class. align-items was the one property that flipped it: measured at
+   390px, the header went from full-width and left-aligned to centred and 291px
+   wide, across 41 views. */
 .gk-page-header h1,
 .gk-page-header h2 {
   font-size: var(--gk-text-title);
@@ -6536,6 +6553,7 @@ a.gk-stat-card:hover {
         max-width: 100vw; max-height: 100vh;
         border-radius: 0;
     }
+
 }
 
 
@@ -7120,5 +7138,38 @@ textarea.gk-input[readonly]:focus-visible {
   .gk-skeleton {
     animation: none;
     background: var(--gk-surface-container-high);
+  }
+}
+
+/* ── Phones: the type in a field, last of all ──────────────────────────────
+   Safari on iOS zooms the whole page into any field with a font under 16px the
+   moment it is tapped, and leaves it zoomed. Only the type grows.
+
+   This block is deliberately the LAST thing in the file: a media query adds no
+   specificity, so a component rule further down would otherwise win — which is
+   exactly what happened with .gk-ajax-search-input and .gk-color-hex on the
+   first attempt. Measured at 390px in ci/browser.js, not read out of here. */
+@media (max-width: 768px) {
+  .gk-input,
+  .gk-search,
+  .gk-filter,
+  select.gk-filter,
+  textarea.gk-input,
+  /* Every other field a user types into: the search inside a searchable select,
+     a multi-select, an AJAX select, the hex field of a colour picker. Each was
+     14px and zoomed just as much. */
+  .gk-select-search-input input,
+  .gk-multiselect-input,
+  .gk-ajax-search-input,
+  .gk-color-hex {
+    font-size: 16px;
+  }
+  /* The compact form sets 13px at a higher specificity (0,2,0), so the list
+     above never reaches it — and that is the form of the invoice editor. */
+  .gk-form-compact .gk-input,
+  .gk-form-compact textarea.gk-input,
+  .gk-form-compact .gk-ajax-search-input,
+  .gk-form-compact .gk-select-search-input input {
+    font-size: 16px;
   }
 }

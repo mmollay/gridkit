@@ -589,6 +589,38 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
     const opened = !!(await nav.$("[data-gk-select-search] .gk-select-display.open"));
     check("after navigation the searchable select on the new page opens (widgets are bound)", opened && (await stayed()));
 
+    // ── On a phone, no field may be small enough for iOS to zoom into ──
+    // Safari zooms the whole page into any field under 16px on the first tap and
+    // leaves it there. Measured, not read out of the stylesheet: a rule in the
+    // wrong media query or a later, more specific one would pass a text check.
+    const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    phone.on("pageerror", (e) => pageErrors.push(e.message));
+    await phone.goto("file://" + fixture);
+    // The form lives in a <template>; put it on the page so its fields render.
+    await phone.evaluate(() => {
+      const d = document.createElement("div");
+      d.innerHTML = document.getElementById("form").innerHTML;
+      document.body.appendChild(d);
+      if (window.GK && GK.initContent) GK.initContent(d);
+    });
+    const kleineFelder = await phone.evaluate(() => {
+      // Only the kinds that bring up a keyboard — those are the ones iOS zooms
+      // into. A checkbox, a colour well or a file button opens something else.
+      const tippbar = ["text", "search", "tel", "url", "email", "password", "number",
+                       "date", "datetime-local", "month", "week", "time", ""];
+      return [...document.querySelectorAll("input, textarea, select")]
+        // Really visible: a searchable select keeps a 1x1 transparent input for
+        // the form value — nobody can tap that one, so nothing zooms.
+        .filter((e) => e.checkVisibility() && e.getBoundingClientRect().height > 4)
+        .filter((e) => e.tagName !== "INPUT" || tippbar.indexOf(e.type) > -1)
+        .map((e) => ({ was: (e.className || e.tagName) + "/" + (e.type || ""), px: parseFloat(getComputedStyle(e).fontSize) }))
+        .filter((f) => f.px < 16);
+    });
+    check("at 390px no visible field has a font iOS would zoom into",
+      kleineFelder.length === 0);
+    if (kleineFelder.length) console.log("   " + JSON.stringify(kleineFelder));
+    await phone.close();
+
     // ── A live table replaces what sits outside it, and binds what comes with it ──
     await nav.goto("http://gk.test/live");
     await nav.evaluate(() => new Promise((f) => {

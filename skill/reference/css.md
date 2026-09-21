@@ -1,4 +1,4 @@
-# GridKit 1.87.0 — CSS
+# GridKit 1.88.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -27,6 +27,7 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-text-muted` | Muted text color |
 | `gk-section-title` | Section heading style |
 | `gk-page-header` | Page title + action area |
+| `gk-page-header-actions` | The action area itself (since 1.88.0): a wrapping flex row, right-aligned. Outside every media query — a rule of your own must load after gridkit.css or be more specific |
 | `gk-empty` | Empty state (centered, padded) |
 | `gk-tabs` `gk-tab-nav` `gk-tab-btn` `gk-tab-panel` | Tabs, authored markup (state class: `gk-active`) |
 | `gk-tabs-nav` `gk-tab` | Tabs, generated nav (state class: `gk-tab-active`) |

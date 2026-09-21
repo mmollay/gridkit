@@ -7,6 +7,53 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.88.0] - 2026-09-21
+
+Tenth round of the SSI Panel's self-maintenance loop.
+
+### Fixed — tapping a field zoomed the whole page in, on every iPhone
+
+Safari on iOS zooms the page into any input whose font is smaller than 16px, the
+moment it is tapped, and leaves it zoomed. Everything in GridKit is 14px, so every
+field a user types into did it — the table search, every filter, form fields, the
+search inside a searchable select, a multi-select, an AJAX select, the hex field
+of a colour picker, the compact form of an editor (13px at a higher specificity),
+and the login screen, which carries its own style block. All of them are 16px
+below 768px now.
+
+The rule sits at the very end of the stylesheet, in a media query of its own: a
+media query adds no specificity, so a component rule further down the file wins —
+which is what happened to three of those fields on the first attempt. Fields keep
+their height except `.gk-search` and `.gk-filter`, which have none of their own
+and grow by 1–2px with the type; nothing wraps differently and nothing scrolls
+sideways, measured at 390px.
+
+The SSI Panel had been overriding this in its own stylesheet for exactly this
+reason — the other systems using GridKit had not.
+
+### Added — `.gk-page-header-actions`
+
+The skill has called `.gk-page-header` "page title + action area" since 1.9, but
+the class for that area existed in no stylesheet. The SSI Panel wrote it itself
+and uses it in 41 views; ssi-core uses it in 22 views and defines it in exactly
+one of them, so in the other 21 it did nothing at all.
+
+It is the Panel's base rule, word for word — minus `align-items: center`. That
+one property was left out on purpose: this rule stands outside every media query
+and therefore beats an equally specific rule that a host application loads BEFORE
+gridkit.css, which is what the Panel does with its own mobile layout for this
+class. With `align-items` in it, the Panel's page header went from full width and
+left-aligned to centred and 291px, across 41 views. Measured at 390px, not
+reasoned about.
+
+Still open, and a question rather than a change: the minimum tap sizes. At 390px
+a small button is 27px tall, a chip 31px and a pager key 34px — all under every
+touch guideline. The Panel overrides the first two, but not the pager. Raising
+them in GridKit changes the look of every system: at 44px only seven pager keys
+fit across a phone where nine fit today, and GridKit already has a 40px rule for
+row actions that 44 would contradict. That wants a decision, not a commit.
+
+---
 ## [1.87.0] - 2026-09-21
 
 Ninth round of the SSI Panel's self-maintenance loop.

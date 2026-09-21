@@ -222,7 +222,9 @@ class Auth {
         .gk-login-field input[type="password"] {
             width: 100%; padding: 10px 14px;
             border: 1.5px solid var(--gk-outline-variant, #d1d5db);
-            border-radius: 8px; font-size: 14px;
+            /* 16px, or Safari on iOS zooms the page into the field on the first
+               tap — on the login screen of all places, before anything else. */
+            border-radius: 8px; font-size: 16px;
             background: var(--gk-surface-container-lowest, #fff);
             color: var(--gk-on-surface, #1f2937);
             outline: none; transition: border-color .15s; box-sizing: border-box;

@@ -25,6 +25,7 @@ ob_start();
     ->field('customer', 'Customer', 'ajaxselect', ['url' => '/search'])
     ->field('kind', 'Kind', 'select', ['options' => $options, 'searchable' => true])
     ->field('tags', 'Tags', 'multiselect', ['options' => $options])
+    ->field('farbe', 'Colour', 'color')
     ->submit('Save')
     ->render();
 $form = ob_get_clean();
@@ -95,7 +96,11 @@ if (isset($argv[1]) && $argv[1] === '--select') {
 }
 
 $root = dirname(__DIR__);
-echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>GridKit browser fixture</title>'
+echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+   // Ohne diese Zeile rechnet der Browser mit 980 px Breite, und keine
+   // Media-Query für Telefone greift — eine mobile Prüfung wäre wertlos.
+   . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+   . '<title>GridKit browser fixture</title>'
    . '<style>' . file_get_contents($root . '/css/gridkit.css') . '</style></head><body class="gk-root">'
    . Lang::jsConfig()
    . '<button id="menu" data-gk-dropdown aria-expanded="false">Menu<div class="gk-dropdown-menu"><a href="#">x</a></div></button>'
