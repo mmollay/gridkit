@@ -235,4 +235,23 @@ return [
     T::contains($js, 'thAlignClass(col)', 'the client-side rebuild does not align its headers');
 },
 
+'the client-side rebuild keeps nowrap and the totals row' => function (): void {
+    // The rebuild wrote a bare <table class="gk-table"> and no <tfoot>: the first
+    // sort of a static table unwrapped its cells and took its totals row away.
+    Lang::set('en');
+    $html = T::capture(fn() => (new Table('t'))
+        ->setData([['id' => 1, 'name' => 'Widget', 'price' => 12.5]])
+        ->column('name', 'Product')->column('price', 'Price', ['format' => 'currency'])
+        ->nowrap()
+        ->footer(['Total', ['text' => '12,50 €', 'align' => 'right', 'bold' => true]])
+        ->render());
+    T::ok((bool) preg_match('~data-gk-data>(.*?)</script>~s', $html, $m), 'the data block is there');
+    $data = json_decode($m[1] ?? '', true) ?: [];
+    T::eq($data['nowrap'] ?? null, true, 'nowrap does not reach the client');
+    T::eq($data['footer'][1]['align'] ?? null, 'right', 'the footer does not reach the client');
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, 'data.nowrap ? " gk-table-nowrap"', 'the rebuild drops gk-table-nowrap');
+    T::contains($js, "'<tfoot><tr class=\"gk-table-footer\">'", 'the rebuild writes no tfoot');
+},
+
 ];

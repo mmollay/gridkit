@@ -7,7 +7,35 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.82.0] - 2026-09-21
+
+Fourth round of the SSI Panel's self-maintenance loop.
+
+### Fixed — a page reached through the sidebar arrived with dead widgets
+
+AJAX navigation re-bound tables and tooltips and nothing else. On a page reached
+through the sidebar a searchable select did not open, an AJAX form posted natively
+and showed its JSON as a page, the client-side pager was missing — until a reload.
+`GK.initContent(root)` is now the one list of widget inits, used on page load, for
+a modal's body and after every swap; every init in it is idempotent. The
+`gk-ajax-nav` event the skill has described since 1.9 fires for the first time.
+
+### Fixed — the first sort of a static table unwrapped its cells and lost its totals row
+
+The client-side rebuild wrote a bare `<table class="gk-table">` and no `<tfoot>`.
+`nowrap()` and `footer()` travel in the data block now and are written again.
+
+### Changed — `percent` shows the same figure in a cell as on a card
+
+A `percent` column cut to a whole number and wrote no space — "12%" under a card
+saying "12,5 %". `Table::percent()` is the one rule for both, and the client
+follows it: the digits as given, the locale's decimal sign, `'decimals'` when
+asked, a space before the sign. **Visible** in every percent column of every
+system: "12%" becomes "12 %", "12.5" is no longer cut to "12".
+
+---
 ## [1.81.0] - 2026-09-20
+
 
 Third round of the SSI Panel's self-maintenance loop. For the first time the work
 was done in a separate working tree and entered the served source in one step —

@@ -379,8 +379,10 @@ return [
     // aria-modal would declare the rest of the page out of bounds while the
     // focus is still in it, and VoiceOver users get stuck.
     T::notContains($fn, 'aria-modal', 'aria-modal on a dialog that does not take the focus');
-    // Content arrives three ways: page load, AJAX navigation, live reload.
-    T::ok(substr_count($js, 'GK.modal.upgradeStatic(') >= 3, 'not every way content arrives is covered');
+    // Content arrives three ways: page load and AJAX navigation go through
+    // GK.initContent, a live reload has its own call.
+    T::ok((bool) preg_match('/GK\.initContent = function \(root\) \{.*?GK\.modal\.upgradeStatic\(root\);.*?\n  \};/s', $js), 'initContent does not upgrade static modals');
+    T::contains($js, 'GK.modal.upgradeStatic(e.target || document);', 'a live reload does not upgrade static modals');
 },
 
 'AJAX navigation brings the page\'s own styles along' => function (): void {
@@ -396,6 +398,20 @@ return [
     // its own widgets right after the swap.
     T::ok((bool) preg_match('/self\._syncHead\(html, function \(cleanUp\) \{\s*self\._render\(html, url, content, pushState\);/', $js),
         'the styles are not synced before the content is rendered');
+},
+
+'AJAX navigation binds every widget, not just tables and tooltips' => function (): void {
+    // Reached through the sidebar, a searchable select did not open, an AJAX
+    // form posted natively, the client-side pager was missing — until a reload.
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::ok((bool) preg_match('/\n  GK\.initContent = function \(root\) \{(.*?)\n  \};/s', $js, $m), 'GK.initContent was not found');
+    foreach (['selectSearch', 'multiSelect', 'ajaxSelect', 'liveTable', 'tabs', 'rowPager', 'accordion', 'form.bind', 'upgradeStatic'] as $w) {
+        T::contains($m[1] ?? '', $w, "initContent does not bind $w");
+    }
+    T::contains($js, "if (typeof GK.initContent === 'function') GK.initContent(content);", 'navigation does not call initContent');
+    T::contains($js, "new CustomEvent('gk-ajax-nav'", 'the skill promised a gk-ajax-nav event that nothing fired');
+    // GK.init and the modal body go through the same list — one list, or they drift.
+    T::contains($js, 'GK.initContent(document);', 'GK.init keeps a list of its own');
 },
 
 ];

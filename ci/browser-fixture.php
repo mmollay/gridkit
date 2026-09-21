@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../autoload.php';
 
-use GridKit\{Form, Lang, Table};
+use GridKit\{Form, Lang, Select, Table};
 
 Lang::set('en');
 
@@ -37,6 +37,8 @@ ob_start();
         ['id' => 2, 'name' => 'Widget', 'price' => 12.5, 'qty' => 7, 'state' => 'ok'],
     ])
     ->caption('Price list')
+    ->nowrap()
+    ->footer(['Total', ['text' => '111,50 €', 'align' => 'right', 'bold' => true]])
     ->selectable()
     ->column('name',  'Product', ['sortable' => true])
     ->column('price', 'Price',   ['format' => 'currency', 'sortable' => true])
@@ -44,6 +46,12 @@ ob_start();
     ->column('state', 'State',   ['align' => 'center'])
     ->render();
 $table = ob_get_clean();
+
+// A searchable select on its own, for the navigation case in ci/browser.js.
+if (isset($argv[1]) && $argv[1] === '--select') {
+    echo Select::searchable('country', $options);
+    exit;
+}
 
 $root = dirname(__DIR__);
 echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>GridKit browser fixture</title>'

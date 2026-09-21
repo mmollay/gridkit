@@ -428,6 +428,10 @@ class Table
                 // that is not itself a column was silently never searched —
                 // and the markup of an HTML column matched instead.
                 'search'  => array_values($this->searchCols),
+                // nowrap() and footer(), so the client-side rebuild keeps both — it
+                // used to write a bare <table class="gk-table"> without a <tfoot>.
+                'nowrap'  => $this->globalNowrap,
+                'footer'  => array_map(static fn ($c): array => is_string($c) ? ['text' => $c] : (array) $c, $this->footerCells),
                 'buttons' => $this->buttons,
                 // Rewritten by the client on every rebuild, like everything else here.
                 'caption' => $this->caption,
@@ -916,6 +920,21 @@ class Table
     }
 
     /** Whole numbers; 0 and empty turn into an em dash (count columns). */
+    /**
+     * A percentage, the way a card and a cell both show it: the digits as given,
+     * the locale's decimal sign, $decimals when asked, a space before the sign.
+     * js/gridkit.js carries the same rule as _gkPercent() — keep them in step.
+     */
+    public static function percent(mixed $val, ?int $decimals = null): string
+    {
+        $dec  = Lang::t('format.decimal');
+        $thou = Lang::t('format.thousands');
+        if ($decimals !== null) {
+            return number_format((float) $val, $decimals, $dec, $thou) . ' %';
+        }
+        return (is_numeric($val) ? str_replace('.', $dec, (string) $val) : (string) $val) . ' %';
+    }
+
     private function formatNumber(mixed $val, array $col): string
     {
         $blank = ($col['blankZero'] ?? true)
@@ -944,7 +963,10 @@ class Table
                     Lang::t('format.decimal'), Lang::t('format.thousands')),
                 $col['currency'] ?? Lang::t('format.currency')
             )),
-            'percent' => $e((int)$val . '%'),
+            // The same rule StatCards follows: the digits as given, the locale's
+            // decimal sign, 'decimals' when asked, a space before the sign. The
+            // cell cut to a whole number and wrote "12%" under a card saying "12,5 %".
+            'percent' => $e(self::percent($val, isset($col['decimals']) ? (int) $col['decimals'] : null)),
             'date' => $val
                 ? $e(date($col['dateFormat'] ?? Lang::t('format.date'), strtotime($val)))
                 : '',

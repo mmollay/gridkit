@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.81.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.82.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -766,7 +766,8 @@ CSS classes (all auto-applied): `gk-tableheader`, `gk-tableheader-status`, `gk-t
 **Formats:** `currency`, `number`, `percent` — each follows the active locale,
 so `12450.80` is `€12,450.80` under `en` and `12.450,80 €` under `de`.
 `number` rounds to whole numbers like the table column does; pass `'decimals' => 2`
-to keep some (`percent` takes it too).
+to keep some. `percent` shows the digits as given (`12.5` → `12,5 %` under `de`) or `'decimals'`
+of them — the same in a card and in a table column (`Table::percent()` is the one rule).
 
 **`trend`** is printed verbatim, exactly as you pass it — GridKit does no
 rounding, no sign and no percent sign of its own. A leading `-` colours it as a
@@ -1295,9 +1296,12 @@ Features:
 - Sidebar links load content with fetch(), no page reload
 - A loading bar along the top edge of the screen
 - Browser back/forward works through pushState
-- Tables, tooltips and the receipt overlay are re-initialised after each swap, and hand-written
-  modals are given a dialog role and a named close button (`GK.modal.upgradeStatic(root)` — call it
-  yourself after inserting an overlay you built in JavaScript)
+- Every widget on the new page is bound after the swap (`GK.initContent(root)` — the same list page
+  load and modals use: selects, live tables, tabs, pager, accordion, AJAX forms, hand-written modals).
+  Call `GK.initContent(el)` yourself after inserting markup with widgets in it, and
+  `GK.modal.upgradeStatic(overlay)` after inserting an overlay you built in JavaScript.
+- `gk-ajax-nav` fires on `document` after each swap (`event.detail.url`, `event.detail.content`) for
+  page code that binds things of its own
 - **The target page's own styles come along.** A `<link rel="stylesheet">` or `<style>` in the new
   page's `<head>` that the current document lacks is added and awaited before the content is swapped,
   and removed again when you navigate on. GridKit marks what it added with `data-gk-nav-asset` — do

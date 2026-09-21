@@ -37,6 +37,7 @@ process.on("exit", () => fs.rmSync(dir, { recursive: true, force: true }));
 process.on("SIGINT", () => process.exit(130));
 const fixture = path.join(dir, "fixture.html");
 fs.writeFileSync(fixture, execFileSync(php, [path.join(__dirname, "browser-fixture.php")], { maxBuffer: 64 * 1024 * 1024 }));
+fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__dirname, "browser-fixture.php"), "--select"]));
 
 (async () => {
   const browser = await chromium.launch();
@@ -139,18 +140,23 @@ fs.writeFileSync(fixture, execFileSync(php, [path.join(__dirname, "browser-fixtu
                sort: price ? price.closest("th").getAttribute("aria-sort") : null,
                caption: (document.querySelector('[data-gk-table="prices"] caption') || {}).textContent || null,
                rowBox: (document.querySelector('[data-gk-table="prices"] tbody td.gk-cb-col input') || { getAttribute() {} }).getAttribute("aria-label"),
+               nowrap: !!document.querySelector('[data-gk-table="prices"] table.gk-table-nowrap'),
+               footer: ((document.querySelector('[data-gk-table="prices"] tfoot td:nth-child(2)') || {}).textContent || "").trim(),
+               footerCells: document.querySelectorAll('[data-gk-table="prices"] tfoot td').length,
                allBox: (document.querySelector('[data-gk-table="prices"] [data-gk-select-all]') || { getAttribute() {} }).getAttribute("aria-label") };
     });
     const good = (h) => h.cell === "right" && h.heads.Price && h.heads.Price.align === "right" && h.heads.Price.justify === "flex-end"
       && h.heads.Qty && h.heads.Qty.align === "right"
       && h.heads.State.align === "center" && h.heads.Product.align !== "right"
-      && h.caption === "Price list" && h.rowBox === "Select row" && h.allBox === "Select all";
+      && h.caption === "Price list" && h.rowBox === "Select row" && h.allBox === "Select all"
+      && h.nowrap && h.footer === "111,50 €";
     const before = await heads();
-    check("server-rendered table: numeric header and cell right, centred column centred, caption and checkbox names present", good(before));
+    check("server-rendered table: numeric header and cell right, centred column centred, caption, checkbox names, nowrap and totals row present", good(before));
     await page.click('[data-gk-table="prices"] [data-gk-sort="price"]');
     const after = await heads();
     check("after a client-side sort all of that is still true — and the sort really happened",
-      good(after) && after.rebuilt && after.sort === "ascending" && before.first === "Anvil" && after.first === "Widget");
+      good(after) && after.rebuilt && after.sort === "ascending" && before.first === "Anvil" && after.first === "Widget"
+      && after.footerCells === before.footerCells);
     if (!good(before) || !good(after)) console.log(JSON.stringify({ before, after }));
 
     // ── AJAX navigation brings the target page's own stylesheet along ─────
@@ -158,13 +164,14 @@ fs.writeFileSync(fixture, execFileSync(php, [path.join(__dirname, "browser-fixtu
     const gridkitJs = fs.readFileSync(path.join(__dirname, "..", "js", "gridkit.js"), "utf8");
     const shell = (title, head, body) =>
       "<!DOCTYPE html><html><head><meta charset='utf-8'><title>" + title + "</title>" + head + "</head><body class='gk-root'>" +
-      "<aside data-gk-sidebar data-gk-ajax-nav><nav class='gk-sidebar-nav'><a id='to-a' href='/a'>A</a><a id='to-b' href='/b'>B</a><a id='to-c' href='/c'>C</a></nav></aside>" +
+      "<aside data-gk-sidebar data-gk-ajax-nav><nav class='gk-sidebar-nav'><a id='to-a' href='/a'>A</a><a id='to-b' href='/b'>B</a><a id='to-c' href='/c'>C</a><a id='to-d' href='/d'>D</a></nav></aside>" +
       "<main data-gk-content>" + body + "</main><script src='/gridkit.js'></script></body></html>";
     const site = {
       "/a": shell("A", "", "<p id='where'>page a</p>"),
       "/b": shell("B", "<link rel='stylesheet' href='/b.css?v=1'><style>#inline-b{letter-spacing:3px}</style>",
         "<p id='where'>page b</p><p id='styled-b'>x</p><p id='inline-b'>y</p>"),
       "/c": shell("C", "", "<p id='where'>page c</p><p id='styled-b'>x</p>"),
+      "/d": shell("D", "", "<p id='where'>page d</p>" + fs.readFileSync(path.join(dir, "select.html"), "utf8")),
     };
     const nav = await browser.newPage();
     nav.on("pageerror", (e) => pageErrors.push(e.message));
@@ -203,6 +210,12 @@ fs.writeFileSync(fixture, execFileSync(php, [path.join(__dirname, "browser-fixtu
     await nav.waitForFunction(() => document.getElementById("where").textContent === "page a");
     const again = await nav.evaluate(() => document.querySelectorAll('link[rel="stylesheet"][href*="b.css"]').length);
     check("… and a changed cache key does not add a second copy behind the rest", again === 1 && (await stayed()));
+    // Widgets on the target page are bound after the swap: a searchable select opens.
+    await nav.click("#to-d");
+    await nav.waitForFunction(() => document.getElementById("where").textContent === "page d");
+    await nav.click("[data-gk-select-search] .gk-select-display");
+    const opened = !!(await nav.$("[data-gk-select-search] .gk-select-display.open"));
+    check("after navigation the searchable select on the new page opens (widgets are bound)", opened && (await stayed()));
     await nav.close();
   } finally {
     await browser.close();

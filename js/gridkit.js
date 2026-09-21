@@ -147,6 +147,18 @@
     }
   }
 
+  // A percentage as Table::percent() writes it: digits as given, the locale's
+  // decimal sign, decimals when asked, a space before the sign. parseInt() used
+  // to cut "12.5" to "12%" on the first sort while the card above said "12,5 %".
+  function _gkPercent(val, decimals) {
+    var dec = _lang.format_decimal || ".";
+    if (decimals !== undefined && decimals !== null && decimals !== "") {
+      return _gkNumber(val, parseInt(decimals, 10) || 0) + " %";
+    }
+    var s = val == null ? "" : String(val);
+    return (isNaN(parseFloat(s)) || !isFinite(Number(s)) ? s : s.replace(".", dec)) + " %";
+  }
+
   // Where a header cell stands: an explicit align wins, a number or currency
   // column is right-aligned without one. Table::headerAlignClass() in PHP is the
   // same rule — keep them in step, or the head jumps on the first sort.
@@ -901,7 +913,7 @@
               // the side it sits on, so both shapes come out right.
               return e(_gkCurrency(val));
             case "percent":
-              return e(parseInt(val || 0) + "%");
+              return e(_gkPercent(val, col.decimals));
             case "date":
               // KNOWN GAP, deliberately left: currency and number above now
               // build from the catalogue, dates do not. The server renders
@@ -1012,7 +1024,10 @@
         const selSet = wrap._gkSelected || new Set();
 
         let html =
-          '<table class="gk-table">' +
+          // nowrap() and footer() travel in the data block: the rebuild wrote a bare
+          // <table class="gk-table"> and no <tfoot>, so the first sort of a static
+          // table unwrapped its cells and took its totals row away.
+          '<table class="gk-table' + (data.nowrap ? " gk-table-nowrap" : "") + '">' +
           (data.caption ? '<caption class="gk-sr-only">' + e(data.caption) + "</caption>" : "") +
           "<thead><tr>";
         if (selectable)
@@ -1322,7 +1337,27 @@
           });
         }
 
-        html += "</tbody></table>";
+        html += "</tbody>";
+        if (Array.isArray(data.footer) && data.footer.length) {
+          // Same markup as Table::render() writes for footer(): the style is built
+          // from a fixed vocabulary, the text is escaped like every cell.
+          html += '<tfoot><tr class="gk-table-footer">';
+          data.footer.forEach(function (cell) {
+            const c = typeof cell === "string" ? { text: cell } : cell || {};
+            const align = ["left", "center", "right"].indexOf(c.align) >= 0 ? c.align : "left";
+            let style = "text-align:" + align + ";";
+            if (c.bold) style += "font-weight:600;";
+            if (align === "right") style += "color:var(--gk-primary);";
+            html += '<td colspan="' + (parseInt(c.colspan, 10) || 1) + '" style="' + style + '">' + e(c.text == null ? "" : c.text) + "</td>";
+          });
+          // The server pads the row to the full width; so does this, or the
+          // footer of a rebuilt table ends short of the last column.
+          const colCount = (selectable ? 1 : 0) + (hasLeft ? 1 : 0) + Object.keys(columns).length + (hasRight ? 1 : 0);
+          const used = data.footer.reduce((n, cell) => n + ((typeof cell === "string" ? 1 : parseInt((cell || {}).colspan, 10)) || 1), 0);
+          if (colCount - used > 0) html += '<td colspan="' + (colCount - used) + '"></td>';
+          html += "</tr></tfoot>";
+        }
+        html += "</table>";
 
         // The pager. A static table has every row in the browser, so paging is
         // a slice — but renderStatic used to drop the pager on every rebuild
@@ -1969,11 +2004,16 @@
         try {
           if (typeof GK.table !== 'undefined' && GK.table.init) GK.table.init();
           if (typeof GK.tooltip !== 'undefined' && GK.tooltip.init) GK.tooltip.init();
-          GK.modal.upgradeStatic(content);
+          // Every other widget too — defined below this point, hence the guard.
+          if (typeof GK.initContent === 'function') GK.initContent(content);
           // BelegModal sits inside [data-gk-content] and is re-rendered on the
           // swap → the close button loses its listener. Bind it again.
           if (typeof GK.belegModal !== 'undefined' && GK.belegModal._init) GK.belegModal._init();
-        } catch (e) {}
+        } catch (e) {
+          if (window.console) console.warn('GK.navigate: widget init after swap', e);
+        }
+        // For page code that binds its own things after a swap.
+        document.dispatchEvent(new CustomEvent('gk-ajax-nav', { detail: { url: url, content: content } }));
       } catch (err) {
         console.warn('GK.navigate: render error', err);
       }
@@ -2889,27 +2929,41 @@
     GK.modal.upgradeStatic(e.target || document);
   });
 
-  var _origInit = GK.init;
-  GK.init = function () {
-    _origInit.call(GK);
+  /**
+   * Bind every widget inside `root` — the one list, used on page load, for a
+   * modal's body and after AJAX navigation.
+   *
+   * Navigation used to re-bind tables and tooltips only. On a page reached
+   * through the sidebar a searchable select did not open, an AJAX form posted
+   * natively and showed its JSON as a page, the client-side pager was missing —
+   * until a reload. Every init here is idempotent (each marks what it bound),
+   * so calling this twice on the same content is harmless.
+   */
+  GK.initContent = function (root) {
+    root = root && root.querySelectorAll ? root : document;
     GK.initRangeSliders();
     GK.initUploadZones();
     GK.initRichtext();
-    if (GK.selectSearch) GK.selectSearch.init();
-    if (GK.multiSelect) GK.multiSelect.init();
-    if (GK.ajaxSelect) GK.ajaxSelect.init();
-    if (GK.liveTable) GK.liveTable.init();
-    if (GK.tabs) GK.tabs.init();
-    if (GK.tabsMarkup) GK.tabsMarkup.init();
-    // Defined further down, so it is absent on the very first GK.init() of an
+    if (GK.form && GK.form.bind) GK.form.bind(root);
+    if (GK.selectSearch) GK.selectSearch.init(root);
+    if (GK.multiSelect) GK.multiSelect.init(root);
+    if (GK.ajaxSelect) GK.ajaxSelect.init(root);
+    if (GK.liveTable) GK.liveTable.init(root);
+    if (GK.tabs) GK.tabs.init(root);
+    if (GK.tabsMarkup) GK.tabsMarkup.init(root);
+    // Defined further down, so absent on the very first GK.init() of an
     // already-loaded document; the ready-aware call beside its definition
     // covers that pass, and this one covers everything added later.
-    if (GK.accordion) GK.accordion.init();
-    // Same story as the accordion: defined below the first bootstrap, so its
-    // own _gkReady call covers that pass and this one covers later content.
-    if (GK.lightbox && GK.lightbox.init) GK.lightbox.init();
-    if (GK.rowPager) GK.rowPager.init();
-    GK.modal.upgradeStatic(document);
+    if (GK.accordion) GK.accordion.init(root);
+    if (GK.lightbox && GK.lightbox.init) GK.lightbox.init(root);
+    if (GK.rowPager) GK.rowPager.init(root);
+    GK.modal.upgradeStatic(root);
+  };
+
+  var _origInit = GK.init;
+  GK.init = function () {
+    _origInit.call(GK);
+    GK.initContent(document);
   };
 
   /*

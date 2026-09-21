@@ -464,6 +464,9 @@ return [
     T::eq($card(1284, ['format' => 'number']), '1.284', 'a whole number is unchanged');
     T::eq($card(12.5, ['format' => 'percent']), '12,5 %', 'a percentage follows the locale like the skill says');
     T::eq($card(78, ['format' => 'percent']), '78 %', 'a whole percentage is unchanged');
+    // The cell cut to a whole number and wrote no space: "12%" under a card saying "12,5 %".
+    T::eq($cell(12.5, ['format' => 'percent']), $card(12.5, ['format' => 'percent']), 'percent: card and cell agree');
+    T::eq($cell(12.345, ['format' => 'percent', 'decimals' => 1]), '12,3 %', 'percent with decimals in the cell');
     Lang::set('en');
 },
 

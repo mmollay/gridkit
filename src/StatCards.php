@@ -58,9 +58,7 @@ class StatCards
                     // The decimal sign follows the locale, as the skill says of all
                     // three formats; it used to be a dot under every locale. Without
                     // 'decimals' the digits stay exactly as passed.
-                    'percent' => (isset($card['decimals'])
-                        ? number_format((float) $val, (int) $card['decimals'], $dec, $thou)
-                        : (is_numeric($val) ? str_replace('.', $dec, (string) $val) : (string) $val)) . ' %',
+                    'percent' => Table::percent($val, isset($card['decimals']) ? (int) $card['decimals'] : null),
                     default   => (string) $val,
                 };
             }

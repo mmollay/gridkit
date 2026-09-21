@@ -1,4 +1,4 @@
-# GridKit 1.81.0 — components
+# GridKit 1.82.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -559,7 +559,8 @@ CSS classes (all auto-applied): `gk-tableheader`, `gk-tableheader-status`, `gk-t
 **Formats:** `currency`, `number`, `percent` — each follows the active locale,
 so `12450.80` is `€12,450.80` under `en` and `12.450,80 €` under `de`.
 `number` rounds to whole numbers like the table column does; pass `'decimals' => 2`
-to keep some (`percent` takes it too).
+to keep some. `percent` shows the digits as given (`12.5` → `12,5 %` under `de`) or `'decimals'`
+of them — the same in a card and in a table column (`Table::percent()` is the one rule).
 
 **`trend`** is printed verbatim, exactly as you pass it — GridKit does no
 rounding, no sign and no percent sign of its own. A leading `-` colours it as a
