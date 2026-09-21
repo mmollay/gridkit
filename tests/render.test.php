@@ -235,6 +235,55 @@ return [
     T::contains($js, 'thAlignClass(col)', 'the client-side rebuild does not align its headers');
 },
 
+'a row button with href is a real link, and a field cannot become a scheme' => function (): void {
+    // Ten SSI Panel views pushed window.location.href into a <button>: no middle
+    // click, no "open in new tab", no status bar. 'href' makes it an <a>.
+    Lang::set('en');
+    $zeile = static fn (array $btn, array $row = []): string => T::capture(fn () => (new Table('t'))
+        ->setData([$row + ['id' => 7, 'slug' => "a!b'c(d)e*f", 'link' => 'javascript:alert(1)']])
+        ->column('id', 'Id')->button('open', ['icon' => 'edit'] + $btn)->render());
+
+    $html = $zeile(['href' => '/artikel/{slug}']);
+    T::contains($html, 'href="/artikel/a%21b%27c%28d%29e%2Af"', 'the row value is not encoded the way rawurlencode does it');
+    T::ok((bool) preg_match('/<a class="gk-btn[^"]*"[^>]*href="\/artikel/', $html), 'href does not render an anchor');
+    // A link must not also fire gk:rowaction — the delegated handler reads that.
+    T::ok(!preg_match('/<a [^>]*data-gk-action/', $html), 'the link still carries data-gk-action');
+
+    // A template that IS a field: the encoding disarms it (no colon survives),
+    // so it stays a link — to a relative path that leads nowhere.
+    T::contains($zeile(['href' => '{link}']), 'href="javascript%3Aalert%281%29"', 'an encoded scheme was not left encoded');
+    // A template carrying a foreign scheme itself is refused outright.
+    // What may be linked to and what may not. An allow list, not a deny list:
+    // "java<TAB>script:" walked straight through the deny list, because the
+    // browser strips control characters before it reads the scheme — and then
+    // ran it (measured in Chromium, 21.09.2026).
+    $ziel = static fn (string $href): string => (string) (preg_match('/<a [^>]*href="([^"]*)"/', $zeile(['href' => $href]), $m) ? $m[1] : 'KEIN LINK');
+    foreach (['/a/1' => '/a/1', './x' => './x', '../y' => '../y', '?q=1' => '?q=1', '#top' => '#top',
+              'users/7' => 'users/7', 'https://example.org/' => 'https://example.org/',
+              'mailto:a@b.c' => 'mailto:a@b.c', 'tel:+431' => 'tel:+431'] as $ein => $aus) {
+        T::eq($ziel($ein), $aus, "a plain target was refused: $ein");
+    }
+    foreach (['javascript:alert(1)', "java\tscript:alert(1)", "java\nscript:x", 'data:text/html,x',
+              '//fremde.example/x', "\xc2\xa0javascript:x"] as $boese) {
+        T::eq($ziel($boese), 'KEIN LINK', 'a dangerous target was linked: ' . addcslashes($boese, "\0..\37"));
+    }
+    T::contains($zeile(['href' => 'javascript:alert({id})']), '<button type="button"', 'a refused href does not fall back to a button');
+
+    // A question cannot live on a link: a middle click, a Ctrl-click and Enter
+    // all walk past a click handler, and a page whose JavaScript never loaded
+    // would follow it unasked. So it becomes a button carrying its target.
+    $gefragt = $zeile(['href' => '/a/{id}', 'confirm' => 'Sicher?']);
+    T::contains($gefragt, '<button type="button"', 'a target with a question is still a link');
+    T::contains($gefragt, 'data-gk-href="/a/7"', 'the target is not kept on the button');
+    T::contains($gefragt, 'data-gk-confirm="Sicher?"', 'the question is gone');
+    T::ok(!str_contains($gefragt, 'data-gk-action'), 'going somewhere is announced as a row action as well');
+
+    // modal and onclick keep what they had — href must not take it away silently.
+    T::contains($zeile(['href' => '/a/{id}', 'modal' => 'm']), 'data-gk-modal="m"', 'href swallowed the modal');
+    T::ok(!str_contains($zeile(['href' => '/a/{id}', 'modal' => 'm']), 'href="/a/7"'), 'href won over the modal');
+    T::contains($zeile(['href' => '/a/{id}', 'onclick' => 'boom({id})']), 'onclick=', 'href swallowed the onclick');
+},
+
 'the client-side rebuild keeps nowrap and the totals row' => function (): void {
     // The rebuild wrote a bare <table class="gk-table"> and no <tfoot>: the first
     // sort of a static table unwrapped its cells and took its totals row away.

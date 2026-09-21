@@ -33,8 +33,11 @@ ob_start();
 (new Table('prices'))
     ->setData([
         // Descending by price on purpose: a sort that really happens changes the order.
-        ['id' => 1, 'name' => 'Anvil',  'price' => 99.0, 'qty' => 2, 'state' => 'ok', 'share' => null],
-        ['id' => 2, 'name' => 'Widget', 'price' => 12.5, 'qty' => 7, 'state' => 'ok', 'share' => 12.5],
+        // The slug carries an apostrophe (which used to break out of the
+        // single-quoted data-gk-params), a space (rawurlencode writes %20 where
+        // urlencode writes +) and the five characters the two encoders disagree on.
+        ['id' => 1, 'name' => 'Anvil',  'price' => 99.0, 'qty' => 2, 'state' => 'ok', 'share' => null,  'slug' => "a!b'c(d) e*f"],
+        ['id' => 2, 'name' => 'Widget', 'price' => 12.5, 'qty' => 7, 'state' => 'ok', 'share' => 12.5, 'slug' => 'plain'],
     ])
     ->caption('Price list')
     ->nowrap()
@@ -46,6 +49,18 @@ ob_start();
     ->column('qty',   'Qty',     ['format' => 'number', 'hideOnMobile' => true])   // the branch with no sort class
     ->column('state', 'State',   ['align' => 'center'])
     ->column('share', 'Share',   ['format' => 'percent', 'decimals' => 1])   // 12.5 and nothing — as the server writes them
+    // A row button that is a real link, with the five characters where PHP and
+    // JavaScript encode differently, plus one with a question before it.
+    ->button('open', ['icon' => 'visibility', 'href' => '/artikel/{slug}'])
+    ->button('go', ['icon' => 'edit', 'href' => '/x/{id}', 'confirm' => 'Sure?'])
+    // A template carrying a foreign scheme: both renderers must refuse it and
+    // fall back to a plain button, before and after a client-side rebuild.
+    ->button('evil', ['icon' => 'delete', 'href' => "java\tscript:alert({id})"])
+    // Text and colour: the client used to shrink labelled buttons and grey out
+    // a 'color' it never read. Both only show on a button like this one.
+    ->button('note', ['text' => 'Note', 'color' => 'danger', 'href' => '/note/{id}'])
+    // A fragment target: following it really happens, and the test page stays.
+    ->button('jump', ['icon' => 'arrow_forward', 'href' => '#ziel-{id}', 'confirm' => 'Jump?'])
     ->render();
 $table = ob_get_clean();
 

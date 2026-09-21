@@ -1,4 +1,4 @@
-# GridKit 1.83.0 — components
+# GridKit 1.84.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -86,6 +86,18 @@ new record. Wiring `onclick` to `GK.modal.open` by hand is the fallback, not the
 ->modal('edit_form', 'Edit customer', 'forms/edit.php', ['size' => 'medium'])
 ->button('edit', ['icon' => 'edit', 'modal' => 'edit_form'])
 ```
+
+**Button `href`:** `->button('open', ['icon' => 'visibility', 'href' => '/users/{id}'])`
+renders a real link (`<a class="gk-btn …">`) instead of a button, so middle click,
+"open in new tab" and the browser's status bar work. `{field}` is replaced from the
+row and URL-encoded. Allowed targets are a relative path, a fragment, a query, or a
+spelt-out `http`, `https`, `mailto` or `tel`; anything else — including a leading
+`//` — falls back to a plain button. A row's own value can never become a scheme.
+A link fires no `gk:rowaction`. With `confirm` it is deliberately NOT a link but a
+button carrying its target, so that a middle click cannot walk past the question;
+it goes only after the answer. `modal` and `onclick` win over `href`: a button that
+already does something keeps doing it. Use `href` instead of
+`'onclick' => 'location.href=…'`.
 
 **`confirm`:** `->button('delete', ['icon' => 'delete', 'confirm' => true])` asks
 before the button acts — `true` uses the translated default, a string is used as

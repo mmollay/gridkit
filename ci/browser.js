@@ -339,14 +339,50 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
                meta: ((document.querySelector('[data-gk-table="prices"] tfoot td.gk-table-meta') || {}).textContent || "").trim(),
                share: Array.from(document.querySelectorAll('[data-gk-table="prices"] tbody tr')).map((tr) => ((tr.querySelectorAll("td")[5] || {}).textContent || "").trim()).sort().join("|"),
                numWrap: ((document.querySelector('[data-gk-table="prices"] tbody td.gk-td-num') || { style: {} }).style || {}).whiteSpace || null,
-               allBox: (document.querySelector('[data-gk-table="prices"] [data-gk-select-all]') || { getAttribute() {} }).getAttribute("aria-label") };
+               allBox: (document.querySelector('[data-gk-table="prices"] [data-gk-select-all]') || { getAttribute() {} }).getAttribute("aria-label"),
+               // A row button with href is a real <a>, encoded the same on both
+               // sides, and carries no data-gk-action (which would fire
+               // gk:rowaction on top of the navigation).
+               // Collected and sorted: a sort puts a different row first, so the
+               // set is what has to stay the same, not the first one.
+               // The refused href: a plain button on both sides, never a link.
+               boese: (() => {
+                 const el = document.querySelector('[data-gk-table="prices"] [aria-label="Evil"]');
+                 return el ? el.tagName + ":" + (el.getAttribute("href") || "-") : "fehlt";
+               })(),
+               // A labelled, coloured button: the client used to add gk-btn-sm and
+               // ignore 'color', so both changed on the first sort.
+               notiz: (() => {
+                 const el = [...document.querySelectorAll('[data-gk-table="prices"] .gk-btn')]
+                   .find((b) => (b.textContent || "").trim() === "Note");
+                 return el ? el.className : "fehlt";
+               })(),
+               // Nothing may break out of an attribute: the row value holds an
+               // apostrophe, and a sort re-renders every one of these.
+               ausbruch: (() => {
+                 const el = document.querySelector('[data-gk-table="prices"] [data-gk-params]');
+                 return el ? el.getAttributeNames().sort().join(",") : "fehlt";
+               })(),
+               link: (() => {
+                 const alle = [...document.querySelectorAll('[data-gk-table="prices"] a[aria-label="Open"]')];
+                 return { hrefs: alle.map((a) => a.getAttribute("href")).sort().join("|"),
+                          tags: alle.map((a) => a.tagName).join(","),
+                          aktion: alle.some((a) => a.hasAttribute("data-gk-action")),
+                          params: alle.map((a) => a.getAttribute("data-gk-params")).sort().join("|") };
+               })() };
     });
     const good = (h) => h.cell === "right" && h.heads.Price && h.heads.Price.align === "right" && h.heads.Price.justify === "flex-end"
       && h.heads.Qty && h.heads.Qty.align === "right"
       && h.heads.State.align === "center" && h.heads.Product.align !== "right"
       && h.caption === "Price list" && h.rowBox === "Select row" && h.allBox === "Select all"
       && h.nowrap && h.footer === "111,50 €"
-      && h.meta === "38 ms" && h.share === "|12.5 %" && h.numWrap === "nowrap";
+      && h.meta === "38 ms" && h.share === "|12.5 %" && h.numWrap === "nowrap"
+      && h.boese === "BUTTON:-"
+      && h.notiz === "gk-btn gk-btn-icon-text gk-btn-text gk-btn-danger"
+      && h.ausbruch === "aria-label,class,data-gk-params,href"
+      && h.link.tags === "A,A" && !h.link.aktion
+      && h.link.hrefs === "/artikel/a%21b%27c%28d%29%20e%2Af|/artikel/plain"
+      && h.link.params === '{"id":1}|{"id":2}';
     const before = await heads();
     check("server-rendered table: numeric header and cell right, centred column centred, caption, checkbox names, nowrap, totals row, load time, percent cells", good(before));
     await page.click('[data-gk-table="prices"] [data-gk-sort="price"]');
@@ -355,6 +391,35 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
       good(after) && after.rebuilt && after.sort === "ascending" && before.first === "Anvil" && after.first === "Widget"
       && after.footerCells === before.footerCells);
     if (!good(before) || !good(after)) console.log(JSON.stringify({ before, after }));
+    // A question before following a link: the delegated handler has to stop the
+    // navigation, ask, and only then go.
+    const frage = await page.evaluate(() => {
+      // Whichever row is on top after the sort — read its id and check against that.
+      const el = document.querySelector('[data-gk-table="prices"] [aria-label="Go"]');
+      const id = JSON.parse(el.getAttribute("data-gk-params")).id;
+      let gefragt = false;
+      window.__echt = GK.confirm;
+      // "no" first: nothing may move.
+      GK.confirm = (msg) => { gefragt = msg; return Promise.resolve(false); };
+      el.click();
+      GK.confirm = window.__echt;
+      return { tag: el.tagName, href: el.getAttribute("href"), ziel: el.getAttribute("data-gk-href"),
+               erwartet: "/x/" + id, gefragt, hash: location.hash };
+    });
+    check("a target with a question is a button, not a link, asks, and does not move on \"no\"",
+      frage.tag === "BUTTON" && frage.href === null && frage.ziel === frage.erwartet
+      && frage.gefragt === "Sure?" && frage.hash === "");
+    // "Yes" has to actually follow the target. A fragment is a real navigation
+    // that keeps the page, so the case can watch it happen.
+    const gefahren = await page.evaluate(() => new Promise((fertig) => {
+      const el = document.querySelector('[data-gk-table="prices"] [aria-label="Jump"]');
+      const id = JSON.parse(el.getAttribute("data-gk-params")).id;
+      GK.confirm = () => Promise.resolve(true);
+      el.click();
+      setTimeout(() => { GK.confirm = window.__echt; fertig([location.hash, "#ziel-" + id]); }, 300);
+    }));
+    check('… and on "yes" it really follows the target', gefahren[0] === gefahren[1]);
+
     // loadTime() without footer cells: "N entries · 1.23 s", before and after a rebuild.
     const meta = () => page.evaluate(() => ((document.querySelector('[data-gk-table="timed"] tfoot td.gk-table-meta') || {}).textContent || "").trim());
     const metaBefore = await meta();

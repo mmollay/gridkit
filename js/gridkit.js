@@ -32,7 +32,26 @@
   function _gkEsc(s) {
     const d = document.createElement("div");
     d.textContent = String(s == null ? "" : s);
-    return d.innerHTML;
+    // textContent escapes < > and &, but NOT quotes — and every attribute this
+    // file writes is quoted. A row value holding an apostrophe closed
+    // data-gk-params='…' and everything after it became attributes of the
+    // element: onmouseover and all. htmlspecialchars(ENT_QUOTES) on the server
+    // has always escaped both; this side did not.
+    return d.innerHTML.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  /*
+   * Is this a target we are willing to link to? An allow list, not a deny list —
+   * "java\tscript:" defeated the latter, because the browser strips control
+   * characters before it reads the scheme. Table::safeTarget() in PHP is the
+   * same rule; keep them in step.
+   */
+  function _gkSafeTarget(href) {
+    var rein = String(href).replace(/[\u0000-\u0020]/g, "");
+    if (rein === "" || rein.indexOf("//") === 0) return null;
+    if (/^(\/|\.\/|\.\.\/|\?|#)/.test(rein)) return rein;
+    if (/^(https?|mailto|tel):/i.test(rein)) return rein;
+    return rein.indexOf(":") > -1 ? null : rein;
   }
 
   function _gkNumber(value, decimals) {
@@ -658,6 +677,8 @@
           const btn = e.target.closest("[data-gk-action]");
           if (!btn) return;
           if (btn.hasAttribute("data-gk-modal") || btn.hasAttribute("onclick")) return;
+          // Carries a target: the handler below owns it, question included.
+          if (btn.hasAttribute("data-gk-href")) return;
 
           const fire = () =>
             wrap.dispatchEvent(
@@ -677,6 +698,20 @@
           } else {
             fire();
           }
+        });
+
+        // A row button with a target AND a question: not an <a>, so no middle
+        // click, Ctrl-click or Enter can slip past the question, and a page whose
+        // JavaScript never loaded does nothing rather than navigating unasked.
+        wrap.addEventListener("click", (e) => {
+          const b = e.target.closest("[data-gk-href]");
+          if (!b) return;
+          const ziel = b.getAttribute("data-gk-href");
+          const frage = b.getAttribute("data-gk-confirm");
+          const gehen = () => { window.location.href = ziel; };
+          if (!frage) return gehen();
+          if (!GK.confirm) return window.confirm(frage) && gehen();
+          GK.confirm(frage, { danger: true }).then((ok) => ok && gehen()).catch(() => {});
         });
 
         // The sortable control is a real <button> now and answers Enter and
@@ -1286,23 +1321,64 @@
               warning: "warning",
               primary: "primary",
             };
-            const color = colorMap[bopts["class"]] || "neutral";
+            // The server reads 'color' first and falls back to 'class'; this side
+            // read 'class' only, so a button declared with the documented
+            // 'color' => 'danger' turned grey on the first sort.
+            const color = colorMap[bopts.color || bopts["class"]] || "neutral";
+            // Same classes as Table::renderButtons: gk-btn-sm belongs to the
+            // icon-only button. The client put it on text buttons too, so every
+            // labelled row button shrank on the first sort.
             let cls = hasText
-              ? "gk-btn gk-btn-icon-text gk-btn-text gk-btn-" +
-                color +
-                " gk-btn-sm"
-              : "gk-btn gk-btn-icon-only gk-btn-text gk-btn-" +
-                color +
-                " gk-btn-sm";
+              ? "gk-btn gk-btn-icon-text gk-btn-text gk-btn-" + color
+              : "gk-btn gk-btn-icon-only gk-btn-text gk-btn-" + color + " gk-btn-sm";
             const params = {};
             if (bopts.params) {
               Object.entries(bopts.params).forEach(([pk, pcol]) => {
                 params[pk] = row[pcol] ?? "";
               });
             }
-            let btnAttrs = ' type="button"';
-            btnAttrs += ' data-gk-action="' + e(bname) + '"';
-            if (bopts.modal)
+            // Table::renderButtons sends the row's own id unless the caller
+            // mapped one itself — this side never did. After the first sort the
+            // edit button of a setData() table carried data-gk-params="{}", and
+            // the modal it opened came up as if it were a new record.
+            if (!Object.prototype.hasOwnProperty.call(params, "id") && row.id !== undefined) {
+              params.id = row.id;
+            }
+            // 'href' => '/users/{id}': a real link, exactly as Table::renderButtons
+            // writes it. encodeURIComponent leaves !'()* alone where PHP's
+            // rawurlencode escapes them — without that the two renderers drift on
+            // any id carrying one of those five characters.
+            let href = null;
+            // Same three conditions as Table::renderButtons: a value of "0" is a
+            // target like any other (bopts.href alone would call it falsy), and
+            // modal or onclick keep what they had.
+            if (bopts.href !== undefined && bopts.href !== null && String(bopts.href) !== ""
+                && !bopts.modal && !bopts.onclick) {
+              try {
+                href = String(bopts.href).replace(/\{(\w+)\}/g, (_, k) =>
+                  encodeURIComponent(String(row[k] ?? "")).replace(/[!'()*]/g, (c) =>
+                    "%" + c.charCodeAt(0).toString(16).toUpperCase()));
+                href = _gkSafeTarget(href);
+              } catch (err) {
+                // A lone surrogate makes encodeURIComponent throw, and this runs
+                // in the middle of drawing the table: without this the whole
+                // table would vanish over one bad character in one cell.
+                href = null;
+              }
+            }
+            // A link with a question is a button carrying its target: a middle
+            // click, a Ctrl-click and Enter all bypass a click handler on an <a>.
+            const fragtVorher = href !== null && bopts.confirm;
+            const zielAttr = fragtVorher ? ' data-gk-href="' + e(href) + '"' : "";
+            if (fragtVorher) href = null;
+            // Going somewhere is not a row action: with data-gk-action the
+            // delegated handler would ask its own question on top of this one.
+            const alsAktion = href === null && !fragtVorher;
+            let btnAttrs = (href === null ? ' type="button"' : ' href="' + e(href) + '"') + zielAttr;
+            // A link carries no data-gk-action: the delegated handler would fire
+            // gk:rowaction on top of the navigation.
+            if (alsAktion) btnAttrs += ' data-gk-action="' + e(bname) + '"';
+            if (bopts.modal && href === null)
               btnAttrs += ' data-gk-modal="' + e(bopts.modal) + '"';
 
             // The same name the server-side renderer gives these buttons, so
@@ -1336,7 +1412,7 @@
             }
             if (bopts.title) btnAttrs += ' title="' + e(bopts.title) + '"';
             btnAttrs += " data-gk-params='" + e(JSON.stringify(params)) + "'";
-            if (bopts.onclick) {
+            if (bopts.onclick && href === null) {
               let oc = String(bopts.onclick).replace(/\{(\w+)\}/g, (_, k) =>
                 JSON.stringify(row[k] ?? null),
               );
@@ -1359,15 +1435,16 @@
             }
             const icon = bopts.icon ? GK.table.iconSvg(bopts.icon) : "";
             const text = hasText ? "<span>" + e(bopts.text) + "</span>" : "";
+            const tag = href === null ? "button" : "a";
             h +=
-              '<button class="' +
+              "<" + tag + ' class="' +
               cls +
               '"' +
               btnAttrs +
               ">" +
               icon +
               text +
-              "</button>";
+              "</" + tag + ">";
           }
           return h;
         };

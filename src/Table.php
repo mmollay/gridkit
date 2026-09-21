@@ -877,6 +877,41 @@ class Table
             }
             $ariaAttr  = ' aria-label="' . $e($actionName) . '"';
             $titleAttr = !empty($bopts['title']) ? ' title="' . $e($bopts['title']) . '"' : '';
+
+            // 'href' => '/users/{id}' makes the row button a real link: middle
+            // click, "open in new tab" and the browser's status bar work again.
+            // Ten SSI Panel views pushed window.location.href into a <button>
+            // instead, and none of them could be opened in a second tab.
+            // 'modal' and 'onclick' keep what they had: a button that already
+            // opens something must not turn into a link because someone added
+            // href — it would lose its behaviour without a word.
+            $href = null;
+            if (isset($bopts['href']) && (string) $bopts['href'] !== ''
+                && !isset($bopts['modal']) && empty($bopts['onclick'])) {
+                $href = preg_replace_callback(
+                    '/\{(\w+)\}/',
+                    static fn (array $m): string => rawurlencode((string) ($row[$m[1]] ?? '')),
+                    (string) $bopts['href']
+                );
+                $href = self::safeTarget($href);
+            }
+            // A link carries no data-gk-action: the delegated handler would fire
+            // gk:rowaction on top of the navigation. The confirmation stays — the
+            // handler below asks before it follows the link.
+            // A question before a link cannot live on an <a>: a middle click, a
+            // Ctrl-click and Enter each take the native path, and a page whose
+            // JavaScript failed to load would follow it without asking at all.
+            // So a link WITH a confirmation is a button carrying its target.
+            $fragtVorher = $href !== null && $confirmMsg !== null;
+            if ($fragtVorher) {
+                // No data-gk-action: going somewhere is not a row action, and the
+                // delegated handler would ask its own question on top of this one.
+                $dataAttrs = " data-gk-params='" . $e(json_encode($params)) . "'"
+                    . $confirmAttr . ' data-gk-href="' . $e($href) . '"';
+                $href = null;
+            }
+            $linkAttrs = $href === null ? '' : ' href="' . $e($href) . '"'
+                . " data-gk-params='" . $e(json_encode($params)) . "'";
             $clickAttr = '';
             if (!empty($bopts['onclick'])) {
                 $js = preg_replace_callback('/\{(\w+)\}/', static function ($m) use ($row) {
@@ -902,8 +937,13 @@ class Table
             if ($hasText) {
                 // Icon + Text button
                 $cls = 'gk-btn gk-btn-icon-text gk-btn-text gk-btn-' . $color;
-                echo '<button type="button" class="' . $cls . '"' . $titleAttr . $clickAttr . $dataAttrs . '>'
-                   . $iconHtml . '<span>' . $e($bopts['text']) . '</span></button>';
+                if ($href !== null) {
+                    echo '<a class="' . $cls . '"' . $linkAttrs . $titleAttr . '>'
+                       . $iconHtml . '<span>' . $e($bopts['text']) . '</span></a>';
+                } else {
+                    echo '<button type="button" class="' . $cls . '"' . $titleAttr . $clickAttr . $dataAttrs . '>'
+                       . $iconHtml . '<span>' . $e($bopts['text']) . '</span></button>';
+                }
             } elseif ($iconHtml) {
                 // Icon-only button (sm) — same classes as JS renderBtnGroup
                 // aria-label only here. The icon+text branch above is named by
@@ -911,10 +951,42 @@ class Table
                 // which also breaks activating the control by speaking its
                 // visible name.
                 $cls = 'gk-btn gk-btn-icon-only gk-btn-text gk-btn-' . $color . ' gk-btn-sm';
-                echo '<button type="button" class="' . $cls . '"' . $ariaAttr . $titleAttr . $clickAttr . $dataAttrs . '>'
-                   . $iconHtml . '</button>';
+                if ($href !== null) {
+                    echo '<a class="' . $cls . '"' . $linkAttrs . $ariaAttr . $titleAttr . '>' . $iconHtml . '</a>';
+                } else {
+                    echo '<button type="button" class="' . $cls . '"' . $ariaAttr . $titleAttr . $clickAttr . $dataAttrs . '>'
+                       . $iconHtml . '</button>';
+                }
             }
         }
+    }
+
+    /**
+     * Is this a target we are willing to link to? A list of what is allowed,
+     * not of what is forbidden — a deny list loses. "java\tscript:" passed one:
+     * the browser strips control characters before reading the scheme, so it
+     * ran while the pattern saw no scheme at all. So: every character up to
+     * 0x20 goes first, then only a relative path, a fragment, a query, or a
+     * spelt-out http/https/mailto/tel is kept. A leading "//" is refused too —
+     * it leaves our own origin without naming a scheme.
+     *
+     * js/gridkit.js carries the same rule as _gkSafeTarget(); keep them in step.
+     */
+    private static function safeTarget(string $href): ?string
+    {
+        $rein = preg_replace('/[\x00-\x20]/', '', $href) ?? '';
+        if ($rein === '' || str_starts_with($rein, '//')) {
+            return null;
+        }
+        if (preg_match('~^(/|\./|\.\./|\?|\#)~', $rein) === 1) {
+            return $rein;
+        }
+        if (preg_match('~^(https?|mailto|tel):~i', $rein) === 1) {
+            return $rein;
+        }
+        // A bare word with no scheme and no slash is a relative path too
+        // ("edit", "users/7") — but anything with a colon in it is not.
+        return str_contains($rein, ':') ? null : $rein;
     }
 
     /** SVG icons for table buttons — delegated to GridKit\Icon since v1.17.0 */

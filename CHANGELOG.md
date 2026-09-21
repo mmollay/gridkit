@@ -7,6 +7,71 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.84.0] - 2026-09-21
+
+Sixth round of the SSI Panel's self-maintenance loop.
+
+### Added — a row button can be a real link
+
+`->button('open', ['icon' => 'visibility', 'href' => '/users/{id}'])` renders an
+`<a class="gk-btn …">` instead of a `<button>`. Middle click, "open in new tab"
+and the browser's status bar work again — twelve SSI Panel views navigate from a
+hand-written click listener on the table instead, where none of that works.
+
+`{field}` is replaced from the row and URL-encoded exactly as `rawurlencode()`
+does it, on both sides: `encodeURIComponent` leaves `!'()*` alone, so the client
+escapes those five itself, and a lone surrogate (which makes it throw) drops the
+link instead of taking the table down with it. `modal` and `onclick` keep what
+they had — adding `href` to such a button does nothing rather than silently
+replacing its behaviour.
+
+**What may be linked to is a list of what is allowed, not of what is forbidden.**
+A deny list loses: `java<TAB>script:` walked through one and the browser ran it,
+because it strips control characters before reading the scheme. So every
+character up to 0x20 goes first, and then only a relative path, a fragment, a
+query or a spelt-out http/https/mailto/tel is kept. A leading `//` is refused too
+— it leaves our own origin without naming a scheme. A row's own value can never
+become a scheme in the first place, because it is encoded.
+
+**A target with a `confirm` is not a link at all.** A middle click, a Ctrl-click
+and Enter each take the browser's native path, and a page whose JavaScript never
+loaded would follow the link without ever asking. Such a button keeps its target
+in `data-gk-href` and goes only after the question is answered — and it carries
+no `data-gk-action`, because going somewhere is not a row action.
+
+### Fixed — three ways a row button changed on the first sort
+
+Found by the parity harness while adding the above. All three are old:
+
+- The client dropped the row's own id from `data-gk-params`. The server has always
+  sent it "unless the caller mapped one itself", so after a sort an edit button
+  opened its modal as if it were a new record.
+- The client put `gk-btn-sm` on buttons with text, the server never did: every
+  labelled row button shrank on the first sort.
+- The client read only `class` for the colour, the server reads `color` first —
+  so a button declared the documented way turned grey on the first sort.
+
+### Fixed — a row value with an apostrophe broke out of its attribute
+
+`_gkEsc()` escaped `<`, `>` and `&` but not quotes, and every attribute the
+client writes is quoted. A row value holding an apostrophe closed
+`data-gk-params='…'`, and whatever followed became attributes of the element —
+`onmouseover` among them, executing on the first hover after a sort. The server
+has always escaped both quotes. The hole is older than this release, but the
+first fix above made it reachable from *every* row button rather than only from
+mapped parameters, which is how it was found.
+
+### Known differences that remain
+
+A parity run now reports 2–3 shapes per side and per case, down from as many as
+12 on the `buttons` case. Three of what is left are real and older than this
+release, and none of them is on the harness's benign list yet: a `label` column
+loses its colour on the first sort (the client's colour table is shorter than the
+server's and knows no `blue`, and it cannot read the `['color' => …, 'text' => …]`
+form at all), button icons lose `stroke-linecap` and `stroke-linejoin`, and a
+selectable row's checkbox loses its `value`.
+
+---
 ## [1.83.0] - 2026-09-21
 
 Fifth round of the SSI Panel's self-maintenance loop.

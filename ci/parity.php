@@ -63,6 +63,11 @@ for ($i = 1; $i <= 12; $i++) {
         'net'    => $i * 137.5,
         'count'  => $i * 3,
         'status' => ['active', 'inactive', 'draft'][$i % 3],
+        // The five characters where rawurlencode and encodeURIComponent disagree,
+        // plus a field that tries to be a scheme — both renderers have to agree
+        // on all of it, or a row button's link drifts on the first sort.
+        'slug'   => "a!b'c(d)e*f $i",
+        'link'   => $i === 1 ? 'javascript:alert(1)' : '/ok/' . $i,
     ];
 }
 
@@ -82,6 +87,10 @@ $cases = [
         ->button('edit', ['icon' => 'edit'])
         ->button('note', ['text' => 'Note'])
         ->button('del', ['icon' => 'delete', 'confirm' => true, 'onclick' => 'doDelete({id})']),
+    'links'      => static fn(Table $t): Table => $t
+        ->button('open', ['icon' => 'visibility', 'href' => '/artikel/{slug}'])
+        ->button('go', ['text' => 'Go', 'href' => '/x/{id}?q={slug}', 'confirm' => 'Sure?'])
+        ->button('raw', ['icon' => 'edit', 'href' => '{link}']),
     'selectable' => static fn(Table $t): Table => $t->selectable('id'),
     'filtered'   => static fn(Table $t): Table => $t
         ->column('status', 'Status', ['format' => 'label'])
