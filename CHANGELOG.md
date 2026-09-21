@@ -7,6 +7,63 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.83.0] - 2026-09-21
+
+Fifth round of the SSI Panel's self-maintenance loop.
+
+### Added — `GK.modal.show()` / `GK.modal.hide()` for a modal that is already on the page
+
+`GK.modal.open()` builds its overlay and fetches the body from a URL. For the far
+more common case — the overlay's markup already stands in the page — GridKit
+offered nothing but the CSS classes, so every page wrote opening, closing,
+Escape, the backdrop click, the focus trap and the focus hand-back itself. The
+SSI Panel alone had 83 such overlays: none with a dialog role, none with a focus
+trap, most hidden with an inline style. Keyboard and screen reader users ended up
+behind the overlay.
+
+```javascript
+GK.modal.show('#reg-overlay', { focus: '#reg-name', onClose: () => reload() });
+GK.modal.hide('#reg-overlay');   // or hide() for the topmost one
+```
+
+It brings the dialog role and a name (through `upgradeStatic`), `aria-modal`
+— set on the way in and taken off again on the way out, because it is only true
+while the dialog holds the focus — the focus trap, Escape through the one
+document listener including its deference to a confirm or an open list above it,
+the backdrop click, every close button that belongs to this overlay, and the
+focus handed back to whatever opened it, as long as the focus was still inside
+when it closed. An overlay it opened carries the class `gk-modal-open`: the hook
+for a page's own CSS that has to know whether a modal is up. Hiding uses the
+`hidden` attribute (`.gk-modal-overlay[hidden]{display:none}` is new — with the
+class in the selector, because the browser's own `[hidden]` rule loses against
+any author rule), so a page needs no CSS of its own; `show()` also clears an
+inline `display` the page may have left.
+
+What it refuses, rather than half-doing: an overlay `open()` built (that one
+belongs to `close()`, which has to remove it), and an overlay the page hides
+with a class of its own — `show()` cannot clear that, and a dialog nobody can
+see must not hold the focus. Both come back as `null`, the second with a console
+warning naming the overlay. `hide()` on a dynamic modal does what `close()` does.
+
+The `display:flex` rule deliberately stays on the bare class. Written as
+`.gk-modal-overlay:not([hidden])` it would outrank a consuming page's own hiding
+class — four modals on the SSI Panel's receipts page (`.bl-hidden`) would have
+torn open the moment this shipped.
+
+`close()` now asks whether an overlay is a static one before removing it — the
+one change to an existing path. An overlay that belongs to the page is hidden,
+never taken out of the DOM, or the first Escape would have made it unopenable.
+Overlays built by `open()` are untouched.
+
+Sixteen cases in `ci/browser.js` cover it in a real browser: opening, the trap,
+Escape with the overlay surviving, opening again, the close button, the backdrop,
+a `GK.confirm` on top answering Escape for itself while the modal stays, a modal
+inside a modal, a dynamic one stacked over a static one, `onClose` running
+exactly once, and both refusals. Every one of them was checked by breaking the
+code it covers on purpose. Two guards are deliberately NOT covered — removing
+either changes nothing a user could see, because a second guard catches it.
+
+---
 ## [1.82.0] - 2026-09-21
 
 Fourth round of the SSI Panel's self-maintenance loop.

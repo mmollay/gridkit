@@ -210,7 +210,11 @@
         // would both point aria-labelledby at whichever came first.
         var titleId = "gk-modal-title-" + (this._seq = (this._seq || 0) + 1);
         var ov = document.createElement("div");
-        ov.className = "gk-modal-overlay";
+        // gk-modal-open marks an overlay that is on screen — the one hook a
+        // page's own CSS can use ("is a modal open?") whichever way the overlay
+        // is hidden. A dynamic overlay exists only while it is open.
+        ov.className = "gk-modal-overlay gk-modal-open";
+        ov._gkDynamic = true;   // show() must refuse one of ours: close() has to remove it
         ov.style.zIndex = 9000 + this.stack.length * 10;
         ov.innerHTML =
           // role and aria-modal: without them this is a div lying on top of
@@ -360,12 +364,134 @@
       close() {
         if (!this.stack.length) return;
         var ov = this.stack.pop();
+        // A static overlay belongs to the page, not to us. Taking it out of the
+        // DOM — which is right for one we built ourselves — would mean it never
+        // opens again; hide it instead.
+        if (ov._gkStatic) return this._hideStatic(ov);
         var opener = ov._gkOpener;
         ov.remove();
         _gkRestoreFocus(opener);
       },
       closeAll() {
         while (this.stack.length) this.close();
+      },
+
+      /*
+       * A modal whose markup already stands on the page. open() builds its
+       * overlay and removes it again; show() only switches one that is already
+       * there — two jobs, two methods, so neither has to guess. Pages used to
+       * write this themselves: the SSI Panel alone had 83 overlays, none with a
+       * dialog role or a focus trap, most of them hidden with an inline style.
+       *
+       *   GK.modal.show('#reg-overlay', { focus: '#reg-name', onClose: fn })
+       *   GK.modal.hide('#reg-overlay')   // or hide() for the topmost one
+       *
+       * What comes with it: the dialog role and a name (upgradeStatic), the
+       * focus trap, Escape through the one document listener — including its
+       * deference to a confirm or an open list above it — the backdrop click,
+       * every close button inside, and the focus handed back to whatever opened
+       * it. Hiding uses the hidden attribute, so the page needs no CSS of its own.
+       */
+      show(target, opts) {
+        var ov = typeof target === "string" ? document.querySelector(target) : target;
+        if (!ov || !ov.classList || !ov.classList.contains("gk-modal-overlay")) return null;
+        // One we built ourselves belongs to close(), which has to REMOVE it.
+        // Marking it static would leave it hidden in the DOM for good.
+        if (ov._gkDynamic) return null;
+        opts = opts || {};
+        var offen = ov.classList.contains("gk-modal-open");
+        // Without the stack the document's Escape listener ignores it (it asks
+        // "is anything open?" first), and a second show() would stack it twice.
+        if (this.stack.indexOf(ov) === -1) this.stack.push(ov);
+        ov._gkStatic = true;
+        ov._gkOnClose = typeof opts.onClose === "function" ? opts.onClose : null;
+        if (!offen) {
+          // Only on the way in, and never something inside the dialog: a second
+          // show() while it is open would make a field in it "what opened it".
+          var active = document.activeElement;
+          ov._gkOpener = active && active !== document.body && !ov.contains(active) ? active : null;
+        }
+        this.upgradeStatic(ov);
+        var box = ov.querySelector(".gk-modal");
+        // aria-modal only here, never in upgradeStatic: it declares the rest of
+        // the page out of bounds, which is only true while the dialog holds the
+        // focus. An overlay that upgradeStatic merely named does not. Taken off
+        // again in _hideStatic.
+        if (box) box.setAttribute("aria-modal", "true");
+        // Guards against stacking listeners on every show(). Note for whoever
+        // changes this: removing the guard is NOT visible in behaviour — hide()
+        // is idempotent and the trap does the same thing twice — so no browser
+        // case can catch it. It is a leak, not a bug in what the user sees.
+        if (!ov._gkStaticBound) {
+          ov._gkStaticBound = true;
+          ov.addEventListener("keydown", this._trap.bind(this, ov));
+          ov.addEventListener("click", function (e) {
+            var t = e.target;
+            if (t === ov) return GK.modal.hide(ov);              // the backdrop
+            var hit = t.closest && t.closest(".gk-modal-close, [data-gk-modal-close]");
+            // Only a close button of THIS overlay: a modal inside a modal, or a
+            // page button that happens to carry the class, must not close it.
+            if (hit && hit.closest(".gk-modal-overlay") === ov) GK.modal.hide(ov);
+          });
+        }
+        ov.removeAttribute("hidden");
+        ov.style.display = "";   // pages hid it with an inline style; CSS alone cannot beat that
+        ov.classList.add("gk-modal-open");
+        // Same ladder open() uses, so the stack order is the order on screen —
+        // a dynamic modal opened over this one has to lie in front of it.
+        ov.style.zIndex = 9000 + (this.stack.length - 1) * 10;
+        // A page may hide its overlay with a class of its own, which none of the
+        // above clears. Trapping the focus in something nobody can see leaves
+        // the next Escape answering a dialog the user cannot even find.
+        var sichtbar = typeof ov.checkVisibility === "function"
+          ? ov.checkVisibility()
+          : getComputedStyle(ov).display !== "none";
+        if (!sichtbar) {
+          this.hide(ov);
+          if (window.console) {
+            console.warn("GK.modal.show: " + (ov.id ? "#" + ov.id : "the overlay") +
+              " stays invisible — a class of the page's own is hiding it. Remove it, or hide the modal with the hidden attribute.");
+          }
+          return null;
+        }
+        var first = opts.focus
+          ? typeof opts.focus === "string" ? ov.querySelector(opts.focus) : opts.focus
+          : null;
+        if (first && first.focus) {
+          try { first.focus({ preventScroll: true }); } catch (e) { first.focus(); }
+        } else {
+          this._focusInto(ov);
+        }
+        return ov;
+      },
+
+      /** Close a static modal. Without an argument: the topmost open one. */
+      hide(target) {
+        var ov = target
+          ? typeof target === "string" ? document.querySelector(target) : target
+          : this.stack[this.stack.length - 1];
+        if (!ov || !ov.classList) return;
+        // hide() on one of ours means close(): it has to leave the DOM.
+        if (!ov._gkStatic) return this.close();
+        var i = this.stack.indexOf(ov);
+        // Nothing to close — and nothing to announce. onClose used to run on
+        // every call, so a second way out fired the page's reload twice.
+        if (i === -1 && !ov.classList.contains("gk-modal-open")) return;
+        if (i > -1) this.stack.splice(i, 1);
+        this._hideStatic(ov);
+      },
+
+      _hideStatic(ov) {
+        ov.classList.remove("gk-modal-open");
+        ov.setAttribute("hidden", "hidden");
+        var box = ov.querySelector(".gk-modal");
+        if (box) box.removeAttribute("aria-modal");   // only true while it holds the focus
+        // Only when the focus is actually in here: closing a modal underneath an
+        // open one would otherwise pull the caret out behind the open dialog.
+        if (ov.contains(document.activeElement)) _gkRestoreFocus(ov._gkOpener);
+        var cb = ov._gkOnClose;
+        ov._gkOnClose = null;   // one close, one call
+        if (typeof cb === "function") cb();
       },
     },
 

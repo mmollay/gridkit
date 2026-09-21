@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.82.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.83.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -1051,6 +1051,23 @@ GK.toast.info('Nothing to do here yet.');
 GK.modal.open('Title', 'forms/edit.php', { id: 42 }, 'medium');
 GK.modal.close();
 
+// A modal whose markup already stands on the page (since 1.83.0). show() only
+// switches one that is already there; open() builds and removes its own.
+// It brings the dialog role and a name, aria-modal, the focus trap, Escape,
+// the backdrop click, every close button inside, and gives the focus back to
+// whatever opened it. Hidden state is the hidden attribute, so you need no CSS.
+GK.modal.show('#reg-overlay', {
+  focus: '#reg-name',            // optional: where the caret goes (default: first control)
+  onClose: () => reload(),       // optional: runs after it closes, however it closed
+});
+GK.modal.hide('#reg-overlay');   // or hide() for the topmost modal, whichever kind
+// While one is open its overlay carries the class gk-modal-open — the hook for
+// a page's own CSS that has to know whether a modal is up.
+// show() returns null and leaves the overlay alone when it cannot own it: one
+// that open() built, or one the page hides with a class of its own (it clears
+// the hidden attribute and an inline display, nothing else). Do not hide a
+// modal you hand to show() with a class — use the hidden attribute.
+
 // Table refresh (after save/delete in server-side mode).
 // Returns false when no table with that id is on the page.
 GK.table.refresh('table-id');
@@ -1578,8 +1595,9 @@ layout, typography, or semantic colors. **Spacing scale: 0/1/2/3/4/5/6 = 0/4/8/1
 2. **Missing `Lang::jsConfig()`** — "no_entries" shows as raw key. Must be in `<head>` before `gridkit.js`.
 3. **Wrong button classes** — Use `gk-btn-filled` not `gk-btn--filled` (no double dash).
 4. **Wrong toast API** — Use `GK.toast.success()` not `GK.toast()`.
-5. **Wrong modal API** — the signature is `GK.modal.open(title, url, params, size)`. It
-   POSTs to `url` and puts the response in the body. It does NOT take an HTML string: pass
-   markup and the browser requests it as a path, so the modal fills with the server's 404
-   page. For inline HTML use the static inline modal above.
+5. **Wrong modal API** — two methods, two jobs. `GK.modal.open(title, url, params, size)`
+   builds its own overlay and POSTs to `url` to fill the body; it does NOT take an HTML
+   string, so passing markup makes the browser request it as a path and the modal fills
+   with the server's 404 page. For an overlay whose markup is already on the page, use
+   `GK.modal.show('#id')` / `GK.modal.hide('#id')` — never `open()`.
 6. **Direct project edits** — Always change GridKit at its own source, never inside a consuming project.

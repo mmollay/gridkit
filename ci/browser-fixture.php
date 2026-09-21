@@ -80,5 +80,25 @@ echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>GridKit 
    . '<div class="my-head"><h4>Move</h4><button class="gk-btn gk-modal-close">Cancel</button></div></div></div>'
    // No heading at all: it must stay the neutral div it was.
    . '<div class="gk-modal-overlay" id="static-bare" style="display:none"><div class="gk-modal"><p>…</p></div></div>'
+   // A hand-written modal the way the SSI Panel writes them — hidden with an
+   // inline style, opened from a button — for GK.modal.show()/hide().
+   . '<button id="open-static">Edit</button>'
+   . '<div class="gk-modal-overlay" id="static-show" style="display:none"><div class="gk-modal">'
+   . '<div class="gk-modal-header"><h3 class="gk-modal-title">Registrar</h3>'
+   . '<button class="gk-modal-close">&times;</button></div>'
+   . '<div class="gk-modal-body"><input id="reg-name" type="text"><button id="reg-save">Save</button>'
+   // A modal inside a modal: its close button must close the INNER one only.
+   . '<div class="gk-modal-overlay" id="inner-show" hidden><div class="gk-modal">'
+   . '<div class="gk-modal-header"><h3 class="gk-modal-title">Sure?</h3>'
+   . '<button class="gk-modal-close" id="inner-close">&times;</button></div>'
+   . '<div class="gk-modal-body"><button id="inner-ok">Yes</button></div>'
+   . '</div></div>'
+   . '</div>'
+   . '</div></div>'
+   // An overlay a page hides with a class of its own — show() cannot clear that
+   // and must refuse rather than trap the focus in something nobody can see.
+   . '<style>.seiten-versteck{display:none}</style>'
+   . '<div class="gk-modal-overlay seiten-versteck" id="klassen-versteck"><div class="gk-modal">'
+   . '<div class="gk-modal-header"><h3 class="gk-modal-title">Hidden</h3></div></div></div>'
    . '<template id="form">' . $form . '</template>'
    . '<script>' . file_get_contents($root . '/js/gridkit.js') . '</script></body></html>';

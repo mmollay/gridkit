@@ -122,6 +122,197 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
       own.role === "dialog" && own.by && own.by === own.h && own.close === null);
     check("static modal without any heading: left alone rather than announced as a nameless dialog", own.bareRole === null);
 
+    // An overlay marked up with hidden must be invisible on its own — display:flex
+    // on the bare class beat the browser's [hidden] until 1.83.0, and a page that
+    // switched to hidden showed its modal full-screen over everything.
+    const versteckt = await page.evaluate(() => {
+      const d = document.createElement("div");
+      d.className = "gk-modal-overlay";
+      d.hidden = true;
+      d.innerHTML = '<div class="gk-modal">x</div>';
+      document.body.appendChild(d);
+      const sichtbar = d.checkVisibility();
+      d.remove();
+      return sichtbar;
+    });
+    check("an overlay with the hidden attribute is invisible without any JavaScript", versteckt === false);
+
+    // ── A modal that already stands on the page: GK.modal.show() / hide() ──
+    const stat = () => page.evaluate(() => {
+      const ov = document.getElementById("static-show");
+      const box = ov.querySelector(".gk-modal");
+      const cs = getComputedStyle(ov);
+      return {
+        da: ov.isConnected,                       // still in the DOM at all
+        sichtbar: cs.display !== "none" && !ov.hasAttribute("hidden"),
+        offen: ov.classList.contains("gk-modal-open"),
+        role: box.getAttribute("role"),
+        modal: box.getAttribute("aria-modal"),
+        fokus: document.activeElement ? document.activeElement.id || document.activeElement.className : null,
+        stack: GK.modal.stack.length,
+      };
+    });
+    await page.evaluate(() => { while (GK.modal.stack.length) GK.modal.close(); });
+    await page.evaluate(() => {
+      document.getElementById("open-static").onclick = () =>
+        GK.modal.show("#static-show", { focus: "#reg-name", onClose: () => (window.__zu = (window.__zu || 0) + 1) });
+    });
+    await page.click("#open-static");
+    const auf = await stat();
+    check("show(): the overlay on the page opens, gets the dialog role, aria-modal and the focus you asked for",
+      auf.sichtbar && auf.offen && auf.role === "dialog" && auf.modal === "true" && auf.fokus === "reg-name" && auf.stack === 1);
+
+    // The focus trap: Tab from the last control goes back to the first.
+    await page.focus("#reg-save");
+    await page.keyboard.press("Tab");
+    const gefangen = await page.evaluate(() => document.activeElement.closest("#static-show") !== null);
+    check("show(): the focus stays inside the dialog", gefangen);
+
+    // Escape closes it — and the overlay must SURVIVE, or it never opens again.
+    await page.keyboard.press("Escape");
+    const zu = await stat();
+    const zaehler = await page.evaluate(() => window.__zu || 0);
+    check("Escape closes it, the overlay stays in the DOM, onClose runs and the focus goes back to the button",
+      zu.da && !zu.sichtbar && !zu.offen && zu.stack === 0 && zaehler === 1 && zu.fokus === "open-static");
+    // aria-modal says the rest of the page is out of bounds — only true while
+    // the dialog is up. Left behind, a closed overlay keeps claiming it.
+    check("… and aria-modal is taken off again", zu.modal === null);
+
+    await page.click("#open-static");
+    check("… and it opens a second time (a static overlay is never removed)", (await stat()).sichtbar);
+
+    // The close button inside needs no onclick of the page's own.
+    await page.click("#static-show .gk-modal-close");
+    check("the close button inside closes it without the page wiring anything", !(await stat()).sichtbar);
+
+    await page.click("#open-static");
+    await page.mouse.click(5, 5);   // backdrop
+    check("a click on the backdrop closes it", !(await stat()).sichtbar);
+
+    // A confirm over the static modal: Escape answers the confirm, the modal stays.
+    await page.click("#open-static");
+    // No return value: GK.confirm hands back a promise that only settles when
+    // someone answers, and evaluate() would wait for it forever.
+    await page.evaluate(() => { GK.confirm("Delete?", () => {}); });
+    await page.waitForSelector(".gk-confirm-overlay");
+    await page.keyboard.press("Escape");
+    const danach = await stat();
+    check("a confirm over it: Escape answers the confirm, the modal underneath stays open",
+      danach.sichtbar && (await page.evaluate(() => !document.querySelector(".gk-confirm-overlay"))));
+    await page.keyboard.press("Escape");
+    check("… and the next Escape closes the modal itself", !(await stat()).sichtbar);
+
+    // One close, one onClose — however it was closed.
+    await page.evaluate(() => { window.__zu = 0; });
+    await page.click("#open-static");
+    await page.click("#static-show .gk-modal-close");
+    await page.click("#static-show .gk-modal-close").catch(() => {});   // already hidden: must do nothing
+    await page.evaluate(() => GK.modal.hide("#static-show"));
+    check("onClose runs exactly once per close, not on every call",
+      (await page.evaluate(() => window.__zu)) === 1);
+
+    // Twice show() without hide(): one entry, not two — or the second Escape
+    // would answer a modal that is already closed.
+    await page.click("#open-static");
+    await page.evaluate(() => GK.modal.show("#static-show"));
+    const doppelt = await page.evaluate(() => GK.modal.stack.length);
+    await page.keyboard.press("Escape");
+    check("show() twice leaves one entry, and one Escape closes it",
+      doppelt === 1 && !(await stat()).sichtbar && (await page.evaluate(() => GK.modal.stack.length)) === 0);
+
+    // hide() on an overlay that was never shown must leave it alone: marking it
+    // hidden would make a modal the page opens itself invisible from then on.
+    const unberuehrt = await page.evaluate(() => {
+      const ov = document.getElementById("static-bare");
+      GK.modal.hide("#static-bare");
+      return { hidden: ov.hasAttribute("hidden"), stack: GK.modal.stack.length };
+    });
+    check("hide() on an overlay that was never opened changes nothing",
+      !unberuehrt.hidden && unberuehrt.stack === 0);
+
+    // show() must refuse an overlay GK.modal built itself: marking it static
+    // would leave close() hiding it instead of removing it — forever in the DOM.
+    await openModal();
+    const fremd = await page.evaluate(() => {
+      const dyn = GK.modal.stack[GK.modal.stack.length - 1];
+      const zurueck = GK.modal.show(dyn);
+      return { abgewiesen: zurueck === null, tiefe: GK.modal.stack.length };
+    });
+    await page.evaluate(() => GK.modal.close());
+    const weg = await page.evaluate(() => !document.querySelector(".gk-modal-overlay:not([id])"));
+    check("show() refuses a modal GK.modal built itself, and close() still removes it",
+      fremd.abgewiesen && fremd.tiefe === 1 && weg);
+
+    // A modal inside a modal: closing the inner one must not take the outer with
+    // it. The click handler sits on the outer overlay, so it has to ask which
+    // overlay the close button it found actually belongs to.
+    await page.click("#open-static");
+    await page.evaluate(() => GK.modal.show("#inner-show"));
+    await page.click("#inner-close");
+    const innen = await page.evaluate(() => ({
+      innenZu: document.getElementById("inner-show").hasAttribute("hidden"),
+      aussenOffen: document.getElementById("static-show").classList.contains("gk-modal-open"),
+      stack: GK.modal.stack.length,
+    }));
+    check("a modal inside a modal: its close button closes the inner one only",
+      innen.innenZu && innen.aussenOffen && innen.stack === 1);
+    await page.keyboard.press("Escape");
+
+    // A page that hides its overlay with a class of its own: show() clears the
+    // hidden attribute and the inline style, but not that. Opening it anyway
+    // would trap the focus in something nobody can see and let the next Escape
+    // answer a dialog the user cannot find.
+    const warnungen = [];
+    page.on("console", (m) => { if (m.type() === "warning") warnungen.push(m.text()); });
+    const versteckt2 = await page.evaluate(() => {
+      const zurueck = GK.modal.show("#klassen-versteck");
+      const ov = document.getElementById("klassen-versteck");
+      return { abgewiesen: zurueck === null, stack: GK.modal.stack.length,
+               offen: ov.classList.contains("gk-modal-open"), hidden: ov.hasAttribute("hidden") };
+    });
+    check("show() refuses an overlay the page hides with a class of its own, and says why",
+      versteckt2.abgewiesen && versteckt2.stack === 0 && !versteckt2.offen && versteckt2.hidden
+      && warnungen.some((w) => w.indexOf("klassen-versteck") > -1));
+
+    // A dynamic modal opened over a static one: in front of it, and each closes
+    // on its own. hide() on the one underneath must not pull the focus out of
+    // the one on top, and close() must still REMOVE the dynamic overlay.
+    await page.click("#open-static");
+    // Not openModal(): that one empties the stack first, and the static modal
+    // has to stay open underneath.
+    await page.evaluate(() => {
+      const html = document.getElementById("form").innerHTML;
+      window.fetch = () => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(html) });
+      GK.modal.open("Test", "/x", {}, "medium");
+    });
+    await page.waitForSelector(".gk-modal-overlay [data-gk-ajax-select]");
+    const gemischt = await page.evaluate(() => {
+      const st = document.getElementById("static-show");
+      const dyn = GK.modal.stack[GK.modal.stack.length - 1];
+      return { tiefe: GK.modal.stack.length, obenIstDyn: dyn !== st,
+               davor: parseInt(getComputedStyle(dyn).zIndex, 10) > parseInt(getComputedStyle(st).zIndex, 10) };
+    });
+    check("a dynamic modal over a static one lies in front of it", gemischt.tiefe === 2 && gemischt.obenIstDyn && gemischt.davor);
+    await page.evaluate(() => GK.modal.hide("#static-show"));
+    const nachUnten = await page.evaluate(() => {
+      const dyn = GK.modal.stack[GK.modal.stack.length - 1];
+      return { tiefe: GK.modal.stack.length, fokusOben: dyn.contains(document.activeElement),
+               untenZu: document.getElementById("static-show").hasAttribute("hidden") };
+    });
+    check("closing the one underneath leaves the focus in the one on top",
+      nachUnten.tiefe === 1 && nachUnten.fokusOben && nachUnten.untenZu);
+    // … and the stack really holds the DYNAMIC one now. Taking the top off
+    // instead of the one that closed leaves the wrong overlay behind, and the
+    // next Escape then answers a modal that is already shut.
+    await page.keyboard.press("Escape");
+    check("… and the next Escape closes the one that is still open",
+      (await page.evaluate(() => GK.modal.stack.length === 0 && !document.querySelector(".gk-modal-overlay:not([id])"))));
+    // hide() with no argument, with a dynamic modal on top: it must be REMOVED,
+    // not hidden — a hidden one would sit in the DOM with its listeners for good.
+    await page.evaluate(() => GK.modal.hide());
+    check("hide() on a dynamic modal removes it like close() does",
+      (await page.evaluate(() => GK.modal.stack.length === 0 && !document.querySelector(".gk-modal-overlay:not([id])"))));
+
     // ── A header stands where its column stands — before and after a rebuild ──
     const heads = () => page.evaluate(() => {
       const out = {};

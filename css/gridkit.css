@@ -2598,6 +2598,19 @@ select.gk-input {
 }
 
 /* === MODAL === */
+/* GK.modal.hide() hides a static overlay this way, so a page needs no CSS of
+   its own for it. It needs the class in the selector: the browser's own
+   [hidden]{display:none} loses against any author rule, so display:flex below
+   would show it anyway — that is how a page marked up with hidden came out
+   fully visible under GridKit 1.82.0.
+   Deliberately NOT .gk-modal-overlay:not([hidden]) for the display:flex rule:
+   that would outrank a consuming page's own hiding class (.bl-hidden and the
+   like, four of them on the SSI Panel's receipts page) and tear their modals
+   open. An inline display still beats all of this, which is why show() clears
+   the inline style instead of trusting the stylesheet. */
+.gk-modal-overlay[hidden] {
+  display: none;
+}
 .gk-modal-overlay {
   position: fixed;
   inset: 0;

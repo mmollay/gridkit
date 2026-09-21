@@ -385,6 +385,32 @@ return [
     T::contains($js, 'GK.modal.upgradeStatic(e.target || document);', 'a live reload does not upgrade static modals');
 },
 
+'a modal already on the page is opened and closed, never removed' => function (): void {
+    // Pages wrote open/close, Escape, the backdrop click and the focus by hand —
+    // the SSI Panel alone had 83 such overlays, none with a focus trap. show()
+    // and hide() do it; the overlay belongs to the page and must survive.
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    // Only what a browser cannot show: that the three methods exist at all, and
+    // that the CSS carries both halves of the hidden rule. Everything about
+    // BEHAVIOUR is checked in ci/browser.js — a string match here goes green on
+    // inverted logic and red on a rewrite that changes nothing.
+    T::ok(str_contains($js, 'show(target, opts) {'), 'GK.modal.show was not found');
+    T::ok(str_contains($js, 'hide(target) {'), 'GK.modal.hide was not found');
+    T::ok(str_contains($js, '_hideStatic(ov) {'), 'GK.modal._hideStatic was not found');
+    // The class is the documented hook for a page's "is a modal open?" CSS —
+    // other systems' stylesheets depend on the exact name.
+    T::contains($js, 'gk-modal-open', 'the open marker is gone');
+    $css = (string) file_get_contents(__DIR__ . '/../css/gridkit.css');
+    T::contains($css, '.gk-modal-overlay[hidden]', 'hidden does not hide the overlay');
+    // The class has to be in that selector: the browser's own [hidden] rule
+    // loses against any author rule, and /domains/registrars came out unusable
+    // on 21.09.2026 because of it. But the display:flex rule must stay on the
+    // BARE class — with :not([hidden]) it would outrank a consuming page's own
+    // hiding class and tear four modals open on the Panel's receipts page.
+    T::ok(!preg_match('/^\.gk-modal-overlay:not\(\[hidden\]\)/m', $css), 'display:flex outranks a page own hiding class');
+    T::ok((bool) preg_match('/\.gk-modal-overlay \{[^}]*display:\s*flex/s', $css), 'display:flex left the bare class');
+},
+
 'AJAX navigation brings the page\'s own styles along' => function (): void {
     // It swapped the content and the title. A page linking a stylesheet of its
     // own in <head> arrived unstyled when reached through the sidebar — and fine
