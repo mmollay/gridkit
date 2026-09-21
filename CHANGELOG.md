@@ -7,6 +7,49 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.87.0] - 2026-09-21
+
+Ninth round of the SSI Panel's self-maintenance loop.
+
+### Added — a column can link its value and carry a second line
+
+```php
+->column('name', 'Customer', ['href' => '/customers/{id}', 'sub' => 'city'])
+```
+
+The two commonest cell shapes — "a name that links somewhere" and "a name with a
+quiet line under it" — could not be expressed at all. Such a cell is built as a
+concatenated HTML string with its own escaping and passed through as
+`'format' => 'html'`: a column that is then neither sortable nor searchable
+without a second key, and an escaping decision made by hand every time. The SSI
+Panel has 62 of those `'html'` columns; about a dozen of them are the two shapes
+here, the rest are chips, progress bars and conditional colour, which this does
+not touch.
+
+`href` wraps the formatted value in `<a class="gk-cell-link">` — `{field}` from
+the row, URL-encoded, with the same allow list of targets as a row button, so a
+value can never become a scheme. An empty value gets no link: a link with no
+text cannot be reached by keyboard and reads as nothing. `sub` names a second
+field and renders it as text under the value, always text whatever the cell's
+format is, and left out when empty. A column named in `search()` searches its
+second line as well — a row has to be findable by the text standing right there
+under its name.
+
+Both keep the raw value, so sorting and searching keep working.
+
+What it is not: `{field}` is a path segment, never a whole target — a stored
+`https://…` cannot be linked this way, because the scheme has to be in the
+template. There is no `target`. `sub` truncates with an ellipsis and carries no
+`title`. And `href` together with `'format' => 'html'` is refused with a warning
+rather than nesting one anchor inside another — the caller's own links would
+take the visible text away from the safe one.
+
+Three older differences between the two renderers came out while testing this:
+a boolean row value rendered as "true"/"false" in the browser and "1"/"" on the
+server, the client wrote the cell classes in a different order, and it never
+wrote `gk-td-muted` at all — so a muted column changed colour on the first sort.
+
+---
 ## [1.86.0] - 2026-09-21
 
 Eighth round of the SSI Panel's self-maintenance loop.

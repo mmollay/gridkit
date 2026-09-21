@@ -89,6 +89,28 @@ class Table
         return $this;
     }
 
+    /**
+     * Every column a search should look at: the ones named, plus the second-line
+     * field of each of them. Without it a row could not be found by the text
+     * standing right there under its name.
+     *
+     * Only for the client-side search of a setData() table, where a missing field
+     * is simply never matched. The SQL path does NOT use this — see buildWhere().
+     *
+     * @param  list<string> $cols
+     * @return list<string>
+     */
+    private function withSubColumns(array $cols): array
+    {
+        foreach ($this->columns as $key => $col) {
+            if (isset($col['sub']) && in_array($key, $cols, true) && !in_array($col['sub'], $cols, true)) {
+                $cols[] = $col['sub'];
+            }
+        }
+
+        return $cols;
+    }
+
     public function searchable(bool $enabled): static
     {
         if (!$enabled) $this->searchCols = [];
@@ -274,6 +296,12 @@ class Table
 
         if ($this->searchQuery !== '' && $this->searchCols) {
             $clauses = [];
+            // NOT withSubColumns() here: this builds SQL, and a second-line field
+            // is a display option — it may well be computed, or come from a
+            // second query. Binding it would put a name into `…` that the derived
+            // table does not have, and the page would die on the first keystroke
+            // in the search box. In a query() table, name the field in search()
+            // yourself if it should be searched.
             foreach ($this->searchCols as $col) {
                 $clauses[] = "`$col` LIKE ?";
                 $params[]  = '%' . $this->searchQuery . '%';
@@ -436,7 +464,7 @@ class Table
                 // fell back to every rendered column, so a declared search key
                 // that is not itself a column was silently never searched —
                 // and the markup of an HTML column matched instead.
-                'search'  => array_values($this->searchCols),
+                'search'  => array_values($this->withSubColumns($this->searchCols)),
                 // nowrap() and footer(), so the client-side rebuild keeps both — it
                 // used to write a bare <table class="gk-table"> without a <tfoot>.
                 'nowrap'  => $this->globalNowrap,
@@ -690,7 +718,7 @@ class Table
                 $tdStyle = $tdStyles ? ' style="' . implode(';', $tdStyles) . '"' : '';
                 $tdClass = $tdCls ? ' class="' . implode(' ', $tdCls) . '"' : '';
                 $dataLabel = ' data-label="' . $e($col['label']) . '"';
-                $formatted = $this->format($val, $col);
+                $formatted = $this->cellContent($val, $col, $row, $e);
                 echo "<td{$tdClass}{$tdStyle}{$dataLabel}>{$formatted}</td>";
             }
             if ($rightButtons) {
@@ -1045,6 +1073,59 @@ class Table
                 Lang::t('format.decimal'), Lang::t('format.thousands'))
             : (string) $val;
         return '<span class="gk-num">' . htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</span>';
+    }
+
+    /**
+     * What goes inside a cell: the formatted value, optionally wrapped in a link,
+     * optionally followed by a second line.
+     *
+     * Two patterns the SSI Panel wrote by hand 62 times across 17 views — "a name
+     * that links somewhere" and "a name with a quiet second line under it" — each
+     * time as a concatenated HTML string with its own escaping, passed through as
+     * 'format' => 'html'. Such a column is neither searchable nor sortable without
+     * a second key, and every one of those strings is an escaping decision made
+     * again.
+     *
+     *     ->column('name', 'Customer', ['href' => '/customers/{id}', 'sub' => 'city'])
+     *
+     * The raw value stays what it was, so search and sort keep working.
+     */
+    private function cellContent(mixed $val, array $col, array $row, \Closure $e): string
+    {
+        $inhalt = $this->format($val, $col);
+        // What the cell SHOWS decides, not the raw value: a number column with
+        // blankZero renders an em dash for 0, and a link whose whole name is a
+        // dash is a focus stop that says nothing.
+        $sichtbar = trim(strip_tags($inhalt)) !== '' && trim(strip_tags($inhalt)) !== '—';
+
+        if (isset($col['href']) && (string) $col['href'] !== '' && $sichtbar) {
+            $ziel = self::safeTarget(preg_replace_callback(
+                '/\{(\w+)\}/',
+                static fn (array $m): string => rawurlencode((string) ($row[$m[1]] ?? '')),
+                (string) $col['href']
+            ));
+            // 'html' means the caller writes the markup — including any links in
+            // it. Wrapping that in another <a> produces nested anchors: the
+            // browser closes the outer one at the inner, and the safe link keeps
+            // only the text before it while the rest belongs to a foreign target.
+            if (($col['format'] ?? '') === 'html') {
+                $ziel = null;
+                trigger_error("GridKit: a column cannot have both 'href' and 'format' => 'html' — the link was left out.", E_USER_WARNING);
+            }
+            if ($ziel !== null) {
+                $inhalt = '<a href="' . $e($ziel) . '" class="gk-cell-link">' . $inhalt . '</a>';
+            }
+        }
+
+        if (isset($col['sub'])) {
+            // Always text, never markup, whatever the main cell's format is.
+            $unter = trim((string) ($row[$col['sub']] ?? ''));
+            if ($unter !== '') {
+                $inhalt .= '<div class="gk-cell-sub">' . $e($unter) . '</div>';
+            }
+        }
+
+        return $inhalt;
     }
 
     private function format(mixed $val, array $col): string

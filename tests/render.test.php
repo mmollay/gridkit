@@ -235,6 +235,62 @@ return [
     T::contains($js, 'thAlignClass(col)', 'the client-side rebuild does not align its headers');
 },
 
+'a column can link its value and carry a second line' => function (): void {
+    // "A name that links somewhere" and "a name with a quiet line under it" were
+    // written by hand 62 times across 17 SSI Panel views — each one a string
+    // concatenation with its own escaping, passed through as 'format' => 'html',
+    // which makes the column neither searchable nor sortable.
+    Lang::set('en');
+    $zelle = static function (array $opt, array $row = []): string {
+        $html = T::capture(fn () => (new Table('t'))
+            ->setData([$row + ['id' => 7, 'name' => 'Meier GmbH', 'ort' => 'Wien', 'link' => 'javascript:alert(1)']])
+            ->column('name', 'Kunde', $opt)->render());
+        return preg_match('~<td[^>]*data-label="Kunde"[^>]*>(.*?)</td>~s', $html, $m) ? trim($m[1]) : 'KEINE ZELLE';
+    };
+
+    T::eq($zelle(['href' => '/customers/{id}']), '<a href="/customers/7" class="gk-cell-link">Meier GmbH</a>',
+        'href does not wrap the value in a link');
+    T::contains($zelle(['sub' => 'ort']), '<div class="gk-cell-sub">Wien</div>', 'sub does not render a second line');
+    // An empty value gets no link: a link with no text cannot be reached by
+    // keyboard and reads as nothing at all.
+    T::ok(!str_contains($zelle(['href' => '/c/{id}'], ['name' => '']), '<a '), 'an empty cell was linked anyway');
+    // An empty second line is left out rather than rendered empty.
+    T::ok(!str_contains($zelle(['sub' => 'fehlt']), 'gk-cell-sub'), 'an empty second line is rendered anyway');
+    // The second line is always text, whatever the main cell's format is.
+    T::contains($zelle(['format' => 'html', 'sub' => 'ort'], ['ort' => '<b>x</b>']), '&lt;b&gt;x&lt;/b&gt;',
+        'the second line is rendered as markup');
+    // Same guard as the row button: a value cannot become a scheme.
+    T::ok(!str_contains($zelle(['href' => '{link}']), 'href="javascript:'), 'a javascript: value came through');
+    T::ok(!str_contains($zelle(['href' => "java\tscript:x{id}"]), '<a '), 'a tab-disguised scheme was linked');
+
+    // The template is developer code and is NOT encoded — so it has to be
+    // escaped, or an & in a query string becomes an entity. Only visible in the
+    // raw HTML: a browser normalises it away before any DOM check could see it.
+    T::contains($zelle(['href' => '/c/{id}?a=1&b=2']), 'href="/c/7?a=1&amp;b=2"', 'the template is written into the attribute unescaped');
+
+    // 'html' means the caller writes the markup, links included. Wrapping that in
+    // another <a> gives nested anchors: the browser closes the outer one at the
+    // inner, and the visible text after it belongs to whatever the inner points at.
+    $vorher = error_reporting();
+    $warnungen = [];
+    set_error_handler(static function (int $n, string $m) use (&$warnungen): bool { $warnungen[] = $m; return true; });
+    $html = $zelle(['format' => 'html', 'href' => '/safe/{id}'],
+        ['name' => 'Kunde <a href="https://fremde.example/pwn">weiterlesen</a>']);
+    restore_error_handler();
+    error_reporting($vorher);
+    T::ok(!str_contains($html, 'gk-cell-link'), 'href and format html were nested into each other');
+    T::ok((bool) preg_grep('/href.*format/i', $warnungen), 'the conflict is not reported: ' . implode(' | ', $warnungen));
+
+    // A row has to be findable by the text standing under its name.
+    $suche = new Table('t');
+    $suche->setData([['id' => 1, 'name' => 'Meier', 'ort' => 'Wien']])
+        ->column('name', 'Kunde', ['sub' => 'ort'])->search(['name']);
+    $html = T::capture(fn () => $suche->render());
+    T::ok((bool) preg_match('~data-gk-data>(.*?)</script>~s', $html, $m), 'the data block is there');
+    $data = json_decode($m[1] ?? '', true) ?: [];
+    T::ok(in_array('ort', $data['search'] ?? [], true), 'the second line is not searched');
+},
+
 'a row button with href is a real link, and a field cannot become a scheme' => function (): void {
     // Ten SSI Panel views pushed window.location.href into a <button>: no middle
     // click, no "open in new tab", no status bar. 'href' makes it an <a>.

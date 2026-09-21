@@ -36,21 +36,31 @@ ob_start();
         // The slug carries an apostrophe (which used to break out of the
         // single-quoted data-gk-params), a space (rawurlencode writes %20 where
         // urlencode writes +) and the five characters the two encoders disagree on.
-        ['id' => 1, 'name' => 'Anvil',  'price' => 99.0, 'qty' => 2, 'state' => 'active',      'share' => null,  'slug' => "a!b'c(d) e*f"],
-        ['id' => 2, 'name' => 'Widget', 'price' => 12.5, 'qty' => 7, 'state' => 'sonderfall', 'share' => 12.5, 'slug' => 'plain'],
+        ['id' => 1, 'name' => 'Anvil',  'price' => 99.0, 'qty' => 2, 'state' => 'active',      'share' => null,  'slug' => "a!b'c(d) e*f", 'leer' => '', 'flag' => false],
+        ['id' => 2, 'name' => 'Widget', 'price' => 12.5, 'qty' => 7, 'state' => 'sonderfall', 'share' => 12.5, 'slug' => 'plain', 'leer' => '', 'flag' => true],
         // A label value that is markup: it must arrive as text, not as markup.
-        ['id' => 3, 'name' => 'Clamp',  'price' => 5.0,  'qty' => 1, 'state' => '<b>kaputt</b>', 'share' => 0.5, 'slug' => 'clamp'],
+        ['id' => 3, 'name' => 'Clamp',  'price' => 5.0,  'qty' => 1, 'state' => '<b>kaputt</b>', 'share' => 0.5, 'slug' => 'clamp', 'leer' => '', 'flag' => 'ja'],
     ])
     ->caption('Price list')
     ->nowrap()
     ->loadTime(38)
     ->footer(['Total', ['text' => '111,50 €', 'align' => 'right', 'bold' => true]])
     ->selectable()
-    ->column('name',  'Product', ['sortable' => true])
+    // A linked value with a second line: both used to be hand-built HTML strings
+    // in 62 places across the SSI Panel, each with its own escaping.
+    // Das & in der Vorlage wird NICHT kodiert (nur die Platzhalterwerte) — es muss
+    // also als &amp; im Attribut stehen, sonst liest der Browser eine Entität.
+    ->column('name',  'Product', ['sortable' => true, 'href' => '/p/{slug}?a=1&b=2', 'sub' => 'state'])
     ->column('price', 'Price',   ['format' => 'currency', 'sortable' => true])
-    ->column('qty',   'Qty',     ['format' => 'number', 'hideOnMobile' => true])   // the branch with no sort class
+
     // A status column: 'active' is green from the shared table, 'sonderfall'
     // gets its colour and its text from the column's own labels.
+    // A column whose target carries a disguised scheme: no link may come out of
+    // it, on either side.
+    ->column('qty', 'Qty', ['format' => 'number', 'hideOnMobile' => true, 'muted' => true, 'href' => "java\tscript:x{id}"])
+    // Leerer Wert: kein Link. Wahrheitswert: (string) false ist "" — auch kein Link.
+    ->column('leer', 'Leer', ['href' => '/x/{id}'])
+    ->column('flag', 'Flag', ['href' => '/f/{id}', 'sub' => 'flag'])
     ->column('state', 'State', ['align' => 'center', 'format' => 'label',
         'labels' => ['sonderfall' => ['color' => 'blue', 'text' => 'Sonderfall']]])
     ->column('share', 'Share',   ['format' => 'percent', 'decimals' => 1])   // 12.5 and nothing — as the server writes them

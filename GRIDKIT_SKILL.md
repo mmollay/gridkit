@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.86.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.87.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -270,11 +270,40 @@ build the query. Use this for a status dropdown that belongs to a table — not
 
 **Column formats:** `currency`, `percent`, `date`, `datetime`, `boolean`, `label`, `html`, `email`, `number`
 
-**A second line inside a cell** (subject, account, reference) — never widens the column:
+**A second line inside a cell** (subject, account, reference) — never widens the
+column: `->column('name', 'Customer', ['sub' => 'city'])`, see below. By hand only
+where the truncated text needs a `title`, which the option does not write:
 
 ```html
 <div class="gk-cell-sub" title="Full text">Your receipt from Anthropic…</div>
 ```
+
+**Column `href` and `sub` (since 1.87.0):** the two commonest cell shapes, without
+building HTML by hand.
+
+```php
+->column('name', 'Customer', ['href' => '/customers/{id}', 'sub' => 'city'])
+```
+
+`href` wraps the formatted value in `<a class="gk-cell-link">`; `{field}` comes
+from the row, URL-encoded, and the same targets are allowed as for a row button.
+`{field}` is a path segment, never a whole target — a scheme belongs in the
+template, so a stored `https://…` cannot be linked this way. A cell that shows
+nothing gets no link. `href` and `'format' => 'html'` exclude each other: with
+html the caller writes the markup, links included, and wrapping that would nest
+anchors — GridKit leaves the link out and says so.
+
+`sub` names a second field, rendered as text under the value in
+`<div class="gk-cell-sub">` — always text, whatever the cell's format is, and
+left out when empty. It truncates with an ellipsis and carries no `title`; where
+the full text has to stay reachable, build that cell by hand. In a `setData()`
+table a column declared in `search()` searches its second line too, so a row can
+be found by the text standing under its name; in a `query()` table name the field
+in `search()` yourself — it has to be a real SQL column there.
+
+Both keep the raw value, so sorting and searching go on working — which is what
+`'format' => 'html'` costs you. There is no `target`: a link opens in the same
+tab, and middle click does the rest.
 
 **`->groupBy($column, $labels)`:** inserts a group row whenever the value changes. Sort the rows by that column first.
 

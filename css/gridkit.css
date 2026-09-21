@@ -349,6 +349,20 @@ a:hover {
   overflow: hidden;
   min-width: 0;
 }
+/* A linked cell value. Not a wall of blue — the row's own colour — but it has to
+   be recognisable as a link WITHOUT hovering it: a dotted underline says "this
+   goes somewhere" to everyone, a colour alone would not (WCAG 1.4.1). */
+.gk-cell-link {
+  color: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--gk-outline);
+}
+.gk-cell-link:hover,
+.gk-cell-link:focus-visible {
+  text-decoration: underline solid;
+  text-decoration-color: currentColor;
+}
 /* Second line inside a cell: truncates with an ellipsis, does not widen the column. */
 .gk-cell-sub {
   display: block;
@@ -4110,6 +4124,7 @@ a.gk-stat-card:hover {
   }
   .gk-table-mobile-card td {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: baseline;
     gap: 12px;
@@ -4131,6 +4146,15 @@ a.gk-stat-card:hover {
   }
   .gk-table-mobile-card td:last-child {
     border-bottom: none;
+  }
+  /* Card mode makes the cell a flex row (label left, value right). A second
+     line is a THIRD child and would sit beside the value, overprinting it on a
+     narrow screen — measured at 390 px: value and sub-line on the same baseline.
+     It gets a row of its own, aligned with the value. */
+  .gk-table-mobile-card .gk-cell-sub {
+    flex-basis: 100%;
+    text-align: right;
+    white-space: normal;
   }
   .gk-table-mobile-card td::before {
     content: attr(data-label);

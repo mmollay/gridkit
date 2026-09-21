@@ -325,7 +325,14 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
       const cell = document.querySelector('[data-gk-table="prices"] tbody td.gk-td-num');
       const price = document.querySelector('[data-gk-table="prices"] thead th [data-gk-sort="price"]');
       return { heads: out, cell: cell ? getComputedStyle(cell).textAlign : null,
-               first: (document.querySelector('[data-gk-table="prices"] tbody tr td:not(.gk-cb-col)') || {}).textContent || null,
+               // Nur der Hauptwert: seit die Spalte eine Unterzeile hat, stünde
+               // sonst beides im textContent.
+               first: (() => {
+                 const td = document.querySelector('[data-gk-table="prices"] tbody tr td:not(.gk-cb-col)');
+                 if (!td) return null;
+                 const a = td.querySelector("a.gk-cell-link");
+                 return (a || td).childNodes[0] ? ((a || td).childNodes[0].textContent || "").trim() : null;
+               })(),
                // Only the client writes these two — proof that a rebuild really happened.
                rebuilt: !!document.querySelector('[data-gk-table="prices"] thead th.gk-sortable-mi'),
                sort: price ? price.closest("th").getAttribute("aria-sort") : null,
@@ -337,7 +344,10 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
                // loadTime() sits in the columns the footer cells leave; a percent cell
                // reads the same before and after a rebuild; a number cell never wraps.
                meta: ((document.querySelector('[data-gk-table="prices"] tfoot td.gk-table-meta') || {}).textContent || "").trim(),
-               share: Array.from(document.querySelectorAll('[data-gk-table="prices"] tbody tr')).map((tr) => ((tr.querySelectorAll("td")[5] || {}).textContent || "").trim()).sort().join("|"),
+               // Über data-label, nicht über den Index: eine neue Spalte würde
+               // die Messung sonst still auf eine andere Zelle schieben.
+               share: [...document.querySelectorAll('[data-gk-table="prices"] tbody td[data-label="Share"]')]
+                 .map((td) => (td.textContent || "").trim()).sort().join("|"),
                numWrap: ((document.querySelector('[data-gk-table="prices"] tbody td.gk-td-num') || { style: {} }).style || {}).whiteSpace || null,
                allBox: (document.querySelector('[data-gk-table="prices"] [data-gk-select-all]') || { getAttribute() {} }).getAttribute("aria-label"),
                // A row button with href is a real <a>, encoded the same on both
@@ -368,6 +378,19 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
                  const l = [...document.querySelectorAll('[data-gk-table="prices"] .gk-label')]
                    .find((x) => x.textContent.indexOf("<b>") > -1);
                  return l ? l.innerHTML : "kein roher Text";
+               })(),
+               // The whole cell, byte for byte: the escaping, the encoding and the
+               // empty-value guard all show up here, and the string has to be the
+               // same before and after a rebuild. An expression would not catch a
+               // client that encodes differently or escapes not at all.
+               zelle: (() => {
+                 const td = document.querySelector('[data-gk-table="prices"] tbody td[data-label="Product"]');
+                 return td ? td.innerHTML.replace(/\s+/g, " ").trim() : "fehlt";
+               })(),
+               // The disguised scheme must not become a link on either side.
+               zelleBoese: (() => {
+                 const td = document.querySelector('[data-gk-table="prices"] tbody td[data-label="Qty"]');
+                 return td ? (td.querySelector("a") ? "VERLINKT" : "kein Link") : "fehlt";
                })(),
                // The refused href: a plain button on both sides, never a link.
                boese: (() => {
@@ -402,6 +425,7 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
       && h.nowrap && h.footer === "111,50 €"
       && h.meta === "38 ms" && h.share === "|0.5 %|12.5 %" && h.numWrap === "nowrap"
       && h.boese === "BUTTON:-"
+      && h.zelleBoese === "kein Link"
       && h.labels === "gk-label-blue:Sonderfall|gk-label-gray:<b>kaputt</b>|gk-label-green:active"
       && h.cbWerte === "1,2,3"
       && h.iconRund === "9:9"
@@ -412,12 +436,37 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
       && h.link.hrefs === "/artikel/a%21b%27c%28d%29%20e%2Af|/artikel/clamp|/artikel/plain"
       && h.link.params === '{"id":1}|{"id":2}|{"id":3}';
     const before = await heads();
+    // Wie der SERVER die verlinkten Zellen schreibt — ALLE, denn die
+    // Besonderheiten verteilen sich auf die Zeilen: die eine trägt die fünf
+    // Zeichen, bei denen die Kodierungen auseinandergehen, die andere Markup in
+    // ihrer Unterzeile. Eine einzelne Zeile zu vergleichen ginge an beidem vorbei.
+    const zellenLesen = () => page.evaluate(() =>
+      [...document.querySelectorAll('[data-gk-table="prices"] tbody td')]
+        .filter((td) => ["Product", "Leer", "Flag", "Qty"].indexOf(td.getAttribute("data-label")) > -1)
+        .map((td) => td.getAttribute("data-label") + " » " + td.outerHTML.replace(/\s+/g, " ").trim())
+        .sort().join("\n"));
+    const zellenServer = await zellenLesen();
     check("server-rendered table: numeric header and cell right, centred column centred, caption, checkbox names, nowrap, totals row, load time, percent cells", good(before));
     await page.click('[data-gk-table="prices"] [data-gk-sort="price"]');
     const after = await heads();
     check("after a client-side sort all of that is still true — and the sort really happened",
       good(after) && after.rebuilt && after.sort === "ascending" && before.first === "Anvil" && after.first === "Clamp"
       && after.footerCells === before.footerCells);
+    // The linked cell with its second line, byte for byte the same on both sides.
+    // Both renderers draw the row with id 2 here: before the sort it is the second
+    // row, after it the third — so the comparison is of one row, not of a position.
+    const zellenClient = await zellenLesen();
+    const zellenGleich = zellenClient === zellenServer && zellenServer.indexOf("gk-cell-sub") > -1
+      && zellenServer.indexOf("gk-cell-link") > -1 && zellenServer.indexOf("%21") > -1
+      // Das & der Vorlage als Entität, die muted-Klasse, und kein Link an einem
+      // leeren oder falschen Wert.
+      && zellenServer.indexOf("&amp;b=2") > -1 && zellenServer.indexOf("gk-td-muted") > -1
+      && zellenServer.indexOf('Leer » <td><a') === -1 && zellenServer.indexOf('Flag » <td><a') === -1;
+    check("every linked cell with a second line is written identically by both renderers", zellenGleich);
+    if (!zellenGleich) {
+      console.log("   Server:\n" + zellenServer.split("\n").map((z) => "     " + z).join("\n"));
+      console.log("   Client:\n" + zellenClient.split("\n").map((z) => "     " + z).join("\n"));
+    }
     if (!good(before) || !good(after)) console.log(JSON.stringify({ before, after }));
     // A question before following a link: the delegated handler has to stop the
     // navigation, ask, and only then go.

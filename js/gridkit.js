@@ -46,6 +46,17 @@
    * characters before it reads the scheme. Table::safeTarget() in PHP is the
    * same rule; keep them in step.
    */
+  /*
+   * A row value the way PHP casts it to a string: (string) false is "", true is
+   * "1", null is "". JavaScript's own String() writes "false" and "true", which
+   * made a boolean column render differently on each side.
+   */
+  function _gkAlsText(v) {
+    if (v === false) return "";
+    if (v === true) return "1";
+    return String(v == null ? "" : v);
+  }
+
   function _gkSafeTarget(href) {
     var rein = String(href).replace(/[\u0000-\u0020]/g, "");
     if (rein === "" || rein.indexOf("//") === 0) return null;
@@ -1570,7 +1581,11 @@
                 renderBtnGroup(leftBtns, row) +
                 "</div></td>";
             for (const [key, col] of Object.entries(columns)) {
-              const val = row[key] ?? "";
+              // (string) true is "1" and (string) false is "" in PHP; JavaScript
+              // would write "true" and "false". A boolean column showed different
+              // text on each side, and the false one was linked here and empty there.
+              const rohWert = row[key] ?? "";
+              const val = typeof rohWert === "boolean" ? (rohWert ? "1" : "") : rohWert;
               // text-align and nowrap, as Table.php writes them on a cell: a
               // column's own nowrap, and a number or currency cell never wraps.
               const tdStyles = [];
@@ -1580,13 +1595,42 @@
               if (col.maxWidth) tdStyles.push("max-width:" + e(col.maxWidth));
               if (col.nowrap || col.format === "number" || col.format === "currency") tdStyles.push("white-space:nowrap");
               const align = tdStyles.length ? ' style="' + tdStyles.join(";") + '"' : "";
+              // Same order as Table::render writes them — a byte-for-byte
+              // comparison of the two renderers is only possible if they agree.
               const tdCls = [];
-              if (col.hideOnMobile) tdCls.push("gk-hide-mobile");
               if (col.format === "number" || col.format === "currency")
                 tdCls.push("gk-td-num");
+              if (col.hideOnMobile) tdCls.push("gk-hide-mobile");
+              // The server writes this too — without it a muted column changed
+              // its text colour on the first sort.
+              if (col.muted) tdCls.push("gk-td-muted");
               const hideCls = tdCls.length
                 ? ' class="' + tdCls.join(" ") + '"'
                 : "";
+              // href and sub, exactly as Table::cellContent() writes them: a
+              // linked value keeps its raw form for search and sort, and the
+              // second line is always text, whatever the cell's format is.
+              let inhalt = formatVal(val, col);
+              if (col.href && _gkAlsText(val).trim() !== "") {
+                let ziel = null;
+                try {
+                  ziel = _gkSafeTarget(String(col.href).replace(/\{(\w+)\}/g, (_, k) =>
+                    encodeURIComponent(String(row[k] ?? "")).replace(/[!'()*]/g, (c) =>
+                      "%" + c.charCodeAt(0).toString(16).toUpperCase())));
+                } catch (err) { ziel = null; }
+                // 'html' means the caller writes the markup, links included:
+                // wrapping it would produce nested anchors, and the browser hands
+                // the visible text after the inner <a> to a foreign target.
+                if (col.format === "html") ziel = null;
+                // e() around a target that is already URL-encoded changes nothing
+                // a browser could show — it is the second line of defence, not
+                // the first, and no browser case can catch its removal.
+                if (ziel !== null) inhalt = '<a href="' + e(ziel) + '" class="gk-cell-link">' + inhalt + "</a>";
+              }
+              if (col.sub) {
+                const unter = _gkAlsText(row[col.sub]).trim();
+                if (unter !== "") inhalt += '<div class="gk-cell-sub">' + e(unter) + "</div>";
+              }
               html +=
                 "<td" +
                 hideCls +
@@ -1594,7 +1638,7 @@
                 ' data-label="' +
                 e(col.label) +
                 '">' +
-                formatVal(val, col) +
+                inhalt +
                 "</td>";
             }
             if (hasRight)

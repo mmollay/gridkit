@@ -75,6 +75,9 @@ for ($i = 1; $i <= 12; $i++) {
         // on all of it, or a row button's link drifts on the first sort.
         'slug'   => "a!b'c(d)e*f $i",
         'link'   => $i === 1 ? 'javascript:alert(1)' : '/ok/' . $i,
+        // Wahrheitswerte: (string) false ist "", String(false) ist "false" — die
+        // beiden Renderer gingen hier auseinander.
+        'flag'   => $i % 3 === 0 ? true : ($i % 3 === 1 ? false : 'ja'),
     ];
 }
 
@@ -94,6 +97,14 @@ $cases = [
         ->button('edit', ['icon' => 'edit'])
         ->button('note', ['text' => 'Note'])
         ->button('del', ['icon' => 'delete', 'confirm' => true, 'onclick' => 'doDelete({id})']),
+    // sortable MUSS an einer Spalte stehen: column() ersetzt den Eintrag ganz, und
+    // ohne Sortierknopf baut die Vergleichsfunktion den Client nie neu — der Fall
+    // meldete dann 0 Abweichungen, weil er nichts verglich (Abnahme 21.09.2026).
+    'zellen'     => static fn(Table $t): Table => $t
+        ->column('name', 'Name', ['href' => '/artikel/{slug}', 'sub' => 'status'])
+        ->column('sku', 'SKU', ['sub' => 'name', 'sortable' => true, 'muted' => true])
+        ->column('link', 'Roh', ['href' => '{link}'])
+        ->column('flag', 'Ja/Nein', ['href' => '/f/{id}', 'sub' => 'flag']),
     'links'      => static fn(Table $t): Table => $t
         ->button('open', ['icon' => 'visibility', 'href' => '/artikel/{slug}'])
         ->button('go', ['text' => 'Go', 'href' => '/x/{id}?q={slug}', 'confirm' => 'Sure?'])
