@@ -1,4 +1,4 @@
-# GridKit 1.85.0 — components
+# GridKit 1.86.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -914,6 +914,14 @@ unless you have one.
 <?php Pagination::render([/* the same options */]); ?>
 </template>
 ```
+
+**`data-gk-replace` works in a live table too (since 1.86.0).** Anything in the
+fresh markup wrapped in `<template data-gk-replace="a-css-selector">` replaces
+the matching element OUTSIDE the container — summary cards above the list, a
+status select beside it, the pager below. GridKit does it before it fires
+`gk-live-reloaded` and re-binds the searchable selects, multi-selects, tooltips
+and `data-gk-live-input` fields that came with it, so a page needs no listener
+of its own. Put one root element in each template.
 
 `PageSize` on its own, outside a `Pagination`:
 

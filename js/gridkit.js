@@ -54,6 +54,69 @@
     return rein.indexOf(":") > -1 ? null : rein;
   }
 
+  /*
+   * Out-of-band updates: a <template data-gk-replace="css-selector"> inside the
+   * fresh markup replaces an element OUTSIDE it — the summary cards above a
+   * table, a status select beside it, the pager below. Both paths that swap
+   * markup use this: the AJAX table (GK.table) and the live table, which could
+   * not do it at all until 1.86.0. The SSI Panel carried the loop for the live
+   * table in its own layout for that reason.
+   *
+   * Returns true when something was replaced, so the caller can re-bind the
+   * widgets that came with the new markup.
+   */
+  function _gkApplyReplacements(root) {
+    var wurzel = root || document;
+    var ersetzt = false;
+    var gesehen = {};
+    wurzel.querySelectorAll("template[data-gk-replace]").forEach(function (tpl) {
+      var sel = tpl.getAttribute("data-gk-replace");
+      // Per template, so a typo in one view costs one replacement and not the
+      // whole reload: this runs inside the live table's promise chain, where a
+      // throw would swallow the event, the URL update and the re-binding.
+      try {
+        if (gesehen[sel] && window.console) {
+          console.warn("GridKit: two templates replace " + sel + " — the last one wins.");
+        }
+        gesehen[sel] = true;
+        var target = sel ? document.querySelector(sel) : null;
+        // A template is meant for something OUTSIDE the markup being swapped.
+        // Pointing it at the container detaches the very node the caller still
+        // holds: the event then reaches nobody and the fresh rows stay unbound.
+        if (target && (target === wurzel || (wurzel.contains && wurzel.contains(target)))) {
+          if (window.console) console.warn("GridKit: " + sel + " points inside the swapped markup — skipped.");
+          tpl.remove();
+          return;
+        }
+        // No element in the template means "nothing to put here" — leaving the
+        // target alone is the safe reading. Writing an empty string would delete
+        // it for good, and only a full page load would bring it back.
+        if (target && tpl.content && tpl.content.firstElementChild) {
+          // The focus would go with the old node. A page filters by keyboard
+          // through exactly such a replaced select, and losing it drops the user
+          // at the top of the page. The control is found again by its id — the
+          // same control, not merely the first one that can take focus.
+          var aktiv = document.activeElement;
+          var fokusId = target.contains(aktiv) && aktiv.id ? aktiv.id : null;
+          var div = document.createElement("div");
+          div.appendChild(tpl.content.cloneNode(true));
+          target.outerHTML = div.innerHTML;
+          if (fokusId) {
+            var wieder = document.getElementById(fokusId);
+            if (wieder && wieder.focus) {
+              try { wieder.focus({ preventScroll: true }); } catch (e) { wieder.focus(); }
+            }
+          }
+          ersetzt = true;
+        }
+      } catch (e) {
+        if (window.console) console.error("GridKit: replacing " + sel + " failed", e);
+      }
+      tpl.remove();
+    });
+    return ersetzt;
+  }
+
   function _gkNumber(value, decimals) {
     var n = parseFloat(value);
     if (isNaN(n)) return value == null ? "" : String(value);
@@ -1831,18 +1894,7 @@
             const anchor = bulkBar || toolbar;
             if (anchor) anchor.insertAdjacentHTML("afterend", html);
             else wrap.insertAdjacentHTML("afterbegin", html);
-            // Out-of-band updates: <template data-gk-replace="css-selector">
-            // Replaces elements OUTSIDE the container (e.g. StatCards).
-            wrap.querySelectorAll("template[data-gk-replace]").forEach(function(tpl) {
-              var sel = tpl.getAttribute("data-gk-replace");
-              var target = document.querySelector(sel);
-              if (target && tpl.content) {
-                var div = document.createElement("div");
-                div.appendChild(tpl.content.cloneNode(true));
-                target.outerHTML = div.innerHTML;
-              }
-              tpl.remove();
-            });
+            _gkApplyReplacements(wrap);
             window.history.replaceState(null, "", url);
           })
           .catch((err) => {
@@ -2914,6 +2966,15 @@
           }
           if (!finish()) return;
           GK.liveTable.hoistPager(container);
+          // Before the event, so a page's own listener sees the finished state.
+          _gkApplyReplacements(container);
+          // The one list, not a hand-picked subset of it: what came back carries
+          // its own widgets — a searchable select, a tab strip, an AJAX form —
+          // and what was REPLACED sits outside the container, so this runs over
+          // the document. That also covers [data-gk-live-input], because
+          // GK.initContent calls GK.liveTable.init, which binds them. Every init
+          // is idempotent; measured at 0.15 ms on a 2500-node invoice list.
+          if (typeof GK.initContent === "function") GK.initContent(document);
           window.history.replaceState(null, "", displayUrl);
           GK.liveTable.saveSession(container);
           container.dispatchEvent(new CustomEvent("gk-live-reloaded", { bubbles: true }));

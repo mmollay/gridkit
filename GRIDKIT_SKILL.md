@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.85.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.86.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -1192,6 +1192,14 @@ unless you have one.
 </template>
 ```
 
+**`data-gk-replace` works in a live table too (since 1.86.0).** Anything in the
+fresh markup wrapped in `<template data-gk-replace="a-css-selector">` replaces
+the matching element OUTSIDE the container — summary cards above the list, a
+status select beside it, the pager below. GridKit does it before it fires
+`gk-live-reloaded` and re-binds the searchable selects, multi-selects, tooltips
+and `data-gk-live-input` fields that came with it, so a page needs no listener
+of its own. Put one root element in each template.
+
 `PageSize` on its own, outside a `Pagination`:
 
 ```php
@@ -1292,7 +1300,15 @@ Features:
 - **250 ms debounce** before the fetch; the URL is synced immediately.
 - **Link interception**: an `<a href>` inside the container pointing at the same endpoint is followed over AJAX-Reload (Sort-Header, Pagination).
 - **`patchNavSelects()`**: overrides `onchange` on `<select data-gk-years>` so they build on `window.location.search`. Keeps the current search when the year changes.
-- The `gk-live-reloaded` event fires on the container after every swap — bind your own re-initialisation to it.
+- **Out-of-band updates (since 1.86.0):** a `<template data-gk-replace="a-css-selector">`
+  in the fresh markup replaces the matching element OUTSIDE the container — summary
+  cards above the list, a status select beside it, the pager below. GridKit applies
+  them, re-binds every widget that came with them (`GK.initContent`) and keeps the
+  focus on the control that had it. One root element per template; a template that
+  cannot be applied costs only itself. See "Out-of-band updates" under Pagination.
+- The `gk-live-reloaded` event fires on the container after every swap — **after** the
+  replacements above, so your listener sees the finished page. Bind your own
+  re-initialisation to it.
 - **A failed request leaves the rows alone.** A 4xx/5xx answer, a network error, or a whole page where a
   fragment (or, in self mode, the container) should be: the old rows stay, an error toast appears and `gk-table-error` fires on the container
   (`event.detail.error`). A 401 — or an answer that was redirected to another path, which is how many

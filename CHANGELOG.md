@@ -7,6 +7,43 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.86.0] - 2026-09-21
+
+Eighth round of the SSI Panel's self-maintenance loop.
+
+### Added — a live table updates what sits outside it, like the AJAX table already did
+
+`<template data-gk-replace="a-css-selector">` in the fresh markup replaces an
+element OUTSIDE the container — the summary cards above a list, a status select
+beside it, the pager below. `GK.table` has done this since 1.11.4 —
+where it was put by a release whose own entry says "liveTable Out-of-Band
+Updates", which is exactly the table that could not do it. `GK.liveTable`
+could not, although the skill described it for both. Seven views in the SSI
+Panel depend on it, so the Panel carried the loop in its own layout — where no
+other system using GridKit could benefit from it.
+
+It now happens before `gk-live-reloaded` fires, so a page's own listener sees
+the finished state, and the widgets that came with the new markup are bound
+again: searchable selects, multi-selects, tooltips and every
+`data-gk-live-input` (those sit outside the container by definition, so the
+re-bind is document-wide). Both paths share one helper now, `_gkApplyReplacements`.
+
+Put one root element in each template. Both paths write the template's whole
+content, so two roots would work — but the Panel's own loop, which this
+replaces, took only the first, and nothing should change silently for the seven
+views that used it. All of them have one root; that was measured, not assumed.
+
+A template that cannot be applied costs that one replacement and nothing else:
+this runs inside the reload's promise chain, where a throw used to swallow the
+event, the URL update and the re-binding along with it. A template with no
+element in it leaves its target alone rather than deleting it — the loop this
+replaces did the same, and an emptied target only comes back on a full page
+load. One pointing INSIDE the markup being swapped is skipped with a warning:
+it would detach the very node the caller still holds. And the focus survives —
+a control that had it is found again by its id, because a page filters by
+keyboard through exactly such a replaced select.
+
+---
 ## [1.85.0] - 2026-09-21
 
 Seventh round of the SSI Panel's self-maintenance loop: the three differences

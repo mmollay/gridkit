@@ -470,13 +470,38 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
         "<p id='where'>page b</p><p id='styled-b'>x</p><p id='inline-b'>y</p>"),
       "/c": shell("C", "", "<p id='where'>page c</p><p id='styled-b'>x</p>"),
       "/d": shell("D", "", "<p id='where'>page d</p>" + fs.readFileSync(path.join(dir, "select.html"), "utf8")),
+      // A live table plus a target OUTSIDE it, for the out-of-band case below.
+      "/live": shell("Live", "",
+        "<div id='kpi'>old numbers</div>" +
+        "<div id='lt' data-gk-live-table='/live'><p>old rows</p></div>"),
     };
+    // What the live table gets back: fresh rows, and a template that replaces
+    // the element outside the container — including a searchable select and an
+    // input the live table itself listens to.
+    const liveFragment =
+      "<p id='rows'>fresh rows</p>" +
+      "<template data-gk-replace='#kpi'><div id='kpi'>new numbers" +
+      fs.readFileSync(path.join(dir, "select.html"), "utf8") +
+      "<input id='li' data-gk-live-input name='q'></div></template>";
+    const liveBroken =
+      "<p id='rows2'>rows after a broken template</p>" +
+      // An invalid selector: querySelector THROWS on this one.
+      "<template data-gk-replace='#a['><b>x</b></template>" +
+      // Nothing in it, pointed at a target that exists: the target must survive.
+      "<template data-gk-replace='#kpi'></template>" +
+      // Pointed at the container being swapped: that would detach the very node
+      // the caller still holds, and the event would reach nobody.
+      "<template data-gk-replace='#lt'><div id='lt'>hijacked</div></template>";
     const nav = await browser.newPage();
     nav.on("pageerror", (e) => pageErrors.push(e.message));
     await nav.route("http://gk.test/**", (route) => {
       const u = new URL(route.request().url());
       if (u.pathname === "/gridkit.js") return route.fulfill({ contentType: "text/javascript", body: gridkitJs });
       if (u.pathname === "/b.css") return route.fulfill({ contentType: "text/css", body: "#styled-b{text-indent:42px}" });
+      // The live table asks for its own address with partial=1.
+      if (u.pathname === "/live" && u.searchParams.has("partial")) {
+        return route.fulfill({ contentType: "text/html", body: u.searchParams.get("kaputt") ? liveBroken : liveFragment });
+      }
       if (site[u.pathname]) return route.fulfill({ contentType: "text/html", body: site[u.pathname] });
       return route.fulfill({ status: 404, body: "" });
     });
@@ -514,6 +539,71 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
     await nav.click("[data-gk-select-search] .gk-select-display");
     const opened = !!(await nav.$("[data-gk-select-search] .gk-select-display.open"));
     check("after navigation the searchable select on the new page opens (widgets are bound)", opened && (await stayed()));
+
+    // ── A live table replaces what sits outside it, and binds what comes with it ──
+    await nav.goto("http://gk.test/live");
+    await nav.evaluate(() => new Promise((f) => {
+      const c = document.getElementById("lt");
+      GK.liveTable.request(c, "/live?partial=1", "/live");
+      const bis = Date.now() + 4000;
+      (function warte() {
+        if (document.getElementById("rows") || Date.now() > bis) return f();
+        setTimeout(warte, 30);
+      })();
+    }));
+    const oob = await nav.evaluate(() => ({
+      zeilen: !!document.getElementById("rows"),
+      kpi: (document.getElementById("kpi") || {}).textContent || "",
+      reste: document.querySelectorAll("template[data-gk-replace]").length,
+      // The select and the input arrived INSIDE the replaced element: both have
+      // to be bound, or the page filters into the void.
+      selectGebunden: !!(document.querySelector("[data-gk-select-search]") || {})._gkBound,
+      inputGebunden: !!(document.getElementById("li") || {})._gkLiveBound,
+    }));
+    check("a live table replaces an element outside the container and binds what came with it",
+      oob.zeilen && oob.kpi.indexOf("new numbers") === 0 && oob.reste === 0
+      && oob.selectGebunden && oob.inputGebunden);
+
+    // A template that cannot be applied must cost that one replacement, not the
+    // whole reload: the event, the URL and the re-binding still have to happen.
+    const kaputt = await nav.evaluate(() => new Promise((f) => {
+      const c = document.getElementById("lt");
+      let ereignis = 0;
+      document.addEventListener("gk-live-reloaded", () => { ereignis++; }, { once: true });
+      GK.liveTable.request(c, "/live?partial=1&kaputt=1", "/live?kaputt=1");
+      const bis = Date.now() + 4000;
+      (function warte() {
+        if (document.getElementById("rows2") || Date.now() > bis) {
+          return f({ ereignis, zeilen: !!document.getElementById("rows2"),
+                     leerNochDa: !!document.getElementById("kpi"),
+                     kpiText: (document.getElementById("kpi") || {}).textContent || "",
+                     entfuehrt: (document.getElementById("lt") || {}).textContent === "hijacked",
+                     reste: document.querySelectorAll("template[data-gk-replace]").length });
+        }
+        setTimeout(warte, 30);
+      })();
+    }));
+    check("a template with a broken selector costs one replacement, not the whole reload",
+      kaputt.zeilen && kaputt.ereignis === 1 && kaputt.reste === 0);
+    check("… and a template with nothing in it leaves its target alone instead of deleting it",
+      kaputt.leerNochDa && kaputt.kpiText.indexOf("new numbers") === 0);
+    check("… and one pointing at the swapped container itself is skipped, not applied",
+      kaputt.zeilen && !kaputt.entfuehrt);
+
+    // The focus survives a replacement: a page filters by keyboard through
+    // exactly such a select, and losing it drops the user at the top of the page.
+    // #li is the live input inside the replaced #kpi — it comes back with the
+    // same id, so the focus can be checked on the element and not just on "not body".
+    await nav.evaluate(() => document.getElementById("li").focus());
+    const fokusVorher = await nav.evaluate(() => document.activeElement.id);
+    await nav.evaluate(() => new Promise((f) => {
+      GK.liveTable.request(document.getElementById("lt"), "/live?partial=1", "/live");
+      const bis = Date.now() + 4000;
+      (function w() { (document.getElementById("rows") || Date.now() > bis) ? f() : setTimeout(w, 30); })();
+    }));
+    const fokusNachher = await nav.evaluate(() => document.activeElement.id);
+    check("the focus stays on the same control after its element was replaced",
+      fokusVorher === "li" && fokusNachher === "li");
     await nav.close();
   } finally {
     await browser.close();
