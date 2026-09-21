@@ -74,3 +74,25 @@ GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser.js
 Like `ci/parity.php` it stays outside the suite: GridKit has no dependencies,
 and the suite keeps that promise. Run it when touching `js/gridkit.js`.
 
+## Colour variables that resolve across two files
+
+A theme lives in `css/themes.css`, the roles and their older aliases in
+`css/gridkit.css`. Whether `--gk-text-muted` still means what
+`--gk-on-surface-variant` means is therefore a question no string comparison can
+answer — the chain only resolves in a browser, with both files loaded.
+`ci/farben.js` resolves every pair across six themes, in light mode and in both
+spellings of dark mode, and reports the WCAG ratio of normal and muted text
+against the ground:
+
+```bash
+node ci/farben.js                      # needs the "playwright" package
+GK_PLAYWRIGHT=/path/to/node_modules/playwright node ci/farben.js
+```
+
+It found the fault 1.89.0 fixes: in dark mode the aliases were literals, and
+`themes.css` had moved the roles underneath them. Four pairs are asserted; the
+four surface aliases stand under `ZURUECKGESTELLT` — measured and reported, but
+not failed, until the surface ladder in `themes.css` is decided. Run it when
+touching a colour variable in either file.
+
+Like `ci/browser.js` and `ci/parity.php` it stays outside the suite.

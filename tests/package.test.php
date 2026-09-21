@@ -123,6 +123,14 @@ return [
     T::ok(is_file($script), 'ci/matrix.sh is missing');
     T::ok(is_readable($script), 'ci/matrix.sh cannot be read');
 
+    // ci/farben.js measures what no string comparison can: whether an alias still
+    // resolves to its role once themes.css is loaded on top. Nothing in the suite
+    // runs it, so without this it could quietly disappear — and the fault it found
+    // in 1.89.0 would come back unseen.
+    T::ok(is_file(ROOT . '/ci/farben.js'), 'ci/farben.js is missing');
+    T::ok(str_contains((string) file_get_contents(ROOT . '/ci/README.md'), 'ci/farben.js'),
+        'ci/README.md does not mention ci/farben.js');
+
     $src = (string) file_get_contents($script);
     T::contains($src, 'tests/run.php', 'the matrix does not run the suite');
     T::contains($src, 'mb_strtolower', 'the matrix does not report on mbstring');

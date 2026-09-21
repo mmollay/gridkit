@@ -162,6 +162,51 @@ return [
     }
 },
 
+'the dark alias variables are derived, never literals' => function (): void {
+    // Two names for one colour: the role (--gk-on-surface-variant) and an older
+    // alias (--gk-text-muted). The light block makes the alias BE the role, so the
+    // two cannot drift. The dark block wrote literals — and themes.css moves the
+    // role underneath them (--gk-on-surface-variant: #94a3b8 there). Measured in a
+    // browser across six themes: seven of these eight pointed at a different colour
+    // than their role, in every dark theme. Which colour a component got depended on
+    // which of the two names its author had typed.
+    //
+    // The same fault was fixed for --gk-surface-variant and --gk-text-secondary in
+    // 1.80.1; these eight were left behind. ci/farben.js measures the resolved values.
+    $paare = [
+        '--gk-text' => '--gk-on-surface',
+        '--gk-text-muted' => '--gk-on-surface-variant',
+        '--gk-text-subtle' => '--gk-outline',
+        '--gk-border' => '--gk-outline-variant',
+    ];
+    // The four surface aliases are NOT in this list, deliberately: themes.css gives
+    // --gk-surface and --gk-surface-container the same colour in dark mode, so
+    // deriving them would make --gk-bg and --gk-bg-muted identical and every muted
+    // surface lying on a plain one would lose its edge. Held back until the ladder
+    // is decided; the comment in the dark block says so, and ci/farben.js measures
+    // and reports them without failing.
+    foreach (['--gk-bg', '--gk-bg-muted', '--gk-bg-subtle', '--gk-bg-hover'] as $offen) {
+        T::ok(!isset($paare[$offen]), "$offen is knowingly still a literal in dark mode");
+    }
+    // Only the dark ROOT block — not the many component rules that also carry
+    // [data-gk-mode="dark"], and not the light block, which spells these the same way.
+    // preg_match_all, not preg_match: with a single match this test would silently
+    // check the FIRST block if someone ever adds a second one above it.
+    $n = preg_match_all('/^\[data-gk-mode="dark"\],\s*\n\.gk-dark \{(.*?)^\}/ms', css(), $m);
+    T::ok($n === 1, "there is exactly one dark root block (found $n)");
+    $dunkel = $m[1][0] ?? '';
+    // The light block carries the same eight lines. Pinning only the dark side would
+    // let the two drift apart again from the other end.
+    $hell = preg_match('/^:root,?[^{]*\{(.*?)^\}/ms', css(), $mh) ? $mh[1] : '';
+    T::ok($hell !== '', 'the light root block is where it is expected');
+
+    foreach ($paare as $alias => $rolle) {
+        $muster = '/' . preg_quote($alias, '/') . ':\s*var\(' . preg_quote($rolle, '/') . '\)/';
+        T::ok((bool) preg_match($muster, $dunkel), "$alias follows $rolle in dark mode");
+        T::ok((bool) preg_match($muster, $hell), "$alias follows $rolle in light mode");
+    }
+},
+
 'the text roles are not darkened in dark mode' => function (): void {
     // The derivation block applies to both modes. In dark the role colours are
     // already the light end of the scale, so the same darkening step landed them

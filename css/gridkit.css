@@ -5100,15 +5100,34 @@ a.gk-stat-card:hover {
   --gk-elev-3: 0 4px 8px rgba(0, 0, 0, 0.36), 0 16px 32px rgba(0, 0, 0, 0.50);
   --gk-elev-4: 0 8px 16px rgba(0, 0, 0, 0.40), 0 24px 48px rgba(0, 0, 0, 0.56);
 
-  /* Override the alias variables explicitly (make sure the fallback chain holds) */
+  /* Restate the alias variables in this block — an alias defined on :root resolves
+     with the LIGHT values, so leaving them out would hand dark mode a light colour.
+
+     The four below are DERIVED from their role, as the light block does. They were
+     literals, and themes.css moves the roles underneath them
+     (--gk-on-surface-variant: #94a3b8): two names for one colour then pointed at two
+     colours, and which one a component got depended on which name its author typed.
+     Without themes.css nothing moves — each value equals the literal it replaced.
+     Measured with ci/farben.js across six themes and both dark spellings. */
+  --gk-text: var(--gk-on-surface);
+  --gk-text-muted: var(--gk-on-surface-variant);
+  --gk-text-subtle: var(--gk-outline);
+  --gk-border: var(--gk-outline-variant);
+
+  /* The four SURFACE aliases stay literals, deliberately, until the ladder in
+     themes.css is decided. There --gk-surface and --gk-surface-container are the
+     SAME colour in dark mode (#1e293b, themes.css:140 and :144), while this file
+     keeps them a step apart (#0d1117 / #161b22). Deriving these four would make
+     --gk-bg and --gk-bg-muted identical, and every muted surface lying on a plain
+     one would lose its edge: the checklist's header strip, footer and row hover,
+     and the hover state in the newsletter group dropdown — you could no longer see
+     which entry you were about to click. That is a palette decision for the whole
+     family of systems, not a tidy-up. Until then these two names keep disagreeing
+     in dark mode under a theme; prefer the ROLE (--gk-surface-container) in new code. */
   --gk-bg: #0d1117;
   --gk-bg-muted: #161b22;
   --gk-bg-subtle: #0d1117;
   --gk-bg-hover: #21262d;
-  --gk-text: #e6edf3;
-  --gk-text-muted: #8b949e;
-  --gk-text-subtle: #484f58;
-  --gk-border: rgba(255, 255, 255, 0.08);
   /* Derived, not literal. 1.80.1 wrote #21262d / #8b949e here — right for the
      bare stylesheet, but themes.css moves the dark surfaces (#1e293b), and the
      literal then sat 1.04:1 on its own ground: the hovered page number this was

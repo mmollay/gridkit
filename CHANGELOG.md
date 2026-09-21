@@ -7,6 +7,54 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.89.0] - 2026-09-22
+
+Twelfth round of the SSI Panel's self-maintenance loop.
+
+### Fixed — in dark mode, the text aliases had stopped meaning what their role means
+
+GridKit carries two names for the same colour: a role (`--gk-on-surface-variant`) and
+an older alias (`--gk-text-muted`). In the light block the alias IS the role, so the
+two can never drift. The dark block wrote literals instead, and `themes.css` moves the
+roles underneath them. Two names for one colour then pointed at two different colours,
+and which one a component got depended on which name its author had happened to type.
+
+`--gk-text`, `--gk-text-muted`, `--gk-text-subtle` and `--gk-border` now derive from
+their role, exactly as the light block does. **Without `themes.css` nothing moves**:
+every literal that was replaced equalled the role it now reads, checked value by value.
+With `themes.css`, muted text goes from #8b949e to #94a3b8 — on the brightest dark
+ground in the file (`.gk-toast`, #2d333b) that lifts it from 4.14:1 to 4.97:1 and
+repairs an AA violation; against the themed page ground, from 4.76:1 to 5.71:1. Normal
+text moves from 12.38:1 to 11.87:1, `--gk-border` not at all. **No background changes**:
+across a full component fixture and two panel pages only text colours moved.
+
+This is the same fault 1.80.1 fixed for `--gk-surface-variant` and `--gk-text-secondary`;
+its warning comment sat directly below these lines and they were left behind.
+
+### Deliberately NOT changed — the four surface aliases
+
+`--gk-bg`, `--gk-bg-muted`, `--gk-bg-subtle` and `--gk-bg-hover` stay literals for now.
+In `themes.css` the dark `--gk-surface` and `--gk-surface-container` are the **same**
+colour (#1e293b, lines 140 and 144), while this file keeps them a step apart
+(#0d1117 / #161b22). Deriving them would make `--gk-bg` and `--gk-bg-muted` identical,
+and every muted surface lying on a plain one would lose its edge — a checklist's header
+strip, footer and row hover, and the hover state of a dropdown, where you could no
+longer see which entry you were about to click. That is a palette decision for the
+whole family of systems, not a tidy-up, so the ladder gets its own round. Until then,
+prefer the role (`--gk-surface-container`) over the alias in new code.
+
+### Added — `ci/farben.js`
+
+Resolves each alias and its role in a real browser — six themes, light mode and both
+spellings of dark mode (`[data-gk-mode="dark"]` and `.gk-dark`) — and reports any pair
+that disagrees plus the WCAG ratio of normal and muted text against the ground. Alpha
+is part of the comparison: `--gk-border` is the one pair with transparency, and an
+opaque `#ffffff` would otherwise have slipped through the RGB channels unnoticed. The
+four deferred pairs are measured and reported without failing. Like `ci/browser.js` and
+`ci/parity.php` it stays outside the dependency-free suite; run it when touching a
+colour variable in either file.
+
+---
 ## [1.88.0] - 2026-09-21
 
 Tenth round of the SSI Panel's self-maintenance loop.
