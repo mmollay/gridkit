@@ -108,7 +108,7 @@ Table-Spalten mit `'format'` Option werden automatisch formatiert:
 | Format | Darstellung | Beispiel |
 |--------|------------|---------|
 | `currency` | Rechtsbündig, `1.234,56 €` | `['format' => 'currency']` |
-| `percent` | `20%` | `['format' => 'percent']` |
+| `percent` | `20 %` | `['format' => 'percent']` |
 | `date` | `13.02.2026` | `['format' => 'date']` |
 | `datetime` | `13.02.2026 08:30` | `['format' => 'datetime']` |
 | `boolean` | Grüner Haken / Grauer Strich | `['format' => 'boolean']` |

@@ -25,13 +25,39 @@ a modal's body and after every swap; every init in it is idempotent. The
 The client-side rebuild wrote a bare `<table class="gk-table">` and no `<tfoot>`.
 `nowrap()` and `footer()` travel in the data block now and are written again.
 
+### Fixed — a form loaded into a modal got a hand-picked subset of the widgets
+
+The modal body ran its own list — no tabs, no row pager, no accordion, no
+static-modal upgrade. It goes through `GK.initContent(body)` now, and that list
+binds tables and tooltips too, so page code that inserts a table and calls
+`GK.initContent(el)` gets sort, search and paging like the skill says.
+
+### Fixed — the rebuild forgot `loadTime()`, a column's `nowrap` and the wrap guard of number cells
+
+The client-side rebuild now writes the `loadTime()` meta cell ("2 entries · 38
+ms", or the time in the columns the footer cells leave), `white-space:nowrap` on
+a column with `nowrap` and on every number or currency cell — the same three
+things `Table::render()` writes. `_gkNumber()` no longer writes "-0,00" for a
+value that rounds to zero; `number_format()` never did.
+
+### Changed — a live table with a remembered filter no longer fires `gk-ajax-nav`
+
+`restoreSession()` answers a sidebar navigation with a full load of its own.
+The event stayed silent there until 1.82.0 because navigation never bound live
+tables; now that it does, page code would have bound things on a page about to
+be replaced. `GK.liveTable._redirecting` tells navigation to stop. The double
+load itself stays — it is what a first visit does too.
+
 ### Changed — `percent` shows the same figure in a cell as on a card
 
 A `percent` column cut to a whole number and wrote no space — "12%" under a card
 saying "12,5 %". `Table::percent()` is the one rule for both, and the client
 follows it: the digits as given, the locale's decimal sign, `'decimals'` when
-asked, a space before the sign. **Visible** in every percent column of every
-system: "12%" becomes "12 %", "12.5" is no longer cut to "12".
+asked, a space before the sign. Nothing, a placeholder without a digit ("–")
+and a value that already ends in % come back as they are; text with a digit
+that is not a number ("12,5") only gets the sign. **Visible** in every percent
+column of every system: "12%" becomes "12 %", "12.5" is no longer cut to "12",
+an empty cell stays empty instead of reading " %".
 
 ---
 ## [1.81.0] - 2026-09-20

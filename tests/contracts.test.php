@@ -467,6 +467,14 @@ return [
     // The cell cut to a whole number and wrote no space: "12%" under a card saying "12,5 %".
     T::eq($cell(12.5, ['format' => 'percent']), $card(12.5, ['format' => 'percent']), 'percent: card and cell agree');
     T::eq($cell(12.345, ['format' => 'percent', 'decimals' => 1]), '12,3 %', 'percent with decimals in the cell');
+    // Nothing and placeholders stay what they are, text keeps its digits, "85%" is not "85% %".
+    T::eq(Table::percent(null), '', 'percent: null is nothing');
+    T::eq(Table::percent(''), '', 'percent: empty is nothing');
+    T::eq(Table::percent('–'), '–', 'percent: a dash stays a dash');
+    T::eq(Table::percent('12,5'), '12,5 %', 'percent: text with a digit only gets the sign');
+    T::eq(Table::percent('85%'), '85%', 'percent: a value that already carries the sign is left alone');
+    T::eq(Table::percent(-0.04, 1), '0,0 %', 'percent: no minus on a zero');
+    T::eq($cell(null, ['format' => 'percent']), '', 'percent: an empty cell stays empty');
     Lang::set('en');
 },
 

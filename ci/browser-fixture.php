@@ -33,17 +33,19 @@ ob_start();
 (new Table('prices'))
     ->setData([
         // Descending by price on purpose: a sort that really happens changes the order.
-        ['id' => 1, 'name' => 'Anvil',  'price' => 99.0, 'qty' => 2, 'state' => 'ok'],
-        ['id' => 2, 'name' => 'Widget', 'price' => 12.5, 'qty' => 7, 'state' => 'ok'],
+        ['id' => 1, 'name' => 'Anvil',  'price' => 99.0, 'qty' => 2, 'state' => 'ok', 'share' => null],
+        ['id' => 2, 'name' => 'Widget', 'price' => 12.5, 'qty' => 7, 'state' => 'ok', 'share' => 12.5],
     ])
     ->caption('Price list')
     ->nowrap()
+    ->loadTime(38)
     ->footer(['Total', ['text' => '111,50 €', 'align' => 'right', 'bold' => true]])
     ->selectable()
     ->column('name',  'Product', ['sortable' => true])
     ->column('price', 'Price',   ['format' => 'currency', 'sortable' => true])
     ->column('qty',   'Qty',     ['format' => 'number', 'hideOnMobile' => true])   // the branch with no sort class
     ->column('state', 'State',   ['align' => 'center'])
+    ->column('share', 'Share',   ['format' => 'percent', 'decimals' => 1])   // 12.5 and nothing — as the server writes them
     ->render();
 $table = ob_get_clean();
 

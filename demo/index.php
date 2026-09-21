@@ -1474,7 +1474,7 @@ $years->range(2022, 2026)->render();</pre></div>
         ?>
     </div>
     <div class="demo-code"><pre>->column('amount', 'Amount', ['format' => 'currency'])    // €1,234.56  (follows the locale)
-->column('tax', 'VAT', ['format' => 'percent'])           // 20%
+->column('tax', 'VAT', ['format' => 'percent'])           // 20 %
 ->column('date', 'Date', ['format' => 'date'])            // Feb 13, 2026  (follows the locale)
 ->column('active', 'Active', ['format' => 'boolean'])     // ✓ / –
 ->column('status', 'Status', ['format' => 'label'])       // Colored label

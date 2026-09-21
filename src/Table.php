@@ -431,6 +431,10 @@ class Table
                 // nowrap() and footer(), so the client-side rebuild keeps both — it
                 // used to write a bare <table class="gk-table"> without a <tfoot>.
                 'nowrap'  => $this->globalNowrap,
+                // loadTime() and the count for its meta cell: the rebuild writes that
+                // cell too now — a loadTime() row on its own vanished on the first sort.
+                'loadTimeMs' => $this->loadTimeMs,
+                'totalRows'  => $this->totalRows,
                 'footer'  => array_map(static fn ($c): array => is_string($c) ? ['text' => $c] : (array) $c, $this->footerCells),
                 'buttons' => $this->buttons,
                 // Rewritten by the client on every rebuild, like everything else here.
@@ -919,22 +923,31 @@ class Table
         return Icon::svg($name, 16, true);
     }
 
-    /** Whole numbers; 0 and empty turn into an em dash (count columns). */
     /**
      * A percentage, the way a card and a cell both show it: the digits as given,
      * the locale's decimal sign, $decimals when asked, a space before the sign.
-     * js/gridkit.js carries the same rule as _gkPercent() — keep them in step.
+     * Nothing, a placeholder without a digit ("–") and a value that already ends
+     * in % come back as they are; text with a digit that is not a number ("12,5")
+     * only gets the sign. js/gridkit.js carries the same rule as _gkPercent() —
+     * keep them in step.
      */
     public static function percent(mixed $val, ?int $decimals = null): string
     {
-        $dec  = Lang::t('format.decimal');
-        $thou = Lang::t('format.thousands');
-        if ($decimals !== null) {
-            return number_format((float) $val, $decimals, $dec, $thou) . ' %';
+        $s = trim((string) ($val ?? ''));
+        if ($s === '' || str_ends_with($s, '%') || preg_match('/\d/', $s) !== 1) {
+            return $s;
         }
-        return (is_numeric($val) ? str_replace('.', $dec, (string) $val) : (string) $val) . ' %';
+        if (!is_numeric($s)) {
+            return $s . ' %';
+        }
+        $dec = Lang::t('format.decimal');
+        if ($decimals !== null) {
+            return number_format((float) $s, $decimals, $dec, Lang::t('format.thousands')) . ' %';
+        }
+        return str_replace('.', $dec, $s) . ' %';
     }
 
+    /** A number with 'decimals'; 0 and empty turn into an em dash unless blankZero is off. */
     private function formatNumber(mixed $val, array $col): string
     {
         $blank = ($col['blankZero'] ?? true)

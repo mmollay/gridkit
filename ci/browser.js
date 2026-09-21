@@ -143,15 +143,21 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
                nowrap: !!document.querySelector('[data-gk-table="prices"] table.gk-table-nowrap'),
                footer: ((document.querySelector('[data-gk-table="prices"] tfoot td:nth-child(2)') || {}).textContent || "").trim(),
                footerCells: document.querySelectorAll('[data-gk-table="prices"] tfoot td').length,
+               // loadTime() sits in the columns the footer cells leave; a percent cell
+               // reads the same before and after a rebuild; a number cell never wraps.
+               meta: ((document.querySelector('[data-gk-table="prices"] tfoot td.gk-table-meta') || {}).textContent || "").trim(),
+               share: Array.from(document.querySelectorAll('[data-gk-table="prices"] tbody tr')).map((tr) => ((tr.querySelectorAll("td")[5] || {}).textContent || "").trim()).sort().join("|"),
+               numWrap: ((document.querySelector('[data-gk-table="prices"] tbody td.gk-td-num') || { style: {} }).style || {}).whiteSpace || null,
                allBox: (document.querySelector('[data-gk-table="prices"] [data-gk-select-all]') || { getAttribute() {} }).getAttribute("aria-label") };
     });
     const good = (h) => h.cell === "right" && h.heads.Price && h.heads.Price.align === "right" && h.heads.Price.justify === "flex-end"
       && h.heads.Qty && h.heads.Qty.align === "right"
       && h.heads.State.align === "center" && h.heads.Product.align !== "right"
       && h.caption === "Price list" && h.rowBox === "Select row" && h.allBox === "Select all"
-      && h.nowrap && h.footer === "111,50 €";
+      && h.nowrap && h.footer === "111,50 €"
+      && h.meta === "38 ms" && h.share === "|12.5 %" && h.numWrap === "nowrap";
     const before = await heads();
-    check("server-rendered table: numeric header and cell right, centred column centred, caption, checkbox names, nowrap and totals row present", good(before));
+    check("server-rendered table: numeric header and cell right, centred column centred, caption, checkbox names, nowrap, totals row, load time, percent cells", good(before));
     await page.click('[data-gk-table="prices"] [data-gk-sort="price"]');
     const after = await heads();
     check("after a client-side sort all of that is still true — and the sort really happened",

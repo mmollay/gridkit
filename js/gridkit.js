@@ -41,8 +41,11 @@
     var dec = _lang.format_decimal || ".";
     var tho = _lang.format_thousands || ",";
     var parts = Math.abs(n).toFixed(decimals).split(".");
+    // No "-0,00": the sign stays only while a digit other than zero is left —
+    // what PHP's number_format() has done since 8.0.
+    var neg = n < 0 && /[1-9]/.test(parts.join(""));
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, tho);
-    return (n < 0 ? "-" : "") + parts[0] + (parts[1] ? dec + parts[1] : "");
+    return (neg ? "-" : "") + parts[0] + (parts[1] ? dec + parts[1] : "");
   }
 
   /*
@@ -150,13 +153,18 @@
   // A percentage as Table::percent() writes it: digits as given, the locale's
   // decimal sign, decimals when asked, a space before the sign. parseInt() used
   // to cut "12.5" to "12%" on the first sort while the card above said "12,5 %".
+  // Nothing, a placeholder without a digit ("–") and a value that already ends
+  // in % come back as they are; text with a digit that is not a number ("12,5")
+  // only gets the sign. Halves: toFixed() and number_format() can round an
+  // exact .5 differently once binary floats are involved — a known hairline.
   function _gkPercent(val, decimals) {
-    var dec = _lang.format_decimal || ".";
+    var s = val == null ? "" : String(val).trim();
+    if (s === "" || s.slice(-1) === "%" || !/\d/.test(s)) return s;
+    if (!/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(s)) return s + " %";
     if (decimals !== undefined && decimals !== null && decimals !== "") {
-      return _gkNumber(val, parseInt(decimals, 10) || 0) + " %";
+      return _gkNumber(s, parseInt(decimals, 10) || 0) + " %";
     }
-    var s = val == null ? "" : String(val);
-    return (isNaN(parseFloat(s)) || !isFinite(Number(s)) ? s : s.replace(".", dec)) + " %";
+    return s.replace(".", _lang.format_decimal || ".") + " %";
   }
 
   // Where a header cell stands: an explicit align wins, a number or currency
@@ -332,18 +340,14 @@
           .then((html) => {
             body.classList.remove("gk-loading");
             body.innerHTML = html;
-            GK.form.bind(body);
+            // Modal content is injected after DOMContentLoaded, so every widget
+            // binder that GK.init() ran for the page runs again here — the one
+            // list, not a hand-written subset (which had no tabs, no row pager
+            // and no accordion until 1.82.0).
+            GK.initContent(body);
             // The body arrives after the frame, so focus lands on the close
             // button first and moves on to the real first field once one exists.
             if (!body.contains(document.activeElement)) GK.modal._focusInto(ov);
-            GK.table.init(body);
-            // Modal content is injected after DOMContentLoaded, so the widget
-            // binders that GK.init() ran for the page have to run again here.
-            GK.initRangeSliders();
-            GK.initUploadZones();
-            if (GK.selectSearch) GK.selectSearch.init(body);
-            if (GK.multiSelect) GK.multiSelect.init(body);
-            if (GK.ajaxSelect) GK.ajaxSelect.init(body);
           })
           .catch(() => {
             body.classList.remove("gk-loading");
@@ -895,6 +899,7 @@
         if (page > pages) page = pages;
         if (page < 1) page = 1;
         wrap._gkPage = page;
+        const totalRows = rows.length;   // after search and filter, before the page slice — what the footer counts
         if (perPage > 0) rows = rows.slice((page - 1) * perPage, page * perPage);
 
         // Build HTML
@@ -1037,7 +1042,11 @@
             '<th scope="col" class="gk-cb-col"><input type="checkbox" data-gk-select-all aria-label="' +
             e(_lang["select_all"] || "Select all") + '" title="' + e(_lang["select_all"] || "Select all") + '"></th>';
         for (const [key, col] of Object.entries(columns)) {
-          const style = col.width ? ' style="width:' + e(col.width) + '"' : "";
+          // width and nowrap, as Table.php writes them on a header cell.
+          const thStyles = [];
+          if (col.width && col.width !== "auto") thStyles.push("width:" + e(col.width));
+          if (col.nowrap) thStyles.push("white-space:nowrap");
+          const style = thStyles.length ? ' style="' + thStyles.join(";") + '"' : "";
           const sortable = col.sortable || false;
           let cls = "",
             attrs = "",
@@ -1308,9 +1317,12 @@
                 "</div></td>";
             for (const [key, col] of Object.entries(columns)) {
               const val = row[key] ?? "";
-              const align = col.align
-                ? ' style="text-align:' + e(col.align) + '"'
-                : "";
+              // text-align and nowrap, as Table.php writes them on a cell: a
+              // column's own nowrap, and a number or currency cell never wraps.
+              const tdStyles = [];
+              if (col.align) tdStyles.push("text-align:" + e(col.align));
+              if (col.nowrap || col.format === "number" || col.format === "currency") tdStyles.push("white-space:nowrap");
+              const align = tdStyles.length ? ' style="' + tdStyles.join(";") + '"' : "";
               const tdCls = [];
               if (col.hideOnMobile) tdCls.push("gk-hide-mobile");
               if (col.format === "number" || col.format === "currency")
@@ -1338,11 +1350,20 @@
         }
 
         html += "</tbody>";
-        if (Array.isArray(data.footer) && data.footer.length) {
-          // Same markup as Table::render() writes for footer(): the style is built
-          // from a fixed vocabulary, the text is escaped like every cell.
+        const footerCells = Array.isArray(data.footer) ? data.footer : [];
+        const loadTime = data.loadTimeMs == null ? null : parseInt(data.loadTimeMs, 10);
+        if (footerCells.length || loadTime !== null) {
+          // Same markup as Table::render() writes for footer() and loadTime():
+          // the style is built from a fixed vocabulary, the text is escaped like
+          // every cell, the time sits in the columns the cells leave. Until
+          // 1.82.0 a loadTime() row on its own was not written at all.
+          const timeText = loadTime === null ? "" : loadTime < 1000 ? loadTime + " ms" : _gkNumber(loadTime / 1000, 2) + " s";
+          const colCount = (selectable ? 1 : 0) + (hasLeft ? 1 : 0) + Object.keys(columns).length + (hasRight ? 1 : 0);
           html += '<tfoot><tr class="gk-table-footer">';
-          data.footer.forEach(function (cell) {
+          if (!footerCells.length) {
+            html += '<td colspan="' + colCount + '" class="gk-table-meta">' + totalRows + " " + e(_lang.pagination_entries || "entries") + " · " + timeText + "</td>";
+          }
+          footerCells.forEach(function (cell) {
             const c = typeof cell === "string" ? { text: cell } : cell || {};
             const align = ["left", "center", "right"].indexOf(c.align) >= 0 ? c.align : "left";
             let style = "text-align:" + align + ";";
@@ -1352,9 +1373,12 @@
           });
           // The server pads the row to the full width; so does this, or the
           // footer of a rebuilt table ends short of the last column.
-          const colCount = (selectable ? 1 : 0) + (hasLeft ? 1 : 0) + Object.keys(columns).length + (hasRight ? 1 : 0);
-          const used = data.footer.reduce((n, cell) => n + ((typeof cell === "string" ? 1 : parseInt((cell || {}).colspan, 10)) || 1), 0);
-          if (colCount - used > 0) html += '<td colspan="' + (colCount - used) + '"></td>';
+          const used = footerCells.reduce((n, cell) => n + ((typeof cell === "string" ? 1 : parseInt((cell || {}).colspan, 10)) || 1), 0);
+          if (footerCells.length && colCount - used > 0) {
+            html += loadTime === null
+              ? '<td colspan="' + (colCount - used) + '"></td>'
+              : '<td colspan="' + (colCount - used) + '" class="gk-table-meta">' + timeText + "</td>";
+          }
           html += "</tr></tfoot>";
         }
         html += "</table>";
@@ -2002,9 +2026,8 @@
         var anchor = frag ? document.getElementById(frag) : null;
         if (anchor) anchor.scrollIntoView(); else window.scrollTo(0, 0);
         try {
-          if (typeof GK.table !== 'undefined' && GK.table.init) GK.table.init();
-          if (typeof GK.tooltip !== 'undefined' && GK.tooltip.init) GK.tooltip.init();
-          // Every other widget too — defined below this point, hence the guard.
+          // Every widget, tables and tooltips included — defined below this
+          // point, hence the guard.
           if (typeof GK.initContent === 'function') GK.initContent(content);
           // BelegModal sits inside [data-gk-content] and is re-rendered on the
           // swap → the close button loses its listener. Bind it again.
@@ -2012,6 +2035,10 @@
         } catch (e) {
           if (window.console) console.warn('GK.navigate: widget init after swap', e);
         }
+        // A live table with a remembered filter answers the swap with a full
+        // load of its own (restoreSession). Nothing to announce on a page that
+        // is on its way out — and the progress bar stays for the load to come.
+        if (typeof GK.liveTable !== 'undefined' && GK.liveTable._redirecting) return;
         // For page code that binds its own things after a swap.
         document.dispatchEvent(new CustomEvent('gk-ajax-nav', { detail: { url: url, content: content } }));
       } catch (err) {
@@ -2541,6 +2568,7 @@
         var restored = baseUrl + (saved.charAt(0) === "?" ? saved : "?" + saved);
         var urlObj = new URL(restored, window.location.origin);
         if (urlObj.search) {
+          GK.liveTable._redirecting = true;   // GK.navigate reads this after a swap
           window.location.replace(restored);
         }
       } catch (e) {}
@@ -2945,6 +2973,11 @@
     GK.initUploadZones();
     GK.initRichtext();
     if (GK.form && GK.form.bind) GK.form.bind(root);
+    // Tables and tooltips were bound beside this list, not in it: a table that
+    // page code inserted and handed to initContent() got no sort, search or
+    // paging — although the skill says this call is all it takes.
+    if (GK.table && GK.table.init) GK.table.init(root);
+    if (GK.tooltip && GK.tooltip.init) GK.tooltip.init();
     if (GK.selectSearch) GK.selectSearch.init(root);
     if (GK.multiSelect) GK.multiSelect.init(root);
     if (GK.ajaxSelect) GK.ajaxSelect.init(root);

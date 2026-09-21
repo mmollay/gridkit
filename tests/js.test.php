@@ -405,13 +405,19 @@ return [
     // form posted natively, the client-side pager was missing — until a reload.
     $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
     T::ok((bool) preg_match('/\n  GK\.initContent = function \(root\) \{(.*?)\n  \};/s', $js, $m), 'GK.initContent was not found');
-    foreach (['selectSearch', 'multiSelect', 'ajaxSelect', 'liveTable', 'tabs', 'rowPager', 'accordion', 'form.bind', 'upgradeStatic'] as $w) {
+    foreach (['table.init', 'tooltip.init', 'selectSearch', 'multiSelect', 'ajaxSelect', 'liveTable', 'tabs', 'rowPager', 'accordion', 'form.bind', 'upgradeStatic'] as $w) {
         T::contains($m[1] ?? '', $w, "initContent does not bind $w");
     }
     T::contains($js, "if (typeof GK.initContent === 'function') GK.initContent(content);", 'navigation does not call initContent');
     T::contains($js, "new CustomEvent('gk-ajax-nav'", 'the skill promised a gk-ajax-nav event that nothing fired');
+    // A live table with a remembered filter answers the swap with a full load:
+    // the event must not reach page code on a page that is on its way out.
+    T::contains($js, 'GK.liveTable._redirecting = true;', 'restoreSession does not say that it redirects');
+    T::contains($js, "if (typeof GK.liveTable !== 'undefined' && GK.liveTable._redirecting) return;", 'gk-ajax-nav fires on a page that is being replaced');
     // GK.init and the modal body go through the same list — one list, or they drift.
     T::contains($js, 'GK.initContent(document);', 'GK.init keeps a list of its own');
+    T::contains($js, 'GK.initContent(body);', 'the modal body keeps a list of its own');
+    T::ok(!preg_match('/GK\.table\.init\(body\)/', $js), 'the modal body still binds tables beside the list');
 },
 
 ];

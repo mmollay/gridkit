@@ -174,8 +174,9 @@ return [
 
     // Modal content arrives after DOMContentLoaded, so the widget binders
     // have to run again — without this a form in a table modal is inert.
-    T::contains($js, 'if (GK.selectSearch) GK.selectSearch.init(body)',
-        'a form loaded into a modal never gets its selects bound');
+    // Since 1.82.0 through the one list GK.init() uses, not a copy of it.
+    T::contains($js, 'GK.initContent(body);',
+        'a form loaded into a modal never gets its widgets bound');
 },
 
 ];
