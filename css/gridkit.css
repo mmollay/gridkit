@@ -1870,8 +1870,21 @@ td.gk-table-meta {
   box-sizing: border-box;
   height: 44px;
 }
-.gk-input::placeholder {
-  color: #6e7781;
+/* Ein Platzhalter für beide Schemata: die gedämpfte Rolle wechselt mit dem Modus
+   selbst, eine Dunkel-Regel braucht es dafür nicht mehr.
+   Vorher stand hier #6e7781 — auf dem ruhenden Feld 4,27:1, also unter AA; dunkel
+   galt var(--gk-outline) mit 2,28:1, dort war der Platzhalter nie lesbar. 85 % der
+   Rolle über dem jeweiligen Feldgrund tragen JEDEN Zustand: hell ruhend 4,93:1 und
+   fokussiert 5,16:1, dunkel 5,62 / 4,56 (fokussiert, das Feld wechselt dabei auf
+   var(--gk-surface)) / 4,96 (nur lesbar) und ohne themes.css durchgehend 4,73:1.
+   Suchfeld und Filter standen nie in dieser Regel und trugen den Browser-Standard —
+   im Panel ist das Tabellen-Suchfeld der meistgesehene Platzhalter überhaupt.
+   Kein Rückfall-Literal: die 32 anderen Mischungen der Datei haben auch keines.
+   Alle Zustände misst ci/farben.js. */
+.gk-input::placeholder,
+.gk-search::placeholder,
+.gk-filter::placeholder {
+  color: color-mix(in oklab, var(--gk-on-surface-variant) 85%, transparent);
 }
 .gk-input:hover {
   border-color: var(--gk-outline, #94a3b8);
@@ -3653,7 +3666,11 @@ a.gk-stat-card:hover {
   position: sticky;
   top: 0;
   backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.85);
+  /* Wie die Dunkelfassung: die eigene Oberfläche, nicht ein fester Wert. Im hellen
+     Schema ist --gk-surface #ffffff, das Ergebnis also Zeichen für Zeichen dasselbe
+     wie das rgba(255,255,255,0.85), das hier stand — aber es bleibt richtig, falls
+     ein Thema die helle Oberfläche je verschiebt. */
+  background: color-mix(in oklab, var(--gk-surface) 85%, transparent);
 }
 
 /* Backward-compat utility */
@@ -5183,7 +5200,13 @@ a.gk-stat-card:hover {
 }
 [data-gk-mode="dark"] .gk-header-sticky,
 .gk-dark .gk-header-sticky {
-  background: rgba(13, 17, 23, 0.92);
+  /* Die Kopfzeile selbst steht drei Zeilen darüber auf var(--gk-surface). Hier stand
+     rgba(13,17,23,0.92) aus GRIDKits eigener Palette — unter einem Thema wechselte die
+     Kopfzeile beim Festkleben sichtbar die Farbe: gemessen rgb(30,41,59) gegen
+     rgb(14,19,26). Ohne Rückfallzeile, wie die 35 anderen color-mix-Stellen der Datei:
+     eine Rückfallzeile hilft ohnehin nur gegen einen Parse-Fehler, nicht gegen ein
+     fehlendes var() — das macht die Deklaration erst zur Rechenzeit ungültig. */
+  background: color-mix(in oklab, var(--gk-surface) 92%, transparent);
 }
 [data-gk-mode="dark"] .gk-modal,
 .gk-dark .gk-modal {
@@ -5200,7 +5223,7 @@ a.gk-stat-card:hover {
 .gk-dark .gk-filter {
   background-color: #0d1117;
   border-color: rgba(255, 255, 255, 0.12);
-  color: #8b949e;
+  color: var(--gk-on-surface-variant);
 }
 [data-gk-mode="dark"] input,
 [data-gk-mode="dark"] select,
@@ -5209,7 +5232,7 @@ a.gk-stat-card:hover {
 .gk-dark select,
 .gk-dark textarea {
   background: #0d1117;
-  color: #e6edf3;
+  color: var(--gk-on-surface);
   border-color: rgba(255, 255, 255, 0.15);
 }
 [data-gk-mode="dark"] .gk-confirm-box,
@@ -5278,7 +5301,7 @@ a.gk-stat-card:hover {
 .gk-dark .gk-message {
   background: #161b22;
   border-color: rgba(255, 255, 255, 0.1);
-  color: #e6edf3;
+  color: var(--gk-on-surface);
 }
 [data-gk-mode="dark"] .gk-message-info,
 .gk-dark .gk-message-info {
@@ -5309,7 +5332,7 @@ a.gk-stat-card:hover {
 [data-gk-mode="dark"] .gk-card-footer,
 .gk-dark .gk-card-footer {
   border-top-color: rgba(255, 255, 255, 0.08);
-  color: #8b949e;
+  color: var(--gk-on-surface-variant);
 }
 
 [data-gk-mode="dark"] .gk-page-btn,
@@ -5369,7 +5392,7 @@ a.gk-stat-card:hover {
 [data-gk-mode="dark"] .gk-btn-tonal.gk-btn-neutral,
 .gk-dark .gk-btn-tonal.gk-btn-neutral {
   background: rgba(255, 255, 255, 0.09);
-  color: #e6edf3;
+  color: var(--gk-on-surface);
 }
 [data-gk-mode="dark"] .gk-btn-tonal.gk-btn-neutral:hover,
 .gk-dark .gk-btn-tonal.gk-btn-neutral:hover {
@@ -5422,7 +5445,7 @@ a.gk-stat-card:hover {
 }
 [data-gk-mode="dark"] .gk-upload-icon,
 .gk-dark .gk-upload-icon {
-  color: #8b949e;
+  color: var(--gk-on-surface-variant);
 }
 [data-gk-mode="dark"] .gk-upload-zone:hover .gk-upload-icon,
 .gk-dark .gk-upload-zone:hover .gk-upload-icon {
@@ -5430,7 +5453,7 @@ a.gk-stat-card:hover {
 }
 [data-gk-mode="dark"] .gk-upload-hint,
 .gk-dark .gk-upload-hint {
-  color: #8b949e;
+  color: var(--gk-on-surface-variant);
 }
 
 /* Dark Mode: Upload Queue */
@@ -5454,7 +5477,7 @@ a.gk-stat-card:hover {
 /* Dark Mode: Form field hints */
 [data-gk-mode="dark"] .gk-field-hint,
 .gk-dark .gk-field-hint {
-  color: #8b949e;
+  color: var(--gk-on-surface-variant);
 }
 
 /* Dark Mode: Page buttons (pagination) */
@@ -5487,7 +5510,7 @@ a.gk-stat-card:hover {
 /* Dark Mode: Breadcrumbs */
 [data-gk-mode="dark"] .gk-breadcrumb a,
 .gk-dark .gk-breadcrumb a {
-  color: #8b949e;
+  color: var(--gk-on-surface-variant);
 }
 [data-gk-mode="dark"] .gk-breadcrumb a:hover,
 .gk-dark .gk-breadcrumb a:hover {
@@ -5495,7 +5518,7 @@ a.gk-stat-card:hover {
 }
 [data-gk-mode="dark"] .gk-breadcrumb-current,
 .gk-dark .gk-breadcrumb-current {
-  color: #e6edf3;
+  color: var(--gk-on-surface);
 }
 
 /* Dark Mode: Accordion */
@@ -5506,7 +5529,7 @@ a.gk-stat-card:hover {
 [data-gk-mode="dark"] .gk-accordion-trigger,
 .gk-dark .gk-accordion-trigger {
   background: #161b22;
-  color: #e6edf3;
+  color: var(--gk-on-surface);
 }
 [data-gk-mode="dark"] .gk-accordion-trigger:hover,
 .gk-dark .gk-accordion-trigger:hover {
@@ -5518,13 +5541,13 @@ a.gk-stat-card:hover {
 }
 [data-gk-mode="dark"] .gk-accordion-body,
 .gk-dark .gk-accordion-body {
-  color: #8b949e;
+  color: var(--gk-on-surface-variant);
 }
 
 /* Dark Mode: Form labels */
 [data-gk-mode="dark"] .gk-label-text,
 .gk-dark .gk-label-text {
-  color: #8b949e;
+  color: var(--gk-on-surface-variant);
 }
 
 /* Dark Mode: Richtext/CKEditor */
@@ -6044,7 +6067,7 @@ a.gk-stat-card:hover {
 [data-gk-mode="dark"] .gk-table thead th,
 .gk-dark .gk-table thead th {
   background: #161b22;
-  color: #8b949e;
+  color: var(--gk-on-surface-variant);
   font-size: var(--gk-text-overline);
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -6106,7 +6129,7 @@ a.gk-stat-card:hover {
 [data-gk-mode="dark"] .gk-table-definition td:first-child,
 .gk-dark .gk-table-definition td:first-child {
   background: #0d1117;
-  color: #8b949e;
+  color: var(--gk-on-surface-variant);
 }
 
 /* Dark: Striped (explicit) */
@@ -6130,10 +6153,6 @@ a.gk-stat-card:hover {
   border-color: rgba(255, 255, 255, 0.15);
   color: var(--gk-on-surface);
 }
-[data-gk-mode="dark"] .gk-input::placeholder,
-.gk-dark .gk-input::placeholder {
-  color: #484f58;
-}
 
 /* --- Modal Header/Body --- */
 [data-gk-mode="dark"] .gk-modal-header,
@@ -6154,7 +6173,7 @@ a.gk-stat-card:hover {
 [data-gk-mode="dark"] .gk-avatar,
 .gk-dark .gk-avatar {
   background: rgba(99, 102, 241, 0.2);
-  color: #a5b4fc;
+  color: var(--gk-primary);
 }
 [data-gk-mode="dark"] .gk-avatar-status,
 .gk-dark .gk-avatar-status {

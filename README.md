@@ -107,7 +107,10 @@ assets wired up. It looks for GridKit beside itself, one directory up, and in
 `vendor/` — so the copy above works without editing anything. If you put it
 somewhere none of those reach, it says so and tells you which line to change.
 
-**Requirements:** PHP 8.2+ and a browser with CSS Custom Properties.
+**Requirements:** PHP 8.2+ and a browser at Baseline 2023 — custom properties,
+plus `color-mix()` (Chrome 111, Safari 16.2, Firefox 113), which the hover and
+focus-ring tokens have quietly depended on for a long while; `oklch()` and
+relative colour syntax sit behind `@supports` and degrade on their own.
 No npm, no Composer plugins, no compilation. `mbstring` is used when present
 but not required — `bash ci/matrix.sh` runs the suite on every PHP your machine
 has and tells you which of them had it.

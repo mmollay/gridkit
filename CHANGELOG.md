@@ -7,6 +7,73 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.90.0] - 2026-09-22
+
+Thirteenth round of the SSI Panel's self-maintenance loop.
+
+### Fixed — under a theme, two palettes were running side by side in dark mode
+
+The dark component rules carried GridKit's own palette as literals right next to
+role-based declarations, often in the same rule block: a search field took its background
+from one palette (`#0d1117`) and its text from the other (`var(--gk-on-surface)`). Under a
+theme the literals belong to no theme value at all, so a filter's grey sat a shade away
+from the stat label beside it.
+
+Measured under a theme with the new second section of `ci/farben.js`: **77 elements on 33
+spots wore a colour that belonged to no theme value.** The sixteen TEXT colours now read
+their role, which brings it to 40 on 15 — and every one of those is a background.
+`.gk-avatar` was among the sixteen in spirit: it carried `--gk-primary`'s own dark value
+as a literal, so the monogram stayed indigo under ocean, forest, rose and amber.
+
+Without `themes.css` nothing moves: each literal equalled the role it now reads. With
+`themes.css`, muted text gains contrast on the grounds it sits on — a filter from 6.15:1
+to 7.38:1, a table head from 5.62:1 to 6.75:1. On a panel page in dark mode, 910 of 3286
+elements change and **not one of them is a background**.
+
+### Fixed — the header changed colour the moment it stuck
+
+`.gk-header` is `var(--gk-surface)`; `.gk-header-sticky` was `rgba(13,17,23,0.92)`,
+GridKit's own near-black. Under a theme the two were measurably different — rgb(30,41,59)
+against rgb(14,19,26) — so scrolling made the header jump. Both the light and the dark rule
+now mix their own surface; the light one moves nothing today, because the light surface IS
+white, but it carried the same defect.
+
+### Fixed — the placeholder was unreadable in dark mode and short of AA in light
+
+Two rules became one. The muted role already switches with the mode, so a dark override was
+never needed — and each side was broken in its own way: light was `#6e7781`, **4.27:1** on
+the resting field, and dark was `var(--gk-outline)` at **2.28:1**, which means dark mode had
+simply never had a readable placeholder.
+
+Now 85% of the muted role over whatever ground the field has. Measured in a browser, every
+state clears AA: light 4.93 resting and 5.16 focused; dark 5.62 resting, 4.56 focused — the
+field moves to `var(--gk-surface)` then, which is where 75% would have failed at 3.90 — 4.96
+read-only, and 4.73 throughout without `themes.css`.
+
+`.gk-search` and `.gk-filter` were never named in the rule and carried the browser default.
+In the panel the table search is the placeholder a user sees most often; it was 4.11:1 and a
+different colour from every field beside it.
+
+### Still literals, deliberately — the 38 backgrounds
+
+They cannot follow their role until the surface ladder in `themes.css` is settled: there dark
+`--gk-surface` and `--gk-surface-container` are the same colour, so a modal, a card and the
+page ground would collapse into one. `ci/farben.js` measures and reports them without failing.
+
+### Added — component measurement in `ci/farben.js`
+
+A second section renders a probe page carrying exactly the components whose dark rules set a
+colour — not the general fixture, which is missing thirteen of them, where "nothing found"
+would only mean "nothing looked for". Every probe must be found or the case is red. It runs
+four configurations (with `themes.css`, without, `.gk-dark`, and light), proves the theme
+attribute actually bites by comparing two themes' accents, and measures the placeholder in
+four field states.
+
+### Changed — the documented browser requirement
+
+The README promised only "custom properties" while the hover and focus-ring tokens have
+depended on `color-mix()` for a long while, at 35 places. It now says Baseline 2023.
+---
 ## [1.89.0] - 2026-09-22
 
 Twelfth round of the SSI Panel's self-maintenance loop.

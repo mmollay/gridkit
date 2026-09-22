@@ -207,6 +207,85 @@ return [
     }
 },
 
+'dark component rules take their TEXT colour from a role, not from a literal' => function (): void {
+    // The dark component rules carried GridKit's own palette as literals next to
+    // role-based declarations, often in the same rule block: a search field took its
+    // background from one palette and its text from the other. Under a theme the
+    // literals belong to no theme value at all.
+    //
+    // An ALLOW list, not a deny list: a deny list of known greys lets #3a4250,
+    // #262d38, an !important, an rgb() spelling or a second declaration on the same
+    // line slip through — and it missed .gk-avatar, which carried --gk-primary's own
+    // value as a literal and stayed indigo under every other theme.
+    $anfang = strpos(css(), '/* Dark mode: Component adjustments */');
+    T::ok($anfang !== false, 'the dark component section is where it is expected');
+    $abschnitt = substr(css(), (int) $anfang);
+
+    // Semantic colours that are deliberately literals: they carry a meaning
+    // (message kinds, tonal buttons) and have no role to read.
+    $erlaubt = ['#38bdf8', '#6ee7b7', '#fcd34d', '#fda4af',   // message kinds
+                '#c7d2fe', '#a7f3d0', '#fde68a', '#fecaca',   // tonal buttons
+                '#fef9c3',                                    // search hit on #854d0e (1.80.1)
+                '#fff', '#ffffff', 'inherit', 'currentcolor', 'transparent'];
+
+    $verstoesse = [];
+    $zeilen = explode("\n", $abschnitt);
+    $versatz = substr_count(substr(css(), 0, (int) $anfang), "\n");
+    foreach ($zeilen as $i => $zeile) {
+        if (!preg_match_all('/(?:^|[;{\s])(?:-webkit-text-fill-color|caret-color|color)\s*:\s*([^;}]+)/i', $zeile, $treffer)) {
+            continue;
+        }
+        foreach ($treffer[1] as $wert) {
+            $wert = strtolower(trim(str_ireplace('!important', '', $wert)));
+            if ($wert === '' || str_starts_with($wert, 'var(') || str_starts_with($wert, 'color-mix(')
+                || in_array($wert, $erlaubt, true)) {
+                continue;
+            }
+            $verstoesse[] = 'Zeile ' . ($versatz + $i + 1) . ': color: ' . $wert;
+        }
+    }
+    T::ok($verstoesse === [],
+        'every text colour in the dark component rules reads a role'
+        . ($verstoesse ? "\n      " . implode("\n      ", $verstoesse) : ''));
+},
+
+'the sticky header keeps the colour of the header it sticks to' => function (): void {
+    // .gk-header is var(--gk-surface); .gk-header-sticky was rgba(13,17,23,0.92) —
+    // GridKit's own near-black. Under a theme the header therefore changed colour
+    // the moment it stuck: measured rgb(30,41,59) against rgb(14,19,26). The light
+    // rule had the same defect (a literal white) and was changed with it, which
+    // moves nothing today because the light surface IS white.
+    foreach ([['/\n\.gk-header-sticky \{(.*?)\}/s', 'light'],
+              ['/\[data-gk-mode="dark"\] \.gk-header-sticky,\s*\n\.gk-dark \.gk-header-sticky \{(.*?)\}/s', 'dark']] as [$muster, $wo]) {
+        T::ok((bool) preg_match($muster, css(), $m), "the $wo sticky-header rule is where it is expected");
+        T::ok(str_contains($m[1] ?? '', 'color-mix(in oklab, var(--gk-surface)'),
+            "the $wo sticky header mixes its own surface instead of a literal");
+    }
+},
+
+'the placeholder reads in every state a field can be in' => function (): void {
+    // Two rules became one. The muted role already switches with the mode, so a dark
+    // override is not needed — and both sides were broken in their own way: light was
+    // #6e7781 at 4.27:1 on the resting field, dark was var(--gk-outline) at 2.28:1 and
+    // had never been readable at all. 85% of the role over whatever ground the field
+    // has carries every state: light 4.93 resting and 5.16 focused; dark 5.62 resting,
+    // 4.56 focused (the field moves to var(--gk-surface) then), 4.96 read-only, and
+    // 4.73 throughout without themes.css. 75% failed three of those.
+    //
+    // .gk-search and .gk-filter were never named in the rule and carried the browser
+    // default — in the panel the table search is the placeholder a user sees most.
+    T::ok((bool) preg_match('/((?:\.gk-[a-z]+::placeholder,?\s*)+)\{([^}]*)\}/s', css(), $m),
+        'the placeholder rule is where it is expected');
+    foreach (['.gk-input::placeholder', '.gk-search::placeholder', '.gk-filter::placeholder'] as $wahl) {
+        T::ok(str_contains($m[1], $wahl), "the rule covers $wahl");
+    }
+    T::ok(str_contains($m[2], 'color-mix(in oklab, var(--gk-on-surface-variant) 85%'),
+        'it is 85% of the muted role, not a literal');
+    // A dark override would re-introduce the split this replaced.
+    T::ok(!preg_match('/\[data-gk-mode="dark"\][^{]*::placeholder(?![^{]*disabled)/', css()),
+        'and no dark rule overrides it again');
+},
+
 'the text roles are not darkened in dark mode' => function (): void {
     // The derivation block applies to both modes. In dark the role colours are
     // already the light end of the scale, so the same darkening step landed them
