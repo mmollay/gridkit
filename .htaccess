@@ -93,3 +93,19 @@
     Require all denied
 </FilesMatch>
 RedirectMatch 403 ^/(tests|ci|\.git|\.design)/
+
+# Tool droppings. This directory IS the site, so whatever a coding session
+# leaves in the working copy is on disk here: .claude/, .playwright-mcp/,
+# .CLAUDE.md. None of it is the site. Until 1.90.1 .claude/settings.local.json
+# answered 200 on gridkit.at. Unanchored on purpose: the same directory is
+# mounted at /gridkit/ inside the SSI Panel, where the path does not start at
+# the root. .well-known stays reachable for certificate renewal.
+RedirectMatch 403 /\.(?!well-known/)
+
+# INTERNAL-DEPLOY.md is git-ignored because it describes the servers, and its
+# own opening lines say it must never be public. It answered 200 all the same:
+# being left out of the repository says nothing about being left out of the
+# site when the working copy is the document root.
+<Files "INTERNAL-DEPLOY.md">
+    Require all denied
+</Files>

@@ -7,6 +7,27 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.90.1] - 2026-09-23
+
+### Security — the working copy served what a session had left in it
+
+This directory is the document root of gridkit.at, and the SSI Panel mounts the same
+directory at `/gridkit/`. On 23.09.2026 both answered 200 for `INTERNAL-DEPLOY.md` — the
+note that describes the servers, git-ignored for exactly that reason — and for
+`.claude/settings.local.json`. Being left out of the repository says nothing about being
+left out of the site when the working copy is what the web server reads.
+
+`.htaccess` now refuses every path segment that starts with a dot (`.claude/`,
+`.playwright-mcp/`, `.CLAUDE.md`; `.well-known/` stays reachable for certificate renewal)
+and `INTERNAL-DEPLOY.md` by name. The dot rule is deliberately not anchored at the root,
+because inside the Panel the path begins with `/gridkit/`. A test in `landing.test.php`
+holds both rules and runs the pattern against the paths that must and must not pass;
+removing either rule turns it red.
+
+The Panel itself now serves only `css/`, `js/`, `assets/` and `VERSION` from `/gridkit/`
+(SSI Panel rc952); the demo, the sources and the tests stay on gridkit.at.
+
+---
 ## [1.90.0] - 2026-09-22
 
 Thirteenth round of the SSI Panel's self-maintenance loop.

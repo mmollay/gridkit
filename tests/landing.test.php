@@ -197,6 +197,31 @@ return [
  * and already redirects from its own vhost, and a broader rule would have
  * caught hosts nobody checked.
  */
+/**
+ * The working copy is the document root, so anything a session leaves in it is
+ * served. On 23.09.2026 gridkit.at answered 200 for INTERNAL-DEPLOY.md (server
+ * paths, git-ignored for exactly that reason) and for .claude/settings.local.json.
+ * The pattern must not be anchored at the root: the SSI Panel mounts this same
+ * directory at /gridkit/.
+ */
+'tool droppings and the internal deploy note are not served' => function (): void {
+    $ht = (string) file_get_contents(__DIR__ . '/../.htaccess');
+
+    T::contains($ht, 'RedirectMatch 403 /\\.(?!well-known/)',
+        'dot-files and dot-directories (.claude/, .CLAUDE.md) are served');
+    T::ok(preg_match('~<Files "INTERNAL-DEPLOY\\.md">\s*Require all denied\s*</Files>~', $ht) === 1,
+        'INTERNAL-DEPLOY.md is served');
+
+    // The regex itself, on the paths that matter.
+    $rx = '~/\.(?!well-known/)~';
+    foreach (['/.claude/settings.local.json', '/.CLAUDE.md', '/gridkit/.claude/x', '/.playwright-mcp/a.png'] as $p) {
+        T::ok(preg_match($rx, $p) === 1, "$p would still be served");
+    }
+    foreach (['/.well-known/acme-challenge/abc', '/css/gridkit.css', '/demo/login.php', '/index.php'] as $p) {
+        T::ok(preg_match($rx, $p) === 0, "$p would be refused although it belongs to the site");
+    }
+},
+
 'the site answers under one hostname' => function (): void {
     $ht = (string) file_get_contents(__DIR__ . '/../.htaccess');
 
