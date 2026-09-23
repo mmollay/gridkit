@@ -1,4 +1,4 @@
-# GridKit 1.90.1 — JavaScript
+# GridKit 1.91.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -43,6 +43,19 @@ GK.table.refreshAll();          // every table on the page
 // or translated, and it blocks the page.
 GK.confirm('Delete this invoice?', { title: 'Delete', confirmText: 'Delete', danger: true })
   .then(function (yes) { if (yes) removeInvoice(); });
+
+// Side sheet (since 1.91.0) — markup on the page, see "Side sheet".
+// The first argument is an id, "#id" or the element. Returns the sheet or null.
+GK.sheet.open('user-sheet', {
+  returnFocus: rowButton,        // optional: where the focus goes back (default: what has it now)
+  focus: '#plan',                // optional: where the caret goes (default: the title)
+  params: { id: 7 },             // optional: handed to gk:sheetopen, posted with url
+  url: 'panels/user.php',        // optional: its answer fills .gk-sheet-body
+  title: 'Jana Novak',        // optional: replaces the text of .gk-sheet-title
+});
+GK.sheet.close();                // the open one
+document.addEventListener('gk:sheetopen', e => fill(e.target, e.detail.params));  // detail: { opener, params }
+document.addEventListener('gk:sheetclose', e => { /* e.detail.opener */ });
 ```
 
 An AJAX form (`Form::ajax()`) reports its own outcome: `{ok: true, message: '…'}` closes the modal, refreshes
@@ -180,3 +193,6 @@ Features:
    with the server's 404 page. For an overlay whose markup is already on the page, use
    `GK.modal.show('#id')` / `GK.modal.hide('#id')` — never `open()`.
 6. **Direct project edits** — Always change GridKit at its own source, never inside a consuming project.
+7. **A clickable row made by hand** — `onclick` on a `<tr>`, `role="link"` or a `tabindex` on it: the keyboard
+   cannot reach it or a screen reader loses the row. Use `->rowLink()`, or `tr.gk-row-link` with one
+   `.gk-row-target` in its main cell. And never a select or a switch in every row — that is what the side sheet is for.

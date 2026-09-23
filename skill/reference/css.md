@@ -1,4 +1,4 @@
-# GridKit 1.90.1 — CSS
+# GridKit 1.91.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -43,6 +43,10 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-accordion-flush` | Accordion without its own border or rounding, for one already inside a card |
 | `gk-richtext-toolbar` `gk-richtext-content` `gk-richtext-btn` | The rich-text field's own parts |
 | `gk-skeleton` | Grey shimmer standing in for text that has not arrived |
+| `gk-sheet` `gk-sheet-header` `gk-sheet-title` `gk-sheet-close` `gk-sheet-body` `gk-sheet-footer` | Side sheet (since 1.91.0): docked right, full screen and modal on a phone; hidden with the `hidden` attribute |
+| `gk-sheet-push` | Content that makes room for a docked sheet while one is open (wide screens only) |
+| `gk-row-link` `gk-row-target` | A row that opens something (on the `<tr>`), and the one control in its main cell that it forwards clicks to |
+| `gk-table-more` `gk-table-more-toggle` `gk-table-more-name` | One row standing for many: the row, the full-width toggle (`aria-controls` names the rows, usually a `<tbody hidden>`), its label |
 
 ### Tabs
 

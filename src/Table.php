@@ -5,6 +5,9 @@ use GridKit\Button;
 
 class Table
 {
+    /** Formats that write a link of their own — no row control may wrap them. */
+    private const ROW_LINK_REFUSED = ['html', 'email'];
+
     private string $id;
     private array $columns = [];
     private array $buttons = [];
@@ -38,6 +41,8 @@ class Table
     private string $groupCol = '';
     private string $caption = '';
     private array $groupLabels = [];
+    /** What a row opens: ['href' => …] or ['sheet' => …, 'url' => …], plus 'column' and 'params'. */
+    private array $rowLink = [];
 
     public function __construct(string $id)
     {
@@ -279,6 +284,121 @@ class Table
     }
 
     /**
+     * The whole row opens something: a page, or a side sheet.
+     *
+     *     ->rowLink('/users/{id}')                              // a page
+     *     ->rowLink(['sheet' => 'user-sheet'])                  // a .gk-sheet on this page
+     *     ->rowLink(['sheet' => 'user-sheet', 'url' => 'panels/user.php'])   // … filled from a URL
+     *
+     * Reading belongs in the row, changing in what the row opens. Two admin
+     * lists that had nowhere else to put it carried a select, a switch and a
+     * label saying the same thing in every cell.
+     *
+     * The row is not turned into a control — role=link or a tabindex on a
+     * <tr> takes away its row role. Its main cell (the first column, or
+     * 'column' => key) carries one real control, <a class="gk-row-target"> or
+     * <button class="gk-row-target" data-gk-sheet>, and gridkit.js forwards a
+     * click anywhere else in the row to it. The keyboard and a screen reader
+     * use the control; without JavaScript a link still works. 'href' follows
+     * the rules of a row button's href; 'params' maps like a row button's and
+     * always carries the row's id — it reaches gk:sheetopen and the POST to
+     * 'url'. A row whose main cell shows nothing, or whose target is not
+     * allowed, stays a plain row: a link without a name is a dead focus stop.
+     *
+     * @param string|array{href?:string,sheet?:string,url?:string,column?:string,params?:array<string,string>} $target
+     */
+    public function rowLink(string|array $target): static
+    {
+        $this->rowLink = is_string($target) ? ['href' => $target] : $target;
+        return $this;
+    }
+
+    /** The column whose cell carries the row's control, or null when there is none to be had. */
+    private function rowLinkColumn(): ?string
+    {
+        if (!$this->rowLink || !$this->columns) return null;
+        $key = (string) ($this->rowLink['column'] ?? array_key_first($this->columns));
+        return isset($this->columns[$key]) ? $key : null;
+    }
+
+    /**
+     * The one control a row carries, as its opening and closing tag — or null
+     * when this row cannot have one. js/gridkit.js builds the same pair in
+     * renderStatic(); keep them in step.
+     *
+     * @return array{0:string,1:string}|null
+     */
+    private function rowTarget(array $row, \Closure $e): ?array
+    {
+        $key = $this->rowLinkColumn();
+        if ($key === null) return null;
+        $col = $this->columns[$key];
+        // 'html' is markup the caller writes, links included, and 'email' writes
+        // a mailto link: wrapping either nests one control inside another.
+        // Said once in renderInner().
+        if (in_array($col['format'] ?? '', self::ROW_LINK_REFUSED, true)) return null;
+        // What the cell SHOWS names the control — the rule a linked cell follows.
+        $shown = trim(html_entity_decode(strip_tags($this->format($row[$key] ?? '', $col)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        if ($shown === '' || $shown === '—') return null;
+
+        $sheet = (string) ($this->rowLink['sheet'] ?? '');
+        if ($sheet !== '') {
+            $params = self::rowParams($this->rowLink['params'] ?? [], $row);
+            $url = (string) ($this->rowLink['url'] ?? '');
+            return [
+                '<button type="button" class="gk-row-target"'
+                . ' data-gk-sheet="' . $e($sheet) . '"'
+                . ($url !== '' ? ' data-gk-sheet-url="' . $e($url) . '"' : '')
+                . ' data-gk-sheet-title="' . $e($shown) . '"'
+                . " data-gk-params='" . $e(json_encode($params)) . "'"
+                . ' aria-haspopup="dialog">',
+                '</button>',
+            ];
+        }
+
+        $href = (string) ($this->rowLink['href'] ?? '');
+        $ziel = $href === '' ? null : self::fillTarget($href, $row);
+        return $ziel === null ? null : ['<a class="gk-row-target" href="' . $e($ziel) . '">', '</a>'];
+    }
+
+    /**
+     * What a row control carries in data-gk-params: 'params' mapped from the
+     * row (key => field), plus the row's own id unless the map names one —
+     * forgetting it opened an edit modal as if for a new record. Row buttons
+     * and row links share it; js/gridkit.js carries it as _gkRowParams().
+     *
+     * @param  array<string,string> $map
+     * @return array<string,mixed>
+     */
+    private static function rowParams(array $map, array $row): array
+    {
+        $params = [];
+        foreach ($map as $pkey => $pcol) {
+            $params[$pkey] = $row[$pcol] ?? '';
+        }
+        if (!array_key_exists('id', $params) && isset($row['id'])) {
+            $params['id'] = $row['id'];
+        }
+        return $params;
+    }
+
+    /**
+     * A target template filled from the row — every {field} encoded the way
+     * rawurlencode() does it, so a value can never become a scheme — and then
+     * held against the allow list (safeTarget). null when GridKit will not link
+     * there. Row buttons, linked cells and row links share it;
+     * js/gridkit.js carries it as _gkFillTarget().
+     */
+    private static function fillTarget(string $template, array $row): ?string
+    {
+        return self::safeTarget((string) preg_replace_callback(
+            '/\{(\w+)\}/',
+            static fn (array $m): string => rawurlencode((string) ($row[$m[1]] ?? '')),
+            $template
+        ));
+    }
+
+    /**
      * The WHERE clauses this table adds to the query it was given, with their
      * bound parameters.
      *
@@ -480,6 +600,11 @@ class Table
                     'column' => $this->groupCol,
                     'labels' => $this->groupLabels,
                 ],
+                // rowLink(), with the column already resolved: the client must not
+                // guess "the first column" from an object whose numeric-looking
+                // keys JavaScript reorders.
+                'rowLink' => $this->rowLinkColumn() === null ? null
+                    : ['column' => $this->rowLinkColumn()] + $this->rowLink,
             // SUBSTITUTE: one malformed byte made json_encode() answer false, the
             // block came out empty and sort, search and paging died silently.
             // HEX_TAG: "<!--<script" inside a cell puts the HTML parser into
@@ -664,6 +789,17 @@ class Table
         }
         $lastGroup = null;
 
+        // The column that carries each row's control. Said once per render
+        // rather than once per row, and only for a combination that cannot work.
+        $linkKey = $this->rowLinkColumn();
+        if ($this->rowLink && $linkKey === null) {
+            trigger_error("GridKit: rowLink() names a column this table does not have — the rows stay plain.", E_USER_WARNING);
+        } elseif ($linkKey !== null && in_array($this->columns[$linkKey]['format'] ?? '', self::ROW_LINK_REFUSED, true)) {
+            trigger_error("GridKit: the rowLink() column cannot be 'format' => '" . $this->columns[$linkKey]['format'] . "' — it writes a link of its own, and a control inside a control reaches nobody. The rows stay plain.", E_USER_WARNING);
+        } elseif ($linkKey !== null && isset($this->columns[$linkKey]['href'])) {
+            trigger_error("GridKit: the rowLink() column has an 'href' of its own — the row's control takes its place, the cell link was left out.", E_USER_WARNING);
+        }
+
         // A static table holds every row in the browser and pages there. The
         // first render has to show one page all the same, or the page arrives
         // with all of them and collapses to ten as soon as JavaScript runs.
@@ -687,7 +823,8 @@ class Table
             }
             $rowId = $this->selectable ? $e($row[$this->selectKey] ?? '') : '';
             $rowIdAttr = $this->selectable ? ' data-gk-row-id="' . $rowId . '"' : '';
-            echo '<tr' . $rowIdAttr . '>';
+            $target = $linkKey !== null ? $this->rowTarget($row, $e) : null;
+            echo '<tr' . ($target !== null ? ' class="gk-row-link"' : '') . $rowIdAttr . '>';
             if ($this->selectable) {
                 // Named like the one in the header: unnamed, every row read as
                 // "checkbox" and nothing else.
@@ -718,7 +855,8 @@ class Table
                 $tdStyle = $tdStyles ? ' style="' . implode(';', $tdStyles) . '"' : '';
                 $tdClass = $tdCls ? ' class="' . implode(' ', $tdCls) . '"' : '';
                 $dataLabel = ' data-label="' . $e($col['label']) . '"';
-                $formatted = $this->cellContent($val, $col, $row, $e);
+                // (string): a key like '2024' is an integer in a PHP array.
+                $formatted = $this->cellContent($val, $col, $row, $e, (string) $key === $linkKey ? $target : null);
                 echo "<td{$tdClass}{$tdStyle}{$dataLabel}>{$formatted}</td>";
             }
             if ($rightButtons) {
@@ -853,17 +991,11 @@ class Table
                 $field = $bopts["hideIf"];
                 if (!empty($row[$field])) continue;
             }
-            $params = [];
-            foreach ($bopts['params'] ?? [] as $pkey => $pcol) {
-                $params[$pkey] = $row[$pcol] ?? '';
-            }
             // Almost every row button needs to say which row it belongs to, and
             // forgetting `'params' => ['id' => 'id']` failed silently: the edit
             // modal opened as if it were a new record. The row's own id is sent
             // unless the caller mapped one itself.
-            if (!array_key_exists('id', $params) && isset($row['id'])) {
-                $params['id'] = $row['id'];
-            }
+            $params = self::rowParams($bopts['params'] ?? [], $row);
 
             // Every other component in GridKit names this option `color` —
             // Button::render(), ActionGroup items, StatCards. The row button
@@ -925,12 +1057,7 @@ class Table
             $href = null;
             if (isset($bopts['href']) && (string) $bopts['href'] !== ''
                 && !isset($bopts['modal']) && empty($bopts['onclick'])) {
-                $href = preg_replace_callback(
-                    '/\{(\w+)\}/',
-                    static fn (array $m): string => rawurlencode((string) ($row[$m[1]] ?? '')),
-                    (string) $bopts['href']
-                );
-                $href = self::safeTarget($href);
+                $href = self::fillTarget((string) $bopts['href'], $row);
             }
             // A link carries no data-gk-action: the delegated handler would fire
             // gk:rowaction on top of the navigation. The confirmation stays — the
@@ -1090,20 +1217,23 @@ class Table
      *
      * The raw value stays what it was, so search and sort keep working.
      */
-    private function cellContent(mixed $val, array $col, array $row, \Closure $e): string
+    private function cellContent(mixed $val, array $col, array $row, \Closure $e, ?array $rowTarget = null): string
     {
         $inhalt = $this->format($val, $col);
+
+        // The row's own control (rowLink()) takes the place of a cell link:
+        // one control per cell, never one inside another.
+        if ($rowTarget !== null) {
+            $inhalt = $rowTarget[0] . $inhalt . $rowTarget[1];
+            $col['href'] = null;
+        }
         // What the cell SHOWS decides, not the raw value: a number column with
         // blankZero renders an em dash for 0, and a link whose whole name is a
         // dash is a focus stop that says nothing.
         $sichtbar = trim(strip_tags($inhalt)) !== '' && trim(strip_tags($inhalt)) !== '—';
 
         if (isset($col['href']) && (string) $col['href'] !== '' && $sichtbar) {
-            $ziel = self::safeTarget(preg_replace_callback(
-                '/\{(\w+)\}/',
-                static fn (array $m): string => rawurlencode((string) ($row[$m[1]] ?? '')),
-                (string) $col['href']
-            ));
+            $ziel = self::fillTarget((string) $col['href'], $row);
             // 'html' means the caller writes the markup — including any links in
             // it. Wrapping that in another <a> produces nested anchors: the
             // browser closes the outer one at the inner, and the safe link keeps

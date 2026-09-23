@@ -96,6 +96,9 @@ return [
     // here — a short list that has to be edited deliberately, which is the point.
     $partials = [
         'demo/_showcase.php',
+        // The people of the side-sheet demo, included by demo/index.php and by
+        // the sheet's endpoint — one list for both (1.91.0).
+        'demo/form/_people.php',
     ];
 
     foreach ($out as $path) {

@@ -66,6 +66,40 @@
   }
 
   /*
+   * A target template filled from the row and held against the allow list —
+   * Table::fillTarget() in PHP, and shared the same way: row buttons, linked
+   * cells and row links. encodeURIComponent leaves !'()* alone where PHP's
+   * rawurlencode escapes them, so those five are escaped here, or the two
+   * renderers drift on any value carrying one of them. A lone surrogate makes
+   * encodeURIComponent throw, and this runs in the middle of drawing a table:
+   * one bad character in one cell drops that link, not the whole table.
+   */
+  function _gkFillTarget(template, row) {
+    try {
+      return _gkSafeTarget(String(template).replace(/\{(\w+)\}/g, function (_, k) {
+        return encodeURIComponent(String(row[k] ?? "")).replace(/[!'()*]/g, function (c) {
+          return "%" + c.charCodeAt(0).toString(16).toUpperCase();
+        });
+      }));
+    } catch (err) {
+      return null;
+    }
+  }
+
+  /*
+   * What a row control carries in data-gk-params — Table::rowParams() in PHP:
+   * the mapped fields, plus the row's own id unless the map names one. The
+   * client once sent "{}" after a sort, and an edit modal came up as if for a
+   * new record.
+   */
+  function _gkRowParams(map, row) {
+    var params = {};
+    Object.keys(map || {}).forEach(function (pk) { params[pk] = row[map[pk]] ?? ""; });
+    if (!Object.prototype.hasOwnProperty.call(params, "id") && row.id !== undefined) params.id = row.id;
+    return params;
+  }
+
+  /*
    * Out-of-band updates: a <template data-gk-replace="css-selector"> inside the
    * fresh markup replaces an element OUTSIDE it — the summary cards above a
    * table, a status select beside it, the pager below. Both paths that swap
@@ -196,6 +230,21 @@
     }
     var first = items[0];
     var last = items[items.length - 1];
+    // The focus can sit on something inside that is not in the tab order — a
+    // side sheet starts on its title. From there Shift+Tab walked straight out
+    // of the dialog, because only the first and the last control were checked.
+    // Wrap only when no control lies that way; otherwise the browser's own
+    // order is right.
+    var cur = document.activeElement;
+    if (items.indexOf(cur) === -1) {
+      var way = e.shiftKey ? Node.DOCUMENT_POSITION_PRECEDING : Node.DOCUMENT_POSITION_FOLLOWING;
+      var ahead = items.some(function (el) { return (cur.compareDocumentPosition(el) & way) !== 0; });
+      if (!ahead) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      }
+      return;
+    }
     if (e.shiftKey && document.activeElement === first) {
       e.preventDefault();
       last.focus();
@@ -241,6 +290,22 @@
     } catch (err) {
       target.focus();
     }
+  }
+
+  /*
+   * A close button with nothing to say gets a name. A hand-written &times; was
+   * read as "multiplication sign". A button that SAYS something keeps its own
+   * words: an aria-label differing from the visible text breaks voice control
+   * (WCAG 2.5.3) — only a bare cross or an icon ligature has nothing to say.
+   * The static modal and the side sheet both need this; one copy, not two.
+   */
+  function _gkNameCloseButton(btn) {
+    if (btn.hasAttribute("aria-label") || btn.hasAttribute("title")) return;
+    var text = btn.cloneNode(true);
+    text.querySelectorAll(".material-icons, [aria-hidden=true]").forEach(function (i) { i.remove(); });
+    var words = text.textContent.replace(/[×✕✖]/g, "").trim();
+    if (words !== "") return;
+    btn.setAttribute("aria-label", _t("close"));
   }
 
   // A percentage as Table::percent() writes it: digits as given, the locale's
@@ -347,17 +412,7 @@
        */
       upgradeStatic(root) {
         var scope = root && root.querySelectorAll ? root : document;
-        scope.querySelectorAll(".gk-modal-close").forEach(function (btn) {
-          if (btn.hasAttribute("aria-label") || btn.hasAttribute("title")) return;
-          // A button that SAYS something keeps its own words: an aria-label
-          // differing from the visible text breaks voice control (WCAG 2.5.3).
-          // Only a bare cross or an icon ligature has nothing to say.
-          var text = btn.cloneNode(true);
-          text.querySelectorAll(".material-icons, [aria-hidden=true]").forEach(function (i) { i.remove(); });
-          var words = text.textContent.replace(/[×✕✖]/g, "").trim();
-          if (words !== "") return;
-          btn.setAttribute("aria-label", _t("close"));
-        });
+        scope.querySelectorAll(".gk-modal-close").forEach(_gkNameCloseButton);
         scope.querySelectorAll(".gk-modal-overlay > .gk-modal").forEach(function (box) {
           if (box.hasAttribute("role")) return;
           // The name first. A dialog without one is worse than the neutral div
@@ -632,7 +687,12 @@
           .then((r) => r.json())
           .then((data) => {
             if (data.ok) {
-              GK.modal.close();
+              // A form in a side sheet closes that sheet — not whatever modal
+              // happens to be on top of the stack, which may belong to
+              // something else entirely. The nearest container decides.
+              const box = form.closest(".gk-modal-overlay, .gk-sheet");
+              if (box && box.classList.contains("gk-sheet")) GK.sheet.close(box);
+              else GK.modal.close();
               GK.table.refreshAll();
               // The skill has promised this toast since 1.10; nothing showed it.
               if (data.message) GK.toast.success(data.message);
@@ -1388,40 +1448,16 @@
             let cls = hasText
               ? "gk-btn gk-btn-icon-text gk-btn-text gk-btn-" + color
               : "gk-btn gk-btn-icon-only gk-btn-text gk-btn-" + color + " gk-btn-sm";
-            const params = {};
-            if (bopts.params) {
-              Object.entries(bopts.params).forEach(([pk, pcol]) => {
-                params[pk] = row[pcol] ?? "";
-              });
-            }
-            // Table::renderButtons sends the row's own id unless the caller
-            // mapped one itself — this side never did. After the first sort the
-            // edit button of a setData() table carried data-gk-params="{}", and
-            // the modal it opened came up as if it were a new record.
-            if (!Object.prototype.hasOwnProperty.call(params, "id") && row.id !== undefined) {
-              params.id = row.id;
-            }
+            const params = _gkRowParams(bopts.params, row);
             // 'href' => '/users/{id}': a real link, exactly as Table::renderButtons
-            // writes it. encodeURIComponent leaves !'()* alone where PHP's
-            // rawurlencode escapes them — without that the two renderers drift on
-            // any id carrying one of those five characters.
+            // writes it (_gkFillTarget).
             let href = null;
             // Same three conditions as Table::renderButtons: a value of "0" is a
             // target like any other (bopts.href alone would call it falsy), and
             // modal or onclick keep what they had.
             if (bopts.href !== undefined && bopts.href !== null && String(bopts.href) !== ""
                 && !bopts.modal && !bopts.onclick) {
-              try {
-                href = String(bopts.href).replace(/\{(\w+)\}/g, (_, k) =>
-                  encodeURIComponent(String(row[k] ?? "")).replace(/[!'()*]/g, (c) =>
-                    "%" + c.charCodeAt(0).toString(16).toUpperCase()));
-                href = _gkSafeTarget(href);
-              } catch (err) {
-                // A lone surrogate makes encodeURIComponent throw, and this runs
-                // in the middle of drawing the table: without this the whole
-                // table would vanish over one bad character in one cell.
-                href = null;
-              }
+              href = _gkFillTarget(bopts.href, row);
             }
             // A link with a question is a button carrying its target: a middle
             // click, a Ctrl-click and Enter all bypass a click handler on an <a>.
@@ -1546,6 +1582,38 @@
             (hasRight ? 1 : 0) +
             (selectable ? 1 : 0);
           let lastGroup = null;
+          /*
+           * rowLink(): the one control a row carries, as Table::rowTarget()
+           * writes it — the same tags, attributes and order, or the row changes
+           * on the first sort. null when the row cannot have one: its main
+           * cell shows nothing, the target is not allowed, or the column writes
+           * a link of its own ('html', 'email').
+           */
+          const rowLink = data.rowLink && columns[data.rowLink.column] ? data.rowLink : null;
+          const rowTarget = (row) => {
+            if (!rowLink) return null;
+            const col = columns[rowLink.column];
+            if (col.format === "html" || col.format === "email") return null;
+            const roh = row[rowLink.column] ?? "";
+            const box = document.createElement("div");
+            box.innerHTML = formatVal(typeof roh === "boolean" ? (roh ? "1" : "") : roh, col);
+            const shown = box.textContent.trim();
+            if (shown === "" || shown === "—") return null;
+            if (rowLink.sheet) {
+              const params = _gkRowParams(rowLink.params, row);
+              return [
+                '<button type="button" class="gk-row-target" data-gk-sheet="' + e(rowLink.sheet) + '"' +
+                  (rowLink.url ? ' data-gk-sheet-url="' + e(rowLink.url) + '"' : "") +
+                  ' data-gk-sheet-title="' + e(shown) + '"' +
+                  " data-gk-params='" + e(JSON.stringify(params)) + "'" +
+                  ' aria-haspopup="dialog">',
+                "</button>",
+              ];
+            }
+            if (rowLink.href === undefined || rowLink.href === null || String(rowLink.href) === "") return null;
+            const ziel = _gkFillTarget(rowLink.href, row);
+            return ziel === null ? null : ['<a class="gk-row-target" href="' + e(ziel) + '">', "</a>"];
+          };
           rows.forEach((row) => {
             if (groupBy && groupBy.column) {
               const gk = String(row[groupBy.column] ?? "");
@@ -1563,9 +1631,9 @@
               }
             }
             const rid = selectable ? String(row[rowIdField] ?? "") : "";
-            html += selectable
-              ? '<tr data-gk-row-id="' + e(rid) + '">'
-              : "<tr>";
+            const target = rowTarget(row);
+            html += "<tr" + (target ? ' class="gk-row-link"' : "") +
+              (selectable ? ' data-gk-row-id="' + e(rid) + '"' : "") + ">";
             if (selectable)
               html +=
                 // value: the server has always written the row id here. Page
@@ -1611,13 +1679,12 @@
               // linked value keeps its raw form for search and sort, and the
               // second line is always text, whatever the cell's format is.
               let inhalt = formatVal(val, col);
-              if (col.href && _gkAlsText(val).trim() !== "") {
-                let ziel = null;
-                try {
-                  ziel = _gkSafeTarget(String(col.href).replace(/\{(\w+)\}/g, (_, k) =>
-                    encodeURIComponent(String(row[k] ?? "")).replace(/[!'()*]/g, (c) =>
-                      "%" + c.charCodeAt(0).toString(16).toUpperCase())));
-                } catch (err) { ziel = null; }
+              // The row's own control takes the place of a cell link — one
+              // control per cell, never one inside another.
+              const isTarget = target && key === rowLink.column;
+              if (isTarget) inhalt = target[0] + inhalt + target[1];
+              if (col.href && !isTarget && _gkAlsText(val).trim() !== "") {
+                let ziel = _gkFillTarget(col.href, row);
                 // 'html' means the caller writes the markup, links included:
                 // wrapping it would produce nested anchors, and the browser hands
                 // the visible text after the inner <a> to a foreign target.
@@ -2476,6 +2543,378 @@
     });
   };
 
+  /*
+   * === SIDE SHEET ===
+   *
+   * A row shows values; the side sheet is where a record is read in full and
+   * changed. Two admin lists put a select, a switch and a label into every
+   * cell because there was nowhere else to put them (Vespera, 23.09.2026).
+   *
+   *   GK.sheet.open('user-sheet', { returnFocus: el })   // id, "#id" or element
+   *   GK.sheet.close()
+   *   <button data-gk-sheet="user-sheet" data-gk-params='{"id":7}'>…</button>
+   *
+   * On a wide screen the sheet docks beside the list and the list stays in
+   * use: a non-modal dialog. No aria-modal there — it would declare the page
+   * out of bounds while the page is still being used — and no focus trap.
+   * Below 769px it covers the screen and IS modal: aria-modal, the trap, and
+   * the page behind stops scrolling (that part is CSS, keyed to the hidden
+   * attribute). The width decides, as in the stylesheet, and crossing it while
+   * the sheet is open switches the behaviour along.
+   *
+   * One at a time: opening another closes the first without handing the focus
+   * back, because the focus goes into the new one. Escape is heard on the sheet
+   * itself, not on the document — so it closes the sheet only while the focus
+   * is in it, a widget inside that handled the key keeps it (defaultPrevented),
+   * and a modal or confirm opened from the sheet lies outside it and answers
+   * for itself.
+   */
+  var _gkSheetMq = typeof window.matchMedia === "function"
+    ? window.matchMedia("(max-width: 768px)")
+    : null;
+
+  GK.sheet = {
+    _open: null,
+    _seq: 0,
+
+    /** A sheet by element, id or "#id". */
+    _find(target) {
+      if (target && target.nodeType === 1) return target;
+      if (typeof target !== "string" || target === "") return null;
+      var el = document.getElementById(target.replace(/^#/, ""));
+      if (!el) {
+        try { el = document.querySelector(target); } catch (err) { el = null; }
+      }
+      return el;
+    },
+
+    /** Full screen and modal right now? The stylesheet's breakpoint, asked live. */
+    _modal() {
+      return !!(_gkSheetMq && _gkSheetMq.matches);
+    },
+
+    /** The open sheet — null as well when AJAX navigation took it out of the page. */
+    _current() {
+      if (this._open && !this._open.isConnected) this._open = null;
+      return this._open;
+    },
+
+    /**
+     * Role, name and a named close button, where the page left them out.
+     * Idempotent: runs on page load, for AJAX content (GK.initContent) and
+     * before every open. A sheet the server rendered open is taken on as the
+     * open one, so Escape and the close button work on it too.
+     */
+    upgrade(root) {
+      var scope = root && root.querySelectorAll ? root : document;
+      var sheets = Array.prototype.slice.call(scope.querySelectorAll(".gk-sheet"));
+      if (scope.classList && scope.classList.contains("gk-sheet")) sheets.unshift(scope);
+      var self = this;
+      sheets.forEach(function (sheet) {
+        if (!sheet.hasAttribute("role")) sheet.setAttribute("role", "dialog");
+        if (!sheet.hasAttribute("aria-label") && !sheet.hasAttribute("aria-labelledby")) {
+          // A dialog without a name is worse than none: "dialog", and nothing after it.
+          var heading = sheet.querySelector(".gk-sheet-title") || sheet.querySelector("h1, h2, h3, h4, h5, h6");
+          if (heading) {
+            if (!heading.id) heading.id = "gk-sheet-title-" + ++self._seq;
+            sheet.setAttribute("aria-labelledby", heading.id);
+          }
+        }
+        sheet.querySelectorAll(".gk-sheet-close").forEach(_gkNameCloseButton);
+        self._bind(sheet);
+        if (!sheet.hidden && sheet.isConnected && !self._current()) {
+          self._open = sheet;
+          self._syncModal();
+        }
+      });
+    },
+
+    _bind(sheet) {
+      if (sheet._gkSheetBound) return;
+      sheet._gkSheetBound = true;
+      var self = this;
+      sheet.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+          if (e.defaultPrevented || self._current() !== sheet) return;
+          // A layer opened from the sheet answers first, even while the focus
+          // has not reached it yet — GK.confirm moves it there 50ms late, and
+          // an Escape in between closed the question AND the sheet. A modal
+          // counts when it came after the sheet, not one the sheet lies over.
+          if (_gkLayerAbove() || (GK.modal && GK.modal.stack.length > (sheet._gkOverModals || 0))) return;
+          // Claimed: a modal underneath must not close along with it.
+          e.preventDefault();
+          self.close(sheet);
+          return;
+        }
+        if (self._current() === sheet && self._modal()) _gkTrap(sheet, e);
+      });
+      sheet.addEventListener("click", function (e) {
+        var hit = e.target.closest && e.target.closest(".gk-sheet-close, [data-gk-sheet-close]");
+        // Only a close button of THIS sheet — the rule the static modal follows.
+        if (!hit || hit.closest(".gk-sheet") !== sheet) return;
+        // Rendered by a server as a plain link, it closes in place here.
+        e.preventDefault();
+        self.close(sheet);
+      });
+    },
+
+    /*
+     * Where the focus starts: the title, when there is one. A sheet opens on
+     * every row click, and the modal's way — the first control, the close
+     * button — drew a focus ring on it each time a mouse opened it. The title
+     * is what a screen reader should read first anyway; one Tab reaches the
+     * close button. Focusable by script only (tabindex -1), so it never enters
+     * the tab order, and the trap wraps from it (see _gkTrap).
+     */
+    _focusStart(sheet) {
+      var title = sheet.querySelector(".gk-sheet-title");
+      if (!title) return _gkFocusInto(sheet);
+      if (!title.hasAttribute("tabindex")) title.setAttribute("tabindex", "-1");
+      try { title.focus({ preventScroll: true }); } catch (err) { title.focus(); }
+    },
+
+    /** aria-modal only while it is true; a sheet that turns modal takes the focus. */
+    _syncModal() {
+      var sheet = this._current();
+      if (!sheet) return;
+      if (this._modal()) {
+        sheet.setAttribute("aria-modal", "true");
+        if (!sheet.contains(document.activeElement)) this._focusStart(sheet);
+      } else {
+        sheet.removeAttribute("aria-modal");
+      }
+    },
+
+    /**
+     * Show a sheet. opts: returnFocus (default: what has the focus now),
+     * focus (selector or element inside, default: the title — _focusStart),
+     * params (handed to gk:sheetopen and posted with url), url (its answer
+     * fills .gk-sheet-body), title (replaces .gk-sheet-title's text).
+     * Returns the sheet, or null when there is no .gk-sheet by that name.
+     */
+    open(target, opts) {
+      var sheet = this._find(target);
+      if (!sheet || !sheet.classList || !sheet.classList.contains("gk-sheet")) return null;
+      opts = opts || {};
+      var prev = this._current();
+      var active = document.activeElement;
+      var back = opts.returnFocus || (active && active !== document.body ? active : null);
+      // Opened from inside the sheet on screen: that element is about to be
+      // hidden, or belongs to the sheet itself. The focus goes back to what
+      // opened the first one.
+      if (prev && back && prev.contains(back)) back = prev._gkReturn || null;
+      if (prev && prev !== sheet) this._hide(prev, false);
+      // The same sheet for another row: the old row is no longer the one shown.
+      this._unmark(sheet);
+      sheet._gkReturn = back;
+      var row = back && back.closest ? back.closest("tr.gk-row-link") : null;
+      if (row) {
+        row.setAttribute("aria-current", "true");
+        sheet._gkRow = row;
+      }
+
+      this.upgrade(sheet);
+      if (opts.title != null) {
+        var titleEl = sheet.querySelector(".gk-sheet-title");
+        if (titleEl) titleEl.textContent = opts.title;
+      }
+      sheet.removeAttribute("hidden");
+      this._open = sheet;
+      // Opened from inside a modal it has to lie above it, or it opens unseen
+      // underneath and takes the focus there. Same ladder as the modals.
+      var stack = GK.modal && GK.modal.stack ? GK.modal.stack.length : 0;
+      sheet.style.zIndex = stack ? String(9000 + stack * 10 + 5) : "";
+      sheet._gkOverModals = stack;
+      if (this._modal()) sheet.setAttribute("aria-modal", "true");
+      else sheet.removeAttribute("aria-modal");
+
+      var params = opts.params || {};
+      // Before the focus moves: a page that fills the sheet here — its title
+      // included — has it read out filled, not with the record before.
+      sheet.dispatchEvent(new CustomEvent("gk:sheetopen", {
+        bubbles: true,
+        detail: { opener: back, params: params },
+      }));
+      var first = opts.focus
+        ? typeof opts.focus === "string" ? sheet.querySelector(opts.focus) : opts.focus
+        : null;
+      if (first && first.focus) {
+        try { first.focus({ preventScroll: true }); } catch (err) { first.focus(); }
+      } else if (!sheet.contains(document.activeElement)) {
+        this._focusStart(sheet);
+      }
+      if (opts.url) this._load(sheet, opts.url, params);
+      return sheet;
+    },
+
+    /** Close the open sheet. With an argument: only if that is the open one. */
+    close(target) {
+      var sheet = target ? this._find(target) : this._current();
+      if (!sheet || sheet !== this._current()) return;
+      this._hide(sheet, true);
+    },
+
+    _unmark(sheet) {
+      if (sheet._gkRow) {
+        sheet._gkRow.removeAttribute("aria-current");
+        sheet._gkRow = null;
+      }
+    },
+
+    _hide(sheet, giveBack) {
+      var active = document.activeElement;
+      // Back to the opener only when the focus is in the sheet (or nowhere):
+      // someone who clicked into the page beside a docked sheet stays there.
+      var focusInside = !active || active === document.body || sheet.contains(active);
+      sheet.setAttribute("hidden", "");
+      sheet.removeAttribute("aria-modal");
+      sheet.style.zIndex = "";
+      // An answer still on its way must not fill a sheet that has closed.
+      sheet._gkLoad = (sheet._gkLoad || 0) + 1;
+      this._unmark(sheet);
+      if (this._open === sheet) this._open = null;
+      var back = sheet._gkReturn;
+      sheet._gkReturn = null;
+      if (giveBack && focusInside) _gkRestoreFocus(back);
+      sheet.dispatchEvent(new CustomEvent("gk:sheetclose", {
+        bubbles: true,
+        detail: { opener: back || null },
+      }));
+    },
+
+    /*
+     * The body from a URL, as GK.modal.open() loads a modal's: POST with the
+     * params, X-Requested-With, and the widgets inside bound. Clicking through
+     * rows fast sends several requests; only the last one may fill the sheet.
+     */
+    _load(sheet, url, params) {
+      var body = sheet.querySelector(".gk-sheet-body");
+      if (!body) return;
+      var n = (sheet._gkLoad = (sheet._gkLoad || 0) + 1);
+      body.innerHTML = "";
+      body.classList.add("gk-loading");
+      body.setAttribute("aria-busy", "true");
+      var fd = new FormData();
+      Object.keys(params || {}).forEach(function (k) { fd.append(k, params[k]); });
+      var done = function () {
+        body.classList.remove("gk-loading");
+        body.removeAttribute("aria-busy");
+      };
+      fetch(url, {
+        method: "POST",
+        body: fd,
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      })
+        .then(function (r) {
+          // The body of a 500 or of a firewall's 403 is not the record.
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.text();
+        })
+        .then(function (html) {
+          if (sheet._gkLoad !== n) return;
+          done();
+          body.innerHTML = html;
+          GK.initContent(body);
+        })
+        .catch(function () {
+          if (sheet._gkLoad !== n) return;
+          done();
+          body.innerHTML = '<p class="gk-text-danger">' + _gkEsc(_t("error_loading")) + "</p>";
+        });
+    },
+  };
+
+  if (_gkSheetMq) {
+    var _gkSheetMqChange = function () { GK.sheet._syncModal(); };
+    if (typeof _gkSheetMq.addEventListener === "function") _gkSheetMq.addEventListener("change", _gkSheetMqChange);
+    else if (typeof _gkSheetMq.addListener === "function") _gkSheetMq.addListener(_gkSheetMqChange);
+  }
+
+  // A trigger in the markup: data-gk-sheet names the sheet, data-gk-params,
+  // data-gk-sheet-url and data-gk-sheet-title fill in the options. Delegated,
+  // so rows a table rebuilds keep working. An <a href> trigger keeps its
+  // address for Ctrl-click, Shift-click and a page without JavaScript — only
+  // its plain click opens the sheet. A button has no such second meaning.
+  document.addEventListener("click", function (e) {
+    if (e.defaultPrevented || e.button !== 0) return;
+    var t = e.target.closest && e.target.closest("[data-gk-sheet]");
+    if (!t) return;
+    if (t.tagName === "A" && t.hasAttribute("href") && (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey)) return;
+    var params = {};
+    try { params = t.dataset.gkParams ? JSON.parse(t.dataset.gkParams) : {}; } catch (err) { params = {}; }
+    var opened = GK.sheet.open(t.getAttribute("data-gk-sheet"), {
+      returnFocus: t,
+      params: params,
+      url: t.getAttribute("data-gk-sheet-url") || null,
+      title: t.hasAttribute("data-gk-sheet-title") ? t.getAttribute("data-gk-sheet-title") : null,
+    });
+    if (opened) e.preventDefault();
+  });
+
+  // A sheet belongs to the page it was opened on.
+  document.addEventListener("gk-ajax-nav", function () {
+    var open = GK.sheet._current();
+    if (open) GK.sheet._hide(open, false);
+  });
+
+  /*
+   * === ROW LINKS === (tr.gk-row-link)
+   *
+   * A click anywhere in the row is a click on its one control, .gk-row-target,
+   * with the button and the modifier keys it came with — so Ctrl-click and a
+   * middle click open a link target in a new tab, as they would on the link
+   * itself (measured in Chromium). What the row leaves alone: a click on a
+   * control of its own (a checkbox, a row button, a second link), a click in
+   * the selection or the action column, and the end of a text selection —
+   * someone copying an address out of a row must not be taken elsewhere.
+   */
+  function _gkRowClick(e) {
+    if (e.defaultPrevented) return;
+    var row = e.target.closest && e.target.closest("tr.gk-row-link");
+    if (!row) return;
+    var own = e.target.closest(
+      "a[href], button, input, select, textarea, label, summary, [tabindex], [contenteditable], td.gk-cb-col, td.gk-actions",
+    );
+    if (own && row.contains(own)) return;
+    var sel = window.getSelection ? window.getSelection() : null;
+    if (sel && !sel.isCollapsed && String(sel).trim() !== "" && row.contains(sel.anchorNode)) return;
+    var target = row.querySelector(".gk-row-target");
+    if (!target) return;
+    if (target.tagName === "A" && target.hasAttribute("href")) {
+      target.dispatchEvent(new MouseEvent("click", {
+        bubbles: true, cancelable: true, view: window, button: e.button,
+        ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey,
+      }));
+    } else if (e.button === 0) {
+      target.click();
+    }
+  }
+  document.addEventListener("click", function (e) { if (e.button === 0) _gkRowClick(e); });
+  document.addEventListener("auxclick", function (e) { if (e.button === 1) _gkRowClick(e); });
+
+  /*
+   * === SUMMARY ROWS === (tr.gk-table-more)
+   *
+   * One row standing for many: its .gk-table-more-toggle shows and hides every
+   * element its aria-controls names — usually a <tbody hidden> right after it.
+   * The hidden attribute is the state of the rows, aria-expanded the state of
+   * the toggle; this is the one place that moves both.
+   */
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest && e.target.closest(".gk-table-more-toggle");
+    if (!btn || e.defaultPrevented) return;
+    var parts = (btn.getAttribute("aria-controls") || "").split(/\s+/)
+      .map(function (id) { return id ? document.getElementById(id) : null; })
+      .filter(Boolean);
+    if (!parts.length) return;
+    var open = btn.getAttribute("aria-expanded") !== "true";
+    parts.forEach(function (p) {
+      if (open) p.removeAttribute("hidden");
+      else p.setAttribute("hidden", "");
+    });
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+
   // === RANGE SLIDERS ===
   GK.initRangeSliders = function () {
     document.querySelectorAll(".gk-range").forEach(function (input) {
@@ -3282,6 +3721,7 @@
     if (GK.rowPager) GK.rowPager.init(e.target || document);
     if (GK.table) GK.table.init(e.target || document);
     GK.modal.upgradeStatic(e.target || document);
+    if (GK.sheet) GK.sheet.upgrade(e.target || document);
   });
 
   /**
@@ -3318,6 +3758,7 @@
     if (GK.lightbox && GK.lightbox.init) GK.lightbox.init(root);
     if (GK.rowPager) GK.rowPager.init(root);
     GK.modal.upgradeStatic(root);
+    if (GK.sheet) GK.sheet.upgrade(root);
   };
 
   var _origInit = GK.init;

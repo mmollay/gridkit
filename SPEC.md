@@ -260,3 +260,97 @@ CSS-only tooltips and rich HTML tooltips.
 - Viewport-aware positioning (flips if clipped)
 - Stays open when hovering the tooltip itself
 - Supports links, images, interactive content
+
+## Six rules for lists
+
+Since 1.91.0. Each rule names the building block that implements it; the full
+text, with the measured row it was drawn from, is in `GRIDKIT_SKILL.md`.
+
+| # | Rule | Building block |
+|---|------|----------------|
+| 1 | One state, one sign — a switch needs no label beside it saying the same | `->groupBy()` / `.gk-table-group`; `.gk-toggle` alone, in the sheet |
+| 2 | Read in the row, change in the sheet — a click anywhere on the row opens it | `->rowLink()` / `tr.gk-row-link` + `.gk-row-target`; `.gk-sheet` |
+| 3 | Who: one cell, two lines — avatar, name, address underneath | `.gk-avatar` + `.gk-cell-sub` (`'sub' => 'email'`) |
+| 4 | Colour only for what needs acting on | `.gk-label-red` for the one count that needs attention |
+| 5 | Group instead of scrolling — at most six columns at 1280px | `.gk-table-group`; `tr.gk-table-more` |
+| 6 | Running text is never bold and never narrow | `.gk-table` cells at weight 400; `.gk-cell-sub` |
+
+The row: 64px in the redesign it came from, never under 44px, the whole row the
+click target.
+
+## Row link (`tr.gk-row-link`)
+
+A row whose whole surface opens a page or a side sheet.
+
+```php
+->rowLink('/users/{id}')                    // a page
+->rowLink(['sheet' => 'user-sheet'])        // a side sheet; 'url', 'params', 'column' optional
+```
+
+- The `<tr>` gets `gk-row-link` and no role and no tabindex — it stays a row.
+- Its main cell (the first column, or `'column'`) carries ONE control,
+  `<a class="gk-row-target" href>` or `<button type="button" class="gk-row-target"
+  data-gk-sheet data-gk-params aria-haspopup="dialog">`, named by the cell's value.
+- gridkit.js forwards a click anywhere else in the row to that control, with its
+  button and modifier keys. Not forwarded: clicks on a control of the row's own
+  (links, buttons, fields, labels), in the checkbox or action column, and the end
+  of a text selection.
+- At least 44px tall; a chevron in the last cell; with `:has()` the focus ring
+  goes round the row; in card mode (`.gk-table-mobile-card`) round the card.
+- A row whose main cell shows nothing, or whose target the allow list refuses,
+  stays a plain row. `'format' => 'html'` and `'email'` are refused for the main
+  cell, and its own `href` is dropped — each with a warning.
+- The client-side rebuild of a `setData()` table writes the same row, byte for byte.
+
+## Side sheet (`.gk-sheet`)
+
+```html
+<div class="gk-sheet" id="user-sheet" hidden>
+  <div class="gk-sheet-header"><h2 class="gk-sheet-title">User</h2>
+    <button type="button" class="gk-sheet-close">&times;</button></div>
+  <div class="gk-sheet-body">…</div>
+  <div class="gk-sheet-footer">…</div>
+</div>
+```
+
+```javascript
+GK.sheet.open('user-sheet', { returnFocus, focus, params, url, title });  // → the sheet or null
+GK.sheet.close();
+```
+
+| | Wide screen (≥ 769px) | Phone (≤ 768px) |
+|---|---|---|
+| Position | docked right, `--gk-sheet-width` (440px), below a fixed/sticky header | full screen |
+| Layer | part of the page (z-index 150): under the header, its user menu and every dropdown | over the page and the header (1200), under modals |
+| Dialog | non-modal: no `aria-modal`, no focus trap, page scrolls | modal: `aria-modal="true"`, focus trap, page held still |
+
+- `role="dialog"` and `aria-labelledby` (from `.gk-sheet-title`) are filled in
+  where missing; a bare `&times;` close button is named from `js.close`.
+- Focus moves to `.gk-sheet-title` on open (tabindex -1, never in the tab
+  order); Escape closes it while the focus is inside (a widget
+  that handled Escape keeps it; a confirm or modal opened from the sheet answers
+  first); focus returns to the opener on close.
+- One open at a time. `gk:sheetopen` and `gk:sheetclose` fire on the sheet.
+- Hidden is the `hidden` attribute; the scroll lock on a phone is CSS keyed to it.
+- Without JavaScript: rendered without `hidden` it is a docked panel.
+- Dark mode: a role colour (`--gk-surface-container`). Reduced motion: no slide-in.
+
+## Summary row (`tr.gk-table-more`)
+
+One row standing for many: a full-width toggle that shows and hides whatever its
+`aria-controls` names, usually a `<tbody hidden>` right after it.
+
+```html
+<tr class="gk-table-more"><td colspan="3">
+  <button type="button" class="gk-table-more-toggle" aria-expanded="false" aria-controls="profiles">
+    <span class="gk-table-more-name">13 chart profiles</span>
+    <span class="gk-cell-sub">Created from charts — they cannot sign in.</span>
+  </button>
+</td></tr>
+<tbody id="profiles" hidden>…</tbody>
+```
+
+- `aria-expanded` and the `hidden` attribute move together; the label does not
+  change — the chevron shows the state to the eye, `aria-expanded` to a screen
+  reader.
+- At least 44px; hidden rows stay hidden in card mode.

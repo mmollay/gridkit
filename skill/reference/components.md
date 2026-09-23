@@ -1,4 +1,4 @@
-# GridKit 1.90.1 — components
+# GridKit 1.91.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -99,6 +99,36 @@ Both keep the raw value, so sorting and searching go on working — which is wha
 tab, and middle click does the rest.
 
 **`->groupBy($column, $labels)`:** inserts a group row whenever the value changes. Sort the rows by that column first.
+
+**`->rowLink($target)` (since 1.91.0):** the whole row opens something — a page, or
+a side sheet on this page. Use it instead of putting selects, switches or a delete
+button into every row (see *Six rules for lists*).
+
+```php
+->rowLink('/users/{id}')                                   // the row opens a page
+->rowLink(['sheet' => 'user-sheet'])                       // … the side sheet #user-sheet
+->rowLink(['sheet' => 'user-sheet', 'url' => 'panels/user.php', 'params' => ['uid' => 'id']])
+->rowLink(['href' => '/users/{id}', 'column' => 'name'])   // which cell carries the control
+```
+
+The row is not made a control — `role=link` or a `tabindex` on a `<tr>` takes away
+its row role. Its main cell (the first column, or `'column'`) carries ONE real
+control, `<a class="gk-row-target">` or `<button class="gk-row-target" data-gk-sheet>`,
+and a click anywhere else in the row is forwarded to it, with its modifier keys:
+Ctrl-click and a middle click open a link row in a new tab. The keyboard and a
+screen reader use the control itself; without JavaScript a link still works.
+Clicks on a control of its own — a checkbox, a row button, a cell link — and the
+end of a text selection stay theirs. The row is at least 44px tall and shows a
+chevron.
+
+`href` follows the rules of a row button's `href`: `{field}` URL-encoded, the
+same allow list of targets. A sheet row posts `params` (mapped like a row
+button's, always with the row's `id`) to `url` and fills the sheet's body with the
+answer — or, without `url`, hands them to `gk:sheetopen` for your own code. The
+shown value becomes the sheet's title. A row whose main cell shows nothing, or
+whose target is not allowed, stays a plain row. The main cell cannot be
+`'format' => 'html'` or `'email'` (both write a link of their own) and loses its
+own `href` — GridKit says so with a warning.
 
 **Button `onclick`:** `{field}` is replaced with the row's value, JSON-encoded (`'onclick' => 'open({id})'`).
 
@@ -640,6 +670,46 @@ GK.modal.close();
 `gk-form-actions` straight inside the modal, which has no side padding. A
 compatibility rule catches the old shape.
 
+### Side sheet (`.gk-sheet`, since 1.91.0)
+
+Where a record is read in full and changed — the row itself only shows values.
+On a wide screen it docks at the right edge, 440px (`--gk-sheet-width` on
+`.gk-root`), and the list beside it stays usable and scrollable: a non-modal
+dialog. Below 769px it covers the screen and is modal — `aria-modal`, the focus
+held inside, the page behind it held still. Docked, it is part of the page and
+lies under the header: below a fixed or sticky GridKit header it starts where
+the header ends (`--gk-sheet-top`), and the header's user menu, a dropdown or a
+select list opened beside it lies over it. Give a page's own fixed bar a
+z-index above 150 if it has to stay over an open sheet.
+
+```html
+<div class="gk-sheet" id="user-sheet" hidden>
+  <div class="gk-sheet-header">
+    <h2 class="gk-sheet-title">User</h2>
+    <button type="button" class="gk-sheet-close">&times;</button>
+  </div>
+  <div class="gk-sheet-body">…</div>
+  <div class="gk-sheet-footer">…</div>   <!-- optional: actions, pinned at the bottom -->
+</div>
+
+<button type="button" data-gk-sheet="user-sheet" data-gk-params='{"id":7}'>Jana</button>
+```
+
+GridKit gives it the dialog role, names it by `.gk-sheet-title` and names a bare
+`&times;` close button, as it does for a static modal. `data-gk-sheet` on any
+button or link opens it (`data-gk-params`, `data-gk-sheet-url` and
+`data-gk-sheet-title` fill in the options); so does `->rowLink()`. Opening moves
+the focus to its title (a screen reader starts at the record's name, one Tab
+reaches the close button), Escape closes it while the focus is inside, and
+closing gives the focus back to what opened it. One sheet at a time: opening another closes the
+first. The row whose record it shows carries `aria-current="true"`. An AJAX form
+inside closes the sheet on `{ok: true}`, not the modal.
+
+Hidden is the `hidden` attribute. Without JavaScript the markup still works: render
+it without `hidden` and it is a docked panel, with a plain link in the close
+button's place. Add `.gk-sheet-push` to the content area if it should make room
+for a docked sheet instead of lying under it.
+
 ### Form (AJAX)
 
 ```php
@@ -1093,4 +1163,5 @@ next update and split the codebase in two.
 | Accordion (JS) | `.gk-accordion` | Collapsible sections, optional single-open (`data-gk-single`) |
 | Tooltips (JS/CSS) | `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` | Hint popups — plain, CSS-only, or with HTML in them |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
+| Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |

@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.90.1 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.91.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -49,6 +49,7 @@ next update and split the codebase in two.
 | Accordion (JS) | `.gk-accordion` | Collapsible sections, optional single-open (`data-gk-single`) |
 | Tooltips (JS/CSS) | `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` | Hint popups — plain, CSS-only, or with HTML in them |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
+| Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
 
 ## The one rule to read first: echo or return
@@ -209,6 +210,82 @@ use GridKit\{Table, Form, StatCards, FilterChips, Button};
 <?php $this->end() ?>
 ```
 
+## Six rules for lists
+
+Read these before you build a list. They come from two admin lists that were
+built with GridKit and turned down (since 1.91.0): a user list of 21 rows had
+nine columns, two selects, a switch and a label in every row, rows 100px tall,
+and its actions scrolled off the right at 1280px. The approved redesign has six
+columns and 64px rows — an avatar, the name at 15px semibold over the address
+at 13px, one coloured count — and a side sheet for everything that changes.
+
+1. **One state, one sign.** A switch shows its state itself. A label beside it
+   saying "allowed" says it again, once per row. In the list, group by the
+   state; the switch lives in the side sheet, with one sentence on what it does.
+   Building block: `->groupBy()` with `.gk-table-group`; `.gk-toggle` with no `.gk-label` beside it.
+2. **Read in the row, change in the sheet.** A row shows values as text. Selects,
+   switches and delete belong in the side sheet the row opens — and a click
+   anywhere on the row opens it, not only on its name.
+   Building block: `->rowLink()`, i.e. `tr.gk-row-link` + `.gk-row-target`; `.gk-sheet` opened by `GK.sheet.open()`.
+3. **Who: one cell, two lines.** Name and address belong together: an avatar,
+   the name, the address underneath. In two columns both break mid-word. A
+   `Table` column writes the two lines with `'sub' => 'email'`.
+   Building block: `.gk-avatar` + `.gk-cell-sub`.
+4. **Colour only for what needs acting on.** Red means something is broken.
+   Counts that are fine stay neutral text, and the breakdown goes in the sheet
+   rather than in three coloured numbers per row.
+   Building block: `.gk-label-red` for the one count that needs attention.
+5. **Group instead of scrolling.** At most six columns at 1280px; nothing
+   scrolls sideways. What is rarely needed folds into one row that stands for
+   many — and records that are not like the others (profiles among users) are
+   such a group.
+   Building block: `.gk-table-group`; `tr.gk-table-more` with a `.gk-table-more-toggle`.
+6. **Running text is never bold and never narrow.** A sentence in a list is set
+   at normal weight and gets the width it needs (`minWidth` on its column); a
+   second line of detail is quiet text, not a second column.
+   Building block: `.gk-table` cells at weight 400 — add no bold; `.gk-cell-sub` for the second line.
+
+The row the rules were drawn from, measured: 64px tall, the whole row the click
+target (never under 44px), name 15/13px, at most six columns at 1280px, one
+colour — for what needs acting on.
+
+A list that follows all six, by hand — a `Table` writes the same row with
+`->rowLink(['sheet' => 'user-sheet'])` and `'sub' => 'email'`:
+
+```html
+<table class="gk-table">
+  <thead><tr><th scope="col">User</th><th scope="col">Plan</th><th scope="col">Last 30 days</th></tr></thead>
+  <tbody>
+    <tr class="gk-table-group"><td colspan="3">
+      <span class="gk-table-group-name">With access</span><span class="gk-table-group-n">5</span>
+    </td></tr>
+    <tr class="gk-row-link">
+      <td data-label="User">
+        <div class="gk-flex gk-items-center gk-gap-lg">
+          <span class="gk-avatar" aria-hidden="true">AP</span>
+          <div>
+            <button type="button" class="gk-row-target" data-gk-sheet="user-sheet"
+                    data-gk-params='{"id":2}' aria-haspopup="dialog">Jana Novak</button>
+            <span class="gk-cell-sub">jana@example.com</span>
+          </div>
+        </div>
+      </td>
+      <td data-label="Plan">Life book</td>
+      <td data-label="Last 30 days"><span class="gk-label gk-label-red">17 failing</span></td>
+    </tr>
+    <tr class="gk-table-more"><td colspan="3">
+      <button type="button" class="gk-table-more-toggle" aria-expanded="false" aria-controls="profiles">
+        <span class="gk-table-more-name">13 chart profiles</span>
+        <span class="gk-cell-sub">Created from charts — they cannot sign in.</span>
+      </button>
+    </td></tr>
+  </tbody>
+  <tbody id="profiles" hidden>
+    <!-- the 13 rows, right after the row that stands for them -->
+  </tbody>
+</table>
+```
+
 ## Component Reference
 
 ### Table
@@ -306,6 +383,36 @@ Both keep the raw value, so sorting and searching go on working — which is wha
 tab, and middle click does the rest.
 
 **`->groupBy($column, $labels)`:** inserts a group row whenever the value changes. Sort the rows by that column first.
+
+**`->rowLink($target)` (since 1.91.0):** the whole row opens something — a page, or
+a side sheet on this page. Use it instead of putting selects, switches or a delete
+button into every row (see *Six rules for lists*).
+
+```php
+->rowLink('/users/{id}')                                   // the row opens a page
+->rowLink(['sheet' => 'user-sheet'])                       // … the side sheet #user-sheet
+->rowLink(['sheet' => 'user-sheet', 'url' => 'panels/user.php', 'params' => ['uid' => 'id']])
+->rowLink(['href' => '/users/{id}', 'column' => 'name'])   // which cell carries the control
+```
+
+The row is not made a control — `role=link` or a `tabindex` on a `<tr>` takes away
+its row role. Its main cell (the first column, or `'column'`) carries ONE real
+control, `<a class="gk-row-target">` or `<button class="gk-row-target" data-gk-sheet>`,
+and a click anywhere else in the row is forwarded to it, with its modifier keys:
+Ctrl-click and a middle click open a link row in a new tab. The keyboard and a
+screen reader use the control itself; without JavaScript a link still works.
+Clicks on a control of its own — a checkbox, a row button, a cell link — and the
+end of a text selection stay theirs. The row is at least 44px tall and shows a
+chevron.
+
+`href` follows the rules of a row button's `href`: `{field}` URL-encoded, the
+same allow list of targets. A sheet row posts `params` (mapped like a row
+button's, always with the row's `id`) to `url` and fills the sheet's body with the
+answer — or, without `url`, hands them to `gk:sheetopen` for your own code. The
+shown value becomes the sheet's title. A row whose main cell shows nothing, or
+whose target is not allowed, stays a plain row. The main cell cannot be
+`'format' => 'html'` or `'email'` (both write a link of their own) and loses its
+own `href` — GridKit says so with a warning.
 
 **Button `onclick`:** `{field}` is replaced with the row's value, JSON-encoded (`'onclick' => 'open({id})'`).
 
@@ -847,6 +954,46 @@ GK.modal.close();
 `gk-form-actions` straight inside the modal, which has no side padding. A
 compatibility rule catches the old shape.
 
+### Side sheet (`.gk-sheet`, since 1.91.0)
+
+Where a record is read in full and changed — the row itself only shows values.
+On a wide screen it docks at the right edge, 440px (`--gk-sheet-width` on
+`.gk-root`), and the list beside it stays usable and scrollable: a non-modal
+dialog. Below 769px it covers the screen and is modal — `aria-modal`, the focus
+held inside, the page behind it held still. Docked, it is part of the page and
+lies under the header: below a fixed or sticky GridKit header it starts where
+the header ends (`--gk-sheet-top`), and the header's user menu, a dropdown or a
+select list opened beside it lies over it. Give a page's own fixed bar a
+z-index above 150 if it has to stay over an open sheet.
+
+```html
+<div class="gk-sheet" id="user-sheet" hidden>
+  <div class="gk-sheet-header">
+    <h2 class="gk-sheet-title">User</h2>
+    <button type="button" class="gk-sheet-close">&times;</button>
+  </div>
+  <div class="gk-sheet-body">…</div>
+  <div class="gk-sheet-footer">…</div>   <!-- optional: actions, pinned at the bottom -->
+</div>
+
+<button type="button" data-gk-sheet="user-sheet" data-gk-params='{"id":7}'>Jana</button>
+```
+
+GridKit gives it the dialog role, names it by `.gk-sheet-title` and names a bare
+`&times;` close button, as it does for a static modal. `data-gk-sheet` on any
+button or link opens it (`data-gk-params`, `data-gk-sheet-url` and
+`data-gk-sheet-title` fill in the options); so does `->rowLink()`. Opening moves
+the focus to its title (a screen reader starts at the record's name, one Tab
+reaches the close button), Escape closes it while the focus is inside, and
+closing gives the focus back to what opened it. One sheet at a time: opening another closes the
+first. The row whose record it shows carries `aria-current="true"`. An AJAX form
+inside closes the sheet on `{ok: true}`, not the modal.
+
+Hidden is the `hidden` attribute. Without JavaScript the markup still works: render
+it without `hidden` and it is a docked panel, with a plain link in the close
+button's place. Add `.gk-sheet-push` to the content area if it should make room
+for a docked sheet instead of lying under it.
+
 ### Form (AJAX)
 
 ```php
@@ -1120,6 +1267,19 @@ GK.table.refreshAll();          // every table on the page
 // or translated, and it blocks the page.
 GK.confirm('Delete this invoice?', { title: 'Delete', confirmText: 'Delete', danger: true })
   .then(function (yes) { if (yes) removeInvoice(); });
+
+// Side sheet (since 1.91.0) — markup on the page, see "Side sheet".
+// The first argument is an id, "#id" or the element. Returns the sheet or null.
+GK.sheet.open('user-sheet', {
+  returnFocus: rowButton,        // optional: where the focus goes back (default: what has it now)
+  focus: '#plan',                // optional: where the caret goes (default: the title)
+  params: { id: 7 },             // optional: handed to gk:sheetopen, posted with url
+  url: 'panels/user.php',        // optional: its answer fills .gk-sheet-body
+  title: 'Jana Novak',        // optional: replaces the text of .gk-sheet-title
+});
+GK.sheet.close();                // the open one
+document.addEventListener('gk:sheetopen', e => fill(e.target, e.detail.params));  // detail: { opener, params }
+document.addEventListener('gk:sheetclose', e => { /* e.detail.opener */ });
 ```
 
 An AJAX form (`Form::ajax()`) reports its own outcome: `{ok: true, message: '…'}` closes the modal, refreshes
@@ -1425,6 +1585,10 @@ Features:
 | `gk-accordion-flush` | Accordion without its own border or rounding, for one already inside a card |
 | `gk-richtext-toolbar` `gk-richtext-content` `gk-richtext-btn` | The rich-text field's own parts |
 | `gk-skeleton` | Grey shimmer standing in for text that has not arrived |
+| `gk-sheet` `gk-sheet-header` `gk-sheet-title` `gk-sheet-close` `gk-sheet-body` `gk-sheet-footer` | Side sheet (since 1.91.0): docked right, full screen and modal on a phone; hidden with the `hidden` attribute |
+| `gk-sheet-push` | Content that makes room for a docked sheet while one is open (wide screens only) |
+| `gk-row-link` `gk-row-target` | A row that opens something (on the `<tr>`), and the one control in its main cell that it forwards clicks to |
+| `gk-table-more` `gk-table-more-toggle` `gk-table-more-name` | One row standing for many: the row, the full-width toggle (`aria-controls` names the rows, usually a `<tbody hidden>`), its label |
 
 ### BelegModal (since v1.15.0)
 
@@ -1659,3 +1823,6 @@ layout, typography, or semantic colors. **Spacing scale: 0/1/2/3/4/5/6 = 0/4/8/1
    with the server's 404 page. For an overlay whose markup is already on the page, use
    `GK.modal.show('#id')` / `GK.modal.hide('#id')` — never `open()`.
 6. **Direct project edits** — Always change GridKit at its own source, never inside a consuming project.
+7. **A clickable row made by hand** — `onclick` on a `<tr>`, `role="link"` or a `tabindex` on it: the keyboard
+   cannot reach it or a screen reader loses the row. Use `->rowLink()`, or `tr.gk-row-link` with one
+   `.gk-row-target` in its main cell. And never a select or a switch in every row — that is what the side sheet is for.

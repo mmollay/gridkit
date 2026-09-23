@@ -48,6 +48,10 @@ def take(*titles):
 core = take(
     'The one rule to read first',
     'Page skeleton',
+    # How a list has to look before its first row is written — a rule, not a
+    # reference: an agent that meets it only in components.md has already put a
+    # select into every row.
+    'Six rules for lists',
     'Filters forget each other',
     'Common Pitfalls',
 )

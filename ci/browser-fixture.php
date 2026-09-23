@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../autoload.php';
 
-use GridKit\{Form, Lang, Select, Table};
+use GridKit\{Form, Header, Lang, Select, Table};
 
 Lang::set('en');
 
@@ -89,6 +89,50 @@ ob_start();
     ->render();
 $timed = ob_get_clean();
 
+// Rows that open a side sheet (1.91.0). A second linked cell and a row button
+// sit in the same row: a click on either must stay theirs. Selectable, so the
+// checkbox column is there too. Descending by name, so a sort reorders.
+ob_start();
+(new Table('people'))
+    ->setData([
+        ['id' => 7, 'name' => 'Zoe Adams',   'mail' => 'zoe@example.com',   'plan' => 'Pro',  'site' => 'zoe'],
+        ['id' => 8, 'name' => "Mia O'Brien", 'mail' => 'mia@example.com',   'plan' => 'Free', 'site' => 'mia'],
+        // Nothing to name the control with: this row must stay a plain row.
+        ['id' => 9, 'name' => '',            'mail' => 'nobody@example.com', 'plan' => 'Free', 'site' => 'x'],
+    ])
+    ->selectable()
+    ->rowLink(['sheet' => 'person-sheet'])
+    ->column('name', 'Name', ['sortable' => true, 'sub' => 'mail'])
+    ->column('plan', 'Plan')
+    ->column('site', 'Site', ['href' => '#site-{site}'])
+    ->button('note', ['icon' => 'edit'])
+    ->render();
+$people = ob_get_clean();
+
+// Rows that are links. Fragment targets, so following one keeps the test page.
+ob_start();
+(new Table('pages'))
+    ->setData([
+        ['id' => 1, 'title' => 'Beta',  'slug' => "b e'ta"],
+        ['id' => 2, 'title' => 'Alpha', 'slug' => 'alpha'],
+    ])
+    ->rowLink('#page-{slug}')
+    ->column('title', 'Title', ['sortable' => true])
+    ->column('slug', 'Slug')
+    ->render();
+$pages = ob_get_clean();
+
+// The side sheet the people table opens: written the way the skill teaches,
+// with no role and no name on the close button — GK.sheet fills both in.
+$personSheet = '<div class="gk-sheet" id="person-sheet" hidden>'
+   . '<div class="gk-sheet-header"><h2 class="gk-sheet-title">Person</h2>'
+   . '<button type="button" class="gk-sheet-close">&times;</button></div>'
+   . '<div class="gk-sheet-body"><label for="plan-pick">Plan</label>'
+   . '<select id="plan-pick"><option>Free</option><option>Pro</option></select>'
+   . '<button type="button" id="sheet-ask">Delete account</button></div>'
+   . '<div class="gk-sheet-footer"><button type="button" id="sheet-last">Done</button></div>'
+   . '</div>';
+
 // A searchable select on its own, for the navigation case in ci/browser.js.
 if (isset($argv[1]) && $argv[1] === '--select') {
     echo Select::searchable('country', $options);
@@ -96,12 +140,35 @@ if (isset($argv[1]) && $argv[1] === '--select') {
 }
 
 $root = dirname(__DIR__);
-echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+$head = '<head><meta charset="utf-8">'
    // Ohne diese Zeile rechnet der Browser mit 980 px Breite, und keine
    // Media-Query für Telefone greift — eine mobile Prüfung wäre wertlos.
    . '<meta name="viewport" content="width=device-width, initial-scale=1">'
    . '<title>GridKit browser fixture</title>'
-   . '<style>' . file_get_contents($root . '/css/gridkit.css') . '</style></head><body class="gk-root">'
+   . '<style>' . file_get_contents($root . '/css/gridkit.css') . '</style></head>';
+$script = '<script>' . file_get_contents($root . '/js/gridkit.js') . '</script>';
+
+// An application page: GridKit's own fixed header with its user menu, the list
+// below it and the sheet the list opens. On a wide screen the sheet docks
+// beside the list — and the header's menu, which opens over the sheet's top
+// corner, has to stay on top of it. ci/browser.js switches the layout and the
+// header variant on this one page.
+if (isset($argv[1]) && $argv[1] === '--header') {
+    echo '<!DOCTYPE html><html lang="en" data-gk-layout="header-first">' . $head . '<body class="gk-root">'
+       . Lang::jsConfig()
+       . (new Header())->title('People')->fixed()->user('Demo User', ['role' => 'Admin', 'menu' => [
+             ['label' => 'Profile', 'href' => '#profile', 'icon' => 'person'],
+             ['label' => 'Settings', 'href' => '#settings', 'icon' => 'settings'],
+             'divider',
+             ['label' => 'Sign out', 'href' => '#sign-out', 'icon' => 'logout'],
+         ]])->render()
+       . '<main class="gk-body-with-header">' . $people . '</main>'
+       . $personSheet
+       . $script . '</body></html>';
+    exit;
+}
+
+echo '<!DOCTYPE html><html lang="en">' . $head . '<body class="gk-root">'
    . Lang::jsConfig()
    . '<button id="menu" data-gk-dropdown aria-expanded="false">Menu<div class="gk-dropdown-menu"><a href="#">x</a></div></button>'
    . $table
@@ -135,5 +202,26 @@ echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
    . '<style>.seiten-versteck{display:none}</style>'
    . '<div class="gk-modal-overlay seiten-versteck" id="klassen-versteck"><div class="gk-modal">'
    . '<div class="gk-modal-header"><h3 class="gk-modal-title">Hidden</h3></div></div></div>'
+   . $people
+   . $pages
+   . $personSheet
+   // A second sheet, for "one at a time".
+   . '<div class="gk-sheet" id="other-sheet" hidden><div class="gk-sheet-header">'
+   . '<h2 class="gk-sheet-title">Other</h2><button type="button" class="gk-sheet-close">&times;</button></div>'
+   . '<div class="gk-sheet-body"><button type="button" id="other-btn">x</button></div></div>'
+   // One row standing for many, in card mode: the folded rows must stay folded
+   // on a phone, where card mode sets display:block on every tbody and tr.
+   . '<div class="gk-table-wrap gk-table-mobile-card"><table class="gk-table">'
+   . '<thead><tr><th scope="col">Name</th><th scope="col">Plan</th></tr></thead>'
+   . '<tbody><tr><td data-label="Name">Ann</td><td data-label="Plan">Pro</td></tr>'
+   . '<tr class="gk-table-more"><td colspan="2">'
+   . '<button type="button" class="gk-table-more-toggle" aria-expanded="false" aria-controls="folded">'
+   . '<span class="gk-table-more-name">3 chart profiles</span>'
+   . '<span class="gk-cell-sub">Created from charts; they cannot sign in.</span></button></td></tr></tbody>'
+   . '<tbody id="folded" hidden>'
+   . '<tr><td data-label="Name">Profile 1</td><td data-label="Plan">-</td></tr>'
+   . '<tr><td data-label="Name">Profile 2</td><td data-label="Plan">-</td></tr>'
+   . '<tr><td data-label="Name">Profile 3</td><td data-label="Plan">-</td></tr>'
+   . '</tbody></table></div>'
    . '<template id="form">' . $form . '</template>'
-   . '<script>' . file_get_contents($root . '/js/gridkit.js') . '</script></body></html>';
+   . $script . '</body></html>';

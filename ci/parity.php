@@ -109,6 +109,16 @@ $cases = [
         ->button('open', ['icon' => 'visibility', 'href' => '/artikel/{slug}'])
         ->button('go', ['text' => 'Go', 'href' => '/x/{id}?q={slug}', 'confirm' => 'Sure?'])
         ->button('raw', ['icon' => 'edit', 'href' => '{link}']),
+    // rowLink() (1.91.0): the row's one control, on a link row and on a sheet
+    // row — its target, its encoding, its params and its title from the shown
+    // value have to come out the same on both sides. The link sits on 'name',
+    // the second column, so 'column' is exercised as well; 'link' carries a
+    // scheme that must stay an encoded path segment.
+    'rowlinks'   => static fn(Table $t): Table => $t
+        ->rowLink(['href' => '/artikel/{slug}?raw={link}', 'column' => 'name']),
+    'rowsheet'   => static fn(Table $t): Table => $t
+        ->selectable('id')
+        ->rowLink(['sheet' => 'item-sheet', 'url' => '/panel.php?a=1&b=2', 'params' => ['sku' => 'sku']]),
     'selectable' => static fn(Table $t): Table => $t->selectable('id'),
     'filtered'   => static fn(Table $t): Table => $t
         ->column('status', 'Status', ['format' => 'label'])

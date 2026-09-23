@@ -38,6 +38,8 @@ process.on("SIGINT", () => process.exit(130));
 const fixture = path.join(dir, "fixture.html");
 fs.writeFileSync(fixture, execFileSync(php, [path.join(__dirname, "browser-fixture.php")], { maxBuffer: 64 * 1024 * 1024 }));
 fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__dirname, "browser-fixture.php"), "--select"]));
+const withHeader = path.join(dir, "header.html");
+fs.writeFileSync(withHeader, execFileSync(php, [path.join(__dirname, "browser-fixture.php"), "--header"], { maxBuffer: 64 * 1024 * 1024 }));
 
 (async () => {
   const browser = await chromium.launch();
@@ -506,6 +508,186 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
       metaBefore === "2 entries · 1.23 s" && metaAfter === metaBefore);
     if (metaAfter !== metaBefore) console.log(JSON.stringify({ metaBefore, metaAfter }));
 
+    // ── A row that opens a side sheet (1.91.0) ─────────────────────────────
+    // The default viewport is 1280 wide: the docked, non-modal sheet.
+    const sheetState = () => page.evaluate(() => {
+      const s = document.getElementById("person-sheet");
+      const cur = [...document.querySelectorAll('[data-gk-table="people"] tr[aria-current="true"]')];
+      return {
+        open: !s.hidden, role: s.getAttribute("role"), modal: s.getAttribute("aria-modal"),
+        named: !!s.getAttribute("aria-labelledby") && s.getAttribute("aria-labelledby") === s.querySelector(".gk-sheet-title").id,
+        title: s.querySelector(".gk-sheet-title").textContent,
+        closeName: s.querySelector(".gk-sheet-close").getAttribute("aria-label"),
+        focusIn: s.contains(document.activeElement),
+        focus: document.activeElement ? (document.activeElement.id || document.activeElement.className) : null,
+        current: cur.map((tr) => tr.querySelector(".gk-row-target").textContent),
+        width: Math.round(s.getBoundingClientRect().width),
+      };
+    });
+    await page.evaluate(() => {
+      window.__sheetEvents = [];
+      document.addEventListener("gk:sheetopen", (e) => window.__sheetEvents.push("open:" + JSON.stringify(e.detail.params)));
+      document.addEventListener("gk:sheetclose", () => window.__sheetEvents.push("close"));
+    });
+    const rows = await page.evaluate(() => [...document.querySelectorAll('[data-gk-table="people"] tbody tr')].map((tr) => ({
+      link: tr.classList.contains("gk-row-link"),
+      target: tr.querySelector(".gk-row-target") ? tr.querySelector(".gk-row-target").tagName : null,
+    })));
+    check("a row whose main cell shows nothing stays a plain row; the others carry one button each",
+      rows.length === 3 && rows.filter((r) => r.link && r.target === "BUTTON").length === 2
+      && rows.filter((r) => !r.link && r.target === null).length === 1);
+    // A click on a cell that is not the control: the Plan cell of Zoe.
+    await page.click('[data-gk-table="people"] tr.gk-row-link:has(.gk-row-target:text("Zoe Adams")) td[data-label="Plan"]');
+    let st1 = await sheetState();
+    check("a click anywhere in the row opens its sheet: a named dialog, not modal on a wide screen, the focus inside",
+      st1.open && st1.role === "dialog" && st1.named && st1.modal === null && st1.focusIn && st1.width === 440
+      && st1.closeName === "Close" && st1.title === "Zoe Adams");
+    check("… the row it shows is marked current, and gk:sheetopen carries the row's id",
+      st1.current.join() === "Zoe Adams"
+      && (await page.evaluate(() => window.__sheetEvents.join())) === 'open:{"id":7}');
+    // Another row while it is open: the same sheet, the mark moves.
+    await page.click('[data-gk-table="people"] tr.gk-row-link:has(.gk-row-target:text("Mia")) td[data-label="Plan"]');
+    st1 = await sheetState();
+    check("… another row while it is open: still one sheet, the mark moves along, the title follows",
+      st1.open && st1.current.join() === "Mia O'Brien" && st1.title === "Mia O'Brien");
+    await page.keyboard.press("Escape");
+    st1 = await sheetState();
+    const backTo = await page.evaluate(() => document.activeElement.textContent);
+    check("Escape closes it, takes the mark off and gives the focus back to the row it came from",
+      !st1.open && st1.current.length === 0 && backTo === "Mia O'Brien");
+    // Keyboard only: the control is a real button.
+    await page.focus('[data-gk-table="people"] .gk-row-target');
+    await page.keyboard.press("Enter");
+    st1 = await sheetState();
+    check("Enter on the row's control opens the sheet", st1.open && st1.focusIn);
+    // A mouse opens it on every row; the focus goes to the title, so no ring
+    // lands on the close button each time.
+    check("… the focus starts on the title — named, out of the tab order, no ring drawn",
+      await page.evaluate(() => {
+        const t = document.activeElement;
+        return t.classList.contains("gk-sheet-title") && t.getAttribute("tabindex") === "-1"
+          && getComputedStyle(t).outlineStyle === "none";
+      }));
+    await page.keyboard.press("Tab");
+    check("… and one Tab reaches the close button",
+      await page.evaluate(() => document.activeElement.classList.contains("gk-sheet-close")));
+    // Tab walks out of a docked sheet: it is not modal on a wide screen.
+    await page.focus("#sheet-last");
+    await page.keyboard.press("Tab");
+    check("… and Tab leaves a docked sheet — no trap where the page is still in use",
+      !(await page.evaluate(() => document.getElementById("person-sheet").contains(document.activeElement))));
+    // A confirm opened from inside the sheet answers Escape for itself.
+    await page.focus("#sheet-ask");
+    await page.evaluate(() => { window._sheetAnswer = "pending"; GK.confirm("Delete?").then((a) => (window._sheetAnswer = a)); });
+    await page.waitForSelector(".gk-confirm-overlay");
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(() => window._sheetAnswer !== "pending");
+    st1 = await sheetState();
+    check("a confirm over the sheet: Escape answers the confirm, the sheet stays",
+      (await page.evaluate(() => window._sheetAnswer)) === false && st1.open);
+    // Opened from inside a modal: above it. A form in it that saves closes the
+    // sheet — not the modal, which is the top of GK.modal's stack.
+    await page.evaluate(() => GK.sheet.close());
+    await openModal();
+    const ueber = await page.evaluate(() => new Promise((fertig) => {
+      const sheet = GK.sheet.open("person-sheet");
+      const ov = document.querySelector(".gk-modal-overlay.gk-modal-open");
+      const hoeher = parseInt(getComputedStyle(sheet).zIndex, 10) > parseInt(getComputedStyle(ov).zIndex, 10);
+      const f = document.createElement("form");
+      f.setAttribute("data-gk-ajax", "");
+      f.action = "/save";
+      f.innerHTML = '<button type="submit" id="sheet-save">Save</button>';
+      sheet.querySelector(".gk-sheet-body").appendChild(f);
+      GK.form.bind(sheet);
+      window.fetch = () => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ ok: true }) });
+      f.querySelector("#sheet-save").click();
+      setTimeout(() => fertig({ hoeher, sheetZu: sheet.hidden, stack: GK.modal.stack.length }), 300);
+    }));
+    check("a sheet opened from inside a modal lies above it, and a form in it that saves closes the sheet, not the modal",
+      ueber.hoeher && ueber.sheetZu && ueber.stack === 1);
+    await page.evaluate(() => { document.querySelector("#person-sheet form").remove(); GK.modal.closeAll(); });
+
+    // One at a time.
+    await page.evaluate(() => GK.sheet.open("other-sheet"));
+    const both = await page.evaluate(() => [document.getElementById("person-sheet").hidden, document.getElementById("other-sheet").hidden]);
+    check("opening a second sheet closes the first", both[0] === true && both[1] === false);
+    await page.click("#other-sheet .gk-sheet-close");
+    check("the close button closes it", await page.evaluate(() => document.getElementById("other-sheet").hidden));
+    // Clicks that belong to something else in the row.
+    const eigene = await page.evaluate(() => {
+      const zoe = [...document.querySelectorAll('[data-gk-table="people"] tr.gk-row-link')]
+        .find((tr) => tr.querySelector(".gk-row-target").textContent === "Zoe Adams");
+      const sheet = document.getElementById("person-sheet");
+      const out = {};
+      zoe.querySelector('td[data-label="Site"] a').click();
+      out.site = sheet.hidden && location.hash === "#site-zoe";
+      zoe.querySelector("td.gk-cb-col input").click();
+      out.box = sheet.hidden && zoe.querySelector("td.gk-cb-col input").checked;
+      zoe.querySelector("td.gk-actions .gk-btn").click();
+      out.btn = sheet.hidden;
+      return out;
+    });
+    check("a second link, the checkbox and a row button in the row stay theirs — none of them opens the sheet",
+      eigene.site && eigene.box && eigene.btn);
+    // Selecting text in a row is not a click on it.
+    const markiert = await page.evaluate(() => {
+      const td = document.querySelector('[data-gk-table="people"] tr.gk-row-link td[data-label="Plan"]');
+      const r = document.createRange();
+      r.selectNodeContents(td);
+      getSelection().removeAllRanges();
+      getSelection().addRange(r);
+      td.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }));
+      const offen = !document.getElementById("person-sheet").hidden;
+      getSelection().removeAllRanges();
+      return offen;
+    });
+    check("… nor does the end of a text selection", markiert === false);
+    // The row is the pointer target: 44px at least.
+    const hoehe = await page.evaluate(() => Math.min(...[...document.querySelectorAll("tr.gk-row-link")].map((tr) => tr.getBoundingClientRect().height)));
+    check("a row that opens something is at least 44px tall", hoehe >= 44);
+    // The client rebuild writes the same row and the same control.
+    const reihen = () => page.evaluate(() => [...document.querySelectorAll('[data-gk-table="people"] tbody tr')]
+      .map((tr) => tr.className + "|" + (tr.querySelector('td[data-label="Name"]') || {}).innerHTML).sort().join("\n"));
+    const vorSort = await reihen();
+    await page.click('[data-gk-table="people"] [data-gk-sort="name"]');
+    const nachSort = await reihen();
+    check("after a client-side sort every row and its control are written byte for byte as the server wrote them",
+      vorSort === nachSort && (await page.evaluate(() => !!document.querySelector('[data-gk-table="people"] thead th.gk-sortable-mi'))));
+    if (vorSort !== nachSort) console.log(vorSort + "\n---\n" + nachSort);
+
+    // ── A row that is a link ───────────────────────────────────────────────
+    await page.evaluate(() => { history.replaceState(null, "", location.pathname); });
+    await page.click('[data-gk-table="pages"] tbody tr:first-child td[data-label="Slug"]');
+    const zuerst = await page.evaluate(() => location.hash);
+    const erwartet = await page.evaluate(() => document.querySelector('[data-gk-table="pages"] tbody tr:first-child .gk-row-target').getAttribute("href"));
+    check("a click on a cell of a link row follows the row's link", zuerst === erwartet && erwartet === "#page-b%20e%27ta");
+    const vorher = page.context().pages().length;
+    const neu = page.context().waitForEvent("page", { timeout: 3000 }).catch(() => null);
+    await page.click('[data-gk-table="pages"] tbody tr:last-child td[data-label="Slug"]', { modifiers: ["Control"] });
+    const tab = await neu;
+    check("… and Ctrl-click on a cell opens it in a new tab, as on the link itself",
+      !!tab && page.context().pages().length === vorher + 1);
+    if (tab) await tab.close();
+    const linkVor = await page.evaluate(() => [...document.querySelectorAll('[data-gk-table="pages"] tbody tr')].map((tr) => tr.outerHTML).sort().join(""));
+    await page.click('[data-gk-table="pages"] [data-gk-sort="title"]');
+    const linkNach = await page.evaluate(() => [...document.querySelectorAll('[data-gk-table="pages"] tbody tr')].map((tr) => tr.outerHTML).sort().join(""));
+    check("… written identically by both renderers, the encoding of the target included", linkVor === linkNach);
+    if (linkVor !== linkNach) console.log(linkVor + "\n---\n" + linkNach);
+
+    // ── One row standing for many ──────────────────────────────────────────
+    const mehr = () => page.evaluate(() => ({
+      expanded: document.querySelector(".gk-table-more-toggle").getAttribute("aria-expanded"),
+      visible: document.querySelector("#folded tr").checkVisibility(),
+    }));
+    const mehrZu = await mehr();
+    await page.click(".gk-table-more-toggle");
+    const mehrAuf = await mehr();
+    await page.click(".gk-table-more-toggle");
+    const wiederZu = await mehr();
+    check("the summary row's toggle shows and hides what aria-controls names, and says so with aria-expanded",
+      mehrZu.expanded === "false" && !mehrZu.visible && mehrAuf.expanded === "true" && mehrAuf.visible
+      && wiederZu.expanded === "false" && !wiederZu.visible);
+
     // ── AJAX navigation brings the target page's own stylesheet along ─────
     // Served from memory: XHR does not work on file://.
     const gridkitJs = fs.readFileSync(path.join(__dirname, "..", "js", "gridkit.js"), "utf8");
@@ -619,7 +801,135 @@ fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__d
     check("at 390px no visible field has a font iOS would zoom into",
       kleineFelder.length === 0);
     if (kleineFelder.length) console.log("   " + JSON.stringify(kleineFelder));
+
+    // ── The side sheet on a phone: full screen, modal, the page holds still ──
+    // Card mode sets display:block on every tbody and tr — the folded rows must
+    // stay folded all the same.
+    const gefaltet = await phone.evaluate(() => document.querySelector("#folded tr").checkVisibility());
+    check("on a phone the folded rows of a summary row stay folded in card mode", gefaltet === false);
+    await phone.tap('[data-gk-table="people"] tr.gk-row-link td[data-label="Plan"]');
+    const handy = await phone.evaluate(() => {
+      // The end of the slide-in, not a frame of it.
+      document.getAnimations().forEach((a) => a.finish());
+      const s = document.getElementById("person-sheet");
+      const r = s.getBoundingClientRect();
+      return { open: !s.hidden, modal: s.getAttribute("aria-modal"), focusIn: s.contains(document.activeElement),
+               full: Math.round(r.left) === 0 && Math.round(r.top) === 0 && Math.round(r.width) === innerWidth
+                 && Math.round(r.height) === innerHeight,
+               still: getComputedStyle(document.documentElement).overflow === "hidden"
+                 && getComputedStyle(document.body).overflow === "hidden",
+               close: Math.round(s.querySelector(".gk-sheet-close").getBoundingClientRect().height) };
+    });
+    check("a sheet on a phone covers the screen, is modal, takes the focus, and the page behind stops scrolling",
+      handy.open && handy.modal === "true" && handy.focusIn && handy.full && handy.still);
+    check("… with a close button of at least 44px", handy.close >= 44);
+    // The focus starts on the title, which is not in the tab order — and
+    // Shift+Tab from there used to walk straight out of a modal dialog.
+    const startTitel = await phone.evaluate(() => document.activeElement.classList.contains("gk-sheet-title"));
+    await phone.keyboard.press("Shift+Tab");
+    const nachShift = await phone.evaluate(() => document.activeElement.id);
+    check("… the focus starts on its title, and Shift+Tab from there wraps to the last control, not out",
+      startTitel && nachShift === "sheet-last");
+    // The trap: Tab from the last control comes round to the first, not to the page.
+    await phone.focus("#sheet-last");
+    await phone.keyboard.press("Tab");
+    check("… and Tab stays inside it",
+      await phone.evaluate(() => document.getElementById("person-sheet").contains(document.activeElement)));
+    // Wider while open: it docks, and stops being modal.
+    await phone.setViewportSize({ width: 1280, height: 844 });
+    const breit = await phone.evaluate(async () => {
+      // The media query's change event fires in the next rendering step, not on
+      // resize; measured before it, this case failed once in a dozen runs. Media
+      // queries are evaluated before animation frames run, so one frame is enough.
+      await new Promise((r) => requestAnimationFrame(r));
+      const s = document.getElementById("person-sheet");
+      return { modal: s.getAttribute("aria-modal"), width: Math.round(s.getBoundingClientRect().width),
+               still: getComputedStyle(document.body).overflow === "hidden" };
+    });
+    check("turned wide while open, it docks at 440px and stops being modal", breit.modal === null && breit.width === 440 && !breit.still);
+    await phone.evaluate(() => GK.sheet.close());
+    const frei = await phone.evaluate(() => getComputedStyle(document.body).overflow);
+    check("… and closed, nothing is left locked", frei !== "hidden");
     await phone.close();
+
+    // ── The docked sheet lies under the header and its user menu ──────────
+    // In an admin list a sheet opens on every row click. 1.91.0 as first built
+    // put it above the header: the user menu opened UNDER the sheet — Profile,
+    // Settings, Sign out, the theme dots and the dark-mode switch out of reach
+    // (a click landed in the sheet) while the keyboard still walked through
+    // them (WCAG 2.4.11). Every layout GridKit ships, measured by hit-testing.
+    const kopf = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    kopf.on("pageerror", (e) => pageErrors.push(e.message));
+    await kopf.goto("file://" + withHeader);
+    const varianten = [
+      ["header-first, fixed header", "header-first", "gk-header-fixed"],
+      ["sidebar-first, fixed header", "sidebar-first", "gk-header-fixed"],
+      ["sticky header", "header-first", "gk-header-sticky"],
+    ];
+    for (const [name, layout, art] of varianten) {
+      await kopf.evaluate(([layout, art]) => {
+        GK.sheet.close();
+        document.documentElement.setAttribute("data-gk-layout", layout);
+        const h = document.querySelector(".gk-header");
+        h.classList.remove("gk-header-fixed", "gk-header-sticky");
+        h.classList.add(art);
+        window.scrollTo(0, 0);
+      }, [layout, art]);
+      await kopf.click('[data-gk-table="people"] tr.gk-row-link td[data-label="Plan"]');
+      await kopf.click(".gk-header-user");
+      const lage = await kopf.evaluate(() => {
+        document.getAnimations().forEach((a) => a.finish());
+        const sheet = document.getElementById("person-sheet");
+        const menu = document.querySelector(".gk-header-user .gk-dropdown-menu");
+        const s = sheet.getBoundingClientRect();
+        const m = menu.getBoundingClientRect();
+        const mitte = (r) => [r.left + r.width / 2, r.top + r.height / 2];
+        const ueber = (r) => { const [x, y] = mitte(r); return x > s.left && x < s.right && y > s.top && y < s.bottom; };
+        // What someone has to reach in the menu: its links, buttons and switches.
+        // The point at the middle of each must belong to the menu. The menu and
+        // not the item itself: without the icon font a file:// page renders
+        // "light_mode" as a word, which runs over the last theme dot — the
+        // menu's own business, not the sheet's.
+        const ziele = [...menu.querySelectorAll("a[href], button, input, [role='switch'], [tabindex]")]
+          .filter((el) => el.getBoundingClientRect().height > 0);
+        const verdeckt = ziele.filter((el) => {
+          const [x, y] = mitte(el.getBoundingClientRect());
+          return !menu.contains(document.elementFromPoint(x, y));
+        }).map((el) => el.textContent.trim() || el.getAttribute("aria-label") || el.className);
+        // The header lies over the sheet where the two meet — its last pixel row
+        // above the sheet is the header's — and the sheet still covers the
+        // list: the middle of its body is its own.
+        const kopf = document.querySelector(".gk-header");
+        const k = kopf.getBoundingClientRect();
+        const [bx, by] = mitte(sheet.querySelector(".gk-sheet-body").getBoundingClientRect());
+        return {
+          offen: !sheet.hidden && document.querySelector(".gk-header-user").classList.contains("open"),
+          ueberlappt: ueber(m),
+          ziele: ziele.length,
+          verdeckt,
+          kopfOben: k.bottom > s.top && kopf.contains(document.elementFromPoint(s.left + 24, k.bottom - 1)),
+          blattOben: sheet.contains(document.elementFromPoint(bx, by)),
+        };
+      });
+      check(`${name}: the user menu opened over a docked sheet is on top — nothing in it lies under the sheet`,
+        lage.offen && lage.ueberlappt && lage.ziele >= 3 && lage.verdeckt.length === 0);
+      if (lage.verdeckt.length) console.log("   under the sheet: " + JSON.stringify(lage.verdeckt));
+      check(`${name}: … the header lies over the sheet's top edge, and the sheet over the list`, lage.kopfOben && lage.blattOben);
+      await kopf.keyboard.press("Escape");
+    }
+    // On a phone the sheet is the screen: it covers the header, menu button included.
+    await kopf.evaluate(() => { GK.sheet.close(); document.querySelectorAll("[data-gk-dropdown].open").forEach((d) => d.classList.remove("open")); });
+    await kopf.setViewportSize({ width: 390, height: 844 });
+    await kopf.evaluate(() => { GK.sheet.open("person-sheet"); document.getAnimations().forEach((a) => a.finish()); });
+    const handyKopf = await kopf.evaluate(() => {
+      const sheet = document.getElementById("person-sheet");
+      return [".gk-header-menu-toggle", ".gk-header-user"].every((sel) => {
+        const r = document.querySelector(sel).getBoundingClientRect();
+        return sheet.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2));
+      });
+    });
+    check("on a phone the sheet covers the header — nothing of the page shows through it", handyKopf);
+    await kopf.close();
 
     // ── A live table replaces what sits outside it, and binds what comes with it ──
     await nav.goto("http://gk.test/live");

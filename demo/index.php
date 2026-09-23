@@ -206,6 +206,7 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-section { max-width:1100px; margin:24px auto; padding:0 24px; display:none; }
         .demo-section.active { display:block; }
         .demo-section h2 { font-size:20px; margin:0 0 16px; color:var(--gk-on-surface, #374151); }
+        .demo-section h3.demo-h3 { margin:32px 0 8px; }
         .demo-section .gk-form { max-width:none; }
         .demo-section .gk-richtext-wrap { border-width:1px; }
         .demo-card { background:var(--gk-surface, #fff); border-radius:8px; padding:24px; border:1px solid transparent; box-shadow:var(--gk-shadow); margin-bottom:24px; }
@@ -435,6 +436,74 @@ echo $demoHeader->title($headerTitle, true)
             ->toolbar(false)
             ->paginate(false)
             ->render();
+        ?>
+
+    <h3 class="demo-h3">Rows that open a side sheet</h3>
+    <p class="demo-intro">Read in the row, change in the sheet: a click anywhere on a row opens its record beside the list — full screen on a phone. One name cell with two lines, groups instead of a status label per row, and colour only for what needs acting on. The six rules behind it are in the agent skill.</p>
+        <?php
+        $people = require __DIR__ . '/form/_people.php';
+        showcase(function () use ($people) {
+            // Rule 4: colour only where something needs acting on — a count that
+            // is fine stays plain text.
+            foreach ($people as &$p) {
+                $p['failing_html'] = $p['failing'] > 0
+                    ? '<span class="gk-label gk-label-red">' . (int) $p['failing'] . ' failing</span>'
+                    : '—';
+            }
+            unset($p);
+
+            (new Table('demo-people'))
+                ->setData($people)
+                ->caption('Users')
+                ->groupBy('access', ['with' => 'With access', 'without' => 'Without access'])
+                ->rowLink(['sheet' => 'demo-person-sheet', 'url' => 'form/f_person_sheet.php'])
+                ->column('name', 'User', ['sub' => 'email'])
+                ->column('plan', 'Plan')
+                ->column('seen', 'Last seen', ['muted' => true])
+                ->column('failing_html', 'Last 30 days', ['format' => 'html'])
+                ->toolbar(false)
+                ->render();
+        });
+        ?>
+    <div class="gk-sheet" id="demo-person-sheet" hidden>
+        <div class="gk-sheet-header">
+            <h2 class="gk-sheet-title">User</h2>
+            <button type="button" class="gk-sheet-close">&times;</button>
+        </div>
+        <div class="gk-sheet-body"></div>
+        <div class="gk-sheet-footer">
+            <button type="button" class="gk-btn gk-btn-outlined gk-btn-neutral" data-gk-sheet-close>Done</button>
+        </div>
+    </div>
+
+    <h3 class="demo-h3">One row standing for many</h3>
+    <p class="demo-intro">What is rarely needed folds into one row. The toggle shows and hides the rows its <code>aria-controls</code> names; the chevron and <code>aria-expanded</code> carry the state, so the label never has to change.</p>
+        <?php
+        showcase(function () {
+            echo <<<'HTML'
+            <div class="gk-table-wrap gk-table-mobile-card">
+              <table class="gk-table">
+                <caption class="gk-sr-only">Users and chart profiles</caption>
+                <thead><tr><th scope="col">User</th><th scope="col">Plan</th></tr></thead>
+                <tbody>
+                  <tr><td data-label="User">Anna Schneider</td><td data-label="Plan">Pro</td></tr>
+                  <tr><td data-label="User">Thomas Berger</td><td data-label="Plan">Team</td></tr>
+                  <tr class="gk-table-more"><td colspan="2">
+                    <button type="button" class="gk-table-more-toggle" aria-expanded="false" aria-controls="demo-profiles">
+                      <span class="gk-table-more-name">3 chart profiles</span>
+                      <span class="gk-cell-sub">Created from charts — they cannot sign in and have no plan.</span>
+                    </button>
+                  </td></tr>
+                </tbody>
+                <tbody id="demo-profiles" hidden>
+                  <tr><td data-label="User">Profile: Berlin, 1984</td><td data-label="Plan">—</td></tr>
+                  <tr><td data-label="User">Profile: Graz, 1991</td><td data-label="Plan">—</td></tr>
+                  <tr><td data-label="User">Profile: Linz, 2002</td><td data-label="Plan">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+            HTML;
+        });
         ?>
 
     <h3 style="margin: 32px 0 16px;">Sizes</h3>

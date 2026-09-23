@@ -372,7 +372,12 @@ return [
     $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
     T::ok((bool) preg_match('/\n      upgradeStatic\(root\) \{(.*?)\n      \},/s', $js, $m), 'GK.modal.upgradeStatic was not found');
     $fn = $m[1] ?? '';
-    T::contains($fn, '_t("close")', 'close buttons are not named');
+    // The naming moved into a helper when the side sheet (1.91.0) needed the
+    // same thing; the requirement is unchanged, so this follows it there.
+    T::contains($fn, '_gkNameCloseButton', 'close buttons are not named');
+    T::ok((bool) preg_match('/function _gkNameCloseButton\(btn\) \{(.*?)\n  \}/s', $js, $name), '_gkNameCloseButton() is missing');
+    T::contains($name[1] ?? '', '_t("close")', 'the helper names nothing');
+    T::contains($name[1] ?? '', 'words !== ""', 'a close button with words of its own loses them to an aria-label');
     T::contains($fn, '"role", "dialog"', 'the dialog role is not set');
     T::contains($fn, 'aria-labelledby', 'the dialog is not named by its heading');
     // Static modals are shown with style.display and never receive the focus;

@@ -222,6 +222,12 @@ a:hover {
   --gk-table-pad-x: 16px;
   --gk-label-radius: 9999px;
 
+  /* How wide the side sheet (.gk-sheet) docks on a wide screen. Where it starts
+     vertically, --gk-sheet-top, is deliberately NOT declared in this block: this
+     block also runs on .gk-root, i.e. on <body>, and would reset a value set
+     higher up — see the rule under SIDE SHEET. */
+  --gk-sheet-width: 440px;
+
   --gk-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --gk-font-size: 14px;
   --gk-font-size-sm: 12px;
@@ -950,6 +956,243 @@ a:hover {
 [data-gk-mode="dark"] .gk-table tbody tr.gk-table-group > td,
 .gk-dark .gk-table tbody tr.gk-table-group > td {
   background: var(--gk-surface-container, #1e293b);
+}
+
+/* ── A row that opens something (tr.gk-row-link) ────────────────────────
+   Two admin lists (Vespera, 23.09.2026) put a select, a switch and a label
+   saying the same thing into every cell: 42 controls, rows 100px tall. Reading
+   belongs in the row, changing in what the row opens — so the whole row has
+   to be the way in.
+
+   The row is not made a control. role=link or a tabindex on a <tr> replaces
+   its row role, and a screen reader then hears neither a row nor a link. The
+   row carries ONE real control instead, .gk-row-target — an <a href> or a
+   <button> in its main cell — and GridKit forwards a click anywhere else in
+   the row to it (js: row links). Keyboard and screen reader use the control
+   itself; without JavaScript the link still works. */
+.gk-table tbody tr.gk-row-link {
+  cursor: pointer;
+}
+/* 44px however dense the table: the row is the pointer target. A cell's
+   height is its minimum in table layout, so nothing taller is cut. */
+.gk-table tbody tr.gk-row-link > td {
+  height: 44px;
+}
+/* The control reads as the row's name, not as a link inside it: the row, the
+   hover and the chevron already say "this opens". Semibold because it is the
+   name the row is about — running text stays at 400 (rule 6). */
+.gk-row-target {
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  text-align: inherit;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.gk-row-target:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+/* The chevron: drawn with two borders in the text colour, so it follows the
+   mode and the theme without an image of its own. */
+.gk-table tbody tr.gk-row-link > td:last-child {
+  position: relative;
+  padding-right: calc(var(--gk-table-pad-x) + 16px);
+}
+.gk-table tbody tr.gk-row-link > td:last-child::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: var(--gk-table-pad-x);
+  width: 7px;
+  height: 7px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+  color: var(--gk-on-surface-variant);
+  transform: translateY(-50%) rotate(45deg);
+}
+/* The row whose record the open side sheet shows (GK.sheet sets it). */
+.gk-table tbody tr.gk-row-link[aria-current="true"] > td {
+  background: var(--gk-state-primary);
+}
+/* Where :has() exists the focus ring goes round the whole row — the row is
+   what the click opens. Without it the control keeps its own ring above. */
+@supports selector(:has(*)) {
+  .gk-table tbody tr.gk-row-link .gk-row-target:focus-visible {
+    outline: none;
+  }
+  .gk-table tbody tr.gk-row-link:has(.gk-row-target:focus-visible) > td {
+    box-shadow: inset 0 2px 0 var(--gk-primary), inset 0 -2px 0 var(--gk-primary);
+  }
+  .gk-table tbody tr.gk-row-link:has(.gk-row-target:focus-visible) > td:first-child {
+    box-shadow: inset 2px 0 0 var(--gk-primary), inset 0 2px 0 var(--gk-primary),
+      inset 0 -2px 0 var(--gk-primary);
+  }
+  .gk-table tbody tr.gk-row-link:has(.gk-row-target:focus-visible) > td:last-child {
+    box-shadow: inset -2px 0 0 var(--gk-primary), inset 0 2px 0 var(--gk-primary),
+      inset 0 -2px 0 var(--gk-primary);
+  }
+  .gk-table tbody tr.gk-row-link:has(.gk-row-target:focus-visible) > td:only-child {
+    box-shadow: inset 0 0 0 2px var(--gk-primary);
+  }
+}
+
+/* ── One row standing for many (tr.gk-table-more) ───────────────────────
+   Thirteen chart profiles stood in a user list as if they were thirteen
+   users. What is rarely needed folds into one row; its toggle shows and hides
+   whatever its aria-controls names — usually a <tbody hidden> right after it.
+
+   The toggle's text does not change between "show" and "hide": aria-expanded
+   carries the state for a screen reader and the chevron for the eye. A label
+   that flips as well says the same thing twice (rule 1). */
+.gk-table tbody tr.gk-table-more > td {
+  padding: 0;
+  background: color-mix(in oklab, var(--gk-on-surface) 3%, transparent);
+}
+.gk-table-more-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px var(--gk-table-pad-x);
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: inherit;
+  color: var(--gk-on-surface);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--gk-transition-state);
+}
+.gk-table-more-toggle:hover {
+  background: var(--gk-state-hover);
+}
+.gk-table-more-toggle:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+.gk-table-more-name {
+  grid-column: 1;
+  font-weight: 600;
+}
+.gk-table-more-toggle > .gk-cell-sub {
+  grid-column: 1;
+}
+.gk-table-more-toggle::after {
+  content: "";
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 8px;
+  height: 8px;
+  margin: 0 4px 4px 0;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+  color: var(--gk-on-surface-variant);
+  transform: rotate(45deg);
+  transition: transform var(--gk-dur-2) var(--gk-ease-out);
+}
+.gk-table-more-toggle[aria-expanded="true"]::after {
+  margin: 4px 4px 0 0;
+  transform: rotate(225deg);
+}
+/* Hidden rows stay hidden in every layout. The browser's own [hidden] rule
+   loses to any author rule that sets display — card mode sets display:block on
+   every tbody and tr, and a folded group came out unfolded on a phone. */
+.gk-table tbody[hidden],
+.gk-table tr[hidden] {
+  display: none;
+}
+/* The last row before a folded group is the bottom of the card while the
+   group is folded, and not while it is open. */
+.gk-table tbody:has(+ tbody[hidden]:last-child) > tr:last-child > td {
+  border-bottom: none;
+}
+.gk-table-wrap .gk-table tbody:has(+ tbody:not([hidden])) > tr:last-child > td {
+  border-radius: 0;
+}
+
+@media (max-width: 768px) {
+  /* Card mode: the card is the row. The chevron moves to the card's right
+     edge, the 44px floor goes (every line of a card would be 44px tall), and
+     the focus ring goes round the card. */
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link {
+    position: relative;
+    padding-right: 40px;
+  }
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link > td {
+    height: auto;
+  }
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link > td:last-child {
+    position: static;
+    padding-right: 0;
+  }
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link > td:last-child::after {
+    right: 18px;
+  }
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link:has(.gk-row-target:focus-visible) {
+    outline: 2px solid var(--gk-primary);
+    outline-offset: 2px;
+  }
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link:has(.gk-row-target:focus-visible) > td {
+    box-shadow: none;
+  }
+  /* The cell with the row's control is what the card is about: its title, full
+     width and left-aligned — not a value right-aligned under a "USER" label. */
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link > td:has(.gk-row-target) {
+    display: block;
+    padding-bottom: 10px;
+  }
+  /* Its own rule, not a member of the lists below: a selector list with a
+     :has() a browser does not know is dropped as a whole. */
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link > td:has(.gk-row-target)::before {
+    display: none;
+  }
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link > td:has(.gk-row-target) .gk-cell-sub {
+    text-align: left;
+  }
+  /* A group row is a heading between the cards, not a card of its own with an
+     empty label taking 40% of it — measured at 390px, "With access 3" stood
+     right-aligned in a padded, shadowed box. */
+  .gk-table-mobile-card .gk-table tbody tr.gk-table-group {
+    padding: 0;
+    margin: 20px 0 8px;
+    background: transparent;
+    box-shadow: none;
+  }
+  .gk-table-mobile-card .gk-table tbody tr.gk-table-group > td {
+    padding: 0 4px;
+    background: transparent;
+  }
+  /* A group heading and a summary row are not "a label and its value": full
+     width, no column label. */
+  .gk-table-mobile-card .gk-table tbody tr.gk-table-group > td,
+  .gk-table-mobile-card .gk-table tbody tr.gk-table-more > td {
+    display: block;
+    border-bottom: none;
+  }
+  .gk-table-mobile-card .gk-table tbody tr.gk-table-group > td::before,
+  .gk-table-mobile-card .gk-table tbody tr.gk-table-more > td::before {
+    display: none;
+  }
+  /* A summary row is a full-width button, not a card of labelled values: no
+     card padding, no empty column label beside it. */
+  .gk-table-mobile-card .gk-table tbody tr.gk-table-more {
+    padding: 0;
+    overflow: hidden;
+  }
+  /* Card mode right-aligns a second line under its value; here it is the
+     summary's own text, read left to right with its name. */
+  .gk-table-mobile-card .gk-table-more-toggle > .gk-cell-sub {
+    text-align: left;
+  }
 }
 [data-gk-mode="dark"] .gk-num-empty,
 .gk-dark .gk-num-empty {
@@ -2697,7 +2940,9 @@ select.gk-input {
   font-weight: 600;
   color: var(--gk-on-surface);
 }
-.gk-modal-close {
+/* The side sheet's close button is this one, a size up — one rule for both. */
+.gk-modal-close,
+.gk-sheet-close {
   background: none;
   border: none;
   font-size: var(--gk-icon-lg);
@@ -2716,11 +2961,13 @@ select.gk-input {
   border-radius: 8px;
   transition: background var(--gk-dur-1), color var(--gk-dur-1);
 }
-.gk-modal-close:hover {
+.gk-modal-close:hover,
+.gk-sheet-close:hover {
   color: var(--gk-on-surface);
   background: var(--gk-surface-container-high);
 }
-.gk-modal-close:focus-visible {
+.gk-modal-close:focus-visible,
+.gk-sheet-close:focus-visible {
   outline: 2px solid var(--gk-primary, #4f46e5);
   outline-offset: 1px;
 }
@@ -2753,6 +3000,175 @@ select.gk-input {
   margin-top: 0;
   padding: 16px 24px;
   background: var(--gk-surface);
+}
+
+/* === SIDE SHEET (.gk-sheet, GK.sheet) ===
+   Where a row's record is read in full and changed — the row itself only shows
+   values (rule 2). On a wide screen it docks at the right edge beside the
+   list, which stays usable and scrollable: a non-modal dialog, no backdrop.
+   Below 769px it covers the screen and is modal — GK.sheet sets aria-modal and
+   holds the focus there, and the page behind it stops scrolling.
+
+   Hidden is the hidden attribute, as for a static modal — with the class in
+   the selector, because the browser's own [hidden] rule loses to the
+   display:flex below. Shown without JavaScript, the markup is a docked panel
+   all the same: a server can render it open and put a plain link in the close
+   button's place. */
+.gk-sheet[hidden] {
+  display: none;
+}
+.gk-sheet {
+  position: fixed;
+  top: var(--gk-sheet-top, 0px);
+  right: 0;
+  bottom: 0;
+  /* Docked, the sheet is part of the page, not a layer over it: above the
+     page's own content, UNDER the header — 200, or 1100 in the header-first
+     layout — and under everything that opens from the page: the
+     header's user menu, dropdowns (200), select lists (500), tooltips, the
+     sidebar, search, modals, confirm, toast. 1.91.0 first put it at 1200,
+     above the header; the user menu then opened under the sheet, and in an
+     admin list a sheet opens on every row click. GK.sheet lifts a sheet
+     opened from inside a modal above that modal; the phone rule below lifts
+     the full-screen sheet over the header. */
+  z-index: 150;
+  width: var(--gk-sheet-width);
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--gk-surface);
+  color: var(--gk-on-surface);
+  border-left: 1px solid var(--gk-outline-variant);
+  box-shadow: var(--gk-elev-3);
+  animation: gk-sheet-in var(--gk-dur-3) var(--gk-ease-out);
+}
+/* Where it starts: below a fixed or sticky GridKit header, so its own header
+   with the close button is not hidden under the page's. 56px is the header's
+   height, the same figure the header-first sidebar starts at; a taller header
+   simply lies over the sheet's top edge (z-index above). Set --gk-sheet-top on
+   .gk-sheet, or on any element below <html>, to change it. */
+:root:has(.gk-header-fixed, .gk-header-sticky) {
+  --gk-sheet-top: 56px;
+}
+@keyframes gk-sheet-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.gk-sheet-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 16px 16px 24px;
+  border-bottom: 1px solid var(--gk-outline-variant);
+  flex: 0 0 auto;
+}
+.gk-sheet-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding-top: 6px;
+  font-size: var(--gk-text-title);
+  font-weight: 600;
+  line-height: var(--gk-leading-tight);
+  color: var(--gk-on-surface);
+  overflow-wrap: anywhere;
+}
+/* GK.sheet puts the focus here on open (tabindex -1, never in the tab order).
+   A heading is not a control: nothing to operate, so no ring to show. */
+.gk-sheet-title:focus {
+  outline: none;
+}
+/* The modal's close button (shared rule above), a size up at 40px: it is the
+   one way out that is always there. A link in its place, for a sheet a server
+   rendered open, looks the same. */
+.gk-sheet-close {
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border-radius: 10px;
+  text-decoration: none;
+}
+.gk-sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* A scroll that reaches the end of the sheet must not carry on into the page. */
+  overscroll-behavior: contain;
+  padding: 20px 24px 24px;
+}
+.gk-sheet-body > .gk-form {
+  margin: 0;
+}
+.gk-sheet-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--gk-outline-variant);
+}
+[data-gk-mode="dark"] .gk-sheet,
+.gk-dark .gk-sheet {
+  /* A raised layer is a step lighter in dark mode — the role the modal's
+     #161b22 stands for, as a role and not as a literal. */
+  background: var(--gk-surface-container);
+}
+@media (min-width: 769px) {
+  /* Opt-in: content that makes room for a docked sheet instead of lying under
+     it. Padding, not margin, and no transition of its own — on .gk-with-sidebar
+     a transition here would replace the sidebar's. */
+  :root:has(.gk-sheet:not([hidden])) .gk-sheet-push {
+    padding-right: var(--gk-sheet-width);
+  }
+}
+@media (max-width: 768px) {
+  .gk-sheet {
+    top: 0;
+    /* Full screen and modal: now it IS a layer over the page — over the
+       header (1100 in header-first) and the sidebar (1000), under the modals
+       (9000 and up), confirm and toast. */
+    z-index: 1200;
+    width: 100%;
+    border-left: 0;
+    box-shadow: none;
+  }
+  .gk-sheet-header {
+    align-items: center;
+    padding: max(8px, env(safe-area-inset-top)) 8px 8px 16px;
+  }
+  .gk-sheet-title {
+    padding-top: 0;
+    font-size: var(--gk-text-subtitle);
+  }
+  .gk-sheet-close {
+    width: 44px;
+    height: 44px;
+  }
+  .gk-sheet-body {
+    padding: 16px;
+  }
+  .gk-sheet-footer {
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+  }
+  /* The page behind a full-screen sheet stays where it was. A state of the
+     markup, not of a script: the sheet's own hidden attribute decides, so a
+     server-rendered sheet locks as well and nothing can be left locked. */
+  :root:has(.gk-sheet:not([hidden])),
+  :root:has(.gk-sheet:not([hidden])) body {
+    overflow: hidden;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gk-sheet {
+    animation: none;
+  }
 }
 
 /* Loading spinner */

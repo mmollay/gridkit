@@ -8,7 +8,7 @@ description: >-
   GridKit in composer.json.
 ---
 
-# GridKit 1.90.1
+# GridKit 1.91.0
 
 PHP components for admin dashboards. Zero dependencies, no build step,
 PHP 8.2+. A checkout is a working install.
@@ -184,6 +184,82 @@ use GridKit\{Table, Form, StatCards, FilterChips, Button};
 <?php $this->start('content') ?>
 <!-- Your components here -->
 <?php $this->end() ?>
+```
+
+## Six rules for lists
+
+Read these before you build a list. They come from two admin lists that were
+built with GridKit and turned down (since 1.91.0): a user list of 21 rows had
+nine columns, two selects, a switch and a label in every row, rows 100px tall,
+and its actions scrolled off the right at 1280px. The approved redesign has six
+columns and 64px rows — an avatar, the name at 15px semibold over the address
+at 13px, one coloured count — and a side sheet for everything that changes.
+
+1. **One state, one sign.** A switch shows its state itself. A label beside it
+   saying "allowed" says it again, once per row. In the list, group by the
+   state; the switch lives in the side sheet, with one sentence on what it does.
+   Building block: `->groupBy()` with `.gk-table-group`; `.gk-toggle` with no `.gk-label` beside it.
+2. **Read in the row, change in the sheet.** A row shows values as text. Selects,
+   switches and delete belong in the side sheet the row opens — and a click
+   anywhere on the row opens it, not only on its name.
+   Building block: `->rowLink()`, i.e. `tr.gk-row-link` + `.gk-row-target`; `.gk-sheet` opened by `GK.sheet.open()`.
+3. **Who: one cell, two lines.** Name and address belong together: an avatar,
+   the name, the address underneath. In two columns both break mid-word. A
+   `Table` column writes the two lines with `'sub' => 'email'`.
+   Building block: `.gk-avatar` + `.gk-cell-sub`.
+4. **Colour only for what needs acting on.** Red means something is broken.
+   Counts that are fine stay neutral text, and the breakdown goes in the sheet
+   rather than in three coloured numbers per row.
+   Building block: `.gk-label-red` for the one count that needs attention.
+5. **Group instead of scrolling.** At most six columns at 1280px; nothing
+   scrolls sideways. What is rarely needed folds into one row that stands for
+   many — and records that are not like the others (profiles among users) are
+   such a group.
+   Building block: `.gk-table-group`; `tr.gk-table-more` with a `.gk-table-more-toggle`.
+6. **Running text is never bold and never narrow.** A sentence in a list is set
+   at normal weight and gets the width it needs (`minWidth` on its column); a
+   second line of detail is quiet text, not a second column.
+   Building block: `.gk-table` cells at weight 400 — add no bold; `.gk-cell-sub` for the second line.
+
+The row the rules were drawn from, measured: 64px tall, the whole row the click
+target (never under 44px), name 15/13px, at most six columns at 1280px, one
+colour — for what needs acting on.
+
+A list that follows all six, by hand — a `Table` writes the same row with
+`->rowLink(['sheet' => 'user-sheet'])` and `'sub' => 'email'`:
+
+```html
+<table class="gk-table">
+  <thead><tr><th scope="col">User</th><th scope="col">Plan</th><th scope="col">Last 30 days</th></tr></thead>
+  <tbody>
+    <tr class="gk-table-group"><td colspan="3">
+      <span class="gk-table-group-name">With access</span><span class="gk-table-group-n">5</span>
+    </td></tr>
+    <tr class="gk-row-link">
+      <td data-label="User">
+        <div class="gk-flex gk-items-center gk-gap-lg">
+          <span class="gk-avatar" aria-hidden="true">AP</span>
+          <div>
+            <button type="button" class="gk-row-target" data-gk-sheet="user-sheet"
+                    data-gk-params='{"id":2}' aria-haspopup="dialog">Jana Novak</button>
+            <span class="gk-cell-sub">jana@example.com</span>
+          </div>
+        </div>
+      </td>
+      <td data-label="Plan">Life book</td>
+      <td data-label="Last 30 days"><span class="gk-label gk-label-red">17 failing</span></td>
+    </tr>
+    <tr class="gk-table-more"><td colspan="3">
+      <button type="button" class="gk-table-more-toggle" aria-expanded="false" aria-controls="profiles">
+        <span class="gk-table-more-name">13 chart profiles</span>
+        <span class="gk-cell-sub">Created from charts — they cannot sign in.</span>
+      </button>
+    </td></tr>
+  </tbody>
+  <tbody id="profiles" hidden>
+    <!-- the 13 rows, right after the row that stands for them -->
+  </tbody>
+</table>
 ```
 
 ## Filters forget each other unless you say otherwise

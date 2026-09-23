@@ -7,6 +7,141 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.91.0] - 2026-09-23
+
+Two admin lists built with GridKit were turned down on sight: "is that really
+GridKit?" A user list of 21 rows had nine columns, two selects, a switch AND a
+label saying the same thing in every row — 42 controls, rows 100px tall — bold
+running text wrapped over seven lines in a narrow column, and its actions
+scrolled off the right at 1280px. Nothing in GridKit had stopped any of it,
+because the building blocks for the better list did not exist. The approved
+redesign needed three; they are here, and the rules behind them are in the
+skill, each pointing at the block that implements it.
+
+### Added — a row that opens something: `->rowLink()`, `tr.gk-row-link`
+
+```php
+->rowLink('/users/{id}')                   // a page
+->rowLink(['sheet' => 'user-sheet'])       // a side sheet on this page
+```
+
+Reading belongs in the row, changing in what the row opens — so the whole row
+has to be the way in. The row itself is deliberately NOT made a control:
+`role="link"` or a `tabindex` on a `<tr>` replaces its row role, and a screen
+reader then hears neither a row nor a link. It carries one real control in its
+main cell instead, `.gk-row-target` — an `<a>` or a `<button data-gk-sheet>` —
+and a click anywhere else in the row is forwarded to it with its button and
+modifier keys. Ctrl-click and a middle click on a cell of a link row open a new
+tab, measured in Chromium, as they would on the link. Without JavaScript the
+link still works.
+
+What the row leaves alone: a click on a control of its own (a checkbox, a row
+button, a cell link), in the checkbox or action column, and the end of a text
+selection — someone copying an address out of a row must not be taken to
+another page. A row is at least 44px tall whatever the size or density: a
+one-line row of a `size('sm')` table measured 31px, the same row as a row link
+44. With `:has()` the focus ring goes round the whole row, in card mode round
+the card, and the name cell becomes the card's title instead of a value
+right-aligned under a "USER" label.
+
+`href` has the allow list and the encoding of a row button's `href`. A sheet
+row posts its `params` (always with the row's `id`) to `url` and fills the
+sheet with the answer, or hands them to `gk:sheetopen`. A row whose main cell
+shows nothing, or whose target is refused, stays a plain row — a link without a
+name is a dead focus stop. `'format' => 'html'` and `'email'` are refused for
+the main cell (each writes a link of its own, and a control inside a control
+reaches nobody), and the cell's own `href` gives way to the row's; each says so
+with a warning. The client rebuild of a `setData()` table writes the same row:
+two new parity cases report exactly the four benign shapes every other case
+does.
+
+### Added — the side sheet: `.gk-sheet`, `GK.sheet.open()` / `close()`
+
+Where a record is read in full and changed. On a wide screen it docks at the
+right, 440px, and the list beside it stays usable: a **non-modal** dialog, no
+`aria-modal`, no trap. Docked, it is part of the page and lies under the header
+(z-index 150, the header 200 or 1100): the first build put it over the header at
+1200, and the user menu then opened under the sheet — all ten of its targets,
+Profile to the dark-mode switch, hit-tested into the sheet in each of the three
+setups GridKit ships (header-first, sidebar-first, sticky), while the keyboard
+still walked through them. Below a fixed or sticky header it starts where the
+header ends. Below 769px it covers the screen, the header included, and **is**
+modal — `aria-modal`, the focus held inside, the page behind held still. Crossing the
+breakpoint while it is open switches the behaviour along. The scroll lock is CSS
+keyed to the sheet's own `hidden` attribute (`:has()`), not a script writing
+`body.style.overflow` — the lightbox and the document modal already do that,
+and two owners of one inline style unlock each other.
+
+It follows the static modal: role and name filled in, a bare `&times;` named,
+the shared trap, focus given back to the opener. The focus starts on the title,
+not on the first control: a sheet opens on every row click, and the modal's way
+drew a focus ring on the close button each time a mouse opened it. Escape is
+heard on the sheet itself, so it closes the sheet only while the focus is in it;
+a confirm opened from the sheet answers first — including in the 50ms before
+`GK.confirm` takes the focus, where the first version of this closed both. One
+sheet at a time; the row it shows carries `aria-current`. An AJAX form inside
+closes the sheet on `{ok: true}`, not whatever modal is on top of the stack.
+Opened from inside a modal it lies above it. Without JavaScript the markup is a
+docked panel all the same.
+
+### Added — one row standing for many: `tr.gk-table-more`
+
+Thirteen chart profiles stood in the user list as if they were thirteen users.
+A `.gk-table-more-toggle` fills its row and shows and hides whatever its
+`aria-controls` names, usually a `<tbody hidden>` right after it. Its label does
+not flip between "show" and "hide": `aria-expanded` carries the state for a
+screen reader and the chevron for the eye, and a label that changes as well says
+it twice — rule 1 of the list below, applied to itself.
+
+### Added — six rules for lists, in the skill
+
+`## Six rules for lists` in `GRIDKIT_SKILL.md` (and in the installable skill's
+`SKILL.md`, where the must-read rules are), plus a table in `SPEC.md`: one state,
+one sign; read in the row, change in the sheet; who in one cell with two lines;
+colour only for what needs acting on; group instead of scrolling; running text
+never bold, never narrow. Each rule names its building block, and
+`tests/lists.test.php` checks that every block named is a class, method or call
+that exists. The demo's Table section shows a list that follows all six.
+
+### Fixed — group rows on a phone were empty-labelled cards
+
+Card mode, the default on a phone, turned every `groupBy()` row into a card of
+its own: padded, shadowed, and an empty column label taking 40% of it, so
+"With access 3" stood right-aligned in a box — measured at 390px. A group row
+is a heading between the cards now. The rows a summary row folds stay folded
+there as well: card mode sets `display: block` on every tbody and tr, and the
+browser's own `[hidden]` rule loses to that.
+
+### Fixed — Shift+Tab from an element outside the tab order left the dialog
+
+The shared focus trap checked only the first and the last control, so from
+anything focused inside but not in the tab order, Shift+Tab walked out. It wraps
+now when no control lies that way; otherwise the browser's own order stands.
+The modal and the lightbox use the same trap.
+
+### Changed — one place per side fills a link target
+
+Row buttons, linked cells and now row links each fill a `{field}` template —
+written out three times in PHP and three times in the client, which have to
+agree byte for byte — and buttons and row links both map a row's params. One
+helper per side now
+(`Table::fillTarget()` / `rowParams()`, `_gkFillTarget()` / `_gkRowParams()`),
+and a test holds each at one copy. The side sheet's close button shares the
+modal close button's rule instead of repeating it. Nothing a page renders
+changes: the parity run and the browser cases are the same before and after.
+
+### Tests
+
+`tests/lists.test.php` (new), and 35 cases in `ci/browser.js` — 82 in all.
+Eleven of those, every guard a later change could drop without a visible
+symptom (the layer check on Escape, the trap, the selection and own-control
+checks of a row, the scroll lock, the folded rows in card mode, the lift above
+a modal …), and eight suite checks were confirmed by breaking the code they
+cover on purpose. So were the layer cases: on a page with GridKit's own header
+(`browser-fixture.php --header`) they hit-test the user menu over an open sheet
+in every layout, and fail at 1200 in all three — and at 1050, between the
+sidebar and the header-first header, still in two.
+---
 ## [1.90.1] - 2026-09-23
 
 ### Security — the working copy served what a session had left in it
