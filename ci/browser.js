@@ -1044,6 +1044,12 @@ fs.writeFileSync(adminPage, execFileSync(php, [path.join(__dirname, "browser-fix
     check("admin: a .gk-message with the hidden attribute is gone — a tile row, a setting and a choice as well",
       versteckt.weg.every(Boolean) && versteckt.offen === "flex");
     check("admin: … and without the attribute it is a flex message again", versteckt.wieder === "flex");
+    const inline = await adm.evaluate(() => {
+      const el = document.getElementById("msg-inline");
+      return { display: getComputedStyle(el).display, h: el.getBoundingClientRect().height };
+    });
+    check("admin: a block a script shows with an inline display stays shown although hidden is still on it — the guard only adds",
+      inline.display === "block" && inline.h > 0);
 
     const kopfzeile = () => adm.evaluate(() => {
       const h1 = document.querySelector(".gk-header-title h1");
@@ -1231,6 +1237,25 @@ fs.writeFileSync(adminPage, execFileSync(php, [path.join(__dirname, "browser-fix
     check("admin: the docked sheet's close button is 44 × 44, in its corner, with the line under the title",
       blatt.w === 44 && blatt.h === 44 && blatt.unter && blatt.ecke && blatt.drin);
 
+    // A sheet longer than the screen, its body a scrolling column: a min-height
+    // replaces a flex item's automatic minimum, and without flex-shrink: 0 the
+    // setting and the choice at its end were squeezed to 44 and 52px.
+    await adm.evaluate(() => { GK.sheet.open("long-sheet"); document.getAnimations().filter((a) => isFinite(a.effect.getComputedTiming().endTime)).forEach((a) => a.finish()); });
+    const lang = await adm.evaluate(() => {
+      const koerper = document.querySelector("#long-sheet .gk-sheet-body");
+      const ganz = (id) => {
+        const el = document.getElementById(id);
+        const r = el.getBoundingClientRect();
+        const unten = Math.max(...[...el.querySelectorAll("span, button")].map((k) => k.getBoundingClientRect().bottom));
+        return el.scrollHeight <= el.clientHeight + 1 && unten <= r.bottom + 0.5;
+      };
+      return { rollt: koerper.scrollHeight > koerper.clientHeight, setting: ganz("long-setting"), choice: ganz("long-choice") };
+    });
+    await adm.evaluate(() => GK.sheet.close());
+    check("admin: in a sheet whose body scrolls, a setting and a choice keep their content height — nothing runs out of the border",
+      lang.rollt && lang.setting && lang.choice);
+    if (!(lang.rollt && lang.setting && lang.choice)) console.log("   long sheet: " + JSON.stringify(lang));
+
     // The sidebar answers its attribute; no control carries inline script.
     const einklappen = await adm.evaluate(() => {
       const sb = document.querySelector("[data-gk-sidebar]");
@@ -1257,6 +1282,21 @@ fs.writeFileSync(adminPage, execFileSync(php, [path.join(__dirname, "browser-fix
     }));
     check("admin: on a phone the content keeps a 16px gutter", (await mainPad()) === "16px 16px 40px 16px 1680px");
     check("admin: on a phone the header line is gone and .gk-show-mobile shows", handy.meta === "none" && handy.nurHandy);
+    // The user menu beside a header action. On a phone the actions row scrolls
+    // sideways (overflow-x: auto), which clips whatever opens out of it — a menu
+    // written INSIDE that row could not be read. Header writes it beside it.
+    await adm.click(".gk-header-user");
+    const menue = await adm.evaluate(() => {
+      const user = document.querySelector(".gk-header-user");
+      const item = user.querySelector(".gk-dropdown-item");
+      const r = item.getBoundingClientRect();
+      const treffer = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return { offen: user.classList.contains("open"), getroffen: !!treffer && item.contains(treffer),
+               neben: user.parentElement.classList.contains("gk-header-right") };
+    });
+    await adm.keyboard.press("Escape");
+    check("admin: on a phone the user menu opens whole beside a header action — its item is what a tap there reaches",
+      menue.offen && menue.getroffen && menue.neben);
     await adm.click(".gk-header-menu-toggle");
     const offen = await adm.evaluate(() => ({
       sb: document.querySelector("[data-gk-sidebar]").classList.contains("open"),

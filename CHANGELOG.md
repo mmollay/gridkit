@@ -125,16 +125,58 @@ two people with the same name, "anna@exa…" left nothing to tell them apart.
   control stays visible). Form field type `'choice'`, with `'multiple'` for
   checkboxes — which a browser cannot require, so GridKit warns and draws no star.
 
+### Fixed — found in review, before the release
+
+Two reviewers went over Vespera's admin built on this version, in a browser at
+1440 and 402px, light and dark. Four findings were GridKit's; a fifth came up
+when the fixes were measured again:
+
+- **A setting was squeezed in a sheet.** `.gk-setting` sets `min-height: 44px`,
+  and a min-height replaces a flex item's automatic minimum — its content. As a
+  child of a sheet body in a column that scrolls, the "Delete account" row
+  shrank to 44px for 91px of content, its title on the border and its sentence
+  outside it. `.gk-setting` and `.gk-choice` (min-height 52px, the same shape)
+  do not shrink now.
+- **"Check now" in a warning read at 4.35:1.** An outlined button is
+  transparent, so in `.gk-message-actions` it stood on the tinted band and not
+  on the surface its text colour was chosen for — in every theme's light mode.
+  It carries `--gk-surface` there now, hovered too; `ci/farben.js` did not
+  measure the documented example and does now, for every message colour.
+- **The empty value was all but gone in dark mode.** `.gk-num-empty` had a dark
+  rule of its own with `--gk-outline`: 2.1:1 on a table, 1.6 in the row of the
+  open sheet. The dash is text; one rule with `--gk-text-muted` follows the mode.
+- **The hidden guard took something away.** With a bare `!important`, a block a
+  script shows with `el.style.display = "block"` while `hidden` stays on it —
+  visible before — would have vanished. The guard leaves an inline display alone
+  (`:not([style*="display"])`); it only adds. `[hidden]` is written last in the
+  selector: happy-dom, the DOM many test suites run on, drops an attribute that
+  is followed by `:not()` and then hid every `gk-` block of a page.
+- **The summary row under the pointer.** `.gk-table-list .gk-table-more-toggle`
+  lifted its ground with an 8 % veil on hover; in dark mode its muted sentence
+  then read 4.2–4.4:1. It takes the state role now, `--gk-state-hover` (6 %),
+  like every other row: 4.6:1 in Vespera's dark admin, at least 4.5 in every
+  theme and spelling.
+
+The docs say two more things a page gets wrong without them: a header written by
+hand keeps `.gk-header-user` beside `.gk-header-actions`, not inside it (on a
+phone that row scrolls sideways and cut Vespera's user menu off), and an address
+in `.gk-cell-sub-wrap` breaks where it should with `<wbr>` after the `@` and
+before each dot.
+
 ### Tests
 
-- `tests/admin-blocks.test.php` (new, 19 tests): the markup PHP writes and the
+- `tests/admin-blocks.test.php` (new, 20 tests): the markup PHP writes and the
   contracts between stylesheet, script and documentation for every block above.
-- `ci/browser.js`: 31 cases on a new fixture page (`browser-fixture.php --admin`),
-  113 in all — the list at 500, 700, 900 and 1100px with nothing scrolling
+- `ci/browser.js`: 34 cases on a new fixture page (`browser-fixture.php --admin`),
+  116 in all — the list at 500, 700, 900 and 1100px with nothing scrolling
   sideways, the hidden message, the sidebar by attribute, the keyboard focus on a
   switch and an answer tile, the header line at 1440, 800 and 390px. Confirmed by
   breaking the hidden guard, `.gk-main`, the delegation and the query widths: six
-  cases went red.
+  cases went red. From the review: a sheet longer than the screen keeps its
+  setting and choice whole, a block shown by an inline display stays shown, and
+  on a phone the user menu opens whole beside a header action — each confirmed
+  by breaking it (no flex-shrink, the bare guard, the menu inside the actions):
+  those three went red.
 - `ci/farben.js`: a third section measures the new colours on real elements in
   seven themes and three modes, with and without `themes.css` — every text
   against the ground it really stands on, and the series colours for contrast,
@@ -144,8 +186,16 @@ two people with the same name, "anna@exa…" left nothing to tell them apart.
   transition was measured mid-way after the mode switch; transitions are
   finished before measuring now. White on the base palette's `#6366f1` for the
   chosen letter measures 4.47:1 — the filled primary button's pair, reported as
-  such and not faulted; every theme clears 4.5.
-- `php tests/run.php`: 3645 assertions.
+  such and not faulted; every theme clears 4.5. Added from the review: an
+  outlined button in each message colour, the empty value in a row and in the
+  row of the open sheet — breaking the two fixes gave 4.35:1 and 2.1:1 again —
+  and the summary row at rest and under the pointer (`:hover` forced through
+  the browser's protocol); with the 8 % veil it measured 4.24:1.
+  Muted text in the open row (1.91.0) measures 4.46–4.48:1 in one spelling only,
+  `.gk-dark` WITH themes.css, where the dark surfaces stay gridkit.css's (the
+  themes.css surface ladder answers `data-gk-mode` only). The address has stood
+  there since 1.91; the dash now reads exactly as it does. Reported, not faulted.
+- `php tests/run.php`: 3659 assertions.
 
 ---
 ## [1.91.0] - 2026-09-23

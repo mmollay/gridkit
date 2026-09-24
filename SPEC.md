@@ -364,20 +364,20 @@ roles only; light and dark follow from them.
 | Block | Markup | PHP |
 |---|---|---|
 | Content area | `<main class="gk-main">` — padding 24/28/48px, 16px on a phone, max `--gk-main-max` (1680px) | — |
-| Hidden | every `gk-` element with `[hidden]` is `display: none` | — |
+| Hidden | every `gk-` element with `[hidden]` is `display: none`, unless an inline style sets a display | — |
 | Line beside the title | `.gk-header-title > h1 + .gk-header-meta` | — |
 | List | `.gk-table-wrap.gk-table-list` — 64px rows, 15/13px, size container | `->size('list')` |
 | Columns that give way | `.gk-col-p2` … `.gk-col-p5` on th and td; gone below 560/720/900/1040px of list width, its border included | `'priority' => 2…5` |
 | Who cell | `.gk-cell-who > .gk-avatar + .gk-cell-who-text > (name, .gk-label, .gk-cell-sub.gk-cell-sub-wrap)` | — |
 | Avatar colours | `.gk-avatar-tone-1` … `-5` | — |
 | Status dot | `.gk-dot` + `.gk-dot-success` `-warning` `-danger` `-primary` `-muted`; `.gk-dot-outline` (empty ring), `.gk-dot-pulse` (running, still under reduced motion) | — |
-| Setting | `.gk-setting > .gk-setting-text > (.gk-setting-title, .gk-setting-hint)` + `.gk-toggle.gk-setting-control`; `.gk-setting-danger` | `'toggle'` with `'hint'` (`'danger'`) |
+| Setting | `.gk-setting > .gk-setting-text > (.gk-setting-title, .gk-setting-hint)` + `.gk-toggle.gk-setting-control`; `.gk-setting-danger`; never shrinks below its content in a scrolling column | `'toggle'` with `'hint'` (`'danger'`) |
 | Read-only field | `.gk-field-static > (-label, -value, .gk-field-hint)` | — |
 | Compact figures | `.gk-stat-tiles > .gk-stat-tile > (-value, -label, -sub)`; `.gk-stat-tile-warning`, `.gk-stat-tile-danger`; also `<button>`/`<a>`, or a `<dl>` (word as `<dt>` first, figure as `<dd>` — still on top) | `StatCards->compact()` |
 | Sheet sub-line | `.gk-sheet-header > .gk-sheet-meta` | — |
 | Chart colours | `--gk-series-1` … `-5`; `.gk-swatch .gk-swatch-1` … `-5`, `.gk-series-fill-1` … `-5`, `.gk-series-stroke-1` … `-5` | — |
 | Touch button | `.gk-btn.gk-btn-touch` — min `--gk-target-min` (44px) both ways | — |
-| Message actions | `.gk-message > .gk-message-actions` | — |
+| Message actions | `.gk-message > .gk-message-actions`; an outlined button in it stands on `--gk-surface` | — |
 | Phone only | `.gk-show-mobile` | — |
 | Answer tile | `label.gk-choice > input + .gk-choice-mark + .gk-choice-text > (-title, -hint)` | `'choice'` (`'multiple'`) |
 

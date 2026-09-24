@@ -351,8 +351,15 @@ a:hover {
    table rows each carried a guard of their own; a page that hid anything else
    wrote one too (Vespera's admin had three). One rule for every class that
    starts with gk-. :where() keeps it at zero specificity — the !important is
-   what wins, and it wins only for the hidden state. */
-:where([class^="gk-"], [class*=" gk-"])[hidden] {
+   what wins, and it wins only for the hidden state.
+   An inline display is left alone (:not([style*="display"])). A page that
+   shows a block with el.style.display = "block" and leaves `hidden` on it saw
+   the block before this rule; with a bare !important it would have vanished.
+   The rule adds what was missing and takes nothing away. [hidden] stands
+   last on purpose: happy-dom (the DOM many test suites run on) drops an
+   attribute that is followed by :not() and then matched every gk- block —
+   measured in Vespera's suite, every card of a page "display: none". */
+:where([class^="gk-"], [class*=" gk-"]):not([style*="display"])[hidden] {
   display: none !important;
 }
 
@@ -973,6 +980,10 @@ a:hover {
   white-space: nowrap;
 }
 .gk-num { font-weight: 600; }
+/* The empty value is text and reads at 4.5:1 like any muted text. Dark mode
+   had its own rule with --gk-outline: 2.1:1 on a table, 1.6 in the row of the
+   open sheet — the dash was all but gone. --gk-text-muted follows the mode by
+   itself, so one rule serves both (1.92.0). */
 .gk-num-empty {
   font-weight: 400;
   color: var(--gk-text-muted, #cbd5e1);
@@ -1225,10 +1236,6 @@ a:hover {
   .gk-table-mobile-card .gk-table-more-toggle > .gk-cell-sub {
     text-align: left;
   }
-}
-[data-gk-mode="dark"] .gk-num-empty,
-.gk-dark .gk-num-empty {
-  color: var(--gk-outline);
 }
 .gk-actions {
   white-space: nowrap;
@@ -7842,8 +7849,11 @@ textarea.gk-input[readonly]:focus-visible {
   border-radius: 10px;
   background: color-mix(in oklab, var(--gk-on-surface) 4%, transparent);
 }
+/* Under the pointer: the state role (6 %), not a veil of 8 % — in dark mode
+   the 8 % lifted the ground until the muted sentence read 4.2–4.4:1 (measured
+   on Vespera's "never used" row). */
 .gk-table-list .gk-table-more-toggle:hover {
-  background: color-mix(in oklab, var(--gk-on-surface) 8%, transparent);
+  background: var(--gk-state-hover);
 }
 .gk-table-list .gk-table-more-name {
   font-size: var(--gk-text-body);
@@ -8031,6 +8041,11 @@ textarea.gk-input[readonly]:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  /* A min-height replaces a flex item's automatic minimum (its content). As a
+     child of a sheet body in a column that scrolls, the row then shrank to
+     44px and its sentence ran out of the border — Vespera's "Delete account"
+     row, measured 44px for 91px of content. It keeps its content height. */
+  flex-shrink: 0;
   min-height: var(--gk-target-min);
   margin: 0;
   padding: 14px 16px;
@@ -8242,6 +8257,16 @@ label.gk-setting-title {
   gap: 8px;
   margin-left: auto;
 }
+/* An outlined button is transparent, so in a message it stood on the tinted
+   band, not on the surface its colour was chosen for: "Check now" in a
+   warning measured 4.35:1 in every theme's light mode. In a message it
+   carries the surface under it, hovered too (the state layer on top). */
+.gk-message-actions .gk-btn-outlined {
+  background-color: var(--gk-surface);
+}
+.gk-message-actions .gk-btn-outlined:hover {
+  background: linear-gradient(var(--gk-state-hover), var(--gk-state-hover)), var(--gk-surface);
+}
 
 /* ── A choice as a tile: .gk-choice ────────────────────────────────────────
    A radio or a checkbox as a bordered tile with a letter — "A  Fix it now" —
@@ -8254,6 +8279,7 @@ label.gk-setting-title {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-shrink: 0; /* as .gk-setting: min-height would let a scrolling column squeeze it */
   min-height: 52px;
   padding: 10px 16px;
   border: 1px solid var(--gk-outline);

@@ -144,8 +144,12 @@ return [
     $c = $css();
     // The reason: a message is a flex box, so the browser's [hidden] lost to it.
     T::contains($rule($c, '.gk-message'), 'display: flex', 'the case this guards against is gone — check the test');
-    $guard = $rule($c, ':where([class^="gk-"], [class*=" gk-"])[hidden]');
+    // An inline display is left alone: a page that shows a block with
+    // el.style.display and leaves `hidden` on it saw it before 1.92.0.
+    $guard = $rule($c, ':where([class^="gk-"], [class*=" gk-"]):not([style*="display"])[hidden]');
     T::contains($guard, 'display: none !important', 'a gk- element with the hidden attribute can still show');
+    T::ok(!str_contains($c, ':where([class^="gk-"], [class*=" gk-"])[hidden] {'),
+        'the guard overrides an inline display again — a page that shows a block by script would lose it');
     // Zero specificity for the class part: the guard must not win anything but
     // the hidden state, and !important is how it wins that one.
     T::ok(!preg_match('/\n\.gk-[a-z-]+\[hidden\]\s*\{[^}]*!important/', $c),
@@ -506,6 +510,24 @@ return [
     foreach (['.gk-field-static', '.gk-field-static-label', '.gk-field-static-value'] as $sel) {
         T::ok($rule($c, $sel) !== '', "$sel has no rule");
     }
+    // An outlined button is transparent: in a message it stood on the tinted
+    // band (4.35:1 in a warning). It carries the surface there, hovered too.
+    T::contains($rule($c, '.gk-message-actions .gk-btn-outlined'), 'background-color: var(--gk-surface)',
+        'an outlined button in a message stands on the tinted band again');
+    T::contains($rule($c, '.gk-message-actions .gk-btn-outlined:hover'), 'var(--gk-surface)',
+        'a hovered outlined button in a message loses the surface under it');
+},
+
+'blocks with a min-height keep their content height in a scrolling column, and an empty value reads' => function () use ($css, $rule): void {
+    $c = $css();
+    // A min-height replaces a flex item's automatic minimum: a sheet body in a
+    // column that scrolls squeezed the setting to 44px, its sentence outside.
+    T::contains($rule($c, '.gk-setting'), 'flex-shrink: 0', 'a setting can be squeezed below its content in a scrolling column');
+    T::contains($rule($c, '.gk-choice'), 'flex-shrink: 0', 'a choice can be squeezed below its content in a scrolling column');
+    // The dash is text: one rule, the muted role, which follows the mode.
+    T::contains($rule($c, '.gk-num-empty'), 'color: var(--gk-text-muted', 'the empty value is not muted text');
+    T::ok(!preg_match('/\.gk-num-empty[^{]*\{[^}]*--gk-outline\)/', $c),
+        'the empty value takes --gk-outline again — 2.1:1 on a dark table');
 },
 
 // ── Documentation ─────────────────────────────────────────────────────────

@@ -543,7 +543,10 @@ mode gives the table 600px, and either undoes what the list is for.
 under the name when both do not fit (the name is shortened only when it does not
 fit on its own), and the `.gk-cell-sub` spans the width underneath.
 `.gk-cell-sub-wrap` breaks a second line instead of shortening it — of two people
-with the same name, the addresses are what tells them apart. In a list the who
+with the same name, the addresses are what tells them apart. It breaks
+anywhere if it must, so it never widens a phone's list; give an address its
+natural break points with `<wbr>` after the `@` and before each dot, and it
+breaks there first ("anna.probe@<wbr>example<wbr>.org"). In a list the who
 column takes the width the others leave.
 
 ```html
@@ -763,6 +766,19 @@ written by hand; it takes the breadcrumb's place — use one or the other.
 
 ```html
 <div class="gk-header-title"><h1>Users</h1><span class="gk-header-meta">2 users · 4 never used</span></div>
+```
+
+**A header written by hand keeps the user menu BESIDE the actions**, the way
+`Header` writes it: `.gk-header-right` > `.gk-header-actions` + `.gk-header-user`.
+On a phone the actions row scrolls sideways (`overflow-x: auto`, so a squeeze
+cannot push buttons over the avatar), and anything that opens out of it is cut
+off — a user menu written inside it could not be seen or tapped at 402px.
+
+```html
+<div class="gk-header-right">
+  <div class="gk-header-actions"><button type="button" class="gk-btn gk-btn-primary gk-btn-touch">New</button></div>
+  <div class="gk-header-user" data-gk-dropdown tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">…</div>
+</div>
 ```
 
 ### Sidebar
@@ -1315,7 +1331,9 @@ in both directions, the type unchanged (`.gk-btn-lg` grows the text as well).
 with a button. A long message takes its line and the actions move under it.
 Written by hand, an outlined button needs its colour class as well:
 `.gk-btn-outlined` alone has a transparent border (`Button::render()` always
-writes one).
+writes one). In a message an outlined button stands on the surface, not on the
+tinted band — its text colour is chosen for the surface (a warning's measured
+4.35:1 on the band).
 
 ```html
 <div class="gk-message gk-message-warning">
@@ -1340,7 +1358,9 @@ writes one).
 **Hidden means hidden.** Every element with a `gk-` class disappears with the
 `hidden` attribute, whatever display its class gives it — `<div class="gk-message"
 hidden>` used to stay on the page, because the browser's own `[hidden]` rule
-loses to any display an author rule sets.
+loses to any display an author rule sets. An inline display is left alone: a
+script that shows a block with `el.style.display = "block"` and leaves `hidden`
+on it still shows it, as before 1.92.0. Hide and show with the attribute.
 
 ### Auth
 

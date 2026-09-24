@@ -185,7 +185,11 @@ if (isset($argv[1]) && $argv[1] === '--admin') {
     // Header::title() writes the <h1> only; the line beside it is markup.
     $header = str_replace('<h1>Users</h1>',
         '<h1>Users</h1><span class="gk-header-meta" id="head-meta">5 users · 2 never signed in · 1 locked · 3 invited this week, none of them back yet</span>',
-        (new Header())->title('Users')->fixed()->sidebarToggle(true)->user('Demo Admin', ['theme_switcher' => false])->render());
+        (new Header())->title('Users')->fixed()->sidebarToggle(true)
+            // An action beside the user menu: on a phone the actions row scrolls
+            // sideways, and a menu inside it would be cut off (1.92.0, measured).
+            ->action('<button type="button" class="gk-btn gk-btn-primary gk-btn-touch" id="head-action" aria-label="New user">+</button>')
+            ->user('Demo Admin', ['theme_switcher' => false, 'menu' => [['label' => 'Sign out', 'href' => '#out']]])->render());
 
     ob_start();
     (new Table('members'))
@@ -249,6 +253,9 @@ if (isset($argv[1]) && $argv[1] === '--admin') {
        . '<div class="gk-message gk-message-error" id="msg-hidden" hidden>Hidden message</div>'
        . '<div class="gk-stat-tiles" id="tiles-hidden" hidden><div class="gk-stat-tile">1</div></div>'
        . '<div class="gk-setting" id="setting-hidden" hidden>x</div>'
+       // Shown the old way: an inline display and the attribute left on. It stood
+       // on the page before 1.92.0 and still does — the guard only adds.
+       . '<div class="gk-message gk-message-info" id="msg-inline" hidden style="display:block">Shown by a script</div>'
        . '<label class="gk-choice" id="choice-hidden" hidden><input type="radio" name="h"><span class="gk-choice-mark">A</span></label>'
        . '<button type="button" class="gk-btn gk-btn-text gk-btn-icon-only gk-btn-sm gk-btn-touch" id="touch-icon" aria-label="Edit"><span aria-hidden="true">E</span></button>'
        . '<span class="gk-show-mobile" id="only-phone">phone only</span>'
@@ -264,6 +271,20 @@ if (isset($argv[1]) && $argv[1] === '--admin') {
        . '<p class="gk-sheet-meta" id="sheet-meta"><a href="mailto:jana.novak@example.org">jana.novak@example.org</a> · last seen today</p>'
        . '<button type="button" class="gk-sheet-close">&times;</button></div>'
        . '<div class="gk-sheet-body"><p>Record</p></div></div>'
+       // A sheet longer than the screen, its body a column that scrolls: the
+       // setting and the choice at the end must keep their content height.
+       . '<div class="gk-sheet" id="long-sheet" hidden><div class="gk-sheet-header">'
+       . '<h2 class="gk-sheet-title">Tom Weber</h2><button type="button" class="gk-sheet-close">&times;</button></div>'
+       . '<div class="gk-sheet-body gk-flex-col gk-gap-xl">'
+       . str_repeat('<p class="gk-m-0">A paragraph of the record, long enough to fill a line of the sheet and then some more.</p>', 24)
+       . '<label class="gk-choice" id="long-choice"><input type="radio" name="lc"><span class="gk-choice-mark">A</span>'
+       . '<span class="gk-choice-text"><span class="gk-choice-title">Keep the account</span>'
+       . '<span class="gk-choice-hint">Nothing changes; the row stays on the list, and the plan keeps running as it is.</span></span></label>'
+       . '<div class="gk-setting gk-setting-danger" id="long-setting"><div class="gk-setting-text">'
+       . '<span class="gk-setting-title">Delete account</span>'
+       . '<span class="gk-setting-hint">Removes the account for good. A question comes first, and nothing is deleted without it.</span></div>'
+       . '<button type="button" class="gk-btn gk-btn-outlined gk-btn-danger gk-btn-touch gk-setting-control">Delete</button></div>'
+       . '</div></div>'
        . $script . '</body></html>';
     exit;
 }

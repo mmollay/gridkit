@@ -257,6 +257,14 @@ const BAUSTEINE = `
   <label class="gk-choice" id="wahl-aus"><input type="radio" name="w"><span class="gk-choice-mark">B</span><span class="gk-choice-text"><span class="gk-choice-title">T</span><span class="gk-choice-hint">H</span></span></label>
 </div>
 <div class="gk-stat-tiles"><div class="gk-stat-tile" id="kachel-seite"><span class="gk-stat-tile-value">1</span><span class="gk-stat-tile-label">x</span><span class="gk-stat-tile-sub">y</span></div></div>
+${[["warning", "warning"], ["error", "danger"], ["success", "success"], ["info", "primary"], ["warning", "neutral"]].map(([band, knopf]) =>
+  `<div class="gk-message gk-message-${band}" id="band-${band}-${knopf}"><span>Text</span><div class="gk-message-actions"><button type="button" class="gk-btn gk-btn-outlined gk-btn-${knopf} gk-btn-touch">Prüfen</button></div></div>`).join("\n")}
+<div class="gk-table-wrap gk-table-list"><table class="gk-table"><tbody>
+<tr class="gk-row-link" id="zeile"><td><button type="button" class="gk-row-target">N</button><span class="gk-cell-sub">a@b</span></td><td><span class="gk-num-empty">—</span></td></tr>
+<tr class="gk-row-link" aria-current="true" id="zeile-offen"><td><button type="button" class="gk-row-target">N</button><span class="gk-cell-sub">a@b</span></td><td><span class="gk-num-empty">—</span></td></tr>
+<tr class="gk-table-more"><td colspan="2"><button type="button" class="gk-table-more-toggle" id="sammel" aria-expanded="false"><span class="gk-table-more-name">2 Konten</span><span class="gk-cell-sub">Satz</span></button></td></tr>
+<tr class="gk-table-more"><td colspan="2"><button type="button" class="gk-table-more-toggle" id="sammel-zeiger" aria-expanded="false"><span class="gk-table-more-name">2 Konten</span><span class="gk-cell-sub">Satz</span></button></td></tr>
+</tbody></table></div>
 <button type="button" class="gk-btn gk-btn-primary" id="knopf-primaer">Speichern</button>`;
 
 /*
@@ -269,6 +277,18 @@ const BAUSTEINE = `
  */
 const WIE_DER_PRIMAERKNOPF = new Set(["Antwort gewählt · Buchstabe"]);
 
+/*
+ * Die Zeile des offenen Blatts (1.91.0) trägt --gk-state-primary. In der
+ * Schreibweise .gk-dark MIT themes.css gelten die dunklen Flächen aus
+ * gridkit.css (#0d1117, gedämpft #8b949e) — die Leiter der Flächen in
+ * themes.css hängt nur an data-gk-mode="dark" (gridkit.css: „until the ladder
+ * in themes.css is decided“). Dort liegt gedämpfter Text in dieser Zeile bei
+ * 4,46–4,48:1: die Adresse, die es seit 1.91 gibt, genauso wie der leere Wert.
+ * Gemeldet, nicht beanstandet — und nur in dieser Schreibweise. Der leere Wert
+ * darf nie unter der Adresse daneben liegen; tut er es, ist es sein Fehler.
+ */
+const WIE_DIE_ADRESSE = new Set(["Leerer Wert · offene Zeile", "Zweite Zeile · offene Zeile"]);
+
 /** Welche Schrift gegen welchen Grund: [Name, Element-ID, Wähler der Schrift im Element]. */
 const TEXTPROBEN = [
   ...[1, 2, 3, 4, 5].map((n) => [`Kürzelfarbe ${n}`, `ton-${n}`, null]),
@@ -280,6 +300,22 @@ const TEXTPROBEN = [
   ["Antwort gewählt · Satz", "wahl-an", ".gk-choice-hint"],
   ["Antwort gewählt · Buchstabe", "wahl-an", ".gk-choice-mark"],
   ["Antwort offen · Buchstabe", "wahl-aus", ".gk-choice-mark"],
+  /* 1.92.0, nachgemessen: ein umrandeter Knopf in einer Meldung stand auf dem
+     getönten Band, nicht auf der Fläche — „Prüfen“ in einer Warnung hielt hell
+     4,35:1. Jede Meldungsfarbe mit ihrem Knopf, dazu der neutrale. */
+  ...[["warning", "warning"], ["error", "danger"], ["success", "success"], ["info", "primary"], ["warning", "neutral"]].map(([band, knopf]) =>
+    [`Meldung ${band} · Knopf ${knopf}`, `band-${band}-${knopf}`, ".gk-btn"]),
+  /* Der leere Wert (.gk-num-empty) ist Text: dunkel stand er bei 2,1:1 auf der
+     Tabelle und 1,6:1 in der Zeile des offenen Blatts. Die Adresse darunter
+     (.gk-cell-sub) in derselben Zeile gleich mit. */
+  ["Leerer Wert · Zeile", "zeile", ".gk-num-empty"],
+  ["Leerer Wert · offene Zeile", "zeile-offen", ".gk-num-empty"],
+  ["Zweite Zeile · offene Zeile", "zeile-offen", ".gk-cell-sub"],
+  /* Die Sammelzeile einer Liste (1.92.0), ruhig und unter dem Zeiger (:hover
+     über das Protokoll des Browsers erzwungen): mit 8 % Schleier stand ihr
+     Satz dunkel bei 4,36:1 — gefunden an Vespera, Thema forest. */
+  ["Sammelzeile · Satz", "sammel", ".gk-cell-sub"],
+  ["Sammelzeile unter dem Zeiger · Satz", "sammel-zeiger", ".gk-cell-sub"],
 ];
 
 // Machado, Oliveira & Fernandes (2009), Stärke 1,0, auf linearem RGB.
@@ -317,6 +353,13 @@ async function bausteineMessen(browser, mitThemes) {
 <body class="gk-root">${BAUSTEINE}</body></html>`);
     const page = await browser.newPage({ viewport: { width: 1280, height: 1400 } });
     await page.goto("file://" + path.join(bDir, "probe.html"));
+    /* Ein Zustand, den nur der Zeiger herstellt: :hover über CDP erzwingen,
+       dann gilt er für jede Messung der Schleife unten. */
+    const cdp = await page.context().newCDPSession(page);
+    const { root } = await cdp.send("DOM.getDocument");
+    const { nodeId } = await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector: "#sammel-zeiger" });
+    await cdp.send("CSS.enable");
+    await cdp.send("CSS.forcePseudoState", { nodeId, forcedPseudoClasses: ["hover"] });
     const zeilen = await page.evaluate(([proben, themen, modi]) => {
       const c = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
       const rgba = (f) => { c.clearRect(0, 0, 1, 1); c.fillStyle = "#000"; c.fillStyle = f; c.fillRect(0, 0, 1, 1);
@@ -385,8 +428,11 @@ function bausteineBerichten(wie, zeilen) {
     const kopf = `${z.thema.padEnd(12)} ${z.modus.padEnd(11)}`;
     const dunkel = z.modus !== "light";
     const wieKnopf = (t) => WIE_DER_PRIMAERKNOPF.has(t.name) && t.kontrast >= z.primaerknopf - 0.01;
-    const zuWenig = z.texte.filter((t) => t.kontrast < 4.5 && !wieKnopf(t));
+    const adresse = z.texte.find((t) => t.name === "Zweite Zeile · offene Zeile");
+    const wieAdresse = (t) => z.modus === "dark-klasse" && WIE_DIE_ADRESSE.has(t.name) && t.kontrast >= adresse.kontrast - 0.01;
+    const zuWenig = z.texte.filter((t) => t.kontrast < 4.5 && !wieKnopf(t) && !wieAdresse(t));
     const zurueck = z.texte.filter((t) => t.kontrast < 4.5 && wieKnopf(t));
+    const zurueckZeile = z.texte.filter((t) => t.kontrast < 4.5 && wieAdresse(t));
     const schwaechster = z.texte.reduce((a, b) => (a.kontrast <= b.kontrast ? a : b));
     if (zuWenig.length) {
       schlecht++;
@@ -395,7 +441,9 @@ function bausteineBerichten(wie, zeilen) {
     } else {
       console.log(`ok    ${kopf}  alle ${z.texte.length} Texte ≥ 4,5:1` + (zurueck.length
         ? ` — zurückgestellt: ${zurueck.map((t) => `${t.name} ${t.kontrast.toFixed(2)}:1`).join(", ")}, wie der gefüllte Primärknopf (${z.primaerknopf.toFixed(2)}:1, Grundpalette)`
-        : ` (schwächster: ${schwaechster.name} ${schwaechster.kontrast.toFixed(2)}:1)`));
+        : zurueckZeile.length ? "" : ` (schwächster: ${schwaechster.name} ${schwaechster.kontrast.toFixed(2)}:1)`) + (zurueckZeile.length
+        ? ` — zurückgestellt: ${zurueckZeile.map((t) => `${t.name} ${t.kontrast.toFixed(2)}:1`).join(", ")}, offene Zeile seit 1.91 (.gk-dark mit themes.css: Flächen aus gridkit.css)`
+        : ""));
     }
     /* Reihenfarben: in jedem Thema dieselben wie im ersten gemessenen. */
     const key = z.reihen.map((r) => r.slice(0, 3).join(",")).join(" ");
