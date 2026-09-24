@@ -1077,6 +1077,9 @@ only when it was in the accessibility tree BEFORE its words changed, so:
   not `display: none`); words bring the box back.
 - Change **only its words**, with `GK.announce()`. Never show it and fill it in
   the same step — that is the pattern that stays silent.
+- Write **nothing between the tags** — not a space, not a line break. "Empty"
+  is CSS `:empty`, and a line break is a text node: the region draws the empty
+  box until `GK.init()` clears it, and for good on a page without the script.
 
 ```html
 <div class="gk-message gk-message-compact gk-announce" id="saved" role="status" aria-live="polite" aria-atomic="true"></div>

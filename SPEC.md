@@ -399,10 +399,10 @@ filled in the same step is often not read at all.
 
 | Part | Contract |
 |---|---|
-| Markup | `<div class="gk-announce" role="status" aria-live="polite" aria-atomic="true"></div>` — usually also `.gk-message` (and `-compact`); on the page from the start, empty, never `hidden` |
+| Markup | `<div class="gk-announce" role="status" aria-live="polite" aria-atomic="true"></div>` — usually also `.gk-message` (and `-compact`); on the page from the start, empty, never `hidden`; nothing between the tags, not even a line break (`:empty` matches no child node at all) |
 | Empty | `.gk-announce:empty` is clipped like `.gk-sr-only` (position absolute, 1px, `clip-path: inset(50%)`, no border or padding) — in the accessibility tree, no box, no gap. Never `display: none` or `visibility: hidden` |
 | Script | `GK.announce(target, text, tone)` — target an element, id or selector; text set as `textContent`; tone `info`/`success`/`warning`/`error` (default `info`) toggles `.gk-message-*` on a `.gk-message`; `''` empties it; the same text again empties the region and writes the text back after 150 ms, so it is read again; returns the element or `null`. `GK.melde` is the same function |
-| Repair | `GK.announce()` and `GK.init()` add a missing `role="status"`, `aria-live` (`assertive` for `role="alert"`) and `aria-atomic="true"`, add the class, and take `hidden` off (on init only from an empty region) |
+| Repair | `GK.announce()` and `GK.init()` add a missing `role="status"`, `aria-live` (`assertive` for `role="alert"`) and `aria-atomic="true"`, add the class, and take `hidden` off (on init only from an empty region); `GK.init()` empties a region that holds nothing but white space |
 
 ## Block index (`css/blocks.json`, 1.93.0)
 
@@ -416,3 +416,6 @@ filled in the same step is often not read at all.
 - The demo marks a block "New in x.y" / "Changed in x.y" when that minor is one
   of the two newest in `CHANGELOG.md` (`.gk-label-green` / `.gk-label-blue`), and
   shows those two minors' entry headings at the top — read from the changelog.
+- One heading, one `since()`: a heading that shows several blocks names them in
+  one call (`since('row-link', 'sheet')`), which says "since" once for the
+  oldest and each mark once.

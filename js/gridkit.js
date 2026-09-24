@@ -2254,9 +2254,15 @@
 
   function _gkAnnounceInit(root) {
     (root || document).querySelectorAll(".gk-announce").forEach(function (el) {
+      // `:empty` matches no child at all — a line break between the tags, as a
+      // PHP or TS template writes it, is a text node, and the region drew the
+      // very empty box it exists to avoid. Nothing but white space is no words:
+      // emptied here, so the clip applies.
+      var blank = !el.textContent.trim();
+      if (blank && el.firstChild) el.textContent = "";
       // An empty region hidden in the markup is shown now, before any message;
       // one with words in it the page hid on purpose stays as it is.
-      _gkAnnounceRegion(el, el.textContent === "");
+      _gkAnnounceRegion(el, blank);
     });
   }
 

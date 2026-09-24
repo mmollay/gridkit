@@ -152,8 +152,10 @@ return [
 
 'every mark in the demo names a block the index knows, and every new block is marked' => function () use ($demo): void {
     $src = $demo();
-    preg_match_all("/since\\('([a-z0-9-]+)'\\)/", $src, $m);
-    $used = array_unique($m[1]);
+    // since('row-link', 'sheet') names two blocks in one call.
+    preg_match_all("/since\\(((?:'[a-z0-9-]+'(?:,\\s*)?)+)\\)/", $src, $calls);
+    preg_match_all("/'([a-z0-9-]+)'/", implode(' ', $calls[1]), $m);
+    $used = array_values(array_unique($m[1]));
     T::ok(count($used) > 30, 'the demo marks only ' . count($used) . ' headings');
     $blocks = gkBlocks();
     foreach ($used as $key) {
@@ -169,6 +171,33 @@ return [
     $threw = false;
     try { since('no-such-block'); } catch (InvalidArgumentException $e) { $threw = true; }
     T::ok($threw, 'a mark for a block the index does not know renders instead of failing');
+},
+
+'a heading showing two blocks says "since" once, and each mark once' => function () use ($demo): void {
+    Lang::set('en');
+    // Two calls side by side read "since 1.91 since 1.91 Changed in 1.92" — to
+    // the eye and to a screen reader — and the second wrapped, indented, on a
+    // phone. One call per heading, the keys in it.
+    T::ok(!preg_match('/since\\([^)]*\\)\\s*\\?>\\s*<\\?=\\s*since\\(/', $demo()),
+        'a heading in the demo carries two since() side by side — name both blocks in one call');
+
+    $both = since('row-link', 'sheet');
+    T::eq(substr_count($both, '>since '), 1, 'two blocks in one heading say "since" twice');
+    T::eq(substr_count($both, 'class="demo-since"'), 1, 'two blocks in one heading give two marks');
+    // "since" is the older block's: the region (1.93) beside the message (1.0).
+    $mixed = since('announce', 'message');
+    T::contains($mixed, 'since ' . gkMinor(gkBlocks()['message']['since']) . '<', 'the heading does not say since when the older block exists');
+    T::contains($mixed, 'New in 1.93', 'the new block of the two is not marked');
+    // Two blocks changed in the same release: the mark once.
+    T::eq(substr_count(since('table', 'sheet'), 'Changed in 1.92'), 1, '"Changed in 1.92" twice in one heading');
+    // One new in 1.92 beside one changed in 1.92: "New in" says it all.
+    $newAndChanged = since('table-list', 'table');
+    T::contains($newAndChanged, 'New in 1.92', 'the new block of the two is not marked');
+    T::notContains($newAndChanged, 'Changed in 1.92', 'a release marked new is marked changed as well');
+    T::eq(since('toast', 'toast'), since('toast'), 'a key named twice is not one block');
+    $threw = false;
+    try { since('toast', 'no-such-block'); } catch (InvalidArgumentException $e) { $threw = true; }
+    T::ok($threw, 'an unknown second key renders instead of failing');
 },
 
 'the news box is the changelog\'s own headings for the last two minors' => function () use ($demo): void {
@@ -208,7 +237,10 @@ return [
     T::ok(!preg_match('/\.gk-announce[^{,]*\{[^}]*display:\s*none/', $css()), 'some rule hides .gk-announce with display: none');
 },
 
-'the announcement markup is on the page from the start, empty and never hidden' => function () use ($doc, $demo): void {
+'the announcement markup is on the page from the start, empty and never hidden' => function () use ($doc, $demo, $root): void {
+    // The skill says why "empty" means no line break either, and so does the spec.
+    T::contains($doc(), '**nothing between the tags**', 'the skill does not warn that a line break between the tags draws the box');
+    T::contains((string) file_get_contents($root . '/SPEC.md'), 'nothing between the tags, not even a line break', 'the spec does not say a line break is not empty');
     foreach (['GRIDKIT_SKILL.md' => $doc(), 'demo/index.php' => $demo()] as $where => $src) {
         preg_match_all('/<div class="[^"]*gk-announce[^"]*"[^>]*>(.*?)<\/div>/s', $src, $m, PREG_SET_ORDER);
         T::ok($m !== [], "$where shows no .gk-announce region");
@@ -235,6 +267,10 @@ return [
     T::contains($src, 'GK.melde = GK.announce;', 'GK.melde is not the same function');
     T::ok((bool) preg_match('/GK\.initContent = function \(root\) \{.*?_gkAnnounceInit\(root\);\s*\};/s', $src),
         'init does not prepare the regions before the first message');
+    // `:empty` matches no child at all: a line break between the tags, as a
+    // template writes it, drew the empty box. Init empties white space.
+    T::ok((bool) preg_match('/function _gkAnnounceInit\(root\) \{.*?var blank = !el\.textContent\.trim\(\);\s*if \(blank && el\.firstChild\) el\.textContent = "";.*?_gkAnnounceRegion\(el, blank\);/s', $src),
+        'init leaves a region holding only white space as it is — a line break draws the empty box');
 },
 
 ];

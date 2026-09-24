@@ -1,5 +1,5 @@
 {
-    "about": "Every gk- class in css/gridkit.css and css/themes.css, in the block the demo shows it as. A class carries the release that first shipped it (read out of the git history once, in 1.93.0); a block's \"since\" is its oldest class. \"changed\" is the last release that changed a block without adding a class to it, kept by hand from 1.92.0 on; a new class marks its block as changed by itself. tests/blocks.test.php fails on a class that is in a stylesheet and not here, and on one that is here and in no stylesheet.",
+    "about": "Every gk- class in css/gridkit.css and css/themes.css, in the block the demo shows it as. A class carries the release that first shipped it (read out of the git history once, in 1.93.0; the classes that first reached git with the rescue of live 1.27.2 carry the changelog entry that brought them, where it names one); a block's \"since\" is its oldest class. \"changed\" is the last release that changed a block without adding a class to it, kept by hand from 1.92.0 on; a new class marks its block as changed by itself. tests/blocks.test.php fails on a class that is in a stylesheet and not here, and on one that is here and in no stylesheet.",
     "blocks": {
         "table": {
             "name": "Table",
@@ -11,7 +11,7 @@
                 "gk-actions-right": "0.9.0",
                 "gk-cb-col": "1.0.0",
                 "gk-cell-link": "1.87.0",
-                "gk-cell-sub": "1.27.2",
+                "gk-cell-sub": "1.27.1",
                 "gk-row": "0.9.0",
                 "gk-row-selected": "1.0.0",
                 "gk-sort-btn": "1.56.0",
@@ -31,9 +31,9 @@
                 "gk-table-fixed": "1.0.0",
                 "gk-table-flat": "0.9.0",
                 "gk-table-footer": "1.4.16",
-                "gk-table-group": "1.27.2",
-                "gk-table-group-n": "1.27.2",
-                "gk-table-group-name": "1.27.2",
+                "gk-table-group": "1.25.0",
+                "gk-table-group-n": "1.25.0",
+                "gk-table-group-name": "1.25.0",
                 "gk-table-inverted": "1.0.0",
                 "gk-table-lg": "0.9.0",
                 "gk-table-md": "0.9.0",
@@ -159,10 +159,10 @@
             "classes": {
                 "gk-bool-no": "0.9.0",
                 "gk-bool-yes": "0.9.0",
-                "gk-num": "1.27.2",
-                "gk-num-empty": "1.27.2",
+                "gk-num": "1.25.0",
+                "gk-num-empty": "1.25.0",
                 "gk-td-muted": "1.28.0",
-                "gk-td-num": "1.27.2"
+                "gk-td-num": "1.25.0"
             }
         },
         "action-group": {
@@ -554,19 +554,19 @@
         "global-search": {
             "name": "Global search",
             "classes": {
-                "gk-search-betrag": "1.27.2",
-                "gk-search-box": "1.27.2",
-                "gk-search-feld": "1.27.2",
-                "gk-search-gruppe": "1.27.2",
-                "gk-search-hinweis": "1.27.2",
-                "gk-search-icon": "1.27.2",
-                "gk-search-laedt": "1.27.2",
-                "gk-search-liste": "1.27.2",
-                "gk-search-overlay": "1.27.2",
-                "gk-search-text": "1.27.2",
-                "gk-search-titel": "1.27.2",
-                "gk-search-treffer": "1.27.2",
-                "gk-search-unter": "1.27.2"
+                "gk-search-betrag": "1.24.0",
+                "gk-search-box": "1.24.0",
+                "gk-search-feld": "1.24.0",
+                "gk-search-gruppe": "1.24.0",
+                "gk-search-hinweis": "1.24.0",
+                "gk-search-icon": "1.24.0",
+                "gk-search-laedt": "1.24.0",
+                "gk-search-liste": "1.24.0",
+                "gk-search-overlay": "1.24.0",
+                "gk-search-text": "1.24.0",
+                "gk-search-titel": "1.24.0",
+                "gk-search-treffer": "1.24.0",
+                "gk-search-unter": "1.24.0"
             }
         },
         "toast": {

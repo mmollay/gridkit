@@ -1363,6 +1363,13 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
     check("announce: GK.init takes hidden off an empty region and gives a bare one role, aria-live and aria-atomic",
       !vorbereitet.versteckt && vorbereitet.rolle === "status" && vorbereitet.live === "polite" && vorbereitet.atomar === "true");
 
+    // A line break between the tags is a text node, and `:empty` matches no
+    // child at all: without GK.init emptying it, the region drew a 22px box.
+    const umbruch = await box("spaced-region");
+    const umbruchText = await an.evaluate(() => document.getElementById("spaced-region").textContent);
+    check("announce: a region holding only a line break is emptied by GK.init — no box",
+      umbruch.w <= 1 && umbruch.h <= 1 && umbruchText === "");
+
     await an.evaluate(() => GK.announce("region", "Saved.", "success"));
     const voll = await ax("#region");
     const vollKasten = await box("region");

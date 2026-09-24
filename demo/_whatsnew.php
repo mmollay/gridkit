@@ -143,23 +143,46 @@ function gkMark(string $kind, string $minor): string
  * What a heading in the demo carries after its name: "since 1.0" and, for a
  * block new or changed in the last two minors, its mark.
  *
+ * A heading that shows more than one block names them all in ONE call —
+ * since('row-link', 'sheet') — and says "since" once, for the oldest of them,
+ * with each mark once. Two calls side by side read "since 1.91 since 1.91" to
+ * the eye and to a screen reader, and the second wrapped onto its own,
+ * indented line on a phone.
+ *
  * Unknown keys throw: a mark for a block the index does not know would be a
  * claim with nothing behind it.
  */
-function since(string $key): string
+function since(string $key, string ...$more): string
 {
     $blocks = gkBlocks();
-    if (!isset($blocks[$key])) {
-        throw new InvalidArgumentException("css/blocks.json has no block \"$key\"");
+    $keys = array_values(array_unique([$key, ...$more]));
+    $recent = gkRecentMinors(gkChangelog());
+    $first = null;
+    $marks = ['new' => [], 'changed' => []];
+    foreach ($keys as $k) {
+        if (!isset($blocks[$k])) {
+            throw new InvalidArgumentException("css/blocks.json has no block \"$k\"");
+        }
+        $b = $blocks[$k];
+        if ($first === null || version_compare($b['since'], $first, '<')) $first = $b['since'];
+        $state = gkBlockState($b, $recent);
+        if ($state['new'] !== null) $marks['new'][$state['new']] = true;
+        if ($state['changed'] !== null) $marks['changed'][$state['changed']] = true;
     }
-    $b = $blocks[$key];
-    $state = gkBlockState($b, gkRecentMinors(gkChangelog()));
+    // A minor one block is new in says it all; "changed in" the same minor
+    // for its neighbour would only repeat it.
+    $marks['changed'] = array_diff_key($marks['changed'], $marks['new']);
     $w = gkMarkWords();
 
-    $html = '<span class="demo-since" data-block="' . htmlspecialchars($key, ENT_QUOTES, 'UTF-8') . '">'
-        . '<span class="gk-text-muted">' . $w['since'] . ' ' . gkMinor($b['since']) . '</span>';
-    if ($state['new'] !== null) $html .= gkMark('new', $state['new']);
-    if ($state['changed'] !== null) $html .= gkMark('changed', $state['changed']);
+    $html = '<span class="demo-since" data-block="' . htmlspecialchars(implode(' ', $keys), ENT_QUOTES, 'UTF-8') . '">'
+        . '<span class="gk-text-muted">' . $w['since'] . ' ' . gkMinor((string) $first) . '</span>';
+    foreach (['new', 'changed'] as $kind) {
+        $minors = array_map('strval', array_keys($marks[$kind]));
+        usort($minors, static fn(string $a, string $b): int => version_compare($b, $a));
+        // The space is for whoever reads the text: "since 1.91 Changed in
+        // 1.92", not "1.91Changed". Between flex items it takes no room.
+        foreach ($minors as $minor) $html .= ' ' . gkMark($kind, $minor);
+    }
     return $html . '</span>';
 }
 

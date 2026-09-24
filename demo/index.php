@@ -276,8 +276,11 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         /* ── What is new, and since when (1.93.0) ─────────────────────────
            The words come from CHANGELOG.md, the marks from css/blocks.json;
            demo/_whatsnew.php reads both. Labels are GridKit's own green and
-           blue — no colour of the demo's. */
-        .demo-since { display:inline-flex; flex-wrap:wrap; align-items:center; gap:6px; margin-left:8px; font-size:var(--gk-text-label, 13px); font-weight:400; vertical-align:middle; }
+           blue — no colour of the demo's. No margin before the marks: the
+           space in the source parts them from the name, and a space at a line
+           break goes away — a margin went with them and indented the wrapped
+           line on a phone. */
+        .demo-since { display:inline-flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:var(--gk-text-label, 13px); font-weight:400; vertical-align:middle; }
         .demo-news-wrap { max-width:1100px; margin:24px auto 0; padding:0 24px; }
         .demo-news { margin:0; }
         .demo-news-summary { cursor:pointer; font-size:17px; font-weight:600; }
@@ -459,7 +462,7 @@ echo $demoHeader->title($headerTitle, true)
             ->render();
         ?>
 
-    <h3 class="demo-h3">Rows that open a side sheet <?= since('row-link') ?><?= since('sheet') ?></h3>
+    <h3 class="demo-h3">Rows that open a side sheet <?= since('row-link', 'sheet') ?></h3>
     <p class="demo-intro">List table <?= since('table-list') ?> · column priority <?= since('col-priority') ?> · who cell <?= since('cell-who') ?></p>
     <p class="demo-intro">Read in the row, change in the sheet: a click anywhere on a row opens its record beside the list — full screen on a phone. One name cell with two lines, groups instead of a status label per row, and colour only for what needs acting on. The six rules behind it are in the agent skill. <code>size('list')</code> sets the row they describe, and <code>'priority'</code> lets columns give way by the list's own width — open the sheet or narrow the window and watch "Last seen" go first.</p>
         <?php
@@ -1353,7 +1356,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3 style="margin: 32px 0 16px;">Gallery + Lightbox <?= since('gallery') ?><?= since('lightbox') ?></h3>
+    <h3 style="margin: 32px 0 16px;">Gallery + Lightbox <?= since('gallery', 'lightbox') ?></h3>
     <p class="demo-intro">Image grid with lazy loading, hover overlay and lightbox (arrow keys, Escape).</p>
 
     <div class="gk-gallery">

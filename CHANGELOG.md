@@ -74,9 +74,39 @@ and "Geändert in". The admin blocks of 1.92 each have their own heading now, so
 each carries its own mark, and the hand-written "v1.10" chip beside TableHeader
 is gone.
 
+### Fixed — a line break is not empty, one heading says "since" once
+
+A review of this release before it shipped found four things, fixed in it.
+
+- **A region written with a line break between its tags drew the empty box.**
+  "Empty" is CSS `:empty`, and that matches no child node at all — the line
+  break a PHP or TypeScript template writes before `</div>` is a text node. The
+  box this block exists to avoid came back, 22 px high, and `GK.init()` left it,
+  because it only looked at an empty `textContent`. Init now empties a region
+  that holds nothing but white space; the skill and the spec say to write
+  nothing between the tags, because a page without the script, or before it
+  runs, still shows the box.
+- **"since 1.91 since 1.91 Changed in 1.92".** A heading that shows two blocks
+  called `since()` twice, and said so twice, to the eye and to a screen reader.
+  `since('row-link', 'sheet')` now takes several blocks and says "since" once,
+  for the oldest, with each mark once ("New in" wins over "Changed in" for the
+  same release). The marks lost their left margin, which indented them when
+  they wrapped onto a line of their own on a phone; a space between the marks
+  makes the heading read "1.91 Changed", not "1.91Changed".
+- **20 classes were dated 1.27.2 that are older.** They first reached git with
+  the commit that rescued the live 1.27.2 from the server, so the history
+  dated them there. The changelog names where they came from: the global
+  search (`gk-search-*`) in 1.24.0, table groups and the number format
+  (`gk-table-group*`, `gk-num*`, `gk-td-num`) in 1.25.0, `gk-cell-sub` in
+  1.27.1. Two it does not name (`gk-rowpager-count`, `gk-code`) stay at 1.27.2.
+- **The suite was red on the commit.** `demo/_whatsnew.php` is a partial, and a
+  leading underscore on a tracked file reads as a probe script left behind; the
+  number below was counted before the file was tracked. It is on the list of
+  partials now.
+
 ### Tests
 
-- `tests/blocks.test.php` (new, 11 tests, 1876 assertions): the index against
+- `tests/blocks.test.php` (new, 12 tests, 1889 assertions): the index against
   both stylesheets in both directions (a class in neither, a class in two
   blocks), its versions against VERSION and the changelog, a class new in this
   version named in this entry, VERSION's heading as the first the demo reads,
@@ -87,12 +117,18 @@ is gone.
   after VERSION, `display: none` on the empty region, no repeat, the demo
   region written `hidden`, the new block unmarked, a mark in a colour of its
   own, a heading left out of the box, the new class missing from this entry.
-- `ci/browser.js`: 8 cases on a new fixture (`browser-fixture.php --announce`),
-  124 in all. The accessibility tree over the browser's protocol: empty, the
+  The fixes above, seven more: two `since()` side by side again, a key named
+  twice counted twice, "since" the newest block's instead of the oldest's,
+  "Changed in" beside "New in" for the same release, init leaving white space
+  in a region, the skill without the line-break rule, the partial off the list
+  — each red.
+- `ci/browser.js`: 9 cases on a new fixture (`browser-fixture.php --announce`),
+  125 in all. The accessibility tree over the browser's protocol: empty, the
   region is a status in the tree and adds neither a box nor a second gap to a
   flex column; init repairs a hidden and a bare region; words bring the box and
   the tone and the tree reads them; a repeat is emptied and written back; words
-  are text; emptied, box and tone go and the region stays. The fault itself is
+  are text; emptied, box and tone go and the region stays; a region holding
+  only a line break is emptied by init and draws no box (red without the fix). The fault itself is
   a case too: an empty `.gk-message` without the class draws a box, a hidden
   one is out of the tree. Five breaks (`display: none`, no clip, no repeat, no
   init, `innerHTML`) turned the matching cases red.
@@ -100,7 +136,7 @@ is gone.
   three spellings — weakest: "New" 8.57:1 light, 6.78:1 dark; "Changed" 7.15 /
   6.14; "since" 6.92 / 5.62 (`.gk-dark`). The same on the demo page itself, over
   every mark it renders: 8.57 / 6.78, 7.15 / 6.14, 6.92 / 5.71.
-- `php tests/run.php`: 5539 assertions.
+- `php tests/run.php`, run on the commit: 5559 assertions, none red.
 
 ---
 ## [1.92.0] - 2026-09-24

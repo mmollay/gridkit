@@ -99,6 +99,9 @@ return [
         // The people of the side-sheet demo, included by demo/index.php and by
         // the sheet's endpoint — one list for both (1.91.0).
         'demo/form/_people.php',
+        // The "what is new" box and the since()/marks helpers, read from
+        // CHANGELOG.md and css/blocks.json, included by demo/index.php (1.93.0).
+        'demo/_whatsnew.php',
     ];
 
     foreach ($out as $path) {
