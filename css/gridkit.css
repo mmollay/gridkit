@@ -8354,6 +8354,32 @@ label.gk-setting-title {
   }
 }
 
+/* ── An announcement: .gk-announce (1.93.0) ────────────────────────────────
+   The line that says "Saved." after a save. A screen reader only reads a live
+   region that was already in the accessibility tree before its words changed.
+   Written with `hidden` until the first message, and shown in the same step
+   the text arrives, the region did not exist a moment earlier — VoiceOver and
+   NVDA often said nothing (found in Vespera's admin). Left visible and empty,
+   a .gk-message drew an empty box.
+
+   So the region is always there and never hidden; empty, it has no box. Not
+   display:none or visibility:hidden, either of which takes it out of the
+   accessibility tree again — the clip of .gk-sr-only, which keeps it in and
+   takes it out of the layout: no border, no padding, no gap in a flex column.
+   Words in it bring the box back, whatever it is (.gk-message and its tones).
+   GK.announce() writes the words so that they are read, a repeat included. */
+.gk-announce:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ── Phones: the type in a field, last of all ──────────────────────────────
    Safari on iOS zooms the whole page into any field with a font under 16px the
    moment it is tapped, and leaves it zoomed. Only the type grows.

@@ -265,7 +265,11 @@ ${[["warning", "warning"], ["error", "danger"], ["success", "success"], ["info",
 <tr class="gk-table-more"><td colspan="2"><button type="button" class="gk-table-more-toggle" id="sammel" aria-expanded="false"><span class="gk-table-more-name">2 Konten</span><span class="gk-cell-sub">Satz</span></button></td></tr>
 <tr class="gk-table-more"><td colspan="2"><button type="button" class="gk-table-more-toggle" id="sammel-zeiger" aria-expanded="false"><span class="gk-table-more-name">2 Konten</span><span class="gk-cell-sub">Satz</span></button></td></tr>
 </tbody></table></div>
-<button type="button" class="gk-btn gk-btn-primary" id="knopf-primaer">Speichern</button>`;
+<button type="button" class="gk-btn gk-btn-primary" id="knopf-primaer">Speichern</button>
+<div class="gk-card" id="marken-karte"><span class="gk-label gk-label-green" id="marke-neu-karte">New in 1.93</span>
+<span class="gk-label gk-label-blue" id="marke-geaendert-karte">Changed in 1.92</span><span class="gk-text-muted" id="seit-karte">since 1.0</span></div>
+<span class="gk-label gk-label-green" id="marke-neu-seite">New in 1.93</span>
+<span class="gk-label gk-label-blue" id="marke-geaendert-seite">Changed in 1.92</span><span class="gk-text-muted" id="seit-seite">since 1.0</span>`;
 
 /*
  * Der Buchstabe einer gewählten Antwort ist --gk-on-primary auf --gk-primary —
@@ -316,6 +320,14 @@ const TEXTPROBEN = [
      Satz dunkel bei 4,36:1 — gefunden an Vespera, Thema forest. */
   ["Sammelzeile · Satz", "sammel", ".gk-cell-sub"],
   ["Sammelzeile unter dem Zeiger · Satz", "sammel-zeiger", ".gk-cell-sub"],
+  /* 1.93.0: die Marken der Demo („New in 1.92“, „Changed in 1.92“) sind GridKits
+     eigene Etiketten grün und blau, daneben „since 1.0“ in gedämpfter Schrift —
+     auf der Seite (--gk-surface-container) und in einer Karte (--gk-surface). */
+  ...["karte", "seite"].flatMap((wo) => [
+    [`Marke Neu · ${wo}`, `marke-neu-${wo}`, null],
+    [`Marke Geändert · ${wo}`, `marke-geaendert-${wo}`, null],
+    [`Seit · ${wo}`, `seit-${wo}`, null],
+  ]),
 ];
 
 // Machado, Oliveira & Fernandes (2009), Stärke 1,0, auf linearem RGB.
@@ -417,6 +429,27 @@ async function bausteineMessen(browser, mitThemes) {
   } finally {
     fs.rmSync(bDir, { recursive: true, force: true });
   }
+}
+
+/**
+ * Die Marken der Demo (1.93.0) ausdrücklich: je Probe der schwächste Wert über
+ * alle Themen, getrennt hell und dunkel. Beanstandet wird wie jeder Text oben
+ * (unter 4,5:1); hier stehen die Zahlen, die man nennen kann.
+ */
+function markenBerichten(wie, zeilen) {
+  console.log(`\nMarken 1.93.0, ${wie} (schwächster Wert über alle Themen):`);
+  const namen = [...new Set(zeilen.flatMap((z) => z.texte.map((t) => t.name)))].filter((n) => /^(Marke|Seit)/.test(n));
+  let schlecht = 0;
+  for (const name of namen) {
+    const teile = ["light", "dark", "dark-klasse"].map((modus) => {
+      const werte = zeilen.filter((z) => z.modus === modus).map((z) => ({ k: z.texte.find((t) => t.name === name).kontrast, thema: z.thema }));
+      const min = werte.reduce((a, b) => (a.k <= b.k ? a : b));
+      if (min.k < 4.5) schlecht++;
+      return `${modus} ${min.k.toFixed(2)}:1 (${min.thema})`;
+    });
+    console.log(`${teile.every((t) => parseFloat(t.split(" ")[1]) >= 4.5) ? "ok  " : "FAIL"}  ${name.padEnd(22)} ${teile.join(" · ")}`);
+  }
+  return schlecht;
 }
 
 /** Die Befunde des dritten Abschnitts als Zeilen; zählt die Beanstandungen. */
@@ -596,6 +629,10 @@ function bausteineBerichten(wie, zeilen) {
 
   schlecht += bausteineBerichten("mit themes.css", bausteineMitThemes);
   schlecht += bausteineBerichten("ohne themes.css", bausteineOhneThemes);
+  // Schon oben mitgezählt (jeder Text unter 4,5:1 ist dort eine Beanstandung);
+  // hier nur die Zahlen der Marken, darum ohne Rückgabe addiert.
+  markenBerichten("mit themes.css", bausteineMitThemes);
+  markenBerichten("ohne themes.css", bausteineOhneThemes);
 
   process.exit(schlecht ? 1 : 0);
 })().catch((e) => { console.error("Abbruch:", e.message.split("\n")[0]); process.exit(2); });

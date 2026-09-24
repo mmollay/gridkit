@@ -1,4 +1,4 @@
-# GridKit 1.92.0 — components
+# GridKit 1.93.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -1066,6 +1066,36 @@ loses to any display an author rule sets. An inline display is left alone: a
 script that shows a block with `el.style.display = "block"` and leaves `hidden`
 on it still shows it, as before 1.92.0. Hide and show with the attribute.
 
+### Announcement (`.gk-announce`, since 1.93.0)
+
+The line that says "Saved." after a save — where the person is working, not in
+a corner like a toast — and a screen reader reads it. A live region is heard
+only when it was in the accessibility tree BEFORE its words changed, so:
+
+- Write it on the page from the start, **empty and never `hidden`**. Empty, it
+  has no box (the `.gk-sr-only` clip, which keeps it in the accessibility tree —
+  not `display: none`); words bring the box back.
+- Change **only its words**, with `GK.announce()`. Never show it and fill it in
+  the same step — that is the pattern that stays silent.
+
+```html
+<div class="gk-message gk-message-compact gk-announce" id="saved" role="status" aria-live="polite" aria-atomic="true"></div>
+```
+
+```javascript
+GK.announce('saved', 'Saved.', 'success');                 // element, id or selector
+GK.announce('saved', 'Could not save — try again.', 'error');
+GK.announce('saved', '');                                   // empty again, no box
+```
+
+The tone (`info`, `success`, `warning`, `error`; default `info`) sets the
+`.gk-message-*` colour. The same words twice are read twice: the region is
+emptied and the words come back 150 ms later. Words are text, never HTML.
+`GK.init()` gives every `.gk-announce` its `role="status"`, `aria-live` and
+`aria-atomic` if the markup left them out, and takes `hidden` off an empty one.
+A region with `role="alert"` is read at once (assertive); keep that for errors
+that must interrupt. `GK.melde()` is the same function.
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -1400,6 +1430,12 @@ at its source, bump `VERSION`, note it in `CHANGELOG.md`, then update the copy
 your project uses. Local edits in a consuming project are silently lost on the
 next update and split the codebase in two.
 
+A new class goes into `css/blocks.json` with the version that brings it, under
+the block it belongs to — the index the demo reads its "since" and "New in"
+marks from. The suite fails on a class that is in a stylesheet and not there,
+and on a VERSION the changelog has no heading for. To ask whether your copy has
+a block: `css/blocks.json` names the release that first shipped each class.
+
 ## Available Components
 
 | Component | Class | Purpose |
@@ -1429,5 +1465,6 @@ next update and split the codebase in two.
 | Accordion (JS) | `.gk-accordion` | Collapsible sections, optional single-open (`data-gk-single`) |
 | Tooltips (JS/CSS) | `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` | Hint popups — plain, CSS-only, or with HTML in them |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
+| Announcement (JS/CSS) | `.gk-announce` / `GK.announce` | The line that says "Saved." where the person works, read by a screen reader; empty it draws no box (since 1.93.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |

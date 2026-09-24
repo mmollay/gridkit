@@ -2182,6 +2182,84 @@
     },
   };
 
+  /*
+   * Announcements (since 1.93.0) — the line that says "Saved." where the
+   * person is working, read out by a screen reader.
+   *
+   * A live region is only heard when it was in the accessibility tree before
+   * its words changed. The usual way to write a status line — `hidden` until
+   * the first message, then text and visibility in one step — creates the
+   * region in the same moment it speaks, and VoiceOver and NVDA often stay
+   * silent. So a .gk-announce region is never hidden: empty, the stylesheet
+   * clips it to nothing (no box), and this only changes the words in it.
+   *
+   * The same words twice are no change at all, and nothing is read. For a
+   * repeat — a second save, the same error again — the region is emptied and
+   * the words come back a moment later: two changes, and the second is heard.
+   *
+   *   GK.announce(el, "Saved.", "success");   // el: element, id or selector
+   *   GK.announce(el, "");                     // empty again, no box
+   *
+   * The tone (info, success, warning, error; default info) sets the
+   * .gk-message-* colour when the region is a .gk-message. Text is text —
+   * set as textContent, never parsed as HTML. GK.melde is the same function.
+   */
+  var _gkTones = ["info", "success", "warning", "error"];
+  var _gkRepeatDelay = 150;
+
+  function _gkAnnounceRegion(el, unhide) {
+    el.classList.add("gk-announce");
+    if (!el.hasAttribute("role")) el.setAttribute("role", "status");
+    if (!el.hasAttribute("aria-live")) el.setAttribute("aria-live", el.getAttribute("role") === "alert" ? "assertive" : "polite");
+    if (!el.hasAttribute("aria-atomic")) el.setAttribute("aria-atomic", "true");
+    // A hidden region is no region. Taken off here, the next message is heard
+    // — this one may not be; write the region without `hidden`.
+    if (unhide && el.hidden) el.hidden = false;
+  }
+
+  GK.announce = function (target, text, tone) {
+    var el = target;
+    if (typeof target === "string") {
+      el = document.getElementById(target.replace(/^#/, ""));
+      if (!el) {
+        try { el = document.querySelector(target); } catch (e) { el = null; }
+      }
+    }
+    if (!el || !el.classList) return null;
+    _gkAnnounceRegion(el, true);
+    clearTimeout(el._gkAnnounceTimer);
+
+    var words = text == null ? "" : String(text);
+    var t = _gkTones.indexOf(tone) >= 0 ? tone : "info";
+    if (el.classList.contains("gk-message")) {
+      _gkTones.forEach(function (n) {
+        el.classList.toggle("gk-message-" + n, words !== "" && n === t);
+      });
+    }
+    if (words === "") {
+      el.textContent = "";
+      return el;
+    }
+    if (el.textContent === words) {
+      el.textContent = "";
+      el._gkAnnounceTimer = setTimeout(function () {
+        el.textContent = words;
+      }, _gkRepeatDelay);
+    } else {
+      el.textContent = words;
+    }
+    return el;
+  };
+  GK.melde = GK.announce;
+
+  function _gkAnnounceInit(root) {
+    (root || document).querySelectorAll(".gk-announce").forEach(function (el) {
+      // An empty region hidden in the markup is shown now, before any message;
+      // one with words in it the page hid on purpose stays as it is.
+      _gkAnnounceRegion(el, el.textContent === "");
+    });
+  }
+
   // Sidebar
   GK.sidebar = {
     el: null,
@@ -3809,6 +3887,7 @@
     if (GK.rowPager) GK.rowPager.init(root);
     GK.modal.upgradeStatic(root);
     if (GK.sheet) GK.sheet.upgrade(root);
+    _gkAnnounceInit(root);
   };
 
   var _origInit = GK.init;

@@ -390,3 +390,29 @@ roles only; light and dark follow from them.
 - `.gk-sheet-close` is `--gk-target-min` wide and tall, docked and on a phone.
 - A `'choice'` with `'multiple'` cannot be required in the browser: GridKit warns
   and draws no star.
+
+## Announcement (`.gk-announce`, 1.93.0)
+
+A live region that exists before it speaks. Screen readers read a change inside
+a live region that is already in the accessibility tree; one that is shown and
+filled in the same step is often not read at all.
+
+| Part | Contract |
+|---|---|
+| Markup | `<div class="gk-announce" role="status" aria-live="polite" aria-atomic="true"></div>` — usually also `.gk-message` (and `-compact`); on the page from the start, empty, never `hidden` |
+| Empty | `.gk-announce:empty` is clipped like `.gk-sr-only` (position absolute, 1px, `clip-path: inset(50%)`, no border or padding) — in the accessibility tree, no box, no gap. Never `display: none` or `visibility: hidden` |
+| Script | `GK.announce(target, text, tone)` — target an element, id or selector; text set as `textContent`; tone `info`/`success`/`warning`/`error` (default `info`) toggles `.gk-message-*` on a `.gk-message`; `''` empties it; the same text again empties the region and writes the text back after 150 ms, so it is read again; returns the element or `null`. `GK.melde` is the same function |
+| Repair | `GK.announce()` and `GK.init()` add a missing `role="status"`, `aria-live` (`assertive` for `role="alert"`) and `aria-atomic="true"`, add the class, and take `hidden` off (on init only from an empty region) |
+
+## Block index (`css/blocks.json`, 1.93.0)
+
+`{"about": "…", "blocks": {"<key>": {"name": "…", "changed"?: "x.y.z", "classes": {"gk-…": "x.y.z"}}}}`
+
+- Every class in `css/gridkit.css` and `css/themes.css` (comments stripped) is in
+  exactly one block, and every class listed is in a stylesheet.
+- A class's version is the release that first shipped it; a block's "since" is
+  its oldest class, its effective "changed" the newer of `changed` and its newest
+  class. No version is newer than `VERSION`.
+- The demo marks a block "New in x.y" / "Changed in x.y" when that minor is one
+  of the two newest in `CHANGELOG.md` (`.gk-label-green` / `.gk-label-blue`), and
+  shows those two minors' entry headings at the top — read from the changelog.

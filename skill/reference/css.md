@@ -1,4 +1,4 @@
-# GridKit 1.92.0 — CSS
+# GridKit 1.93.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -61,6 +61,7 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-swatch` `gk-swatch-1` … `gk-swatch-5`, `gk-series-fill-1` … `-5`, `gk-series-stroke-1` … `-5` | Chart colours from `--gk-series-1` … `-5`: legend mark, SVG fill, SVG stroke |
 | `gk-btn-touch` | A button at least `--gk-target-min` (44px) in both directions, type unchanged |
 | `gk-message-actions` | Actions on the right of a `.gk-message` |
+| `gk-announce` | A live region that is always on the page (since 1.93.0): empty it has no box but stays in the accessibility tree; `GK.announce()` writes its words |
 | `gk-show-mobile` | Shown at 768px and below only — the counterpart of `gk-hide-mobile` |
 | `gk-choice` `gk-choice-mark` `gk-choice-text` `gk-choice-title` `gk-choice-hint` | A radio or checkbox as an answer tile with a letter (Form `'choice'`) |
 

@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.92.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.93.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -19,6 +19,12 @@ You are building or maintaining a web application using **GridKit**, a lightweig
 at its source, bump `VERSION`, note it in `CHANGELOG.md`, then update the copy
 your project uses. Local edits in a consuming project are silently lost on the
 next update and split the codebase in two.
+
+A new class goes into `css/blocks.json` with the version that brings it, under
+the block it belongs to — the index the demo reads its "since" and "New in"
+marks from. The suite fails on a class that is in a stylesheet and not there,
+and on a VERSION the changelog has no heading for. To ask whether your copy has
+a block: `css/blocks.json` names the release that first shipped each class.
 
 ## Available Components
 
@@ -49,6 +55,7 @@ next update and split the codebase in two.
 | Accordion (JS) | `.gk-accordion` | Collapsible sections, optional single-open (`data-gk-single`) |
 | Tooltips (JS/CSS) | `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` | Hint popups — plain, CSS-only, or with HTML in them |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
+| Announcement (JS/CSS) | `.gk-announce` / `GK.announce` | The line that says "Saved." where the person works, read by a screen reader; empty it draws no box (since 1.93.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
 
@@ -1362,6 +1369,36 @@ loses to any display an author rule sets. An inline display is left alone: a
 script that shows a block with `el.style.display = "block"` and leaves `hidden`
 on it still shows it, as before 1.92.0. Hide and show with the attribute.
 
+### Announcement (`.gk-announce`, since 1.93.0)
+
+The line that says "Saved." after a save — where the person is working, not in
+a corner like a toast — and a screen reader reads it. A live region is heard
+only when it was in the accessibility tree BEFORE its words changed, so:
+
+- Write it on the page from the start, **empty and never `hidden`**. Empty, it
+  has no box (the `.gk-sr-only` clip, which keeps it in the accessibility tree —
+  not `display: none`); words bring the box back.
+- Change **only its words**, with `GK.announce()`. Never show it and fill it in
+  the same step — that is the pattern that stays silent.
+
+```html
+<div class="gk-message gk-message-compact gk-announce" id="saved" role="status" aria-live="polite" aria-atomic="true"></div>
+```
+
+```javascript
+GK.announce('saved', 'Saved.', 'success');                 // element, id or selector
+GK.announce('saved', 'Could not save — try again.', 'error');
+GK.announce('saved', '');                                   // empty again, no box
+```
+
+The tone (`info`, `success`, `warning`, `error`; default `info`) sets the
+`.gk-message-*` colour. The same words twice are read twice: the region is
+emptied and the words come back 150 ms later. Words are text, never HTML.
+`GK.init()` gives every `.gk-announce` its `role="status"`, `aria-live` and
+`aria-atomic` if the markup left them out, and takes `hidden` off an empty one.
+A region with `role="alert"` is read at once (assertive); keep that for errors
+that must interrupt. `GK.melde()` is the same function.
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -1556,6 +1593,10 @@ GK.sheet.open('user-sheet', {
   title: 'Jana Novak',        // optional: replaces the text of .gk-sheet-title
 });
 GK.sheet.close();                // the open one
+
+// Announcement (since 1.93.0) — markup on the page, see "Announcement".
+GK.announce('saved', 'Saved.', 'success');   // tone: info, success, warning, error
+GK.announce('saved', '');                    // empty: no box, still a live region
 document.addEventListener('gk:sheetopen', e => fill(e.target, e.detail.params));  // detail: { opener, params }
 document.addEventListener('gk:sheetclose', e => { /* e.detail.opener */ });
 ```
@@ -1881,6 +1922,7 @@ Features:
 | `gk-swatch` `gk-swatch-1` … `gk-swatch-5`, `gk-series-fill-1` … `-5`, `gk-series-stroke-1` … `-5` | Chart colours from `--gk-series-1` … `-5`: legend mark, SVG fill, SVG stroke |
 | `gk-btn-touch` | A button at least `--gk-target-min` (44px) in both directions, type unchanged |
 | `gk-message-actions` | Actions on the right of a `.gk-message` |
+| `gk-announce` | A live region that is always on the page (since 1.93.0): empty it has no box but stays in the accessibility tree; `GK.announce()` writes its words |
 | `gk-show-mobile` | Shown at 768px and below only — the counterpart of `gk-hide-mobile` |
 | `gk-choice` `gk-choice-mark` `gk-choice-text` `gk-choice-title` `gk-choice-hint` | A radio or checkbox as an answer tile with a letter (Form `'choice'`) |
 

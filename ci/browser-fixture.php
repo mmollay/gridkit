@@ -148,6 +148,25 @@ $head = '<head><meta charset="utf-8">'
    . '<style>' . file_get_contents($root . '/css/gridkit.css') . '</style></head>';
 $script = '<script>' . file_get_contents($root . '/js/gridkit.js') . '</script>';
 
+// An announcement after a save (1.93.0): the region as the skill writes it, in a
+// flex column with a gap, between two lines — an empty region must add neither a
+// box nor a gap. Beside it, the two ways a page gets it wrong: one written
+// `hidden`, and one with no role at all. ci/browser.js reads the accessibility
+// tree over the browser's protocol.
+if (isset($argv[1]) && $argv[1] === '--announce') {
+    echo '<!DOCTYPE html><html lang="en">' . $head . '<body class="gk-root">'
+       . '<div class="gk-flex gk-flex-col gk-gap-xl" id="column">'
+       . '<p id="above">Above</p>'
+       . '<div class="gk-message gk-message-compact gk-announce" id="region" role="status" aria-live="polite" aria-atomic="true"></div>'
+       . '<p id="below">Below</p>'
+       . '</div>'
+       . '<div class="gk-message gk-announce" id="hidden-region" role="status" aria-live="polite" hidden></div>'
+       . '<div class="gk-message gk-announce" id="bare-region"></div>'
+       . '<div class="gk-message" id="plain-message"></div>'
+       . $script . '</body></html>';
+    exit;
+}
+
 // An application page: GridKit's own fixed header with its user menu, the list
 // below it and the sheet the list opens. On a wide screen the sheet docks
 // beside the list — and the header's menu, which opens over the sheet's top

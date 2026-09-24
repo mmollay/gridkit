@@ -7,6 +7,102 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.93.0] - 2026-09-24
+
+Two requests from the people who use GridKit most. Martin asked to see what has
+changed without reading the whole changelog: marks in the demo, the way
+Fomantic UI marks what is new, and the news of each version in one place. And
+Vespera's admin said "Saved." to the eye only: its status line was written
+`hidden` until the first message and shown in the same step its text arrived,
+so the live region came into being at the moment it spoke — VoiceOver and NVDA
+often read nothing. Written visible and empty instead, a `.gk-message` drew an
+empty box. Both are fixed at the source, once.
+
+### Added — an announcement that is heard: `.gk-announce`, `GK.announce()`
+
+```html
+<div class="gk-message gk-message-compact gk-announce" id="saved" role="status" aria-live="polite" aria-atomic="true"></div>
+```
+
+```js
+GK.announce('saved', 'Saved.', 'success');   // tone: info, success, warning, error
+GK.announce('saved', '');                    // empty again
+```
+
+The region is on the page from the start and never hidden, so a screen reader
+knows it before anything is said in it. Empty, it has no box — not
+`display: none` or `visibility: hidden`, which would take it out of the
+accessibility tree again, but the clip of `.gk-sr-only`: no border, no padding
+and no gap in a flex column. Words bring the box back. `GK.announce()` changes
+only the words (as text, never HTML) and the tone of a `.gk-message`; the same
+words twice are no change and nothing is read, so a repeat empties the region
+and writes the words back 150 ms later. It takes an element, an id or a
+selector, adds `role="status"`, `aria-live` and `aria-atomic` when the markup
+forgot them, and takes `hidden` off — the next message is heard, this one may
+not be. `GK.init()` does the same for every `.gk-announce` on the page before
+anything is announced. `GK.melde()` is the same function under the name
+Vespera's pages already call.
+
+### Added — what is new, and since when: `css/blocks.json`
+
+Every `gk-` class of both stylesheets, in the block the demo shows it as, with
+the release that first shipped it — 679 classes in 55 blocks, read once out of
+the git history: the first commit whose stylesheet has the class, counted from
+the last time it appeared, with the version of that commit (the tag before
+1.0.0, when VERSION was still renumbered). A block's "since" is its oldest
+class. "changed" is the last release that changed a block without adding a
+class to it, kept by hand from 1.92.0 on; a new class marks its block changed
+by itself.
+
+A JSON file beside the stylesheet, not a PHP array or comments in the CSS:
+PHP, the demo, a test, an agent and a consuming project all read it without
+running anything; a comment beside a rule would be one of many rules a class
+spreads over, and a class list inside PHP could not be read by anything else.
+It ships with the package, because a project with GridKit in `vendor/` is who
+asks "does my copy have this block?".
+
+### Added — marks in the demo, and the news at the top
+
+Each block's heading in the demo says "since 1.0", and a block that is new or
+changed in the last two minors carries a mark: "New in 1.92" in the green
+label, "Changed in 1.92" in the blue one — GridKit's own labels, no new colour
+(4.5:1 or better in both modes and every theme, measured in `ci/farben.js`). At
+the top of the demo a box shows the last two minors: the blocks each brought or
+changed, from the index, and the headings of their changelog entries, read out
+of this file — the demo writes no second text. A demo in German says "Neu in"
+and "Geändert in". The admin blocks of 1.92 each have their own heading now, so
+each carries its own mark, and the hand-written "v1.10" chip beside TableHeader
+is gone.
+
+### Tests
+
+- `tests/blocks.test.php` (new, 11 tests, 1876 assertions): the index against
+  both stylesheets in both directions (a class in neither, a class in two
+  blocks), its versions against VERSION and the changelog, a class new in this
+  version named in this entry, VERSION's heading as the first the demo reads,
+  the marks (own labels, German too) and the news box as the demo renders them,
+  every new block marked in the demo, the announcement's markup, rule and
+  script. Confirmed by breaking what each covers — twelve breaks, twelve reds:
+  a new class and a missing one, a stale one, VERSION 1.94.0, a class dated
+  after VERSION, `display: none` on the empty region, no repeat, the demo
+  region written `hidden`, the new block unmarked, a mark in a colour of its
+  own, a heading left out of the box, the new class missing from this entry.
+- `ci/browser.js`: 8 cases on a new fixture (`browser-fixture.php --announce`),
+  124 in all. The accessibility tree over the browser's protocol: empty, the
+  region is a status in the tree and adds neither a box nor a second gap to a
+  flex column; init repairs a hidden and a bare region; words bring the box and
+  the tone and the tree reads them; a repeat is emptied and written back; words
+  are text; emptied, box and tone go and the region stays. The fault itself is
+  a case too: an empty `.gk-message` without the class draws a box, a hidden
+  one is out of the tree. Five breaks (`display: none`, no clip, no repeat, no
+  init, `innerHTML`) turned the matching cases red.
+- `ci/farben.js`: the marks and "since" on a card and on the page, every theme,
+  three spellings — weakest: "New" 8.57:1 light, 6.78:1 dark; "Changed" 7.15 /
+  6.14; "since" 6.92 / 5.62 (`.gk-dark`). The same on the demo page itself, over
+  every mark it renders: 8.57 / 6.78, 7.15 / 6.14, 6.92 / 5.71.
+- `php tests/run.php`: 5539 assertions.
+
+---
 ## [1.92.0] - 2026-09-24
 
 Vespera's admin — users, usage, modules and the situation page — is built with

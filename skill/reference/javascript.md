@@ -1,4 +1,4 @@
-# GridKit 1.92.0 — JavaScript
+# GridKit 1.93.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -54,6 +54,10 @@ GK.sheet.open('user-sheet', {
   title: 'Jana Novak',        // optional: replaces the text of .gk-sheet-title
 });
 GK.sheet.close();                // the open one
+
+// Announcement (since 1.93.0) — markup on the page, see "Announcement".
+GK.announce('saved', 'Saved.', 'success');   // tone: info, success, warning, error
+GK.announce('saved', '');                    // empty: no box, still a live region
 document.addEventListener('gk:sheetopen', e => fill(e.target, e.detail.params));  // detail: { opener, params }
 document.addEventListener('gk:sheetclose', e => { /* e.detail.opener */ });
 ```

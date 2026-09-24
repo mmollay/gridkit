@@ -64,6 +64,7 @@ $demoRows = static function (array $rows) use ($lang): array {
  * was the wrong thing to ship. Generated here instead: no files, no requests.
  */
 require_once __DIR__ . '/_showcase.php';
+require_once __DIR__ . '/_whatsnew.php';
 
 function ph(int $w, int $h, int $seed, string $initials = ''): string
 {
@@ -272,6 +273,24 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-showcase-copy:hover { opacity: 1; color: var(--gk-primary); border-color: var(--gk-primary); }
         .demo-showcase-copy:focus-visible { opacity: 1; outline: 2px solid var(--gk-primary); outline-offset: 2px; }
         .demo-showcase-copy[data-ok] { opacity: 1; color: var(--gk-success); border-color: var(--gk-success); }
+        /* ── What is new, and since when (1.93.0) ─────────────────────────
+           The words come from CHANGELOG.md, the marks from css/blocks.json;
+           demo/_whatsnew.php reads both. Labels are GridKit's own green and
+           blue — no colour of the demo's. */
+        .demo-since { display:inline-flex; flex-wrap:wrap; align-items:center; gap:6px; margin-left:8px; font-size:var(--gk-text-label, 13px); font-weight:400; vertical-align:middle; }
+        .demo-news-wrap { max-width:1100px; margin:24px auto 0; padding:0 24px; }
+        .demo-news { margin:0; }
+        .demo-news-summary { cursor:pointer; font-size:17px; font-weight:600; }
+        .demo-news-summary:focus-visible { outline:2px solid var(--gk-primary); outline-offset:2px; }
+        .demo-news a { color:var(--gk-primary-text, var(--gk-primary)); text-decoration:underline; text-underline-offset:2px; }
+        .demo-news-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap:8px 32px; margin-top:12px; }
+        .demo-news-version { margin:8px 0; font-size:15px; }
+        .demo-news-entry { margin:12px 0 4px; font-size:14px; font-weight:600; }
+        .demo-news-blocks { margin:0 0 8px; font-size:14px; line-height:1.9; }
+        .demo-news-list { margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; font-size:14px; line-height:1.5; }
+        .demo-news-list li { padding-left:14px; text-indent:-14px; }
+        .demo-news-list li::before { content:"\00b7\00a0\00a0"; }
+        .demo-announce-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
         .demo-pair { display:flex; flex-direction:column; gap:16px; margin-bottom:24px; }
         .demo-pair-left { display:contents; }
         .demo-stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:24px; }
@@ -340,9 +359,11 @@ echo $demoHeader->title($headerTitle, true)
     ->render();
 ?>
 
+<div class="demo-news-wrap"><?= whatsNew() ?></div>
+
 <!-- ===== TABLE ===== -->
 <div class="demo-section active" data-section="table">
-    <h2>Table</h2>
+    <h2>Table <?= since('table') ?></h2>
 
     <h3 style="margin: 32px 0 16px;">Complete table with all features</h3>
         <?php
@@ -438,7 +459,8 @@ echo $demoHeader->title($headerTitle, true)
             ->render();
         ?>
 
-    <h3 class="demo-h3">Rows that open a side sheet</h3>
+    <h3 class="demo-h3">Rows that open a side sheet <?= since('row-link') ?><?= since('sheet') ?></h3>
+    <p class="demo-intro">List table <?= since('table-list') ?> · column priority <?= since('col-priority') ?> · who cell <?= since('cell-who') ?></p>
     <p class="demo-intro">Read in the row, change in the sheet: a click anywhere on a row opens its record beside the list — full screen on a phone. One name cell with two lines, groups instead of a status label per row, and colour only for what needs acting on. The six rules behind it are in the agent skill. <code>size('list')</code> sets the row they describe, and <code>'priority'</code> lets columns give way by the list's own width — open the sheet or narrow the window and watch "Last seen" go first.</p>
         <?php
         $people = require __DIR__ . '/form/_people.php';
@@ -477,7 +499,7 @@ echo $demoHeader->title($headerTitle, true)
         </div>
     </div>
 
-    <h3 class="demo-h3">One row standing for many</h3>
+    <h3 class="demo-h3">One row standing for many <?= since('table-more') ?></h3>
     <p class="demo-intro">What is rarely needed folds into one row. The toggle shows and hides the rows its <code>aria-controls</code> names; the chevron and <code>aria-expanded</code> carry the state, so the label never has to change.</p>
         <?php
         showcase(function () {
@@ -667,7 +689,7 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
 
 <!-- ===== FORM (merged: form + upload + color) ===== -->
 <div class="demo-section" data-section="form">
-    <h2>Form</h2>
+    <h2>Form <?= since('form') ?></h2>
 
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Grid Layout (16 columns)</h3>
@@ -695,7 +717,7 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
     </div>
 
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Checkbox &amp; Radio</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Checkbox &amp; Radio <?= since('checkbox-radio') ?></h3>
         <?php
         $form2 = new Form('checkbox_radio_form');
         $form2->field('agree', 'Accept terms', 'checkbox', ['checked' => true])
@@ -714,7 +736,7 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
     </div>
 
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Toggle &amp; Slider</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Toggle &amp; Slider <?= since('toggle-range') ?></h3>
         <?php
         $form3 = new Form('toggle_slider_form');
         $form3->field('dark_mode', 'Dark Mode', 'toggle', ['inline' => true])
@@ -726,7 +748,7 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
     </div>
 
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">File Upload</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">File Upload <?= since('upload') ?></h3>
         <?php
         $form4 = new Form('upload_form');
         $form4->field('document', 'Document', 'file', ['accept' => '.pdf,.doc,.docx', 'multiple' => true, 'maxSize' => '10MB'])
@@ -735,7 +757,7 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
     </div>
 
     <div class="demo-card">
-        <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">RichText Editor (CKEditor 5)</h3>
+        <h3 style="margin:0 0 8px; font-size:15px; color:var(--gk-on-surface, #374151);">RichText Editor (CKEditor 5) <?= since('richtext') ?></h3>
         <p class="demo-intro">Local vendor bundle (<code>assets/ckeditor5/</code>), no CDN. Initialization via <code>IntersectionObserver</code> — works in tabs and modals too.</p>
         <?php
         $form5 = new Form('richtext_form');
@@ -802,7 +824,7 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
     </div>
 
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Select extensions</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Select extensions <?= since('select') ?></h3>
         <p style="margin:0 0 12px; font-size:13px; color:var(--gk-on-surface-variant, #6b7280);"><strong>Searchable Select</strong> – Country selection with search field</p>
         <?php
         $formSearch = new Form('searchable_select_demo');
@@ -903,7 +925,7 @@ $form->row()
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>Color Picker</h3>
+    <h3>Color Picker <?= since('color') ?></h3>
     <p class="demo-intro">Styled native color input — color swatch on the left (clickable) + hex field on the right. Swatch and hex value sync automatically, validated as <code>#RRGGBB</code>.</p>
 
     <div class="demo-card">
@@ -1031,7 +1053,7 @@ $form->row()
 
 <!-- ===== CARDS (merged: cards + statcards) ===== -->
 <div class="demo-section" data-section="cards">
-    <h2>Cards</h2>
+    <h2>Cards <?= since('card') ?></h2>
     <p class="demo-intro">Card grid for structured content — responsive, with header, body and footer.</p>
 
     <h3 style="margin: 32px 0 16px;">Auto-Grid (responsive)</h3>
@@ -1069,7 +1091,7 @@ $form->row()
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>Stat Cards</h3>
+    <h3>Stat Cards <?= since('stat-cards') ?></h3>
     <div class="demo-pair">
     <div class="demo-card">
         <?php
@@ -1089,7 +1111,9 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
     </div>
 
     <h3 class="demo-h3">Admin blocks</h3>
-    <p class="demo-intro">The small parts an admin page used to style itself, as classes: compact figures for a sheet, a settings row, a read-only field, answer tiles, status dots, avatar colours, chart colours and actions in a message. Light and dark come from the roles.</p>
+    <p class="demo-intro">The small parts an admin page used to style itself, as classes. Light and dark come from the roles.</p>
+
+    <h3 class="demo-h3">Compact figures <?= since('stat-tiles') ?></h3>
         <?php
         showcase(function () {
             (new StatCards('demo-tiles'))
@@ -1098,7 +1122,12 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
                 ->card('open', 12, ['sub' => 'for 3 days'])
                 ->card('done', 40)
                 ->render();
+        });
+        ?>
 
+    <h3 class="demo-h3">Setting <?= since('setting') ?> and answer tiles <?= since('choice') ?></h3>
+        <?php
+        showcase(function () {
             (new Form('demo-settings'))
                 ->field('demo_login', 'Sign-in allowed', 'toggle', ['hint' => 'Takes effect at once, also on running sessions.', 'value' => 1])
                 ->field('demo_lock', 'Lock the account', 'toggle', ['hint' => 'Signs the person out everywhere.', 'danger' => true])
@@ -1109,15 +1138,25 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
                 ->render();
         });
         ?>
+
+    <h3 class="demo-h3">Read-only value <?= since('field-static') ?></h3>
+        <?php
+        showcase(function () {
+            echo <<<'HTML'
+            <div class="gk-field-static">
+              <span class="gk-field-static-label">Plan</span>
+              <span class="gk-field-static-value">Everything</span>
+              <span class="gk-field-hint">The superuser always has everything.</span>
+            </div>
+            HTML;
+        });
+        ?>
+
+    <h3 class="demo-h3">Status dots <?= since('dot') ?> and avatar colours <?= since('avatar') ?></h3>
         <?php
         showcase(function () {
             echo <<<'HTML'
             <div class="gk-flex gk-flex-col gk-gap-xl">
-              <div class="gk-field-static">
-                <span class="gk-field-static-label">Plan</span>
-                <span class="gk-field-static-value">Everything</span>
-                <span class="gk-field-hint">The superuser always has everything.</span>
-              </div>
               <div class="gk-flex gk-flex-wrap gk-gap-xl gk-items-center">
                 <span><span class="gk-dot gk-dot-success" aria-hidden="true"></span> today 08:12</span>
                 <span><span class="gk-dot gk-dot-warning" aria-hidden="true"></span> 3 days ago</span>
@@ -1131,17 +1170,33 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
                 <span class="gk-avatar gk-avatar-sm gk-avatar-initials gk-avatar-tone-4" aria-hidden="true">PG</span>
                 <span class="gk-avatar gk-avatar-sm gk-avatar-initials gk-avatar-tone-5" aria-hidden="true">MH</span>
               </div>
-              <div class="gk-flex gk-flex-wrap gk-gap-xl">
-                <span><span class="gk-swatch gk-swatch-1" aria-hidden="true"></span> Model A 41 %</span>
-                <span><span class="gk-swatch gk-swatch-2" aria-hidden="true"></span> Model B 27 %</span>
-                <span><span class="gk-swatch gk-swatch-3" aria-hidden="true"></span> Model C 18 %</span>
-                <span><span class="gk-swatch gk-swatch-4" aria-hidden="true"></span> Model D 9 %</span>
-                <span><span class="gk-swatch gk-swatch-5" aria-hidden="true"></span> Other 5 %</span>
-              </div>
-              <div class="gk-message gk-message-warning">
-                <span>2 runs are stuck.</span>
-                <div class="gk-message-actions"><button type="button" class="gk-btn gk-btn-outlined gk-btn-warning gk-btn-touch">Check now</button></div>
-              </div>
+            </div>
+            HTML;
+        });
+        ?>
+
+    <h3 class="demo-h3">Chart colours <?= since('series') ?></h3>
+        <?php
+        showcase(function () {
+            echo <<<'HTML'
+            <div class="gk-flex gk-flex-wrap gk-gap-xl">
+              <span><span class="gk-swatch gk-swatch-1" aria-hidden="true"></span> Model A 41 %</span>
+              <span><span class="gk-swatch gk-swatch-2" aria-hidden="true"></span> Model B 27 %</span>
+              <span><span class="gk-swatch gk-swatch-3" aria-hidden="true"></span> Model C 18 %</span>
+              <span><span class="gk-swatch gk-swatch-4" aria-hidden="true"></span> Model D 9 %</span>
+              <span><span class="gk-swatch gk-swatch-5" aria-hidden="true"></span> Other 5 %</span>
+            </div>
+            HTML;
+        });
+        ?>
+
+    <h3 class="demo-h3">Actions in a message <?= since('message') ?>, a finger-sized button <?= since('button') ?></h3>
+        <?php
+        showcase(function () {
+            echo <<<'HTML'
+            <div class="gk-message gk-message-warning">
+              <span>2 runs are stuck.</span>
+              <div class="gk-message-actions"><button type="button" class="gk-btn gk-btn-outlined gk-btn-warning gk-btn-touch">Check now</button></div>
             </div>
             HTML;
         });
@@ -1152,7 +1207,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 <div class="demo-section" data-section="layout">
     <h2>Layout</h2>
 
-    <h3 style="margin: 32px 0 16px;">Segment</h3>
+    <h3 style="margin: 32px 0 16px;">Segment <?= since('segment') ?></h3>
     <p class="demo-intro">Container for related content — single, stacked or with header.</p>
 
     <div class="gk-segment"><p>A simple segment visually groups related content.</p></div>
@@ -1178,7 +1233,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>Message</h3>
+    <h3>Message <?= since('message') ?></h3>
     <p class="demo-intro">Notices, warnings and status messages for users.</p>
 
     <div class="gk-message"><span class="material-icons" aria-hidden="true">info</span><div class="gk-message-content">A neutral message without a specific status.</div></div>
@@ -1204,7 +1259,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 <div class="demo-section" data-section="navigation">
     <h2>Navigation & Filter</h2>
 
-    <h3 style="margin: 32px 0 16px;">Accordion</h3>
+    <h3 style="margin: 32px 0 16px;">Accordion <?= since('accordion') ?></h3>
     <p class="demo-intro">Collapsible content areas &mdash; individually or as a group.</p>
 
     <div class="gk-accordion" data-gk-single>
@@ -1254,7 +1309,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3 style="margin: 32px 0 16px;">Avatar</h3>
+    <h3 style="margin: 32px 0 16px;">Avatar <?= since('avatar') ?></h3>
     <p class="demo-intro">Profile pictures with initials fallback, status dot and groups.</p>
 
     <div class="gk-segment">
@@ -1298,7 +1353,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3 style="margin: 32px 0 16px;">Gallery + Lightbox</h3>
+    <h3 style="margin: 32px 0 16px;">Gallery + Lightbox <?= since('gallery') ?><?= since('lightbox') ?></h3>
     <p class="demo-intro">Image grid with lazy loading, hover overlay and lightbox (arrow keys, Escape).</p>
 
     <div class="gk-gallery">
@@ -1346,7 +1401,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3 style="margin: 32px 0 16px;">Breadcrumb</h3>
+    <h3 style="margin: 32px 0 16px;">Breadcrumb <?= since('breadcrumb') ?></h3>
     <p class="demo-intro">Path navigation for orientation in nested areas.</p>
 
     <div class="gk-segment">
@@ -1372,7 +1427,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3 style="margin: 32px 0 16px;">Tabs</h3>
+    <h3 style="margin: 32px 0 16px;">Tabs <?= since('tabs') ?></h3>
     <p class="demo-intro">Tab navigation for switching between content areas.</p>
 
     <div class="gk-tabs">
@@ -1481,7 +1536,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3 style="margin: 32px 0 16px;">Pagination (standalone)</h3>
+    <h3 style="margin: 32px 0 16px;">Pagination (standalone) <?= since('pagination') ?></h3>
     <p class="demo-intro">Page navigation &mdash; automatically generated by Table, but can also be used standalone.</p>
     <div class="gk-segment">
         <nav class="gk-pagination">
@@ -1503,7 +1558,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3 style="margin: 32px 0 16px;">FilterChips</h3>
+    <h3 style="margin: 32px 0 16px;">FilterChips <?= since('chips') ?></h3>
     <div class="demo-pair">
     <div class="demo-card">
         <?php
@@ -1524,7 +1579,7 @@ $chips->chip('', 'All', ['count' => 152])
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>YearFilter</h3>
+    <h3>YearFilter <?= since('year-filter') ?></h3>
     <div class="demo-pair">
     <div class="demo-card">
         <?php
@@ -1538,7 +1593,7 @@ $years->range(2022, 2026)->render();</pre></div>
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>TableHeader <span style="font-size:11px;background:var(--gk-success-container);color:var(--gk-on-success-container);padding:2px 6px;border-radius:4px;vertical-align:middle;">v1.10</span></h3>
+    <h3>TableHeader <?= since('tableheader') ?></h3>
     <p class="demo-intro">One unified filter/search bar for all tables. Three fixed sections: Status row · Toolbar · Advanced (collapsible). Stops every page from looking different.</p>
     <div class="demo-pair">
     <div class="demo-card" style="padding:0;overflow:hidden;border-radius:8px;">
@@ -1581,7 +1636,7 @@ $years->range(2022, 2026)->render();</pre></div>
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>Formatter</h3>
+    <h3>Formatter <?= since('formatter') ?></h3>
     <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">Built-in formatting for table columns: currency, percent, date, boolean, label, email.</p>
@@ -1613,7 +1668,7 @@ $years->range(2022, 2026)->render();</pre></div>
 
 <!-- ===== SUCHE ===== -->
 <div class="demo-section" data-section="suche">
-    <h2>Search</h2>
+    <h2>Search <?= since('global-search') ?></h2>
     <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">System-wide quick search. GridKit provides the widget only —
@@ -1647,7 +1702,7 @@ $years->range(2022, 2026)->render();</pre></div>
 <div class="demo-section" data-section="feedback">
     <h2>Feedback & Dialogs</h2>
 
-    <h3 style="margin: 32px 0 16px;">Toast</h3>
+    <h3 style="margin: 32px 0 16px;">Toast <?= since('toast') ?></h3>
     <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">Toast notifications for success, error and info messages. Disappear after 3 seconds.</p>
@@ -1664,9 +1719,30 @@ GK.toast.warning('Warning: Limit reached!');
 GK.toast.info('3 new entries');</pre></div>
     </div>
 
+    <h3 class="demo-h3">Announcement after a save <?= since('announce') ?></h3>
+    <p class="demo-intro">A toast is for the corner; this line says "Saved." where the person is working, and a screen reader reads it. The region is on the page from the start and never hidden — empty, it draws no box. <code>GK.announce()</code> changes only its words, and the same words twice are read twice.</p>
+        <?php
+        showcase(function () {
+            echo <<<'HTML'
+            <div class="demo-announce-row">
+              <button type="button" class="gk-btn gk-btn-filled gk-btn-primary" data-demo-announce="Saved." data-tone="success">Save</button>
+              <button type="button" class="gk-btn gk-btn-outlined gk-btn-danger" data-demo-announce="Could not save — the connection dropped." data-tone="error">Fail</button>
+              <button type="button" class="gk-btn gk-btn-text gk-btn-neutral" data-demo-announce="">Clear</button>
+            </div>
+            <div class="gk-message gk-message-compact gk-announce" id="demo-announce" role="status" aria-live="polite" aria-atomic="true"></div>
+            <script>
+            document.addEventListener('click', function (e) {
+              var b = e.target.closest('[data-demo-announce]');
+              if (b) GK.announce('demo-announce', b.getAttribute('data-demo-announce'), b.getAttribute('data-tone'));
+            });
+            </script>
+            HTML;
+        });
+        ?>
+
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>Confirm</h3>
+    <h3>Confirm <?= since('confirm') ?></h3>
     <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">Confirm dialogs as clean modals. Promise-based, with danger mode for destructive actions.</p>
@@ -1686,7 +1762,7 @@ GK.confirm('Really delete?', {
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>Modal</h3>
+    <h3>Modal <?= since('modal') ?></h3>
     <div class="demo-pair">
         <div class="demo-pair-left">
             <div class="demo-card">
@@ -1727,7 +1803,7 @@ $table->button('edit', ['icon' => 'edit', 'modal' => 'edit_form'])
 <div class="demo-section" data-section="ui">
     <h2>UI Components</h2>
 
-    <h3 style="margin: 32px 0 16px;">Buttons</h3>
+    <h3 style="margin: 32px 0 16px;">Buttons <?= since('button') ?></h3>
 
     <div class="demo-card">
         <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">Variants</h3>
@@ -1862,7 +1938,7 @@ $table->button('edit', ['icon' => 'edit', 'modal' => 'edit_form'])
     </div>
 
     <div class="demo-card">
-        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">FAB (Floating Action Button)</h3>
+        <h3 style="margin:0 0 12px; font-size:15px; color:var(--gk-on-surface, #374151);">FAB (Floating Action Button) <?= since('fab') ?></h3>
         <div class="demo-btn-row" style="align-items:center; gap:16px">
             <?= \GridKit\Button::fab('add', ['size' => 'sm']) ?>
             <?= \GridKit\Button::fab('add') ?>
@@ -1888,7 +1964,7 @@ echo Button::fab('edit', ['extended' => true, 'label' => 'Edit']);</pre></div>
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>Labels</h3>
+    <h3>Labels <?= since('label') ?></h3>
     <div class="demo-card">
         <p class="demo-intro">Colored labels for status display &mdash; also usable standalone, not only in tables.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
@@ -1907,7 +1983,7 @@ echo Button::fab('edit', ['extended' => true, 'label' => 'Edit']);</pre></div>
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>Tooltip</h3>
+    <h3>Tooltip <?= since('tooltip') ?></h3>
     <div class="demo-card">
         <p class="demo-intro">Tooltips appear automatically on buttons with a <code>title</code> attribute. Hover over the buttons:</p>
         <div class="demo-btn-row">
@@ -1923,7 +1999,7 @@ Button::icon('edit', ['title' => 'Edit']);
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>Empty State</h3>
+    <h3>Empty State <?= since('empty') ?></h3>
     <div class="demo-card">
         <p class="demo-intro">Placeholder for empty tables or lists.</p>
         <div class="gk-table-wrap">
@@ -1939,7 +2015,7 @@ Button::icon('edit', ['title' => 'Edit']);
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>Header</h3>
+    <h3>Header <?= since('header') ?></h3>
     <div class="demo-card" style="padding:0; overflow:hidden;">
         <?php
         $header = new Header();
@@ -1979,7 +2055,7 @@ echo $header->title('Invoices')
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>Sidebar</h3>
+    <h3>Sidebar <?= since('sidebar') ?></h3>
     <div class="demo-pair">
     <div class="demo-card">
         <p class="demo-intro">Responsive sidebar navigation with groups, icons, badges and mobile toggle. Visible live on this page.</p>
@@ -1996,7 +2072,7 @@ GK.sidebar.toggle(); GK.sidebar.open(); GK.sidebar.close();</pre></div>
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3>Themes</h3>
+    <h3>Themes <?= since('theme') ?></h3>
     <div class="demo-card">
         <p class="demo-intro">M3-compliant theme system with 6 themes and Dark/Light Mode.</p>
         <h3 style="margin:16px 0 12px; font-size:15px;">Layout Mode</h3>
@@ -2222,7 +2298,7 @@ Auth::renderLogin([...]);    // Login page</div>
     </div>
 </div>
 
-<!-- ===== TOOLTIP ===== --><div class="demo-section" data-section="tooltip">    <h2>Tooltip</h2>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">CSS-only Tooltips</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Pure CSS tooltips via <code>data-gk-tooltip</code> attribute. No JavaScript needed.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="Tooltip on top" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Top (default)</span>            <span data-gk-tooltip="Tooltip on bottom" data-gk-tooltip-pos="bottom" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Bottom</span>            <span data-gk-tooltip="Tooltip on left" data-gk-tooltip-pos="left" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Left</span>            <span data-gk-tooltip="Tooltip on right" data-gk-tooltip-pos="right" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Right</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Multiline Tooltip</h3>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="This is a longer tooltip text that wraps to multiple lines for better readability" data-gk-tooltip-wrap style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Hover for multiline</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Rich Tooltip (HTML content)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Rich tooltips use <code>data-gk-tooltip-rich</code> pointing to a hidden element. Supports links, formatting, and stays open on hover.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip-rich="#richTip1" style="padding:8px 16px;background:var(--gk-primary);color:var(--gk-on-primary);border-radius:6px;cursor:pointer">Hover for details</span>            <div id="richTip1">                <strong>GridKit Tooltip</strong>                <p style="margin:8px 0 4px;font-size:12px;color:var(--gk-on-surface-variant)">Rich tooltips support full HTML content including links, images, and interactive elements.</p>                <a href="#" style="font-size:12px">Learn more &rarr;</a>            </div>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Tooltip on Buttons</h3>        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center;padding:40px 0">            <button class="gk-btn gk-btn-filled gk-btn-primary" data-gk-tooltip="Save your changes"><span class="material-icons" style="font-size:18px" aria-hidden="true">save</span> Save</button>            <button class="gk-btn gk-btn-outlined gk-btn-error" data-gk-tooltip="Delete this item" data-gk-tooltip-pos="bottom"><span class="material-icons" style="font-size:18px" aria-hidden="true">delete</span> Delete</button>            <button class="gk-btn gk-btn-tonal gk-btn-neutral" data-gk-tooltip="Print document" data-gk-tooltip-pos="right"><span class="material-icons" style="font-size:18px" aria-hidden="true">print</span></button>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Global title tooltip (GK.tip, since v1.23.0)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Any element with a <code>title</code> attribute gets a GridKit popup — no markup needed. Opt out with <code>data-gk-tip-off</code>.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span title="Upgraded automatically — just use title" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Element with title</span>            <span title="First line&#10;Second line (\n breaks)" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Multiline</span>            <span data-gk-tip-off><span title="This one is the browser's own" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Opt-out</span></span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 12px;font-size:15px">Usage</h3>        <pre style="background:var(--gk-surface-container);padding:16px;border-radius:8px;font-size:12px;line-height:1.6;overflow-x:auto">&lt;!-- Simple tooltip (CSS-only) --&gt;
+<!-- ===== TOOLTIP ===== --><div class="demo-section" data-section="tooltip">    <h2>Tooltip <?= since('tooltip') ?></h2>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">CSS-only Tooltips</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Pure CSS tooltips via <code>data-gk-tooltip</code> attribute. No JavaScript needed.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="Tooltip on top" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Top (default)</span>            <span data-gk-tooltip="Tooltip on bottom" data-gk-tooltip-pos="bottom" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Bottom</span>            <span data-gk-tooltip="Tooltip on left" data-gk-tooltip-pos="left" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Left</span>            <span data-gk-tooltip="Tooltip on right" data-gk-tooltip-pos="right" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Right</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Multiline Tooltip</h3>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip="This is a longer tooltip text that wraps to multiple lines for better readability" data-gk-tooltip-wrap style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Hover for multiline</span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Rich Tooltip (HTML content)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Rich tooltips use <code>data-gk-tooltip-rich</code> pointing to a hidden element. Supports links, formatting, and stays open on hover.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span data-gk-tooltip-rich="#richTip1" style="padding:8px 16px;background:var(--gk-primary);color:var(--gk-on-primary);border-radius:6px;cursor:pointer">Hover for details</span>            <div id="richTip1">                <strong>GridKit Tooltip</strong>                <p style="margin:8px 0 4px;font-size:12px;color:var(--gk-on-surface-variant)">Rich tooltips support full HTML content including links, images, and interactive elements.</p>                <a href="#" style="font-size:12px">Learn more &rarr;</a>            </div>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Tooltip on Buttons</h3>        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center;padding:40px 0">            <button class="gk-btn gk-btn-filled gk-btn-primary" data-gk-tooltip="Save your changes"><span class="material-icons" style="font-size:18px" aria-hidden="true">save</span> Save</button>            <button class="gk-btn gk-btn-outlined gk-btn-error" data-gk-tooltip="Delete this item" data-gk-tooltip-pos="bottom"><span class="material-icons" style="font-size:18px" aria-hidden="true">delete</span> Delete</button>            <button class="gk-btn gk-btn-tonal gk-btn-neutral" data-gk-tooltip="Print document" data-gk-tooltip-pos="right"><span class="material-icons" style="font-size:18px" aria-hidden="true">print</span></button>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 16px;font-size:15px">Global title tooltip (GK.tip, since v1.23.0)</h3>        <p style="margin:0 0 20px;font-size:13px;color:var(--gk-on-surface-variant)">Any element with a <code>title</code> attribute gets a GridKit popup — no markup needed. Opt out with <code>data-gk-tip-off</code>.</p>        <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;justify-content:center;padding:40px 0">            <span title="Upgraded automatically — just use title" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Element with title</span>            <span title="First line&#10;Second line (\n breaks)" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Multiline</span>            <span data-gk-tip-off><span title="This one is the browser's own" style="padding:8px 16px;background:var(--gk-surface-container);border-radius:6px;cursor:default">Opt-out</span></span>        </div>    </div>    <div class="demo-card">        <h3 style="margin:0 0 12px;font-size:15px">Usage</h3>        <pre style="background:var(--gk-surface-container);padding:16px;border-radius:8px;font-size:12px;line-height:1.6;overflow-x:auto">&lt;!-- Simple tooltip (CSS-only) --&gt;
 &lt;span data-gk-tooltip="Hello!"&gt;Hover me&lt;/span&gt;
 
 &lt;!-- Position: top (default), bottom, left, right --&gt;
@@ -2303,6 +2379,15 @@ Auth::renderLogin([...]);    // Login page</div>
     } else {
         showSection('table');
     }
+    // On a phone the news box starts folded: open, it stood a screen and a half
+    // above the first example. Its summary line still says what is new.
+    var news = document.querySelector('.demo-news');
+    if (news && window.matchMedia && window.matchMedia('(max-width: 768px)').matches) news.open = false;
+
+    // "All release notes" in the news box is a plain link, not a sidebar item.
+    window.addEventListener('hashchange', function () {
+        if (window.location.hash) showSection(window.location.hash.substring(1));
+    });
 })();
 
 document.querySelectorAll('.gk-upload-zone[data-gk-upload]').forEach(function(zone) {

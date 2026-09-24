@@ -1,0 +1,965 @@
+{
+    "about": "Every gk- class in css/gridkit.css and css/themes.css, in the block the demo shows it as. A class carries the release that first shipped it (read out of the git history once, in 1.93.0); a block's \"since\" is its oldest class. \"changed\" is the last release that changed a block without adding a class to it, kept by hand from 1.92.0 on; a new class marks its block as changed by itself. tests/blocks.test.php fails on a class that is in a stylesheet and not here, and on one that is here and in no stylesheet.",
+    "blocks": {
+        "table": {
+            "name": "Table",
+            "changed": "1.92.0",
+            "classes": {
+                "gk-actions": "0.9.0",
+                "gk-actions-col": "0.9.0",
+                "gk-actions-left": "0.9.0",
+                "gk-actions-right": "0.9.0",
+                "gk-cb-col": "1.0.0",
+                "gk-cell-link": "1.87.0",
+                "gk-cell-sub": "1.27.2",
+                "gk-row": "0.9.0",
+                "gk-row-selected": "1.0.0",
+                "gk-sort-btn": "1.56.0",
+                "gk-sort-icon": "1.11.0",
+                "gk-sort-link": "1.11.0",
+                "gk-sortable": "0.9.0",
+                "gk-sortable-mi": "1.19.0",
+                "gk-sorted-asc": "0.9.0",
+                "gk-sorted-desc": "0.9.0",
+                "gk-table": "0.9.0",
+                "gk-table-bordered": "0.9.0",
+                "gk-table-card": "1.22.11",
+                "gk-table-celled": "1.0.0",
+                "gk-table-compact": "1.0.0",
+                "gk-table-container": "0.9.0",
+                "gk-table-definition": "1.0.0",
+                "gk-table-fixed": "1.0.0",
+                "gk-table-flat": "0.9.0",
+                "gk-table-footer": "1.4.16",
+                "gk-table-group": "1.27.2",
+                "gk-table-group-n": "1.27.2",
+                "gk-table-group-name": "1.27.2",
+                "gk-table-inverted": "1.0.0",
+                "gk-table-lg": "0.9.0",
+                "gk-table-md": "0.9.0",
+                "gk-table-meta": "1.4.16",
+                "gk-table-minimal": "0.9.0",
+                "gk-table-mobile-card": "0.9.0",
+                "gk-table-mobile-scroll": "0.9.0",
+                "gk-table-nowrap": "0.9.0",
+                "gk-table-padded": "1.0.0",
+                "gk-table-scroll": "1.9.3",
+                "gk-table-section": "1.22.8",
+                "gk-table-selectable": "1.0.0",
+                "gk-table-single-line": "1.0.0",
+                "gk-table-sm": "0.9.0",
+                "gk-table-striped": "0.9.0",
+                "gk-table-title": "1.22.8",
+                "gk-table-title-actions": "1.22.8",
+                "gk-table-very-compact": "1.0.0",
+                "gk-table-wrap": "0.9.0",
+                "gk-table-xs": "1.0.0"
+            }
+        },
+        "table-list": {
+            "name": "List table",
+            "classes": {
+                "gk-table-list": "1.92.0"
+            }
+        },
+        "col-priority": {
+            "name": "Column priority",
+            "classes": {
+                "gk-col-p2": "1.92.0",
+                "gk-col-p3": "1.92.0",
+                "gk-col-p4": "1.92.0",
+                "gk-col-p5": "1.92.0"
+            }
+        },
+        "cell-who": {
+            "name": "Who cell",
+            "classes": {
+                "gk-cell-sub-wrap": "1.92.0",
+                "gk-cell-who": "1.92.0",
+                "gk-cell-who-text": "1.92.0"
+            }
+        },
+        "row-link": {
+            "name": "Row link",
+            "classes": {
+                "gk-row-link": "1.91.0",
+                "gk-row-target": "1.91.0"
+            }
+        },
+        "table-more": {
+            "name": "Summary row",
+            "changed": "1.92.0",
+            "classes": {
+                "gk-table-more": "1.91.0",
+                "gk-table-more-name": "1.91.0",
+                "gk-table-more-toggle": "1.91.0"
+            }
+        },
+        "sheet": {
+            "name": "Side sheet",
+            "changed": "1.92.0",
+            "classes": {
+                "gk-sheet": "1.91.0",
+                "gk-sheet-body": "1.91.0",
+                "gk-sheet-close": "1.91.0",
+                "gk-sheet-footer": "1.91.0",
+                "gk-sheet-header": "1.91.0",
+                "gk-sheet-meta": "1.92.0",
+                "gk-sheet-push": "1.91.0",
+                "gk-sheet-title": "1.91.0"
+            }
+        },
+        "tableheader": {
+            "name": "TableHeader",
+            "classes": {
+                "gk-tableheader": "1.10.0",
+                "gk-tableheader-advanced": "1.10.0",
+                "gk-tableheader-advanced-body": "1.10.0",
+                "gk-tableheader-spacer": "1.10.0",
+                "gk-tableheader-status": "1.10.0",
+                "gk-tableheader-toolbar": "1.10.0"
+            }
+        },
+        "toolbar": {
+            "name": "Toolbar",
+            "classes": {
+                "gk-bulk-bar": "1.0.0",
+                "gk-filter": "0.9.0",
+                "gk-search": "0.9.0",
+                "gk-toolbar": "0.9.0",
+                "gk-toolbar-row": "1.9.3",
+                "gk-toolbar-row-filters": "1.9.3",
+                "gk-toolbar-row-search": "1.9.3",
+                "gk-toolbar-spacer": "0.9.0",
+                "gk-toolbar-stacked": "1.9.3"
+            }
+        },
+        "pagination": {
+            "name": "Pagination",
+            "classes": {
+                "gk-page-btn": "0.9.0",
+                "gk-pagesize": "1.20.0",
+                "gk-pagesize-select": "1.20.0",
+                "gk-pagesize-text": "1.20.0",
+                "gk-pagination": "0.9.0",
+                "gk-pg": "1.21.0",
+                "gk-pg-active": "1.21.0",
+                "gk-pg-gap": "1.21.0",
+                "gk-pg-icon": "1.21.0",
+                "gk-pg-off": "1.21.0",
+                "gk-rowpager": "1.21.0",
+                "gk-rowpager-count": "1.27.2",
+                "gk-rowpager-info": "1.21.0",
+                "gk-rowpager-nav": "1.21.0"
+            }
+        },
+        "formatter": {
+            "name": "Formatter",
+            "changed": "1.92.0",
+            "classes": {
+                "gk-bool-no": "0.9.0",
+                "gk-bool-yes": "0.9.0",
+                "gk-num": "1.27.2",
+                "gk-num-empty": "1.27.2",
+                "gk-td-muted": "1.28.0",
+                "gk-td-num": "1.27.2"
+            }
+        },
+        "action-group": {
+            "name": "ActionGroup",
+            "classes": {
+                "gk-action-group": "1.16.0"
+            }
+        },
+        "form": {
+            "name": "Form",
+            "changed": "1.92.0",
+            "classes": {
+                "gk-field": "0.9.0",
+                "gk-field-error": "0.9.0",
+                "gk-field-has-error": "0.9.0",
+                "gk-field-hint": "1.0.0",
+                "gk-field-inline": "0.9.0",
+                "gk-form": "0.9.0",
+                "gk-form-actions": "0.9.0",
+                "gk-form-col-1": "0.9.0",
+                "gk-form-col-10": "0.9.0",
+                "gk-form-col-11": "0.9.0",
+                "gk-form-col-12": "0.9.0",
+                "gk-form-col-13": "0.9.0",
+                "gk-form-col-14": "0.9.0",
+                "gk-form-col-15": "0.9.0",
+                "gk-form-col-16": "0.9.0",
+                "gk-form-col-2": "0.9.0",
+                "gk-form-col-3": "0.9.0",
+                "gk-form-col-4": "0.9.0",
+                "gk-form-col-5": "0.9.0",
+                "gk-form-col-6": "0.9.0",
+                "gk-form-col-7": "0.9.0",
+                "gk-form-col-8": "0.9.0",
+                "gk-form-col-9": "0.9.0",
+                "gk-form-col-auto": "0.9.0",
+                "gk-form-compact": "1.4.11",
+                "gk-form-page": "1.0.0",
+                "gk-form-row": "0.9.0",
+                "gk-form-wide": "1.0.0",
+                "gk-has-error": "0.9.0",
+                "gk-input": "0.9.0",
+                "gk-input-clear": "1.0.0",
+                "gk-input-clearable": "1.0.0",
+                "gk-input-wrap": "0.9.0",
+                "gk-label-text": "0.9.0",
+                "gk-required": "0.9.0",
+                "gk-section-title": "1.0.0",
+                "gk-w-1": "0.9.0",
+                "gk-w-10": "0.9.0",
+                "gk-w-11": "0.9.0",
+                "gk-w-12": "0.9.0",
+                "gk-w-13": "0.9.0",
+                "gk-w-14": "0.9.0",
+                "gk-w-15": "0.9.0",
+                "gk-w-16": "0.9.0",
+                "gk-w-2": "0.9.0",
+                "gk-w-3": "0.9.0",
+                "gk-w-4": "0.9.0",
+                "gk-w-5": "0.9.0",
+                "gk-w-6": "0.9.0",
+                "gk-w-7": "0.9.0",
+                "gk-w-8": "0.9.0",
+                "gk-w-9": "0.9.0"
+            }
+        },
+        "checkbox-radio": {
+            "name": "Checkbox and radio",
+            "classes": {
+                "gk-checkbox-custom": "0.9.0",
+                "gk-checkbox-label": "0.9.0",
+                "gk-checkbox-text": "0.9.0",
+                "gk-checkbox-wrap": "0.9.0",
+                "gk-radio-custom": "0.9.0",
+                "gk-radio-group": "0.9.0",
+                "gk-radio-group-inline": "0.9.0",
+                "gk-radio-label": "0.9.0",
+                "gk-radio-wrap": "0.9.0"
+            }
+        },
+        "toggle-range": {
+            "name": "Toggle and slider",
+            "changed": "1.92.0",
+            "classes": {
+                "gk-range": "0.9.0",
+                "gk-range-value": "0.9.0",
+                "gk-range-wrap": "0.9.0",
+                "gk-toggle": "0.9.0",
+                "gk-toggle-slider": "0.9.0"
+            }
+        },
+        "upload": {
+            "name": "File upload",
+            "classes": {
+                "gk-dragover": "0.9.0",
+                "gk-upload-content": "0.9.0",
+                "gk-upload-hint": "0.9.0",
+                "gk-upload-icon": "0.9.0",
+                "gk-upload-idle": "1.0.0",
+                "gk-upload-input": "0.9.0",
+                "gk-upload-progress": "1.0.0",
+                "gk-upload-progress-label": "1.0.0",
+                "gk-upload-queue": "1.0.0",
+                "gk-upload-text": "0.9.0",
+                "gk-upload-zone": "0.9.0",
+                "gk-uq-done": "1.0.0",
+                "gk-uq-error": "1.0.0",
+                "gk-uq-icon": "1.0.0",
+                "gk-uq-img": "1.0.0",
+                "gk-uq-info": "1.0.0",
+                "gk-uq-item": "1.0.0",
+                "gk-uq-name": "1.0.0",
+                "gk-uq-pending": "1.0.0",
+                "gk-uq-remove": "1.0.0",
+                "gk-uq-removing": "1.0.0",
+                "gk-uq-size": "1.0.0",
+                "gk-uq-status": "1.0.0",
+                "gk-uq-thumb": "1.0.0",
+                "gk-uq-uploading": "1.0.0"
+            }
+        },
+        "richtext": {
+            "name": "Rich text",
+            "classes": {
+                "gk-richtext": "0.9.0",
+                "gk-richtext-btn": "0.9.0",
+                "gk-richtext-content": "0.9.0",
+                "gk-richtext-toolbar": "0.9.0",
+                "gk-richtext-wrap": "1.0.0"
+            }
+        },
+        "color": {
+            "name": "Colour picker",
+            "classes": {
+                "gk-color-hex": "1.0.0",
+                "gk-color-swatch": "1.0.0",
+                "gk-color-wrap": "1.0.0"
+            }
+        },
+        "select": {
+            "name": "Select",
+            "classes": {
+                "gk-ajax-clear": "0.9.0",
+                "gk-ajax-search-input": "0.9.0",
+                "gk-ajax-select": "0.9.0",
+                "gk-multiselect": "0.9.0",
+                "gk-multiselect-chips": "0.9.0",
+                "gk-multiselect-display": "0.9.0",
+                "gk-multiselect-input": "0.9.0",
+                "gk-select-arrow": "0.9.0",
+                "gk-select-disabled": "1.0.0",
+                "gk-select-display": "0.9.0",
+                "gk-select-dropdown": "0.9.0",
+                "gk-select-empty": "0.9.0",
+                "gk-select-icon": "0.9.0",
+                "gk-select-loading": "0.9.0",
+                "gk-select-option": "0.9.0",
+                "gk-select-option-sub": "0.9.0",
+                "gk-select-options": "0.9.0",
+                "gk-select-search": "0.9.0",
+                "gk-select-search-input": "0.9.0",
+                "gk-select-value-input": "1.42.0"
+            }
+        },
+        "setting": {
+            "name": "Setting",
+            "classes": {
+                "gk-setting": "1.92.0",
+                "gk-setting-control": "1.92.0",
+                "gk-setting-danger": "1.92.0",
+                "gk-setting-hint": "1.92.0",
+                "gk-setting-text": "1.92.0",
+                "gk-setting-title": "1.92.0"
+            }
+        },
+        "field-static": {
+            "name": "Read-only value",
+            "classes": {
+                "gk-field-static": "1.92.0",
+                "gk-field-static-label": "1.92.0",
+                "gk-field-static-value": "1.92.0"
+            }
+        },
+        "choice": {
+            "name": "Answer tiles",
+            "classes": {
+                "gk-choice": "1.92.0",
+                "gk-choice-hint": "1.92.0",
+                "gk-choice-mark": "1.92.0",
+                "gk-choice-text": "1.92.0",
+                "gk-choice-title": "1.92.0"
+            }
+        },
+        "card": {
+            "name": "Cards",
+            "classes": {
+                "gk-card": "0.9.0",
+                "gk-card-actions": "1.22.4",
+                "gk-card-body": "1.0.0",
+                "gk-card-description": "1.0.0",
+                "gk-card-elevated": "0.9.0",
+                "gk-card-flat": "0.9.0",
+                "gk-card-footer": "1.0.0",
+                "gk-card-header": "1.0.0",
+                "gk-card-image": "1.0.0",
+                "gk-card-link": "1.0.0",
+                "gk-card-meta": "1.0.0",
+                "gk-card-title": "0.9.0",
+                "gk-cards": "1.0.0",
+                "gk-cards-2": "1.0.0",
+                "gk-cards-3": "1.0.0",
+                "gk-cards-4": "1.0.0"
+            }
+        },
+        "stat-tiles": {
+            "name": "Compact figures",
+            "classes": {
+                "gk-stat-tile": "1.92.0",
+                "gk-stat-tile-danger": "1.92.0",
+                "gk-stat-tile-label": "1.92.0",
+                "gk-stat-tile-sub": "1.92.0",
+                "gk-stat-tile-value": "1.92.0",
+                "gk-stat-tile-warning": "1.92.0",
+                "gk-stat-tiles": "1.92.0"
+            }
+        },
+        "stat-cards": {
+            "name": "StatCards",
+            "changed": "1.92.0",
+            "classes": {
+                "gk-stat-blue": "0.9.0",
+                "gk-stat-card": "0.9.0",
+                "gk-stat-cards": "0.9.0",
+                "gk-stat-content": "0.9.0",
+                "gk-stat-danger": "0.9.0",
+                "gk-stat-grid": "1.0.0",
+                "gk-stat-highlight": "0.9.0",
+                "gk-stat-icon": "0.9.0",
+                "gk-stat-info": "0.9.0",
+                "gk-stat-label": "0.9.0",
+                "gk-stat-primary": "0.9.0",
+                "gk-stat-success": "0.9.0",
+                "gk-stat-trend": "1.42.0",
+                "gk-stat-trend-down": "1.42.0",
+                "gk-stat-trend-up": "1.42.0",
+                "gk-stat-value": "0.9.0",
+                "gk-stat-warning": "0.9.0"
+            }
+        },
+        "segment": {
+            "name": "Segment",
+            "classes": {
+                "gk-segment": "1.0.0",
+                "gk-segment-basic": "1.0.0",
+                "gk-segment-compact": "1.0.0",
+                "gk-segment-header": "1.0.0",
+                "gk-segment-muted": "1.0.0",
+                "gk-segment-padded": "1.0.0",
+                "gk-segment-raised": "1.0.0",
+                "gk-segments": "1.0.0"
+            }
+        },
+        "message": {
+            "name": "Message",
+            "classes": {
+                "gk-message": "1.0.0",
+                "gk-message-actions": "1.92.0",
+                "gk-message-compact": "1.0.0",
+                "gk-message-content": "1.0.0",
+                "gk-message-dismiss": "1.0.0",
+                "gk-message-error": "1.0.0",
+                "gk-message-header": "1.0.0",
+                "gk-message-info": "1.0.0",
+                "gk-message-list": "1.0.0",
+                "gk-message-success": "1.0.0",
+                "gk-message-warning": "1.0.0"
+            }
+        },
+        "announce": {
+            "name": "Announcement",
+            "classes": {
+                "gk-announce": "1.93.0"
+            }
+        },
+        "accordion": {
+            "name": "Accordion",
+            "classes": {
+                "gk-accordion": "1.0.0",
+                "gk-accordion-body": "1.0.0",
+                "gk-accordion-content": "1.0.0",
+                "gk-accordion-flush": "1.0.0",
+                "gk-accordion-item": "1.0.0",
+                "gk-accordion-trigger": "1.0.0"
+            }
+        },
+        "avatar": {
+            "name": "Avatar",
+            "classes": {
+                "gk-avatar": "0.9.0",
+                "gk-avatar-group": "1.0.0",
+                "gk-avatar-initials": "0.9.0",
+                "gk-avatar-lg": "1.0.0",
+                "gk-avatar-md": "1.0.0",
+                "gk-avatar-sm": "1.0.0",
+                "gk-avatar-square": "1.0.0",
+                "gk-avatar-status": "1.0.0",
+                "gk-avatar-tone-1": "1.92.0",
+                "gk-avatar-tone-2": "1.92.0",
+                "gk-avatar-tone-3": "1.92.0",
+                "gk-avatar-tone-4": "1.92.0",
+                "gk-avatar-tone-5": "1.92.0",
+                "gk-avatar-xl": "1.0.0",
+                "gk-avatar-xs": "1.0.0"
+            }
+        },
+        "gallery": {
+            "name": "Gallery",
+            "classes": {
+                "gk-gallery": "1.0.0",
+                "gk-gallery-caption": "1.0.0",
+                "gk-gallery-item": "1.0.0",
+                "gk-gallery-lg": "1.0.0",
+                "gk-gallery-masonry": "1.0.0",
+                "gk-gallery-overlay": "1.0.0",
+                "gk-gallery-sm": "1.0.0"
+            }
+        },
+        "lightbox": {
+            "name": "Lightbox",
+            "classes": {
+                "gk-lightbox": "1.0.0",
+                "gk-lightbox-caption": "1.0.0",
+                "gk-lightbox-close": "1.0.0",
+                "gk-lightbox-counter": "1.0.0",
+                "gk-lightbox-img": "1.0.0",
+                "gk-lightbox-nav": "1.0.0",
+                "gk-lightbox-next": "1.0.0",
+                "gk-lightbox-prev": "1.0.0"
+            }
+        },
+        "breadcrumb": {
+            "name": "Breadcrumb",
+            "classes": {
+                "gk-breadcrumb": "0.9.0",
+                "gk-breadcrumb-current": "0.9.0",
+                "gk-breadcrumb-sep": "0.9.0"
+            }
+        },
+        "tabs": {
+            "name": "Tabs",
+            "classes": {
+                "gk-tab": "1.21.0",
+                "gk-tab-active": "1.21.0",
+                "gk-tab-btn": "1.0.0",
+                "gk-tab-nav": "1.0.0",
+                "gk-tab-panel": "1.0.0",
+                "gk-tabs": "1.0.0",
+                "gk-tabs-nav": "1.21.0"
+            }
+        },
+        "chips": {
+            "name": "FilterChips",
+            "classes": {
+                "gk-chip": "0.9.0",
+                "gk-chip-active": "0.9.0",
+                "gk-chip-blue": "1.42.0",
+                "gk-chip-count": "0.9.0",
+                "gk-chip-danger": "0.9.0",
+                "gk-chip-green": "1.42.0",
+                "gk-chip-icon": "0.9.0",
+                "gk-chip-neutral": "1.42.0",
+                "gk-chip-orange": "1.42.0",
+                "gk-chip-primary": "1.42.0",
+                "gk-chip-red": "1.42.0",
+                "gk-chip-remove": "0.9.0",
+                "gk-chip-selected": "0.9.0",
+                "gk-chip-sm": "0.9.0",
+                "gk-chip-success": "0.9.0",
+                "gk-chip-warning": "0.9.0",
+                "gk-filter-chips": "0.9.0"
+            }
+        },
+        "year-filter": {
+            "name": "YearFilter",
+            "classes": {
+                "gk-year-filter": "0.9.0"
+            }
+        },
+        "global-search": {
+            "name": "Global search",
+            "classes": {
+                "gk-search-betrag": "1.27.2",
+                "gk-search-box": "1.27.2",
+                "gk-search-feld": "1.27.2",
+                "gk-search-gruppe": "1.27.2",
+                "gk-search-hinweis": "1.27.2",
+                "gk-search-icon": "1.27.2",
+                "gk-search-laedt": "1.27.2",
+                "gk-search-liste": "1.27.2",
+                "gk-search-overlay": "1.27.2",
+                "gk-search-text": "1.27.2",
+                "gk-search-titel": "1.27.2",
+                "gk-search-treffer": "1.27.2",
+                "gk-search-unter": "1.27.2"
+            }
+        },
+        "toast": {
+            "name": "Toast",
+            "classes": {
+                "gk-toast": "0.9.0",
+                "gk-toast-close": "0.9.0",
+                "gk-toast-container": "0.9.0",
+                "gk-toast-error": "0.9.0",
+                "gk-toast-icon": "0.9.0",
+                "gk-toast-info": "0.9.0",
+                "gk-toast-out": "0.9.0",
+                "gk-toast-success": "0.9.0",
+                "gk-toast-warning": "0.9.0"
+            }
+        },
+        "confirm": {
+            "name": "Confirm",
+            "classes": {
+                "gk-confirm-body": "0.9.0",
+                "gk-confirm-box": "0.9.0",
+                "gk-confirm-footer": "0.9.0",
+                "gk-confirm-header": "0.9.0",
+                "gk-confirm-overlay": "0.9.0"
+            }
+        },
+        "modal": {
+            "name": "Modal",
+            "classes": {
+                "gk-modal": "0.9.0",
+                "gk-modal-body": "0.9.0",
+                "gk-modal-close": "0.9.0",
+                "gk-modal-footer": "1.22.3",
+                "gk-modal-full": "0.9.0",
+                "gk-modal-header": "0.9.0",
+                "gk-modal-large": "0.9.0",
+                "gk-modal-medium": "0.9.0",
+                "gk-modal-overlay": "0.9.0",
+                "gk-modal-small": "0.9.0",
+                "gk-modal-title": "0.9.0"
+            }
+        },
+        "beleg": {
+            "name": "BelegModal",
+            "classes": {
+                "gk-beleg-btn-label": "1.15.0",
+                "gk-beleg-mobile-icon": "1.15.0",
+                "gk-beleg-modal-actions": "1.15.0",
+                "gk-beleg-modal-body": "1.15.0",
+                "gk-beleg-modal-box": "1.15.0",
+                "gk-beleg-modal-frame": "1.15.0",
+                "gk-beleg-modal-mobile": "1.15.0",
+                "gk-beleg-modal-overlay": "1.15.0"
+            }
+        },
+        "button": {
+            "name": "Button",
+            "changed": "1.92.0",
+            "classes": {
+                "gk-btn": "0.9.0",
+                "gk-btn-badge": "0.9.0",
+                "gk-btn-circle": "0.9.0",
+                "gk-btn-danger": "0.9.0",
+                "gk-btn-filled": "0.9.0",
+                "gk-btn-full": "0.9.0",
+                "gk-btn-group": "0.9.0",
+                "gk-btn-group-bordered": "1.4.11",
+                "gk-btn-icon": "0.9.0",
+                "gk-btn-icon-only": "0.9.0",
+                "gk-btn-icon-text": "0.9.0",
+                "gk-btn-lg": "0.9.0",
+                "gk-btn-loading": "0.9.0",
+                "gk-btn-neutral": "0.9.0",
+                "gk-btn-outlined": "0.9.0",
+                "gk-btn-pill": "0.9.0",
+                "gk-btn-primary": "0.9.0",
+                "gk-btn-sm": "0.9.0",
+                "gk-btn-spinner": "0.9.0",
+                "gk-btn-square": "0.9.0",
+                "gk-btn-success": "0.9.0",
+                "gk-btn-text": "0.9.0",
+                "gk-btn-tonal": "0.9.0",
+                "gk-btn-touch": "1.92.0",
+                "gk-btn-warning": "0.9.0",
+                "gk-btn-xs": "1.16.0"
+            }
+        },
+        "fab": {
+            "name": "FAB",
+            "classes": {
+                "gk-fab": "0.9.0",
+                "gk-fab-extended": "0.9.0",
+                "gk-fab-lg": "0.9.0",
+                "gk-fab-sm": "0.9.0"
+            }
+        },
+        "label": {
+            "name": "Label",
+            "classes": {
+                "gk-label": "0.9.0",
+                "gk-label-blue": "0.9.0",
+                "gk-label-gray": "0.9.0",
+                "gk-label-green": "0.9.0",
+                "gk-label-orange": "0.9.0",
+                "gk-label-plain": "1.28.0",
+                "gk-label-red": "0.9.0"
+            }
+        },
+        "tooltip": {
+            "name": "Tooltip",
+            "classes": {
+                "gk-tip": "1.23.0",
+                "gk-tooltip": "0.9.0",
+                "gk-tooltip-content": "1.3.0"
+            }
+        },
+        "empty": {
+            "name": "Empty state",
+            "classes": {
+                "gk-empty": "0.9.0",
+                "gk-empty-action": "1.28.0",
+                "gk-empty-hint": "1.28.0",
+                "gk-empty-icon": "1.28.0",
+                "gk-empty-inner": "1.28.0",
+                "gk-empty-row": "1.28.0",
+                "gk-empty-title": "1.28.0"
+            }
+        },
+        "dot": {
+            "name": "Status dot",
+            "classes": {
+                "gk-dot": "1.92.0",
+                "gk-dot-danger": "1.92.0",
+                "gk-dot-muted": "1.92.0",
+                "gk-dot-outline": "1.92.0",
+                "gk-dot-primary": "1.92.0",
+                "gk-dot-pulse": "1.92.0",
+                "gk-dot-success": "1.92.0",
+                "gk-dot-warning": "1.92.0"
+            }
+        },
+        "series": {
+            "name": "Chart colours",
+            "classes": {
+                "gk-series-fill-1": "1.92.0",
+                "gk-series-fill-2": "1.92.0",
+                "gk-series-fill-3": "1.92.0",
+                "gk-series-fill-4": "1.92.0",
+                "gk-series-fill-5": "1.92.0",
+                "gk-series-stroke-1": "1.92.0",
+                "gk-series-stroke-2": "1.92.0",
+                "gk-series-stroke-3": "1.92.0",
+                "gk-series-stroke-4": "1.92.0",
+                "gk-series-stroke-5": "1.92.0",
+                "gk-swatch": "1.92.0",
+                "gk-swatch-1": "1.92.0",
+                "gk-swatch-2": "1.92.0",
+                "gk-swatch-3": "1.92.0",
+                "gk-swatch-4": "1.92.0",
+                "gk-swatch-5": "1.92.0"
+            }
+        },
+        "header": {
+            "name": "Header",
+            "changed": "1.92.0",
+            "classes": {
+                "gk-body-with-header": "0.9.0",
+                "gk-dropdown-divider": "0.9.0",
+                "gk-dropdown-html": "1.0.0",
+                "gk-dropdown-item": "0.9.0",
+                "gk-dropdown-menu": "0.9.0",
+                "gk-header": "0.9.0",
+                "gk-header-actions": "0.9.0",
+                "gk-header-center": "0.9.0",
+                "gk-header-fixed": "0.9.0",
+                "gk-header-left": "0.9.0",
+                "gk-header-menu-toggle": "0.9.0",
+                "gk-header-meta": "1.92.0",
+                "gk-header-right": "0.9.0",
+                "gk-header-search": "0.9.0",
+                "gk-header-sticky": "0.9.0",
+                "gk-header-title": "0.9.0",
+                "gk-header-user": "0.9.0",
+                "gk-header-user-name": "0.9.0"
+            }
+        },
+        "sidebar": {
+            "name": "Sidebar",
+            "changed": "1.92.0",
+            "classes": {
+                "gk-sidebar": "0.9.0",
+                "gk-sidebar-badge": "0.9.0",
+                "gk-sidebar-brand": "0.9.0",
+                "gk-sidebar-brand-icon": "0.9.0",
+                "gk-sidebar-brand-text": "0.9.0",
+                "gk-sidebar-brand-title": "0.9.0",
+                "gk-sidebar-brand-version": "0.9.0",
+                "gk-sidebar-chevron": "0.9.0",
+                "gk-sidebar-close-mobile": "0.9.0",
+                "gk-sidebar-collapse-bottom": "0.9.0",
+                "gk-sidebar-collapse-btn": "0.9.0",
+                "gk-sidebar-collapse-label": "0.9.0",
+                "gk-sidebar-divider": "0.9.0",
+                "gk-sidebar-group-label": "0.9.0",
+                "gk-sidebar-group-toggle": "0.9.0",
+                "gk-sidebar-icon": "0.9.0",
+                "gk-sidebar-item": "0.9.0",
+                "gk-sidebar-label": "0.9.0",
+                "gk-sidebar-nav": "0.9.0",
+                "gk-sidebar-overlay": "0.9.0",
+                "gk-sidebar-subitem": "0.9.0",
+                "gk-sidebar-subitems": "0.9.0",
+                "gk-sidebar-toggle": "0.9.0",
+                "gk-with-sidebar": "0.9.0"
+            }
+        },
+        "theme": {
+            "name": "Themes and dark mode",
+            "classes": {
+                "gk-dark": "0.9.0",
+                "gk-mode-dark": "0.9.0",
+                "gk-mode-light": "0.9.0",
+                "gk-mode-toggle": "0.9.0",
+                "gk-theme-active": "0.9.0",
+                "gk-theme-colors": "0.9.0",
+                "gk-theme-dot": "0.9.0",
+                "gk-theme-switcher": "0.9.0"
+            }
+        },
+        "page": {
+            "name": "Page skeleton",
+            "classes": {
+                "gk-layout-header-first": "0.9.0",
+                "gk-layout-sidebar-first": "0.9.0",
+                "gk-main": "1.92.0",
+                "gk-page-header": "1.0.0",
+                "gk-page-header-actions": "1.88.0",
+                "gk-root": "0.9.0"
+            }
+        },
+        "loading": {
+            "name": "Loading states",
+            "classes": {
+                "gk-live-loading": "1.40.0",
+                "gk-loading": "0.9.0",
+                "gk-skeleton": "1.28.0",
+                "gk-spin": "1.40.0"
+            }
+        },
+        "utilities": {
+            "name": "Utility classes",
+            "changed": "1.92.0",
+            "classes": {
+                "gk-active": "0.9.0",
+                "gk-bg-danger-soft": "1.14.0",
+                "gk-bg-muted": "1.14.0",
+                "gk-bg-primary-soft": "1.14.0",
+                "gk-bg-success-soft": "1.14.0",
+                "gk-bg-surface": "1.14.0",
+                "gk-bg-warning-soft": "1.14.0",
+                "gk-block": "1.14.0",
+                "gk-break-word": "1.14.0",
+                "gk-clickable": "1.14.0",
+                "gk-code": "1.27.2",
+                "gk-disabled": "1.28.0",
+                "gk-flex": "1.14.0",
+                "gk-flex-1": "1.14.0",
+                "gk-flex-between": "1.14.0",
+                "gk-flex-center": "1.14.0",
+                "gk-flex-col": "1.14.0",
+                "gk-flex-wrap": "1.14.0",
+                "gk-font-mono": "1.14.0",
+                "gk-fs-2xl": "1.14.0",
+                "gk-fs-base": "1.14.0",
+                "gk-fs-lg": "1.14.0",
+                "gk-fs-md": "1.14.0",
+                "gk-fs-sm": "1.14.0",
+                "gk-fs-xl": "1.14.0",
+                "gk-fs-xs": "1.14.0",
+                "gk-fw-bold": "1.14.0",
+                "gk-fw-medium": "1.14.0",
+                "gk-fw-normal": "1.14.0",
+                "gk-fw-semibold": "1.14.0",
+                "gk-gap-2xl": "1.14.0",
+                "gk-gap-lg": "1.14.0",
+                "gk-gap-md": "1.14.0",
+                "gk-gap-sm": "1.14.0",
+                "gk-gap-xl": "1.14.0",
+                "gk-gap-xs": "1.14.0",
+                "gk-grid": "1.0.0",
+                "gk-grid-2": "1.0.0",
+                "gk-grid-4": "1.0.0",
+                "gk-h-auto": "1.14.0",
+                "gk-h-full": "1.14.0",
+                "gk-hidden": "1.14.0",
+                "gk-hide-mobile": "0.9.0",
+                "gk-inline": "1.14.0",
+                "gk-inline-block": "1.14.0",
+                "gk-inline-flex": "1.14.0",
+                "gk-items-baseline": "1.14.0",
+                "gk-items-center": "1.14.0",
+                "gk-items-end": "1.14.0",
+                "gk-items-start": "1.14.0",
+                "gk-justify-between": "1.14.0",
+                "gk-justify-center": "1.14.0",
+                "gk-justify-end": "1.14.0",
+                "gk-justify-start": "1.14.0",
+                "gk-m-0": "1.14.0",
+                "gk-m-1": "1.14.0",
+                "gk-m-2": "1.14.0",
+                "gk-m-3": "1.14.0",
+                "gk-m-4": "1.14.0",
+                "gk-m-5": "1.14.0",
+                "gk-m-6": "1.14.0",
+                "gk-mb-0": "1.14.0",
+                "gk-mb-1": "1.14.0",
+                "gk-mb-2": "1.14.0",
+                "gk-mb-3": "1.14.0",
+                "gk-mb-4": "1.14.0",
+                "gk-mb-5": "1.14.0",
+                "gk-mb-6": "1.14.0",
+                "gk-ml-0": "1.14.0",
+                "gk-ml-1": "1.14.0",
+                "gk-ml-2": "1.14.0",
+                "gk-ml-3": "1.14.0",
+                "gk-ml-4": "1.14.0",
+                "gk-ml-auto": "1.14.0",
+                "gk-mr-0": "1.14.0",
+                "gk-mr-1": "1.14.0",
+                "gk-mr-2": "1.14.0",
+                "gk-mr-3": "1.14.0",
+                "gk-mr-4": "1.14.0",
+                "gk-mr-auto": "1.14.0",
+                "gk-mt-0": "1.14.0",
+                "gk-mt-1": "1.14.0",
+                "gk-mt-2": "1.14.0",
+                "gk-mt-3": "1.14.0",
+                "gk-mt-4": "1.14.0",
+                "gk-mt-5": "1.14.0",
+                "gk-mt-6": "1.14.0",
+                "gk-mx-auto": "1.14.0",
+                "gk-no-decoration": "1.14.0",
+                "gk-not-clickable": "1.14.0",
+                "gk-nowrap": "0.9.0",
+                "gk-overflow-x-auto": "1.14.0",
+                "gk-overflow-y-auto": "1.14.0",
+                "gk-p-0": "1.14.0",
+                "gk-p-1": "1.14.0",
+                "gk-p-2": "1.14.0",
+                "gk-p-3": "1.14.0",
+                "gk-p-4": "1.14.0",
+                "gk-p-5": "1.14.0",
+                "gk-p-6": "1.14.0",
+                "gk-px-0": "1.14.0",
+                "gk-px-1": "1.14.0",
+                "gk-px-2": "1.14.0",
+                "gk-px-3": "1.14.0",
+                "gk-px-4": "1.14.0",
+                "gk-px-5": "1.14.0",
+                "gk-px-6": "1.14.0",
+                "gk-py-0": "1.14.0",
+                "gk-py-1": "1.14.0",
+                "gk-py-2": "1.14.0",
+                "gk-py-3": "1.14.0",
+                "gk-py-4": "1.14.0",
+                "gk-py-5": "1.14.0",
+                "gk-py-6": "1.14.0",
+                "gk-rounded-full": "1.14.0",
+                "gk-rounded-lg": "1.14.0",
+                "gk-rounded-md": "1.14.0",
+                "gk-rounded-none": "1.14.0",
+                "gk-rounded-sm": "1.14.0",
+                "gk-rounded-xl": "1.14.0",
+                "gk-show-mobile": "1.92.0",
+                "gk-spacer": "1.0.0",
+                "gk-spacer-lg": "1.0.0",
+                "gk-spacer-md": "1.0.0",
+                "gk-spacer-sm": "1.0.0",
+                "gk-spacer-xl": "1.0.0",
+                "gk-sr-only": "1.59.0",
+                "gk-text-center": "1.14.0",
+                "gk-text-danger": "1.14.0",
+                "gk-text-left": "1.14.0",
+                "gk-text-muted": "1.0.0",
+                "gk-text-on-surface": "1.14.0",
+                "gk-text-primary": "1.14.0",
+                "gk-text-right": "1.80.1",
+                "gk-text-success": "1.14.0",
+                "gk-text-warning": "1.14.0",
+                "gk-truncate": "1.14.0",
+                "gk-w-auto": "1.14.0",
+                "gk-w-full": "1.14.0"
+            }
+        }
+    }
+}

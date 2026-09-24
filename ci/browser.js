@@ -42,6 +42,8 @@ const withHeader = path.join(dir, "header.html");
 fs.writeFileSync(withHeader, execFileSync(php, [path.join(__dirname, "browser-fixture.php"), "--header"], { maxBuffer: 64 * 1024 * 1024 }));
 const adminPage = path.join(dir, "admin.html");
 fs.writeFileSync(adminPage, execFileSync(php, [path.join(__dirname, "browser-fixture.php"), "--admin"], { maxBuffer: 64 * 1024 * 1024 }));
+const announcePage = path.join(dir, "announce.html");
+fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-fixture.php"), "--announce"], { maxBuffer: 64 * 1024 * 1024 }));
 
 (async () => {
   const browser = await chromium.launch();
@@ -1313,6 +1315,95 @@ fs.writeFileSync(adminPage, execFileSync(php, [path.join(__dirname, "browser-fix
       offen.sb && offen.ov && offen.aria === "true");
     check("admin: … and a tap on the overlay closes it again", !zu.sb && zu.aria === "false");
     await adm.close();
+    }
+
+    // ── An announcement after a save (1.93.0) ─────────────────────────────
+    // What a screen reader gets is read out of the accessibility tree over the
+    // browser's protocol: "ignored" is what the tree says of a node it leaves out.
+    {
+    const an = await browser.newPage({ viewport: { width: 1000, height: 800 } });
+    an.on("pageerror", (e) => pageErrors.push(e.message));
+    await an.goto("file://" + announcePage);
+    const cdp = await an.context().newCDPSession(an);
+    await cdp.send("Accessibility.enable");
+    const ax = async (sel) => {
+      const { root } = await cdp.send("DOM.getDocument", { depth: -1 });
+      const { nodeId } = await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector: sel });
+      const { node } = await cdp.send("DOM.describeNode", { nodeId });
+      const { nodes } = await cdp.send("Accessibility.getPartialAXTree", { nodeId, fetchRelatives: true });
+      const self = nodes.find((n) => n.backendDOMNodeId === node.backendNodeId) || { ignored: true };
+      const kinder = new Set(self.childIds || []);
+      const text = nodes.filter((n) => kinder.has(n.nodeId) && n.name).map((n) => n.name.value).join(" ");
+      return { ignored: !!self.ignored, role: self.role && self.role.value, text };
+    };
+    const box = (id) => an.evaluate((i) => { const r = document.getElementById(i).getBoundingClientRect(); return { w: r.width, h: r.height }; }, id);
+
+    const leer = await ax("#region");
+    const luecken = await an.evaluate(() => {
+      const gap = () => document.getElementById("below").getBoundingClientRect().top - document.getElementById("above").getBoundingClientRect().bottom;
+      const mit = gap();
+      const r = document.getElementById("region"); const p = r.parentNode; const n = r.nextSibling;
+      p.removeChild(r);
+      const ohne = gap();
+      p.insertBefore(r, n);
+      return { mit, ohne };
+    });
+    const leerKasten = await box("region");
+    check("announce: empty, the region is in the accessibility tree as a status",
+      !leer.ignored && leer.role === "status");
+    check("announce: … and takes no room — no box, no second gap in a flex column",
+      leerKasten.w <= 1 && leerKasten.h <= 1 && Math.abs(luecken.mit - luecken.ohne) < 0.5);
+
+    const vorbereitet = await an.evaluate(() => ({
+      versteckt: document.getElementById("hidden-region").hidden,
+      rolle: document.getElementById("bare-region").getAttribute("role"),
+      live: document.getElementById("bare-region").getAttribute("aria-live"),
+      atomar: document.getElementById("bare-region").getAttribute("aria-atomic"),
+    }));
+    check("announce: GK.init takes hidden off an empty region and gives a bare one role, aria-live and aria-atomic",
+      !vorbereitet.versteckt && vorbereitet.rolle === "status" && vorbereitet.live === "polite" && vorbereitet.atomar === "true");
+
+    await an.evaluate(() => GK.announce("region", "Saved.", "success"));
+    const voll = await ax("#region");
+    const vollKasten = await box("region");
+    const ton = await an.evaluate(() => document.getElementById("region").className);
+    check("announce: the words bring the box back in their tone, and the tree reads them",
+      vollKasten.h > 20 && /gk-message-success/.test(ton) && !voll.ignored && /Saved\./.test(voll.text));
+
+    const wiederholt = await an.evaluate(() => new Promise((resolve) => {
+      const r = document.getElementById("region");
+      const seen = [];
+      const mo = new MutationObserver(() => seen.push(r.textContent));
+      mo.observe(r, { childList: true, characterData: true, subtree: true });
+      GK.announce(r, "Saved.", "success");
+      const sofort = r.textContent;
+      setTimeout(() => { mo.disconnect(); resolve({ sofort, seen, ende: r.textContent }); }, 400);
+    }));
+    check("announce: the same words twice are two changes — emptied, then written back — so they are read again",
+      wiederholt.sofort === "" && wiederholt.seen.length >= 2 && wiederholt.seen[0] === "" && wiederholt.ende === "Saved.");
+
+    const alsText = await an.evaluate(() => {
+      const r = GK.announce("#region", "<b>x</b> & y", "error");
+      return { b: r.querySelector("b") === null, t: r.textContent, err: r.classList.contains("gk-message-error"), ok: !r.classList.contains("gk-message-success") };
+    });
+    check("announce: words are text, never markup, and the tone moves with them",
+      alsText.b && alsText.t === "<b>x</b> & y" && alsText.err && alsText.ok);
+
+    await an.evaluate(() => GK.announce("region", ""));
+    const wiederLeer = await box("region");
+    const wiederLeerAx = await ax("#region");
+    const ohneTon = await an.evaluate(() => !/gk-message-(info|success|warning|error)/.test(document.getElementById("region").className));
+    check("announce: emptied, the box and the tone are gone and the region stays in the tree",
+      wiederLeer.w <= 1 && ohneTon && !wiederLeerAx.ignored);
+
+    // Why the block exists: an empty message without it draws a box, and one
+    // written hidden is not in the tree at all — nothing there to hear.
+    const leereMeldung = await box("plain-message");
+    await an.evaluate(() => { document.getElementById("plain-message").hidden = true; });
+    const versteckt = await ax("#plain-message");
+    check("announce (the fault): an empty .gk-message without it draws a box, and a hidden one is out of the tree",
+      leereMeldung.h > 10 && versteckt.ignored);
+    await an.close();
     }
   } finally {
     await browser.close();
