@@ -215,9 +215,9 @@ Sixteen, each a PHP class with a chainable API:
 
 | | | |
 |---|---|---|
-| `Table` — search, sort, filter, paginate, group, bulk actions, rows that open a page or a side sheet | `Form` — 16-column grid, validation, upload | `Modal` — stackable, AJAX-loaded |
+| `Table` — search, sort, filter, paginate, group, bulk actions, rows that open a page or a side sheet, lists whose columns give way by their own width | `Form` — 16-column grid, validation, upload, settings rows, answer tiles | `Modal` — stackable, AJAX-loaded |
 | `Sidebar` — groups, badges, collapse, mobile overlay | `Header` — fixed, search, user menu | `Button` — filled, tonal, outlined, text, FAB |
-| `StatCards` — KPI tiles with trend | `Pagination` — standalone or attached | `Select` — searchable, multi, AJAX |
+| `StatCards` — KPI tiles with trend, or compact tiles for a sheet | `Pagination` — standalone or attached | `Select` — searchable, multi, AJAX |
 | `FilterChips` — one-click filters | `TableHeader` — unified filter bar | `PageSize` — rows per page |
 | `ActionGroup` — grouped row actions | `SortLink` — sortable headers | `YearFilter` — year navigation |
 | `BelegModal` — document preview | | |
@@ -226,7 +226,10 @@ Plus `Theme`, `Layout`, `Lang`, `Auth` and `Icon` as infrastructure — and the
 side sheet (`.gk-sheet`, `GK.sheet`), markup and script rather than a class: the
 panel a row opens, docked beside the list, full screen on a phone. How a list
 should look before its first row is written is in the skill's *Six rules for
-lists*.
+lists*. The small parts an admin page used to style itself — status dots, avatar
+colours, chart colours, settings rows, read-only fields, finger-sized buttons,
+actions in a message — are classes since 1.92.0, so such a page needs no
+stylesheet of its own.
 
 ---
 

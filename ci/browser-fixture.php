@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../autoload.php';
 
-use GridKit\{Form, Header, Lang, Select, Table};
+use GridKit\{Form, Header, Lang, Select, Sidebar, StatCards, Table};
 
 Lang::set('en');
 
@@ -164,6 +164,106 @@ if (isset($argv[1]) && $argv[1] === '--header') {
          ]])->render()
        . '<main class="gk-body-with-header">' . $people . '</main>'
        . $personSheet
+       . $script . '</body></html>';
+    exit;
+}
+
+// An admin page without a stylesheet of its own (1.92.0): GridKit's sidebar
+// and header, the content area, a list whose columns give way, a who cell, the
+// sheet with a line under its title, and the small parts. Names are made up.
+// ci/browser.js resizes #list-box and #who-box to measure the list by its own
+// width, and switches the viewport, the colour mode and reduced motion.
+if (isset($argv[1]) && $argv[1] === '--admin') {
+    ob_start();
+    (new Sidebar('adm'))->brand('Admin', 'dashboard')
+        ->group('Manage')
+        ->item('Users', '#users', 'people', ['active' => true])
+        ->item('Modules', '#modules', 'extension')
+        ->render();
+    $sidebar = ob_get_clean();
+
+    // Header::title() writes the <h1> only; the line beside it is markup.
+    $header = str_replace('<h1>Users</h1>',
+        '<h1>Users</h1><span class="gk-header-meta" id="head-meta">5 users · 2 never signed in · 1 locked · 3 invited this week, none of them back yet</span>',
+        (new Header())->title('Users')->fixed()->sidebarToggle(true)->user('Demo Admin', ['theme_switcher' => false])->render());
+
+    ob_start();
+    (new Table('members'))
+        ->setData([
+            ['id' => 1, 'name' => 'Jana Novak',  'email' => 'jana.novak@example.org',  'state' => '3 failing', 'plan' => 'Pro',  'seen' => 'today 08:12', 'usage' => '12.40 EUR'],
+            ['id' => 2, 'name' => 'Tom Weber',   'email' => 'tom.weber@example.org',   'state' => 'fine',      'plan' => 'Free', 'seen' => 'yesterday',   'usage' => '0.80 EUR'],
+            ['id' => 3, 'name' => 'Ada Lindqvist', 'email' => 'ada.lindqvist@example.org', 'state' => 'fine',  'plan' => 'Team', 'seen' => 'never',       'usage' => '0.00 EUR'],
+        ])
+        ->caption('Members')
+        ->size('list')
+        ->rowLink(['sheet' => 'member-sheet'])
+        ->column('name',  'User',      ['sub' => 'email'])
+        ->column('state', 'State',     ['priority' => 2])
+        ->column('plan',  'Plan',      ['priority' => 3])
+        ->column('seen',  'Last seen', ['priority' => 4])
+        ->column('usage', 'Usage',     ['priority' => 5])
+        ->toolbar(false)
+        ->render();
+    $list = ob_get_clean();
+
+    ob_start();
+    (new Form('parts'))
+        ->field('login', 'Sign-in allowed', 'toggle', ['hint' => 'Takes effect at once.', 'value' => 1])
+        ->field('next', 'What now?', 'choice', ['options' => [
+            'fix'   => 'Fix it now',
+            'later' => ['title' => 'Later', 'hint' => 'Stays on the list until next week.'],
+        ]])
+        ->render();
+    (new StatCards('figures'))->compact()
+        ->card('failing', 3, ['color' => 'danger'])
+        ->card('open', 12, ['sub' => 'for 3 days'])
+        ->render();
+    $parts = ob_get_clean();
+
+    echo '<!DOCTYPE html><html lang="en" data-gk-layout="header-first">' . $head . '<body class="gk-root">'
+       . Lang::jsConfig()
+       . $sidebar
+       . '<div class="gk-with-sidebar">' . $header
+       . '<main class="gk-main" id="main">'
+       . '<div id="list-box">' . $list . '</div>'
+       // A who cell whose name and label do not fit side by side at 420px.
+       . '<div id="who-box"><div class="gk-table-wrap gk-table-list"><table class="gk-table">'
+       . '<thead><tr><th scope="col">User</th><th scope="col" class="gk-col-p2">Plan</th></tr></thead><tbody>'
+       . '<tr><td><div class="gk-cell-who">'
+       . '<span class="gk-avatar gk-avatar-sm gk-avatar-initials gk-avatar-tone-3" id="tone3" aria-hidden="true">MB</span>'
+       . '<div class="gk-cell-who-text"><span id="who-name">Maximilian Bergmann-Hollerbach</span>'
+       . '<span class="gk-label gk-label-gray" id="who-label">locked</span>'
+       . '<span class="gk-cell-sub gk-cell-sub-wrap" id="who-mail">maximilian.bergmann-hollerbach@example.org</span>'
+       . '</div></div></td><td class="gk-col-p2">Pro</td></tr></tbody></table></div></div>'
+       . '<section id="parts-box">' . $parts
+       . '<div class="gk-stat-tiles"><button type="button" class="gk-stat-tile" id="tile-btn">'
+       . '<span class="gk-stat-tile-value">7</span><span class="gk-stat-tile-label">open</span></button></div>'
+       // A definition list: the word comes first in the markup, the figure still on top.
+       . '<dl class="gk-stat-tiles" id="tiles-dl"><div class="gk-stat-tile"><dt class="gk-stat-tile-label" id="dl-word">open</dt>'
+       . '<dd class="gk-stat-tile-value" id="dl-figure">12</dd></div></dl>'
+       . '<div class="gk-field-static" id="static"><span class="gk-field-static-label">Plan</span>'
+       . '<span class="gk-field-static-value">everything</span><span class="gk-field-hint">The superuser always has everything.</span></div>'
+       . '<div class="gk-message gk-message-warning" id="msg"><span>2 runs are stuck.</span>'
+       . '<div class="gk-message-actions"><button type="button" class="gk-btn gk-btn-outlined gk-btn-warning gk-btn-touch" id="msg-btn">Check now</button></div></div>'
+       // The same blocks with the hidden attribute: every one has a display of its own.
+       . '<div class="gk-message gk-message-error" id="msg-hidden" hidden>Hidden message</div>'
+       . '<div class="gk-stat-tiles" id="tiles-hidden" hidden><div class="gk-stat-tile">1</div></div>'
+       . '<div class="gk-setting" id="setting-hidden" hidden>x</div>'
+       . '<label class="gk-choice" id="choice-hidden" hidden><input type="radio" name="h"><span class="gk-choice-mark">A</span></label>'
+       . '<button type="button" class="gk-btn gk-btn-text gk-btn-icon-only gk-btn-sm gk-btn-touch" id="touch-icon" aria-label="Edit"><span aria-hidden="true">E</span></button>'
+       . '<span class="gk-show-mobile" id="only-phone">phone only</span>'
+       . '<span class="gk-dot gk-dot-primary gk-dot-pulse" id="dot-pulse" aria-hidden="true"></span> running'
+       . '<span class="gk-dot gk-dot-outline" id="dot-ring" aria-hidden="true"></span> never'
+       . '<svg width="100" height="10" aria-hidden="true"><rect id="bar1" class="gk-series-fill-1" width="50" height="10"/>'
+       . '<rect id="bar2" class="gk-series-stroke-2" fill="none" x="50" width="50" height="10"/></svg>'
+       . '<span class="gk-swatch gk-swatch-3" id="sw3" aria-hidden="true"></span> third'
+       . '</section>'
+       . '</main></div>'
+       . '<div class="gk-sheet" id="member-sheet" hidden><div class="gk-sheet-header">'
+       . '<h2 class="gk-sheet-title">Jana Novak</h2>'
+       . '<p class="gk-sheet-meta" id="sheet-meta"><a href="mailto:jana.novak@example.org">jana.novak@example.org</a> · last seen today</p>'
+       . '<button type="button" class="gk-sheet-close">&times;</button></div>'
+       . '<div class="gk-sheet-body"><p>Record</p></div></div>'
        . $script . '</body></html>';
     exit;
 }

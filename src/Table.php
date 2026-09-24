@@ -33,7 +33,8 @@ class Table
     private bool $showToolbar = true;
     private string $size = 'md';
     private string $variant = 'default';
-    private string $mobileMode = 'card';
+    /** 'card' | 'scroll'; null until mobile() is called — the default depends on size(). */
+    private ?string $mobileMode = null;
     private bool $selectable = false;
     private string $selectKey = 'id';
     private ?int $loadTimeMs = null;
@@ -124,6 +125,23 @@ class Table
 
     public function column(string $key, string $label, array $opts = []): static
     {
+        // 'priority' (1.92.0): 2 to 5, how early the column gives way in a list
+        // that is narrow (size('list')); 1 is "never", as is no priority. Stored
+        // as an int or not at all, so the client rebuild reads the same number
+        // the server did — a '3.0' or a 7 would otherwise mean one thing in PHP
+        // and another in JavaScript.
+        if (array_key_exists('priority', $opts)) {
+            $raw = $opts['priority'];
+            $p = is_scalar($raw) ? filter_var($raw, FILTER_VALIDATE_INT) : false;
+            unset($opts['priority']);
+            if ($p !== false && $p >= 2 && $p <= 5) {
+                $opts['priority'] = $p;
+            } elseif ($p !== 1) {
+                $shown = is_scalar($raw) ? var_export($raw, true) : get_debug_type($raw);
+                trigger_error("GridKit: column '$key' has 'priority' => $shown — it takes 2 to 5"
+                    . " (5 gives way first) or 1 for never. The column always shows.", E_USER_WARNING);
+            }
+        }
         $this->columns[$key] = ['label' => $label, ...$opts];
         return $this;
     }
@@ -547,8 +565,17 @@ class Table
         $wrapClasses   = 'gk-table-wrap';
         $wrapClasses  .= ' gk-table-' . $this->size;
         if ($this->variant !== 'default') $wrapClasses .= ' gk-table-' . $this->variant;
-        if ($this->mobileMode === 'card') $wrapClasses .= ' gk-table-mobile-card';
-        elseif ($this->mobileMode === 'scroll') $wrapClasses .= ' gk-table-mobile-scroll';
+        // A list (size('list'), 1.92.0) neither turns into cards nor scrolls on
+        // a phone: its columns give way by the list's own width. Card mode would
+        // stack every row into a box and scroll mode gives the table 600px — each
+        // undoes what the list is for, so asking for one is refused out loud.
+        $mobile = $this->mobileMode ?? ($this->size === 'list' ? '' : 'card');
+        if ($this->size === 'list' && $mobile !== '') {
+            trigger_error("GridKit: a size('list') table sheds columns by its own width ('priority'); mobile('$mobile') was left out.", E_USER_WARNING);
+            $mobile = '';
+        }
+        if ($mobile === 'card') $wrapClasses .= ' gk-table-mobile-card';
+        elseif ($mobile === 'scroll') $wrapClasses .= ' gk-table-mobile-scroll';
         echo '<div class="' . $wrapClasses . '" data-gk-table="' . $e($this->id) . '"' . $staticAttr . $selectAttr . '>';
 
         // Embed JSON data + column config for client-side operations
@@ -724,6 +751,8 @@ class Table
             $clsList = [];
             if ($sortable) $clsList[] = 'gk-sortable';
             if (!empty($col['hideOnMobile'])) $clsList[] = 'gk-hide-mobile';
+            // Header and cells give way together (a list's 'priority').
+            if (isset($col['priority'])) $clsList[] = 'gk-col-p' . $col['priority'];
             // A header stands where its column stands. The cells have carried
             // 'align' and the numeric class all along; the header got neither, so
             // a right-aligned column of figures sat under a left-aligned heading.
@@ -849,6 +878,7 @@ class Table
                     if (empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
                 }
                 if (!empty($col['hideOnMobile'])) $tdCls[] = 'gk-hide-mobile';
+                if (isset($col['priority'])) $tdCls[] = 'gk-col-p' . $col['priority'];
                 // Secondary columns (numbers, identifiers) step back in text color
                 // so that the actual name is what gets the attention.
                 if (!empty($col['muted'])) $tdCls[] = 'gk-td-muted';

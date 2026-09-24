@@ -8,7 +8,7 @@ class Form
     /** Types with rendering of their own, beyond a plain <input>. */
     private const FIELD_TYPES = [
         'textarea', 'select', 'multiselect', 'ajaxselect', 'checkbox', 'toggle',
-        'radio', 'file', 'richtext', 'color', 'range',
+        'radio', 'file', 'richtext', 'color', 'range', 'choice',
     ];
 
     /** Everything HTML accepts as an <input type>. Anything else is a typo. */
@@ -133,6 +133,13 @@ class Form
         $type = $f['type'];
         $value = $f['value'] ?? '';
         $isRequired = (bool) ($f['required'] ?? false);
+        // A browser can require one radio of a group, but not one checkbox of
+        // several: required on each would demand all of them. A star that
+        // nothing enforces is a promise the form breaks, so it is not drawn.
+        if ($isRequired && $type === 'choice' && !empty($f['multiple'])) {
+            trigger_error("GridKit: field '$name' is a 'choice' with 'multiple' — a browser cannot require one of several checkboxes, so it shows no star; check it on the server.", E_USER_WARNING);
+            $isRequired = false;
+        }
 
         /*
          * The error text under a field was rendered, styled and never announced.
@@ -176,15 +183,19 @@ class Form
 
         echo "<div class=\"{$cls}\"{$colStyle}>";
 
+        // A toggle with a 'hint' is a settings row (.gk-setting, 1.92.0): its
+        // title and its sentence stand beside the switch, not a label above it.
+        $setting = $type === 'toggle' && trim((string) ($f['hint'] ?? '')) !== '';
+
         // Label (not for checkbox which has label integrated)
-        $showLabel = $label && !in_array($type, ['checkbox']);
+        $showLabel = $label && !in_array($type, ['checkbox']) && !$setting;
 
         // These types render no labelable element the label can point at. The
         // value carrier is hidden from the accessibility tree, or the control
         // is a group of them — so `for` either dangled or, worse, resolved to
         // a 1x1 aria-hidden input, and clicking the label focused nothing you
         // could see. They are named through aria-labelledby instead.
-        $composite = in_array($type, ['radio', 'multiselect', 'ajaxselect', 'richtext', 'color'], true)
+        $composite = in_array($type, ['radio', 'choice', 'multiselect', 'ajaxselect', 'richtext', 'color'], true)
                   || ($type === 'select' && empty($f['native']));
         $labelId   = $e($name) . '-label';
 
@@ -335,9 +346,17 @@ class Form
 
             case 'toggle':
                 $checked = !empty($f['checked']) || !empty($value) ? ' checked' : '';
+                if ($setting) {
+                    $this->renderSetting($f, $e, $checked, $isRequired, $hasError);
+                    break;
+                }
                 // The same control the checkbox branch renders, in a different
                 // skin — and that branch has always passed {$req} through.
                 echo "<label class=\"gk-toggle\"><input type=\"checkbox\" name=\"{$e($name)}\" id=\"{$e($name)}\" value=\"1\"{$req}{$checked}><span class=\"gk-toggle-slider\"></span></label>";
+                break;
+
+            case 'choice':
+                $this->renderChoice($f, $e, $showLabel && !isset($f['aria']) ? $labelId : null, $isRequired, $describe);
                 break;
 
             case 'checkbox':
@@ -704,5 +723,83 @@ class Form
             echo '<div class="gk-field-error" id="' . $errorId . '" role="alert"'
                . ' data-gk-error="' . $e($name) . '">' . $e($f['error'] ?? '') . '</div>';
         echo '</div></div>';
+    }
+
+    /**
+     * A 'toggle' with a 'hint': a settings row (.gk-setting). The title is a
+     * real <label for> — a click on the words switches, as on the switch — and
+     * the sentence describes the control, then the error slot does. The input
+     * is a switch to a screen reader (role="switch"), as it is to the eye.
+     * 'danger' => true marks a switch that locks someone out.
+     */
+    private function renderSetting(array $f, \Closure $e, string $checked, bool $isRequired, bool $hasError): void
+    {
+        $name  = (string) $f['name'];
+        $id    = $e($name);
+        $cls   = 'gk-setting' . (!empty($f['danger']) ? ' gk-setting-danger' : '');
+        $star  = $isRequired ? ' <span class="gk-required" aria-hidden="true">*</span>' : '';
+        echo '<div class="' . $cls . '">'
+           . '<div class="gk-setting-text">'
+           . '<label class="gk-setting-title" id="' . $id . '-label" for="' . $id . '">' . $e($f['label'] ?? '') . $star . '</label>'
+           . '<span class="gk-setting-hint" id="' . $id . '-hint">' . $e($f['hint']) . '</span>'
+           . '</div>'
+           . '<label class="gk-toggle gk-setting-control">'
+           . '<input type="checkbox" role="switch" name="' . $id . '" id="' . $id . '" value="1"'
+           . ($isRequired ? ' required' : '')
+           . ' aria-describedby="' . $id . '-hint ' . $id . '-error"'
+           . ($hasError ? ' aria-invalid="true"' : '')
+           . $checked . '>'
+           . '<span class="gk-toggle-slider"></span></label>'
+           . '</div>';
+    }
+
+    /**
+     * A 'choice' field: its options as bordered tiles with a letter
+     * (.gk-choice), for a decision between a few answers. Radios by default;
+     * 'multiple' => true makes them checkboxes, posted as name[]. An option
+     * is a label, or ['title' => …, 'hint' => …, 'mark' => …]; the mark is
+     * A, B, C … by position unless given. Each input is named by its mark
+     * and title and described by its hint, so a screen reader hears
+     * "A, Fix it now" and then the sentence — not all three run together.
+     */
+    private function renderChoice(array $f, \Closure $e, ?string $labelId, bool $isRequired, string $describe): void
+    {
+        $name     = (string) $f['name'];
+        $multiple = !empty($f['multiple']);
+        $slug     = self::slug($name);
+        $value    = $f['value'] ?? '';
+        $chosen   = $multiple
+            ? array_map('strval', is_array($value) ? $value : array_filter(array_map('trim', explode(',', (string) $value)), 'strlen'))
+            : [(string) $value];
+        $group = $labelId !== null
+            ? ' aria-labelledby="' . $labelId . '"'
+            : ' aria-label="' . $e($f['aria'] ?? ($f['label'] ?? '')) . '"';
+        // A group of checkboxes cannot be required natively (required on each
+        // would demand all of them), so it is a group, not a radiogroup, and
+        // the requirement is left to the server — see the skill.
+        echo '<div class="gk-flex gk-flex-col gk-gap-sm" role="' . ($multiple ? 'group' : 'radiogroup') . '"' . $group . $describe . '>';
+        $i = 0;
+        foreach ((array) ($f['options'] ?? []) as $k => $opt) {
+            $title = is_array($opt) ? (string) ($opt['title'] ?? $k) : (string) $opt;
+            $hint  = is_array($opt) ? (string) ($opt['hint'] ?? '') : '';
+            $mark  = is_array($opt) && isset($opt['mark']) ? (string) $opt['mark']
+                   : ($i < 26 ? chr(65 + $i) : (string) ($i + 1));
+            $oid   = $slug . '-c' . $i;
+            $on    = in_array((string) $k, $chosen, true) ? ' checked' : '';
+            echo '<label class="gk-choice">'
+               . '<input type="' . ($multiple ? 'checkbox' : 'radio') . '" name="' . $e($name) . ($multiple ? '[]' : '') . '"'
+               . ' value="' . $e((string) $k) . '"'
+               . ($isRequired && !$multiple ? ' required' : '')
+               . ' aria-labelledby="' . $oid . '-m ' . $oid . '-t"'
+               . ($hint !== '' ? ' aria-describedby="' . $oid . '-h"' : '')
+               . $on . '>'
+               . '<span class="gk-choice-mark" id="' . $oid . '-m">' . $e($mark) . '</span>'
+               . '<span class="gk-choice-text">'
+               . '<span class="gk-choice-title" id="' . $oid . '-t">' . $e($title) . '</span>'
+               . ($hint !== '' ? '<span class="gk-choice-hint" id="' . $oid . '-h">' . $e($hint) . '</span>' : '')
+               . '</span></label>';
+            $i++;
+        }
+        echo '</div>';
     }
 }

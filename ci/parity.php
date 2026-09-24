@@ -119,6 +119,13 @@ $cases = [
     'rowsheet'   => static fn(Table $t): Table => $t
         ->selectable('id')
         ->rowLink(['sheet' => 'item-sheet', 'url' => '/panel.php?a=1&b=2', 'params' => ['sku' => 'sku']]),
+    // 'priority' (1.92.0): a list column that gives way carries .gk-col-pN on
+    // its header and every cell — on the plain header and on the sortable one,
+    // which the client builds on a separate path.
+    'priority'   => static fn(Table $t): Table => $t
+        ->size('list')
+        ->column('name', 'Name', ['priority' => 3])
+        ->column('status', 'Status', ['format' => 'label', 'sortable' => true, 'priority' => 5]),
     'selectable' => static fn(Table $t): Table => $t->selectable('id'),
     'filtered'   => static fn(Table $t): Table => $t
         ->column('status', 'Status', ['format' => 'label'])

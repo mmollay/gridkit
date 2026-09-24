@@ -439,7 +439,7 @@ echo $demoHeader->title($headerTitle, true)
         ?>
 
     <h3 class="demo-h3">Rows that open a side sheet</h3>
-    <p class="demo-intro">Read in the row, change in the sheet: a click anywhere on a row opens its record beside the list — full screen on a phone. One name cell with two lines, groups instead of a status label per row, and colour only for what needs acting on. The six rules behind it are in the agent skill.</p>
+    <p class="demo-intro">Read in the row, change in the sheet: a click anywhere on a row opens its record beside the list — full screen on a phone. One name cell with two lines, groups instead of a status label per row, and colour only for what needs acting on. The six rules behind it are in the agent skill. <code>size('list')</code> sets the row they describe, and <code>'priority'</code> lets columns give way by the list's own width — open the sheet or narrow the window and watch "Last seen" go first.</p>
         <?php
         $people = require __DIR__ . '/form/_people.php';
         showcase(function () use ($people) {
@@ -455,12 +455,13 @@ echo $demoHeader->title($headerTitle, true)
             (new Table('demo-people'))
                 ->setData($people)
                 ->caption('Users')
+                ->size('list')
                 ->groupBy('access', ['with' => 'With access', 'without' => 'Without access'])
                 ->rowLink(['sheet' => 'demo-person-sheet', 'url' => 'form/f_person_sheet.php'])
                 ->column('name', 'User', ['sub' => 'email'])
-                ->column('plan', 'Plan')
-                ->column('seen', 'Last seen', ['muted' => true])
-                ->column('failing_html', 'Last 30 days', ['format' => 'html'])
+                ->column('plan', 'Plan', ['priority' => 3])
+                ->column('seen', 'Last seen', ['muted' => true, 'priority' => 4])
+                ->column('failing_html', 'Last 30 days', ['format' => 'html', 'priority' => 2])
                 ->toolbar(false)
                 ->render();
         });
@@ -1086,6 +1087,65 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
     ->card('Outstanding', 12480.00, ['format' => 'currency', 'color' => 'red'])
     ->render();</pre></div>
     </div>
+
+    <h3 class="demo-h3">Admin blocks</h3>
+    <p class="demo-intro">The small parts an admin page used to style itself, as classes: compact figures for a sheet, a settings row, a read-only field, answer tiles, status dots, avatar colours, chart colours and actions in a message. Light and dark come from the roles.</p>
+        <?php
+        showcase(function () {
+            (new StatCards('demo-tiles'))
+                ->compact()
+                ->card('failing', 3, ['color' => 'danger'])
+                ->card('open', 12, ['sub' => 'for 3 days'])
+                ->card('done', 40)
+                ->render();
+
+            (new Form('demo-settings'))
+                ->field('demo_login', 'Sign-in allowed', 'toggle', ['hint' => 'Takes effect at once, also on running sessions.', 'value' => 1])
+                ->field('demo_lock', 'Lock the account', 'toggle', ['hint' => 'Signs the person out everywhere.', 'danger' => true])
+                ->field('demo_next', 'What happens now?', 'choice', ['value' => 'fix', 'options' => [
+                    'fix'   => 'Fix it now',
+                    'later' => ['title' => 'Later', 'hint' => 'Stays on the list until next week.'],
+                ]])
+                ->render();
+        });
+        ?>
+        <?php
+        showcase(function () {
+            echo <<<'HTML'
+            <div class="gk-flex gk-flex-col gk-gap-xl">
+              <div class="gk-field-static">
+                <span class="gk-field-static-label">Plan</span>
+                <span class="gk-field-static-value">Everything</span>
+                <span class="gk-field-hint">The superuser always has everything.</span>
+              </div>
+              <div class="gk-flex gk-flex-wrap gk-gap-xl gk-items-center">
+                <span><span class="gk-dot gk-dot-success" aria-hidden="true"></span> today 08:12</span>
+                <span><span class="gk-dot gk-dot-warning" aria-hidden="true"></span> 3 days ago</span>
+                <span><span class="gk-dot gk-dot-primary gk-dot-pulse" aria-hidden="true"></span> running</span>
+                <span><span class="gk-dot gk-dot-outline" aria-hidden="true"></span> never</span>
+              </div>
+              <div class="gk-flex gk-gap-md">
+                <span class="gk-avatar gk-avatar-sm gk-avatar-initials gk-avatar-tone-1" aria-hidden="true">AS</span>
+                <span class="gk-avatar gk-avatar-sm gk-avatar-initials gk-avatar-tone-2" aria-hidden="true">TB</span>
+                <span class="gk-avatar gk-avatar-sm gk-avatar-initials gk-avatar-tone-3" aria-hidden="true">LW</span>
+                <span class="gk-avatar gk-avatar-sm gk-avatar-initials gk-avatar-tone-4" aria-hidden="true">PG</span>
+                <span class="gk-avatar gk-avatar-sm gk-avatar-initials gk-avatar-tone-5" aria-hidden="true">MH</span>
+              </div>
+              <div class="gk-flex gk-flex-wrap gk-gap-xl">
+                <span><span class="gk-swatch gk-swatch-1" aria-hidden="true"></span> Model A 41 %</span>
+                <span><span class="gk-swatch gk-swatch-2" aria-hidden="true"></span> Model B 27 %</span>
+                <span><span class="gk-swatch gk-swatch-3" aria-hidden="true"></span> Model C 18 %</span>
+                <span><span class="gk-swatch gk-swatch-4" aria-hidden="true"></span> Model D 9 %</span>
+                <span><span class="gk-swatch gk-swatch-5" aria-hidden="true"></span> Other 5 %</span>
+              </div>
+              <div class="gk-message gk-message-warning">
+                <span>2 runs are stuck.</span>
+                <div class="gk-message-actions"><button type="button" class="gk-btn gk-btn-outlined gk-btn-warning gk-btn-touch">Check now</button></div>
+              </div>
+            </div>
+            HTML;
+        });
+        ?>
 </div>
 
 <!-- ===== LAYOUT (merged: segment + message) ===== -->

@@ -268,15 +268,15 @@ text, with the measured row it was drawn from, is in `GRIDKIT_SKILL.md`.
 
 | # | Rule | Building block |
 |---|------|----------------|
-| 1 | One state, one sign — a switch needs no label beside it saying the same | `->groupBy()` / `.gk-table-group`; `.gk-toggle` alone, in the sheet |
+| 1 | One state, one sign — a switch needs no label beside it saying the same | `->groupBy()` / `.gk-table-group`; `.gk-toggle` alone, in a `.gk-setting` row in the sheet |
 | 2 | Read in the row, change in the sheet — a click anywhere on the row opens it | `->rowLink()` / `tr.gk-row-link` + `.gk-row-target`; `.gk-sheet` |
-| 3 | Who: one cell, two lines — avatar, name, address underneath | `.gk-avatar` + `.gk-cell-sub` (`'sub' => 'email'`) |
+| 3 | Who: one cell, two lines — avatar, name, address underneath | `.gk-cell-who` with `.gk-avatar` + `.gk-cell-sub` (`'sub' => 'email'`) |
 | 4 | Colour only for what needs acting on | `.gk-label-red` for the one count that needs attention |
-| 5 | Group instead of scrolling — at most six columns at 1280px | `.gk-table-group`; `tr.gk-table-more` |
+| 5 | Group instead of scrolling — at most six columns at 1280px | `.gk-table-group`; `tr.gk-table-more`; `.gk-col-p2` … `-p5` (`'priority'`) |
 | 6 | Running text is never bold and never narrow | `.gk-table` cells at weight 400; `.gk-cell-sub` |
 
 The row: 64px in the redesign it came from, never under 44px, the whole row the
-click target.
+click target — since 1.92.0 the class `.gk-table-list` (`Table->size('list')`).
 
 ## Row link (`tr.gk-row-link`)
 
@@ -354,3 +354,39 @@ One row standing for many: a full-width toggle that shows and hides whatever its
   change — the chevron shows the state to the eye, `aria-expanded` to a screen
   reader.
 - At least 44px; hidden rows stay hidden in card mode.
+
+## Blocks for an admin without its own CSS (1.92.0)
+
+Each block replaces rules an admin built with GridKit had to write itself
+(Vespera: about 465 rules, around 100 of them overriding GridKit). Colours are
+roles only; light and dark follow from them.
+
+| Block | Markup | PHP |
+|---|---|---|
+| Content area | `<main class="gk-main">` — padding 24/28/48px, 16px on a phone, max `--gk-main-max` (1680px) | — |
+| Hidden | every `gk-` element with `[hidden]` is `display: none` | — |
+| Line beside the title | `.gk-header-title > h1 + .gk-header-meta` | — |
+| List | `.gk-table-wrap.gk-table-list` — 64px rows, 15/13px, size container | `->size('list')` |
+| Columns that give way | `.gk-col-p2` … `.gk-col-p5` on th and td; gone below 560/720/900/1040px of list width, its border included | `'priority' => 2…5` |
+| Who cell | `.gk-cell-who > .gk-avatar + .gk-cell-who-text > (name, .gk-label, .gk-cell-sub.gk-cell-sub-wrap)` | — |
+| Avatar colours | `.gk-avatar-tone-1` … `-5` | — |
+| Status dot | `.gk-dot` + `.gk-dot-success` `-warning` `-danger` `-primary` `-muted`; `.gk-dot-outline` (empty ring), `.gk-dot-pulse` (running, still under reduced motion) | — |
+| Setting | `.gk-setting > .gk-setting-text > (.gk-setting-title, .gk-setting-hint)` + `.gk-toggle.gk-setting-control`; `.gk-setting-danger` | `'toggle'` with `'hint'` (`'danger'`) |
+| Read-only field | `.gk-field-static > (-label, -value, .gk-field-hint)` | — |
+| Compact figures | `.gk-stat-tiles > .gk-stat-tile > (-value, -label, -sub)`; `.gk-stat-tile-warning`, `.gk-stat-tile-danger`; also `<button>`/`<a>`, or a `<dl>` (word as `<dt>` first, figure as `<dd>` — still on top) | `StatCards->compact()` |
+| Sheet sub-line | `.gk-sheet-header > .gk-sheet-meta` | — |
+| Chart colours | `--gk-series-1` … `-5`; `.gk-swatch .gk-swatch-1` … `-5`, `.gk-series-fill-1` … `-5`, `.gk-series-stroke-1` … `-5` | — |
+| Touch button | `.gk-btn.gk-btn-touch` — min `--gk-target-min` (44px) both ways | — |
+| Message actions | `.gk-message > .gk-message-actions` | — |
+| Phone only | `.gk-show-mobile` | — |
+| Answer tile | `label.gk-choice > input + .gk-choice-mark + .gk-choice-text > (-title, -hint)` | `'choice'` (`'multiple'`) |
+
+- `.gk-table-list` is the only `.gk-table-wrap` that is a size container; a list
+  never turns into cards and never scrolls sideways (`->mobile()` on it warns).
+- `'priority'` outside 2…5 (1 = never) warns; the column then always shows.
+  Server and client rebuild write the same class.
+- The sidebar writes `data-gk-sidebar-action="toggle|close|collapse"`, no
+  `onclick`; gridkit.js delegates to `GK.sidebar.*`, which stay the API.
+- `.gk-sheet-close` is `--gk-target-min` wide and tall, docked and on a phone.
+- A `'choice'` with `'multiple'` cannot be required in the browser: GridKit warns
+  and draws no star.

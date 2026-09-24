@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.91.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.92.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -193,8 +193,11 @@ because nothing is broken, it is just covered:
 ```
 
 `gk-with-sidebar` carries the left margin and shrinks when the sidebar
-collapses; `gk-main` carries the padding. `skeleton.php` in the repository is
-this file, filled in.
+collapses; `gk-main` carries the padding — 24px 28px 48px, 16px at the edge of a
+phone — and caps the content at `--gk-main-max` (1680px; set it on the page to
+change it). Until 1.92.0 the class was documented here and had no rule, so every
+page wrote that padding itself. `skeleton.php` in the repository is this file,
+filled in.
 
 ### Inside SSI Panel
 
@@ -222,24 +225,28 @@ at 13px, one coloured count — and a side sheet for everything that changes.
 1. **One state, one sign.** A switch shows its state itself. A label beside it
    saying "allowed" says it again, once per row. In the list, group by the
    state; the switch lives in the side sheet, with one sentence on what it does.
-   Building block: `->groupBy()` with `.gk-table-group`; `.gk-toggle` with no `.gk-label` beside it.
+   Building block: `->groupBy()` with `.gk-table-group`; `.gk-toggle` with no `.gk-label` beside it, in a `.gk-setting` row (a Form toggle with a hint writes it).
 2. **Read in the row, change in the sheet.** A row shows values as text. Selects,
    switches and delete belong in the side sheet the row opens — and a click
    anywhere on the row opens it, not only on its name.
    Building block: `->rowLink()`, i.e. `tr.gk-row-link` + `.gk-row-target`; `.gk-sheet` opened by `GK.sheet.open()`.
 3. **Who: one cell, two lines.** Name and address belong together: an avatar,
    the name, the address underneath. In two columns both break mid-word. A
-   `Table` column writes the two lines with `'sub' => 'email'`.
-   Building block: `.gk-avatar` + `.gk-cell-sub`.
+   `Table` column writes the two lines with `'sub' => 'email'`; with a label
+   after the name, `.gk-cell-who` moves the label under the name instead of
+   shortening it.
+   Building block: `.gk-cell-who` with `.gk-avatar` + `.gk-cell-sub`.
 4. **Colour only for what needs acting on.** Red means something is broken.
    Counts that are fine stay neutral text, and the breakdown goes in the sheet
    rather than in three coloured numbers per row.
-   Building block: `.gk-label-red` for the one count that needs attention.
+   Building block: `.gk-label-red` for the one count that needs attention; `.gk-stat-tile-danger` in the sheet.
 5. **Group instead of scrolling.** At most six columns at 1280px; nothing
    scrolls sideways. What is rarely needed folds into one row that stands for
    many — and records that are not like the others (profiles among users) are
-   such a group.
-   Building block: `.gk-table-group`; `tr.gk-table-more` with a `.gk-table-more-toggle`.
+   such a group. When the list itself gets narrow — a docked sheet, a
+   phone — the least needed columns give way, by the list's width, not the
+   window's.
+   Building block: `.gk-table-group`; `tr.gk-table-more` with a `.gk-table-more-toggle`; `.gk-col-p2` … `.gk-col-p5` (a column's priority).
 6. **Running text is never bold and never narrow.** A sentence in a list is set
    at normal weight and gets the width it needs (`minWidth` on its column); a
    second line of detail is quiet text, not a second column.
@@ -247,30 +254,34 @@ at 13px, one coloured count — and a side sheet for everything that changes.
 
 The row the rules were drawn from, measured: 64px tall, the whole row the click
 target (never under 44px), name 15/13px, at most six columns at 1280px, one
-colour — for what needs acting on.
+colour — for what needs acting on. Since 1.92.0 that row is a class:
+`.gk-table-list` on the wrap (`->size('list')`), so a list needs no CSS of its
+own.
 
 A list that follows all six, by hand — a `Table` writes the same row with
-`->rowLink(['sheet' => 'user-sheet'])` and `'sub' => 'email'`:
+`->size('list')`, `->rowLink(['sheet' => 'user-sheet'])`, `'sub' => 'email'` and
+`'priority'` on the columns that may give way:
 
 ```html
+<div class="gk-table-wrap gk-table-list">
 <table class="gk-table">
-  <thead><tr><th scope="col">User</th><th scope="col">Plan</th><th scope="col">Last 30 days</th></tr></thead>
+  <thead><tr><th scope="col">User</th><th scope="col" class="gk-col-p3">Plan</th><th scope="col">Last 30 days</th></tr></thead>
   <tbody>
     <tr class="gk-table-group"><td colspan="3">
       <span class="gk-table-group-name">With access</span><span class="gk-table-group-n">5</span>
     </td></tr>
     <tr class="gk-row-link">
       <td data-label="User">
-        <div class="gk-flex gk-items-center gk-gap-lg">
-          <span class="gk-avatar" aria-hidden="true">AP</span>
-          <div>
+        <div class="gk-cell-who">
+          <span class="gk-avatar gk-avatar-sm gk-avatar-initials gk-avatar-tone-2" aria-hidden="true">JN</span>
+          <div class="gk-cell-who-text">
             <button type="button" class="gk-row-target" data-gk-sheet="user-sheet"
                     data-gk-params='{"id":2}' aria-haspopup="dialog">Jana Novak</button>
-            <span class="gk-cell-sub">jana@example.com</span>
+            <span class="gk-cell-sub gk-cell-sub-wrap">jana@example.com</span>
           </div>
         </div>
       </td>
-      <td data-label="Plan">Life book</td>
+      <td data-label="Plan" class="gk-col-p3">Life book</td>
       <td data-label="Last 30 days"><span class="gk-label gk-label-red">17 failing</span></td>
     </tr>
     <tr class="gk-table-more"><td colspan="3">
@@ -284,6 +295,7 @@ A list that follows all six, by hand — a `Table` writes the same row with
     <!-- the 13 rows, right after the row that stands for them -->
   </tbody>
 </table>
+</div>
 ```
 
 ## Component Reference
@@ -477,7 +489,8 @@ second case, so only describe the first.
 ```php
 ->toolbar(false)     // no search/filter bar above the table at all
 ->searchable(false)  // keep the toolbar, drop the search box
-->size('sm')         // sm | md (default) | lg — row height and padding
+->size('sm')         // sm | md (default) | lg — row height and padding;
+                     // list — the row of the six rules, see below
 ->variant('striped') // default | bordered | striped | celled | padded |
                      // minimal | flat | inverted | compact.
                      // ONE slot: a second call replaces the first.
@@ -494,6 +507,60 @@ second case, so only describe the first.
                      // fills the columns the footer cells leave over.
 ->mobile('card')     // card | scroll — how it collapses on a phone
 ```
+
+**A list: `->size('list')` and `'priority'` (since 1.92.0).** The row the six
+rules describe, without CSS of your own: 64px rows, the name at 15px over the
+address at 13px, a group heading without a bar, the summary row set in. The wrap
+gets `.gk-table-list`. A list does not scroll sideways and does not turn into
+cards on a phone — its columns give way instead, measured on the **list's own
+width**, not the window's (a docked sheet takes 440px of it, a collapsed sidebar
+gives some back):
+
+```php
+(new Table('users'))
+    ->setData($rows)
+    ->size('list')
+    ->rowLink(['sheet' => 'user-sheet'])
+    ->column('name',   'User',   ['sub' => 'email'])     // no priority: never goes
+    ->column('role',   'Role',   ['priority' => 2])       // goes below 560px of list
+    ->column('status', 'Status', ['priority' => 3])       // below 720px
+    ->column('email',  'Email',  ['priority' => 5])       // first, below 1040px
+    ->render();
+```
+
+`'priority'` takes 2 to 5 (5 gives way first; 1, or none, means never) and puts
+`.gk-col-p2` … `.gk-col-p5` on the header and every cell of the column; anything
+else raises a warning and the column always shows. The widths are the list as it
+stands on the page, its 1px border included. The classes work only inside
+`.gk-table-list`, which is a CSS size container — in a flex row of its own, give
+it a width (`gk-flex-1`, a grid track), as any container needs one. `->mobile()`
+on a list is refused with a warning: card mode would box every row and scroll
+mode gives the table 600px, and either undoes what the list is for.
+
+**The who cell** — rule 3 as markup, for a column you write with
+`'format' => 'html'` or by hand: `.gk-cell-who` holds the avatar and
+`.gk-cell-who-text`; in it the name comes first, a `.gk-label` after it moves
+under the name when both do not fit (the name is shortened only when it does not
+fit on its own), and the `.gk-cell-sub` spans the width underneath.
+`.gk-cell-sub-wrap` breaks a second line instead of shortening it — of two people
+with the same name, the addresses are what tells them apart. In a list the who
+column takes the width the others leave.
+
+```html
+<td data-label="User"><div class="gk-cell-who">
+  <span class="gk-avatar gk-avatar-sm gk-avatar-initials gk-avatar-tone-2" aria-hidden="true">AP</span>
+  <div class="gk-cell-who-text">
+    <button type="button" class="gk-row-target" data-gk-sheet="user-sheet" data-gk-params='{"id":2}'>Anna Probe</button>
+    <span class="gk-label gk-label-gray">locked</span>
+    <span class="gk-cell-sub gk-cell-sub-wrap">anna@example.org</span>
+  </div>
+</div></td>
+```
+
+`.gk-avatar-tone-1` … `-5` give initials one of five quiet role pairs (primary,
+tertiary, info and warning containers, a raised surface) — pick by the person's
+id modulo 5, never by rank, so a person keeps their colour when the list is
+sorted.
 
 ### Server-side tables (`rows()` + `isAjaxReload()`)
 
@@ -688,6 +755,16 @@ toggles on the page, with competing active states and no error. Pick one:
 you read `$_GET['q']` and narrow the data yourself. A `Table` that declares
 `->search([…])` needs none of it — see the search rule under *TableHeader*.
 
+**A quiet line beside the title (`.gk-header-meta`, since 1.92.0)** — "2 users ·
+4 never used", on the title's baseline. It is the part that gives way: shortened
+with an ellipsis before the user menu is pushed off the edge, and gone at 768px
+and below. `Header::title()` writes the `<h1>` only, so the line is for a header
+written by hand; it takes the breadcrumb's place — use one or the other.
+
+```html
+<div class="gk-header-title"><h1>Users</h1><span class="gk-header-meta">2 users · 4 never used</span></div>
+```
+
 ### Sidebar
 
 `Sidebar::render()` PRINTS. It is `position: fixed`, so whatever sits beside it
@@ -717,8 +794,16 @@ underneath the sidebar, silently.
 `badge`, `children` (a submenu, same item shape) and `id` (the submenu's DOM id;
 one is derived from the label otherwise).
 
-`Sidebar::toggleButton()` RETURNS the hamburger for a page with no `Header`;
+`Sidebar::toggleButton()` prints the hamburger for a page with no `Header`;
 `Header::sidebarToggle(true)` is the usual way.
+
+**No `onclick` (since 1.92.0).** The sidebar's controls carry
+`data-gk-sidebar-action="toggle"`, `"close"` or `"collapse"`, and gridkit.js
+answers them by delegation — so a page under a Content-Security-Policy without
+`'unsafe-inline'` keeps a working sidebar. A shell written by hand uses the same
+attribute instead of `onclick="GK.sidebar.toggle()"`; `GK.sidebar.toggle()`,
+`open()`, `close()` and `collapse()` stay the API. A toggle that carries
+`aria-expanded` is kept in step with the sidebar.
 
 ### Select
 
@@ -922,6 +1007,28 @@ rounding, no sign and no percent sign of its own. A leading `-` colours it as a
 fall, anything else as a rise. So pass a finished string: `'+12%'`, `'-0.4%'`,
 `'▲ 3'`. Passing a raw float gives you a bare `-8` in the card.
 
+**`->compact()` (since 1.92.0)** renders the same `card()`s as compact tiles —
+a figure over its word, small enough for a side sheet or a card
+(`.gk-stat-tiles`, `.gk-stat-tile`). The cards stay the block for an overview
+page.
+
+```php
+(new StatCards('user-lage'))
+    ->compact()
+    ->card('failing', 3,  ['color' => 'danger'])                // the one that needs acting on
+    ->card('open',    12, ['sub' => 'for 3 days', 'href' => '#open'])
+    ->card('done',    40)
+    ->render();
+```
+
+`format` and `decimals` work as on a card; `sub` is a quiet third line; `href`
+makes the tile a link. `'color' => 'danger'` or `'warning'` (also `'red'`,
+`'orange'`, and `'highlight' => true`) tones the tile — every other colour stays
+neutral, because a colour that means nothing costs the one that does (rule 4).
+`icon` and `trend` belong to the full card and are not shown. By hand a tile may
+also be a `<button>`: at least 44px tall, with a focus ring and a hover that
+keeps its tone.
+
 ### Modal
 
 ```php
@@ -994,6 +1101,19 @@ it without `hidden` and it is a docked panel, with a plain link in the close
 button's place. Add `.gk-sheet-push` to the content area if it should make room
 for a docked sheet instead of lying under it.
 
+**A line under the title (`.gk-sheet-meta`, since 1.92.0)** — the address, when
+the record last moved, a link. With it the header becomes a grid: the line sits
+under the title and the close button keeps its corner; links in it carry a dotted
+underline. The close button is `--gk-target-min` (44px) docked and on a phone.
+
+```html
+<div class="gk-sheet-header">
+  <h2 class="gk-sheet-title">Anna Probe</h2>
+  <p class="gk-sheet-meta"><a href="mailto:anna@example.org">anna@example.org</a> · last seen today</p>
+  <button type="button" class="gk-sheet-close">&times;</button>
+</div>
+```
+
 ### Form (AJAX)
 
 ```php
@@ -1014,10 +1134,11 @@ for a docked sheet instead of lying under it.
     ->render();
 ```
 
-**Field types.** Eleven have rendering of their own:
+**Field types.** Twelve have rendering of their own:
 
 `textarea` · `select` (searchable) · `multiselect` · `ajaxselect` · `checkbox` ·
-`toggle` · `radio` · `file` (drag & drop) · `richtext` (CKEditor) · `color` · `range`
+`toggle` · `radio` · `file` (drag & drop) · `richtext` (CKEditor) · `color` · `range` ·
+`choice` (answer tiles, since 1.92.0)
 
 Anything else becomes an `<input type="…">`, so every HTML type works:
 `text`, `number`, `email`, `tel`, `url`, `password`, `date`, `time`,
@@ -1044,6 +1165,10 @@ searchable select is plain `'select'`.
 | `->cancel($label, $href)` | — | a link beside the submit button — a method, not a field |
 | `->hidden($name, $value)` | — | a hidden input — a method, not a field |
 | `error` | every field | a validation message, rendered red under the field. This is how a classic POST-redisplay shows errors: `['value' => $_POST['email'] ?? '', 'error' => $errors['email'] ?? '']`. The AJAX handler writes into the same slot, so both paths look identical |
+| `hint` | `toggle` | one sentence on what the switch does — the field becomes a settings row (`.gk-setting`): title and sentence on the left, the switch on the right, no label above it, and the input a `role="switch"` described by the sentence (since 1.92.0) |
+| `danger` | `toggle` with `hint` | marks a switch that locks someone out: the title in the error colour, the switch red when on |
+| `options` | `choice` | `value => label`, or `value => ['title' => …, 'hint' => …, 'mark' => …]`; the mark is A, B, C … by position unless given |
+| `multiple` | `choice` | checkboxes instead of radios, posted as `name[]`; `value` takes an array or a comma string. Cannot be `required` in the browser — GridKit warns and draws no star; check it on the server |
 
 **Form Density:** Add `gk-form-compact` class to a `<form>` or wrapper `<div>` for compact forms. All elements scale down proportionally:
 
@@ -1072,6 +1197,24 @@ searchable select is plain `'select'`.
 </div>
 ```
 
+**Settings and choices (since 1.92.0)** — the two fields a side sheet needs most:
+
+```php
+(new Form('user-7'))
+    ->field('login', 'Sign-in allowed', 'toggle', ['hint' => 'Takes effect at once, also on running sessions.', 'value' => 1])
+    ->field('lock',  'Lock the account', 'toggle', ['hint' => 'Signs the person out everywhere.', 'danger' => true])
+    ->field('next',  'What happens now?', 'choice', ['required' => true, 'options' => [
+        'fix'   => 'Fix it now',
+        'later' => ['title' => 'Later', 'hint' => 'Stays on the list until next week.'],
+    ]])
+    ->render();
+```
+
+A `choice` is a radio group (`role="radiogroup"`, named by the field's label) of
+`.gk-choice` tiles; each input is named by its mark and title and described by its
+hint. The tile carries the state and the focus ring; where `:has()` is missing the
+native control stays visible.
+
 **`->ajax()` is the opt-in.** It is what renders `data-gk-ajax` on the `<form>`,
 and `GK.form.bind()` binds the submit handler to nothing else. Leave it off and
 the form still renders and still validates, but the browser submits it natively
@@ -1083,6 +1226,121 @@ echo json_encode(['ok' => true]);                          // success
 echo json_encode(['ok' => true, 'message' => 'Saved!']);  // with toast
 echo json_encode(['ok' => false, 'errors' => ['email' => 'Already exists']]);  // validation
 ```
+
+### Admin blocks: settings, figures, dots, colours (since 1.92.0)
+
+The small parts an admin page kept writing for itself — each a class, light and
+dark through roles, so a page needs no stylesheet of its own. The Form fields and
+`StatCards::compact()` above write the first three; by hand they look like this.
+
+**A setting (`.gk-setting`)** — rule 1 in the sheet: the switch alone, with one
+sentence on what it does. `-danger` for a switch that locks someone out.
+
+```html
+<div class="gk-setting">
+  <div class="gk-setting-text">
+    <span class="gk-setting-title" id="login-t">Sign-in allowed</span>
+    <span class="gk-setting-hint" id="login-h">Takes effect at once, also on running sessions.</span>
+  </div>
+  <label class="gk-toggle gk-setting-control">
+    <input type="checkbox" role="switch" aria-labelledby="login-t" aria-describedby="login-h">
+    <span class="gk-toggle-slider"></span>
+  </label>
+</div>
+```
+
+**A value that is only read (`.gk-field-static`)** — a field in the sheet that
+cannot be changed there, and why:
+
+```html
+<div class="gk-field-static">
+  <span class="gk-field-static-label">Plan</span>
+  <span class="gk-field-static-value">everything</span>
+  <span class="gk-field-hint">The superuser always has everything.</span>
+</div>
+```
+
+**Compact figures (`.gk-stat-tiles`)** — see `StatCards::compact()`. By hand, a
+tile that opens something is a `<button>`:
+
+```html
+<div class="gk-stat-tiles">
+  <div class="gk-stat-tile gk-stat-tile-danger"><span class="gk-stat-tile-value">3</span><span class="gk-stat-tile-label">failing</span></div>
+  <button type="button" class="gk-stat-tile"><span class="gk-stat-tile-value">12</span><span class="gk-stat-tile-label">open</span><span class="gk-stat-tile-sub">for 3 days</span></button>
+</div>
+```
+
+As a definition list the word is the `<dt>` and comes first, as HTML wants it —
+the figure still stands on top, and a `<dd>` brings no indent:
+
+```html
+<dl class="gk-stat-tiles">
+  <div class="gk-stat-tile"><dt class="gk-stat-tile-label">open</dt><dd class="gk-stat-tile-value">12</dd></div>
+</dl>
+```
+
+**A status dot (`.gk-dot`)** — a state or a presence beside its words, never
+instead of them (`aria-hidden`). Tones `-success`, `-warning`, `-danger`,
+`-primary`, `-muted`; `-outline` is an empty ring, told apart by its shape
+("never"); `-pulse` for something running — it stands still under
+`prefers-reduced-motion`.
+
+```html
+<span class="gk-dot gk-dot-success" aria-hidden="true"></span> today 08:12
+<span class="gk-dot gk-dot-outline" aria-hidden="true"></span> never
+<span class="gk-dot gk-dot-primary gk-dot-pulse" aria-hidden="true"></span> running
+```
+
+**Chart colours (`--gk-series-1` … `-5`)** — five categorical slots, the same in
+every theme (a series follows its entity, never the accent), stepped separately
+for dark mode. Assign them in order and keep an entity on its slot when a filter
+removes others; a sixth series folds into "other". `.gk-swatch .gk-swatch-N` is
+the legend mark, `.gk-series-fill-N` / `.gk-series-stroke-N` colour an SVG mark.
+Slots 3 to 5 sit under 3:1 on a white ground, so a chart that uses them shows
+its values as text as well — figures in the legend, or a table.
+
+```html
+<svg viewBox="0 0 100 20" role="img" aria-label="Opus 60 %, Sonnet 40 %">
+  <rect class="gk-series-fill-1" width="60" height="20"/>
+  <rect class="gk-series-fill-2" x="61" width="39" height="20"/>
+</svg>
+<span class="gk-swatch gk-swatch-1" aria-hidden="true"></span> Opus 60 %
+```
+
+**A finger-sized button (`.gk-btn-touch`)** — at least `--gk-target-min` (44px)
+in both directions, the type unchanged (`.gk-btn-lg` grows the text as well).
+
+**Actions in a message (`.gk-message-actions`)** — a place on the right of a
+`.gk-message` for what to do about it; the status band of a page is a message
+with a button. A long message takes its line and the actions move under it.
+Written by hand, an outlined button needs its colour class as well:
+`.gk-btn-outlined` alone has a transparent border (`Button::render()` always
+writes one).
+
+```html
+<div class="gk-message gk-message-warning">
+  <span>2 runs are stuck.</span>
+  <div class="gk-message-actions"><button type="button" class="gk-btn gk-btn-outlined gk-btn-warning gk-btn-touch">Check now</button></div>
+</div>
+```
+
+**Answer tiles (`.gk-choice`)** — see the Form's `'choice'` field; by hand:
+
+```html
+<label class="gk-choice">
+  <input type="radio" name="q12" value="a">
+  <span class="gk-choice-mark">A</span>
+  <span class="gk-choice-text"><span class="gk-choice-title">Fix it now</span><span class="gk-choice-hint">Takes a minute.</span></span>
+</label>
+```
+
+**Shown on a phone only (`.gk-show-mobile`)** — the counterpart of
+`.gk-hide-mobile`: hidden above 768px, its own display below.
+
+**Hidden means hidden.** Every element with a `gk-` class disappears with the
+`hidden` attribute, whatever display its class gives it — `<div class="gk-message"
+hidden>` used to stay on the page, because the browser's own `[hidden]` rule
+loses to any display an author rule sets.
 
 ### Auth
 
@@ -1589,6 +1847,22 @@ Features:
 | `gk-sheet-push` | Content that makes room for a docked sheet while one is open (wide screens only) |
 | `gk-row-link` `gk-row-target` | A row that opens something (on the `<tr>`), and the one control in its main cell that it forwards clicks to |
 | `gk-table-more` `gk-table-more-toggle` `gk-table-more-name` | One row standing for many: the row, the full-width toggle (`aria-controls` names the rows, usually a `<tbody hidden>`), its label |
+| `gk-main` | The content area (since 1.92.0 a rule, before only a name): padding 24px 28px 48px, 16px on a phone, capped at `--gk-main-max` (1680px) |
+| `gk-header-meta` | A quiet line beside the header title, on its baseline; shortened first, gone at 768px and below |
+| `gk-table-list` | On `.gk-table-wrap` (`Table->size('list')`): the list row of the six rules — 64px, name 15px over 13px, quiet groups; a size container, never cards, never sideways scroll |
+| `gk-col-p2` `gk-col-p3` `gk-col-p4` `gk-col-p5` | On th and td of a list column (`'priority' => n`): gone below 560 / 720 / 900 / 1040px of LIST width |
+| `gk-cell-who` `gk-cell-who-text` `gk-cell-sub-wrap` | The who cell: avatar, name, a label that moves under the name, the address underneath; a second line that breaks instead of being shortened |
+| `gk-avatar-tone-1` … `gk-avatar-tone-5` | Five quiet role pairs for initials, told apart side by side |
+| `gk-dot` `gk-dot-success` `gk-dot-warning` `gk-dot-danger` `gk-dot-primary` `gk-dot-muted` `gk-dot-outline` `gk-dot-pulse` | Status dot beside its words; outline = empty ring, pulse = running (still under reduced motion) |
+| `gk-setting` `gk-setting-text` `gk-setting-title` `gk-setting-hint` `gk-setting-control` `gk-setting-danger` | A settings row: title and one sentence, the switch on the right |
+| `gk-field-static` `gk-field-static-label` `gk-field-static-value` | A read-only field (reason under it: `gk-field-hint`) |
+| `gk-stat-tiles` `gk-stat-tile` `gk-stat-tile-value` `gk-stat-tile-label` `gk-stat-tile-sub` `gk-stat-tile-warning` `gk-stat-tile-danger` | Compact key figures (`StatCards->compact()`); a tile may be a `<button>` or `<a>` |
+| `gk-sheet-meta` | A line under the side sheet's title |
+| `gk-swatch` `gk-swatch-1` … `gk-swatch-5`, `gk-series-fill-1` … `-5`, `gk-series-stroke-1` … `-5` | Chart colours from `--gk-series-1` … `-5`: legend mark, SVG fill, SVG stroke |
+| `gk-btn-touch` | A button at least `--gk-target-min` (44px) in both directions, type unchanged |
+| `gk-message-actions` | Actions on the right of a `.gk-message` |
+| `gk-show-mobile` | Shown at 768px and below only — the counterpart of `gk-hide-mobile` |
+| `gk-choice` `gk-choice-mark` `gk-choice-text` `gk-choice-title` `gk-choice-hint` | A radio or checkbox as an answer tile with a letter (Form `'choice'`) |
 
 ### BelegModal (since v1.15.0)
 

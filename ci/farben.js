@@ -19,6 +19,11 @@
  * Exit code 0 when every asserted alias agrees with its role and muted text still
  * reads. Die vier Oberflächen-Aliase sind davon ausgenommen und stehen unter
  * ZURUECKGESTELLT — sie werden gemessen und gemeldet, aber nicht beanstandet.
+ *
+ * Seit 1.92.0 misst ein dritter Abschnitt die Bausteine für einen Adminbereich
+ * ohne eigenes CSS (Kürzelfarben, Kacheln, Einstellung, Antwortkachel) und die
+ * Reihenfarben --gk-series-1 … 5 — Kontrast, Themenfestigkeit und Abstand der
+ * Nachbarn bei Farbsehschwäche.
  */
 const fs = require("fs");
 const os = require("os");
@@ -215,6 +220,214 @@ async function komponentenMessen(browser, mitThemes, schreibweise) {
   }
 }
 
+/* ────────────────────────────────────────────────────────────────────────
+ * Dritter Abschnitt (1.92.0): die Bausteine für einen Adminbereich ohne
+ * eigenes CSS — gemessen an echten Elementen, in jedem Thema und Modus.
+ *
+ * tests/admin-blocks.test.php liest Hex-Werte aus dem Stylesheet und kann nur
+ * Paare prüfen, die beide im selben Block stehen. Was themes.css verschiebt und
+ * was ein Schleier (color-mix mit Durchsicht) über welchem Grund ergibt, sieht
+ * erst der Browser. Darum hier:
+ *
+ *   - Kürzelfarben 1–5, Kacheln (ruhig, Warnung, Gefahr) auf Seite und Karte,
+ *     die Gefahr-Einstellung und die gewählte Antwortkachel: jeder Text hält
+ *     4,5:1 gegen den Grund, auf dem er WIRKLICH steht.
+ *   - Reihenfarben 1–5: in jedem Thema dieselben (eine Reihe folgt ihrem Ding,
+ *     nie dem Akzent), dunkel alle ≥ 3:1 gegen die Fläche, hell die ersten zwei
+ *     (3–5 liegen darunter und tragen ihre Zahl als Text — dokumentiert).
+ *     Nachbarn bleiben unterscheidbar: ΔE (OKLab ×100) ≥ 8 unter simulierter
+ *     Protanopie und Deuteranopie (Machado 2009, Stärke 1,0), ≥ 15 bei
+ *     normalem Sehen — dieselbe Rechnung wie der Palettenprüfer der
+ *     dataviz-Anleitung.
+ * ──────────────────────────────────────────────────────────────────────── */
+const BAUSTEINE = `
+<div class="gk-card" id="karte">
+  <span class="gk-avatar gk-avatar-initials gk-avatar-tone-1" id="ton-1">AB</span>
+  <span class="gk-avatar gk-avatar-initials gk-avatar-tone-2" id="ton-2">AB</span>
+  <span class="gk-avatar gk-avatar-initials gk-avatar-tone-3" id="ton-3">AB</span>
+  <span class="gk-avatar gk-avatar-initials gk-avatar-tone-4" id="ton-4">AB</span>
+  <span class="gk-avatar gk-avatar-initials gk-avatar-tone-5" id="ton-5">AB</span>
+  <div class="gk-stat-tiles">
+    <div class="gk-stat-tile" id="kachel-karte"><span class="gk-stat-tile-value">1</span><span class="gk-stat-tile-label">x</span><span class="gk-stat-tile-sub">y</span></div>
+    <div class="gk-stat-tile gk-stat-tile-warning" id="kachel-warnung"><span class="gk-stat-tile-value">1</span><span class="gk-stat-tile-label">x</span><span class="gk-stat-tile-sub">y</span></div>
+    <div class="gk-stat-tile gk-stat-tile-danger" id="kachel-gefahr"><span class="gk-stat-tile-value">1</span><span class="gk-stat-tile-label">x</span><span class="gk-stat-tile-sub">y</span></div>
+  </div>
+  <div class="gk-setting gk-setting-danger" id="einstellung"><div class="gk-setting-text"><span class="gk-setting-title">T</span><span class="gk-setting-hint">H</span></div></div>
+  <label class="gk-choice" id="wahl-an"><input type="radio" name="w" checked><span class="gk-choice-mark">A</span><span class="gk-choice-text"><span class="gk-choice-title">T</span><span class="gk-choice-hint">H</span></span></label>
+  <label class="gk-choice" id="wahl-aus"><input type="radio" name="w"><span class="gk-choice-mark">B</span><span class="gk-choice-text"><span class="gk-choice-title">T</span><span class="gk-choice-hint">H</span></span></label>
+</div>
+<div class="gk-stat-tiles"><div class="gk-stat-tile" id="kachel-seite"><span class="gk-stat-tile-value">1</span><span class="gk-stat-tile-label">x</span><span class="gk-stat-tile-sub">y</span></div></div>
+<button type="button" class="gk-btn gk-btn-primary" id="knopf-primaer">Speichern</button>`;
+
+/*
+ * Der Buchstabe einer gewählten Antwort ist --gk-on-primary auf --gk-primary —
+ * dasselbe Paar wie der gefüllte Primärknopf. In der Grundpalette OHNE Thema
+ * (#6366f1) hält das 4,47:1, in jedem Thema über 4,5 (--gk-l-primary, 1.6x).
+ * Das ist eine Eigenschaft der Grundpalette, nicht dieses Bausteins: liegt der
+ * Buchstabe genau dort, wo der Knopf liegt, wird er gemeldet, nicht beanstandet.
+ * Liegt er darunter, ist es sein eigener Fehler.
+ */
+const WIE_DER_PRIMAERKNOPF = new Set(["Antwort gewählt · Buchstabe"]);
+
+/** Welche Schrift gegen welchen Grund: [Name, Element-ID, Wähler der Schrift im Element]. */
+const TEXTPROBEN = [
+  ...[1, 2, 3, 4, 5].map((n) => [`Kürzelfarbe ${n}`, `ton-${n}`, null]),
+  ...["karte", "seite", "warnung", "gefahr"].flatMap((k) =>
+    ["value", "label", "sub"].map((t) => [`Kachel ${k} · ${t}`, `kachel-${k}`, `.gk-stat-tile-${t}`])),
+  ["Einstellung Gefahr · Titel", "einstellung", ".gk-setting-title"],
+  ["Einstellung Gefahr · Satz", "einstellung", ".gk-setting-hint"],
+  ["Antwort gewählt · Titel", "wahl-an", ".gk-choice-title"],
+  ["Antwort gewählt · Satz", "wahl-an", ".gk-choice-hint"],
+  ["Antwort gewählt · Buchstabe", "wahl-an", ".gk-choice-mark"],
+  ["Antwort offen · Buchstabe", "wahl-aus", ".gk-choice-mark"],
+];
+
+// Machado, Oliveira & Fernandes (2009), Stärke 1,0, auf linearem RGB.
+const MACHADO = {
+  protan: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-0.003882, -0.048116, 1.051998]],
+  deutan: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.011820, 0.042940, 0.968881]],
+};
+const linear = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+const oklab = ([r, g, b]) => {
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+          1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+          0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+};
+const sehen = (rgb, art) => {
+  const lin = rgb.map(linear);
+  if (!art) return oklab(lin);
+  const M = MACHADO[art];
+  const k = (x) => Math.min(1, Math.max(0, x));
+  return oklab(M.map((z) => k(z[0] * lin[0] + z[1] * lin[1] + z[2] * lin[2])));
+};
+const abstand = (a, b, art) => {
+  const [p, q] = [sehen(a, art), sehen(b, art)];
+  return 100 * Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+};
+
+async function bausteineMessen(browser, mitThemes) {
+  const bDir = fs.mkdtempSync(path.join(os.tmpdir(), "gk-farben-b-"));
+  try {
+    for (const f of ["gridkit.css", "themes.css"]) fs.copyFileSync(path.join(WURZEL, "css", f), path.join(bDir, f));
+    fs.writeFileSync(path.join(bDir, "probe.html"), `<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="gridkit.css">${mitThemes ? '<link rel="stylesheet" href="themes.css">' : ""}</head>
+<body class="gk-root">${BAUSTEINE}</body></html>`);
+    const page = await browser.newPage({ viewport: { width: 1280, height: 1400 } });
+    await page.goto("file://" + path.join(bDir, "probe.html"));
+    const zeilen = await page.evaluate(([proben, themen, modi]) => {
+      const c = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+      const rgba = (f) => { c.clearRect(0, 0, 1, 1); c.fillStyle = "#000"; c.fillStyle = f; c.fillRect(0, 0, 1, 1);
+        const d = c.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
+      const ueber = (vorn, hinten) => [0, 1, 2].map((i) => vorn[i] * vorn[3] + hinten[i] * (1 - vorn[3]));
+      const lum = (v) => { const f = (x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+        return 0.2126 * f(v[0]) + 0.7152 * f(v[1]) + 0.0722 * f(v[2]); };
+      const kontrast = (a, b) => { const la = lum(a), lb = lum(b); return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05); };
+      /* Der Grund, auf dem ein Element wirklich steht: alle Hintergründe von
+         oben nach unten übereinander gelegt, ab dem ersten deckenden. */
+      const grund = (el) => {
+        const schichten = [];
+        for (let e = el; e; e = e.parentElement) schichten.push(rgba(getComputedStyle(e).backgroundColor));
+        let g = [255, 255, 255];
+        for (const s of schichten.reverse()) g = ueber(s, g);
+        return g;
+      };
+      const sonde = document.createElement("span"); document.body.appendChild(sonde);
+      const aufloesen = (v) => { sonde.style.color = `var(${v})`; return rgba(getComputedStyle(sonde).color); };
+
+      const ergebnis = [];
+      for (const thema of themen) {
+        for (const modus of modi) {
+          thema ? document.body.setAttribute("data-gk-theme", thema) : document.body.removeAttribute("data-gk-theme");
+          document.body.classList.toggle("gk-dark", modus === "dark-klasse");
+          document.body.setAttribute("data-gk-mode", modus === "dark-klasse" ? "light" : modus);
+          /* Eine Kachel mit transition steht nach dem Umschalten noch auf dem
+             alten Grund, ihr Text schon auf dem neuen: gemessen wurde 1,22:1,
+             das niemand je sieht. Erst den Stil rechnen lassen (das startet die
+             Übergänge), dann jeden an sein Ende setzen. */
+          void document.body.offsetWidth;
+          document.getAnimations().filter((a) => isFinite(a.effect.getComputedTiming().endTime)).forEach((a) => a.finish());
+          const texte = [];
+          for (const [name, id, wahl] of proben) {
+            const kasten = document.getElementById(id);
+            const schrift = wahl ? kasten.querySelector(wahl) : kasten;
+            const g = grund(schrift);
+            const t = ueber(rgba(getComputedStyle(schrift).color), g);
+            texte.push({ name, kontrast: kontrast(t, g) });
+          }
+          const knopf = document.getElementById("knopf-primaer");
+          const kg = grund(knopf);
+          const primaerknopf = kontrast(ueber(rgba(getComputedStyle(knopf).color), kg), kg);
+          const flaeche = aufloesen("--gk-surface").slice(0, 3);
+          const reihen = [1, 2, 3, 4, 5].map((n) => aufloesen(`--gk-series-${n}`));
+          ergebnis.push({ thema: thema || "(ohne Thema)", modus, texte, primaerknopf, flaeche, reihen,
+            reihenKontrast: reihen.map((r) => kontrast(r.slice(0, 3), flaeche)) });
+        }
+      }
+      sonde.remove();
+      return ergebnis;
+    }, [TEXTPROBEN, mitThemes ? THEMEN : [""], MODI]);
+    await page.close();
+    return zeilen;
+  } finally {
+    fs.rmSync(bDir, { recursive: true, force: true });
+  }
+}
+
+/** Die Befunde des dritten Abschnitts als Zeilen; zählt die Beanstandungen. */
+function bausteineBerichten(wie, zeilen) {
+  let schlecht = 0;
+  console.log(`\nBausteine 1.92.0, ${wie}:`);
+  const hellDunkel = { light: null, dark: null };
+  for (const z of zeilen) {
+    const kopf = `${z.thema.padEnd(12)} ${z.modus.padEnd(11)}`;
+    const dunkel = z.modus !== "light";
+    const wieKnopf = (t) => WIE_DER_PRIMAERKNOPF.has(t.name) && t.kontrast >= z.primaerknopf - 0.01;
+    const zuWenig = z.texte.filter((t) => t.kontrast < 4.5 && !wieKnopf(t));
+    const zurueck = z.texte.filter((t) => t.kontrast < 4.5 && wieKnopf(t));
+    const schwaechster = z.texte.reduce((a, b) => (a.kontrast <= b.kontrast ? a : b));
+    if (zuWenig.length) {
+      schlecht++;
+      console.log(`FAIL  ${kopf}  ${zuWenig.length} Text(e) unter 4,5:1`);
+      zuWenig.forEach((t) => console.log(`        ${t.name} ${t.kontrast.toFixed(2)}:1`));
+    } else {
+      console.log(`ok    ${kopf}  alle ${z.texte.length} Texte ≥ 4,5:1` + (zurueck.length
+        ? ` — zurückgestellt: ${zurueck.map((t) => `${t.name} ${t.kontrast.toFixed(2)}:1`).join(", ")}, wie der gefüllte Primärknopf (${z.primaerknopf.toFixed(2)}:1, Grundpalette)`
+        : ` (schwächster: ${schwaechster.name} ${schwaechster.kontrast.toFixed(2)}:1)`));
+    }
+    /* Reihenfarben: in jedem Thema dieselben wie im ersten gemessenen. */
+    const key = z.reihen.map((r) => r.slice(0, 3).join(",")).join(" ");
+    const art = dunkel ? "dark" : "light";
+    if (hellDunkel[art] === null) hellDunkel[art] = { key, reihen: z.reihen };
+    else if (hellDunkel[art].key !== key) {
+      schlecht++;
+      console.log(`FAIL  ${kopf}  die Reihenfarben weichen vom ersten Thema ab — ein Thema verschiebt sie`);
+    }
+    const muessen = dunkel ? [0, 1, 2, 3, 4] : [0, 1];
+    const schwach = muessen.filter((i) => z.reihenKontrast[i] < 3);
+    if (schwach.length) {
+      schlecht++;
+      console.log(`FAIL  ${kopf}  Reihe ${schwach.map((i) => i + 1).join(", ")} unter 3:1 gegen die Fläche`);
+    }
+  }
+  /* Nachbarn unterscheidbar: je Modus einmal (die Farben sind themenfest). */
+  for (const [art, satz] of Object.entries(hellDunkel)) {
+    if (!satz) continue;
+    let schlechtesterCvd = Infinity, schlechtesterNormal = Infinity;
+    for (let i = 0; i < 4; i++) {
+      const [a, b] = [satz.reihen[i].slice(0, 3), satz.reihen[i + 1].slice(0, 3)];
+      schlechtesterCvd = Math.min(schlechtesterCvd, abstand(a, b, "protan"), abstand(a, b, "deutan"));
+      schlechtesterNormal = Math.min(schlechtesterNormal, abstand(a, b, null));
+    }
+    const gut = schlechtesterCvd >= 8 && schlechtesterNormal >= 15;
+    if (!gut) schlecht++;
+    console.log(`${gut ? "ok  " : "FAIL"}  Reihenfarben ${art.padEnd(5)}  Nachbarn ΔE ${schlechtesterCvd.toFixed(1)} (Protan/Deutan, verlangt 8) · ${schlechtesterNormal.toFixed(1)} normal (verlangt 15)`);
+  }
+  return schlecht;
+}
+
 (async () => {
   const browser = await chromium.launch();
   const page = await browser.newPage();
@@ -282,6 +495,8 @@ async function komponentenMessen(browser, mitThemes, schreibweise) {
   const ohneThemes = await komponentenMessen(browser, false, "attribut");
   const klassenSchreibweise = await komponentenMessen(browser, false, "klasse");
   const hell = await komponentenMessen(browser, true, "hell");
+  const bausteineMitThemes = await bausteineMessen(browser, true);
+  const bausteineOhneThemes = await bausteineMessen(browser, false);
   await browser.close();
 
   let schlecht = 0;
@@ -330,6 +545,9 @@ async function komponentenMessen(browser, mitThemes, schreibweise) {
       console.log(`${liest ? "ok  " : "FAIL"}  Platzhalter ${zustand.padEnd(11)} ${ph.wert} auf ${ph.grund} → ${ph.kontrast.toFixed(2)}:1`);
     }
   }
+
+  schlecht += bausteineBerichten("mit themes.css", bausteineMitThemes);
+  schlecht += bausteineBerichten("ohne themes.css", bausteineOhneThemes);
 
   process.exit(schlecht ? 1 : 0);
 })().catch((e) => { console.error("Abbruch:", e.message.split("\n")[0]); process.exit(2); });

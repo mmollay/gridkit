@@ -93,7 +93,7 @@ class Header
             // often the only way in. Its glyph is decoration; without a name
             // of its own it announced as "button".
             $menuLabel = htmlspecialchars(Lang::t('sidebar.open'), ENT_QUOTES, 'UTF-8');
-            $html .= '<button class="gk-header-menu-toggle" aria-label="' . $menuLabel . '" title="' . $menuLabel . '" aria-expanded="false" onclick="GK.sidebar.toggle()">';
+            $html .= '<button class="gk-header-menu-toggle" aria-label="' . $menuLabel . '" title="' . $menuLabel . '" aria-expanded="false" data-gk-sidebar-action="toggle">';
             $html .= '<span class="material-icons" aria-hidden="true">menu</span>';
             $html .= '</button>';
         }

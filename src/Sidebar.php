@@ -92,7 +92,11 @@ class Sidebar
     {
         $this->usedIds = [];
         $e = fn(string $s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
-        echo '<div class="gk-sidebar-overlay" data-gk-sidebar-overlay onclick="GK.sidebar.close()"></div>';
+        // No onclick anywhere in the sidebar (1.92.0): gridkit.js answers
+        // data-gk-sidebar-action by delegation, so a page with a strict
+        // Content-Security-Policy (no 'unsafe-inline') keeps a working sidebar,
+        // and GK.sidebar.* stays the API the attribute calls.
+        echo '<div class="gk-sidebar-overlay" data-gk-sidebar-overlay data-gk-sidebar-action="close"></div>';
         $sidebarCls = 'gk-sidebar';
         if ($this->headerOffset) $sidebarCls .= ' gk-sidebar-with-header';
         $ajaxAttr = $this->ajaxNavEnabled ? ' data-gk-ajax-nav' : '';
@@ -102,7 +106,7 @@ class Sidebar
         if ($this->brand !== '') {
             echo '<div class="gk-sidebar-brand">';
             if ($this->collapsePosition === 'top') {
-                echo '<button class="gk-sidebar-collapse-btn" aria-label="' . $e(Lang::t('sidebar.collapse')) . '" onclick="window.GK&&GK.sidebar.collapse()" title="' . $e(Lang::t('sidebar.toggle')) . '">';
+                echo '<button class="gk-sidebar-collapse-btn" aria-label="' . $e(Lang::t('sidebar.collapse')) . '" data-gk-sidebar-action="collapse" title="' . $e(Lang::t('sidebar.toggle')) . '">';
                 echo '<span class="material-icons" aria-hidden="true">menu</span>';
                 echo '</button>';
             }
@@ -120,7 +124,7 @@ class Sidebar
             // unless it says so itself. It read as "close" before, by accident
             // of the ligature.
             $closeLabel = $e(Lang::t('sidebar.close'));
-            echo '<button class="gk-sidebar-close-mobile" aria-label="' . $closeLabel . '" title="' . $closeLabel . '" onclick="window.GK&&GK.sidebar.close()">';
+            echo '<button class="gk-sidebar-close-mobile" aria-label="' . $closeLabel . '" title="' . $closeLabel . '" data-gk-sidebar-action="close">';
             echo '<span class="material-icons" aria-hidden="true">close</span>';
             echo '</button>';
             echo '</div>';
@@ -162,7 +166,7 @@ class Sidebar
 
         // Collapse button (bottom)
         if ($this->collapsePosition === 'bottom') {
-            echo '<button class="gk-sidebar-collapse-btn gk-sidebar-collapse-bottom" aria-label="' . $e(Lang::t('sidebar.collapse')) . '" onclick="window.GK&&GK.sidebar.collapse()" title="' . $e(Lang::t('sidebar.toggle')) . '">';
+            echo '<button class="gk-sidebar-collapse-btn gk-sidebar-collapse-bottom" aria-label="' . $e(Lang::t('sidebar.collapse')) . '" data-gk-sidebar-action="collapse" title="' . $e(Lang::t('sidebar.toggle')) . '">';
             echo '<span class="material-icons" aria-hidden="true">chevron_left</span>';
             echo '<span class="gk-sidebar-collapse-label">' . $e(Lang::t('sidebar.collapse')) . '</span>';
             echo '</button>';
@@ -263,7 +267,7 @@ class Sidebar
     public static function toggleButton(): void
     {
         $openLabel = htmlspecialchars(Lang::t('sidebar.open'), ENT_QUOTES, 'UTF-8');
-        echo '<button class="gk-sidebar-toggle" aria-label="' . $openLabel . '" title="' . $openLabel . '" onclick="GK.sidebar.toggle()">';
+        echo '<button class="gk-sidebar-toggle" aria-label="' . $openLabel . '" title="' . $openLabel . '" data-gk-sidebar-action="toggle">';
         echo '<span class="material-icons" aria-hidden="true">menu</span>';
         echo '</button>';
     }

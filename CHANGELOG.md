@@ -7,6 +7,147 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.92.0] - 2026-09-24
+
+Vespera's admin — users, usage, modules and the situation page — is built with
+GridKit 1.91 and still carried about 465 rules of CSS of its own, around 100 of
+them overriding GridKit. The aim was an admin with no stylesheet at all. Going
+through those rules one by one, each was either a block GridKit did not have or
+a GridKit fault the page had worked around: four were faults, fifteen were
+missing blocks. They are below, each named once, in roles only, so the same rule
+is right in light and dark mode and under every theme. Six more candidates were
+not built because a block that exists already does the job: filter segments (the
+filters go), a status line (a `.gk-message`, now that `hidden` hides it), a
+plain list (`.gk-table-minimal` with `tr.gk-row-link`), pill and count labels
+(the density's own labels stay), a meta list (text with " · "), and a plain
+sheet header or body stack (the standard header; `.gk-flex-col .gk-gap-xl`).
+
+### Fixed — `.gk-main` had no rule
+
+The skill and `skeleton.php` have shown `<main class="gk-main">` as the content
+area with "padding and max-width" since 1.36.0, and no rule gave it either: the
+last one naming the class went in 28538aa. Every page wrote the padding itself.
+It is a rule now: 24px 28px 48px, 16px at the edge of a phone, at most
+`--gk-main-max` (1680px, a hook the page may set). A test now reads every class
+name the skill and the skeleton mention and fails on one no stylesheet rule has
+— comments stripped, so talking about a class does not count as styling it.
+
+### Fixed — the `hidden` attribute did not hide a GridKit block
+
+The browser's own `[hidden] { display: none }` loses to any author rule that sets
+a display, and most blocks set one: `<div class="gk-message" hidden>` stood on the
+page, because a message is flex. The sheet, the modal overlay and the folded
+table rows each had a guard of their own; a page hiding anything else wrote one
+too (Vespera's admin had three). One rule for every element with a `gk-` class,
+`:where()` for zero specificity and `!important` so that it wins the hidden state
+and nothing else.
+
+### Fixed — the docked sheet's close button was 40px
+
+On a phone it was 44, docked 40, and a page that asks 44 of every target wrote
+its own override. The new token `--gk-target-min: 44px` sizes it in both places;
+a negative margin keeps the header as tall as the 40px button made it, so the
+title does not move.
+
+### Fixed — the sidebar wrote inline script
+
+`Sidebar` and `Header` wrote `onclick="GK.sidebar.toggle()"` and friends — refused
+by a Content-Security-Policy without `'unsafe-inline'`, and copied by every page
+that built its own shell. They write `data-gk-sidebar-action="toggle|close|collapse"`
+now and one delegated listener calls `GK.sidebar.*`, which stays the API. The
+menu button said `aria-expanded="false"` from the day it was written and nothing
+ever changed it; it follows the sidebar now. And a switch showed no focus at all
+— the input is invisible and the slider is what the eye sees — so the slider
+carries the focus ring.
+
+### Added — a list as a class: `.gk-table-list`, `->size('list')`
+
+The row the six rules of 1.91 were drawn from, which every list wrote by hand:
+64px rows, the name at 15px semibold over the address at 13px, a group heading
+without a bar, the summary row set in with a radius. A list neither turns into
+cards nor scrolls sideways on a phone — `->mobile()` on it is refused with a
+warning. The wrap is a size container, and only this wrap: `container-type` on
+every `.gk-table-wrap` would change how tables in a flex row are sized.
+
+### Added — columns that give way by the list's width: `.gk-col-p2` … `-p5`
+
+Which columns fit depends on how wide the LIST is, not the window — the sidebar
+is wide, collapsed or gone, and a docked sheet takes 440px. `'priority' => 2…5`
+on a `Table` column puts the class on its header and every cell, on the server
+and in the client rebuild (a new parity case, confirmed by breaking the client
+helper). p5 goes below 1040px of list, p4 below 900, p3 below 720, p2 below 560;
+a column without one never goes; anything outside 2…5 warns. The widths are the
+list as it stands, border included: a container measures inside its border, and
+written as `max-width: 899px` a list exactly 900px wide lost its column — the
+browser case caught it.
+
+### Added — the who cell: `.gk-cell-who`, `.gk-cell-sub-wrap`
+
+Rule 3 as a finished cell: avatar, name, a label right after it, the address
+underneath. A label that does not fit beside the name moves under it instead of
+shortening it; the name is shortened only when it does not fit on its own.
+`.gk-cell-sub-wrap` breaks a second line instead of ending it in an ellipsis — of
+two people with the same name, "anna@exa…" left nothing to tell them apart.
+
+### Added — the small parts
+
+- `.gk-header-meta`: a quiet line on the baseline beside the header title; it
+  gives way first (ellipsis before the user menu is pushed off) and is gone at
+  768px and below.
+- `.gk-avatar-tone-1` … `-5`: five container role pairs for initials, told apart
+  side by side, after the dark `.gk-avatar` rule so that they beat it.
+- `.gk-dot` with `-success`, `-warning`, `-danger`, `-primary`, `-muted`,
+  `-outline` (an empty ring, told apart by shape) and `-pulse` (still under
+  `prefers-reduced-motion`) — four hand-built dots in one admin became one block.
+- `.gk-setting`: the settings row of rule 1 — title, one sentence, the switch on
+  the right; `-danger` for a switch that locks someone out. A Form `'toggle'` with
+  a `'hint'` writes it, the input a `role="switch"` described by the sentence.
+- `.gk-field-static`: a value that is only read in the sheet, with its reason.
+- `.gk-stat-tiles` / `.gk-stat-tile`: a figure over its word for a sheet or a
+  card; `-warning` and `-danger` for the one that needs acting on; also a
+  `<button>`, an `<a>` or a `<dl>` (the word as `<dt>` first, the figure still on
+  top). `StatCards->compact()` writes them from the same `card()`s. The figures of
+  a row stand on one line.
+- `.gk-sheet-meta`: a line under the sheet title; the header becomes a grid and
+  the close button keeps its corner.
+- `--gk-series-1` … `-5` with `.gk-swatch-N`, `.gk-series-fill-N` and
+  `.gk-series-stroke-N`: chart colours, the same in every theme, stepped for the
+  dark ground. The usage chart carried ten fixed hex colours, the same in dark
+  mode. Slots 3 to 5 sit under 3:1 on white; a chart using them shows its values
+  as text too (documented).
+- `.gk-btn-touch`: a 44px target without the larger type of `.gk-btn-lg` — one
+  admin wrote its own 44px on seven buttons.
+- `.gk-message-actions`: a place for buttons on the right of a message; the
+  status band of a page is a message with a button.
+- `.gk-show-mobile`: the counterpart of `.gk-hide-mobile`.
+- `.gk-choice`: a radio or checkbox as a bordered answer tile with a letter; the
+  tile carries the state and the focus ring (`:has()`; without it the native
+  control stays visible). Form field type `'choice'`, with `'multiple'` for
+  checkboxes — which a browser cannot require, so GridKit warns and draws no star.
+
+### Tests
+
+- `tests/admin-blocks.test.php` (new, 19 tests): the markup PHP writes and the
+  contracts between stylesheet, script and documentation for every block above.
+- `ci/browser.js`: 31 cases on a new fixture page (`browser-fixture.php --admin`),
+  113 in all — the list at 500, 700, 900 and 1100px with nothing scrolling
+  sideways, the hidden message, the sidebar by attribute, the keyboard focus on a
+  switch and an answer tile, the header line at 1440, 800 and 390px. Confirmed by
+  breaking the hidden guard, `.gk-main`, the delegation and the query widths: six
+  cases went red.
+- `ci/farben.js`: a third section measures the new colours on real elements in
+  seven themes and three modes, with and without `themes.css` — every text
+  against the ground it really stands on, and the series colours for contrast,
+  constancy across themes and distance between neighbours under simulated
+  protanopia and deuteranopia (ΔE 9.1 light, 8.4 dark; 19.6 and 19.3 for normal
+  vision). The first run reported 1.22:1 that nobody ever sees: a tile with a
+  transition was measured mid-way after the mode switch; transitions are
+  finished before measuring now. White on the base palette's `#6366f1` for the
+  chosen letter measures 4.47:1 — the filled primary button's pair, reported as
+  such and not faulted; every theme clears 4.5.
+- `php tests/run.php`: 3645 assertions.
+
+---
 ## [1.91.0] - 2026-09-23
 
 Two admin lists built with GridKit were turned down on sight: "is that really

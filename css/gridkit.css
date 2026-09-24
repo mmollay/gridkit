@@ -228,6 +228,26 @@ a:hover {
      higher up — see the rule under SIDE SHEET. */
   --gk-sheet-width: 440px;
 
+  /* The smallest pointer target a control may have. A row link, the summary
+     toggle and the phone sheet's close button each wrote 44px on their own;
+     the docked close button wrote 40, and every page that needed 44 there
+     wrote its own override. One number now: .gk-sheet-close, .gk-btn-touch,
+     .gk-stat-tile and .gk-setting read it. */
+  --gk-target-min: 44px;
+
+  /* Series colours, for charts — five categorical slots in a fixed order, the
+     same in every theme (a series follows its entity, never the accent).
+     The first five of a validated categorical palette: adjacent pairs 9.1
+     apart under simulated protanopia and deuteranopia, 19.6 for normal vision
+     (OKLab x100). Slots 3 to 5 sit under 3:1 on white — a chart that uses them
+     shows its values as text too (a legend with figures, or a table).
+     ci/farben.js measures all of it in both modes. */
+  --gk-series-1: #2a78d6;
+  --gk-series-2: #eb6834;
+  --gk-series-3: #1baf7a;
+  --gk-series-4: #eda100;
+  --gk-series-5: #e87ba4;
+
   --gk-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --gk-font-size: 14px;
   --gk-font-size-sm: 12px;
@@ -322,6 +342,18 @@ a:hover {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+/* The hidden attribute hides every GridKit block. The browser's own
+   [hidden] { display: none } loses to any author rule that sets display, and
+   most blocks here set one: a .gk-message is flex, so <div class="gk-message"
+   hidden> stood on the page. The side sheet, the modal overlay and the folded
+   table rows each carried a guard of their own; a page that hid anything else
+   wrote one too (Vespera's admin had three). One rule for every class that
+   starts with gk-. :where() keeps it at zero specificity — the !important is
+   what wins, and it wins only for the hidden state. */
+:where([class^="gk-"], [class*=" gk-"])[hidden] {
+  display: none !important;
 }
 
 /* === TABLE === */
@@ -2301,6 +2333,14 @@ select.gk-input {
 .gk-toggle input:checked + .gk-toggle-slider::before {
   transform: translateX(20px);
 }
+/* The input is invisible and the slider is what the eye sees, so the focus
+   has to show on the slider. It showed nowhere: a keyboard reached a switch
+   and nothing on the page moved. Pages that noticed wrote the rule themselves
+   (Vespera's settings rows did). */
+.gk-toggle input:focus-visible + .gk-toggle-slider {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
 
 .gk-form-actions {
   display: flex;
@@ -3082,16 +3122,60 @@ select.gk-input {
 .gk-sheet-title:focus {
   outline: none;
 }
-/* The modal's close button (shared rule above), a size up at 40px: it is the
-   one way out that is always there. A link in its place, for a sheet a server
-   rendered open, looks the same. */
+/* The modal's close button (shared rule above), a size up at the pointer
+   target: it is the one way out that is always there. A link in its place, for
+   a sheet a server rendered open, looks the same. Docked it was 40px until
+   1.92.0 — on a phone 44 — and a page that asked 44 of every target wrote its
+   own override. The negative margin keeps the header as tall as the 40px
+   button made it, so the title does not move. */
 .gk-sheet-close {
-  width: 40px;
-  height: 40px;
-  margin: 0;
+  width: var(--gk-target-min);
+  height: var(--gk-target-min);
+  margin: calc((40px - var(--gk-target-min)) / 2);
   padding: 0;
   border-radius: 10px;
   text-decoration: none;
+}
+/* A line under the title — the address, when the record last moved, a link
+   (.gk-sheet-meta, since 1.92.0). With it the header is a grid: the line sits
+   under the title and the close button keeps its corner, and the reading
+   order stays the markup's — title, line, close. Vespera's admin built the
+   same with a wrapper and eleven rules of its own. */
+.gk-sheet-header:has(> .gk-sheet-meta) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 12px;
+  row-gap: 2px;
+  align-items: start;
+}
+.gk-sheet-header:has(> .gk-sheet-meta) > .gk-sheet-close {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+.gk-sheet-meta {
+  grid-column: 1;
+  margin: 0;
+  font-size: var(--gk-text-body);
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface-variant);
+  overflow-wrap: anywhere;
+}
+/* A link in the line is recognisable without hovering it — the dotted
+   underline of a linked cell (.gk-cell-link), not a colour of its own. */
+.gk-sheet-meta a {
+  color: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--gk-outline);
+}
+.gk-sheet-meta a:hover {
+  text-decoration: underline solid;
+  text-decoration-color: currentColor;
+}
+.gk-sheet-meta a:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 .gk-sheet-body {
   flex: 1 1 auto;
@@ -3148,8 +3232,7 @@ select.gk-input {
     font-size: var(--gk-text-subtitle);
   }
   .gk-sheet-close {
-    width: 44px;
-    height: 44px;
+    margin: 0;
   }
   .gk-sheet-body {
     padding: 16px;
@@ -3784,6 +3867,20 @@ a.gk-stat-card:hover {
   margin-left: 60px;
 }
 
+/* The content area beside the sidebar. The skill and skeleton.php have shown
+   <main class="gk-main"> as "padding and max-width" since 1.36.0, and no rule
+   ever gave it either: the last rule naming the class (a margin reset for the
+   old fixed header) went in 28538aa. Every page wrote the padding itself —
+   Vespera's admin as 24px 28px 48px, capped at 1680px — or its content touched
+   the sidebar. Those numbers, as the rule. --gk-main-max is a hook a page may
+   set; GridKit never does. */
+.gk-main {
+  display: block;
+  padding: 24px 28px 48px;
+  max-width: var(--gk-main-max, 1680px);
+  min-width: 0;
+}
+
 @media (max-width: 768px) {
   .gk-sidebar {
     transform: translateX(-100%);
@@ -3805,6 +3902,10 @@ a.gk-stat-card:hover {
   }
   .gk-with-sidebar {
     margin-left: 0;
+  }
+  /* 16px at the edge of a phone, the gutter the rest of the phone layout keeps. */
+  .gk-main {
+    padding: 16px 16px 40px;
   }
 }
 
@@ -4201,6 +4302,41 @@ a.gk-stat-card:hover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+/* A quiet line beside the title, on its baseline: "2 users · 4 never used"
+   (.gk-header-meta, since 1.92.0). It is the part that gives way — shortened
+   with an ellipsis before the user menu is pushed off the edge, gone on a
+   phone. For that the left side may shrink while it carries one; without the
+   line it keeps its size, as before. */
+.gk-header-title:has(> .gk-header-meta) {
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: baseline;
+  gap: 12px;
+}
+.gk-header-left:has(> .gk-header-title > .gk-header-meta) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* The title keeps its width while the line beside it gives way; only a title
+   that alone is too long is shortened (the h1 rule above). */
+.gk-header-title:has(> .gk-header-meta) > h1 {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+.gk-header-meta {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: var(--gk-text-body);
+  color: var(--gk-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 768px) {
+  .gk-header-meta {
+    display: none;
+  }
 }
 
 /* Breadcrumb */
@@ -4623,6 +4759,14 @@ a.gk-stat-card:hover {
 /* === TABLE MOBILE: Hide Cols === */
 @media (max-width: 768px) {
   .gk-hide-mobile {
+    display: none !important;
+  }
+}
+/* Its counterpart (since 1.92.0): shown on a phone only — a short form of a
+   word the wide screen spells out, an icon-only button's phone twin. On the
+   phone it keeps whatever display it has; only the wide screen hides it. */
+@media (min-width: 769px) {
+  .gk-show-mobile {
     display: none !important;
   }
 }
@@ -5604,6 +5748,15 @@ a.gk-stat-card:hover {
   /* Icons need 3:1, which 0.45 (4.17:1) already met — raised to match the
      label beside them rather than sit a shade below it. */
   --gk-sidebar-icon-muted: rgba(255, 255, 255, 0.55);
+
+  /* The same five hues, stepped for a dark ground: each clears 3:1 on
+     #0d1117 and on themes.css's #1e293b; adjacent pairs 8.4 apart under
+     simulated CVD, 19.3 for normal vision. */
+  --gk-series-1: #3987e5;
+  --gk-series-2: #d95926;
+  --gk-series-3: #199e70;
+  --gk-series-4: #c98500;
+  --gk-series-5: #d55181;
 
   color-scheme: dark;
 }
@@ -7592,6 +7745,586 @@ textarea.gk-input[readonly]:focus-visible {
   .gk-skeleton {
     animation: none;
     background: var(--gk-surface-container-high);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BLOCKS FOR AN ADMIN WITHOUT ITS OWN CSS (since 1.92.0)
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Vespera's admin (users, usage, modules, the situation page) was built with
+   GridKit and still carried about 465 rules of its own CSS, around 100 of them
+   overriding GridKit: the list row the six rules describe, columns that give
+   way, the who cell, settings rows, key-figure tiles, status dots, avatar
+   colours, chart colours, answer tiles. Each block below is one of those,
+   named and built once, so a page can drop its stylesheet. Colours are roles
+   only — the same rule is right in light and dark mode and under every theme.
+
+   Down here on purpose: a list must beat the phone rule that gives every table
+   540px (0,3,0, in the mobile block above), and an avatar tone the dark
+   .gk-avatar rule (0,2,0) — at equal specificity the later rule wins. Only the
+   iOS field-zoom block below comes after this one; it has to be last. */
+
+/* ── A list: .gk-table-list ─────────────────────────────────────────────────
+   The row the six rules were drawn from, as a class: 64px, the name at 15px
+   semibold over the address at 13px, a group heading without a surface, the
+   summary row set in with a radius. Every list wrote it by hand until now.
+   A modifier on .gk-table-wrap; Table->size('list') writes it.
+
+   The wrap is a size container, and only this wrap. container-type makes a box
+   ignore its content when it is sized — on every .gk-table-wrap that would
+   move tables that sit in a flex row. A list in a row of its own needs a width
+   (flex: 1, a grid track), as any container does. */
+.gk-table-wrap.gk-table-list {
+  container: gk-list / inline-size;
+  --gk-table-pad-y: 10px;
+  --gk-table-pad-x: 8px;
+}
+/* A list does not scroll sideways: its columns give way instead (below). */
+.gk-table-wrap.gk-table-list .gk-table {
+  min-width: 0;
+}
+.gk-table-list .gk-table tbody tr:not(.gk-table-group, .gk-table-more) > td {
+  height: 64px;
+}
+.gk-table-list .gk-table :is(th, td):first-child {
+  padding-left: 20px;
+}
+.gk-table-list .gk-table :is(th, td):last-child {
+  padding-right: 20px;
+}
+.gk-table-list .gk-table tbody tr.gk-row-link > td:last-child {
+  padding-right: 44px;
+}
+.gk-table-list .gk-table tbody tr.gk-row-link > td:last-child::after {
+  right: 20px;
+}
+.gk-table-list .gk-row-target {
+  font-size: 15px;
+  line-height: 1.3;
+}
+.gk-table-list .gk-cell-sub {
+  font-size: var(--gk-text-label);
+  line-height: 1.35;
+}
+/* The group heading reads as a heading between rows, not as a bar: no surface,
+   the name in the text colour, the count after a middle dot. */
+.gk-table-list .gk-table tbody tr.gk-table-group > td,
+.gk-table-list .gk-table tbody tr.gk-table-group:hover > td {
+  padding: 14px 20px 8px;
+  background: transparent;
+  box-shadow: none;
+  font-size: var(--gk-text-label);
+  letter-spacing: 0;
+}
+.gk-table-list .gk-table tbody tr:has(+ tr.gk-table-group) > td {
+  border-bottom: 0;
+}
+.gk-table-list .gk-table-group-name {
+  font-weight: 600;
+}
+.gk-table-list .gk-table-group-n::before {
+  content: "· ";
+}
+/* The summary row stands in the list as a quiet block of its own. A veil,
+   not a surface role: in dark mode --gk-surface-container-low IS the surface,
+   and the block vanished (measured without themes.css). */
+.gk-table-list .gk-table tbody tr.gk-table-more > td,
+.gk-table-list .gk-table tbody tr.gk-table-more:hover > td {
+  padding: 8px 12px 12px;
+  background: transparent;
+  border-bottom: 0;
+  box-shadow: none;
+}
+.gk-table-list .gk-table-more-toggle {
+  padding: 14px 16px;
+  row-gap: 2px;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--gk-on-surface) 4%, transparent);
+}
+.gk-table-list .gk-table-more-toggle:hover {
+  background: color-mix(in oklab, var(--gk-on-surface) 8%, transparent);
+}
+.gk-table-list .gk-table-more-name {
+  font-size: var(--gk-text-body);
+}
+.gk-table-list .gk-table-more-toggle > .gk-cell-sub {
+  white-space: normal;
+}
+/* The who cell takes the width the other columns leave, and its text gives
+   way inside it — instead of the name widening the table. */
+.gk-table-list .gk-table td:has(> .gk-cell-who) {
+  width: 100%;
+  max-width: 0;
+}
+@container gk-list (width < 478px) {
+  .gk-table-list .gk-table :is(th, td):first-child {
+    padding-left: 12px;
+  }
+  .gk-table-list .gk-table :is(th, td):last-child {
+    padding-right: 12px;
+  }
+  .gk-table-list .gk-table tbody tr.gk-row-link > td:last-child {
+    padding-right: 30px;
+  }
+  .gk-table-list .gk-table tbody tr.gk-row-link > td:last-child::after {
+    right: 12px;
+  }
+  .gk-table-list .gk-cell-who {
+    gap: 10px;
+  }
+}
+
+/* ── Columns that give way: .gk-col-p2 … .gk-col-p5 ───────────────────────
+   Which columns a list can show depends on how wide the LIST is, not the
+   window: the sidebar is wide, collapsed or gone, and a docked sheet takes
+   440px of it. So the list's own width decides (the container above). p5 goes
+   first, below 1040px of list; p2 last, below 560. A column without a class
+   — the who column — never goes. On th and td alike (Table: 'priority' => n);
+   outside .gk-table-list the classes do nothing.
+   The numbers are the list as it stands on the page, border included. A
+   container measures inside its border, and the wrap has 1px on each side:
+   written as max-width: 899px, a list exactly 900px wide lost its p4 column.
+   So each query is 2px short of the width it names — width < 898px is a list
+   under 900. (The same goes for the 480px query above.) */
+@container gk-list (width < 1038px) {
+  .gk-table-list .gk-col-p5 {
+    display: none;
+  }
+}
+@container gk-list (width < 898px) {
+  .gk-table-list .gk-col-p4 {
+    display: none;
+  }
+}
+@container gk-list (width < 718px) {
+  .gk-table-list .gk-col-p3 {
+    display: none;
+  }
+}
+@container gk-list (width < 558px) {
+  .gk-table-list .gk-col-p2 {
+    display: none;
+  }
+}
+
+/* ── Who: .gk-cell-who ──────────────────────────────────────────────────────
+   Rule 3 as a finished cell: avatar, the name, a label right after it, the
+   address underneath over the whole width. The name is shortened only when it
+   does not fit on its own — a label that does not fit beside it moves under
+   it instead. .gk-cell-sub-wrap: a second line that is never shortened with an
+   ellipsis but breaks — of two people called the same, "anna@exa…" left
+   nothing to tell them apart by. */
+.gk-cell-who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.gk-cell-who-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.gk-cell-who-text > :first-child {
+  flex: 0 1 auto;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--gk-on-surface);
+}
+.gk-cell-who-text > .gk-label {
+  flex: 0 0 auto;
+}
+.gk-cell-who-text > .gk-cell-sub {
+  flex: 1 0 100%;
+}
+.gk-cell-sub.gk-cell-sub-wrap {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+
+/* ── Avatar colours: .gk-avatar-tone-1 … -5 ─────────────────────────────────
+   Five quiet role pairs, so initials next to each other can be told apart —
+   pick one per person (id modulo 5), never by rank. Container and on-container
+   roles: each pair carries its text in both modes, and themes move them along.
+   Two classes deep, and after the dark .gk-avatar rule (0,2,0), which would
+   otherwise paint every one of them the same indigo veil in dark mode. */
+.gk-avatar.gk-avatar-tone-1 {
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+}
+.gk-avatar.gk-avatar-tone-2 {
+  background: var(--gk-tertiary-container);
+  color: var(--gk-on-tertiary-container);
+}
+.gk-avatar.gk-avatar-tone-3 {
+  background: var(--gk-info-container);
+  color: var(--gk-on-info-container);
+}
+.gk-avatar.gk-avatar-tone-4 {
+  background: var(--gk-warning-container);
+  color: var(--gk-on-warning-container);
+}
+.gk-avatar.gk-avatar-tone-5 {
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface-variant);
+}
+
+/* ── Status dot: .gk-dot ────────────────────────────────────────────────────
+   A state or a presence beside its words — "● today 08:12". Four hand-built
+   dots in one admin became one block. The dot never speaks alone: the text
+   beside it says what it means, the dot is aria-hidden. -outline is an empty
+   ring, told apart by its shape rather than its colour ("never used");
+   -pulse says something is running, and stands still for anyone who asked
+   for less motion. The tones are the role colours the label dots use. */
+.gk-dot {
+  --gk-dot: var(--gk-on-surface-variant);
+  display: inline-block;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-right: 0.25em;
+  border-radius: 50%;
+  background: var(--gk-dot);
+  vertical-align: middle;
+}
+.gk-dot-success { --gk-dot: var(--gk-success); }
+.gk-dot-warning { --gk-dot: var(--gk-warning); }
+.gk-dot-danger  { --gk-dot: var(--gk-error); }
+.gk-dot-primary { --gk-dot: var(--gk-primary); }
+.gk-dot-muted   { --gk-dot: var(--gk-outline); }
+.gk-dot-outline {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--gk-dot);
+}
+.gk-dot-pulse {
+  animation: gk-dot-pulse 1.6s ease-in-out infinite;
+}
+@keyframes gk-dot-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gk-dot-pulse {
+    animation: none;
+  }
+}
+
+/* ── A setting: .gk-setting ─────────────────────────────────────────────────
+   Rule 1 in the sheet: the switch alone, with one sentence on what it does —
+   no label beside it repeating its state. Title and sentence on the left, the
+   control on the right. -danger for a switch that locks someone out. Form
+   writes it for a 'toggle' field that has a 'hint'. */
+.gk-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: var(--gk-target-min);
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: 12px;
+}
+.gk-setting-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gk-setting-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface);
+}
+label.gk-setting-title {
+  cursor: pointer;
+}
+.gk-setting-hint {
+  font-size: var(--gk-text-label);
+  line-height: var(--gk-leading-normal);
+  color: var(--gk-on-surface-variant);
+}
+.gk-setting-control {
+  flex-shrink: 0;
+}
+.gk-setting-danger {
+  border-color: color-mix(in oklab, var(--gk-error) 35%, var(--gk-outline-variant));
+}
+.gk-setting-danger .gk-setting-title {
+  color: var(--gk-danger-text);
+}
+.gk-setting-danger .gk-toggle input:checked + .gk-toggle-slider {
+  background: var(--gk-danger-fill);
+}
+
+/* ── A value that is only read: .gk-field-static ───────────────────────────
+   A field in the sheet that cannot be changed here — "Plan: everything", and
+   why. The label looks like every field label beside it (.gk-label-text); the
+   reason is the ordinary .gk-field-hint. */
+.gk-field-static {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.gk-field-static-label {
+  font-size: var(--gk-text-label);
+  font-weight: 500;
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface-variant);
+}
+.gk-field-static-value {
+  font-size: 15px;
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface);
+  overflow-wrap: anywhere;
+}
+.gk-field-static > .gk-field-hint {
+  margin-top: 0;
+}
+
+/* ── Compact key figures: .gk-stat-tiles ───────────────────────────────────
+   A figure over its word, small enough for a sheet or a card: "3 failing ·
+   12 open · 40 done". .gk-stat-card stays the block for an overview page.
+   Also a <button> or an <a>, then at least the pointer target tall. -warning
+   and -danger for the one figure that needs acting on (rule 4). The resting
+   surface is a veil, so it shows on the page, on a card and in the sheet, in
+   both modes. StatCards->compact() writes it.
+
+   A definition list works too — <dl class="gk-stat-tiles">, each tile a <div>
+   with the word as <dt> and the figure as <dd>. The word comes first there, as
+   HTML asks of a term, so the figure is put on top by order rather than by
+   source; the children lose the margins a dd brings along. And the figures of
+   a row stand on one line: a tile without a third line is as tall as its
+   neighbour with one, and centred its figure 8px lower. */
+.gk-stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.gk-stat-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: var(--gk-target-min);
+  margin: 0;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--gk-on-surface) 4%, transparent);
+  color: var(--gk-on-surface);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+.gk-stat-tile > * {
+  margin: 0;
+}
+.gk-stat-tile-value {
+  order: -1;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+  color: var(--gk-on-surface);
+}
+.gk-stat-tile-label {
+  font-size: var(--gk-text-label);
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface-variant);
+}
+.gk-stat-tile-sub {
+  font-size: var(--gk-text-caption);
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface-variant);
+}
+.gk-stat-tile-warning {
+  background: var(--gk-warning-container);
+}
+.gk-stat-tile-warning .gk-stat-tile-value {
+  color: var(--gk-warning-text);
+}
+.gk-stat-tile-warning :is(.gk-stat-tile-label, .gk-stat-tile-sub) {
+  color: var(--gk-on-warning-container);
+}
+.gk-stat-tile-danger {
+  background: var(--gk-error-container);
+}
+.gk-stat-tile-danger .gk-stat-tile-value {
+  color: var(--gk-danger-text);
+}
+.gk-stat-tile-danger :is(.gk-stat-tile-label, .gk-stat-tile-sub) {
+  color: var(--gk-on-error-container);
+}
+/* A tile that opens something: the hover is a state layer laid over whatever
+   tone it has, so a red tile does not turn grey under the pointer. */
+:is(button, a).gk-stat-tile {
+  cursor: pointer;
+  transition: var(--gk-transition-state);
+}
+:is(button, a).gk-stat-tile:hover {
+  box-shadow: inset 0 0 0 100vmax var(--gk-state-hover);
+}
+:is(button, a).gk-stat-tile:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+
+/* ── Chart colours: .gk-swatch, .gk-series-fill-N, .gk-series-stroke-N ─────
+   The five --gk-series-N tokens as classes, so a chart and its legend need no
+   colour of their own: a legend swatch beside its words, an SVG mark's fill
+   or stroke. Vespera's usage chart carried ten fixed hex colours, the same in
+   dark mode. A series beyond the fifth folds into "other". */
+.gk-swatch {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  margin-right: 0.25em;
+  border-radius: 3px;
+  background: var(--gk-on-surface-variant);
+  vertical-align: middle;
+}
+.gk-swatch-1 { background: var(--gk-series-1); }
+.gk-swatch-2 { background: var(--gk-series-2); }
+.gk-swatch-3 { background: var(--gk-series-3); }
+.gk-swatch-4 { background: var(--gk-series-4); }
+.gk-swatch-5 { background: var(--gk-series-5); }
+.gk-series-fill-1 { fill: var(--gk-series-1); }
+.gk-series-fill-2 { fill: var(--gk-series-2); }
+.gk-series-fill-3 { fill: var(--gk-series-3); }
+.gk-series-fill-4 { fill: var(--gk-series-4); }
+.gk-series-fill-5 { fill: var(--gk-series-5); }
+.gk-series-stroke-1 { stroke: var(--gk-series-1); }
+.gk-series-stroke-2 { stroke: var(--gk-series-2); }
+.gk-series-stroke-3 { stroke: var(--gk-series-3); }
+.gk-series-stroke-4 { stroke: var(--gk-series-4); }
+.gk-series-stroke-5 { stroke: var(--gk-series-5); }
+
+/* ── A button with a finger-sized target: .gk-btn-touch ────────────────────
+   At least --gk-target-min in both directions, the type unchanged — .gk-btn-lg
+   grows the text as well, and an admin that needed the target wrote its own
+   44px per button (seven of them on one page). */
+.gk-btn.gk-btn-touch {
+  min-height: var(--gk-target-min);
+  min-width: var(--gk-target-min);
+}
+
+/* ── Actions in a message: .gk-message-actions ─────────────────────────────
+   A place on the right of a .gk-message for what to do about it — the status
+   band of a page is a message with a button. A long message takes its line
+   and the actions move under it, still on the right. */
+.gk-message:has(> .gk-message-actions) {
+  flex-wrap: wrap;
+  align-items: center;
+}
+.gk-message-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* ── A choice as a tile: .gk-choice ────────────────────────────────────────
+   A radio or a checkbox as a bordered tile with a letter — "A  Fix it now" —
+   for a decision between a few answers. The whole tile is the label, so it is
+   the click target; the state is the tile's (:has(input:checked)), and so is
+   the focus ring. Where :has() is missing the native control stays visible,
+   so the choice never becomes invisible. Form writes it for a 'choice' field. */
+.gk-choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 10px 16px;
+  border: 1px solid var(--gk-outline);
+  border-radius: 10px;
+  background: var(--gk-surface);
+  color: var(--gk-on-surface);
+  cursor: pointer;
+  transition: var(--gk-transition-state);
+}
+.gk-choice:hover {
+  border-color: var(--gk-primary);
+}
+.gk-choice input {
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--gk-primary);
+}
+.gk-choice-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--gk-on-surface) 6%, transparent);
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-label);
+  font-weight: 700;
+}
+.gk-choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gk-choice-title {
+  font-size: 15px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.gk-choice-hint {
+  font-size: var(--gk-text-label);
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface-variant);
+  overflow-wrap: anywhere;
+}
+@supports selector(:has(*)) {
+  .gk-choice input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .gk-choice:has(input:checked) {
+    border-color: var(--gk-primary);
+    box-shadow: inset 0 0 0 1px var(--gk-primary);
+    background: color-mix(in oklab, var(--gk-primary) 8%, var(--gk-surface));
+  }
+  .gk-choice:has(input:checked) .gk-choice-mark {
+    background: var(--gk-primary);
+    color: var(--gk-on-primary);
+  }
+  .gk-choice:has(input:focus-visible) {
+    outline: 2px solid var(--gk-primary);
+    outline-offset: 2px;
+  }
+  .gk-choice:has(input:disabled) {
+    opacity: 0.55;
+    cursor: not-allowed;
   }
 }
 

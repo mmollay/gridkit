@@ -87,6 +87,18 @@
   }
 
   /*
+   * A list column's priority as its class — gk-col-p2 … gk-col-p5, or nothing.
+   * Table::column() has already reduced 'priority' to an int in that range or
+   * dropped it, so this only has to write what arrived; the range check keeps a
+   * hand-built data block from inventing a class no rule answers.
+   * Twin of the two lines in Table::render() that write the same class.
+   */
+  function _gkPriorityClass(col) {
+    const p = col.priority;
+    return Number.isInteger(p) && p >= 2 && p <= 5 ? "gk-col-p" + p : "";
+  }
+
+  /*
    * What a row control carries in data-gk-params — Table::rowParams() in PHP:
    * the mapped fields, plus the row's own id unless the map names one. The
    * client once sent "{}" after a sort, and an edit modal came up as if for a
@@ -1328,6 +1340,7 @@
           if (col.nowrap) thStyles.push("white-space:nowrap");
           const style = thStyles.length ? ' style="' + thStyles.join(";") + '"' : "";
           const sortable = col.sortable || false;
+          const prio = _gkPriorityClass(col);
           let cls = "",
             attrs = "",
             sortBtn = "",
@@ -1352,7 +1365,8 @@
             // suppresses the ::after arrow of .gk-sortable.
             const base =
               "gk-sortable gk-sortable-mi" +
-              (col.hideOnMobile ? " gk-hide-mobile" : "");
+              (col.hideOnMobile ? " gk-hide-mobile" : "") +
+              (prio ? " " + prio : "");
             cls =
               ' class="' +
               base +
@@ -1372,8 +1386,8 @@
               '">' +
               iconName +
               "</span>";
-          } else if (col.hideOnMobile) {
-            cls = ' class="gk-hide-mobile"';
+          } else if (col.hideOnMobile || prio) {
+            cls = ' class="' + [col.hideOnMobile ? "gk-hide-mobile" : "", prio].filter(Boolean).join(" ") + '"';
           }
           // Same rule as Table::headerAlignClass(): the header stands where its
           // column stands.
@@ -1669,6 +1683,9 @@
               if (col.format === "number" || col.format === "currency")
                 tdCls.push("gk-td-num");
               if (col.hideOnMobile) tdCls.push("gk-hide-mobile");
+              // A list's column that gives way: header and cells together.
+              const tdPrio = _gkPriorityClass(col);
+              if (tdPrio) tdCls.push(tdPrio);
               // The server writes this too — without it a muted column changed
               // its text colour on the first sort.
               if (col.muted) tdCls.push("gk-td-muted");
@@ -2211,16 +2228,30 @@
       if (!this.el) return;
       this.el.classList.toggle("open");
       if (this.overlay) this.overlay.classList.toggle("open");
+      this._expanded();
     },
     close() {
       if (!this.el) return;
       this.el.classList.remove("open");
       if (this.overlay) this.overlay.classList.remove("open");
+      this._expanded();
     },
     open() {
       if (!this.el) return;
       this.el.classList.add("open");
       if (this.overlay) this.overlay.classList.add("open");
+      this._expanded();
+    },
+    /*
+     * The header's menu button has said aria-expanded="false" since it was
+     * written, and nothing ever changed it: open, the sidebar was announced as
+     * closed. Every toggle that carries the attribute now follows the sidebar.
+     */
+    _expanded() {
+      var open = this.el.classList.contains("open") ? "true" : "false";
+      document.querySelectorAll('[data-gk-sidebar-action="toggle"][aria-expanded]').forEach(function (b) {
+        b.setAttribute("aria-expanded", open);
+      });
     },
     collapse() {
       if (!this.el) return;
@@ -2240,6 +2271,25 @@
       } catch (e) {}
     },
   };
+
+  /*
+   * The sidebar's controls, by delegation (1.92.0). Sidebar.php and Header.php
+   * wrote onclick="GK.sidebar.toggle()" and friends — inline script, which a
+   * Content-Security-Policy without 'unsafe-inline' refuses, and which every
+   * page building its own shell copied (Vespera's admin carried three). They
+   * write data-gk-sidebar-action now, and this one listener calls the same
+   * GK.sidebar methods, which stay the API.
+   */
+  var _gkSidebarActions = { toggle: 1, close: 1, collapse: 1 };
+  document.addEventListener("click", function (e) {
+    var ctl = e.target.closest && e.target.closest("[data-gk-sidebar-action]");
+    if (!ctl || e.defaultPrevented) return;
+    var action = ctl.getAttribute("data-gk-sidebar-action");
+    if (!_gkSidebarActions[action]) return;
+    // A link written as the control must not also navigate.
+    if (ctl.tagName === "A") e.preventDefault();
+    GK.sidebar[action]();
+  });
 
   // AJAX Navigation (SPA-lite)
   GK.navigate = {

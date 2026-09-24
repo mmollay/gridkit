@@ -24,7 +24,7 @@ const VALIDATABLE = ['text', 'textarea', 'select', 'multiselect', 'ajaxselect',
 
 /** Every type the class documents. */
 const ALL_TYPES = ['text', 'textarea', 'select', 'multiselect', 'ajaxselect',
-                   'checkbox', 'toggle', 'radio', 'range', 'color', 'file', 'richtext'];
+                   'checkbox', 'toggle', 'radio', 'range', 'color', 'file', 'richtext', 'choice'];
 
 function fieldHtml(string $type, array $opts = []): string
 {

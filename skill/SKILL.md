@@ -8,7 +8,7 @@ description: >-
   GridKit in composer.json.
 ---
 
-# GridKit 1.91.0
+# GridKit 1.92.0
 
 PHP components for admin dashboards. Zero dependencies, no build step,
 PHP 8.2+. A checkout is a working install.
@@ -169,8 +169,11 @@ because nothing is broken, it is just covered:
 ```
 
 `gk-with-sidebar` carries the left margin and shrinks when the sidebar
-collapses; `gk-main` carries the padding. `skeleton.php` in the repository is
-this file, filled in.
+collapses; `gk-main` carries the padding — 24px 28px 48px, 16px at the edge of a
+phone — and caps the content at `--gk-main-max` (1680px; set it on the page to
+change it). Until 1.92.0 the class was documented here and had no rule, so every
+page wrote that padding itself. `skeleton.php` in the repository is this file,
+filled in.
 
 ### Inside SSI Panel
 
@@ -198,24 +201,28 @@ at 13px, one coloured count — and a side sheet for everything that changes.
 1. **One state, one sign.** A switch shows its state itself. A label beside it
    saying "allowed" says it again, once per row. In the list, group by the
    state; the switch lives in the side sheet, with one sentence on what it does.
-   Building block: `->groupBy()` with `.gk-table-group`; `.gk-toggle` with no `.gk-label` beside it.
+   Building block: `->groupBy()` with `.gk-table-group`; `.gk-toggle` with no `.gk-label` beside it, in a `.gk-setting` row (a Form toggle with a hint writes it).
 2. **Read in the row, change in the sheet.** A row shows values as text. Selects,
    switches and delete belong in the side sheet the row opens — and a click
    anywhere on the row opens it, not only on its name.
    Building block: `->rowLink()`, i.e. `tr.gk-row-link` + `.gk-row-target`; `.gk-sheet` opened by `GK.sheet.open()`.
 3. **Who: one cell, two lines.** Name and address belong together: an avatar,
    the name, the address underneath. In two columns both break mid-word. A
-   `Table` column writes the two lines with `'sub' => 'email'`.
-   Building block: `.gk-avatar` + `.gk-cell-sub`.
+   `Table` column writes the two lines with `'sub' => 'email'`; with a label
+   after the name, `.gk-cell-who` moves the label under the name instead of
+   shortening it.
+   Building block: `.gk-cell-who` with `.gk-avatar` + `.gk-cell-sub`.
 4. **Colour only for what needs acting on.** Red means something is broken.
    Counts that are fine stay neutral text, and the breakdown goes in the sheet
    rather than in three coloured numbers per row.
-   Building block: `.gk-label-red` for the one count that needs attention.
+   Building block: `.gk-label-red` for the one count that needs attention; `.gk-stat-tile-danger` in the sheet.
 5. **Group instead of scrolling.** At most six columns at 1280px; nothing
    scrolls sideways. What is rarely needed folds into one row that stands for
    many — and records that are not like the others (profiles among users) are
-   such a group.
-   Building block: `.gk-table-group`; `tr.gk-table-more` with a `.gk-table-more-toggle`.
+   such a group. When the list itself gets narrow — a docked sheet, a
+   phone — the least needed columns give way, by the list's width, not the
+   window's.
+   Building block: `.gk-table-group`; `tr.gk-table-more` with a `.gk-table-more-toggle`; `.gk-col-p2` … `.gk-col-p5` (a column's priority).
 6. **Running text is never bold and never narrow.** A sentence in a list is set
    at normal weight and gets the width it needs (`minWidth` on its column); a
    second line of detail is quiet text, not a second column.
@@ -223,30 +230,34 @@ at 13px, one coloured count — and a side sheet for everything that changes.
 
 The row the rules were drawn from, measured: 64px tall, the whole row the click
 target (never under 44px), name 15/13px, at most six columns at 1280px, one
-colour — for what needs acting on.
+colour — for what needs acting on. Since 1.92.0 that row is a class:
+`.gk-table-list` on the wrap (`->size('list')`), so a list needs no CSS of its
+own.
 
 A list that follows all six, by hand — a `Table` writes the same row with
-`->rowLink(['sheet' => 'user-sheet'])` and `'sub' => 'email'`:
+`->size('list')`, `->rowLink(['sheet' => 'user-sheet'])`, `'sub' => 'email'` and
+`'priority'` on the columns that may give way:
 
 ```html
+<div class="gk-table-wrap gk-table-list">
 <table class="gk-table">
-  <thead><tr><th scope="col">User</th><th scope="col">Plan</th><th scope="col">Last 30 days</th></tr></thead>
+  <thead><tr><th scope="col">User</th><th scope="col" class="gk-col-p3">Plan</th><th scope="col">Last 30 days</th></tr></thead>
   <tbody>
     <tr class="gk-table-group"><td colspan="3">
       <span class="gk-table-group-name">With access</span><span class="gk-table-group-n">5</span>
     </td></tr>
     <tr class="gk-row-link">
       <td data-label="User">
-        <div class="gk-flex gk-items-center gk-gap-lg">
-          <span class="gk-avatar" aria-hidden="true">AP</span>
-          <div>
+        <div class="gk-cell-who">
+          <span class="gk-avatar gk-avatar-sm gk-avatar-initials gk-avatar-tone-2" aria-hidden="true">JN</span>
+          <div class="gk-cell-who-text">
             <button type="button" class="gk-row-target" data-gk-sheet="user-sheet"
                     data-gk-params='{"id":2}' aria-haspopup="dialog">Jana Novak</button>
-            <span class="gk-cell-sub">jana@example.com</span>
+            <span class="gk-cell-sub gk-cell-sub-wrap">jana@example.com</span>
           </div>
         </div>
       </td>
-      <td data-label="Plan">Life book</td>
+      <td data-label="Plan" class="gk-col-p3">Life book</td>
       <td data-label="Last 30 days"><span class="gk-label gk-label-red">17 failing</span></td>
     </tr>
     <tr class="gk-table-more"><td colspan="3">
@@ -260,6 +271,7 @@ A list that follows all six, by hand — a `Table` writes the same row with
     <!-- the 13 rows, right after the row that stands for them -->
   </tbody>
 </table>
+</div>
 ```
 
 ## Filters forget each other unless you say otherwise

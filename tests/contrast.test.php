@@ -366,7 +366,9 @@ return [
     preg_match_all('/(--gk-[a-z0-9-]+)\s*:/', $all, $def);
     preg_match_all('/var\(\s*(--gk-[a-z0-9-]+)/', $all, $use);
     // Hooks a page may set and GridKit never does; each is read with a fallback.
-    $hooks = ['--gk-inverse-surface', '--gk-on-inverse-surface', '--gk-primary-rgb'];
+    // --gk-main-max (1.92.0): the cap of .gk-main. Declared on .gk-root it would
+    // reset a value the page sets on <html>, so it is not declared at all.
+    $hooks = ['--gk-inverse-surface', '--gk-on-inverse-surface', '--gk-primary-rgb', '--gk-main-max'];
     $missing = array_values(array_diff(array_unique($use[1]), array_unique($def[1]), $hooks));
     T::eq($missing, [], 'tokens read but never defined');
 

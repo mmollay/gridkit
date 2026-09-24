@@ -40,6 +40,8 @@ fs.writeFileSync(fixture, execFileSync(php, [path.join(__dirname, "browser-fixtu
 fs.writeFileSync(path.join(dir, "select.html"), execFileSync(php, [path.join(__dirname, "browser-fixture.php"), "--select"]));
 const withHeader = path.join(dir, "header.html");
 fs.writeFileSync(withHeader, execFileSync(php, [path.join(__dirname, "browser-fixture.php"), "--header"], { maxBuffer: 64 * 1024 * 1024 }));
+const adminPage = path.join(dir, "admin.html");
+fs.writeFileSync(adminPage, execFileSync(php, [path.join(__dirname, "browser-fixture.php"), "--admin"], { maxBuffer: 64 * 1024 * 1024 }));
 
 (async () => {
   const browser = await chromium.launch();
@@ -996,6 +998,282 @@ fs.writeFileSync(withHeader, execFileSync(php, [path.join(__dirname, "browser-fi
     check("the focus stays on the same control after its element was replaced",
       fokusVorher === "li" && fokusNachher === "li");
     await nav.close();
+
+    // ── An admin page without a stylesheet of its own (1.92.0) ─────────────
+    // A block of its own: its names would clash with the cases above. Only
+    // finite animations are finished here — the running dot pulses for ever,
+    // and finish() on an endless one throws.
+    {
+    // Sidebar, header, list, sheet and the small parts — GridKit's CSS and
+    // nothing else. Each case is one of the rules Vespera's admin had to write.
+    const adm = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    adm.on("pageerror", (e) => pageErrors.push(e.message));
+    await adm.goto("file://" + adminPage);
+    // Tab through the page until the focus sits on what the selector names:
+    // :focus-visible is what a keyboard sees, and only a keyboard sets it for sure.
+    const tabTo = async (sel) => {
+      await adm.evaluate(() => document.activeElement && document.activeElement.blur());
+      for (let i = 0; i < 90; i++) {
+        await adm.keyboard.press("Tab");
+        if (await adm.evaluate((s) => !!document.activeElement && document.activeElement.matches(s), sel)) return true;
+      }
+      return false;
+    };
+
+    const mainPad = () => adm.evaluate(() => {
+      const cs = getComputedStyle(document.getElementById("main"));
+      return [cs.paddingTop, cs.paddingRight, cs.paddingBottom, cs.paddingLeft, cs.maxWidth].join(" ");
+    });
+    check("admin: <main class=\"gk-main\"> has its padding and its cap — 24 28 48, at most 1680px",
+      (await mainPad()) === "24px 28px 48px 28px 1680px");
+
+    const versteckt = await adm.evaluate(() => ({
+      weg: ["msg-hidden", "tiles-hidden", "setting-hidden", "choice-hidden"].map((id) => {
+        const el = document.getElementById(id);
+        return getComputedStyle(el).display === "none" && el.getBoundingClientRect().height === 0;
+      }),
+      offen: getComputedStyle(document.getElementById("msg")).display,
+      wieder: (() => {
+        const m = document.getElementById("msg-hidden");
+        m.hidden = false;
+        const d = getComputedStyle(m).display;
+        m.hidden = true;
+        return d;
+      })(),
+    }));
+    check("admin: a .gk-message with the hidden attribute is gone — a tile row, a setting and a choice as well",
+      versteckt.weg.every(Boolean) && versteckt.offen === "flex");
+    check("admin: … and without the attribute it is a flex message again", versteckt.wieder === "flex");
+
+    const kopfzeile = () => adm.evaluate(() => {
+      const h1 = document.querySelector(".gk-header-title h1");
+      const meta = document.getElementById("head-meta");
+      const u = document.querySelector(".gk-header-user").getBoundingClientRect();
+      const a = h1.getBoundingClientRect(), m = meta.getBoundingClientRect();
+      return { daneben: m.width > 0 && m.left >= a.right, gekuerzt: meta.scrollWidth > meta.clientWidth,
+               titelGanz: h1.scrollWidth <= h1.clientWidth, userDrin: u.right <= innerWidth && u.left >= 0,
+               weg: getComputedStyle(meta).display === "none" };
+    });
+    const kopfBreit = await kopfzeile();
+    check("admin: the line beside the header title stands beside it, whole, with the user menu in view",
+      kopfBreit.daneben && !kopfBreit.gekuerzt && kopfBreit.titelGanz && kopfBreit.userDrin);
+
+    // Columns give way by the width of the LIST: the same window, four list widths.
+    const liste = {};
+    for (const w of [500, 700, 900, 1100]) {
+      liste[w] = await adm.evaluate((w) => {
+        const box = document.getElementById("list-box");
+        box.style.width = w + "px";
+        const wrap = box.querySelector(".gk-table-wrap");
+        const sicht = (el) => getComputedStyle(el).display !== "none";
+        return {
+          th: [...wrap.querySelectorAll("thead th")].filter(sicht).map((t) => t.textContent.trim()),
+          td: [...wrap.querySelectorAll("tbody tr.gk-row-link:first-of-type td")].filter(sicht).length,
+          quer: wrap.scrollWidth - wrap.clientWidth,
+          seite: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          zeile: Math.round(wrap.querySelector("tbody tr.gk-row-link").getBoundingClientRect().height),
+        };
+      }, w);
+    }
+    const spalten = { 500: ["User"], 700: ["User", "State"], 900: ["User", "State", "Plan", "Last seen"],
+                      1100: ["User", "State", "Plan", "Last seen", "Usage"] };
+    for (const w of [500, 700, 900, 1100]) {
+      const l = liste[w];
+      check(`admin: a list ${w}px wide shows ${spalten[w].join(", ")} — header and cells together, nothing scrolls sideways`,
+        JSON.stringify(l.th) === JSON.stringify(spalten[w]) && l.td === spalten[w].length && l.quer <= 0 && l.seite <= 0);
+      if (JSON.stringify(l.th) !== JSON.stringify(spalten[w]) || l.quer > 0) console.log(`   ${w}px: ${JSON.stringify(l)}`);
+    }
+    check("admin: a list row is 64px tall", liste[1100].zeile >= 64 && liste[1100].zeile <= 65);
+
+    const wer = await adm.evaluate(() => {
+      const n = document.getElementById("who-name"), l = document.getElementById("who-label"), m = document.getElementById("who-mail");
+      const lage = (w) => {
+        document.getElementById("who-box").style.width = w + "px";
+        const a = n.getBoundingClientRect(), b = l.getBoundingClientRect(), c = m.getBoundingClientRect();
+        return { nameGanz: n.scrollWidth <= n.clientWidth, daneben: b.left >= a.right && b.top < a.bottom,
+                 darunter: b.top >= a.bottom - 1, mailGanz: m.scrollWidth <= m.clientWidth,
+                 mailDarunter: c.top >= Math.max(a.bottom, b.bottom) - 1 };
+      };
+      // 420px: name and label fit side by side. 340px: they do not, and the
+      // label moves under the name rather than shortening it.
+      const breit = lage(420), eng = lage(340);
+      document.getElementById("who-box").style.width = "300px";
+      const zeile = parseFloat(getComputedStyle(m).lineHeight);
+      const schmal = { mailGanz: m.scrollWidth <= m.clientWidth, umgebrochen: m.getBoundingClientRect().height > zeile * 1.5,
+                       ellipse: getComputedStyle(m).textOverflow };
+      return { breit, eng, schmal };
+    });
+    check("admin: in the who cell a label stands beside the name while both fit, and moves under it when not — the name stays whole",
+      wer.breit.daneben && wer.breit.nameGanz && wer.eng.darunter && wer.eng.nameGanz
+      && wer.breit.mailDarunter && wer.eng.mailDarunter);
+    if (!(wer.breit.daneben && wer.eng.darunter)) console.log("   who cell: " + JSON.stringify(wer));
+    check("admin: … and the address breaks onto a second line instead of losing its end to an ellipsis",
+      wer.breit.mailGanz && wer.schmal.mailGanz && wer.schmal.umgebrochen && wer.schmal.ellipse === "clip");
+
+    // Colours follow the mode: an avatar tone beats the dark .gk-avatar rule, a
+    // series mark takes its token, and the token is stepped for the dark ground.
+    const farbeIn = (modus) => adm.evaluate((modus) => {
+      document.body.setAttribute("data-gk-mode", modus);
+      document.getAnimations().filter((a) => isFinite(a.effect.getComputedTiming().endTime)).forEach((a) => a.finish());
+      const probe = document.createElement("span");
+      document.body.appendChild(probe);
+      const soll = (v) => { probe.style.color = `var(${v})`; return getComputedStyle(probe).color; };
+      const grundSoll = (v) => { probe.style.backgroundColor = `var(${v})`; return getComputedStyle(probe).backgroundColor; };
+      const r = {
+        ton: getComputedStyle(document.getElementById("tone3")).backgroundColor === grundSoll("--gk-info-container"),
+        fill: getComputedStyle(document.getElementById("bar1")).fill,
+        fillSoll: soll("--gk-series-1"),
+        stroke: getComputedStyle(document.getElementById("bar2")).stroke === soll("--gk-series-2"),
+        swatch: getComputedStyle(document.getElementById("sw3")).backgroundColor === soll("--gk-series-3"),
+      };
+      probe.remove();
+      return r;
+    }, modus);
+    const hellF = await farbeIn("light"), dunkelF = await farbeIn("dark");
+    await adm.evaluate(() => document.body.setAttribute("data-gk-mode", "light"));
+    check("admin: avatar tone 3 is the info container in light and in dark — the dark avatar rule does not paint over it",
+      hellF.ton && dunkelF.ton);
+    check("admin: series fill, stroke and swatch take --gk-series-N, and the dark mode has its own step",
+      hellF.fill === hellF.fillSoll && dunkelF.fill === dunkelF.fillSoll && hellF.fill !== dunkelF.fill
+      && hellF.stroke && dunkelF.stroke && hellF.swatch && dunkelF.swatch);
+
+    const punkt = () => adm.evaluate(() => ({
+      puls: getComputedStyle(document.getElementById("dot-pulse")).animationName,
+      ringGrund: getComputedStyle(document.getElementById("dot-ring")).backgroundColor,
+      ringRand: getComputedStyle(document.getElementById("dot-ring")).boxShadow,
+    }));
+    const bewegt = await punkt();
+    await adm.emulateMedia({ reducedMotion: "reduce" });
+    const still = await punkt();
+    await adm.emulateMedia({ reducedMotion: "no-preference" });
+    check("admin: a running dot pulses, and stands still for someone who asked for less motion",
+      bewegt.puls === "gk-dot-pulse" && still.puls === "none");
+    check("admin: the outline dot is an empty ring — its shape tells it apart, not its colour",
+      bewegt.ringGrund === "rgba(0, 0, 0, 0)" && bewegt.ringRand !== "none");
+
+    // The settings row: a keyboard sees the focus on the slider; a click on the words switches.
+    const zumSchalter = await tabTo("#login");
+    const schalterFokus = await adm.evaluate(() => {
+      const s = document.querySelector("#login + .gk-toggle-slider");
+      return getComputedStyle(s).outlineStyle;
+    });
+    check("admin: a settings switch reached by keyboard shows its focus on the slider",
+      zumSchalter && schalterFokus === "solid");
+    const schalter = await adm.evaluate(() => {
+      const i = document.getElementById("login");
+      const vorher = i.checked;
+      document.getElementById("login-label").click();
+      const nachher = i.checked;
+      i.checked = vorher;
+      return { vorher, nachher, rolle: i.getAttribute("role"),
+               hoehe: document.querySelector(".gk-setting").getBoundingClientRect().height };
+    });
+    check("admin: a click on the setting's title switches it; the input is a switch; the row is at least 44px",
+      schalter.vorher !== schalter.nachher && schalter.rolle === "switch" && schalter.hoehe >= 44);
+
+    // Answer tiles: the tile is the target, carries the state and the focus ring.
+    const zurWahl = await tabTo('input[name="next"]');
+    const wahlFokus = await adm.evaluate(() => {
+      const kachel = document.activeElement.closest(".gk-choice");
+      return { ring: getComputedStyle(kachel).outlineStyle, nativ: getComputedStyle(document.activeElement).opacity };
+    });
+    await adm.click('.gk-choice:has(input[value="later"])');
+    const wahl = await adm.evaluate(() => {
+      // The tile eases into its state (a transition on the border): read the end.
+      document.getAnimations().filter((a) => isFinite(a.effect.getComputedTiming().endTime)).forEach((a) => a.finish());
+      const probe = document.createElement("span");
+      document.body.appendChild(probe);
+      probe.style.color = "var(--gk-primary)";
+      const primaer = getComputedStyle(probe).color;
+      probe.remove();
+      const k = document.querySelector('.gk-choice:has(input[value="later"])');
+      return { an: k.querySelector("input").checked, rand: getComputedStyle(k).borderTopColor === primaer,
+               marke: getComputedStyle(k.querySelector(".gk-choice-mark")).backgroundColor === primaer };
+    });
+    check("admin: an answer tile reached by keyboard carries the focus ring; the native radio is not drawn",
+      zurWahl && wahlFokus.ring === "solid" && wahlFokus.nativ === "0");
+    check("admin: a click anywhere on the tile chooses it, and the tile and its letter show it",
+      wahl.an && wahl.rand && wahl.marke);
+    if (!(wahl.an && wahl.rand && wahl.marke)) console.log("   choice: " + JSON.stringify(wahl));
+
+    const teile = await adm.evaluate(() => {
+      const r = (id) => document.getElementById(id).getBoundingClientRect();
+      const werte = [...document.querySelectorAll('[data-gk-stats="figures"] .gk-stat-tile-value')].map((v) => Math.round(v.getBoundingClientRect().top));
+      const msg = r("msg"), btn = r("msg-btn"), text = document.querySelector("#msg > span").getBoundingClientRect();
+      return {
+        kachelKnopf: r("tile-btn").height,
+        dlOben: r("dl-figure").top < r("dl-word").top,
+        dlEinzug: getComputedStyle(document.getElementById("dl-figure")).marginLeft,
+        eineLinie: werte.length >= 2 && werte.every((t) => t === werte[0]),
+        touch: [r("touch-icon").width, r("touch-icon").height],
+        rechts: btn.left > text.right && msg.right - btn.right <= 24,
+        handyWeg: getComputedStyle(document.getElementById("only-phone")).display === "none",
+      };
+    });
+    check("admin: a tile that is a button is at least 44px tall", teile.kachelKnopf >= 44);
+    check("admin: tiles written as a <dl> put the figure on top with no indent, and the figures of a row stand on one line",
+      teile.dlOben && teile.dlEinzug === "0px" && teile.eineLinie);
+    check("admin: .gk-btn-touch gives a small icon button a 44 × 44 target",
+      teile.touch[0] >= 44 && teile.touch[1] >= 44);
+    check("admin: the actions of a message stand on its right, after the text", teile.rechts);
+    check("admin: .gk-show-mobile is hidden on a wide screen", teile.handyWeg);
+
+    // The sheet with a line under its title: a 44px close button in its corner.
+    await adm.evaluate(() => { GK.sheet.open("member-sheet"); document.getAnimations().filter((a) => isFinite(a.effect.getComputedTiming().endTime)).forEach((a) => a.finish()); });
+    const blatt = await adm.evaluate(() => {
+      const r = (el) => el.getBoundingClientRect();
+      const s = document.getElementById("member-sheet");
+      const x = r(s.querySelector(".gk-sheet-close")), t = r(s.querySelector(".gk-sheet-title")), m = r(document.getElementById("sheet-meta"));
+      return { w: x.width, h: x.height, unter: m.top >= t.bottom - 1, ecke: x.left >= m.right - 1 && x.top <= t.top + 4,
+               drin: x.right <= r(s).right };
+    });
+    await adm.evaluate(() => GK.sheet.close());
+    check("admin: the docked sheet's close button is 44 × 44, in its corner, with the line under the title",
+      blatt.w === 44 && blatt.h === 44 && blatt.unter && blatt.ecke && blatt.drin);
+
+    // The sidebar answers its attribute; no control carries inline script.
+    const einklappen = await adm.evaluate(() => {
+      const sb = document.querySelector("[data-gk-sidebar]");
+      const knopf = document.querySelector('[data-gk-sidebar-action="collapse"]');
+      knopf.click();
+      const zu = sb.classList.contains("collapsed");
+      knopf.click();
+      return { zu, auf: !sb.classList.contains("collapsed"), onclick: document.querySelectorAll("[onclick]").length };
+    });
+    check("admin: the collapse button works through data-gk-sidebar-action, and no element carries an onclick",
+      einklappen.zu && einklappen.auf && einklappen.onclick === 0);
+
+    // 800px: the header line gives way before the user menu leaves the screen.
+    await adm.setViewportSize({ width: 800, height: 900 });
+    const kopfMittel = await kopfzeile();
+    check("admin: at 800px the header line is shortened, the title is whole and the user menu stays on screen",
+      kopfMittel.gekuerzt && kopfMittel.titelGanz && kopfMittel.userDrin);
+
+    // A phone.
+    await adm.setViewportSize({ width: 390, height: 844 });
+    const handy = await adm.evaluate(() => ({
+      meta: getComputedStyle(document.getElementById("head-meta")).display,
+      nurHandy: document.getElementById("only-phone").getBoundingClientRect().width > 0,
+    }));
+    check("admin: on a phone the content keeps a 16px gutter", (await mainPad()) === "16px 16px 40px 16px 1680px");
+    check("admin: on a phone the header line is gone and .gk-show-mobile shows", handy.meta === "none" && handy.nurHandy);
+    await adm.click(".gk-header-menu-toggle");
+    const offen = await adm.evaluate(() => ({
+      sb: document.querySelector("[data-gk-sidebar]").classList.contains("open"),
+      ov: document.querySelector("[data-gk-sidebar-overlay]").classList.contains("open"),
+      aria: document.querySelector(".gk-header-menu-toggle").getAttribute("aria-expanded"),
+    }));
+    await adm.evaluate(() => document.getAnimations().filter((a) => isFinite(a.effect.getComputedTiming().endTime)).forEach((a) => a.finish()));
+    await adm.mouse.click(370, 500);
+    const zu = await adm.evaluate(() => ({
+      sb: document.querySelector("[data-gk-sidebar]").classList.contains("open"),
+      aria: document.querySelector(".gk-header-menu-toggle").getAttribute("aria-expanded"),
+    }));
+    check("admin: the menu button opens the sidebar by delegation and says so (aria-expanded)",
+      offen.sb && offen.ov && offen.aria === "true");
+    check("admin: … and a tap on the overlay closes it again", !zu.sb && zu.aria === "false");
+    await adm.close();
+    }
   } finally {
     await browser.close();
   }
