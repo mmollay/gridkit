@@ -1145,25 +1145,27 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
       hellF.fill === hellF.fillSoll && dunkelF.fill === dunkelF.fillSoll && hellF.fill !== dunkelF.fill
       && hellF.stroke && dunkelF.stroke && hellF.swatch && dunkelF.swatch);
 
-    // A filled primary button has to answer the pointer in both modes. In dark mode the hover
-    // colour was derived darker (l - 0.06) and a brightness(1.1) filter lit it up again: the two
-    // cancelled out to 1.03:1 (Panel review rc965). Measured as painted — background through the
-    // button's own filter on a canvas — because a computed background never shows the filter.
-    const hoverAbstand = async (modus) => {
-      await adm.evaluate((modus) => {
+    // A filled button has to answer the pointer in both modes — and its text has to stay readable
+    // on the hover colour. Primary: the darker derived hover and a dark-mode brightness(1.1) filter
+    // cancelled out to 1.03:1. Success, warning, danger: the hover was derived from the light ROLE
+    // colour, not from the dark FILL, so white text dropped to 2.0–3.1:1 on hover (Panel review,
+    // rounds rc965 and 18). Measured as painted — background through the button's own filter on a
+    // canvas — because a computed background never shows a filter.
+    const hoverMessen = async (modus, klasse) => {
+      await adm.evaluate(([modus, klasse]) => {
         document.body.setAttribute("data-gk-mode", modus);
         document.getElementById("hover-probe")?.remove();
         const b = document.createElement("button");
-        b.id = "hover-probe"; b.className = "gk-btn gk-btn-filled gk-btn-primary"; b.textContent = "Save";
+        b.id = "hover-probe"; b.className = klasse; b.textContent = "Save";
         b.style.cssText = "position:fixed;right:24px;bottom:24px;z-index:2147483647;transition:none";
         document.body.appendChild(b);
-      }, modus);
+      }, [modus, klasse]);
       const gemalt = () => adm.evaluate(() => {
         const b = document.getElementById("hover-probe"), cs = getComputedStyle(b);
-        const c = document.createElement("canvas").getContext("2d");
-        c.filter = cs.filter === "none" ? "none" : cs.filter;
-        c.fillStyle = cs.backgroundColor; c.fillRect(0, 0, 1, 1);
-        return Array.from(c.getImageData(0, 0, 1, 1).data).slice(0, 3);
+        const male = (farbe) => { const c = document.createElement("canvas").getContext("2d");
+          c.filter = cs.filter === "none" ? "none" : cs.filter; c.fillStyle = farbe; c.fillRect(0, 0, 1, 1);
+          return Array.from(c.getImageData(0, 0, 1, 1).data).slice(0, 3); };
+        return { grund: male(cs.backgroundColor), text: male(cs.color) };
       });
       await adm.mouse.move(0, 0);
       const ruhe = await gemalt();
@@ -1172,13 +1174,21 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
       await adm.mouse.move(0, 0);
       const lum = (rgb) => { const k = rgb.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
         return 0.2126 * k[0] + 0.7152 * k[1] + 0.0722 * k[2]; };
-      const [x, y] = [lum(ruhe), lum(drauf)];
-      return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+      const k = (a, b) => { const [x, y] = [lum(a), lum(b)]; return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+      return { schritt: k(ruhe.grund, drauf.grund), text: k(drauf.text, drauf.grund) };
     };
-    const hoverHell = await hoverAbstand("light"), hoverDunkel = await hoverAbstand("dark");
+    const knoepfe = ["gk-btn gk-btn-filled gk-btn-primary", "gk-btn gk-btn-filled gk-btn-success", "gk-btn gk-btn-filled gk-btn-warning",
+      "gk-btn gk-btn-filled gk-btn-danger", "gk-btn gk-btn-success", "gk-btn gk-btn-warning", "gk-btn gk-btn-danger"];
+    const hoverSchwach = [];
+    for (const klasse of knoepfe) {
+      for (const modus of ["light", "dark"]) {
+        const m = await hoverMessen(modus, klasse);
+        if (m.schritt < 1.1 || m.text < 4.5) hoverSchwach.push(klasse.replace("gk-btn ", "") + " " + modus + " " + m.schritt.toFixed(2) + "/" + m.text.toFixed(2));
+      }
+    }
     await adm.evaluate(() => { document.getElementById("hover-probe")?.remove(); document.body.setAttribute("data-gk-mode", "light"); });
-    check("button: a filled primary button visibly answers the pointer in light AND dark mode (" + hoverHell.toFixed(2) + ":1 / " + hoverDunkel.toFixed(2) + ":1)",
-      hoverHell >= 1.1 && hoverDunkel >= 1.1);
+    check("button: every filled button visibly answers the pointer (≥ 1.1:1) and keeps its text readable on hover (≥ 4.5:1), light and dark"
+      + (hoverSchwach.length ? " — weak: " + hoverSchwach.join("; ") : ""), hoverSchwach.length === 0);
 
     const punkt = () => adm.evaluate(() => ({
       puls: getComputedStyle(document.getElementById("dot-pulse")).animationName,

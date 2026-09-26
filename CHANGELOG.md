@@ -9,16 +9,26 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ---
 ## [1.93.1] - 2026-09-26
 
-### Fixed — a filled primary button answers the pointer in dark mode
+### Fixed — filled buttons answer the pointer and stay readable on hover
 
-In dark mode the hover of `.gk-btn-filled.gk-btn-primary` changed the button by
-1.03:1 — nobody could see it. `--gk-primary-hover` is derived darker
-(`l - 0.06`, DERIVED STATE COLORS) and a dark-mode rule put
-`filter: brightness(1.1)` on top, so the two cancelled out. The filter is gone;
-the derived colour alone now gives 1.24:1 in dark and 1.30:1 in light, like every
-other filled button. Found by the SSI Panel review of rc965; `ci/browser.js`
-measures it as painted (background through the button's own filter on a canvas,
-because a computed background never shows a filter).
+- **Primary, dark mode:** the hover changed the button by 1.03:1 — nobody could
+  see it. `--gk-primary-hover` is derived darker (`l - 0.06`, DERIVED STATE
+  COLORS) and a dark-mode rule put `filter: brightness(1.1)` on top, so the two
+  cancelled out. The filter is gone: 1.24:1 in dark, 1.30:1 in light.
+- **Success, warning, danger:** the hover of a filled button was the light ROLE
+  tone (`--gk-success-hover` …), not a step from the dark FILL — the button got
+  lighter under the pointer and white text dropped to 2.0–3.1:1 (danger in light
+  barely changed at all, 1.03:1). New tokens `--gk-success-fill-hover`,
+  `--gk-warning-fill-hover`, `--gk-danger-fill-hover`, derived one step darker
+  than the fill, with literal fallbacks. The role hovers stay as they are for
+  tonal and outlined buttons. Note: `.gk-btn.gk-btn-success:not(…):hover` also
+  matches `.gk-btn-filled` buttons and wins on specificity; both rules now name
+  the same colour.
+
+Found by the SSI Panel reviews of rc965 and round 18. `ci/browser.js` measures
+every filled button in both modes as painted (background through the button's
+own filter on a canvas, because a computed background never shows a filter):
+a visible step of at least 1.1:1 and text of at least 4.5:1 on the hover colour.
 
 ### Tests
 

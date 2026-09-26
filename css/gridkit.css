@@ -101,6 +101,13 @@ a:hover {
   --gk-success-fill: #047857;   /* white: 5.48:1 */
   --gk-warning-fill: #b45309;   /* white: 5.02:1 */
   --gk-danger-fill:  #dc2626;   /* white: 4.83:1 */
+  /* Hover of a filled semantic button: a step DARKER than the fill, so white text
+     gains contrast. Derived below where relative colour syntax exists; these are
+     the fallbacks. The role hovers (--gk-success-hover …) are lighter tones for
+     tonal/outlined use — on a filled button they dropped white text to 2.0–3.1:1. */
+  --gk-success-fill-hover: #065f46;
+  --gk-warning-fill-hover: #92400e;
+  --gk-danger-fill-hover:  #b91c1c;
   --gk-warning-container: #fef3c7;
   --gk-on-warning-container: #92400e;
   --gk-on-info: #ffffff;
@@ -1428,8 +1435,8 @@ a:hover {
   border-color: var(--gk-success-fill);
 }
 .gk-btn-filled.gk-btn-success:hover {
-  background: var(--gk-success-hover);
-  border-color: var(--gk-success-hover);
+  background: var(--gk-success-fill-hover);
+  border-color: var(--gk-success-fill-hover);
   box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-success) 30%, transparent);
 }
 .gk-btn-filled.gk-btn-warning {
@@ -1438,8 +1445,8 @@ a:hover {
   border-color: var(--gk-warning-fill);
 }
 .gk-btn-filled.gk-btn-warning:hover {
-  background: var(--gk-warning-hover);
-  border-color: var(--gk-warning-hover);
+  background: var(--gk-warning-fill-hover);
+  border-color: var(--gk-warning-fill-hover);
 }
 .gk-btn-filled.gk-btn-danger {
   background: var(--gk-danger-fill);
@@ -1447,8 +1454,8 @@ a:hover {
   border-color: var(--gk-danger-fill);
 }
 .gk-btn-filled.gk-btn-danger:hover {
-  background: var(--gk-error-hover);
-  border-color: var(--gk-error-hover);
+  background: var(--gk-danger-fill-hover);
+  border-color: var(--gk-danger-fill-hover);
   box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-error) 30%, transparent);
 }
 .gk-btn-filled.gk-btn-neutral {
@@ -1643,8 +1650,8 @@ a:hover {
 .gk-btn.gk-btn-success:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ):hover {
-  background: var(--gk-success-hover);
-  border-color: var(--gk-success-hover);
+  background: var(--gk-success-fill-hover);
+  border-color: var(--gk-success-fill-hover);
 }
 .gk-btn.gk-btn-warning:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
@@ -1656,8 +1663,8 @@ a:hover {
 .gk-btn.gk-btn-warning:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ):hover {
-  background: var(--gk-warning-hover);
-  border-color: var(--gk-warning-hover);
+  background: var(--gk-warning-fill-hover);
+  border-color: var(--gk-warning-fill-hover);
 }
 .gk-btn.gk-btn-danger:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
@@ -1669,8 +1676,8 @@ a:hover {
 .gk-btn.gk-btn-danger:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ):hover {
-  background: var(--gk-error-hover);
-  border-color: var(--gk-error-hover);
+  background: var(--gk-danger-fill-hover);
+  border-color: var(--gk-danger-fill-hover);
 }
 .gk-btn.gk-btn-neutral:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
@@ -6630,8 +6637,7 @@ a.gk-stat-card:hover {
    No brightness filter on hover any more: --gk-primary-hover is derived darker
    (l - 0.06, DERIVED STATE COLORS) and the filter lit it up again — the two
    cancelled out to 1.03:1, a hover nobody could see (Panel review rc965).
-   The derived colour alone gives a visible step in both modes, like every
-   other filled button. */
+   The derived colour alone gives a visible step in both modes (1.24:1 dark). */
 
 /* --- Buttons: text neutral --- */
 [data-gk-mode="dark"] .gk-btn-text.gk-btn-neutral:hover,
@@ -7327,6 +7333,9 @@ a.gk-stat-card:hover {
     --gk-success-hover: oklch(from var(--gk-success) calc(l - 0.06) c h);
     --gk-error-hover: oklch(from var(--gk-error) calc(l - 0.06) c h);
     --gk-warning-hover: oklch(from var(--gk-warning) calc(l - 0.06) c h);
+    --gk-success-fill-hover: oklch(from var(--gk-success-fill) calc(l - 0.06) c h);
+    --gk-warning-fill-hover: oklch(from var(--gk-warning-fill) calc(l - 0.06) c h);
+    --gk-danger-fill-hover:  oklch(from var(--gk-danger-fill)  calc(l - 0.06) c h);
     /* Text roles: darkened further so the contrast holds on a light surface */
     /* -0.10 was not enough: it moved warning from 2.15:1 to 3.19:1, still under
        the 4.5:1 body text needs. */
