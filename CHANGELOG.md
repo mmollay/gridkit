@@ -7,6 +7,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.93.1] - 2026-09-26
+
+### Fixed — a filled primary button answers the pointer in dark mode
+
+In dark mode the hover of `.gk-btn-filled.gk-btn-primary` changed the button by
+1.03:1 — nobody could see it. `--gk-primary-hover` is derived darker
+(`l - 0.06`, DERIVED STATE COLORS) and a dark-mode rule put
+`filter: brightness(1.1)` on top, so the two cancelled out. The filter is gone;
+the derived colour alone now gives 1.24:1 in dark and 1.30:1 in light, like every
+other filled button. Found by the SSI Panel review of rc965; `ci/browser.js`
+measures it as painted (background through the button's own filter on a canvas,
+because a computed background never shows a filter).
+
+### Tests
+
+- `Table::percent('-0')` and `percent(-0.0)` show "0 %" — handled since 1.81, but
+  no case held it: removing the line kept the suite green.
+
+---
 ## [1.93.0] - 2026-09-24
 
 Two requests from the people who use GridKit most. Martin asked to see what has

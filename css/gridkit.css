@@ -6626,11 +6626,12 @@ a.gk-stat-card:hover {
   background: rgba(var(--gk-primary-rgb, 99, 102, 241), 0.12);
 }
 
-/* --- Buttons: filled primary → theme-aware --- */
-[data-gk-mode="dark"] .gk-btn-filled.gk-btn-primary:hover,
-.gk-dark .gk-btn-filled.gk-btn-primary:hover {
-  filter: brightness(1.1);
-}
+/* --- Buttons: filled primary → theme-aware ---
+   No brightness filter on hover any more: --gk-primary-hover is derived darker
+   (l - 0.06, DERIVED STATE COLORS) and the filter lit it up again — the two
+   cancelled out to 1.03:1, a hover nobody could see (Panel review rc965).
+   The derived colour alone gives a visible step in both modes, like every
+   other filled button. */
 
 /* --- Buttons: text neutral --- */
 [data-gk-mode="dark"] .gk-btn-text.gk-btn-neutral:hover,

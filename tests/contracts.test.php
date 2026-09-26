@@ -471,6 +471,10 @@ return [
     T::eq(Table::percent(null), '', 'percent: null is nothing');
     T::eq(Table::percent(''), '', 'percent: empty is nothing');
     T::eq(Table::percent('–'), '–', 'percent: a dash stays a dash');
+    // (string) -0.0 is "-0"; the client reads it as "0". Handled since 1.81, but no case held it:
+    // removing the line kept the suite green (Panel self-maintenance, 26.09.2026).
+    T::eq(Table::percent('-0'), '0 %', 'percent: "-0" is shown as 0 %');
+    T::eq(Table::percent(-0.0), '0 %', 'percent: a negative zero float is shown as 0 %');
     T::eq(Table::percent('12,5'), '12,5 %', 'percent: text with a digit only gets the sign');
     T::eq(Table::percent('85%'), '85%', 'percent: a value that already carries the sign is left alone');
     T::eq(Table::percent(-0.04, 1), '0,0 %', 'percent: no minus on a zero');
