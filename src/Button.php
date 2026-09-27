@@ -51,7 +51,8 @@ class Button
         $classes[] = 'gk-btn-' . $variant;
         $classes[] = 'gk-btn-' . $color;
         if ($size !== 'md') $classes[] = 'gk-btn-' . $size;
-        if ($disabled) $classes[] = 'disabled';
+        // No "disabled" class: the element is always a <button disabled>, styled by .gk-btn:disabled. A class
+        // outlived `button.disabled = false` in scripts — the button stayed grey until a reload (Panel, 27.09.2026).
         if ($loading) $classes[] = 'gk-btn-loading';
         if ($fullWidth) $classes[] = 'gk-btn-full';
         if ($label === '' && $icon !== '') $classes[] = 'gk-btn-icon-only';

@@ -7,6 +7,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.93.2] - 2026-09-27
+
+### Fixed — a disabled button can be enabled by a script
+`Button::render(…, ['disabled' => true])` gave the `<button>` both the `disabled` attribute **and** a `disabled`
+class. The class rule (`opacity: .45; pointer-events: none`) survived `button.disabled = false`, so a button a page
+had enabled stayed grey and unclickable until a reload (Panel „Meine Webseite": „Veröffentlichen" after a change,
+27.09.2026). The class is no longer set; the element is always a `<button disabled>` and `.gk-btn:disabled` styles
+it. The rule `.gk-btn.disabled` stays for pages that set the class themselves.
+
 ## [1.93.1] - 2026-09-26
 
 ### Fixed — filled buttons answer the pointer and stay readable on hover

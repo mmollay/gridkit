@@ -23,7 +23,7 @@ namespace GridKit;
  *   - color      primary | success | danger | warning | neutral (default: neutral)
  *   - size       xs | sm | md | lg (default: sm for table actions)
  *   - pill       true → border-radius:999px (badge style)
- *   - disabled   true → disabled class + disabled attribute
+ *   - disabled   true → disabled attribute (a script may clear it with button.disabled = false)
  *   - showIf     falsy → item is not rendered (for conditional actions)
  *
  * All CSS classes come from the existing gk-btn system — nothing home-grown.

@@ -143,4 +143,17 @@ return [
     T::ok(!str_contains($skeleton, "'/gridkit/css"), 'no hardcoded /gridkit/ asset path');
 },
 
+
+'A disabled Button can be enabled by script alone' => function (): void {
+    // Panel, 27.09.2026: „Veröffentlichen" stayed grey after the page had set button.disabled = false —
+    // the class "disabled" (opacity .45, pointer-events none) was still there; only a reload helped.
+    $html = GridKit\Button::render('Publish', ['id' => 'x', 'disabled' => true]);
+    T::ok((bool) preg_match('/<button[^>]*\sdisabled[\s>]/', $html), 'the disabled attribute is set');
+    T::ok(!preg_match('/class="[^"]*\bdisabled\b/', $html), 'no "disabled" class — a script cannot see or remove it');
+    $link = GridKit\Button::render('Go', ['href' => '/x', 'disabled' => true]);
+    T::ok(str_starts_with($link, '<button') && (bool) preg_match('/\sdisabled[\s>]/', $link) && !preg_match('/class="[^"]*\bdisabled\b/', $link),
+        'a disabled link becomes a disabled <button>, likewise without the class');
+    T::contains((string) file_get_contents(__DIR__ . '/../css/gridkit.css'), '.gk-btn.disabled,', 'the class rule stays for callers that set the class themselves');
+},
+
 ];
