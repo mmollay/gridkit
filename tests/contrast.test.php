@@ -403,9 +403,11 @@ return [
 
 'an active chip keeps its colour role in dark mode' => function (): void {
     // In dark mode "[data-gk-mode="dark"] .gk-chip.gk-chip-active" (0,3,0) outranked
-    // every colour role (".gk-chip-danger.gk-chip-active", 0,2,0): the invoice list's
-    // Mahnung, Bezahlt, Warten and Archiv all wore the same tonal indigo (found in
-    // round 29, measured 1.93.3: #4345b0 on every active chip, in every theme). A role
+    // every colour role (".gk-chip-danger.gk-chip-active", 0,2,0): danger, success,
+    // warning and neutral all wore the tonal container of the chip without a colour
+    // (found in round 29; measured in 1.93.3: #4345b0 on every active chip without
+    // themes.css, and under each theme that theme's container — one ground per theme,
+    // the same for every role). A role
     // is the same rule in both modes, so in dark it wears what it wears in light;
     // primary and blue stay what they are in light — the chip without a role — which
     // is the tonal container in dark, unchanged.
@@ -568,9 +570,14 @@ return [
     // #262d38, an !important, an rgb() spelling or a second declaration on the same
     // line slip through — and it missed .gk-avatar, which carried --gk-primary's own
     // value as a literal and stayed indigo under every other theme.
-    $anfang = strpos(css(), '/* Dark mode: Component adjustments */');
-    T::ok($anfang !== false, 'the dark component section is where it is expected');
-    $abschnitt = substr(css(), (int) $anfang);
+    //
+    // Round 30 review: this read the file from "/* Dark mode: Component adjustments */"
+    // on. 1.93.4 moved the chip's dark rules up to the chip, before that marker, and a
+    // counter-probe that wrote #e6edf3 into "[data-gk-mode="dark"] .gk-chip" stayed
+    // green — as would any dark rule written next to its component (there are dozens
+    // from line 1000 on). Now EVERY rule whose selector list names a dark spelling is
+    // read, wherever it stands; a rule with no dark selector is a light rule and not
+    // this test's business.
 
     // Semantic colours that are deliberately literals: they carry a meaning
     // (message kinds, tonal buttons) and have no role to read.
@@ -578,26 +585,66 @@ return [
                 '#c7d2fe', '#a7f3d0', '#fde68a', '#fecaca',   // tonal buttons
                 '#fef9c3',                                    // search hit on #854d0e (1.80.1)
                 '#fff', '#ffffff', 'inherit', 'currentcolor', 'transparent'];
+    // Allowed for ONE rule each, bound to a selector of that rule and to the value —
+    // the same literal anywhere else is still a finding. May only shrink.
+    $ausnahmen = [
+        // Dark text on the amber of an active warning chip, the same in both modes
+        // (8.79:1 dark). No role carries it: --gk-on-warning is white in light
+        // (2.15:1 on amber) and the rule is one list for both modes (1.93.4).
+        ['.gk-chip-warning.gk-chip-active', '#1f2937'],
+        // A white veil on the dark sidebar, which is dark under every theme. It stood
+        // outside the section this test used to read and so was never looked at; it
+        // is not GridKit's palette, and whether it should read --gk-sidebar-text
+        // (0.70) instead is a decision of its own, not part of this test.
+        ['[data-gk-mode="dark"] .gk-sidebar', 'rgba(255, 255, 255, 0.78)'],
+    ];
+    $genutzt = [];
 
+    // Comments blanked to spaces, so offsets and line numbers stay those of the file.
+    $plain = (string) preg_replace_callback('#/\*.*?\*/#s',
+        static fn(array $m): string => (string) preg_replace('/[^\n]/', ' ', $m[0]), css());
+    preg_match_all('/([^{}]+)\{([^{}]*)\}/', $plain, $regeln, PREG_OFFSET_CAPTURE);
+    $dunkelMuster = '/\[data-gk-mode="dark"\]|\.gk-dark(?![\w-])/';
+    $dunkel = 0;
+    $gelesen = 0;
     $verstoesse = [];
-    $zeilen = explode("\n", $abschnitt);
-    $versatz = substr_count(substr(css(), 0, (int) $anfang), "\n");
-    foreach ($zeilen as $i => $zeile) {
-        if (!preg_match_all('/(?:^|[;{\s])(?:-webkit-text-fill-color|caret-color|color)\s*:\s*([^;}]+)/i', $zeile, $treffer)) {
+    foreach ($regeln[1] as $n => [$selektoren, $pos]) {
+        if (!preg_match($dunkelMuster, $selektoren)) {
             continue;
         }
-        foreach ($treffer[1] as $wert) {
-            $wert = strtolower(trim(str_ireplace('!important', '', $wert)));
+        $dunkel++;
+        $gelesen += preg_match_all($dunkelMuster, $selektoren);
+        $liste = gkSelectorList($selektoren);
+        [$rumpf, $rumpfPos] = $regeln[2][$n];
+        preg_match_all('/(?:^|[;{\s])(?:-webkit-text-fill-color|caret-color|color)\s*:\s*([^;}]+)/i',
+            $rumpf, $treffer, PREG_OFFSET_CAPTURE);
+        foreach ($treffer[1] as [$roh, $wo]) {
+            $wert = strtolower(trim(str_ireplace('!important', '', $roh)));
             if ($wert === '' || str_starts_with($wert, 'var(') || str_starts_with($wert, 'color-mix(')
                 || in_array($wert, $erlaubt, true)) {
                 continue;
             }
-            $verstoesse[] = 'Zeile ' . ($versatz + $i + 1) . ': color: ' . $wert;
+            foreach ($ausnahmen as $i => [$sel, $wertErlaubt]) {
+                if (in_array($sel, $liste, true) && $wert === $wertErlaubt) {
+                    $genutzt[$i] = true;
+                    continue 2;
+                }
+            }
+            $verstoesse[] = 'Zeile ' . (substr_count($plain, "\n", 0, $rumpfPos + $wo) + 1)
+                . ' (' . $liste[0] . '): color: ' . $wert;
         }
     }
+    // Nothing found would mean nothing searched: every dark spelling in the file has to
+    // sit in the selector list of a rule read here.
+    $imStylesheet = preg_match_all($dunkelMuster, $plain);
+    T::ok($dunkel > 0 && $gelesen === $imStylesheet,
+        "every dark rule is read, wherever it stands ($dunkel rules, $gelesen of $imStylesheet dark selectors)");
     T::ok($verstoesse === [],
-        'every text colour in the dark component rules reads a role'
+        'every text colour in a dark rule reads a role'
         . ($verstoesse ? "\n      " . implode("\n      ", $verstoesse) : ''));
+    foreach ($ausnahmen as $i => [$sel, $wertErlaubt]) {
+        T::ok(isset($genutzt[$i]), "the exception for $sel ($wertErlaubt) is still needed — otherwise remove it");
+    }
 },
 
 'the sticky header keeps the colour of the header it sticks to' => function (): void {

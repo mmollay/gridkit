@@ -11,9 +11,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed — active chips keep their colour role in dark mode
 In dark mode `[data-gk-mode="dark"] .gk-chip.gk-chip-active` (0,3,0) came after every chip colour
-(`.gk-chip-danger.gk-chip-active`, 0,2,0) and outranked it, so every active chip wore the same tonal
-indigo: on the SSI Panel's invoice list, Mahnung, Bezahlt, Warten and Archiv looked alike (found in
-round 29; measured in 1.93.3: one ground per theme for every active chip, danger to neutral).
+(`.gk-chip-danger.gk-chip-active`, 0,2,0) and outranked it, so every active chip wore the tonal
+container of the chip without a colour: wherever filter chips carry colours (on the SSI Panel,
+receipts, expenses, banking, the chart of accounts and the website monitor), a danger, success,
+warning and neutral chip looked alike (found in round 29; measured in 1.93.3: one ground per theme
+for every active chip, danger to neutral).
 The chip's dark rules now stand with the chip, before its colours, and each colour names both dark
 spellings (`[data-gk-mode="dark"]` and `.gk-dark`) in its own selector list, at the same 0,3,0 —
 one rule per colour for both modes, nothing more specific than before. Danger and success write
@@ -39,6 +41,14 @@ hover and focused, differ only on the active colour chips in dark mode. The focu
 - `ci/farben.js`: every colour role and alias, at rest and under the pointer, in all six themes and
   without one, light and both dark spellings: the ground is the colour of its role and never that of
   the chip without one, the label reads at 4.5:1, and the count never reads weaker than the label.
+- `tests/contrast.test.php`: "dark component rules take their TEXT colour from a role" read the
+  stylesheet only from the marker of the dark component section on, and the chip's dark rules now stand before
+  it (a literal written into them stayed green; review of this release). It now reads every rule
+  whose selector list names `[data-gk-mode="dark"]` or `.gk-dark`, wherever it stands, and checks
+  that every dark selector of the file sits in a rule it read. Two literals are allowed for one rule
+  each, bound to selector and value: `#1f2937` on the active warning chip (no role carries dark text
+  on amber in both modes) and the white veil `rgba(255, 255, 255, 0.78)` of the dark sidebar, which
+  had stood outside the section all along.
 
 ## [1.93.3] - 2026-09-28
 

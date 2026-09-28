@@ -247,7 +247,8 @@ async function komponentenMessen(browser, mitThemes, schreibweise) {
    teilen ihre Regel mit dem Namen der Rolle. */
 const CHIPFARBEN = ["primary", "danger", "success", "warning", "neutral"];
 /* 1.93.4: im dunklen Schema schlug die Regel des aktiven Chips jede Farbrolle —
-   Mahnung, Bezahlt, Warten und Archiv trugen alle dasselbe Indigo. Jede Rolle samt
+   danger, success, warning und neutral trugen alle den tonalen Container des Chips
+   ohne Rolle, je Thema einen, aber für alle Rollen denselben. Jede Rolle samt
    Alias trägt ihre Farbe (die Variable ihrer Regel) in jedem Thema und Modus, ruhend
    und unter dem Zeiger, und nie den Grund des Chips ohne Rolle. primary und blue
    SIND der Chip ohne Rolle (hell wie dunkel) und stehen darum nicht hier. */

@@ -3326,9 +3326,9 @@ select.gk-input {
 }
 /* The chip in dark mode stands HERE, before the colours, not with the other dark
    components further down. There the rule for the active chip (0,3,0) came after
-   every colour (0,2,0) and outranked it: Mahnung, Bezahlt, Warten and Archiv all
-   wore the same tonal indigo (1.93.4). Each colour below names its dark spellings
-   too, at the same 0,3,0, and wins by coming later. */
+   every colour (0,2,0) and outranked it: danger, success, warning and neutral all
+   wore the tonal container of the chip without a colour (1.93.4). Each colour
+   below names its dark spellings too, at the same 0,3,0, and wins by coming later. */
 [data-gk-mode="dark"] .gk-chip,
 .gk-dark .gk-chip {
   background: #161b22;
