@@ -1152,6 +1152,8 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
     // rounds rc965 and 18). Measured as painted — background through the button's own filter on a
     // canvas — because a computed background never shows a filter.
     const hoverMessen = async (modus, klasse) => {
+      const rolle = klasse.match(/gk-btn-(primary|success|warning|danger)/)[1];
+      const token = rolle === "primary" ? "--gk-primary-hover" : "--gk-" + rolle + "-fill-hover";
       await adm.evaluate(([modus, klasse]) => {
         document.body.setAttribute("data-gk-mode", modus);
         document.getElementById("hover-probe")?.remove();
@@ -1160,13 +1162,20 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
         b.style.cssText = "position:fixed;right:24px;bottom:24px;z-index:2147483647;transition:none";
         document.body.appendChild(b);
       }, [modus, klasse]);
-      const gemalt = () => adm.evaluate(() => {
+      const gemalt = () => adm.evaluate((token) => {
         const b = document.getElementById("hover-probe"), cs = getComputedStyle(b);
         const male = (farbe) => { const c = document.createElement("canvas").getContext("2d");
           c.filter = cs.filter === "none" ? "none" : cs.filter; c.fillStyle = farbe; c.fillRect(0, 0, 1, 1);
           return Array.from(c.getImageData(0, 0, 1, 1).data).slice(0, 3); };
-        return { grund: male(cs.backgroundColor), text: male(cs.color), rand: male(cs.borderTopColor), schatten: cs.boxShadow };
-      });
+        // What the hover token computes to right here, as a plain background next to the button.
+        const sonde = document.createElement("span");
+        sonde.style.background = "var(" + token + ")";
+        document.body.appendChild(sonde);
+        const soll = getComputedStyle(sonde).backgroundColor;
+        sonde.remove();
+        return { grund: male(cs.backgroundColor), text: male(cs.color), rand: male(cs.borderTopColor), schatten: cs.boxShadow,
+                 fuellung: cs.backgroundColor, soll };
+      }, token);
       await adm.mouse.move(0, 0);
       const ruhe = await gemalt();
       await adm.hover("#hover-probe");
@@ -1177,22 +1186,28 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
       const k = (a, b) => { const [x, y] = [lum(a), lum(b)]; return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
       const gleich = (a, b) => a.join(",") === b.join(",");
       return { schritt: k(ruhe.grund, drauf.grund), text: k(drauf.text, drauf.grund),
-               randIstFuellung: gleich(ruhe.rand, ruhe.grund) && gleich(drauf.rand, drauf.grund), schatten: drauf.schatten };
+               randIstFuellung: gleich(ruhe.rand, ruhe.grund) && gleich(drauf.rand, drauf.grund), schatten: drauf.schatten,
+               istToken: drauf.fuellung === drauf.soll, fuellung: drauf.fuellung, soll: drauf.soll };
     };
     // 1.93.3: the hover fill of filled success, warning and danger stands in ONE selector list with the
     // default variant — so the buttons carrying gk-btn-filled WITHOUT gk-btn are measured too (only the
     // filled selector reaches them), along with the border and the shadow that rule carries.
+    // Round 29 review: a second hover rule with another, readable colour passed all of these — the
+    // step, the text and the border hold for any darker fill. So the fill under the pointer is also
+    // compared with what the role's hover token computes to: whichever rule wins, in whatever
+    // spelling, it has to be the one that names the token. Primary joined the list in 1.93.3 too.
     const knoepfe = ["gk-btn gk-btn-filled gk-btn-primary", "gk-btn gk-btn-filled gk-btn-success", "gk-btn gk-btn-filled gk-btn-warning",
-      "gk-btn gk-btn-filled gk-btn-danger", "gk-btn gk-btn-success", "gk-btn gk-btn-warning", "gk-btn gk-btn-danger",
-      "gk-btn-filled gk-btn-success", "gk-btn-filled gk-btn-warning", "gk-btn-filled gk-btn-danger"];
+      "gk-btn gk-btn-filled gk-btn-danger", "gk-btn gk-btn-primary", "gk-btn gk-btn-success", "gk-btn gk-btn-warning", "gk-btn gk-btn-danger",
+      "gk-btn-filled gk-btn-primary", "gk-btn-filled gk-btn-success", "gk-btn-filled gk-btn-warning", "gk-btn-filled gk-btn-danger"];
     const benennen = (klasse) => klasse.startsWith("gk-btn ") ? klasse.slice(7) : klasse + " (no .gk-btn)";
-    const hoverSchwach = [], randFremd = [], ohneSchatten = [];
+    const hoverSchwach = [], randFremd = [], ohneSchatten = [], nichtToken = [];
     for (const klasse of knoepfe) {
       for (const modus of ["light", "dark"]) {
         const m = await hoverMessen(modus, klasse);
         if (m.schritt < 1.1 || m.text < 4.5) hoverSchwach.push(benennen(klasse) + " " + modus + " " + m.schritt.toFixed(2) + "/" + m.text.toFixed(2));
         if (!m.randIstFuellung) randFremd.push(benennen(klasse) + " " + modus);
-        if (/gk-btn-filled gk-btn-(success|danger)/.test(klasse) && m.schatten === "none") ohneSchatten.push(benennen(klasse) + " " + modus);
+        if (/gk-btn-filled gk-btn-(primary|success|danger)/.test(klasse) && m.schatten === "none") ohneSchatten.push(benennen(klasse) + " " + modus);
+        if (!m.istToken) nichtToken.push(benennen(klasse) + " " + modus + " " + m.fuellung + " ≠ " + m.soll);
       }
     }
     await adm.evaluate(() => { document.getElementById("hover-probe")?.remove(); document.body.setAttribute("data-gk-mode", "light"); });
@@ -1200,8 +1215,10 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
       + (hoverSchwach.length ? " — weak: " + hoverSchwach.join("; ") : ""), hoverSchwach.length === 0);
     check("button: the border of a filled button is its fill, at rest and on hover, light and dark"
       + (randFremd.length ? " — differs: " + randFremd.join("; ") : ""), randFremd.length === 0);
-    check("button: filled success and danger cast their shadow on hover, with and without .gk-btn"
+    check("button: filled primary, success and danger cast their shadow on hover, with and without .gk-btn"
       + (ohneSchatten.length ? " — none: " + ohneSchatten.join("; ") : ""), ohneSchatten.length === 0);
+    check("button: under the pointer a filled primary, success, warning or danger button takes its role's hover token, in every spelling, light and dark"
+      + (nichtToken.length ? " — another rule paints: " + nichtToken.join("; ") : ""), nichtToken.length === 0);
 
     const punkt = () => adm.evaluate(() => ({
       puls: getComputedStyle(document.getElementById("dot-pulse")).animationName,

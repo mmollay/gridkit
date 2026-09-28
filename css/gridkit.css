@@ -1424,9 +1424,21 @@ a:hover {
   color: var(--gk-on-primary);
   border-color: var(--gk-primary);
 }
-.gk-btn-filled.gk-btn-primary:hover {
+/* The hover fill of primary, success, warning and danger is stated ONCE per role,
+   for both ways of writing a filled button: .gk-btn-filled (the only selector
+   that reaches one without .gk-btn) and the default variant (.gk-btn without a
+   variant class), which also matches a button carrying both .gk-btn-filled and
+   .gk-btn and wins on specificity. As two rules naming the same colour, a change
+   to the filled one changed nothing on screen; one list since 1.93.3. The shadow
+   stays with .gk-btn-filled alone, as before. */
+.gk-btn-filled.gk-btn-primary:hover,
+.gk-btn.gk-btn-primary:not(.gk-btn-outlined):not(.gk-btn-text):not(
+    .gk-btn-tonal
+  ):hover {
   background: var(--gk-primary-hover);
   border-color: var(--gk-primary-hover);
+}
+.gk-btn-filled.gk-btn-primary:hover {
   box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-primary) 30%, transparent);
 }
 .gk-btn-filled.gk-btn-success {
@@ -1434,12 +1446,6 @@ a:hover {
   color: #ffffff;
   border-color: var(--gk-success-fill);
 }
-/* The hover fill of success, warning and danger is stated ONCE, for both ways of
-   writing a filled button: .gk-btn-filled (the only selector that reaches one
-   without .gk-btn) and the default variant (.gk-btn without a variant class),
-   which also matches a .gk-btn-filled .gk-btn and wins on specificity. As two
-   rules naming the same colour, a change to this one changed nothing on screen;
-   one list since 1.93.3. The shadow stays with .gk-btn-filled alone, as before. */
 .gk-btn-filled.gk-btn-success:hover,
 .gk-btn.gk-btn-success:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
@@ -1482,6 +1488,10 @@ a:hover {
   color: var(--gk-on-secondary);
   border-color: var(--gk-secondary);
 }
+/* Neutral still has two hover rules, and they name DIFFERENT colours: this one
+   reaches only a button without .gk-btn; every Button::render button takes the
+   default-variant rule further down. Which colour is right is an open decision
+   (round 29), so both stand as they are. */
 .gk-btn-filled.gk-btn-neutral:hover {
   background: oklch(from var(--gk-secondary) calc(l - 0.06) c h);
   border-color: oklch(from var(--gk-secondary) calc(l - 0.06) c h);
@@ -1653,12 +1663,6 @@ a:hover {
   color: var(--gk-on-primary);
   border-color: var(--gk-primary);
 }
-.gk-btn.gk-btn-primary:not(.gk-btn-outlined):not(.gk-btn-text):not(
-    .gk-btn-tonal
-  ):hover {
-  background: var(--gk-primary-hover);
-  border-color: var(--gk-primary-hover);
-}
 .gk-btn.gk-btn-success:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ) {
@@ -1680,8 +1684,8 @@ a:hover {
     color: #ffffff;
     border-color: var(--gk-danger-fill);
 }
-/* The hover of success, warning and danger is in the filled rules above: one
-   selector list for both spellings (1.93.3). */
+/* The hover of primary, success, warning and danger is in the filled rules
+   above: one selector list per role for both spellings (1.93.3). */
 .gk-btn.gk-btn-neutral:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ) {

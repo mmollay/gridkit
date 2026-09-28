@@ -132,29 +132,83 @@ function gkSpecificity(string $selector): int
 }
 
 /**
- * The value of $prop on an element that every selector in $matching matches: the
+ * The value of $props on an element that every selector in $matching matches: the
  * highest specificity wins, then the later rule — the cascade, for the handful of
  * rules a test names. A browser proves the result; this finds the rule that decides.
+ * A shorthand and its longhand (background, background-color) are passed together:
+ * they decide as one property, and the later declaration of a rule wins.
  *
  * @param list<string> $matching
  */
-function gkWinner(array $matching, string $prop): ?string
+function gkWinner(array $matching, string ...$props): ?string
 {
     $best = null;
     $bestKey = [-1, -1];
     foreach (gkRules() as $rule) {
-        if (!isset($rule['decl'][$prop])) {
+        $set = array_intersect_key($rule['decl'], array_flip($props));
+        if ($set === []) {
             continue;
         }
         foreach ($rule['selectors'] as $s) {
             $key = [gkSpecificity($s), $rule['pos']];
             if (in_array($s, $matching, true) && $key > $bestKey) {
                 $bestKey = $key;
-                $best = $rule['decl'][$prop];
+                $best = end($set);
             }
         }
     }
     return $best;
+}
+
+/**
+ * Does $selector reach a button that carries exactly $classes — under the pointer
+ * or at rest — inside the dark-mode ancestor $mode ('' in light mode)? Understood
+ * is what button rules are written with: classes, :hover and :not(.class), after at
+ * most that one ancestor. A selector naming anything else (another ancestor, focus,
+ * a disabled state) does not reach the button asked about. Picking rules this way,
+ * and not by the value they set, is what finds a second rule with another colour.
+ *
+ * @param list<string> $classes
+ */
+function gkReaches(string $selector, array $classes, bool $hover, string $mode = ''): bool
+{
+    if ($mode !== '' && str_starts_with($selector, "$mode ")) {
+        $selector = substr($selector, strlen($mode) + 1);
+    }
+    if (!preg_match('/^(?:\.[\w-]+|:hover|:not\(\.[\w-]+\))+$/', $selector)) {
+        return false;
+    }
+    preg_match_all('/:not\(\.([\w-]+)\)|\.([\w-]+)|:hover/', $selector, $parts, PREG_SET_ORDER);
+    foreach ($parts as $p) {
+        $holds = match (true) {
+            ($p[1] ?? '') !== '' => !in_array($p[1], $classes, true),
+            ($p[2] ?? '') !== '' => in_array($p[2], $classes, true),
+            default => $hover,
+        };
+        if (!$holds) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Every selector of the stylesheet that reaches that button — the list gkWinner() takes.
+ *
+ * @param list<string> $classes
+ * @return list<string>
+ */
+function gkReaching(array $classes, bool $hover, string $mode = ''): array
+{
+    $out = [];
+    foreach (gkRules() as $rule) {
+        foreach ($rule['selectors'] as $s) {
+            if (gkReaches($s, $classes, $hover, $mode)) {
+                $out[] = $s;
+            }
+        }
+    }
+    return array_values(array_unique($out));
 }
 
 /** A colour value as hex: var(--gk-x[, fallback]) through the token of the mode, or a literal. */
@@ -217,31 +271,73 @@ return [
     T::contains(css(), '--gk-warning: #f59e0b;', 'the warning role is unchanged');
 },
 
-'a filled semantic button names its hover colour once' => function (): void {
+'a filled primary, success, warning or danger button names its hover colour once' => function (): void {
     // Two rules painted the hover of a filled success, warning or danger button:
     // .gk-btn-filled.gk-btn-X:hover and the default-variant rule, which matches a
-    // .gk-btn-filled button as well and wins on specificity. Both named the same
-    // colour, so changing the filled one changed nothing on screen — a counter-probe
-    // of the SSI Panel stayed green (round 18). The filled rule is not redundant,
-    // though (round 22): it alone reaches a button with gk-btn-filled and WITHOUT
-    // gk-btn, and it carries the shadow. So background and border stand in ONE
-    // selector list, and the shadow stays where it was.
-    foreach (['success', 'warning', 'danger'] as $role) {
-        $token = "var(--gk-$role-fill-hover)";
-        $painting = array_values(array_filter(gkRules(), static fn(array $r): bool =>
-            ($r['decl']['background'] ?? '') === $token || ($r['decl']['border-color'] ?? '') === $token));
-        T::eq(count($painting), 1, "$role: exactly one rule paints the hover fill");
-        $rule = $painting[0] ?? ['selectors' => [], 'decl' => []];
+    // button carrying both .gk-btn-filled and .gk-btn and wins on specificity. Both
+    // named the same colour, so changing the filled one changed nothing on screen —
+    // a counter-probe of the SSI Panel stayed green (round 18). The filled rule is
+    // not redundant, though (round 22): it alone reaches a button with gk-btn-filled
+    // and WITHOUT gk-btn, and it carries the shadow. So background and border stand
+    // in ONE selector list, and the shadow stays where it was.
+    //
+    // Round 29 review: the rules were picked by the VALUE they set. A second hover
+    // rule with another, readable colour went uncounted — a counter-probe put one
+    // back for success and the suite stayed green while the shared list no longer
+    // reached a single Button::render button. Rules are now picked by the buttons
+    // they REACH, in every spelling of a filled button, light and both dark
+    // spellings, and the cascade over all of them has to end on the hover token.
+    // Primary had the same two rules (same colour) and joined the list then.
+    // Neutral is left out on purpose: its two rules name DIFFERENT colours, and
+    // which one is right is a decision still open.
+    $modes = ['light' => '', 'dark' => '[data-gk-mode="dark"]', 'dark (.gk-dark)' => '.gk-dark'];
+    $tokens = ['primary' => 'var(--gk-primary-hover)', 'success' => 'var(--gk-success-fill-hover)',
+               'warning' => 'var(--gk-warning-fill-hover)', 'danger' => 'var(--gk-danger-fill-hover)'];
+    foreach ($tokens as $role => $token) {
+        $spellings = [
+            'gk-btn gk-btn-filled' => ['gk-btn', 'gk-btn-filled', "gk-btn-$role"],
+            'gk-btn (default variant)' => ['gk-btn', "gk-btn-$role"],
+            'gk-btn-filled without gk-btn' => ['gk-btn-filled', "gk-btn-$role"],
+        ];
+        $painting = [];
+        foreach (gkRules() as $i => $r) {
+            if (array_intersect_key($r['decl'], array_flip(['background', 'background-color', 'border', 'border-color'])) === []) {
+                continue;
+            }
+            foreach ($r['selectors'] as $s) {
+                foreach ($spellings as $classes) {
+                    foreach ($modes as $p) {
+                        if (gkReaches($s, $classes, true, $p) && !gkReaches($s, $classes, false, $p)) {
+                            $painting[$i] = $r;
+                        }
+                    }
+                }
+            }
+        }
+        T::eq(count($painting), 1,
+            "$role: exactly one rule paints a filled button once the pointer is on it — any spelling, light or dark");
+        $rule = array_values($painting)[0] ?? ['selectors' => [], 'decl' => []];
         T::ok(in_array(".gk-btn-filled.gk-btn-$role:hover", $rule['selectors'], true),
             "$role: that rule covers a filled button, with or without .gk-btn");
         T::ok(in_array(".gk-btn.gk-btn-$role:not(.gk-btn-outlined):not(.gk-btn-text):not(.gk-btn-tonal):hover",
             $rule['selectors'], true), "$role: and the default variant (.gk-btn without a variant class)");
         T::eq($rule['decl']['background'] ?? '', $token, "$role: its background is the hover fill");
         T::eq($rule['decl']['border-color'] ?? '', $token, "$role: its border is the hover fill");
+        foreach ($spellings as $name => $classes) {
+            foreach ($modes as $mode => $p) {
+                $reaching = gkReaching($classes, true, $p);
+                T::eq(gkWinner($reaching, 'background', 'background-color'), $token,
+                    "$role, $name, $mode: under the pointer the cascade ends on the hover fill");
+                T::eq(gkWinner($reaching, 'border-color', 'border'), $token,
+                    "$role, $name, $mode: and the border on the same colour");
+            }
+        }
     }
-    foreach (['success' => '--gk-success', 'danger' => '--gk-error'] as $role => $tone) {
-        T::ok(str_contains((string) gkWinner([".gk-btn-filled.gk-btn-$role:hover"], 'box-shadow'), "var($tone) 30%"),
-            "$role: the filled hover keeps its shadow");
+    foreach (['primary' => '--gk-primary', 'success' => '--gk-success', 'danger' => '--gk-error'] as $role => $tone) {
+        foreach ([['gk-btn', 'gk-btn-filled', "gk-btn-$role"], ['gk-btn-filled', "gk-btn-$role"]] as $classes) {
+            T::ok(str_contains((string) gkWinner(gkReaching($classes, true), 'box-shadow'), "var($tone) 30%"),
+                "$role: the filled hover keeps its shadow (" . implode(' ', $classes) . ')');
+        }
     }
 },
 

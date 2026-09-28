@@ -20,26 +20,41 @@ every count takes the dark tint there. Now 6.37–7.89:1 light and 7.79–9.97:1
 about a chip moved: label, ground, border and focus ring measure identical at rest, on hover and
 focused, and the count of an inactive chip is untouched.
 
-### Changed — the hover of a filled success, warning or danger button is stated once
+### Changed — the hover of a filled primary, success, warning or danger button is stated once
 Two rules painted it: `.gk-btn-filled.gk-btn-X:hover` and the default variant
 `.gk-btn.gk-btn-X:not(.gk-btn-outlined):not(.gk-btn-text):not(.gk-btn-tonal):hover`, which also
-matches a `.gk-btn-filled` `.gk-btn` and wins on specificity. Both named the same colour, so a change
-to the filled rule changed nothing on screen (noted in 1.93.1). Background and border now stand in
-ONE selector list per role, where the filled rule stood; the shadow stays on `.gk-btn-filled` alone,
-which is also the only selector that reaches a button with `gk-btn-filled` and no `gk-btn`. Nothing
-looks different: 26880 computed styles (every variant and role, plain, small, disabled and inside a
-message, at rest, on hover, focused and pressed, seven theme settings, light and both dark
-spellings) are identical before and after.
+matches a button carrying both `.gk-btn-filled` and `.gk-btn` and wins on specificity. Both named
+the same colour, so a change to the filled rule changed nothing on screen (noted in 1.93.1).
+Background and border now stand in ONE selector list per role, where the filled rule stood; the
+shadow stays on `.gk-btn-filled` alone, which is also the only selector that reaches a button with
+`gk-btn-filled` and no `gk-btn`. Primary had the same two rules with the same colour and joined the
+same way. Nothing looks different: 136080 computed values (every variant and role, with and without
+`gk-btn`, plain, small, disabled and inside a message, at rest, on hover, focused and pressed, seven
+theme settings, light and both dark spellings) are identical to 1.93.2.
+
+Neutral is left as it is, on purpose: its two hover rules name DIFFERENT colours
+(`.gk-btn-filled.gk-btn-neutral:hover` darkens the secondary colour, the default variant mixes in
+18 % of the text colour), so a neutral button looks different under the pointer depending on whether
+it carries `gk-btn`. Every `Button::render` button takes the default-variant colour. Which one is
+right is a design decision; choosing it changes what one of the two spellings looks like, so it
+waits for a round of its own with a measurement before and after. A comment at the rule says so.
 
 ### Tests
 - `tests/contrast.test.php`: the count of every active chip colour, at rest and under the pointer,
   light and both dark spellings, followed through the rules of the stylesheet — at least 4.5:1 and
-  never weaker than its label. And exactly one rule paints the hover fill of each filled semantic
-  button, covering both spellings, with the shadow left on the filled rule.
+  never weaker than its label. And exactly one rule paints the hover fill of each filled primary,
+  success, warning and danger button, with the shadow left on the filled rule. The rules are picked
+  by the buttons they reach — every spelling of a filled button, light and both dark spellings — not
+  by the colour they set: picked by colour, a second hover rule with another colour went uncounted
+  and the suite stayed green (review of this release). The cascade over every rule that reaches the
+  button under the pointer has to end on the hover token, for background and border, shorthand and
+  longhand alike.
 - `ci/farben.js`: the count of the resting, the active, the hovered and each coloured active chip,
   in all six themes and without one, light and both dark spellings.
 - `ci/browser.js`: buttons with `gk-btn-filled` and no `gk-btn` are measured too; the border of a
-  filled button is its fill at rest and on hover; filled success and danger keep their hover shadow.
+  filled button is its fill at rest and on hover; filled primary, success and danger keep their hover
+  shadow; and the fill under the pointer is what the role's hover token computes to, in every
+  spelling, light and dark, so whichever rule wins has to be the one that names the token.
 
 ## [1.93.2] - 2026-09-27
 
