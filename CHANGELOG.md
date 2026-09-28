@@ -7,6 +7,40 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.93.3] - 2026-09-28
+
+### Fixed — the count in an active chip is readable
+`.gk-chip-count` lays a tint over its chip. On an active chip that tint was 20 % white under white
+text, so it took away what the accent had: the count measured 3.19–3.90:1 in light mode and
+3.68–4.67:1 in dark, in every theme, on every page with `FilterChips` (SSI Panel, round 28). The tint
+now moves away from the text: `rgba(0, 0, 0, 0.2)` under light text, and the old white tint only
+under the dark text of `warning`/`orange` and `neutral` (a dark tint would put warning at 4.43:1).
+In dark mode every active chip carries light text (the dark chip rule outranks the chip colours), so
+every count takes the dark tint there. Now 6.37–7.89:1 light and 7.79–9.97:1 dark. Nothing else
+about a chip moved: label, ground, border and focus ring measure identical at rest, on hover and
+focused, and the count of an inactive chip is untouched.
+
+### Changed — the hover of a filled success, warning or danger button is stated once
+Two rules painted it: `.gk-btn-filled.gk-btn-X:hover` and the default variant
+`.gk-btn.gk-btn-X:not(.gk-btn-outlined):not(.gk-btn-text):not(.gk-btn-tonal):hover`, which also
+matches a `.gk-btn-filled` `.gk-btn` and wins on specificity. Both named the same colour, so a change
+to the filled rule changed nothing on screen (noted in 1.93.1). Background and border now stand in
+ONE selector list per role, where the filled rule stood; the shadow stays on `.gk-btn-filled` alone,
+which is also the only selector that reaches a button with `gk-btn-filled` and no `gk-btn`. Nothing
+looks different: 26880 computed styles (every variant and role, plain, small, disabled and inside a
+message, at rest, on hover, focused and pressed, seven theme settings, light and both dark
+spellings) are identical before and after.
+
+### Tests
+- `tests/contrast.test.php`: the count of every active chip colour, at rest and under the pointer,
+  light and both dark spellings, followed through the rules of the stylesheet — at least 4.5:1 and
+  never weaker than its label. And exactly one rule paints the hover fill of each filled semantic
+  button, covering both spellings, with the shadow left on the filled rule.
+- `ci/farben.js`: the count of the resting, the active, the hovered and each coloured active chip,
+  in all six themes and without one, light and both dark spellings.
+- `ci/browser.js`: buttons with `gk-btn-filled` and no `gk-btn` are measured too; the border of a
+  filled button is its fill at rest and on hover; filled success and danger keep their hover shadow.
+
 ## [1.93.2] - 2026-09-27
 
 ### Fixed — a disabled button can be enabled by a script

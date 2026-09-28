@@ -231,7 +231,8 @@ async function komponentenMessen(browser, mitThemes, schreibweise) {
  *
  *   - Kürzelfarben 1–5, Kacheln (ruhig, Warnung, Gefahr) auf Seite und Karte,
  *     die Gefahr-Einstellung und die gewählte Antwortkachel: jeder Text hält
- *     4,5:1 gegen den Grund, auf dem er WIRKLICH steht.
+ *     4,5:1 gegen den Grund, auf dem er WIRKLICH steht. Seit 1.93.3 auch die
+ *     Zahl im Chip (ruhend, aktiv, aktiv unter dem Zeiger, jede Chipfarbe).
  *   - Reihenfarben 1–5: in jedem Thema dieselben (eine Reihe folgt ihrem Ding,
  *     nie dem Akzent), dunkel alle ≥ 3:1 gegen die Fläche, hell die ersten zwei
  *     (3–5 liegen darunter und tragen ihre Zahl als Text — dokumentiert).
@@ -240,6 +241,9 @@ async function komponentenMessen(browser, mitThemes, schreibweise) {
  *     normalem Sehen — dieselbe Rechnung wie der Palettenprüfer der
  *     dataviz-Anleitung.
  * ──────────────────────────────────────────────────────────────────────── */
+/* Jede Chipfarbe, die FilterChips annimmt — die Aliase (red, green, orange, blue)
+   teilen ihre Regel mit dem Namen der Rolle. */
+const CHIPFARBEN = ["primary", "danger", "success", "warning", "neutral"];
 const BAUSTEINE = `
 <div class="gk-card" id="karte">
   <span class="gk-avatar gk-avatar-initials gk-avatar-tone-1" id="ton-1">AB</span>
@@ -269,7 +273,13 @@ ${[["warning", "warning"], ["error", "danger"], ["success", "success"], ["info",
 <div class="gk-card" id="marken-karte"><span class="gk-label gk-label-green" id="marke-neu-karte">New in 1.93</span>
 <span class="gk-label gk-label-blue" id="marke-geaendert-karte">Changed in 1.92</span><span class="gk-text-muted" id="seit-karte">since 1.0</span></div>
 <span class="gk-label gk-label-green" id="marke-neu-seite">New in 1.93</span>
-<span class="gk-label gk-label-blue" id="marke-geaendert-seite">Changed in 1.92</span><span class="gk-text-muted" id="seit-seite">since 1.0</span>`;
+<span class="gk-label gk-label-blue" id="marke-geaendert-seite">Changed in 1.92</span><span class="gk-text-muted" id="seit-seite">since 1.0</span>
+<div class="gk-filter-chips">
+<a href="#" class="gk-chip" id="chip-ruhig">Alle <span class="gk-chip-count">24</span></a>
+<a href="#" class="gk-chip gk-chip-active" id="chip-aktiv">Offen <span class="gk-chip-count">12</span></a>
+<a href="#" class="gk-chip gk-chip-active" id="chip-aktiv-zeiger">Offen <span class="gk-chip-count">12</span></a>
+${CHIPFARBEN.map((f) => `<a href="#" class="gk-chip gk-chip-${f} gk-chip-active" id="chip-${f}">${f} <span class="gk-chip-count">3</span></a>`).join("\n")}
+</div>`;
 
 /*
  * Der Buchstabe einer gewählten Antwort ist --gk-on-primary auf --gk-primary —
@@ -328,6 +338,13 @@ const TEXTPROBEN = [
     [`Marke Geändert · ${wo}`, `marke-geaendert-${wo}`, null],
     [`Seit · ${wo}`, `seit-${wo}`, null],
   ]),
+  /* 1.93.3: die Zahl im aktiven Chip stand auf 20 % Weiß unter weißer Schrift —
+     hell 3,19–3,90:1, dunkel 3,68–4,67:1, auf jeder Seite mit FilterChips. Der
+     ruhende Chip, der aktive (auch unter dem Zeiger) und jede Chipfarbe aktiv. */
+  ["Chip ruhig · Zahl", "chip-ruhig", ".gk-chip-count"],
+  ["Chip aktiv · Zahl", "chip-aktiv", ".gk-chip-count"],
+  ["Chip aktiv unter dem Zeiger · Zahl", "chip-aktiv-zeiger", ".gk-chip-count"],
+  ...CHIPFARBEN.map((f) => [`Chip ${f} aktiv · Zahl`, `chip-${f}`, ".gk-chip-count"]),
 ];
 
 // Machado, Oliveira & Fernandes (2009), Stärke 1,0, auf linearem RGB.
@@ -369,9 +386,11 @@ async function bausteineMessen(browser, mitThemes) {
        dann gilt er für jede Messung der Schleife unten. */
     const cdp = await page.context().newCDPSession(page);
     const { root } = await cdp.send("DOM.getDocument");
-    const { nodeId } = await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector: "#sammel-zeiger" });
     await cdp.send("CSS.enable");
-    await cdp.send("CSS.forcePseudoState", { nodeId, forcedPseudoClasses: ["hover"] });
+    for (const wahl of ["#sammel-zeiger", "#chip-aktiv-zeiger"]) {
+      const { nodeId } = await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector: wahl });
+      await cdp.send("CSS.forcePseudoState", { nodeId, forcedPseudoClasses: ["hover"] });
+    }
     const zeilen = await page.evaluate(([proben, themen, modi]) => {
       const c = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
       const rgba = (f) => { c.clearRect(0, 0, 1, 1); c.fillStyle = "#000"; c.fillStyle = f; c.fillRect(0, 0, 1, 1);
@@ -432,13 +451,15 @@ async function bausteineMessen(browser, mitThemes) {
 }
 
 /**
- * Die Marken der Demo (1.93.0) ausdrücklich: je Probe der schwächste Wert über
- * alle Themen, getrennt hell und dunkel. Beanstandet wird wie jeder Text oben
- * (unter 4,5:1); hier stehen die Zahlen, die man nennen kann.
+ * Die Marken der Demo (1.93.0) und die Zahlen in den Chips (1.93.3) ausdrücklich:
+ * je Probe der schwächste Wert über alle Themen, getrennt hell und dunkel.
+ * Beanstandet wird wie jeder Text oben (unter 4,5:1); hier stehen die Zahlen, die
+ * man nennen kann.
  */
-function markenBerichten(wie, zeilen) {
-  console.log(`\nMarken 1.93.0, ${wie} (schwächster Wert über alle Themen):`);
-  const namen = [...new Set(zeilen.flatMap((z) => z.texte.map((t) => t.name)))].filter((n) => /^(Marke|Seit)/.test(n));
+function markenBerichten(wie, zeilen, titel = "Marken 1.93.0", muster = /^(Marke|Seit)/) {
+  console.log(`\n${titel}, ${wie} (schwächster Wert über alle Themen):`);
+  const namen = [...new Set(zeilen.flatMap((z) => z.texte.map((t) => t.name)))].filter((n) => muster.test(n));
+  const breite = Math.max(...namen.map((n) => n.length));
   let schlecht = 0;
   for (const name of namen) {
     const teile = ["light", "dark", "dark-klasse"].map((modus) => {
@@ -447,7 +468,7 @@ function markenBerichten(wie, zeilen) {
       if (min.k < 4.5) schlecht++;
       return `${modus} ${min.k.toFixed(2)}:1 (${min.thema})`;
     });
-    console.log(`${teile.every((t) => parseFloat(t.split(" ")[1]) >= 4.5) ? "ok  " : "FAIL"}  ${name.padEnd(22)} ${teile.join(" · ")}`);
+    console.log(`${teile.every((t) => parseFloat(t.split(" ")[1]) >= 4.5) ? "ok  " : "FAIL"}  ${name.padEnd(breite)} ${teile.join(" · ")}`);
   }
   return schlecht;
 }
@@ -633,6 +654,8 @@ function bausteineBerichten(wie, zeilen) {
   // hier nur die Zahlen der Marken, darum ohne Rückgabe addiert.
   markenBerichten("mit themes.css", bausteineMitThemes);
   markenBerichten("ohne themes.css", bausteineOhneThemes);
+  markenBerichten("mit themes.css", bausteineMitThemes, "Zahl im Chip 1.93.3", /^Chip /);
+  markenBerichten("ohne themes.css", bausteineOhneThemes, "Zahl im Chip 1.93.3", /^Chip /);
 
   process.exit(schlecht ? 1 : 0);
 })().catch((e) => { console.error("Abbruch:", e.message.split("\n")[0]); process.exit(2); });

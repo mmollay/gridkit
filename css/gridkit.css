@@ -1434,9 +1434,20 @@ a:hover {
   color: #ffffff;
   border-color: var(--gk-success-fill);
 }
-.gk-btn-filled.gk-btn-success:hover {
+/* The hover fill of success, warning and danger is stated ONCE, for both ways of
+   writing a filled button: .gk-btn-filled (the only selector that reaches one
+   without .gk-btn) and the default variant (.gk-btn without a variant class),
+   which also matches a .gk-btn-filled .gk-btn and wins on specificity. As two
+   rules naming the same colour, a change to this one changed nothing on screen;
+   one list since 1.93.3. The shadow stays with .gk-btn-filled alone, as before. */
+.gk-btn-filled.gk-btn-success:hover,
+.gk-btn.gk-btn-success:not(.gk-btn-outlined):not(.gk-btn-text):not(
+    .gk-btn-tonal
+  ):hover {
   background: var(--gk-success-fill-hover);
   border-color: var(--gk-success-fill-hover);
+}
+.gk-btn-filled.gk-btn-success:hover {
   box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-success) 30%, transparent);
 }
 .gk-btn-filled.gk-btn-warning {
@@ -1444,7 +1455,10 @@ a:hover {
   color: #ffffff;
   border-color: var(--gk-warning-fill);
 }
-.gk-btn-filled.gk-btn-warning:hover {
+.gk-btn-filled.gk-btn-warning:hover,
+.gk-btn.gk-btn-warning:not(.gk-btn-outlined):not(.gk-btn-text):not(
+    .gk-btn-tonal
+  ):hover {
   background: var(--gk-warning-fill-hover);
   border-color: var(--gk-warning-fill-hover);
 }
@@ -1453,9 +1467,14 @@ a:hover {
   color: #ffffff;
   border-color: var(--gk-danger-fill);
 }
-.gk-btn-filled.gk-btn-danger:hover {
+.gk-btn-filled.gk-btn-danger:hover,
+.gk-btn.gk-btn-danger:not(.gk-btn-outlined):not(.gk-btn-text):not(
+    .gk-btn-tonal
+  ):hover {
   background: var(--gk-danger-fill-hover);
   border-color: var(--gk-danger-fill-hover);
+}
+.gk-btn-filled.gk-btn-danger:hover {
   box-shadow: 0 1px 3px color-mix(in oklab, var(--gk-error) 30%, transparent);
 }
 .gk-btn-filled.gk-btn-neutral {
@@ -1647,24 +1666,12 @@ a:hover {
     color: #ffffff;
     border-color: var(--gk-success-fill);
 }
-.gk-btn.gk-btn-success:not(.gk-btn-outlined):not(.gk-btn-text):not(
-    .gk-btn-tonal
-  ):hover {
-  background: var(--gk-success-fill-hover);
-  border-color: var(--gk-success-fill-hover);
-}
 .gk-btn.gk-btn-warning:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ) {
     background: var(--gk-warning-fill);
     color: #ffffff;
     border-color: var(--gk-warning-fill);
-}
-.gk-btn.gk-btn-warning:not(.gk-btn-outlined):not(.gk-btn-text):not(
-    .gk-btn-tonal
-  ):hover {
-  background: var(--gk-warning-fill-hover);
-  border-color: var(--gk-warning-fill-hover);
 }
 .gk-btn.gk-btn-danger:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
@@ -1673,12 +1680,8 @@ a:hover {
     color: #ffffff;
     border-color: var(--gk-danger-fill);
 }
-.gk-btn.gk-btn-danger:not(.gk-btn-outlined):not(.gk-btn-text):not(
-    .gk-btn-tonal
-  ):hover {
-  background: var(--gk-danger-fill-hover);
-  border-color: var(--gk-danger-fill-hover);
-}
+/* The hover of success, warning and danger is in the filled rules above: one
+   selector list for both spellings (1.93.3). */
 .gk-btn.gk-btn-neutral:not(.gk-btn-outlined):not(.gk-btn-text):not(
     .gk-btn-tonal
   ) {
@@ -3370,7 +3373,17 @@ select.gk-input {
   font-size: var(--gk-text-overline);
   margin-left: 2px;
 }
+/* The count sits on a tint of its chip, and the tint has to move AWAY from the
+   text. 20 % white under white text took away what the accent had: 3.19–3.90:1
+   light and 3.68–4.67:1 dark, in every theme (1.93.3). Darker under light text,
+   lighter under the dark text of warning and neutral — the count never reads
+   weaker than the label beside it. */
 .gk-chip-active .gk-chip-count {
+  background: rgba(0, 0, 0, 0.2);
+}
+.gk-chip-warning.gk-chip-active .gk-chip-count,
+.gk-chip-orange.gk-chip-active .gk-chip-count,
+.gk-chip-neutral.gk-chip-active .gk-chip-count {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -5859,6 +5872,13 @@ a.gk-stat-card:hover {
   background: var(--gk-primary-container);
   color: var(--gk-on-primary-container);
   border-color: var(--gk-primary-container);
+}
+/* Every active chip carries light text here, warning and neutral included (the
+   rule above outranks their colours), so every count takes the darker tint —
+   later in source and of equal specificity, this beats the lighter one. */
+[data-gk-mode="dark"] .gk-chip-active .gk-chip-count,
+.gk-dark .gk-chip-active .gk-chip-count {
+  background: rgba(0, 0, 0, 0.2);
 }
 
 [data-gk-mode="dark"] .gk-card,

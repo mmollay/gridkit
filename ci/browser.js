@@ -1165,7 +1165,7 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
         const male = (farbe) => { const c = document.createElement("canvas").getContext("2d");
           c.filter = cs.filter === "none" ? "none" : cs.filter; c.fillStyle = farbe; c.fillRect(0, 0, 1, 1);
           return Array.from(c.getImageData(0, 0, 1, 1).data).slice(0, 3); };
-        return { grund: male(cs.backgroundColor), text: male(cs.color) };
+        return { grund: male(cs.backgroundColor), text: male(cs.color), rand: male(cs.borderTopColor), schatten: cs.boxShadow };
       });
       await adm.mouse.move(0, 0);
       const ruhe = await gemalt();
@@ -1175,20 +1175,33 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
       const lum = (rgb) => { const k = rgb.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
         return 0.2126 * k[0] + 0.7152 * k[1] + 0.0722 * k[2]; };
       const k = (a, b) => { const [x, y] = [lum(a), lum(b)]; return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
-      return { schritt: k(ruhe.grund, drauf.grund), text: k(drauf.text, drauf.grund) };
+      const gleich = (a, b) => a.join(",") === b.join(",");
+      return { schritt: k(ruhe.grund, drauf.grund), text: k(drauf.text, drauf.grund),
+               randIstFuellung: gleich(ruhe.rand, ruhe.grund) && gleich(drauf.rand, drauf.grund), schatten: drauf.schatten };
     };
+    // 1.93.3: the hover fill of filled success, warning and danger stands in ONE selector list with the
+    // default variant — so the buttons carrying gk-btn-filled WITHOUT gk-btn are measured too (only the
+    // filled selector reaches them), along with the border and the shadow that rule carries.
     const knoepfe = ["gk-btn gk-btn-filled gk-btn-primary", "gk-btn gk-btn-filled gk-btn-success", "gk-btn gk-btn-filled gk-btn-warning",
-      "gk-btn gk-btn-filled gk-btn-danger", "gk-btn gk-btn-success", "gk-btn gk-btn-warning", "gk-btn gk-btn-danger"];
-    const hoverSchwach = [];
+      "gk-btn gk-btn-filled gk-btn-danger", "gk-btn gk-btn-success", "gk-btn gk-btn-warning", "gk-btn gk-btn-danger",
+      "gk-btn-filled gk-btn-success", "gk-btn-filled gk-btn-warning", "gk-btn-filled gk-btn-danger"];
+    const benennen = (klasse) => klasse.startsWith("gk-btn ") ? klasse.slice(7) : klasse + " (no .gk-btn)";
+    const hoverSchwach = [], randFremd = [], ohneSchatten = [];
     for (const klasse of knoepfe) {
       for (const modus of ["light", "dark"]) {
         const m = await hoverMessen(modus, klasse);
-        if (m.schritt < 1.1 || m.text < 4.5) hoverSchwach.push(klasse.replace("gk-btn ", "") + " " + modus + " " + m.schritt.toFixed(2) + "/" + m.text.toFixed(2));
+        if (m.schritt < 1.1 || m.text < 4.5) hoverSchwach.push(benennen(klasse) + " " + modus + " " + m.schritt.toFixed(2) + "/" + m.text.toFixed(2));
+        if (!m.randIstFuellung) randFremd.push(benennen(klasse) + " " + modus);
+        if (/gk-btn-filled gk-btn-(success|danger)/.test(klasse) && m.schatten === "none") ohneSchatten.push(benennen(klasse) + " " + modus);
       }
     }
     await adm.evaluate(() => { document.getElementById("hover-probe")?.remove(); document.body.setAttribute("data-gk-mode", "light"); });
     check("button: every filled button visibly answers the pointer (≥ 1.1:1) and keeps its text readable on hover (≥ 4.5:1), light and dark"
       + (hoverSchwach.length ? " — weak: " + hoverSchwach.join("; ") : ""), hoverSchwach.length === 0);
+    check("button: the border of a filled button is its fill, at rest and on hover, light and dark"
+      + (randFremd.length ? " — differs: " + randFremd.join("; ") : ""), randFremd.length === 0);
+    check("button: filled success and danger cast their shadow on hover, with and without .gk-btn"
+      + (ohneSchatten.length ? " — none: " + ohneSchatten.join("; ") : ""), ohneSchatten.length === 0);
 
     const punkt = () => adm.evaluate(() => ({
       puls: getComputedStyle(document.getElementById("dot-pulse")).animationName,

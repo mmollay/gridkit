@@ -60,6 +60,125 @@ function gkToken(string $name): string
     return $m[1] ?? '';
 }
 
+/** The same, out of the dark root block — empty when that block does not set it. */
+function gkDarkToken(string $name): string
+{
+    static $block = null;
+    $block ??= preg_match('/^\[data-gk-mode="dark"\],\s*\n\.gk-dark \{(.*?)^\}/ms', css(), $m) ? $m[1] : '';
+    preg_match('/--' . preg_quote($name, '/') . ':\s*(#[0-9a-fA-F]{6})/', $block, $t);
+    return $t[1] ?? '';
+}
+
+/**
+ * A selector list split at its top-level commas, whitespace collapsed the way
+ * the stylesheet's formatter breaks long :not() chains.
+ *
+ * @return list<string>
+ */
+function gkSelectorList(string $list): array
+{
+    $out = [];
+    $depth = 0;
+    $cur = '';
+    foreach (str_split($list) as $ch) {
+        $depth += $ch === '(' ? 1 : ($ch === ')' ? -1 : 0);
+        if ($ch === ',' && $depth === 0) {
+            $out[] = $cur;
+            $cur = '';
+            continue;
+        }
+        $cur .= $ch;
+    }
+    $out[] = $cur;
+    return array_map(static fn(string $s): string =>
+        (string) preg_replace(['/\s+/', '/\(\s+/', '/\s+\)/'], [' ', '(', ')'], trim($s)), $out);
+}
+
+/**
+ * Every rule of the core stylesheet, comments stripped: its selectors, its
+ * declarations and where it stands.
+ *
+ * @return list<array{selectors: list<string>, decl: array<string,string>, pos: int}>
+ */
+function gkRules(): array
+{
+    static $rules = null;
+    if ($rules !== null) {
+        return $rules;
+    }
+    $plain = (string) preg_replace('#/\*.*?\*/#s', '', css());
+    preg_match_all('/([^{}]+)\{([^{}]*)\}/', $plain, $m, PREG_OFFSET_CAPTURE);
+    $rules = [];
+    foreach ($m[1] as $i => [$selectors, $pos]) {
+        $decl = [];
+        foreach (explode(';', $m[2][$i][0]) as $d) {
+            if (str_contains($d, ':')) {
+                [$p, $v] = explode(':', $d, 2);
+                $decl[strtolower(trim($p))] = trim($v);
+            }
+        }
+        $rules[] = ['selectors' => gkSelectorList($selectors), 'decl' => $decl, 'pos' => $pos];
+    }
+    return $rules;
+}
+
+/**
+ * Classes, attributes and pseudo-classes; :not() counts its argument, not itself.
+ * Enough for chip and button selectors, which carry no ids and no elements.
+ */
+function gkSpecificity(string $selector): int
+{
+    return (int) preg_match_all('/\.[\w-]+|\[[^\]]+\]|(?<!:):(?!:|not\()[\w-]+/', $selector);
+}
+
+/**
+ * The value of $prop on an element that every selector in $matching matches: the
+ * highest specificity wins, then the later rule — the cascade, for the handful of
+ * rules a test names. A browser proves the result; this finds the rule that decides.
+ *
+ * @param list<string> $matching
+ */
+function gkWinner(array $matching, string $prop): ?string
+{
+    $best = null;
+    $bestKey = [-1, -1];
+    foreach (gkRules() as $rule) {
+        if (!isset($rule['decl'][$prop])) {
+            continue;
+        }
+        foreach ($rule['selectors'] as $s) {
+            $key = [gkSpecificity($s), $rule['pos']];
+            if (in_array($s, $matching, true) && $key > $bestKey) {
+                $bestKey = $key;
+                $best = $rule['decl'][$prop];
+            }
+        }
+    }
+    return $best;
+}
+
+/** A colour value as hex: var(--gk-x[, fallback]) through the token of the mode, or a literal. */
+function gkColour(?string $value, bool $dark): string
+{
+    if ($value !== null && preg_match('/^var\(--(gk-[a-z0-9-]+)/', $value, $m)) {
+        return ($dark ? gkDarkToken($m[1]) : '') ?: gkToken($m[1]);
+    }
+    return $value !== null && preg_match('/^#[0-9a-fA-F]{6}$/', $value) ? $value : '';
+}
+
+/** An rgba() layer painted over a hex ground, the way a browser composites it. */
+function gkOver(?string $layer, string $ground): string
+{
+    if ($layer === null || $ground === ''
+        || !preg_match('/^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)$/', $layer, $m)) {
+        return '';
+    }
+    $g = sscanf(ltrim($ground, '#'), '%2x%2x%2x');
+    $a = (float) $m[4];
+    return vsprintf('#%02x%02x%02x', array_map(
+        static fn(int $i): int => (int) round((int) $m[$i + 1] * $a + $g[$i] * (1 - $a)), [0, 1, 2]));
+}
+
 /** @return array<string,callable> */
 return [
 
@@ -96,6 +215,82 @@ return [
     // The role colours themselves must not have been moved.
     T::contains(css(), '--gk-success: #10b981;', 'the success role is unchanged');
     T::contains(css(), '--gk-warning: #f59e0b;', 'the warning role is unchanged');
+},
+
+'a filled semantic button names its hover colour once' => function (): void {
+    // Two rules painted the hover of a filled success, warning or danger button:
+    // .gk-btn-filled.gk-btn-X:hover and the default-variant rule, which matches a
+    // .gk-btn-filled button as well and wins on specificity. Both named the same
+    // colour, so changing the filled one changed nothing on screen — a counter-probe
+    // of the SSI Panel stayed green (round 18). The filled rule is not redundant,
+    // though (round 22): it alone reaches a button with gk-btn-filled and WITHOUT
+    // gk-btn, and it carries the shadow. So background and border stand in ONE
+    // selector list, and the shadow stays where it was.
+    foreach (['success', 'warning', 'danger'] as $role) {
+        $token = "var(--gk-$role-fill-hover)";
+        $painting = array_values(array_filter(gkRules(), static fn(array $r): bool =>
+            ($r['decl']['background'] ?? '') === $token || ($r['decl']['border-color'] ?? '') === $token));
+        T::eq(count($painting), 1, "$role: exactly one rule paints the hover fill");
+        $rule = $painting[0] ?? ['selectors' => [], 'decl' => []];
+        T::ok(in_array(".gk-btn-filled.gk-btn-$role:hover", $rule['selectors'], true),
+            "$role: that rule covers a filled button, with or without .gk-btn");
+        T::ok(in_array(".gk-btn.gk-btn-$role:not(.gk-btn-outlined):not(.gk-btn-text):not(.gk-btn-tonal):hover",
+            $rule['selectors'], true), "$role: and the default variant (.gk-btn without a variant class)");
+        T::eq($rule['decl']['background'] ?? '', $token, "$role: its background is the hover fill");
+        T::eq($rule['decl']['border-color'] ?? '', $token, "$role: its border is the hover fill");
+    }
+    foreach (['success' => '--gk-success', 'danger' => '--gk-error'] as $role => $tone) {
+        T::ok(str_contains((string) gkWinner([".gk-btn-filled.gk-btn-$role:hover"], 'box-shadow'), "var($tone) 30%"),
+            "$role: the filled hover keeps its shadow");
+    }
+},
+
+'the count in an active chip reads on the tint it sits on' => function (): void {
+    // .gk-chip-count lays a tint over its chip. On an active chip that was 20 % WHITE
+    // under white text, so the tint took away what the accent had: measured in a
+    // browser (1.93.2) at 3.19–3.90:1 light and 3.68–4.67:1 dark, in every theme, on
+    // every page with FilterChips. The tint has to move AWAY from the text — darker
+    // under light text, lighter under dark text — so the count never reads weaker
+    // than the label beside it.
+    //
+    // Followed through the rules of the bare stylesheet (literal tokens, no theme).
+    // ci/farben.js measures the same counts in all six themes and both dark spellings.
+    $modes = ['light' => null, 'dark' => '[data-gk-mode="dark"] ', 'dark (.gk-dark)' => '.gk-dark '];
+    $colours = ['', 'primary', 'blue', 'danger', 'red', 'success', 'green', 'warning', 'orange', 'neutral'];
+    foreach ($modes as $mode => $p) {
+        foreach ($colours as $c) {
+            foreach ([false, true] as $hover) {
+                $chip = ['.gk-chip', '.gk-chip-active'];
+                $count = ['.gk-chip-count', '.gk-chip-active .gk-chip-count'];
+                if ($c !== '') {
+                    $chip[] = ".gk-chip-$c.gk-chip-active";
+                    $count[] = ".gk-chip-$c.gk-chip-active .gk-chip-count";
+                }
+                if ($hover) {
+                    array_push($chip, '.gk-chip:hover', '.gk-chip-active:hover');
+                }
+                if ($p !== null) {
+                    array_push($chip, "{$p}.gk-chip", "{$p}.gk-chip.gk-chip-active", ...($hover ? ["{$p}.gk-chip:hover"] : []));
+                    array_push($count, "{$p}.gk-chip-count", "{$p}.gk-chip-active .gk-chip-count",
+                        "{$p}.gk-chip.gk-chip-active .gk-chip-count");
+                }
+                $name = trim("$mode, " . ($c ?: 'plain') . ($hover ? ', under the pointer' : ''));
+                $ground = gkColour(gkWinner($chip, 'background'), $p !== null);
+                $text = gkColour(gkWinner($chip, 'color'), $p !== null);
+                $tint = gkOver(gkWinner($count, 'background'), $ground);
+                $countText = gkColour(gkWinner($count, 'color'), $p !== null) ?: $text;
+                T::ok($ground !== '' && $text !== '' && $tint !== '', "$name: chip, label and tint resolve");
+                if ($ground === '' || $text === '' || $tint === '') {
+                    continue;
+                }
+                $label = gkContrast($text, $ground);
+                $number = gkContrast($countText, $tint);
+                T::ok($number >= 4.5, sprintf('%s: the count reads at %.2f:1 — AA asks 4.5', $name, $number));
+                T::ok($number >= $label - 0.005, sprintf(
+                    '%s: the tint takes contrast from the count (%.2f:1, the label beside it %.2f:1)', $name, $number, $label));
+            }
+        }
+    }
 },
 
 'nothing paints a literal white on the accent' => function (): void {
