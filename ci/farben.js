@@ -232,7 +232,9 @@ async function komponentenMessen(browser, mitThemes, schreibweise) {
  *   - Kürzelfarben 1–5, Kacheln (ruhig, Warnung, Gefahr) auf Seite und Karte,
  *     die Gefahr-Einstellung und die gewählte Antwortkachel: jeder Text hält
  *     4,5:1 gegen den Grund, auf dem er WIRKLICH steht. Seit 1.93.3 auch die
- *     Zahl im Chip (ruhend, aktiv, aktiv unter dem Zeiger, jede Chipfarbe).
+ *     Zahl im Chip (ruhend, aktiv, aktiv unter dem Zeiger, jede Chipfarbe),
+ *     seit 1.93.4 die Beschriftung jeder Farbrolle — und ob ein aktiver Chip
+ *     mit Farbrolle die Farbe seiner Rolle trägt, hell wie dunkel.
  *   - Reihenfarben 1–5: in jedem Thema dieselben (eine Reihe folgt ihrem Ding,
  *     nie dem Akzent), dunkel alle ≥ 3:1 gegen die Fläche, hell die ersten zwei
  *     (3–5 liegen darunter und tragen ihre Zahl als Text — dokumentiert).
@@ -244,6 +246,18 @@ async function komponentenMessen(browser, mitThemes, schreibweise) {
 /* Jede Chipfarbe, die FilterChips annimmt — die Aliase (red, green, orange, blue)
    teilen ihre Regel mit dem Namen der Rolle. */
 const CHIPFARBEN = ["primary", "danger", "success", "warning", "neutral"];
+/* 1.93.4: im dunklen Schema schlug die Regel des aktiven Chips jede Farbrolle —
+   Mahnung, Bezahlt, Warten und Archiv trugen alle dasselbe Indigo. Jede Rolle samt
+   Alias trägt ihre Farbe (die Variable ihrer Regel) in jedem Thema und Modus, ruhend
+   und unter dem Zeiger, und nie den Grund des Chips ohne Rolle. primary und blue
+   SIND der Chip ohne Rolle (hell wie dunkel) und stehen darum nicht hier. */
+const CHIPROLLEN = {
+  danger: "--gk-danger-fill", red: "--gk-danger-fill",
+  success: "--gk-success-fill", green: "--gk-success-fill",
+  warning: "--gk-warning", orange: "--gk-warning",
+  neutral: "--gk-surface-container-highest",
+};
+const ALLE_CHIPS = [...new Set([...CHIPFARBEN, ...Object.keys(CHIPROLLEN), "blue"])];
 const BAUSTEINE = `
 <div class="gk-card" id="karte">
   <span class="gk-avatar gk-avatar-initials gk-avatar-tone-1" id="ton-1">AB</span>
@@ -278,7 +292,8 @@ ${[["warning", "warning"], ["error", "danger"], ["success", "success"], ["info",
 <a href="#" class="gk-chip" id="chip-ruhig">Alle <span class="gk-chip-count">24</span></a>
 <a href="#" class="gk-chip gk-chip-active" id="chip-aktiv">Offen <span class="gk-chip-count">12</span></a>
 <a href="#" class="gk-chip gk-chip-active" id="chip-aktiv-zeiger">Offen <span class="gk-chip-count">12</span></a>
-${CHIPFARBEN.map((f) => `<a href="#" class="gk-chip gk-chip-${f} gk-chip-active" id="chip-${f}">${f} <span class="gk-chip-count">3</span></a>`).join("\n")}
+${ALLE_CHIPS.flatMap((f) => ["", "-zeiger"].map((z) =>
+  `<a href="#" class="gk-chip gk-chip-${f} gk-chip-active" id="chip-${f}${z}">${f} <span class="gk-chip-count">3</span></a>`)).join("\n")}
 </div>`;
 
 /*
@@ -344,7 +359,12 @@ const TEXTPROBEN = [
   ["Chip ruhig · Zahl", "chip-ruhig", ".gk-chip-count"],
   ["Chip aktiv · Zahl", "chip-aktiv", ".gk-chip-count"],
   ["Chip aktiv unter dem Zeiger · Zahl", "chip-aktiv-zeiger", ".gk-chip-count"],
-  ...CHIPFARBEN.map((f) => [`Chip ${f} aktiv · Zahl`, `chip-${f}`, ".gk-chip-count"]),
+  ...ALLE_CHIPS.flatMap((f) => [[`Chip ${f} aktiv · Zahl`, `chip-${f}`, ".gk-chip-count"],
+    [`Chip ${f} aktiv unter dem Zeiger · Zahl`, `chip-${f}-zeiger`, ".gk-chip-count"]]),
+  /* 1.93.4: die Beschriftung jeder Farbrolle, ruhend und unter dem Zeiger — dunkel
+     trug sie vorher die Schrift des Chips ohne Rolle. */
+  ...Object.keys(CHIPROLLEN).flatMap((f) => [[`Chip ${f} aktiv · Beschriftung`, `chip-${f}`, null],
+    [`Chip ${f} aktiv unter dem Zeiger · Beschriftung`, `chip-${f}-zeiger`, null]]),
 ];
 
 // Machado, Oliveira & Fernandes (2009), Stärke 1,0, auf linearem RGB.
@@ -387,11 +407,11 @@ async function bausteineMessen(browser, mitThemes) {
     const cdp = await page.context().newCDPSession(page);
     const { root } = await cdp.send("DOM.getDocument");
     await cdp.send("CSS.enable");
-    for (const wahl of ["#sammel-zeiger", "#chip-aktiv-zeiger"]) {
+    for (const wahl of ["#sammel-zeiger", "#chip-aktiv-zeiger", ...ALLE_CHIPS.map((f) => `#chip-${f}-zeiger`)]) {
       const { nodeId } = await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector: wahl });
       await cdp.send("CSS.forcePseudoState", { nodeId, forcedPseudoClasses: ["hover"] });
     }
-    const zeilen = await page.evaluate(([proben, themen, modi]) => {
+    const zeilen = await page.evaluate(([proben, themen, modi, rollen]) => {
       const c = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
       const rgba = (f) => { c.clearRect(0, 0, 1, 1); c.fillStyle = "#000"; c.fillStyle = f; c.fillRect(0, 0, 1, 1);
         const d = c.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
@@ -436,13 +456,22 @@ async function bausteineMessen(browser, mitThemes) {
           const primaerknopf = kontrast(ueber(rgba(getComputedStyle(knopf).color), kg), kg);
           const flaeche = aufloesen("--gk-surface").slice(0, 3);
           const reihen = [1, 2, 3, 4, 5].map((n) => aufloesen(`--gk-series-${n}`));
-          ergebnis.push({ thema: thema || "(ohne Thema)", modus, texte, primaerknopf, flaeche, reihen,
+          /* Trägt jeder aktive Chip mit Farbrolle die Farbe seiner Rolle — und nicht
+             die des Chips ohne Rolle im selben Zustand? */
+          const hex = (v) => v.slice(0, 3).map((x) => Math.round(x)).join(",");
+          const chipRollen = Object.entries(rollen).flatMap(([f, variable]) => ["", "-zeiger"].map((z) => ({
+            name: `${f}${z ? " unter dem Zeiger" : ""}`,
+            grund: hex(grund(document.getElementById(`chip-${f}${z}`))),
+            soll: hex(aufloesen(variable)),
+            ohneRolle: hex(grund(document.getElementById(`chip-aktiv${z}`))),
+          })));
+          ergebnis.push({ thema: thema || "(ohne Thema)", modus, texte, primaerknopf, flaeche, reihen, chipRollen,
             reihenKontrast: reihen.map((r) => kontrast(r.slice(0, 3), flaeche)) });
         }
       }
       sonde.remove();
       return ergebnis;
-    }, [TEXTPROBEN, mitThemes ? THEMEN : [""], MODI]);
+    }, [TEXTPROBEN, mitThemes ? THEMEN : [""], MODI, CHIPROLLEN]);
     await page.close();
     return zeilen;
   } finally {
@@ -476,6 +505,7 @@ function markenBerichten(wie, zeilen, titel = "Marken 1.93.0", muster = /^(Marke
 /** Die Befunde des dritten Abschnitts als Zeilen; zählt die Beanstandungen. */
 function bausteineBerichten(wie, zeilen) {
   let schlecht = 0;
+  let chipsGeprueft = 0, chipsOhneFarbe = 0;
   console.log(`\nBausteine 1.92.0, ${wie}:`);
   const hellDunkel = { light: null, dark: null };
   for (const z of zeilen) {
@@ -498,6 +528,28 @@ function bausteineBerichten(wie, zeilen) {
         : zurueckZeile.length ? "" : ` (schwächster: ${schwaechster.name} ${schwaechster.kontrast.toFixed(2)}:1)`) + (zurueckZeile.length
         ? ` — zurückgestellt: ${zurueckZeile.map((t) => `${t.name} ${t.kontrast.toFixed(2)}:1`).join(", ")}, offene Zeile seit 1.91 (.gk-dark mit themes.css: Flächen aus gridkit.css)`
         : ""));
+    }
+    /* 1.93.4: aktive Chips mit Farbrolle tragen ihre Rolle, nicht den Chip ohne Rolle. */
+    const ohneFarbe = z.chipRollen.filter((r) => r.grund !== r.soll || r.grund === r.ohneRolle);
+    chipsGeprueft += z.chipRollen.length;
+    if (ohneFarbe.length) {
+      schlecht++;
+      chipsOhneFarbe += ohneFarbe.length;
+      console.log(`FAIL  ${kopf}  ${ohneFarbe.length} aktive(r) Chip(s) ohne die Farbe ihrer Rolle`);
+      ohneFarbe.forEach((r) => console.log(`        ${r.name}: Grund rgb(${r.grund}), Rolle rgb(${r.soll}), ohne Rolle rgb(${r.ohneRolle})`));
+    }
+    /* Die Tönung unter der Zahl rückt VON der Schrift weg (1.93.3): die Zahl liest nie
+       schwächer als die Beschriftung daneben — dunkel trägt warning dunkle Schrift,
+       neutral helle, also je die andere Tönung als hell. */
+    const wert = (name) => z.texte.find((t) => t.name === name).kontrast;
+    const zahlSchwaecher = Object.keys(CHIPROLLEN).flatMap((f) => ["", " unter dem Zeiger"].map((w) => ({
+      name: `${f}${w}`, zahl: wert(`Chip ${f} aktiv${w} · Zahl`), beschriftung: wert(`Chip ${f} aktiv${w} · Beschriftung`),
+    }))).filter((r) => r.zahl < r.beschriftung - 0.01);
+    if (zahlSchwaecher.length) {
+      schlecht++;
+      chipsOhneFarbe += zahlSchwaecher.length;
+      console.log(`FAIL  ${kopf}  ${zahlSchwaecher.length} Chip-Zahl(en) schwächer als ihre Beschriftung — die Tönung rückt zur Schrift hin`);
+      zahlSchwaecher.forEach((r) => console.log(`        ${r.name}: Zahl ${r.zahl.toFixed(2)}:1, Beschriftung ${r.beschriftung.toFixed(2)}:1`));
     }
     /* Reihenfarben: in jedem Thema dieselben wie im ersten gemessenen. */
     const key = z.reihen.map((r) => r.slice(0, 3).join(",")).join(" ");
@@ -526,6 +578,9 @@ function bausteineBerichten(wie, zeilen) {
     const gut = schlechtesterCvd >= 8 && schlechtesterNormal >= 15;
     if (!gut) schlecht++;
     console.log(`${gut ? "ok  " : "FAIL"}  Reihenfarben ${art.padEnd(5)}  Nachbarn ΔE ${schlechtesterCvd.toFixed(1)} (Protan/Deutan, verlangt 8) · ${schlechtesterNormal.toFixed(1)} normal (verlangt 15)`);
+  }
+  if (!chipsOhneFarbe) {
+    console.log(`ok    Chipfarben  ${chipsGeprueft} aktive Chips mit Farbrolle (ruhend und unter dem Zeiger) tragen ihre Rolle, keiner den Grund des Chips ohne Rolle, keine Zahl schwächer als ihre Beschriftung`);
   }
   return schlecht;
 }
@@ -654,8 +709,8 @@ function bausteineBerichten(wie, zeilen) {
   // hier nur die Zahlen der Marken, darum ohne Rückgabe addiert.
   markenBerichten("mit themes.css", bausteineMitThemes);
   markenBerichten("ohne themes.css", bausteineOhneThemes);
-  markenBerichten("mit themes.css", bausteineMitThemes, "Zahl im Chip 1.93.3", /^Chip /);
-  markenBerichten("ohne themes.css", bausteineOhneThemes, "Zahl im Chip 1.93.3", /^Chip /);
+  markenBerichten("mit themes.css", bausteineMitThemes, "Chips 1.93.3/1.93.4 (Zahl und Beschriftung)", /^Chip /);
+  markenBerichten("ohne themes.css", bausteineOhneThemes, "Chips 1.93.3/1.93.4 (Zahl und Beschriftung)", /^Chip /);
 
   process.exit(schlecht ? 1 : 0);
 })().catch((e) => { console.error("Abbruch:", e.message.split("\n")[0]); process.exit(2); });

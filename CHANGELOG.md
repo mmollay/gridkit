@@ -7,6 +7,39 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.93.4] - 2026-09-28
+
+### Fixed — active chips keep their colour role in dark mode
+In dark mode `[data-gk-mode="dark"] .gk-chip.gk-chip-active` (0,3,0) came after every chip colour
+(`.gk-chip-danger.gk-chip-active`, 0,2,0) and outranked it, so every active chip wore the same tonal
+indigo: on the SSI Panel's invoice list, Mahnung, Bezahlt, Warten and Archiv looked alike (found in
+round 29; measured in 1.93.3: one ground per theme for every active chip, danger to neutral).
+The chip's dark rules now stand with the chip, before its colours, and each colour names both dark
+spellings (`[data-gk-mode="dark"]` and `.gk-dark`) in its own selector list, at the same 0,3,0 —
+one rule per colour for both modes, nothing more specific than before. Danger and success write
+their white as a literal, as the filled buttons do: `--gk-on-primary` is dark in dark mode, and dark
+text on the danger fill read 2.3:1 there. In dark mode neutral carries light text, so its count takes
+the darker tint again; warning keeps the lighter one, as in light.
+
+Dark, all six themes and without one, both spellings, at rest and under the pointer: danger/red
+`#dc2626` label 4.83:1, count 6.87:1; success/green `#047857` 5.48 / 7.60; warning/orange `#fbbf24`
+8.79 / 9.69; neutral 9.26-10.78 / 10.99-12.42 (was: every one of them on the tonal container,
+5.99-8.21 / 7.79-9.97). Primary and blue are the chip without a colour in light and stay it in
+dark; the chip without a colour, the inactive chip and every light value are unchanged: 6912
+computed values in 24 combinations of theme and mode, with and without `themes.css`, at rest, on
+hover and focused, differ only on the active colour chips in dark mode. The focus ring is the same.
+
+### Tests
+- `tests/contrast.test.php`: an active chip with a colour role wears, in both dark spellings and
+  under the pointer, the background and border it wears in light; label and count at least 4.5:1,
+  the count never weaker than the label; no colour, danger, success, warning and neutral each have a
+  ground of their own; primary, blue and the chip without a colour stay on the tonal container. The
+  count test picks its rules by the chips they reach, no longer from a written-out list, which knew
+  only the selectors of its day.
+- `ci/farben.js`: every colour role and alias, at rest and under the pointer, in all six themes and
+  without one, light and both dark spellings: the ground is the colour of its role and never that of
+  the chip without one, the label reads at 4.5:1, and the count never reads weaker than the label.
+
 ## [1.93.3] - 2026-09-28
 
 ### Fixed — the count in an active chip is readable

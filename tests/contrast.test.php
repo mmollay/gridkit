@@ -194,21 +194,46 @@ function gkReaches(string $selector, array $classes, bool $hover, string $mode =
 
 /**
  * Every selector of the stylesheet that reaches that button — the list gkWinner() takes.
+ * With $child (".gk-chip-count"): every selector that reaches that child inside it —
+ * the child alone, or a selector reaching the element followed by " $child".
  *
  * @param list<string> $classes
  * @return list<string>
  */
-function gkReaching(array $classes, bool $hover, string $mode = ''): array
+function gkReaching(array $classes, bool $hover, string $mode = '', string $child = ''): array
 {
     $out = [];
     foreach (gkRules() as $rule) {
         foreach ($rule['selectors'] as $s) {
-            if (gkReaches($s, $classes, $hover, $mode)) {
+            $reaches = $child === ''
+                ? gkReaches($s, $classes, $hover, $mode)
+                : $s === $child || ($mode !== '' && $s === "$mode $child")
+                  || (str_ends_with($s, " $child")
+                      && gkReaches(substr($s, 0, -strlen(" $child")), $classes, $hover, $mode));
+            if ($reaches) {
                 $out[] = $s;
             }
         }
     }
     return array_values(array_unique($out));
+}
+
+/**
+ * What a chip with $classes shows in $mode, followed through the cascade of the bare
+ * stylesheet: [ground, label, ground of its count, text of its count] as hex.
+ *
+ * @param list<string> $classes
+ * @return array{0: string, 1: string, 2: string, 3: string}
+ */
+function gkChipLook(array $classes, bool $hover, string $mode = ''): array
+{
+    $dark = $mode !== '';
+    $chip = gkReaching($classes, $hover, $mode);
+    $count = gkReaching($classes, $hover, $mode, '.gk-chip-count');
+    $ground = gkColour(gkWinner($chip, 'background', 'background-color'), $dark);
+    $text = gkColour(gkWinner($chip, 'color'), $dark);
+    $tint = gkOver(gkWinner($count, 'background', 'background-color'), $ground);
+    return [$ground, $text, $tint, gkColour(gkWinner($count, 'color'), $dark) ?: $text];
 }
 
 /** A colour value as hex: var(--gk-x[, fallback]) through the token of the mode, or a literal. */
@@ -351,30 +376,17 @@ return [
     //
     // Followed through the rules of the bare stylesheet (literal tokens, no theme).
     // ci/farben.js measures the same counts in all six themes and both dark spellings.
-    $modes = ['light' => null, 'dark' => '[data-gk-mode="dark"] ', 'dark (.gk-dark)' => '.gk-dark '];
+    // Round 30: the rules are picked by the chips they REACH (gkChipLook), no longer
+    // from a hand-written list — that list knew only the selectors of its day, and a
+    // dark rule for a colour role would have gone unseen.
+    $modes = ['light' => '', 'dark' => '[data-gk-mode="dark"]', 'dark (.gk-dark)' => '.gk-dark'];
     $colours = ['', 'primary', 'blue', 'danger', 'red', 'success', 'green', 'warning', 'orange', 'neutral'];
     foreach ($modes as $mode => $p) {
         foreach ($colours as $c) {
             foreach ([false, true] as $hover) {
-                $chip = ['.gk-chip', '.gk-chip-active'];
-                $count = ['.gk-chip-count', '.gk-chip-active .gk-chip-count'];
-                if ($c !== '') {
-                    $chip[] = ".gk-chip-$c.gk-chip-active";
-                    $count[] = ".gk-chip-$c.gk-chip-active .gk-chip-count";
-                }
-                if ($hover) {
-                    array_push($chip, '.gk-chip:hover', '.gk-chip-active:hover');
-                }
-                if ($p !== null) {
-                    array_push($chip, "{$p}.gk-chip", "{$p}.gk-chip.gk-chip-active", ...($hover ? ["{$p}.gk-chip:hover"] : []));
-                    array_push($count, "{$p}.gk-chip-count", "{$p}.gk-chip-active .gk-chip-count",
-                        "{$p}.gk-chip.gk-chip-active .gk-chip-count");
-                }
+                $classes = $c === '' ? ['gk-chip', 'gk-chip-active'] : ['gk-chip', "gk-chip-$c", 'gk-chip-active'];
                 $name = trim("$mode, " . ($c ?: 'plain') . ($hover ? ', under the pointer' : ''));
-                $ground = gkColour(gkWinner($chip, 'background'), $p !== null);
-                $text = gkColour(gkWinner($chip, 'color'), $p !== null);
-                $tint = gkOver(gkWinner($count, 'background'), $ground);
-                $countText = gkColour(gkWinner($count, 'color'), $p !== null) ?: $text;
+                [$ground, $text, $tint, $countText] = gkChipLook($classes, $hover, $p);
                 T::ok($ground !== '' && $text !== '' && $tint !== '', "$name: chip, label and tint resolve");
                 if ($ground === '' || $text === '' || $tint === '') {
                     continue;
@@ -385,6 +397,54 @@ return [
                 T::ok($number >= $label - 0.005, sprintf(
                     '%s: the tint takes contrast from the count (%.2f:1, the label beside it %.2f:1)', $name, $number, $label));
             }
+        }
+    }
+},
+
+'an active chip keeps its colour role in dark mode' => function (): void {
+    // In dark mode "[data-gk-mode="dark"] .gk-chip.gk-chip-active" (0,3,0) outranked
+    // every colour role (".gk-chip-danger.gk-chip-active", 0,2,0): the invoice list's
+    // Mahnung, Bezahlt, Warten and Archiv all wore the same tonal indigo (found in
+    // round 29, measured 1.93.3: #4345b0 on every active chip, in every theme). A role
+    // is the same rule in both modes, so in dark it wears what it wears in light;
+    // primary and blue stay what they are in light — the chip without a role — which
+    // is the tonal container in dark, unchanged.
+    //
+    // Label AND count at 4.5:1 or better, at rest and under the pointer, in both dark
+    // spellings; the four roles and the chip without one never share a ground.
+    // ci/farben.js measures the same in all six themes.
+    $modes = ['light' => '', 'dark' => '[data-gk-mode="dark"]', 'dark (.gk-dark)' => '.gk-dark'];
+    $roles = ['danger', 'red', 'success', 'green', 'warning', 'orange', 'neutral'];
+    foreach ($modes as $mode => $p) {
+        foreach ([false, true] as $hover) {
+            $at = $mode . ($hover ? ', under the pointer' : '');
+            $grounds = [];
+            foreach (['', 'primary', 'blue', ...$roles] as $c) {
+                $classes = $c === '' ? ['gk-chip', 'gk-chip-active'] : ['gk-chip', "gk-chip-$c", 'gk-chip-active'];
+                $name = "$at, " . ($c ?: 'no role');
+                [$ground, $text, $tint, $countText] = $grounds[$c] = gkChipLook($classes, $hover, $p);
+                $bg = gkWinner(gkReaching($classes, $hover, $p), 'background', 'background-color');
+                $border = gkWinner(gkReaching($classes, $hover, $p), 'border-color', 'border');
+                if (!in_array($c, $roles, true)) {
+                    if ($p !== '') {
+                        T::eq($bg, 'var(--gk-primary-container)', "$name: the tonal container, as before");
+                    }
+                    continue;
+                }
+                $light = gkReaching($classes, $hover);
+                T::eq($bg, gkWinner($light, 'background', 'background-color'),
+                    "$name: the chip wears its role colour, the one it wears in light");
+                T::eq($border, gkWinner($light, 'border-color', 'border'), "$name: and the border of its role");
+                $label = $ground !== '' && $text !== '' ? gkContrast($text, $ground) : 0.0;
+                T::ok($label >= 4.5, sprintf('%s: the label reads at %.2f:1 — AA asks 4.5', $name, $label));
+                $number = $tint !== '' && $countText !== '' ? gkContrast($countText, $tint) : 0.0;
+                T::ok($number >= 4.5, sprintf('%s: the count reads at %.2f:1 — AA asks 4.5', $name, $number));
+                T::ok($number >= $label - 0.005, sprintf(
+                    '%s: the tint takes contrast from the count (%.2f:1, the label beside it %.2f:1)', $name, $number, $label));
+            }
+            $looks = array_map(static fn(string $c): string => $grounds[$c][0], ['', 'danger', 'success', 'warning', 'neutral']);
+            T::eq(count(array_unique($looks)), 5,
+                "$at: no role, danger, success, warning and neutral each have a ground of their own (" . implode(' ', $looks) . ')');
         }
     }
 },

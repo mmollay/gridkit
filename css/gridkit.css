@@ -3324,6 +3324,27 @@ select.gk-input {
 .gk-chip-active:hover {
   background: var(--gk-primary-hover);
 }
+/* The chip in dark mode stands HERE, before the colours, not with the other dark
+   components further down. There the rule for the active chip (0,3,0) came after
+   every colour (0,2,0) and outranked it: Mahnung, Bezahlt, Warten and Archiv all
+   wore the same tonal indigo (1.93.4). Each colour below names its dark spellings
+   too, at the same 0,3,0, and wins by coming later. */
+[data-gk-mode="dark"] .gk-chip,
+.gk-dark .gk-chip {
+  background: #161b22;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--gk-on-surface);
+}
+[data-gk-mode="dark"] .gk-chip:hover,
+.gk-dark .gk-chip:hover {
+  background: #21262d;
+}
+[data-gk-mode="dark"] .gk-chip.gk-chip-active,
+.gk-dark .gk-chip.gk-chip-active {
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+  border-color: var(--gk-primary-container);
+}
 /* Chip colours. FilterChips passes ['color' => x] straight through as
    .gk-chip-x, so whatever the caller writes has to have a rule here. Three
    existed; the demo ships green, orange, red and blue, and the skill document
@@ -3333,31 +3354,50 @@ select.gk-input {
    white does not carry on the bright ones. 1.47.0 gave every chip colour a rule
    at last — and reached for the bright token, so the active green chip went
    from carrying its label to 2.54:1. The buttons have used -fill all along. */
+/* One rule per colour for both modes (1.93.4). White on the fill is a literal, as
+   on the filled buttons: --gk-on-primary is dark in dark mode, and dark text on
+   the danger fill read 2.3:1 there. */
 .gk-chip-danger.gk-chip-active,
-.gk-chip-red.gk-chip-active {
+.gk-chip-red.gk-chip-active,
+[data-gk-mode="dark"] .gk-chip-danger.gk-chip-active,
+[data-gk-mode="dark"] .gk-chip-red.gk-chip-active,
+.gk-dark .gk-chip-danger.gk-chip-active,
+.gk-dark .gk-chip-red.gk-chip-active {
   background: var(--gk-danger-fill);
   border-color: var(--gk-danger-fill);
-  color: var(--gk-on-primary, #fff);
+  color: #ffffff;
 }
 .gk-chip-success.gk-chip-active,
-.gk-chip-green.gk-chip-active {
+.gk-chip-green.gk-chip-active,
+[data-gk-mode="dark"] .gk-chip-success.gk-chip-active,
+[data-gk-mode="dark"] .gk-chip-green.gk-chip-active,
+.gk-dark .gk-chip-success.gk-chip-active,
+.gk-dark .gk-chip-green.gk-chip-active {
   background: var(--gk-success-fill);
   border-color: var(--gk-success-fill);
-  color: var(--gk-on-primary, #fff);
+  color: #ffffff;
 }
 .gk-chip-warning.gk-chip-active,
-.gk-chip-orange.gk-chip-active {
+.gk-chip-orange.gk-chip-active,
+[data-gk-mode="dark"] .gk-chip-warning.gk-chip-active,
+[data-gk-mode="dark"] .gk-chip-orange.gk-chip-active,
+.gk-dark .gk-chip-warning.gk-chip-active,
+.gk-dark .gk-chip-orange.gk-chip-active {
   background: var(--gk-warning);
   border-color: var(--gk-warning);
   color: #1f2937;
 }
+/* Primary and blue ARE the chip without a colour in light, and stay it in dark:
+   the tonal container above outranks them there, as it always has. */
 .gk-chip-primary.gk-chip-active,
 .gk-chip-blue.gk-chip-active {
   background: var(--gk-primary);
   border-color: var(--gk-primary);
   color: var(--gk-on-primary, #fff);
 }
-.gk-chip-neutral.gk-chip-active {
+.gk-chip-neutral.gk-chip-active,
+[data-gk-mode="dark"] .gk-chip-neutral.gk-chip-active,
+.gk-dark .gk-chip-neutral.gk-chip-active {
   background: var(--gk-surface-container-highest);
   border-color: var(--gk-outline);
   color: var(--gk-on-surface);
@@ -3385,9 +3425,18 @@ select.gk-input {
 .gk-chip-active .gk-chip-count {
   background: rgba(0, 0, 0, 0.2);
 }
-.gk-chip-warning.gk-chip-active .gk-chip-count,
-.gk-chip-orange.gk-chip-active .gk-chip-count,
 .gk-chip-neutral.gk-chip-active .gk-chip-count {
+  background: rgba(255, 255, 255, 0.2);
+}
+/* In dark mode neutral carries light text (--gk-on-surface turns), so its count
+   takes the darker tint again: later, same specificity. Warning carries dark text
+   in both modes and keeps the lighter tint — its rule comes after this one. */
+[data-gk-mode="dark"] .gk-chip-active .gk-chip-count,
+.gk-dark .gk-chip-active .gk-chip-count {
+  background: rgba(0, 0, 0, 0.2);
+}
+.gk-chip-warning.gk-chip-active .gk-chip-count,
+.gk-chip-orange.gk-chip-active .gk-chip-count {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -5861,29 +5910,8 @@ a.gk-stat-card:hover {
    green and amber figures all turned white. The base rule reads --gk-text,
    which already flips with the mode. */
 
-[data-gk-mode="dark"] .gk-chip,
-.gk-dark .gk-chip {
-  background: #161b22;
-  border-color: rgba(255, 255, 255, 0.12);
-  color: var(--gk-on-surface);
-}
-[data-gk-mode="dark"] .gk-chip:hover,
-.gk-dark .gk-chip:hover {
-  background: #21262d;
-}
-[data-gk-mode="dark"] .gk-chip.gk-chip-active,
-.gk-dark .gk-chip.gk-chip-active {
-  background: var(--gk-primary-container);
-  color: var(--gk-on-primary-container);
-  border-color: var(--gk-primary-container);
-}
-/* Every active chip carries light text here, warning and neutral included (the
-   rule above outranks their colours), so every count takes the darker tint —
-   later in source and of equal specificity, this beats the lighter one. */
-[data-gk-mode="dark"] .gk-chip-active .gk-chip-count,
-.gk-dark .gk-chip-active .gk-chip-count {
-  background: rgba(0, 0, 0, 0.2);
-}
+/* The chip's dark rules stand with the chip (FILTER CHIPS, 1.93.4): its colours
+   have to come after them. */
 
 [data-gk-mode="dark"] .gk-card,
 .gk-dark .gk-card {
