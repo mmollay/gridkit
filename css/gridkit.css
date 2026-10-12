@@ -5760,14 +5760,16 @@ a.gk-stat-card:hover {
   font-weight: 600;
   cursor: pointer;
 }
+/* White on the dark overlay, whatever the theme: the theme's primary is 4.47:1 under white text in the
+   default light palette (measured in review), and the viewer's ground is black in every mode. */
 .gk-lightbox-choose {
-  border: 2px solid var(--gk-primary);
-  background: var(--gk-primary);
-  color: var(--gk-on-primary);
+  border: 2px solid #fff;
+  background: #fff;
+  color: #111827;
 }
 .gk-lightbox-choose:hover:not(:disabled) {
-  background: var(--gk-primary-hover);
-  border-color: var(--gk-primary-hover);
+  background: #e5e7eb;
+  border-color: #e5e7eb;
 }
 .gk-lightbox-choose[aria-pressed="true"] {
   background: transparent;
@@ -5802,6 +5804,24 @@ a.gk-stat-card:hover {
   .gk-lightbox,
   .gk-lightbox-img {
     animation: none;
+  }
+}
+/* A phone held sideways, or a window zoomed to 200 %: the foot (caption, origin, buttons) took 121 px
+   of a 375 px screen and left the picture 174 px. Short screens put caption and buttons on one line. */
+@media (max-height: 480px) {
+  .gk-lightbox.open {
+    padding: 44px 12px 8px;
+  }
+  .gk-lightbox-foot {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px 12px;
+    padding-top: 6px;
+  }
+  .gk-lightbox-meta {
+    display: none;
   }
 }
 .gk-lightbox-counter {

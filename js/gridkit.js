@@ -1952,7 +1952,7 @@
           default:
             return (
               '<span class="material-icons" style="font-size:16px;vertical-align:middle;">' +
-              name +
+              _gkEsc(name) +
               "</span>"
             );
         }
@@ -5093,6 +5093,8 @@
       img.alt = item.caption || _t("lightbox_image", { n: current + 1, m: items.length });
       lb.querySelector(".gk-lightbox-caption").textContent = item.caption || "";
       lb.querySelector(".gk-lightbox-meta").textContent = item.meta || "";
+      // The dialog is named by the picture it shows, so opening it says which one.
+      lb.setAttribute("aria-label", item.caption || _t("lightbox_title"));
       lb.querySelector(".gk-lightbox-counter").textContent =
         current + 1 + " / " + items.length;
       renderActions(item);
@@ -5114,7 +5116,11 @@
       if (!pick) return;
       var btn = lb.querySelector(".gk-lightbox-choose");
       var picked = !!(item.selected && item.selected());
+      var held = document.activeElement === btn;
       btn.disabled = !item.choose || !!item.disabled;
+      // A button that disables itself under the focus drops it on the page behind the dialog (and the
+      // Tab trap, which listens on the dialog, never hears the next key): the focus moves to "Close".
+      if (held && btn.disabled) lb.querySelector(".gk-lightbox-dismiss").focus();
       btn.setAttribute("aria-pressed", picked ? "true" : "false");
       btn.innerHTML = (GK.table && GK.table.iconSvg ? GK.table.iconSvg("check") : "") + "<span></span>";
       btn.querySelector("span").textContent = picked
@@ -5149,11 +5155,17 @@
       if (lb) lb.classList.remove("open");
       document.body.style.overflow = "";
       var seen = function (el) { return !!el && el.isConnected && el.offsetParent !== null; };
+      var first = opener;
       var target = back && back.nodeType === 1 ? back : null;
       if (!seen(target) && entry && entry.returnTo) target = entry.returnTo();
       if (seen(target)) opener = target;
       // Back to the thumbnail it was opened from.
       _gkRestoreFocus(opener);
+      // The place the person knows may not be the one they started from (after paging from 3 to 29
+      // the zoom button of 29 can be far below the fold): focus without scrolling left a ring nobody saw.
+      if (opener && opener !== first && opener.scrollIntoView) {
+        try { opener.scrollIntoView({ block: "nearest", inline: "nearest" }); } catch (err) { /* old browser: the focus is where it is */ }
+      }
       opener = null;
     }
 
@@ -5256,9 +5268,14 @@
       showLb(Math.max(0, Math.min(index || 0, entries.length - 1)));
     }
 
+    /** The viewer is open and something changed behind it (a picture was picked, one arrived): draw the buttons again. */
+    function refreshLb() {
+      if (lb && lb.classList.contains("open") && items[current]) renderActions(items[current]);
+    }
+
     // Expose for external use
     window.GK = window.GK || {};
-    GK.lightbox = { open: showLb, close: closeLb, init: decorate, show: show };
+    GK.lightbox = { open: showLb, close: closeLb, init: decorate, show: show, refresh: refreshLb };
   })();
 
   // === IMAGE PICKER (1.94.0) ===
@@ -5268,13 +5285,16 @@
    * screen reader work without this file. What it adds:
    *
    *   - the fold: only the first `rows` rows show, then "Show all N". The tiles
-   *     are counted by what the browser laid out (offsetTop), not by a guess
-   *     about the width, and again when the width changes. The picked tile and
-   *     the one that has the focus never fold away;
-   *   - a roving tab stop: the zoom and action buttons of ONE tile — the one with
-   *     the focus, else the picked one — are in the tab order, the others are
-   *     not. Thirty tiles would otherwise be sixty stops between the radio group
-   *     and the next field; the arrow keys already move between tiles;
+   *     are counted by what the browser laid out (the grid's resolved columns),
+   *     not by a guess about the width, and again when the width changes. The
+   *     picked tile and the one that has the focus never fold away;
+   *   - a roving tab stop for the magnifiers: the zoom button of ONE tile — the
+   *     one with the focus, else the picked one — is in the tab order, the
+   *     others are not (thirty magnifiers would be thirty stops between the radio
+   *     group and the next field; the arrow keys already move between tiles, and
+   *     the viewer reaches every picture). A caption action stays in the tab
+   *     order on every tile: the focused tile is always the picked one, which an
+   *     application will not let you remove;
    *   - the status line ("Selected: …");
    *   - the viewer: the zoom button opens the library's lightbox on the large
    *     versions, with "select this image" in it (GK.lightbox.show);
@@ -5314,19 +5334,26 @@
       var el = c.querySelector("[data-gk-picker-status]");
       if (!el) return;
       var r = c.querySelector(".gk-picker-input:checked");
-      el.textContent = r ? label(c, "selected").replace("{name}", titleOf(tileOf(r))) : label(c, "none");
+      // A function as the replacement: a title with "$&" or "$$" in it is text, not a replacement pattern.
+      el.textContent = r ? label(c, "selected").replace("{name}", function () { return titleOf(tileOf(r)); }) : label(c, "none");
     }
 
     /*
-     * Which tile's buttons are in the tab order. `focused` is the tile the focus
-     * is in right now; without it the picked tile, else the first one shown.
+     * Which tile's magnifier is in the tab order. `focused` is the tile the focus
+     * is in right now; without it the picked tile, else the first one shown. Only
+     * the magnifiers are rationed — the viewer reaches every picture, and the
+     * arrow keys move between tiles. A caption action ("Remove") stays in the tab
+     * order on EVERY tile: with a native radio group the tile that has the focus
+     * is always the picked one, and an application will not let the picked image
+     * be removed, so rationing the actions would have made the others
+     * unreachable from the keyboard (found in review).
      */
     function rove(c, focused) {
       var list = tiles(c);
       var checked = c.querySelector(".gk-picker-input:checked");
       var active = focused || (checked && tileOf(checked)) || list.filter(function (t) { return !t.hidden; })[0] || null;
       list.forEach(function (t) {
-        t.querySelectorAll("button").forEach(function (b) {
+        t.querySelectorAll(".gk-picker-zoom").forEach(function (b) {
           b.setAttribute("tabindex", t === active ? "0" : "-1");
         });
       });
@@ -5355,6 +5382,9 @@
       var cols = grid ? Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length) : 1;
       var shown = rows > 0 ? rows * cols : list.length;
       var foldable = rows > 0 && list.length > shown;
+      // Nothing to fold (the list shrank, the window widened): drop an old "open", or pictures that arrive
+      // later would show up unfolded without anyone having asked.
+      if (!foldable) c.removeAttribute("data-gk-picker-open");
       var open = c.hasAttribute("data-gk-picker-open");
       list.forEach(function (t, i) {
         t.hidden = foldable && !open && i >= shown && !t.querySelector(".gk-picker-input:checked") && !t.contains(document.activeElement);
@@ -5443,7 +5473,7 @@
     function tileHtml(it, o) {
       var e = _gkEsc;
       var icon = function (name) { return GK.table && GK.table.iconSvg ? GK.table.iconSvg(name) : ""; };
-      var n = o.id + "-" + (o.index || 1);
+      var n = String(o.id).replace(/[^A-Za-z0-9_-]/g, "") + "-" + (o.index || 1);   // the same cut PHP makes
       var value = it.value == null ? "" : String(it.value);
       var title = it.title ? String(it.title) : value;
       var thumb = it.thumb ? String(it.thumb) : "";
@@ -5513,9 +5543,13 @@
         var tile = holder.content.firstElementChild;
         grid.appendChild(tile);
         var input = inputOf(tile);
+        // A picture that arrives while the viewer is open (an upload that took a while) must not take the
+        // focus out from under it — the page behind the dialog is not where the person is.
+        var viewerOpen = !!document.querySelector(".gk-lightbox.open");
         if (opts.select && !input.disabled) input.click();
         refreshNow(c);
-        if (opts.focus) input.focus();
+        if (viewerOpen && GK.lightbox && GK.lightbox.refresh) GK.lightbox.refresh();
+        if (opts.focus && !viewerOpen) input.focus();
         return tile;
       },
 
@@ -5557,6 +5591,7 @@
       if (!t.classList || !t.classList.contains("gk-picker-input")) return;
       var c = t.closest("[data-gk-picker]");
       if (c) refreshNow(c);
+      if (GK.lightbox && GK.lightbox.refresh) GK.lightbox.refresh();
     });
 
     document.addEventListener("focusin", function (e) {

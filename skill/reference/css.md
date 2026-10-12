@@ -183,7 +183,10 @@ GK.lightbox.show(
 
 An entry may carry `choose()` (picks it and returns the element that should have
 the focus afterwards), `selected()`, `disabled`, `returnTo()` and
-`chooseLabel`. With none of them the viewer is exactly the one it always was.
+`chooseLabel`. With none of them it is the viewer it always was — pictures,
+paging, Escape, the focus back — with one difference in layout: the caption stands
+under the picture and wraps (it was a one-line pill over its lower edge), and the
+picture takes the room the caption leaves instead of a fixed 85 % of the height.
 
 ### Image picker — ImagePicker
 
@@ -260,9 +263,11 @@ GK.picker.tileHtml(item, { name, id, index });  // the same markup PHP writes
 What the keyboard and a reader get, without being asked: native radios (Tab
 enters the group once, the arrow keys move *and* pick, disabled tiles are
 skipped); a 3 px focus ring; the check mark, a thicker ring and a bold title for
-the picked tile — never colour alone; the zoom and action buttons of **one** tile
-(the one with the focus, else the picked one) are in the tab order, the others
-are not, so thirty tiles are not sixty tab stops; the viewer traps Tab, closes on
+the picked tile — never colour alone; the zoom button of **one** tile (the one
+with the focus, else the picked one) is in the tab order, the others are not, so
+thirty tiles are not thirty extra tab stops — a caption action stays in the tab
+order on every tile, because the focused tile is always the picked one and an
+application will not let you remove that; the viewer traps Tab, closes on
 Escape, pages with ← →, and gives the focus back to the zoom button of the tile it
 was last showing (or to the radio, when a picture was picked from it). A tile out
 of rows folds away unless it is picked or has the focus. The tile's picture has

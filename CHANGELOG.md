@@ -47,9 +47,12 @@ large version of the picture it was given.
   (`aria-expanded`). How many tiles that is comes from the columns the grid resolved to
   (`gridTemplateColumns`) — nothing is laid out first to be measured — and again when the width
   changes. The picked tile and the one holding the focus never fold away.
-- **A roving tab stop.** The zoom and action buttons of ONE tile — the one with the focus, else the
-  picked one — are in the tab order; the others are `tabindex="-1"`. Thirty tiles are three tab
-  stops, not sixty; the arrow keys move between tiles.
+- **A roving tab stop for the magnifiers.** The zoom button of ONE tile — the one with the focus, else
+  the picked one — is in the tab order; the others are `tabindex="-1"`; the arrow keys move between
+  tiles and the viewer reaches every picture. A caption action ("Remove") stays in the tab order on
+  EVERY tile: the focused tile is always the picked one, and an application will not let the picked
+  image be removed, so rationing the actions left every other image's button out of the keyboard's
+  reach (found in review, with the first draft that rationed both).
 - **Actions are events.** A caption button (`remove`, …) fires `gk:pickeraction`
   (`detail: { action, value, item, picker }`, bubbles) and does nothing else: the library never
   deletes. The application decides and asks "Really?" (`GK.confirm`), then calls
@@ -80,11 +83,18 @@ large version of the picture it was given.
 own tiles still come in through the click handler and are the same thing with `src` and `caption`.
 - A second line, `.gk-lightbox-meta`, under the caption (where the picture comes from), and a row,
   `.gk-lightbox-actions`, with **Select this image** and a visible **Close** — only when an entry
-  can be picked; a plain gallery shows exactly what it showed. On the picture that is already
-  picked the button says "Selected" and stays pressed; on one that cannot be picked it is disabled.
+  can be picked; a plain gallery shows no row. On the picture that is already picked the button
+  says "Selected" and stays pressed; on one that cannot be picked it is disabled — and the focus
+  moves to "Close" instead of falling onto the page behind. White on the dark overlay in every theme
+  (the theme's primary measured 4.47:1 under white in the default light palette).
 - Closing gives the focus back to the zoom button of the picture last shown (after paging from 3 to
   8 the place a person knows is 8), or to the radio that took the pick, falling back to the opener
-  when the target is not on screen (a folded tile). The one `_gkRestoreFocus` is used, as before.
+  when the target is not on screen (a folded tile). The one `_gkRestoreFocus` is used, as before; a
+  target other than the opener is scrolled into view (`block: "nearest"`) — after paging from 1 to
+  29 the ring was on a button below the fold. The dialog is named by the picture it shows
+  (`aria-label`). `GK.lightbox.refresh()` redraws the buttons when something changed behind an open
+  viewer; a picture that arrives meanwhile (`GK.picker.add` with `focus`) does not take the focus out
+  from under the dialog.
 - New lightbox classes: `gk-lightbox-stage`, `gk-lightbox-foot`, `gk-lightbox-meta`,
   `gk-lightbox-actions`, `gk-lightbox-choose`, `gk-lightbox-dismiss` and `gk-lightbox-pick`.
 - The picture lives in a stage (`.gk-lightbox-stage`) that takes the height the foot (caption,
@@ -94,6 +104,15 @@ own tiles still come in through the click handler and are the same thing with `s
   stage — a 640 px upload is shown as large as the screen allows — and its shadow follows the
   picture (a filter); a plain gallery keeps showing natural size. Clicking the dark area around the
   picture still closes it. Buttons draw a white 3 px focus ring on the dark overlay.
+- **What changes for a plain gallery (every application that uses `.gk-gallery-item[data-lightbox]`):**
+  behaviour is the same (open, ← →, Escape, the dark area, the focus back, no extra buttons), the
+  layout is not. The caption is no longer a one-line pill laid over the picture's lower edge but
+  stands under it and wraps; a large picture is bigger (1378×689 where it was 1268×634 at
+  1440×900) and on a phone held sideways it no longer sits under the caption. Measured against 1.93.4
+  at 1440×900, 390×844 and 667×375.
+- On a screen under 480 px high (a phone held sideways, a window at 200 % zoom) caption and buttons
+  share one line and the origin line is dropped, so the picture keeps its room (174 px of 375 became
+  at least 200).
 - `prefers-reduced-motion`: the viewer's entrance is switched off in its own block.
 
 ### Added — the demo has a Gallery section
@@ -109,7 +128,10 @@ has a button, "Run workflow" with `since` (default 1.54.0), for ONE catch-up Rel
 the current `VERSION`: the newest version in full and every version since as the titles of its
 changes. 58 tags (v1.55.0 … v1.93.4) had no Release object; the page ended at v1.54.0. Idempotent: a
 tag whose Release exists is left alone, the catch-up replaces the notes of an existing Release
-instead of adding another; the tag must equal `VERSION`; `--verify-tag` never creates a tag.
+instead of adding another; the tag must equal `VERSION`; `--verify-tag` never creates a tag. One
+concurrency group for every start, the mode decided by the event (the button pressed on a tag is
+still the catch-up), `since` matched with `[[ =~ ]]` (a second line used to pass `grep -E`), no
+`--latest` (GitHub picks the highest version; an old hotfix tag must not become "Latest").
 `ci/release-notes.sh --since` fell over GitHub's 125 000-character limit (1.54.0 → 1.93.4 is
 150 000): past 120 000 bytes it now prints the newest version in full and the titles of the rest.
 It sits in `ci/`, not in `.github/workflows/`: the token this repository is pushed with has no
@@ -124,7 +146,7 @@ to switch it on. It cannot be run from a checkout, so it is held to what it says
   row for it. `css/blocks.json`: block "Image picker" and the new lightbox classes, 1.94.0.
 
 ### Tests
-- `tests/picker.test.php` (new, 120 assertions): the markup (one radio per image in one group, named
+- `tests/picker.test.php` (new, 174 assertions): the markup (one radio per image in one group, named
   by its title, described by its origin, `alt=""`, lazy, inline SVG icons, the zoom button on the
   picture and the action in the caption row, no zoom without a large version), escaping of every
   value that comes from the caller (script tag, attribute break, a `data` name cut to letters, an
@@ -144,6 +166,17 @@ to switch it on. It cannot be run from a checkout, so it is held to what it says
   produces the markup PHP writes; two pickers stay apart; a plain gallery is as it was; a touch
   screen gets 44 px targets; dark contrast; reduced motion; a portrait picture is cropped to 16:9,
   not squeezed (found while writing it: an in-flow `<img>` gave the box its own height).
+- Found by an independent review of the first commit and fixed before release (each with a case in
+  `ci/browser-picker.js`, 82 cases now): a caption action out of the keyboard's reach; the focus ring
+  below the fold after paging far; the focus dropped on the page when "Select this image" disables
+  itself under it; an upload that arrives under an open viewer taking the focus (and the viewer's
+  button not noticing the new pick); the JS side of the escaping — `GK.picker.add`, the viewer, the
+  status line, the dialog name — had no test that would fail (hostile text in every field, `$&` and
+  `$$` in a title, a `data` value, an action name); `String.replace` with a title as the replacement
+  (`$&` read as a pattern, in the status line and in the application's question); the id prefix and
+  an icon name written raw by the script where PHP cuts and escapes them; the pick button's contrast;
+  a stale "show all" that unfolded pictures added later; the status line naming the first of several
+  `checked` where the browser keeps the last.
 - Found by that run and fixed before release: the pointer's 2 px hover ring beat the 3 px picked
   ring (`:hover` outranked `:checked`: a picked tile looked less picked under the mouse); the
   portrait tile; a title measured against black in a fixture without a page background.

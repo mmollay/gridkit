@@ -62,9 +62,10 @@ class ImagePicker
     {
         $o = self::resolve($opts);
 
+        // The LAST checked image names the status: of several radios with `checked` the browser keeps the last one.
         $checked = null;
         foreach ($items as $it) {
-            if (!empty($it['checked'])) { $checked = (string) ($it['title'] ?? $it['value'] ?? ''); break; }
+            if (!empty($it['checked'])) { $checked = (string) ($it['title'] ?? $it['value'] ?? ''); }
         }
 
         $out = '<div class="gk-picker' . ($o['class'] !== '' ? ' ' . self::e($o['class']) : '') . '" id="' . $o['id'] . '" data-gk-picker'

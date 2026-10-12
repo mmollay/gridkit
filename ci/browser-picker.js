@@ -151,23 +151,26 @@ const lb = (page) => page.evaluate(() => {
     const t3 = await page.evaluate(() => document.activeElement.value);
     check("P05 the arrows skip the disabled tile (7) and land on 8", t3 === "img-8.webp", t3);
     const stops = await page.evaluate(() => {
-      const aktiv = [...document.querySelectorAll("#p12 .gk-picker-item")].filter((i) => [...i.querySelectorAll("button")].some((b) => b.tabIndex === 0)).map((i) => i.querySelector("input").value);
-      const knoepfe = [...document.querySelectorAll("#p12 .gk-picker-item button")].filter((b) => b.tabIndex === 0).length;
-      return { aktiv, knoepfe };
+      const zoom = [...document.querySelectorAll("#p12 .gk-picker-zoom")].filter((b) => b.tabIndex === 0).map((b) => b.closest(".gk-picker-item").querySelector("input").value);
+      const acts = [...document.querySelectorAll("#p12 .gk-picker-action")];
+      return { zoom, aktionen: acts.length, aktionenImTab: acts.filter((b) => b.tabIndex === 0).length };
     });
-    check("P05 only the tile that has the focus has its buttons in the tab order (twelve tiles are not twenty-four tab stops)", JSON.stringify(stops.aktiv) === '["img-8.webp"]' && stops.knoepfe === 1, stops);
+    check("P05 only the tile that has the focus has its magnifier in the tab order (twelve tiles are not twelve extra tab stops) …", JSON.stringify(stops.zoom) === '["img-8.webp"]', stops);
+    check("P05 … but EVERY remove button stays in it: with native radios the focused tile is the picked one, which an application will not let you remove — rationing them would leave the others out of reach", stops.aktionen === 4 && stops.aktionenImTab === 4, stops);
     await page.keyboard.press("Tab");
     const t4 = await page.evaluate(() => ({ cls: document.activeElement.className, aria: document.activeElement.getAttribute("aria-label") }));
     check("P05 Tab from the radio reaches its zoom button, which says what it enlarges", /gk-picker-zoom/.test(t4.cls) && t4.aria === "Enlarge: Image 8", t4);
     await page.keyboard.press("Tab");
-    const t5 = await page.evaluate(() => ({ cls: document.activeElement.className, id: document.activeElement.id }));
-    check("P05 then the fold button, then out of the group (tile 8 has no action)", /gk-picker-more/.test(t5.cls), t5);
+    check("P05 then the remove button of the next tile that has one (9; tile 12 is folded away and takes no stop)", (await page.evaluate(() => document.activeElement.getAttribute("aria-label"))) === "Remove: Image 9");
+    await page.keyboard.press("Tab");
+    check("P05 then the fold button", /gk-picker-more/.test(await page.evaluate(() => document.activeElement.className)));
     await page.keyboard.press("Tab");
     check("P05 and on to what follows the group", (await page.evaluate(() => document.activeElement.id)) === "a12");
-    await page.keyboard.press("Shift+Tab");
-    await page.keyboard.press("Shift+Tab");
-    await page.keyboard.press("Shift+Tab");
+    for (let i = 0; i < 4; i++) await page.keyboard.press("Shift+Tab");
     check("P05 Shift+Tab walks back to the radio that is picked", (await page.evaluate(() => document.activeElement.value)) === "img-8.webp");
+    await page.keyboard.press("Shift+Tab");
+    check("P05 and one more reaches the remove button of a tile BEFORE it (6) — a tile that is not the picked one can be removed from the keyboard", (await page.evaluate(() => document.activeElement.getAttribute("aria-label"))) === "Remove: Image 6");
+    await page.focus('#p12 input[value="img-8.webp"]');
 
     // ── P06 the viewer: open, content, trap, page, close, focus back ──────
     await page.keyboard.press("Tab");   // the zoom button of tile 8
@@ -255,7 +258,9 @@ const lb = (page) => page.evaluate(() => {
     await page.click('#p12 [data-lightbox][data-caption="Image 5"] .gk-picker-zoom');
     await page.keyboard.press("ArrowRight");
     const g1 = await lb(page);
-    check("P09 the viewer skips the image that has no large version (5 → 8)", g1.caption === "Image 8" || g1.caption === "Image 7", g1);
+    check("P09 the viewer skips the image that has no large version: from 5 the next is 7 (6 has none), and 7 — disabled — can be looked at but not picked: its button is disabled", g1.caption === "Image 7" && g1.wahl && g1.wahl.gesperrt === true, g1);
+    await page.click(".gk-lightbox-choose", { force: true }).catch(() => null);
+    check("P09 … and a click on it picks nothing (the radio of 7 stays unchecked, the viewer stays open)", (await page.evaluate(() => document.querySelector('#p12 input[value="img-7.webp"]').checked)) === false && (await lb(page)).offen);
     await page.keyboard.press("Escape");
     await page.click("#p12 [data-gk-picker-more-btn]");   // fold again for the next cases
 
@@ -355,9 +360,69 @@ const lb = (page) => page.evaluate(() => {
     // ── P17 tabs: the order is the reading order ─────────────────────────
     await page.focus("#b12");
     const reihenfolge = [];
-    for (let i = 0; i < 5; i++) { await page.keyboard.press("Tab"); reihenfolge.push(await page.evaluate(() => { const a = document.activeElement; return a.matches("input") ? "radio:" + a.value : a.matches(".gk-picker-zoom") ? "zoom" : a.matches(".gk-picker-action") ? "action" : a.matches("[data-gk-picker-more-btn]") ? "more" : a.id || a.tagName; })); }
+    for (let i = 0; i < 9; i++) { await page.keyboard.press("Tab"); reihenfolge.push(await page.evaluate(() => { const a = document.activeElement; return a.matches("input") ? "radio:" + a.value : a.matches(".gk-picker-zoom") ? "zoom" : a.matches(".gk-picker-action") ? "action" : a.matches("[data-gk-picker-more-btn]") ? "more" : a.id || a.tagName; })); }
     check("P17 tab order through the twelve: radio, zoom, (action), fold button, what follows — and no more than that for the group",
       reihenfolge.includes("more") && reihenfolge.includes("a12") && reihenfolge.filter((x) => x === "zoom").length <= 1 && reihenfolge.filter((x) => x.startsWith("radio:")).length === 1, reihenfolge);
+
+    // ── P20 hostile text: every place the caller's words land, from script as well as from PHP ──────────────────────
+    await page.evaluate(() => { window.__xss = undefined; });
+    const boese = await page.evaluate(() => {
+      const h = `<img src=x onerror="window.__xss=1">"'$&$$ \${x} </label></div><script>window.__xss=2</script>`;
+      window.__boese = h;
+      const c = document.getElementById("p3");
+      const thumb = document.querySelector("#p3 img").getAttribute("src");
+      const t = GK.picker.add(c, { value: "x-boese", title: h, alt: h, meta: h, note: h, badge: h, thumb, full: thumb, data: { "x-y": h }, actions: [{ name: h, label: h, icon: h }] }, { select: true });
+      const r = t.querySelector("input");
+      return { gewaehlt: r.checked, titel: t.querySelector(".gk-picker-title").textContent, status: document.querySelector("#p3 [data-gk-picker-status]").textContent, daten: t.getAttribute("data-x-y"),
+        fremdes: c.querySelectorAll('img[src="x"], script').length, aktion: t.querySelector(".gk-picker-action").getAttribute("data-gk-picker-action"), hinweis: t.querySelector(".gk-picker-note").textContent, marke: t.querySelector(".gk-picker-badge").textContent };
+    });
+    check("P20 GK.picker.add with hostile text everywhere (markup, quotes, $&, $$, </label>): it is all text — no element appears, nothing runs", (await page.evaluate(() => window.__xss)) === undefined && boese.fremdes === 0 && boese.titel.includes("<img src=x") && boese.hinweis.includes("<img") && boese.marke.includes("<img"), boese);
+    check("P20 the status line says the title literally — \"$&\" and \"$$\" are not replacement patterns", boese.status === "Selected: " + (await page.evaluate(() => window.__boese)), boese.status);
+    check("P20 the data attribute and the action name keep the text, whole", boese.daten === (await page.evaluate(() => window.__boese)) && boese.aktion === (await page.evaluate(() => window.__boese)), boese);
+    await page.click('#p3 .gk-picker-item:last-child .gk-picker-zoom');
+    const vb = await lb(page);
+    check("P20 the viewer shows the caption, the origin line and the alt literally, and nothing in it runs", vb.offen && vb.caption === (await page.evaluate(() => window.__boese)) && vb.alt === vb.caption && vb.meta.startsWith(vb.caption) && (await page.evaluate(() => window.__xss)) === undefined, { offen: vb.offen, caption: vb.caption && vb.caption.slice(0, 60), alt: vb.alt && vb.alt.slice(0, 20), meta: vb.meta && vb.meta.slice(0, 20) });
+    const dialog = await page.evaluate(() => ({ name: document.querySelector(".gk-lightbox").getAttribute("aria-label") }));
+    check("P20 the dialog is named by the picture it shows (so opening it says which one)", dialog.name === vb.caption, dialog);
+    await page.keyboard.press("Escape");
+    await page.evaluate(() => GK.picker.remove(document.getElementById("p3"), "x-boese"));
+
+    // ── P21 the focus after paging far: the ring is in sight ────────────────────────────────────────────────────────
+    await page.click("#p30 [data-gk-picker-more-btn]");
+    await page.evaluate(() => document.querySelector('#p30 .gk-picker-item:first-child').scrollIntoView({ block: "start" }));
+    await page.click('#p30 .gk-picker-item:first-child .gk-picker-zoom');
+    await page.keyboard.press("ArrowLeft");   // wraps to the last picture (30), far below
+    await page.keyboard.press("Escape");
+    const fern = await page.evaluate(() => { const e = document.activeElement; const r = e.getBoundingClientRect(); return { aria: e.getAttribute("aria-label"), oben: Math.round(r.top), unten: Math.round(r.bottom), fenster: innerHeight }; });
+    check("P21 after paging from the first to the last of thirty and Escape, the focus is on the zoom button of the LAST — and it is scrolled into view (a ring nobody can see is no ring)", fern.aria === "Enlarge: Image 30" && fern.oben >= 0 && fern.unten <= fern.fenster, fern);
+    await page.click("#p30 [data-gk-picker-more-btn]");
+    await page.evaluate(() => window.scrollTo(0, 0));
+
+    // ── P22 the focus survives a disabled button, and a picture that arrives under an open viewer ────────────────────
+    await page.click('#p12 [data-lightbox][data-caption="Image 5"] .gk-picker-zoom');
+    await page.focus(".gk-lightbox-choose");
+    await page.keyboard.press("ArrowRight");   // 5 → 7, which is disabled: the pick button disables under the focus
+    const verloren = await page.evaluate(() => ({ drin: document.querySelector(".gk-lightbox").contains(document.activeElement), tag: document.activeElement.tagName, cls: document.activeElement.className, titel: document.querySelector(".gk-lightbox-caption").textContent }));
+    check("P22 paging with the focus on \"Select this image\" onto a picture that cannot be picked does not drop the focus on the page behind: it moves to \"Close\"", verloren.titel === "Image 7" && verloren.drin && /gk-lightbox-dismiss/.test(verloren.cls), verloren);
+    await page.evaluate(() => {
+      const c = document.getElementById("p12");
+      GK.picker.add(c, { value: "spaet", title: "Late arrival", thumb: document.querySelector("#p12 img").src, full: document.querySelector("#p12 img").src }, { select: true, focus: true });
+    });
+    const spaet = await page.evaluate(() => ({ drin: document.querySelector(".gk-lightbox").contains(document.activeElement), offen: document.querySelector(".gk-lightbox").classList.contains("open"), gewaehlt: document.querySelector('#p12 input[value="spaet"]').checked }));
+    check("P22 a picture that arrives while the viewer is open (an upload that took a while) is picked but does NOT take the focus out from under the dialog", spaet.drin && spaet.offen && spaet.gewaehlt, spaet);
+    await page.keyboard.press("Escape");
+    await page.evaluate(() => GK.picker.remove(document.getElementById("p12"), "spaet"));
+    await page.click('#p12 input[value="img-1.webp"]');
+
+    // ── P23 a short screen: the picture keeps room ────────────────────────────────────────────────────────────────────
+    await page.setViewportSize({ width: 667, height: 375 });
+    await page.click('#p3 [data-lightbox] .gk-picker-zoom');
+    await page.waitForTimeout(350);
+    const kurz = await page.evaluate(() => { const i = document.querySelector(".gk-lightbox-img").getBoundingClientRect(), f = document.querySelector(".gk-lightbox-foot").getBoundingClientRect(), c = document.querySelector(".gk-lightbox-choose").getBoundingClientRect();
+      return { bildHoehe: Math.round(i.height), fuss: Math.round(f.height), wahlImFenster: c.bottom <= innerHeight + 0.5 && c.top >= 0, ueber: i.bottom > f.top + 1 }; });
+    check("P23 on a screen 375 px high (a phone held sideways) the picture keeps at least 200 px, caption and buttons share a line, the button is on screen and not over the picture", kurz.bildHoehe >= 200 && kurz.wahlImFenster && !kurz.ueber, kurz);
+    await page.keyboard.press("Escape");
+    await page.setViewportSize({ width: 1440, height: 900 });
 
     // ── P18 the phone: 390 and 360 px ────────────────────────────────────
     for (const w of [390, 360]) {

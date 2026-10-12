@@ -28,8 +28,9 @@ on:
 permissions:
   contents: write
 
+# One Release at a time, whatever started it: a tag push and the button racing each other would both try to create.
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 jobs:
@@ -43,9 +44,11 @@ jobs:
         id: v
         env:
           SINCE: ${{ github.event.inputs.since }}
+          EVENT: ${{ github.event_name }}
         run: |
           version=$(tr -d '[:space:]' < VERSION)
-          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+          # The event decides, not the kind of ref: the button pressed on a tag would otherwise run as a tag push and ignore "since".
+          if [ "$EVENT" = "push" ] && [ "$GITHUB_REF_TYPE" = "tag" ]; then
             tag="$GITHUB_REF_NAME"
             if [ "$tag" != "v$version" ]; then
               echo "::error::The tag $tag does not match VERSION ($version). Tag the commit whose VERSION it names."
@@ -55,7 +58,8 @@ jobs:
           else
             tag="v$version"
             mode=catchup
-            if ! echo "$SINCE" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            # [[ =~ ]] anchors the whole value: grep -E on echo checks line by line, and a second line would pass.
+            if ! [[ "$SINCE" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               echo "::error::'since' must be a version like 1.54.0, not '$SINCE'."
               exit 1
             fi
@@ -98,12 +102,13 @@ jobs:
         run: |
           if gh release view "$TAG" > /dev/null 2>&1; then
             if [ "$MODE" = "catchup" ]; then
-              gh release edit "$TAG" --title "GridKit $VERSION" --notes-file notes.md --latest
+              gh release edit "$TAG" --title "GridKit $VERSION" --notes-file notes.md
               echo "Updated the notes of the existing Release $TAG."
             else
               echo "The Release $TAG exists already — nothing to do."
             fi
           else
-            gh release create "$TAG" --verify-tag --title "GridKit $VERSION" --notes-file notes.md --latest
+            # No --latest: GitHub picks the highest version (an old hotfix tag must not become "Latest").
+            gh release create "$TAG" --verify-tag --title "GridKit $VERSION" --notes-file notes.md
             echo "Created the Release $TAG."
           fi

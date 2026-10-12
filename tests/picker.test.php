@@ -337,8 +337,9 @@ return [
     T::contains($js, 'bubbles: true', 'it bubbles to the page');
     T::contains($js, '_gkReady(function () { GK.picker.init(); })', 'it starts through the library\'s ready guard');
 
-    // The roving tab stop: thirty tiles must not be sixty tab stops.
-    T::contains($js, 'setAttribute("tabindex", "-1")', 'the buttons of a tile that does not have the focus leave the tab order');
+    // The roving tab stop: thirty magnifiers must not be thirty tab stops — but a remove button stays reachable on every tile.
+    T::contains($js, 'querySelectorAll(".gk-picker-zoom").forEach(function (b) {', 'only the magnifiers of the tiles that do not have the focus leave the tab order …');
+    T::notContains($js, 't.querySelectorAll("button").forEach(function (b) {', '… the caption actions do not (the focused tile is always the picked one, which cannot be removed)');
     T::contains($js, 'focusin', 'and follow the focus');
 
     // Folding.
@@ -353,6 +354,26 @@ return [
     T::contains($js, 'gk-lightbox-actions', 'the viewer has a row for what can be done with the picture');
     T::contains($js, 'gk-lightbox-choose', 'including the button that picks it');
     T::contains($js, 'gk-lightbox-meta', 'and a second line for where the picture comes from');
+},
+
+'the review\'s findings stay fixed: escaping in script, focus, scroll, a stale fold' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    T::contains($js, '.replace("{name}", function () { return titleOf(tileOf(r)); })', 'a title is not a replacement pattern ($&, $$)');
+    T::contains($js, 'String(o.id).replace(/[^A-Za-z0-9_-]/g, "")', 'the id prefix is cut in script as PHP cuts it');
+    T::contains($js, '_gkEsc(name) +', 'an icon name the library does not know is escaped, not pasted');
+    T::contains($js, 'opener.scrollIntoView({ block: "nearest"', 'a focus returned to a place other than the opener is scrolled into view');
+    T::contains($js, 'lb.querySelector(".gk-lightbox-dismiss").focus()', 'the focus leaves a pick button that disables itself');
+    T::contains($js, 'refresh: refreshLb', 'the viewer can be redrawn when something changed behind it');
+    T::contains($js, 'if (opts.focus && !viewerOpen) input.focus();', 'an arriving picture does not take the focus from an open viewer');
+    T::contains($js, 'lb.setAttribute("aria-label", item.caption || _t("lightbox_title"));', 'the dialog is named by its picture');
+    T::contains($js, 'if (!foldable) c.removeAttribute("data-gk-picker-open");', 'an old "show all" does not outlive the fold');
+    $css = (string) file_get_contents(__DIR__ . '/../css/gridkit.css');
+    T::ok((bool) preg_match('/\.gk-lightbox-choose\s*\{[^}]*background:\s*#fff;[^}]*color:\s*#111827/s', $css), 'the pick button is white with dark text on the dark overlay in every theme (16:1, not the theme\'s 4.47:1)');
+    T::ok((bool) preg_match('/@media \(max-height: 480px\)\s*\{[^@]*\.gk-lightbox-foot/s', $css), 'a short screen gives the picture its room');
+    Lang::set('en');
+    $zwei = [['value' => 'a', 'title' => 'First', 'checked' => true], ['value' => 'b', 'title' => 'Second', 'checked' => true]];
+    [, $x] = pkDom(ImagePicker::html($zwei, ['name' => 'n', 'id' => 'two']));
+    T::eq(trim((string) $x->query('//p[@data-gk-picker-status]')->item(0)->textContent), 'Selected: Second', 'of several checked images the status names the LAST, as the browser does');
 },
 
 'the viewer: picking returns the focus to the radio, closing to the zoom button' => function (): void {
