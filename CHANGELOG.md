@@ -156,7 +156,7 @@ to switch it on. It cannot be run from a checkout, so it is held to what it says
   targets, `pointer: coarse`, 16:9, no `!important`, reduced motion), the script's contract (events,
   fold by `gridTemplateColumns`, roving tab stop, the viewer's `choose`/`returnTo`), the guide, the
   demo and the words in both languages.
-- `ci/browser-picker.js` (new, 69 cases in Chromium, outside the suite like `ci/browser.js`) on
+- `ci/browser-picker.js` (new, 83 cases in Chromium, outside the suite like `ci/browser.js`) on
   `ci/browser-fixture.php --picker`: 1, 3, 12 and 30 images at 850 px, 390 and 360 px (tiles per row,
   rows shown, "Show all", the picked tile beyond the fold, no sideways scroll); picking with the
   mouse and the keyboard (arrows skip a disabled tile, a 3 px ring, one `change`); the tab order;
@@ -167,7 +167,7 @@ to switch it on. It cannot be run from a checkout, so it is held to what it says
   screen gets 44 px targets; dark contrast; reduced motion; a portrait picture is cropped to 16:9,
   not squeezed (found while writing it: an in-flow `<img>` gave the box its own height).
 - Found by an independent review of the first commit and fixed before release (each with a case in
-  `ci/browser-picker.js`, 82 cases now): a caption action out of the keyboard's reach; the focus ring
+  `ci/browser-picker.js`, 83 cases now): a caption action out of the keyboard's reach; the focus ring
   below the fold after paging far; the focus dropped on the page when "Select this image" disables
   itself under it; an upload that arrives under an open viewer taking the focus (and the viewer's
   button not noticing the new pick); the JS side of the escaping — `GK.picker.add`, the viewer, the

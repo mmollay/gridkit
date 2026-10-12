@@ -371,12 +371,15 @@ const lb = (page) => page.evaluate(() => {
       window.__boese = h;
       const c = document.getElementById("p3");
       const thumb = document.querySelector("#p3 img").getAttribute("src");
+      c.setAttribute("data-gk-picker-id", 'p3" onfocus="window.__idx=1');   // a hand-written container with a hostile id prefix: script cuts it as PHP does
       const t = GK.picker.add(c, { value: "x-boese", title: h, alt: h, meta: h, note: h, badge: h, thumb, full: thumb, data: { "x-y": h }, actions: [{ name: h, label: h, icon: h }] }, { select: true });
       const r = t.querySelector("input");
-      return { gewaehlt: r.checked, titel: t.querySelector(".gk-picker-title").textContent, status: document.querySelector("#p3 [data-gk-picker-status]").textContent, daten: t.getAttribute("data-x-y"),
+      c.setAttribute("data-gk-picker-id", "p3");
+      return { idrein: !r.hasAttribute("onfocus") && !t.querySelector("[onfocus]") && /^p3onfocuswindow__idx1-\d+$/.test(r.id), id: r.id, gewaehlt: r.checked, titel: t.querySelector(".gk-picker-title").textContent, status: document.querySelector("#p3 [data-gk-picker-status]").textContent, daten: t.getAttribute("data-x-y"),
         fremdes: c.querySelectorAll('img[src="x"], script').length, aktion: t.querySelector(".gk-picker-action").getAttribute("data-gk-picker-action"), hinweis: t.querySelector(".gk-picker-note").textContent, marke: t.querySelector(".gk-picker-badge").textContent };
     });
     check("P20 GK.picker.add with hostile text everywhere (markup, quotes, $&, $$, </label>): it is all text — no element appears, nothing runs", (await page.evaluate(() => window.__xss)) === undefined && boese.fremdes === 0 && boese.titel.includes("<img src=x") && boese.hinweis.includes("<img") && boese.marke.includes("<img"), boese);
+    check("P20 an id prefix with a quote and an attribute in it is cut to letters, digits, dashes and underscores — no onfocus appears", boese.idrein, boese.id);
     check("P20 the status line says the title literally — \"$&\" and \"$$\" are not replacement patterns", boese.status === "Selected: " + (await page.evaluate(() => window.__boese)), boese.status);
     check("P20 the data attribute and the action name keep the text, whole", boese.daten === (await page.evaluate(() => window.__boese)) && boese.aktion === (await page.evaluate(() => window.__boese)), boese);
     await page.click('#p3 .gk-picker-item:last-child .gk-picker-zoom');
@@ -389,6 +392,7 @@ const lb = (page) => page.evaluate(() => {
 
     // ── P21 the focus after paging far: the ring is in sight ────────────────────────────────────────────────────────
     await page.click("#p30 [data-gk-picker-more-btn]");
+    await page.setViewportSize({ width: 1440, height: 520 });   // the last of thirty lies well below the first
     await page.evaluate(() => document.querySelector('#p30 .gk-picker-item:first-child').scrollIntoView({ block: "start" }));
     await page.click('#p30 .gk-picker-item:first-child .gk-picker-zoom');
     await page.keyboard.press("ArrowLeft");   // wraps to the last picture (30), far below
@@ -396,6 +400,7 @@ const lb = (page) => page.evaluate(() => {
     const fern = await page.evaluate(() => { const e = document.activeElement; const r = e.getBoundingClientRect(); return { aria: e.getAttribute("aria-label"), oben: Math.round(r.top), unten: Math.round(r.bottom), fenster: innerHeight }; });
     check("P21 after paging from the first to the last of thirty and Escape, the focus is on the zoom button of the LAST — and it is scrolled into view (a ring nobody can see is no ring)", fern.aria === "Enlarge: Image 30" && fern.oben >= 0 && fern.unten <= fern.fenster, fern);
     await page.click("#p30 [data-gk-picker-more-btn]");
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.evaluate(() => window.scrollTo(0, 0));
 
     // ── P22 the focus survives a disabled button, and a picture that arrives under an open viewer ────────────────────
