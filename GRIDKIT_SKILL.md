@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.93.4 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.94.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -55,6 +55,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Accordion (JS) | `.gk-accordion` | Collapsible sections, optional single-open (`data-gk-single`) |
 | Tooltips (JS/CSS) | `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` | Hint popups — plain, CSS-only, or with HTML in them |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
+| Image picker | `GridKit\ImagePicker` / `GK.picker` | Choose one image out of many: a compact grid of 16:9 tiles that works like a radio group, folds after two rows, and an enlarged view that can pick (since 1.94.0) |
 | Announcement (JS/CSS) | `.gk-announce` / `GK.announce` | The line that says "Saved." where the person works, read by a screen reader; empty it draws no box (since 1.93.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
@@ -1897,6 +1898,7 @@ Features:
 | `gk-tabs-nav` `gk-tab` | Tabs, generated nav (state class: `gk-tab-active`) |
 | `gk-accordion` `gk-accordion-item` `gk-accordion-trigger` `gk-accordion-content` `gk-accordion-body` | Accordion (state class: `open` on the item) |
 | `gk-gallery` `gk-gallery-item` `gk-gallery-overlay` | Image gallery |
+| `gk-picker` `gk-picker-grid` `gk-picker-item` `gk-picker-media` `gk-picker-input` `gk-picker-caption` | Image picker (since 1.94.0): container, grid, one tile, its picture area, the radio drawn as that area, the title row |
 | `gk-card-elevated` `gk-card-flat` | Card with a shadow / with a hairline border instead |
 | `gk-card-image` | A picture flush with the top of a card (rounds the two upper corners) |
 | `gk-card-title` `gk-card-actions` | Heading inside a card / a right-aligned row of buttons in its header |
@@ -2087,6 +2089,108 @@ GK.lightbox.open(0);      // by index within the gallery last clicked
 GK.lightbox.close();
 GK.lightbox.init(root);   // for a gallery added to the page after load
 ```
+
+Since 1.94.0 the viewer can show more than a caption: a second line
+(`meta`), and a row with **Select this image** and **Close** when the entries it
+was given can be picked (the image picker below). It is also open to your own
+lists:
+
+```js
+GK.lightbox.show(
+    [{ src: '/g/1.webp', caption: 'Fireplace', meta: 'Own image' }, { src: '/g/2.webp', caption: 'Road' }],
+    0,            // start here
+    button        // the element the focus returns to when it closes
+);
+```
+
+An entry may carry `choose()` (picks it and returns the element that should have
+the focus afterwards), `selected()`, `disabled`, `returnTo()` and
+`chooseLabel`. With none of them the viewer is exactly the one it always was.
+
+### Image picker — ImagePicker
+
+Choose **one** image out of many. A full row per image is fine for three and
+unusable for thirty; this is a grid of 16:9 tiles (about 150 px, two per row on a
+phone) that works like a radio group, shows the first two rows with a "Show all
+30" button, and opens the library's viewer on the large version.
+
+```php
+<?php
+\GridKit\ImagePicker::render([
+    ['value' => 'a.webp', 'title' => 'Fireplace at dusk', 'thumb' => '/t/a.webp', 'full' => '/g/a.webp',
+     'meta' => 'Own image', 'checked' => true],
+    ['value' => 'b.webp', 'title' => 'Mountain road', 'thumb' => '/t/b.webp', 'full' => '/g/b.webp',
+     'meta' => 'AI generated', 'badge' => 'AI', 'actions' => [['name' => 'remove', 'label' => 'Remove']]],
+    ['value' => 'c.webp', 'title' => 'Not released yet', 'note' => 'Waiting for approval', 'disabled' => true],
+], ['name' => 'cover', 'label' => 'Header image']);
+```
+
+`ImagePicker::render()` prints, `ImagePicker::html()` returns the same markup,
+`ImagePicker::tileHtml($item, $opts)` returns one tile (what an AJAX answer would
+carry). Put the picker in a `<fieldset>` with a `<legend>`, or pass `label`:
+a group a reader cannot name is a list of unlabelled radios.
+
+| Per image | |
+|---|---|
+| `value` | what the form submits — the radio's value (required) |
+| `title` | one line on the tile, cut with an ellipsis; the whole of it is the tooltip and the radio's name |
+| `thumb` | the **small** picture for the tile (omitted: a placeholder is drawn) |
+| `full` | the **large** picture the viewer loads when it opens (omitted: no zoom button, nothing for the viewer) |
+| `alt` | the viewer's caption and the large picture's `alt` (default: the title) |
+| `meta` | where it comes from ("AI generated"): a second line in the viewer, the radio's description |
+| `note` | a line under the title on the tile ("Waiting for approval"), also in the description |
+| `badge` | a short word on the picture ("AI") — `meta` says it in full for a reader |
+| `checked` / `disabled` | the state |
+| `actions` | `[['name' => 'remove', 'label' => 'Remove', 'icon' => 'delete']]` — buttons in the caption row |
+| `data` | `['x' => 'y']` — `data-x="y"` on the tile, for your own bookkeeping |
+
+Options: `name` (required — the radios' group), `id` (prefix of every id), `label`
+(names the group), `rows` (rows shown before "show all"; default `2`, `0` = never
+fold), `status` (`false`: no "Selected: …" line), `class`, and `labels`
+(`zoom`, `choose`, `more` with `{n}`, `less`, `selected` with `{name}`, `none`) —
+by default the active language's words.
+
+**The pictures are yours to size.** The library draws what it is given: give
+`thumb` a small file (about 400 px on the long edge — a tile is 150 px wide) and
+`full` the large one. A tile that loads the original makes thirty tiles thirty
+originals.
+
+Nothing is in the library that deletes. A caption button fires an event and
+nothing else — the application decides, and asks "Really?":
+
+```js
+picker.addEventListener('gk:pickeraction', (e) => {
+    // e.detail = { action: 'remove', value: 'b.webp', item: <the tile>, picker: <the container> }
+    GK.confirm('Remove this image?', { danger: true }).then((ok) => {
+        if (ok) removeOnTheServer(e.detail.value).then(() => GK.picker.remove(e.detail.picker, e.detail.value));
+    });
+});
+```
+
+Picking is the radio's own `change` event — it bubbles, and the form submits the
+value, so a page that listened to the old list of radios needs nothing new.
+
+```js
+GK.picker.add(picker, { value: 'd.webp', title: 'Fresh upload', thumb: '…', full: '…' },
+              { select: true, focus: true });   // picks it as a click would, one change event
+GK.picker.remove(picker, 'd.webp');             // takes the tile out; the focus is yours to place
+GK.picker.refresh(picker);                      // after you changed which radio is checked in script
+GK.picker.init(root);                           // for a picker added to the page after load
+GK.picker.tileHtml(item, { name, id, index });  // the same markup PHP writes
+```
+
+What the keyboard and a reader get, without being asked: native radios (Tab
+enters the group once, the arrow keys move *and* pick, disabled tiles are
+skipped); a 3 px focus ring; the check mark, a thicker ring and a bold title for
+the picked tile — never colour alone; the zoom and action buttons of **one** tile
+(the one with the focus, else the picked one) are in the tab order, the others
+are not, so thirty tiles are not sixty tab stops; the viewer traps Tab, closes on
+Escape, pages with ← →, and gives the focus back to the zoom button of the tile it
+was last showing (or to the radio, when a picture was picked from it). A tile out
+of rows folds away unless it is picked or has the focus. The tile's picture has
+`alt=""` on purpose: the title already names it, and an `alt` would say it twice.
+Touch screens get finger-sized buttons (`pointer: coarse`); reduced motion stops
+the ring's transition and the viewer's entrance.
 
 ### Tooltips
 

@@ -1,0 +1,109 @@
+name: Release
+
+# A tag is not a release: GitHub's Releases page still showed v1.54.0 while the
+# tags ran to v1.93.4. This workflow creates the Release object for a tag, with
+# the notes cut from CHANGELOG.md by ci/release-notes.sh.
+#
+#   push a tag v<VERSION>   -> the Release for that tag (the notes of that version)
+#   Run workflow (by hand)  -> ONE catch-up Release for the tag of the current VERSION,
+#                              covering everything since the version in "since"
+#                              (the notes of the newest version in full, earlier ones as titles)
+#
+# Both are idempotent: a tag push whose Release exists changes nothing; the
+# catch-up replaces the notes of an existing Release instead of adding a second.
+# It lives here, not in .github/workflows/, for the reason github-actions.yml does: the token this
+# repository is pushed with has no `workflow` scope, and a tracked workflow file makes every push
+# fail (.gitignore, 6b259c9). ci/README.md ("The Releases page") says how to switch it on.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      since:
+        description: 'Catch-up Release: everything since this version (a version CHANGELOG.md has an entry for)'
+        required: true
+        default: '1.54.0'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release notes and Release object
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Work out the tag and check it against VERSION
+        id: v
+        env:
+          SINCE: ${{ github.event.inputs.since }}
+        run: |
+          version=$(tr -d '[:space:]' < VERSION)
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            tag="$GITHUB_REF_NAME"
+            if [ "$tag" != "v$version" ]; then
+              echo "::error::The tag $tag does not match VERSION ($version). Tag the commit whose VERSION it names."
+              exit 1
+            fi
+            mode=tag
+          else
+            tag="v$version"
+            mode=catchup
+            if ! echo "$SINCE" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::'since' must be a version like 1.54.0, not '$SINCE'."
+              exit 1
+            fi
+            if ! git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+              echo "::error::The tag $tag does not exist on GitHub yet. Push it first (git tag $tag && git push origin $tag)."
+              exit 1
+            fi
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
+      - name: Write the notes
+        env:
+          MODE: ${{ steps.v.outputs.mode }}
+          VERSION: ${{ steps.v.outputs.version }}
+          SINCE: ${{ github.event.inputs.since }}
+        run: |
+          if [ "$MODE" = "catchup" ]; then
+            bash ci/release-notes.sh --since "$SINCE" > notes.md
+          else
+            bash ci/release-notes.sh "$VERSION" > notes.md
+          fi
+          printf '\n\nLive demo: https://gridkit.at/demo/\n' >> notes.md
+          # GitHub refuses a body over 125 000 characters; ci/release-notes.sh keeps the catch-up under 120 000 bytes.
+          bytes=$(wc -c < notes.md)
+          echo "notes: $bytes bytes"
+          if [ "$bytes" -gt 124000 ]; then
+            echo "::error::The notes are $bytes bytes — over what GitHub accepts."
+            exit 1
+          fi
+          cat notes.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create the Release (or leave it)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODE: ${{ steps.v.outputs.mode }}
+          TAG: ${{ steps.v.outputs.tag }}
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            if [ "$MODE" = "catchup" ]; then
+              gh release edit "$TAG" --title "GridKit $VERSION" --notes-file notes.md --latest
+              echo "Updated the notes of the existing Release $TAG."
+            else
+              echo "The Release $TAG exists already — nothing to do."
+            fi
+          else
+            gh release create "$TAG" --verify-tag --title "GridKit $VERSION" --notes-file notes.md --latest
+            echo "Created the Release $TAG."
+          fi

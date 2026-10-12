@@ -494,13 +494,41 @@
             "name": "Lightbox",
             "classes": {
                 "gk-lightbox": "1.0.0",
+                "gk-lightbox-actions": "1.94.0",
                 "gk-lightbox-caption": "1.0.0",
+                "gk-lightbox-choose": "1.94.0",
                 "gk-lightbox-close": "1.0.0",
                 "gk-lightbox-counter": "1.0.0",
+                "gk-lightbox-dismiss": "1.94.0",
+                "gk-lightbox-foot": "1.94.0",
                 "gk-lightbox-img": "1.0.0",
+                "gk-lightbox-meta": "1.94.0",
                 "gk-lightbox-nav": "1.0.0",
                 "gk-lightbox-next": "1.0.0",
-                "gk-lightbox-prev": "1.0.0"
+                "gk-lightbox-pick": "1.94.0",
+                "gk-lightbox-prev": "1.0.0",
+                "gk-lightbox-stage": "1.94.0"
+            }
+        },
+        "picker": {
+            "name": "Image picker",
+            "classes": {
+                "gk-picker": "1.94.0",
+                "gk-picker-action": "1.94.0",
+                "gk-picker-badge": "1.94.0",
+                "gk-picker-caption": "1.94.0",
+                "gk-picker-check": "1.94.0",
+                "gk-picker-grid": "1.94.0",
+                "gk-picker-img": "1.94.0",
+                "gk-picker-input": "1.94.0",
+                "gk-picker-item": "1.94.0",
+                "gk-picker-media": "1.94.0",
+                "gk-picker-more": "1.94.0",
+                "gk-picker-note": "1.94.0",
+                "gk-picker-ph": "1.94.0",
+                "gk-picker-status": "1.94.0",
+                "gk-picker-title": "1.94.0",
+                "gk-picker-zoom": "1.94.0"
             }
         },
         "breadcrumb": {

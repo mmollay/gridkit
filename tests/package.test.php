@@ -82,6 +82,36 @@ return [
     }
 },
 
+'the Release workflow is there and means what ci/README.md says' => function (): void {
+    // A tag is not a Release (1.55 … 1.93.4 had none). The workflow is the fix, and it is only
+    // as good as its guards: the tag must be the VERSION, a second run must not add a second
+    // Release, and the text must stay under what GitHub accepts. It cannot be run from here, so
+    // the file is held to what it has to say.
+    // It sits in ci/ like github-actions.yml: a TRACKED .github/workflows/* blocks every push with this repository's token.
+    $yml = (string) file_get_contents(ROOT . '/ci/github-release.yml');
+    T::ok($yml !== '', 'ci/github-release.yml is missing');
+    $out = [];
+    exec('git -C ' . escapeshellarg(ROOT) . ' ls-files .github/workflows 2>/dev/null', $out);
+    T::eq(array_filter($out), [], 'a workflow file is tracked under .github/workflows/ — the push token has no workflow scope, every push fails');
+    T::contains($yml, "tags: ['v*']", 'a pushed v* tag starts it');
+    T::contains($yml, 'workflow_dispatch:', 'and so does the button, for the catch-up Release');
+    T::contains($yml, "default: '1.54.0'", 'whose default is the last version that has a Release');
+    T::contains($yml, 'contents: write', 'it may write Releases');
+    T::notContains($yml, 'pull_request', 'a pull request never creates a Release');
+    T::contains($yml, 'does not match VERSION', 'the tag has to be the VERSION it is cut from');
+    T::contains($yml, 'ci/release-notes.sh', 'the notes come from the changelog script');
+    T::contains($yml, 'Live demo: https://gridkit.at/demo/', 'with the line that points at the demo');
+    T::contains($yml, 'gh release view', 'a Release that exists is found first …');
+    T::contains($yml, 'gh release create', '… and only otherwise created');
+    T::contains($yml, '--verify-tag', 'never creating the tag behind the back of whoever pushed it');
+    T::contains($yml, '124000', 'the text stays under the 125 000 characters GitHub accepts');
+    $ci = (string) file_get_contents(ROOT . '/ci/github-actions.yml');
+    T::notContains($ci, "tags:", 'the test workflow does not start on a tag too (it would race the Release)');
+    $notes = (string) shell_exec('bash ' . escapeshellarg(ROOT . '/ci/release-notes.sh') . ' --since 1.54.0 2>&1');
+    T::ok(strlen($notes) > 1000 && strlen($notes) < 120000, 'the catch-up notes fit GitHub\'s limit (' . strlen($notes) . ' bytes)');
+    T::contains($notes, 'Earlier versions', 'and are the list of titles once the whole text would be too long');
+},
+
 'no scratch file from an audit run is tracked' => function (): void {
     // Twice now an agent left a probe script in the repo root and `git add -A`
     // carried it into a commit — once into the Composer package itself. The

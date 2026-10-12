@@ -211,7 +211,7 @@ by `ci/build-skill.sh`, and a test fails if the two drift apart.
 
 ## Components
 
-Sixteen, each a PHP class with a chainable API:
+Seventeen, each a PHP class with a chainable API:
 
 | | | |
 |---|---|---|
@@ -220,7 +220,7 @@ Sixteen, each a PHP class with a chainable API:
 | `StatCards` — KPI tiles with trend, or compact tiles for a sheet | `Pagination` — standalone or attached | `Select` — searchable, multi, AJAX |
 | `FilterChips` — one-click filters | `TableHeader` — unified filter bar | `PageSize` — rows per page |
 | `ActionGroup` — grouped row actions | `SortLink` — sortable headers | `YearFilter` — year navigation |
-| `BelegModal` — document preview | | |
+| `BelegModal` — document preview | `ImagePicker` — choose one image from many: a compact grid, an enlarged view that can pick | |
 
 Plus `Theme`, `Layout`, `Lang`, `Auth` and `Icon` as infrastructure — and the
 side sheet (`.gk-sheet`, `GK.sheet`), markup and script rather than a class: the
@@ -263,7 +263,9 @@ value reaches the page unescaped, and that the English locale contains no German
 The workflow in [`ci/`](ci/) runs it on PHP 8.2, 8.3 and 8.4, plus one job with
 `mbstring` switched off. It is not active yet: it sits in `ci/` rather than
 `.github/workflows/` because the token this repository is pushed with has no
-`workflow` scope. [One `git mv` turns it on.](ci/README.md)
+`workflow` scope. [One `git mv` turns it on.](ci/README.md) A second workflow,
+`ci/github-release.yml`, creates the GitHub Release for every pushed
+`v*` tag from `CHANGELOG.md` (see [ci/README.md](ci/README.md#the-releases-page)).
 
 ---
 

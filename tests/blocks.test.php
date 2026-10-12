@@ -129,9 +129,11 @@ return [
     T::contains($new, 'New in 1.93', 'the mark does not say what is new');
     T::contains($new, 'since 1.93', 'the heading does not say since when');
 
-    $changed = since('message');
+    // The window moves with every minor (the last two): the block that shows "changed" is the one a
+    // new class marked changed by itself — the lightbox, which learned a second line and a button in 1.94.
+    $changed = since('lightbox');
     T::contains($changed, 'gk-label gk-label-blue', 'a changed block is not marked with the blue label');
-    T::contains($changed, 'Changed in 1.92', 'the mark does not say when it changed');
+    T::contains($changed, 'Changed in 1.94', 'the mark does not say when it changed');
 
     $old = since('toast');
     T::notContains($old, 'gk-label', 'a block unchanged for years carries a mark');
@@ -146,7 +148,7 @@ return [
 
     Lang::set('de');
     T::contains(since('announce'), 'Neu in 1.93', 'a German demo marks in English');
-    T::contains(since('message'), 'Geändert in 1.92', 'a German demo marks in English');
+    T::contains(since('lightbox'), 'Geändert in 1.94', 'a German demo marks in English');
     Lang::set('en');
 },
 
@@ -188,12 +190,13 @@ return [
     $mixed = since('announce', 'message');
     T::contains($mixed, 'since ' . gkMinor(gkBlocks()['message']['since']) . '<', 'the heading does not say since when the older block exists');
     T::contains($mixed, 'New in 1.93', 'the new block of the two is not marked');
-    // Two blocks changed in the same release: the mark once.
-    T::eq(substr_count(since('table', 'sheet'), 'Changed in 1.92'), 1, '"Changed in 1.92" twice in one heading');
-    // One new in 1.92 beside one changed in 1.92: "New in" says it all.
-    $newAndChanged = since('table-list', 'table');
-    T::contains($newAndChanged, 'New in 1.92', 'the new block of the two is not marked');
-    T::notContains($newAndChanged, 'Changed in 1.92', 'a release marked new is marked changed as well');
+    // A block changed in 1.94 beside one new in 1.93: each mark once.
+    T::eq(substr_count(since('announce', 'lightbox'), 'Changed in 1.94'), 1, '"Changed in 1.94" twice in one heading');
+    T::eq(substr_count(since('announce', 'lightbox'), 'New in 1.93'), 1, '"New in 1.93" twice in one heading');
+    // One new in 1.94 beside one changed in 1.94: "New in" says it all.
+    $newAndChanged = since('picker', 'lightbox');
+    T::contains($newAndChanged, 'New in 1.94', 'the new block of the two is not marked');
+    T::notContains($newAndChanged, 'Changed in 1.94', 'a release marked new is marked changed as well');
     T::eq(since('toast', 'toast'), since('toast'), 'a key named twice is not one block');
     $threw = false;
     try { since('toast', 'no-such-block'); } catch (InvalidArgumentException $e) { $threw = true; }

@@ -170,6 +170,56 @@ if (isset($argv[1]) && $argv[1] === '--announce') {
     exit;
 }
 
+// The image picker (1.94.0), driven by ci/browser-picker.js: four pickers of one,
+// three, twelve and thirty images, a plain gallery beside them (its viewer must
+// not change), a button before and one after (where the focus goes). Pictures
+// are SVG data URIs — no files, no server — one colour and one number each, a
+// portrait one among them (a tile crops it to 16:9), a long title, a tile with
+// no large version, a disabled one, an origin chip, an action.
+if (isset($argv[1]) && $argv[1] === '--picker') {
+    $svg = static function (int $w, int $h, int $i): string {
+        $hue = ($i * 47) % 360;
+        $s = '<svg xmlns="http://www.w3.org/2000/svg" width="' . $w . '" height="' . $h . '" viewBox="0 0 ' . $w . ' ' . $h . '">'
+           . '<rect width="100%" height="100%" fill="hsl(' . $hue . ',55%,45%)"/>'
+           . '<circle cx="' . intdiv($w, 2) . '" cy="' . intdiv($h, 2) . '" r="' . intdiv(min($w, $h), 4) . '" fill="hsl(' . $hue . ',60%,75%)"/>'
+           . '<text x="50%" y="50%" font-size="' . intdiv(min($w, $h), 5) . '" text-anchor="middle" dominant-baseline="central" fill="#111">' . $i . '</text></svg>';
+        return 'data:image/svg+xml;base64,' . base64_encode($s);
+    };
+    $items = static function (int $n, int $checked = -1) use ($svg): array {
+        $out = [];
+        for ($i = 1; $i <= $n; $i++) {
+            $t = ['value' => "img-$i.webp", 'title' => "Image $i", 'thumb' => $svg(320, 180, $i), 'full' => $svg(1600, 900, $i),
+                  'meta' => $i % 4 === 0 ? 'AI generated' : 'Own image', 'checked' => $i === $checked];
+            if ($i % 4 === 0) { $t['badge'] = 'AI'; }
+            if ($i % 3 === 0) { $t['actions'] = [['name' => 'remove', 'label' => 'Remove']]; }
+            if ($i === 2) { $t['title'] = 'A very long title that does not fit on one line of a small tile, however wide the screen is'; }
+            if ($i === 5) { $t['thumb'] = $svg(180, 320, $i); $t['full'] = $svg(900, 1600, $i); }
+            if ($i === 6) { unset($t['thumb'], $t['full']); $t['note'] = 'No preview'; }
+            if ($i === 7) { $t['disabled'] = true; $t['note'] = 'Not released yet'; }
+            $out[] = $t;
+        }
+        return $out;
+    };
+    $gal = '<div class="gk-gallery gk-gallery-sm" id="gal">'
+         . '<div class="gk-gallery-item" data-lightbox="' . $svg(800, 600, 90) . '" data-caption="Plain one"><img src="' . $svg(200, 200, 90) . '" alt="Plain one"></div>'
+         . '<div class="gk-gallery-item" data-lightbox="' . $svg(800, 600, 91) . '" data-caption="Plain two"><img src="' . $svg(200, 200, 91) . '" alt="Plain two"></div></div>';
+    echo '<!DOCTYPE html><html lang="en">' . $head . '<body class="gk-root">' . Lang::jsConfig()
+       // 850 px: about the width of the content column of an admin page — wide enough for
+       // five tiles a row, so twelve images are three rows and fold, thirty are six.
+       . '<style>body{background:var(--gk-surface);color:var(--gk-on-surface)}#page{max-width:850px;margin:0 auto;padding:16px}</style>'
+       . '<main id="page">'
+       . '<button type="button" id="before">Before</button>'
+       . '<section id="s1"><h2 id="h1">One image</h2>' . \GridKit\ImagePicker::html($items(1), ['name' => 'one', 'id' => 'p1', 'label' => 'One image']) . '</section>'
+       . '<section id="s3"><h2>Three images</h2>' . \GridKit\ImagePicker::html($items(3, 2), ['name' => 'three', 'id' => 'p3', 'label' => 'Three images']) . '</section>'
+       . '<section id="s12"><h2>Twelve images</h2><button type="button" id="b12">Before twelve</button><form id="f12">' . \GridKit\ImagePicker::html($items(12, 1), ['name' => 'twelve', 'id' => 'p12', 'label' => 'Twelve images']) . '</form><button type="button" id="a12">After twelve</button></section>'
+       . '<section id="s30"><h2>Thirty images</h2>' . \GridKit\ImagePicker::html($items(30, 21), ['name' => 'thirty', 'id' => 'p30', 'label' => 'Thirty images',
+             'labels' => ['more' => 'Show all {n} images', 'less' => 'Show fewer images']]) . '</section>'
+       . '<section id="sg"><h2>A plain gallery</h2>' . $gal . '</section>'
+       . '<button type="button" id="after">After</button>'
+       . '</main>' . $script . '</body></html>';
+    exit;
+}
+
 // An application page: GridKit's own fixed header with its user menu, the list
 // below it and the sheet the list opens. On a wide screen the sheet docks
 // beside the list — and the header's menu, which opens over the sheet's top

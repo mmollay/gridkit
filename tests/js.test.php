@@ -62,16 +62,16 @@ return [
     T::ok(count($keys) > 10, 'expected a good number of JS keys, found ' . count($keys));
 
     /*
-     * jsConfig() exports four families, each flattened with its own prefix:
-     * js.* loses it entirely, while action.*, pagination.* and format.*
-     * keep it with the dot turned into an underscore. A key the script asks
+     * jsConfig() exports five families, each flattened with its own prefix:
+     * js.* loses it entirely, while action.*, pagination.*, picker.* and
+     * format.* keep it with the dot turned into an underscore. A key the script asks
      * for may live under any of them, so the test has to look where the
      * export actually put it. Checking only js.* reported the shared
      * pagination catalogue as missing when it was there under its own name.
      */
     $sources = static function (string $key): array {
         $candidates = ["js.$key"];
-        foreach (['action', 'pagination', 'format'] as $family) {
+        foreach (['action', 'pagination', 'picker', 'format'] as $family) {
             if (str_starts_with($key, $family . '_')) {
                 $candidates[] = $family . '.' . substr($key, strlen($family) + 1);
             }

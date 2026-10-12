@@ -176,9 +176,9 @@ return [
     $md     = (string) file_get_contents(SKILL);
     $readme = (string) file_get_contents(__DIR__ . '/../README.md');
 
-    preg_match('/Sixteen, each a PHP class.*?\n\n(.*?)\n\nPlus/s', $readme, $m);
+    preg_match('/Seventeen, each a PHP class.*?\n\n(.*?)\n\nPlus/s', $readme, $m);
     preg_match_all('/`(\w+)` +—/', $m[1] ?? '', $c);
-    T::ok(count($c[1]) === 16, 'the README component table changed shape');
+    T::ok(count($c[1]) === 17, 'the README component table changed shape');
 
     foreach ($c[1] as $component) {
         T::ok(

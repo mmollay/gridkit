@@ -1943,6 +1943,12 @@
             return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 0 1 7 7"/><path d="M15 7h2a5 5 0 0 1 4 8"/><line x1="8" y1="12" x2="12" y2="12"/><line x1="2" y1="2" x2="22" y2="22"/></svg>';
           case "refresh":
             return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
+          case "zoom_in":
+          case "zoom":
+            return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>';
+          case "image":
+          case "photo":
+            return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
           default:
             return (
               '<span class="material-icons" style="font-size:16px;vertical-align:middle;">' +
@@ -3890,6 +3896,7 @@
     // covers that pass, and this one covers everything added later.
     if (GK.accordion) GK.accordion.init(root);
     if (GK.lightbox && GK.lightbox.init) GK.lightbox.init(root);
+    if (GK.picker) GK.picker.init(root);
     if (GK.rowPager) GK.rowPager.init(root);
     GK.modal.upgradeStatic(root);
     if (GK.sheet) GK.sheet.upgrade(root);
@@ -5016,15 +5023,36 @@
         '<span class="material-icons" aria-hidden="true">close</span></button>' +
         '<button class="gk-lightbox-nav gk-lightbox-prev" aria-label="' + _gkEsc(_t("lightbox_prev")) + '">' +
         '<span class="material-icons" aria-hidden="true">chevron_left</span></button>' +
-        '<img class="gk-lightbox-img" src="" alt="">' +
         '<button class="gk-lightbox-nav gk-lightbox-next" aria-label="' + _gkEsc(_t("lightbox_next")) + '">' +
         '<span class="material-icons" aria-hidden="true">chevron_right</span></button>' +
+        // The picture sits in a stage that takes the height the foot leaves it.
+        '<div class="gk-lightbox-stage"><img class="gk-lightbox-img" src="" alt=""></div>' +
+        '<div class="gk-lightbox-foot">' +
         // The caption and the counter change as you page through, and nothing
         // said so. Announced politely, they now read out on each step.
         '<div class="gk-lightbox-caption" aria-live="polite"></div>' +
+        '<div class="gk-lightbox-meta" aria-live="polite"></div>' +
+        // What can be done with the picture — only when an entry offers it
+        // (an image picker's "select this one"); a plain gallery shows none.
+        '<div class="gk-lightbox-actions" hidden>' +
+        '<button type="button" class="gk-lightbox-choose"></button>' +
+        '<button type="button" class="gk-lightbox-dismiss">' + _gkEsc(_t("close")) + '</button>' +
+        "</div></div>" +
         '<div class="gk-lightbox-counter" aria-live="polite"></div>';
       document.body.appendChild(lb);
-      lb.querySelector(".gk-lightbox-close").addEventListener("click", closeLb);
+      lb.querySelector(".gk-lightbox-close").addEventListener("click", function () {
+        closeLb();
+      });
+      lb.querySelector(".gk-lightbox-dismiss").addEventListener("click", function () {
+        closeLb();
+      });
+      lb.querySelector(".gk-lightbox-choose").addEventListener("click", function () {
+        var entry = items[current];
+        if (!entry || !entry.choose || entry.disabled) return;
+        // The entry does the picking and says where the focus goes — the
+        // library knows nothing about radios.
+        closeLb(entry.choose());
+      });
       lb.querySelector(".gk-lightbox-prev").addEventListener(
         "click",
         function () {
@@ -5038,7 +5066,8 @@
         },
       );
       lb.addEventListener("click", function (e) {
-        if (e.target === lb) closeLb();
+        // The dark area around the picture is the stage's, not the overlay's.
+        if (e.target === lb || e.target.classList.contains("gk-lightbox-stage")) closeLb();
       });
       lb.addEventListener("keydown", function (e) {
         _gkTrap(lb, e);
@@ -5063,8 +5092,34 @@
       // The caption if there is one, otherwise at least which picture this is.
       img.alt = item.caption || _t("lightbox_image", { n: current + 1, m: items.length });
       lb.querySelector(".gk-lightbox-caption").textContent = item.caption || "";
+      lb.querySelector(".gk-lightbox-meta").textContent = item.meta || "";
       lb.querySelector(".gk-lightbox-counter").textContent =
         current + 1 + " / " + items.length;
+      renderActions(item);
+    }
+
+    /*
+     * The row under the picture: "select this one" and a plain "Close". Shown
+     * when the entries can be picked (an image picker's), otherwise absent, so a
+     * gallery that only looks at pictures is exactly what it was. On the picture
+     * that is already picked the button says so and stays pressed — it does not
+     * pretend there is something left to do — and on one that cannot be picked
+     * it is disabled.
+     */
+    function renderActions(item) {
+      var bar = lb.querySelector(".gk-lightbox-actions");
+      var pick = items.some(function (e) { return !!e.choose; });
+      bar.hidden = !pick;
+      lb.classList.toggle("gk-lightbox-pick", pick);
+      if (!pick) return;
+      var btn = lb.querySelector(".gk-lightbox-choose");
+      var picked = !!(item.selected && item.selected());
+      btn.disabled = !item.choose || !!item.disabled;
+      btn.setAttribute("aria-pressed", picked ? "true" : "false");
+      btn.innerHTML = (GK.table && GK.table.iconSvg ? GK.table.iconSvg("check") : "") + "<span></span>";
+      btn.querySelector("span").textContent = picked
+        ? item.chosenLabel || _t("lightbox_chosen")
+        : item.chooseLabel || _t("lightbox_choose");
     }
 
     function showLb(idx) {
@@ -5080,9 +5135,23 @@
       _gkFocusInto(lb);
     }
 
-    function closeLb() {
+    /*
+     * Closing gives the focus back. To the tile it was opened from — or, when the
+     * entries know better, to where the person is now: after paging from picture
+     * 3 to picture 8 the place they know is picture 8, not 3. `back` is that
+     * place, handed over when something was picked (the radio that took the
+     * pick); without it the entry names its own (entry.returnTo) and the opener
+     * is the last resort. A target that is not on screen (a folded tile) takes
+     * no focus, so each is checked before it is used.
+     */
+    function closeLb(back) {
+      var entry = items[current];
       if (lb) lb.classList.remove("open");
       document.body.style.overflow = "";
+      var seen = function (el) { return !!el && el.isConnected && el.offsetParent !== null; };
+      var target = back && back.nodeType === 1 ? back : null;
+      if (!seen(target) && entry && entry.returnTo) target = entry.returnTo();
+      if (seen(target)) opener = target;
       // Back to the thumbnail it was opened from.
       _gkRestoreFocus(opener);
       opener = null;
@@ -5171,9 +5240,336 @@
       decorate();
     });
 
+    /*
+     * Open the viewer on a list the caller built: [{src, caption, meta,
+     * choose(), selected(), disabled, returnTo(), chooseLabel, chosenLabel}],
+     * starting at `index`, with `from` as the place the focus returns to. Only
+     * src is required. An entry with choose() can be picked from the viewer —
+     * choose() does it and returns the element that should have the focus
+     * afterwards. The image picker uses this; the gallery's own tiles come in
+     * through openFrom() and are the same thing with only src and caption.
+     */
+    function show(entries, index, from) {
+      if (!entries || !entries.length) return;
+      items = entries;
+      opener = from || document.activeElement;
+      showLb(Math.max(0, Math.min(index || 0, entries.length - 1)));
+    }
+
     // Expose for external use
     window.GK = window.GK || {};
-    GK.lightbox = { open: showLb, close: closeLb, init: decorate };
+    GK.lightbox = { open: showLb, close: closeLb, init: decorate, show: show };
+  })();
+
+  // === IMAGE PICKER (1.94.0) ===
+  /*
+   * Choose one image out of many (GridKit\ImagePicker writes the markup). The
+   * tiles are native radios, so picking, the arrow keys, the form and the
+   * screen reader work without this file. What it adds:
+   *
+   *   - the fold: only the first `rows` rows show, then "Show all N". The tiles
+   *     are counted by what the browser laid out (offsetTop), not by a guess
+   *     about the width, and again when the width changes. The picked tile and
+   *     the one that has the focus never fold away;
+   *   - a roving tab stop: the zoom and action buttons of ONE tile — the one with
+   *     the focus, else the picked one — are in the tab order, the others are
+   *     not. Thirty tiles would otherwise be sixty stops between the radio group
+   *     and the next field; the arrow keys already move between tiles;
+   *   - the status line ("Selected: …");
+   *   - the viewer: the zoom button opens the library's lightbox on the large
+   *     versions, with "select this image" in it (GK.lightbox.show);
+   *   - gk:pickeraction: a caption button fires it and does nothing else. The
+   *     application decides — and asks "Really?" if it deletes.
+   *
+   * GK.picker.add() and .remove() are for a tile that arrives or goes after the
+   * first paint (an upload); tileHtml() writes the same markup PHP does.
+   */
+  (function () {
+    var KEYS = { zoom: "picker_zoom", choose: "lightbox_choose", more: "picker_more", less: "picker_less", selected: "picker_selected", none: "picker_none" };
+
+    /** The words: the container's own (the application's), else the library's in the active language. */
+    function label(c, key) {
+      var own = c.getAttribute("data-gk-picker-label-" + key);
+      return own !== null && own !== "" ? own : _t(KEYS[key]);
+    }
+
+    function tiles(c) {
+      return Array.prototype.slice.call(c.querySelectorAll(".gk-picker-item"));
+    }
+
+    function tileOf(el) {
+      return el && el.closest ? el.closest(".gk-picker-item") : null;
+    }
+
+    function inputOf(tile) {
+      return tile.querySelector(".gk-picker-input");
+    }
+
+    function titleOf(tile) {
+      var t = tile.querySelector(".gk-picker-title");
+      return t ? t.textContent : "";
+    }
+
+    function status(c) {
+      var el = c.querySelector("[data-gk-picker-status]");
+      if (!el) return;
+      var r = c.querySelector(".gk-picker-input:checked");
+      el.textContent = r ? label(c, "selected").replace("{name}", titleOf(tileOf(r))) : label(c, "none");
+    }
+
+    /*
+     * Which tile's buttons are in the tab order. `focused` is the tile the focus
+     * is in right now; without it the picked tile, else the first one shown.
+     */
+    function rove(c, focused) {
+      var list = tiles(c);
+      var checked = c.querySelector(".gk-picker-input:checked");
+      var active = focused || (checked && tileOf(checked)) || list.filter(function (t) { return !t.hidden; })[0] || null;
+      list.forEach(function (t) {
+        t.querySelectorAll("button").forEach(function (b) {
+          b.setAttribute("tabindex", t === active ? "0" : "-1");
+        });
+      });
+    }
+
+    /*
+     * Fold: show the first `rows` rows. How many tiles that is comes from what
+     * the browser laid out — the number of columns the grid resolved to
+     * (getComputedStyle(grid).gridTemplateColumns) — and not from a guess about
+     * the width. Nothing has to be shown to be counted: the columns are read from
+     * the grid whatever is folded, so folding and unfolding never lays the whole
+     * list out first. (A browser may already have asked for the lazy pictures of
+     * tiles that this script folds a moment later — the script usually comes at
+     * the end of the page, after the first layout. Measured in a real page: all
+     * the pictures were asked for. That is why the tile's picture is the
+     * application's SMALL one: folded tiles cost a few kilobytes, not a megabyte.)
+     * The picked tile and the one holding the focus are never folded away — they
+     * must stay where the person can see them. With nothing beyond the rows,
+     * there is no button.
+     */
+    function fold(c) {
+      var rows = parseInt(c.getAttribute("data-gk-picker-rows") || "2", 10);
+      var btn = c.querySelector("[data-gk-picker-more-btn]");
+      var grid = c.querySelector(".gk-picker-grid");
+      var list = tiles(c);
+      var cols = grid ? Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length) : 1;
+      var shown = rows > 0 ? rows * cols : list.length;
+      var foldable = rows > 0 && list.length > shown;
+      var open = c.hasAttribute("data-gk-picker-open");
+      list.forEach(function (t, i) {
+        t.hidden = foldable && !open && i >= shown && !t.querySelector(".gk-picker-input:checked") && !t.contains(document.activeElement);
+      });
+      if (!btn) return;
+      btn.hidden = !foldable;
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      btn.textContent = open ? label(c, "less") : label(c, "more").replace("{n}", String(list.length));
+    }
+
+    var pending = new WeakMap();
+
+    /** One refresh a frame, however many things asked for it. */
+    function refresh(c) {
+      if (pending.has(c)) return;
+      pending.set(c, requestAnimationFrame(function () {
+        pending.delete(c);
+        fold(c);
+        status(c);
+        rove(c, tileOf(document.activeElement) && c.contains(document.activeElement) ? tileOf(document.activeElement) : null);
+      }));
+    }
+
+    function refreshNow(c) {
+      if (pending.has(c)) {
+        cancelAnimationFrame(pending.get(c));
+        pending.delete(c);
+      }
+      fold(c);
+      status(c);
+      rove(c, tileOf(document.activeElement) && c.contains(document.activeElement) ? tileOf(document.activeElement) : null);
+    }
+
+    function init(root) {
+      Array.prototype.forEach.call((root && root.querySelectorAll ? root : document).querySelectorAll("[data-gk-picker]"), function (c) {
+        if (c._gkPicker) return;
+        c._gkPicker = true;
+        refreshNow(c);
+        var grid = c.querySelector(".gk-picker-grid");
+        if (!grid) return;
+        // New tiles (add(), or the application's own markup) and a new width
+        // both change what folds. Only the WIDTH is watched: hiding tiles changes
+        // the height, and refreshing on that would chase its own tail.
+        if (window.MutationObserver) new MutationObserver(function () { refresh(c); }).observe(grid, { childList: true });
+        if (window.ResizeObserver) {
+          var width = grid.getBoundingClientRect().width;
+          new ResizeObserver(function () {
+            var w = grid.getBoundingClientRect().width;
+            if (w !== width) { width = w; refresh(c); }
+          }).observe(grid);
+        }
+      });
+    }
+
+    /** What the viewer is shown for one tile — see GK.lightbox.show. */
+    function entry(c, tile) {
+      var input = inputOf(tile);
+      var more = [tile.getAttribute("data-meta"), tile.getAttribute("data-note")].filter(Boolean).join(" — ");
+      return {
+        src: tile.getAttribute("data-lightbox"),
+        caption: tile.getAttribute("data-caption") || titleOf(tile),
+        meta: more,
+        chooseLabel: label(c, "choose"),
+        disabled: input.disabled,
+        selected: function () { return input.checked; },
+        choose: function () {
+          // A click, not input.checked = true: the page hears the same events a tap on the tile makes.
+          if (!input.checked && !input.disabled) input.click();
+          return input;
+        },
+        returnTo: function () {
+          var z = tile.querySelector(".gk-picker-zoom");
+          return z && z.offsetParent !== null ? z : c.querySelector("[data-gk-picker-more-btn]:not([hidden])");
+        },
+      };
+    }
+
+    function zoom(btn) {
+      var tile = tileOf(btn);
+      var c = tile.closest("[data-gk-picker]");
+      var list = tiles(c).filter(function (t) { return t.hasAttribute("data-lightbox"); });
+      GK.lightbox.show(list.map(function (t) { return entry(c, t); }), list.indexOf(tile), btn);
+    }
+
+    /** The tile's markup — the same GridKit\ImagePicker::tileHtml writes (ci/browser-picker.js compares them). */
+    function tileHtml(it, o) {
+      var e = _gkEsc;
+      var icon = function (name) { return GK.table && GK.table.iconSvg ? GK.table.iconSvg(name) : ""; };
+      var n = o.id + "-" + (o.index || 1);
+      var value = it.value == null ? "" : String(it.value);
+      var title = it.title ? String(it.title) : value;
+      var thumb = it.thumb ? String(it.thumb) : "";
+      var full = it.full ? String(it.full) : "";
+      var meta = it.meta ? String(it.meta) : "";
+      var note = it.note ? String(it.note) : "";
+      var badge = it.badge ? String(it.badge) : "";
+      var alt = it.alt ? String(it.alt) : title;
+      var zoomLabel = o.zoom || _t("picker_zoom");
+      var described = [meta ? n + "-d" : "", note ? n + "-n" : ""].filter(Boolean).join(" ");
+      var attrs = "";
+      if (full) {
+        attrs += ' data-lightbox="' + e(full) + '" data-caption="' + e(alt) + '"' +
+          (meta ? ' data-meta="' + e(meta) + '"' : "") + (note ? ' data-note="' + e(note) + '"' : "");
+      }
+      Object.keys(it.data || {}).forEach(function (k) {
+        var key = k.toLowerCase().replace(/[^a-z0-9-]/g, "");
+        if (key && it.data[k] != null && typeof it.data[k] !== "object") attrs += " data-" + key + '="' + e(it.data[k]) + '"';
+      });
+      var h = '<div class="gk-picker-item"' + attrs + ">" +
+        '<div class="gk-picker-media">' +
+        '<input class="gk-picker-input" type="radio" id="' + n + '" name="' + e(o.name) + '" value="' + e(value) + '"' +
+        ' aria-labelledby="' + n + '-t"' + (described ? ' aria-describedby="' + described + '"' : "") +
+        (it.checked ? " checked" : "") + (it.disabled ? " disabled" : "") + ">" +
+        (thumb
+          ? '<img class="gk-picker-img" src="' + e(thumb) + '" alt="" loading="lazy" decoding="async">'
+          : '<span class="gk-picker-ph" aria-hidden="true">' + icon("image") + "</span>") +
+        '<span class="gk-picker-check" aria-hidden="true">' + icon("check") + "</span>" +
+        (badge ? '<span class="gk-picker-badge" aria-hidden="true">' + e(badge) + "</span>" : "");
+      if (full) {
+        h += '<button type="button" class="gk-picker-zoom" data-gk-picker-zoom aria-label="' + e(zoomLabel + ": " + title) +
+          '" title="' + e(zoomLabel) + '">' + icon("zoom_in") + "</button>";
+      }
+      h += "</div>" +
+        '<div class="gk-picker-caption">' +
+        '<label class="gk-picker-title" id="' + n + '-t" for="' + n + '" title="' + e(title) + '">' + e(title) + "</label>";
+      (it.actions || []).forEach(function (a) {
+        var name = a.name == null ? "" : String(a.name);
+        var lab = a.label == null ? name : String(a.label);
+        h += '<button type="button" class="gk-picker-action" data-gk-picker-action="' + e(name) + '" aria-label="' + e(lab + ": " + title) +
+          '" title="' + e(lab) + '">' + icon(a.icon ? String(a.icon) : "delete") + "</button>";
+      });
+      h += "</div>" +
+        (note ? '<p class="gk-picker-note" id="' + n + '-n">' + e(note) + "</p>" : "") +
+        (meta ? '<span class="gk-sr-only" id="' + n + '-d">' + e(meta) + "</span>" : "") +
+        "</div>";
+      return h;
+    }
+
+    GK.picker = {
+      init: init,
+      refresh: refreshNow,
+      tileHtml: tileHtml,
+
+      /**
+       * Append a tile to a picker (an upload that arrived). {select: true} picks it as a click would
+       * — one change event for the page — and {focus: true} puts the focus on it. Returns the tile.
+       */
+      add: function (c, data, opts) {
+        opts = opts || {};
+        var grid = c.querySelector(".gk-picker-grid");
+        var id = c.getAttribute("data-gk-picker-id") || c.id || "gk-picker";
+        var index = tiles(c).length + 1;
+        while (document.getElementById(id + "-" + index)) index++;
+        var holder = document.createElement("template");
+        holder.innerHTML = tileHtml(data, { name: c.getAttribute("data-gk-picker-name"), id: id, index: index, zoom: label(c, "zoom") });
+        var tile = holder.content.firstElementChild;
+        grid.appendChild(tile);
+        var input = inputOf(tile);
+        if (opts.select && !input.disabled) input.click();
+        refreshNow(c);
+        if (opts.focus) input.focus();
+        return tile;
+      },
+
+      /** Take the tile with this value out. The focus is the caller's to place. */
+      remove: function (c, value) {
+        var gone = tiles(c).filter(function (t) { return inputOf(t).value === String(value); });
+        gone.forEach(function (t) { t.remove(); });
+        refreshNow(c);
+        return gone.length;
+      },
+    };
+
+    document.addEventListener("click", function (e) {
+      var t = e.target;
+      if (!t.closest) return;
+      var z = t.closest("[data-gk-picker-zoom]");
+      if (z) { zoom(z); return; }
+      var a = t.closest("[data-gk-picker-action]");
+      if (a) {
+        var tile = tileOf(a);
+        var input = tile && inputOf(tile);
+        a.dispatchEvent(new CustomEvent("gk:pickeraction", {
+          bubbles: true,
+          detail: { action: a.getAttribute("data-gk-picker-action"), value: input ? input.value : "", item: tile, picker: a.closest("[data-gk-picker]") },
+        }));
+        return;
+      }
+      var m = t.closest("[data-gk-picker-more-btn]");
+      if (m) {
+        var c = m.closest("[data-gk-picker]");
+        if (c.hasAttribute("data-gk-picker-open")) c.removeAttribute("data-gk-picker-open");
+        else c.setAttribute("data-gk-picker-open", "");
+        refreshNow(c);
+      }
+    });
+
+    document.addEventListener("change", function (e) {
+      var t = e.target;
+      if (!t.classList || !t.classList.contains("gk-picker-input")) return;
+      var c = t.closest("[data-gk-picker]");
+      if (c) refreshNow(c);
+    });
+
+    document.addEventListener("focusin", function (e) {
+      var c = e.target.closest ? e.target.closest("[data-gk-picker]") : null;
+      if (c) rove(c, tileOf(e.target));
+    });
+
+    document.addEventListener("focusout", function (e) {
+      var c = e.target.closest ? e.target.closest("[data-gk-picker]") : null;
+      if (c && !(e.relatedTarget && c.contains(e.relatedTarget))) rove(c, null);
+    });
+
+    _gkReady(function () { GK.picker.init(); });
   })();
 })();
 

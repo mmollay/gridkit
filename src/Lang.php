@@ -107,6 +107,11 @@ class Lang
                 // A screen reader heard one wording before a sort and another
                 // after. Found by the parity harness, which is what it is for.
                 $jsKeys['pagination_' . substr($key, 11)] = $val;
+            } elseif (str_starts_with($key, 'picker.')) {
+                // The image picker is drawn by both sides — PHP for the first
+                // paint, GK.picker.add() for a tile that arrives later — and a
+                // reader must hear the same words from both.
+                $jsKeys['picker_' . substr($key, 7)] = $val;
             } elseif (str_starts_with($key, 'format.')) {
                 // Number and date shapes, for exactly the same reason as
                 // action.* above — and this pair had already drifted. The

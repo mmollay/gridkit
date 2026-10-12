@@ -5624,9 +5624,26 @@ a.gk-stat-card:hover {
 .gk-lightbox.open {
   display: flex;
 }
+/* The picture lives in a stage that takes whatever height the foot (caption, origin,
+   buttons) leaves — a flex column, not a guess in vh. With a fixed 85vh the caption
+   sat over the picture's lower edge on a phone held sideways, and a viewer that can
+   pick (a row of buttons under the picture) had nowhere to stand at all. */
+.gk-lightbox.open {
+  flex-direction: column;
+  padding: 64px 16px 16px;
+  box-sizing: border-box;
+}
+.gk-lightbox-stage {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .gk-lightbox-img {
-  max-width: 90vw;
-  max-height: 85vh;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   border-radius: 4px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
@@ -5679,17 +5696,113 @@ a.gk-stat-card:hover {
 .gk-lightbox-next {
   right: 16px;
 }
+.gk-lightbox-foot {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 720px;
+  padding-top: 14px;
+  text-align: center;
+}
 .gk-lightbox-caption {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: rgba(255, 255, 255, 0.8);
+  max-width: 100%;
+  color: rgba(255, 255, 255, 0.9);
   font-size: var(--gk-text-label);
+  line-height: var(--gk-leading-snug);
   background: rgba(0, 0, 0, 0.5);
   padding: 6px 16px;
   border-radius: 20px;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+/* In an image picker the viewer is there to LOOK at the picture: it fills the stage, small ones
+   included (a 640 px upload is shown as large as the screen allows, not as a postage stamp).
+   The shadow follows the picture, not the stage, so it is a filter. */
+.gk-lightbox-pick .gk-lightbox-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.5));
+}
+.gk-lightbox-caption:empty,
+.gk-lightbox-meta:empty {
+  display: none;
+}
+.gk-lightbox-meta {
+  max-width: 100%;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: var(--gk-text-caption);
+  line-height: var(--gk-leading-snug);
+  overflow-wrap: anywhere;
+}
+/* What can be done with the picture: pick it (an image picker), or just close.
+   Written for the dark overlay, not for a theme: a themed outlined button is
+   indigo text on near-black here. */
+.gk-lightbox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.gk-lightbox-choose,
+.gk-lightbox-dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--gk-target-min);
+  padding: 0 20px;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gk-lightbox-choose {
+  border: 2px solid var(--gk-primary);
+  background: var(--gk-primary);
+  color: var(--gk-on-primary);
+}
+.gk-lightbox-choose:hover:not(:disabled) {
+  background: var(--gk-primary-hover);
+  border-color: var(--gk-primary-hover);
+}
+.gk-lightbox-choose[aria-pressed="true"] {
+  background: transparent;
+  border-color: #fff;
+  color: #fff;
+}
+.gk-lightbox-choose:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.gk-lightbox-dismiss {
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.gk-lightbox-dismiss:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.gk-lightbox-choose:focus-visible,
+.gk-lightbox-dismiss:focus-visible,
+.gk-lightbox-close:focus-visible,
+.gk-lightbox-nav:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+.gk-lightbox-choose svg,
+.gk-lightbox-dismiss svg {
+  width: 18px;
+  height: 18px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gk-lightbox,
+  .gk-lightbox-img {
+    animation: none;
+  }
 }
 .gk-lightbox-counter {
   position: absolute;
@@ -8440,6 +8553,284 @@ label.gk-setting-title {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+/* === IMAGE PICKER (1.94.0): .gk-picker ===================================
+   Choose one image out of many. A grid of 16:9 tiles instead of a full row each:
+   with ten images the row list filled the screen, with thirty it was unusable.
+   Native radios underneath (ImagePicker, GK.picker), so the form, the arrow keys
+   and the screen reader need no script.
+
+   The radio IS the tile's picture area: transparent, drawn by its own box-shadow
+   (a 1px line, a 2px ring on hover, a 3px primary ring plus a white inner ring
+   when picked — visible on a dark and on a light picture), covering the picture
+   so a click or a tap lands on it. The state is never colour alone: a check mark
+   appears (a shape), the ring thickens (a size), the title turns bold.
+
+   Specificity: one class each, nothing nested deeper than a sibling combinator —
+   an application restyles a tile with one class of its own. */
+.gk-picker {
+  display: block;
+  min-width: 0;
+}
+.gk-picker-status {
+  margin: 0 0 10px;
+  font-size: var(--gk-text-label);
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface-variant);
+}
+.gk-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 14px 12px;
+}
+@media (max-width: 480px) {
+  .gk-picker-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 10px;
+  }
+}
+.gk-picker-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.gk-picker-media {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--gk-radius-sm, 8px);
+  background: var(--gk-surface-container);
+}
+/* Absolute, not in the flow: a portrait picture in the flow gave the box its own
+   height (an aspect-ratio box never shrinks below its content) and the tile
+   stood 9:16 instead of 16:9. */
+.gk-picker-img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.gk-picker-ph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: var(--gk-surface-container);
+  color: var(--gk-on-surface-variant);
+  pointer-events: none;
+}
+.gk-picker-ph svg {
+  width: 28px;
+  height: 28px;
+}
+.gk-picker-input {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gk-on-surface) 22%, transparent);
+  cursor: pointer;
+  transition: box-shadow var(--gk-dur-1) var(--gk-ease-out);
+}
+.gk-picker-input:hover:not(:disabled):not(:checked) {
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--gk-primary) 60%, transparent);
+}
+.gk-picker-input:checked {
+  box-shadow: inset 0 0 0 3px var(--gk-primary), inset 0 0 0 5px rgba(255, 255, 255, 0.9);
+}
+.gk-picker-input:focus-visible {
+  outline: 3px solid var(--gk-primary);
+  outline-offset: 3px;
+}
+.gk-picker-input:disabled {
+  cursor: not-allowed;
+}
+.gk-picker-input:disabled ~ .gk-picker-img,
+.gk-picker-input:disabled ~ .gk-picker-ph {
+  opacity: 0.5;
+}
+.gk-picker-check {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--gk-primary);
+  color: var(--gk-on-primary);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
+  pointer-events: none;
+}
+.gk-picker-check svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 3;
+}
+.gk-picker-input:checked ~ .gk-picker-check {
+  display: flex;
+}
+.gk-picker-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 2;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #fff;
+  font-size: var(--gk-text-overline);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  pointer-events: none;
+}
+/* The zoom button is a finger-sized box in the picture's corner with a smaller
+   round chip drawn in it: the target is --gk-target-min, the mark is 30px. It
+   sits over the picture on purpose (a thumb finds it where the picture is) and
+   is harmless — a stray tap only opens the viewer. */
+.gk-picker-zoom {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: var(--gk-target-min);
+  height: var(--gk-target-min);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.gk-picker-zoom::before {
+  content: "";
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.68);
+}
+.gk-picker-zoom:hover::before {
+  background: rgba(15, 23, 42, 0.88);
+}
+.gk-picker-zoom:focus-visible {
+  outline: none;
+}
+.gk-picker-zoom:focus-visible::before {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 5px var(--gk-primary);
+}
+.gk-picker-zoom svg {
+  position: relative;
+  width: 16px;
+  height: 16px;
+}
+.gk-picker-caption {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+}
+/* Two lines, then an ellipsis: a title cut after fourteen characters ("KI-erzeugtes Bild…")
+   names nothing, two lines carry about thirty. The whole of it is the tooltip. */
+.gk-picker-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: var(--gk-text-label);
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface);
+  cursor: pointer;
+}
+.gk-picker-action {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gk-on-surface-variant);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.gk-picker-action:hover {
+  background: var(--gk-state-hover);
+  color: var(--gk-on-surface);
+}
+.gk-picker-action:focus-visible {
+  outline: 3px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+.gk-picker-action svg {
+  width: 18px;
+  height: 18px;
+}
+.gk-picker-note {
+  margin: 0;
+  font-size: var(--gk-text-caption);
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface-variant);
+  overflow-wrap: anywhere;
+}
+.gk-picker-more {
+  margin-top: 10px;
+}
+@supports selector(:has(*)) {
+  .gk-picker-item:has(.gk-picker-input:checked) .gk-picker-title {
+    font-weight: 700;
+    color: var(--gk-primary-text);
+  }
+  .gk-picker-item:has(.gk-picker-input:disabled) .gk-picker-title {
+    color: var(--gk-on-surface-variant);
+    cursor: not-allowed;
+  }
+}
+/* A finger, not a pointer: the action in the caption row grows to --gk-target-min
+   (the row with it). The zoom button already is that size. */
+@media (pointer: coarse) {
+  .gk-picker-more {
+    min-height: var(--gk-target-min);
+  }
+  .gk-picker-action {
+    width: var(--gk-target-min);
+    height: var(--gk-target-min);
+  }
+  .gk-picker-caption {
+    min-height: var(--gk-target-min);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gk-picker-input {
+    transition: none;
+  }
 }
 
 /* ── Phones: the type in a field, last of all ──────────────────────────────

@@ -7,6 +7,154 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.94.0] - 2026-10-12
+
+### Added — the image picker: choose one image out of many, in a compact grid
+`GridKit\ImagePicker` and `GK.picker`. A list of images with a full row each is fine for three and
+unusable for thirty; the SSI Panel built that list by hand — preview left, title, a loose button
+right — and with ten images a header-picture choice filled the screen (a phone: 4 700 px for
+thirty). The picker is a grid of 16:9 tiles, about 150 px wide, two to a row on a phone, that works
+like a radio group, shows the first two rows with a "Show all 30" button and opens the viewer on a
+large version of the picture it was given.
+
+```php
+\GridKit\ImagePicker::render([
+    ['value' => 'a.webp', 'title' => 'Fireplace at dusk', 'thumb' => '/t/a.webp', 'full' => '/g/a.webp',
+     'meta' => 'Own image', 'checked' => true],
+    ['value' => 'b.webp', 'title' => 'Mountain road', 'thumb' => '/t/b.webp', 'full' => '/g/b.webp',
+     'meta' => 'AI generated', 'badge' => 'AI', 'actions' => [['name' => 'remove', 'label' => 'Remove']]],
+    ['value' => 'c.webp', 'title' => 'Not released yet', 'note' => 'Waiting for approval', 'disabled' => true],
+], ['name' => 'cover', 'label' => 'Header image']);
+```
+
+- **Native radios underneath.** One `<input type="radio">` per image, drawn by its own box-shadow over
+  the picture, so a click or a tap lands on it, the form submits its value and Tab, the arrow keys
+  and a screen reader work without a line of script. Picking is the radio's own `change` event: a
+  page that listened to the old list needs nothing new. The radio is named by the tile's title
+  (`aria-labelledby`, the title is a `<label for>`, so a click on the words picks too) and described
+  by what the caller says about the picture (`meta`, `note`).
+- **The state is never colour alone.** A picked tile has a check mark (a shape), a 3 px primary
+  ring with a white inner ring that shows on a dark and on a light picture (a size) and a bold
+  title; the others have a 1 px line. Keyboard focus is a 3 px primary outline with an offset.
+  Disabled tiles are dimmed and say why (`note`).
+- **Per image:** `value`, `title`, `thumb` (the SMALL picture for the tile), `full` (the LARGE one the
+  viewer loads when it opens; omitted, the tile has no zoom button and a placeholder), `alt`,
+  `meta` (where it comes from), `note`, `badge` (a short word on the picture), `checked`,
+  `disabled`, `actions` and `data`. Options: `name`, `id`, `label`, `rows` (default 2, 0 = never
+  fold), `status`, `class`, `labels`. `html()` returns the markup, `render()` prints it,
+  `tileHtml()` writes one tile.
+- **Fold by rows.** Only the first `rows` rows show, then `Show all N` / `Show fewer`
+  (`aria-expanded`). How many tiles that is comes from the columns the grid resolved to
+  (`gridTemplateColumns`) — nothing is laid out first to be measured — and again when the width
+  changes. The picked tile and the one holding the focus never fold away.
+- **A roving tab stop.** The zoom and action buttons of ONE tile — the one with the focus, else the
+  picked one — are in the tab order; the others are `tabindex="-1"`. Thirty tiles are three tab
+  stops, not sixty; the arrow keys move between tiles.
+- **Actions are events.** A caption button (`remove`, …) fires `gk:pickeraction`
+  (`detail: { action, value, item, picker }`, bubbles) and does nothing else: the library never
+  deletes. The application decides and asks "Really?" (`GK.confirm`), then calls
+  `GK.picker.remove(picker, value)`.
+- **Script:** `GK.picker.init(root)` (also from `GK.initContent`), `.add(picker, item, { select, focus })`
+  (an upload that arrived: appended, picked as a click would — one `change` — and focused),
+  `.remove(picker, value)`, `.refresh(picker)` (after a script changed which radio is checked) and
+  `.tileHtml(item, opts)`, which writes the same markup PHP does; `ci/browser-picker.js` compares the
+  two. Words: `picker.*` in both languages, exported to the browser as `picker_*`, and overridable
+  per picker (`labels`), so an application can say "Show all 30 images".
+- **Icons.** `zoom_in` and `image` join the inline SVG set, in PHP and in `GK.table.iconSvg` (the
+  parity test holds the two together): a tile has no icon-font ligature that could show as a word.
+- **Classes (the block "Image picker" in `css/blocks.json`):** `gk-picker` (the container), `gk-picker-status`,
+  `gk-picker-grid`, `gk-picker-item` (one tile), `gk-picker-media` (the 16:9 picture area),
+  `gk-picker-img`, `gk-picker-ph` (the placeholder without a picture), `gk-picker-input` (the radio,
+  drawn as the picture area), `gk-picker-check`, `gk-picker-badge`, `gk-picker-zoom`,
+  `gk-picker-caption`, `gk-picker-title`, `gk-picker-action`, `gk-picker-note` and `gk-picker-more`.
+  One class each, nothing nested deeper than a sibling combinator and no `!important`: an
+  application restyles a tile with one class of its own.
+- **Touch and motion.** The zoom button is a `--gk-target-min` box with a 30 px chip drawn in it,
+  and the caption action grows from 32 to `--gk-target-min` on `(pointer: coarse)`; the action
+  sits in the caption row, below the picture, so a tap that picks never reaches it. With
+  `prefers-reduced-motion` the ring does not ease.
+
+### Changed — the lightbox can show more, and pick
+`GK.lightbox.show(entries, index, from)` opens the viewer on a list the caller built (`src`,
+`caption`, `meta`, and for a picker `choose()`, `selected()`, `disabled`, `returnTo()`); the gallery's
+own tiles still come in through the click handler and are the same thing with `src` and `caption`.
+- A second line, `.gk-lightbox-meta`, under the caption (where the picture comes from), and a row,
+  `.gk-lightbox-actions`, with **Select this image** and a visible **Close** — only when an entry
+  can be picked; a plain gallery shows exactly what it showed. On the picture that is already
+  picked the button says "Selected" and stays pressed; on one that cannot be picked it is disabled.
+- Closing gives the focus back to the zoom button of the picture last shown (after paging from 3 to
+  8 the place a person knows is 8), or to the radio that took the pick, falling back to the opener
+  when the target is not on screen (a folded tile). The one `_gkRestoreFocus` is used, as before.
+- New lightbox classes: `gk-lightbox-stage`, `gk-lightbox-foot`, `gk-lightbox-meta`,
+  `gk-lightbox-actions`, `gk-lightbox-choose`, `gk-lightbox-dismiss` and `gk-lightbox-pick`.
+- The picture lives in a stage (`.gk-lightbox-stage`) that takes the height the foot (caption,
+  meta, buttons) leaves, instead of a fixed `85vh`: on a phone held sideways the caption no longer
+  covers the picture, and a viewer with a row of buttons has room. A long caption wraps instead of
+  running out of the screen. In a picker's viewer (`.gk-lightbox-pick`) a small picture fills the
+  stage — a 640 px upload is shown as large as the screen allows — and its shadow follows the
+  picture (a filter); a plain gallery keeps showing natural size. Clicking the dark area around the
+  picture still closes it. Buttons draw a white 3 px focus ring on the dark overlay.
+- `prefers-reduced-motion`: the viewer's entrance is switched off in its own block.
+
+### Added — the demo has a Gallery section
+A "Gallery" entry in the sidebar, with the plain gallery (moved from "Navigation"), the picker with
+six, thirty, one and no images, a form that shows its value, a log of the events it hears, "Add a
+new image" (`GK.picker.add`), a remove button that asks first, the keyboard in a table and the
+script. The examples are `showcase()` listings: the code shown is the code that ran.
+
+### Changed — the Releases page is fed by a workflow
+`ci/github-release.yml` (to be switched on the way `github-actions.yml` is — below) creates the GitHub Release for every pushed `v*` tag (title
+"GridKit <version>", the notes of that version from `ci/release-notes.sh`, a "Live demo" line) and
+has a button, "Run workflow" with `since` (default 1.54.0), for ONE catch-up Release for the tag of
+the current `VERSION`: the newest version in full and every version since as the titles of its
+changes. 58 tags (v1.55.0 … v1.93.4) had no Release object; the page ended at v1.54.0. Idempotent: a
+tag whose Release exists is left alone, the catch-up replaces the notes of an existing Release
+instead of adding another; the tag must equal `VERSION`; `--verify-tag` never creates a tag.
+`ci/release-notes.sh --since` fell over GitHub's 125 000-character limit (1.54.0 → 1.93.4 is
+150 000): past 120 000 bytes it now prints the newest version in full and the titles of the rest.
+It sits in `ci/`, not in `.github/workflows/`: the token this repository is pushed with has no
+`workflow` scope, `.gitignore` keeps that folder out of commits (a tracked workflow once blocked
+every push for three days) and a test now fails if one is tracked. `ci/README.md` has the commands
+to switch it on. It cannot be run from a checkout, so it is held to what it says
+(`tests/package.test.php`) and its YAML was parsed.
+
+### Changed
+- `README.md`, the landing page and `GRIDKIT_SKILL.md`: seventeen components, twenty-two classes in
+  `src/`; the skill has a section "Image picker — ImagePicker" and the component and class tables a
+  row for it. `css/blocks.json`: block "Image picker" and the new lightbox classes, 1.94.0.
+
+### Tests
+- `tests/picker.test.php` (new, 120 assertions): the markup (one radio per image in one group, named
+  by its title, described by its origin, `alt=""`, lazy, inline SVG icons, the zoom button on the
+  picture and the action in the caption row, no zoom without a large version), escaping of every
+  value that comes from the caller (script tag, attribute break, a `data` name cut to letters, an
+  `id` stripped), no inline style or handler, options and words as data attributes, the status
+  line, ids unique across two pickers, `tileHtml` is what `html` is made of, the stylesheet
+  (check mark on `:checked`, 3 px ring, 3 px focus ring, `[hidden]` really hides, finger-sized
+  targets, `pointer: coarse`, 16:9, no `!important`, reduced motion), the script's contract (events,
+  fold by `gridTemplateColumns`, roving tab stop, the viewer's `choose`/`returnTo`), the guide, the
+  demo and the words in both languages.
+- `ci/browser-picker.js` (new, 69 cases in Chromium, outside the suite like `ci/browser.js`) on
+  `ci/browser-fixture.php --picker`: 1, 3, 12 and 30 images at 850 px, 390 and 360 px (tiles per row,
+  rows shown, "Show all", the picked tile beyond the fold, no sideways scroll); picking with the
+  mouse and the keyboard (arrows skip a disabled tile, a 3 px ring, one `change`); the tab order;
+  the viewer (opens on the large version, ←/→, Tab trap, Escape, focus back to the right zoom
+  button, paging to a folded tile, "Select this image", "Selected" on the picked one, a click on the
+  dark area, a small picture enlarged); `gk:pickeraction` and `GK.picker.remove`; `GK.picker.add`
+  produces the markup PHP writes; two pickers stay apart; a plain gallery is as it was; a touch
+  screen gets 44 px targets; dark contrast; reduced motion; a portrait picture is cropped to 16:9,
+  not squeezed (found while writing it: an in-flow `<img>` gave the box its own height).
+- Found by that run and fixed before release: the pointer's 2 px hover ring beat the 3 px picked
+  ring (`:hover` outranked `:checked`: a picked tile looked less picked under the mouse); the
+  portrait tile; a title measured against black in a fixture without a page background.
+- Gegenproben (`scripts/gegenprobe.php`, each: break it, the test goes red, put it back byte for
+  byte, green): the check mark on `:checked`, the roving tab stop, the focus return, Escape, the
+  fold, the picked tile staying visible, the viewer's pick, the Tab trap, the escaping of the title,
+  the `gk:pickeraction` event, the hover ring that must not thin a picked tile and the focus after a
+  pick. (A guard of the picker's own for `[hidden]` was written first and taken out again: the
+  library-wide rule for every `gk-` class — 1.92 — already covers a folded tile, and a Gegenprobe
+  on the guard stayed green.)
+
 ## [1.93.4] - 2026-09-28
 
 ### Fixed — active chips keep their colour role in dark mode

@@ -40,24 +40,63 @@ present but never required. Both halves of that claim went unverified until
 
 ## The Releases page
 
-Thirty tags are on GitHub; six Releases exist, the newest `v1.2.3`. GitHub
-treats those as separate things — a tag is not a release, and the Releases page
-is what most people look at first.
+Fifty-eight tags (v1.55.0 … v1.93.4) had no Release object: Packagist and the
+tags were current while GitHub's Releases page, which is what most people look
+at first, ended at v1.54.0. A tag is not a release — GitHub keeps them apart.
 
-Creating one needs a tag, a title and a body. The tags are there; this prints
-the body:
+`ci/github-release.yml` closes that gap and keeps it closed once it is switched on
+(below):
+
+- **Push a tag `v<VERSION>`** — the workflow checks the tag against `VERSION`,
+  cuts the notes of that version from `CHANGELOG.md`
+  (`bash ci/release-notes.sh <version>`), adds the line "Live demo:
+  https://gridkit.at/demo/" and creates the Release "GridKit <version>". If the
+  Release exists already, it does nothing.
+- **Run workflow** (Actions → Release → Run workflow, input `since`, default
+  `1.54.0`) — ONE catch-up Release for the tag of the current `VERSION`: the
+  notes of the newest version in full and every version since `since` as a list
+  of the titles of its changes (`bash ci/release-notes.sh --since 1.54.0`).
+  GitHub refuses a Release text over 125 000 characters and the whole of 1.54.0
+  → 1.93.4 is 150 000, so the script falls back to titles once the full text
+  passes 120 000 bytes. The tag has to be on GitHub already; run it again and it
+  replaces the notes of that Release instead of adding another.
+
+The workflow needs `permissions: contents: write` and nothing else (the job's
+own `GITHUB_TOKEN`).
+
+**Switching it on** is the same step as for `github-actions.yml` below, for the
+same reason: GitHub refuses a push that creates a file under
+`.github/workflows/` unless the token has the `workflow` scope, and
+`.gitignore` keeps that folder out of commits made from this machine (a tracked
+workflow once blocked every push for three days). So the file is committed here
+and moved there by whoever has the rights:
+
+```bash
+mkdir -p .github/workflows
+cp ci/github-release.yml .github/workflows/release.yml
+git add -f .github/workflows/release.yml
+git commit -m "ci: create GitHub Releases from tags"
+git push                      # with a token that has the `workflow` scope
+git tag v1.94.0 && git push origin v1.94.0     # the Release for this version
+```
+
+Or: GitHub → Add file → Create new file → `.github/workflows/release.yml`, paste
+`ci/github-release.yml`. Then, once: Actions → Release → Run workflow (`since`
+1.54.0) for the catch-up Release, which replaces the notes of the Release the
+tag push made. What to look for: the Releases page lists "GridKit 1.94.0" as
+the latest, with the notes of 1.94.0 in full, the titles of 1.93.4 … 1.55.0
+below them and the line "Live demo: https://gridkit.at/demo/".
+
+To print a body by hand — for a Release made in the web form instead:
 
 ```bash
 bash ci/release-notes.sh              # the current VERSION
 bash ci/release-notes.sh 1.42.0       # any released version
-bash ci/release-notes.sh --since 1.4.0   # one catch-up release covering
-                                         # everything after the version
-                                         # Packagist still serves
+bash ci/release-notes.sh --since 1.54.0   # the catch-up text
 ```
 
-Then: **Releases → Draft a new release**, pick the tag, paste, publish. It
-refuses a version `CHANGELOG.md` does not know, rather than printing the whole
-file — which is what its first version did.
+It refuses a version `CHANGELOG.md` does not know, rather than printing the
+whole file — which is what its first version did.
 
 ## Behaviour in a real browser
 

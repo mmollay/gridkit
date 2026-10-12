@@ -236,6 +236,18 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-code { background:var(--gk-surface-dim, #1e293b); color:var(--gk-on-surface, #e2e8f0); padding:20px; border-radius:8px; overflow-x:auto; font-family:'SF Mono',Monaco,Consolas,monospace; font-size:13px; line-height:1.6; margin-top:16px; }
         .demo-code pre { margin:0; }
 
+        /* ── Gallery section: the image picker demos ────────────────────── */
+        .demo-fieldset { border:0; margin:0; padding:0; min-width:0; }
+        .demo-fieldset .gk-label-text { padding:0; margin-bottom:10px; }
+        .demo-picker-form .demo-picker-value { margin:16px 0 8px; font-size:13px; color:var(--gk-on-surface-variant); }
+        .demo-log { margin:0 0 12px; padding:12px 14px; max-height:140px; overflow:auto; border-radius:8px; background:var(--gk-surface-container); color:var(--gk-on-surface);
+            font:12px/1.6 'SF Mono',Monaco,Consolas,monospace; white-space:pre-wrap; }
+        .demo-pair { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:24px; }
+        .demo-keys { width:100%; font-size:13px; }
+        .demo-keys kbd { display:inline-block; min-width:1.6em; padding:1px 6px; border:1px solid var(--gk-outline-variant); border-bottom-width:2px; border-radius:5px; background:var(--gk-surface-container-low);
+            font:600 12px/1.5 system-ui,sans-serif; text-align:center; }
+        .demo-rule { border:none; border-top:1px solid var(--gk-outline-variant); margin:40px 0; }
+
         /* ── Beispiel mit ausklappbarem Code ─────────────────────────────
            <details> statt eines Divs mit Klick-Handler: es funktioniert ohne
            JavaScript, ist von Haus aus mit der Tastatur bedienbar und wird von
@@ -326,6 +338,7 @@ $sidebar->brand('', 'widgets')
     ->item('Cards', '#cards', 'grid_view')
     ->item('Layout', '#layout', 'layers')
     ->item('Navigation', '#navigation', 'filter_list')
+    ->item('Gallery', '#gallery', 'photo_library')
     ->item('Search', '#suche', 'search')
     ->item('Feedback', '#feedback', 'notifications')
     ->item('UI', '#ui', 'palette')
@@ -1356,54 +1369,6 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3 style="margin: 32px 0 16px;">Gallery + Lightbox <?= since('gallery', 'lightbox') ?></h3>
-    <p class="demo-intro">Image grid with lazy loading, hover overlay and lightbox (arrow keys, Escape).</p>
-
-    <div class="gk-gallery">
-        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 1) ?>" data-caption="Landscape 1" data-lazy>
-            <img data-src="<?= ph(400, 400, 1) ?>" alt="Landscape 1">
-            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Landscape</span></div>
-        </div>
-        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 2) ?>" data-caption="Architecture" data-lazy>
-            <img data-src="<?= ph(400, 400, 2) ?>" alt="Architecture">
-            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Architecture</span></div>
-        </div>
-        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 3) ?>" data-caption="Nature" data-lazy>
-            <img data-src="<?= ph(400, 400, 3) ?>" alt="Nature">
-            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Nature</span></div>
-        </div>
-        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 4) ?>" data-caption="City" data-lazy>
-            <img data-src="<?= ph(400, 400, 4) ?>" alt="City">
-            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">City</span></div>
-        </div>
-        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 5) ?>" data-caption="Abstract" data-lazy>
-            <img data-src="<?= ph(400, 400, 5) ?>" alt="Abstract">
-            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Abstract</span></div>
-        </div>
-        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 6) ?>" data-caption="Panorama" data-lazy>
-            <img data-src="<?= ph(400, 400, 6) ?>" alt="Panorama">
-            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Panorama</span></div>
-        </div>
-    </div>
-
-    <div class="demo-code"><pre>&lt;div class="gk-gallery"&gt;
-    &lt;div class="gk-gallery-item" data-lightbox="full.jpg" data-caption="Caption" data-lazy&gt;
-        &lt;img data-src="thumb.jpg" alt=""&gt;
-        &lt;div class="gk-gallery-overlay"&gt;
-            &lt;span class="gk-gallery-caption"&gt;Caption&lt;/span&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-
-// Variants:
-.gk-gallery-sm              // Smaller thumbnails (100px min)
-.gk-gallery-lg              // Larger thumbnails (220px min)
-.gk-gallery-masonry         // Pinterest layout (columns)
-// Lightbox: arrow keys, Escape, click outside to close
-// data-lazy: load images only when visible</pre></div>
-
-    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
-
     <h3 style="margin: 32px 0 16px;">Breadcrumb <?= since('breadcrumb') ?></h3>
     <p class="demo-intro">Path navigation for orientation in nested areas.</p>
 
@@ -1667,6 +1632,154 @@ $years->range(2022, 2026)->render();</pre></div>
 ->column('status', 'Status', ['format' => 'label'])       // Colored label
 ->column('email', 'E-Mail', ['format' => 'email'])        // mailto: Link</pre></div>
     </div>
+</div>
+
+<!-- ===== GALLERY (gallery + lightbox + image picker) ===== -->
+<div class="demo-section" data-section="gallery">
+    <h2>Gallery <?= since('gallery', 'lightbox', 'picker') ?></h2>
+    <p class="demo-intro">Two ways to show pictures. A <strong>gallery</strong> looks: tiles that open a viewer. An <strong>image picker</strong>
+        chooses: the same tiles, but each one is a radio button, and the viewer can pick. Both use the same viewer, so it pages with the arrow keys,
+        closes on Escape and gives the focus back.</p>
+
+<?php
+// Pictures for the picker demos: a small one for the tile (about 400 px in real use) and a large one for the viewer.
+$pickerItems = static function (int $n, int $checked = 0, bool $varied = false): array {
+    $names = ['Fireplace at dusk', 'Mountain road in the fog', 'Workshop table', 'Group on the summit', 'Compass and map', 'Tent at sunrise',
+              'Teaching the knot', 'Lake in the morning', 'Cabin door', 'Trail marker', 'Evening meal', 'Campfire sparks'];
+    $out = [];
+    for ($i = 1; $i <= $n; $i++) {
+        $it = ['value' => 'img-' . $i, 'title' => $names[($i - 1) % count($names)] . ($i > count($names) ? ' (' . (intdiv($i - 1, count($names)) + 1) . ')' : ''),
+               'thumb' => ph(320, 180, $i), 'full' => ph(1600, 900, $i), 'meta' => 'Own image', 'checked' => $i === $checked];
+        if ($varied && $i === 2) { $it['meta'] = 'AI generated'; $it['badge'] = 'AI'; }
+        if ($varied && $i === 3) { $it['actions'] = [['name' => 'remove', 'label' => 'Remove']]; }
+        if ($varied && $i === 4) { unset($it['thumb'], $it['full']); $it['title'] = 'From the stock — no preview'; $it['meta'] = 'stock-image.webp'; }
+        if ($varied && $i === 5) { $it['disabled'] = true; $it['note'] = 'Not released yet'; }
+        $out[] = $it;
+    }
+    return $out;
+};
+?>
+
+    <h3 class="demo-h3" id="picker-six">Image picker <?= since('picker') ?> — six images</h3>
+    <p class="demo-intro">Tap a tile to pick it, or Tab into the group and use the arrow keys. The magnifier opens the viewer; <strong>Select this image</strong> in it
+        picks the picture you are looking at. The status line, the form value and the event log below follow every change.
+        One tile has a small origin chip ("AI"), one a remove button, one has no preview, one is disabled and says why.</p>
+
+    <form class="demo-card demo-picker-form" id="demo-picker-form" onsubmit="return false">
+        <fieldset class="demo-fieldset">
+            <legend class="gk-label-text">Header image</legend>
+            <?php showcase(function () use ($pickerItems) {
+                \GridKit\ImagePicker::render($pickerItems(6, 1, true), ['name' => 'cover', 'id' => 'demo-pk-six']);
+            }); ?>
+        </fieldset>
+        <p class="demo-picker-value">Form value: <code id="demo-picker-value">img-1</code></p>
+        <pre class="demo-log" id="demo-picker-log" aria-live="polite" aria-label="Event log">Events appear here.</pre>
+        <div class="demo-btn-row">
+            <button type="button" class="gk-btn gk-btn-outlined gk-btn-neutral gk-btn-sm" id="demo-picker-add">Add a new image</button>
+        </div>
+    </form>
+
+    <h3 class="demo-h3" id="picker-thirty">Thirty images — two rows, then "Show all 30"</h3>
+    <p class="demo-intro">The picked tile (21 here) stays visible even though it lies beyond the fold. Resize the window: the number of tiles in the two rows follows the width. On a
+        phone two tiles fit in a row, and thirty images are about four tiles and a button instead of a screen-long list.</p>
+    <div class="demo-card">
+        <fieldset class="demo-fieldset">
+            <legend class="gk-label-text">Pick one of thirty</legend>
+            <?php \GridKit\ImagePicker::render($pickerItems(30, 21), ['name' => 'thirty', 'id' => 'demo-pk-thirty', 'labels' => ['more' => 'Show all {n} images', 'less' => 'Show fewer images']]); ?>
+        </fieldset>
+    </div>
+
+    <h3 class="demo-h3" id="picker-one">One image, and none</h3>
+    <div class="demo-card demo-pair">
+        <fieldset class="demo-fieldset">
+            <legend class="gk-label-text">One image</legend>
+            <?php \GridKit\ImagePicker::render($pickerItems(1), ['name' => 'single', 'id' => 'demo-pk-one']); ?>
+        </fieldset>
+        <fieldset class="demo-fieldset">
+            <legend class="gk-label-text">Nothing yet (the shell waits for GK.picker.add)</legend>
+            <?php \GridKit\ImagePicker::render([], ['name' => 'empty', 'id' => 'demo-pk-empty', 'status' => true]); ?>
+        </fieldset>
+    </div>
+
+    <h3 class="demo-h3" id="picker-keys">Keyboard</h3>
+    <table class="gk-table demo-keys">
+        <caption class="gk-sr-only">Keys in the picker and in its viewer</caption>
+        <thead><tr><th scope="col">Where</th><th scope="col">Key</th><th scope="col">What happens</th></tr></thead>
+        <tbody>
+            <tr><td>Picker</td><td><kbd>Tab</kbd></td><td>Enters the group once, on the picked tile; the next Tab reaches that tile's magnifier (and remove button), then the fold button — thirty tiles are not sixty tab stops.</td></tr>
+            <tr><td>Picker</td><td><kbd>&larr;</kbd> <kbd>&rarr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd></td><td>Moves to the next tile and picks it (native radios); disabled tiles are skipped.</td></tr>
+            <tr><td>Picker</td><td><kbd>Enter</kbd> on the magnifier</td><td>Opens the viewer on that picture.</td></tr>
+            <tr><td>Viewer</td><td><kbd>&larr;</kbd> <kbd>&rarr;</kbd></td><td>Previous or next picture (all of them, folded ones included).</td></tr>
+            <tr><td>Viewer</td><td><kbd>Tab</kbd></td><td>Stays inside: close, previous, next, "Select this image", "Close".</td></tr>
+            <tr><td>Viewer</td><td><kbd>Esc</kbd></td><td>Closes it; the focus goes back to the magnifier of the picture last shown — or to the radio, when one was picked from the viewer.</td></tr>
+        </tbody>
+    </table>
+
+    <h3 class="demo-h3" id="picker-events">Events and script</h3>
+    <p class="demo-intro">Picking is the radio's own <code>change</code> event, so a form needs nothing new. A caption button fires <code>gk:pickeraction</code> and does nothing else —
+        here the page asks "Really?" first (<code>GK.confirm</code>) and only then calls <code>GK.picker.remove()</code>. The library never deletes anything itself.</p>
+    <div class="demo-code"><pre>picker.addEventListener('gk:pickeraction', (e) =&gt; {
+    // e.detail = { action: 'remove', value: 'img-3', item: &lt;the tile&gt;, picker: &lt;the container&gt; }
+    GK.confirm('Remove this image?', { danger: true }).then((ok) =&gt; {
+        if (ok) GK.picker.remove(e.detail.picker, e.detail.value);
+    });
+});
+
+GK.picker.add(picker, { value: 'img-9', title: 'Fresh upload', thumb: '/t/9.webp', full: '/g/9.webp' },
+              { select: true, focus: true });   // picks it as a click would — one change event
+
+// The viewer is open to your own lists too:
+GK.lightbox.show([{ src: '/g/1.webp', caption: 'Fireplace', meta: 'Own image' }], 0, openerButton);</pre></div>
+
+    <hr class="demo-rule">
+
+    <h3 class="demo-h3" id="gallery-plain">Gallery + Lightbox <?= since('gallery', 'lightbox') ?></h3>
+    <p class="demo-intro">Image grid with lazy loading, hover overlay and lightbox (arrow keys, Escape).</p>
+
+    <div class="gk-gallery">
+        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 1) ?>" data-caption="Landscape 1" data-lazy>
+            <img data-src="<?= ph(400, 400, 1) ?>" alt="Landscape 1">
+            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Landscape</span></div>
+        </div>
+        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 2) ?>" data-caption="Architecture" data-lazy>
+            <img data-src="<?= ph(400, 400, 2) ?>" alt="Architecture">
+            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Architecture</span></div>
+        </div>
+        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 3) ?>" data-caption="Nature" data-lazy>
+            <img data-src="<?= ph(400, 400, 3) ?>" alt="Nature">
+            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Nature</span></div>
+        </div>
+        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 4) ?>" data-caption="City" data-lazy>
+            <img data-src="<?= ph(400, 400, 4) ?>" alt="City">
+            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">City</span></div>
+        </div>
+        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 5) ?>" data-caption="Abstract" data-lazy>
+            <img data-src="<?= ph(400, 400, 5) ?>" alt="Abstract">
+            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Abstract</span></div>
+        </div>
+        <div class="gk-gallery-item" data-lightbox="<?= ph(800, 600, 6) ?>" data-caption="Panorama" data-lazy>
+            <img data-src="<?= ph(400, 400, 6) ?>" alt="Panorama">
+            <div class="gk-gallery-overlay"><span class="gk-gallery-caption">Panorama</span></div>
+        </div>
+    </div>
+
+    <div class="demo-code"><pre>&lt;div class="gk-gallery"&gt;
+    &lt;div class="gk-gallery-item" data-lightbox="full.jpg" data-caption="Caption" data-lazy&gt;
+        &lt;img data-src="thumb.jpg" alt=""&gt;
+        &lt;div class="gk-gallery-overlay"&gt;
+            &lt;span class="gk-gallery-caption"&gt;Caption&lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+// Variants:
+.gk-gallery-sm              // Smaller thumbnails (100px min)
+.gk-gallery-lg              // Larger thumbnails (220px min)
+.gk-gallery-masonry         // Pinterest layout (columns)
+// Lightbox: arrow keys, Escape, click outside to close
+// data-lazy: load images only when visible</pre></div>
+
+    <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 </div>
 
 <!-- ===== SUCHE ===== -->
@@ -2391,6 +2504,59 @@ Auth::renderLogin([...]);    // Login page</div>
     window.addEventListener('hashchange', function () {
         if (window.location.hash) showSection(window.location.hash.substring(1));
     });
+})();
+
+// Image picker demos: show what the page hears, ask before removing, add a tile from script.
+(function () {
+    var six = document.getElementById('demo-pk-six');
+    if (!six) return;
+    var log = document.getElementById('demo-picker-log');
+    var value = document.getElementById('demo-picker-value');
+    var lines = [];
+    function say(text) {
+        lines.unshift(text);
+        log.textContent = lines.slice(0, 6).join('\n');
+    }
+    document.getElementById('demo-picker-form').addEventListener('change', function (e) {
+        if (!e.target.classList.contains('gk-picker-input')) return;
+        value.textContent = e.target.value;
+        say('change → ' + e.target.name + ' = ' + e.target.value);
+    });
+    six.addEventListener('gk:pickeraction', function (e) {
+        var d = e.detail;
+        say('gk:pickeraction → ' + d.action + ' ' + d.value);
+        GK.confirm('Remove this image?', { danger: true, confirmText: 'Remove' }).then(function (ok) {
+            if (!ok) { say('  … cancelled, nothing removed'); return; }
+            var checked = d.picker.querySelector('.gk-picker-input:checked');
+            GK.picker.remove(d.picker, d.value);
+            say('  … removed ' + d.value);
+            if (checked && checked.value === d.value) value.textContent = '(none)';
+        });
+    });
+    var added = 0;
+    document.getElementById('demo-picker-add').addEventListener('click', function () {
+        added++;
+        var seed = 40 + added;
+        var svg = function (w, h) {
+            return 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '"><rect width="100%" height="100%" fill="hsl(' + (seed * 47 % 360) + ' 55% 50%)"/>'
+                + '<text x="50%" y="50%" font-size="' + Math.round(h / 3) + '" text-anchor="middle" dominant-baseline="central" fill="#fff">new ' + added + '</text></svg>');
+        };
+        GK.picker.add(six, { value: 'new-' + added, title: 'Fresh upload ' + added, thumb: svg(320, 180), full: svg(1600, 900), meta: 'Own image',
+            actions: [{ name: 'remove', label: 'Remove' }] }, { select: true, focus: true });
+        say('GK.picker.add → new-' + added + ' (picked, focused)');
+    });
+    var empty = document.getElementById('demo-pk-empty');
+    if (empty) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'gk-btn gk-btn-outlined gk-btn-neutral gk-btn-sm';
+        button.textContent = 'Add one image to the empty picker';
+        empty.appendChild(button);
+        button.addEventListener('click', function () {
+            GK.picker.add(empty, { value: 'first', title: 'The first image', thumb: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="100%" height="100%" fill="teal"/></svg>') }, { select: true });
+            button.remove();
+        });
+    }
 })();
 
 document.querySelectorAll('.gk-upload-zone[data-gk-upload]').forEach(function(zone) {
