@@ -113,6 +113,21 @@ GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser.js
 Like `ci/parity.php` it stays outside the suite: GridKit has no dependencies,
 and the suite keeps that promise. Run it when touching `js/gridkit.js`.
 
+Two blocks that are CSS and markup only have a script of their own, on a page of
+their own (`ci/browser-fixture.php --timeline-video`), because a stylesheet is
+tested by looking at boxes: `ci/browser-timeline-video.js` measures the timeline
+(`.gk-timeline`: the five symbols and where they sit, the line, the ring and its
+stopping under reduced motion, long words on a phone, both dark spellings, forced
+colours, the keyboard) and the portrait video frame (`.gk-video-frame`: 9:16 at every
+column width and window height, the limit, the picture in the box, the safe zones and
+a click through them, the empty states). It runs in about fifteen seconds, which makes
+the counter-checks of a rule practical:
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-timeline-video.js
+GK_SHOTS=/some/dir node ci/browser-timeline-video.js     # also saves pictures to look at
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

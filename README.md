@@ -229,7 +229,9 @@ should look before its first row is written is in the skill's *Six rules for
 lists*. The small parts an admin page used to style itself — status dots, avatar
 colours, chart colours, settings rows, read-only fields, finger-sized buttons,
 actions in a message — are classes since 1.92.0, so such a page needs no
-stylesheet of its own.
+stylesheet of its own. Two blocks are markup and classes as well: a timeline
+(`.gk-timeline`, since 1.96.0) for a log of steps whose state is a symbol and a word,
+and a portrait video frame (`.gk-video-frame`) for a 9:16 video or picture.
 
 ---
 

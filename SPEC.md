@@ -379,6 +379,8 @@ roles only; light and dark follow from them.
 | Touch button | `.gk-btn.gk-btn-touch` — min `--gk-target-min` (44px) both ways | — |
 | Message actions | `.gk-message > .gk-message-actions`; an outlined button in it stands on `--gk-surface` | — |
 | Small message | `.gk-message.gk-message-sm` (+ a tone class, or none): padding 10px 14px, gap 10px, `--gk-text-label` over 1.45, symbol `--gk-icon-sm`, title margin 2px, margin 0 (`gk-mb-*` still wins), a long word wraps; colours from the tone class only. `.gk-message-compact` is unchanged (keeps the 16px margin) | — |
+| Timeline | `ol.gk-timeline[role=list] > li.gk-timeline-step.gk-timeline-{ok,failed,running,waiting,skipped} > span.gk-timeline-marker[aria-hidden] + div.gk-timeline-body > (div.gk-timeline-head > (-title, -state, -time)), div.gk-timeline-chips > .gk-label, -detail, -error`: a symbol (check, cross, turning ring, empty ring, dash) and a WORD for each state, never colour alone; roles only, no dark rule; long words break; the ring stands still under reduced motion; `aria-current="step"` on the running step | — |
+| Portrait video frame | `figure.gk-video-frame > div.gk-video-frame-media > (video[controls playsinline] \| img \| .gk-empty) + figcaption.gk-video-frame-caption`: 9:16, width `min(100%, --gk-video-frame-max-h × 9/16)` (75dvh, 75vh behind it), the picture shown whole, no autoplay; `gk-video-frame-safe` draws the top 10% and bottom 20% (`--gk-video-safe-top`, `--gk-video-safe-bottom`) as guide lines that catch no click; `gk-video-frame-busy` / `-error` reuse `.gk-empty` | — |
 | Phone only | `.gk-show-mobile` | — |
 | Answer tile | `label.gk-choice > input + .gk-choice-mark + .gk-choice-text > (-title, -hint)` | `'choice'` (`'multiple'`) |
 

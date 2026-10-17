@@ -262,7 +262,22 @@ const CHIPROLLEN = {
 const ALLE_CHIPS = [...new Set([...CHIPFARBEN, ...Object.keys(CHIPROLLEN), "blue"])];
 /* 1.95.0: die Töne einer Meldung. Ohne Ton ist es die neutrale (.gk-message allein). */
 const MELDUNGSTOENE = ["neutral", "info", "success", "warning", "error"];
-const BAUSTEINE = `
+/* 1.96.0: die Zeitleiste (.gk-timeline) und der Hochformat-Rahmen (.gk-video-frame), beide einmal in einer Karte
+   (--gk-surface) und einmal auf der Seite (--gk-surface-container), wo sie stehen können. */
+const ZEIT_ZUSTAENDE = ["ok", "failed", "running", "waiting", "skipped"];
+const zeitschritt = (wo, z) => `<li class="gk-timeline-step gk-timeline-${z}" id="zl-${wo}-${z}"><span class="gk-timeline-marker" aria-hidden="true"></span>`
+  + `<div class="gk-timeline-body"><div class="gk-timeline-head"><span class="gk-timeline-title">Titel</span><span class="gk-timeline-state">Wort</span>`
+  + `<span class="gk-timeline-time">09:12 · 4 s</span></div><div class="gk-timeline-chips"><span class="gk-label gk-label-gray">Chip</span></div>`
+  + `<p class="gk-timeline-detail">Detail</p>${z === "failed" ? '<p class="gk-timeline-error">Meldung</p>' : ""}</div></li>`;
+const zeitleiste = (wo) => `<ol class="gk-timeline" role="list" aria-label="Schritte">${ZEIT_ZUSTAENDE.map((z) => zeitschritt(wo, z)).join("")}</ol>`;
+const RAHMEN_ZUSTAENDE = ["busy", "error"];
+const rahmen = (wo, art) => `<figure class="gk-video-frame gk-video-frame-${art}" id="vr-${wo}-${art}"><div class="gk-video-frame-media"><div class="gk-empty"><div class="gk-empty-inner">`
+  + `<span class="gk-empty-icon">x</span><div class="gk-empty-title">Titel</div><div class="gk-empty-hint">Satz</div></div></div></div>`
+  + `<figcaption class="gk-video-frame-caption">Unterschrift</figcaption></figure>`;
+const ZEIT_UND_RAHMEN = `
+<div class="gk-card" id="zeit-karte">${zeitleiste("karte")}${RAHMEN_ZUSTAENDE.map((a) => rahmen("karte", a)).join("")}</div>
+<div id="zeit-seite">${zeitleiste("seite")}${RAHMEN_ZUSTAENDE.map((a) => rahmen("seite", a)).join("")}</div>`;
+const BAUSTEINE = `${ZEIT_UND_RAHMEN}
 <div class="gk-card" id="karte">
   <span class="gk-avatar gk-avatar-initials gk-avatar-tone-1" id="ton-1">AB</span>
   <span class="gk-avatar gk-avatar-initials gk-avatar-tone-2" id="ton-2">AB</span>
@@ -347,6 +362,26 @@ const TEXTPROBEN = [
     [`Meldung ${ton} · Text`, `meldung-${ton}`, ".gk-message-content"],
     [`Meldung ${ton} klein · Text`, `meldung-klein-${ton}`, ".gk-message-content"],
     [`Meldung ${ton} klein · Titel`, `meldung-klein-${ton}`, ".gk-message-header"],
+  ]),
+  /* 1.96.0: die Zeitleiste und der Hochformat-Rahmen. Jede Schrift gegen den Grund, auf dem sie wirklich steht:
+     Titel, Wort des Zustands, Zeit, Detail, Chip, das Symbol auf seiner Scheibe (Farbe der Schrift gegen die
+     Scheibe) und die Meldung eines gescheiterten Schritts; im Rahmen Titel, Satz, Symbol und Unterschrift. */
+  ...["karte", "seite"].flatMap((wo) => [
+    ...ZEIT_ZUSTAENDE.flatMap((z) => [
+      [`Zeitleiste ${wo} ${z} · Titel`, `zl-${wo}-${z}`, ".gk-timeline-title"],
+      [`Zeitleiste ${wo} ${z} · Wort`, `zl-${wo}-${z}`, ".gk-timeline-state"],
+      [`Zeitleiste ${wo} ${z} · Zeit`, `zl-${wo}-${z}`, ".gk-timeline-time"],
+      [`Zeitleiste ${wo} ${z} · Detail`, `zl-${wo}-${z}`, ".gk-timeline-detail"],
+      [`Zeitleiste ${wo} ${z} · Chip`, `zl-${wo}-${z}`, ".gk-label"],
+      [`Zeitleiste ${wo} ${z} · Symbol`, `zl-${wo}-${z}`, ".gk-timeline-marker"],
+    ]),
+    [`Zeitleiste ${wo} failed · Meldung`, `zl-${wo}-failed`, ".gk-timeline-error"],
+    ...RAHMEN_ZUSTAENDE.flatMap((a) => [
+      [`Rahmen ${wo} ${a} · Titel`, `vr-${wo}-${a}`, ".gk-empty-title"],
+      [`Rahmen ${wo} ${a} · Satz`, `vr-${wo}-${a}`, ".gk-empty-hint"],
+      [`Rahmen ${wo} ${a} · Symbol`, `vr-${wo}-${a}`, ".gk-empty-icon"],
+      [`Rahmen ${wo} ${a} · Unterschrift`, `vr-${wo}-${a}`, ".gk-video-frame-caption"],
+    ]),
   ]),
   /* Der leere Wert (.gk-num-empty) ist Text: dunkel stand er bei 2,1:1 auf der
      Tabelle und 1,6:1 in der Zeile des offenen Blatts. Die Adresse darunter
@@ -725,6 +760,10 @@ function bausteineBerichten(wie, zeilen) {
   markenBerichten("ohne themes.css", bausteineOhneThemes);
   markenBerichten("mit themes.css", bausteineMitThemes, "Meldungen 1.95.0 (Text und Titel auf dem getönten Band)", /^Meldung .* · (Text|Titel)$/);
   markenBerichten("ohne themes.css", bausteineOhneThemes, "Meldungen 1.95.0 (Text und Titel auf dem getönten Band)", /^Meldung .* · (Text|Titel)$/);
+  markenBerichten("mit themes.css", bausteineMitThemes, "Zeitleiste 1.96.0 (Titel, Wort, Zeit, Detail, Chip, Symbol, Meldung)", /^Zeitleiste .* · /);
+  markenBerichten("ohne themes.css", bausteineOhneThemes, "Zeitleiste 1.96.0 (Titel, Wort, Zeit, Detail, Chip, Symbol, Meldung)", /^Zeitleiste .* · /);
+  markenBerichten("mit themes.css", bausteineMitThemes, "Hochformat-Rahmen 1.96.0 (Titel, Satz, Symbol, Unterschrift)", /^Rahmen /);
+  markenBerichten("ohne themes.css", bausteineOhneThemes, "Hochformat-Rahmen 1.96.0 (Titel, Satz, Symbol, Unterschrift)", /^Rahmen /);
   markenBerichten("mit themes.css", bausteineMitThemes, "Chips 1.93.3/1.93.4 (Zahl und Beschriftung)", /^Chip /);
   markenBerichten("ohne themes.css", bausteineOhneThemes, "Chips 1.93.3/1.93.4 (Zahl und Beschriftung)", /^Chip /);
 

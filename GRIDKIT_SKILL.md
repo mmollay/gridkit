@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.95.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.96.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -57,6 +57,8 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
 | Image picker | `GridKit\ImagePicker` / `GK.picker` | Choose one image out of many: a compact grid of 16:9 tiles that works like a radio group, folds after two rows, and an enlarged view that can pick (since 1.94.0) |
 | Announcement (JS/CSS) | `.gk-announce` / `GK.announce` | The line that says "Saved." where the person works, read by a screen reader; empty it draws no box (since 1.93.0) |
+| Timeline | `.gk-timeline` | A log of steps, one under the other: a real ordered list, each step with a symbol and a word for its state (ok · failed · running · waiting · skipped), title, time, small chips, a detail and — when it broke — a message block (since 1.96.0) |
+| Portrait video frame | `.gk-video-frame` | A 9:16 frame for a video or picture: never wider than its column or taller than the window, optional guide lines for the zones a platform covers, an empty "being made" state and a failed state, a caption (since 1.96.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
 
@@ -1419,6 +1421,136 @@ emptied and the words come back 150 ms later. Words are text, never HTML.
 A region with `role="alert"` is read at once (assertive); keep that for errors
 that must interrupt. `GK.melde()` is the same function.
 
+### Timeline (`.gk-timeline`, since 1.96.0)
+
+A log of steps, one under the other: what ran, in which order, how each step ended — a
+pipeline, an import, an approval chain. Markup and classes only; there is no PHP class and
+no script, because the page that has the steps writes them.
+
+```html
+<ol class="gk-timeline" role="list" aria-label="Steps of the run">
+  <li class="gk-timeline-step gk-timeline-ok">
+    <span class="gk-timeline-marker" aria-hidden="true"></span>
+    <div class="gk-timeline-body">
+      <div class="gk-timeline-head">
+        <span class="gk-timeline-title">Write the script</span>
+        <span class="gk-timeline-state">Done</span>
+        <span class="gk-timeline-time"><time datetime="2026-10-17T09:12:03">09:12:03</time> · 4.2 s</span>
+      </div>
+      <div class="gk-timeline-chips"><span class="gk-label gk-label-gray">Claude</span><span class="gk-label gk-label-gray">$0.03</span></div>
+      <p class="gk-timeline-detail">Three scenes, 38 words.</p>
+    </div>
+  </li>
+  <li class="gk-timeline-step gk-timeline-failed">
+    <span class="gk-timeline-marker" aria-hidden="true"></span>
+    <div class="gk-timeline-body">
+      <div class="gk-timeline-head">
+        <span class="gk-timeline-title">Make the pictures</span>
+        <span class="gk-timeline-state">Failed</span>
+      </div>
+      <p class="gk-timeline-error">The image service did not answer after 3 tries.</p>
+    </div>
+  </li>
+  <li class="gk-timeline-step gk-timeline-running" aria-current="step">
+    <span class="gk-timeline-marker" aria-hidden="true"></span>
+    <div class="gk-timeline-body"><div class="gk-timeline-head">
+      <span class="gk-timeline-title">Assemble the video</span><span class="gk-timeline-state">Running</span>
+    </div></div>
+  </li>
+</ol>
+```
+
+- **A real ordered list.** The order is the information, so it is an `<ol>`, with a name
+  (`aria-label`) and `role="list"`: the numbers and bullets are off (the markers and the line
+  draw the sequence), and a screen reader that sees `list-style: none` drops the list unless
+  the role says it is one. Do not number the steps in the text.
+- **The state is a symbol AND a word, never colour alone.** One class on the `<li>` says
+  which: `gk-timeline-ok` (a check), `gk-timeline-failed` (a cross), `gk-timeline-running` (a ring with a gap,
+  turning), `gk-timeline-waiting` (an empty dashed ring with a dot), `gk-timeline-skipped` (a dash).
+  The word stands beside the title in `.gk-timeline-state` — **write it in every step**; the
+  marker is decoration (`aria-hidden="true"`, empty — CSS draws it), so a screen reader hears
+  "Make the pictures, Failed". Put `aria-current="step"` on the running step.
+- **Parts, all optional but the marker, the title and the state word:** `.gk-timeline-head`
+  (title, state word and time on one row; on a phone the time goes under them),
+  `.gk-timeline-time` (a `<time datetime>` for the timestamp, then the duration as text),
+  `.gk-timeline-chips` (small `.gk-label`s — cost, provider — that may wrap),
+  `.gk-timeline-detail` (a quiet sentence), `.gk-timeline-error` (the message of a step that
+  broke: a tinted block with a 4px edge, in the error container pair — not a coloured sentence).
+  `.gk-timeline-body` holds everything right of the marker.
+- **Long words break** — a title, a detail, a message or a chip with an address in it wraps
+  inside the column; nothing pushes the page wide, from 320px up.
+- **Colour is roles only**, so light, `[data-gk-mode="dark"]` and `.gk-dark` follow from the
+  tokens — there is no dark rule. The word of a tone uses the text-safe variants
+  (`--gk-success-text`, `--gk-danger-text`, `--gk-primary-text`), the marker the container pair
+  of its tone. Measured in a browser in all six themes and without one, light and both dark
+  spellings, on a card and on the page (weakest value, light / dark / dark class): title, word,
+  time and detail 5.36 / 5.62 / 5.62, the symbol on its disc 6.50 / 4.95 / 4.95 (the skipped dash,
+  and the gray chip, which is the `.gk-label` GridKit has), the message of a failed step 7.97 /
+  7.97 / 7.97; WCAG AA asks 4.5:1. The symbols are lines and borders, so a high-contrast mode
+  (`forced-colors`) keeps them.
+- **Motion:** the only thing that moves is the ring of the running step (`gk-spin`), and
+  it stands still under `prefers-reduced-motion`.
+- **Updating a step while the person watches:** replace the `<li>` — its state class, its
+  word and, if it moved, `aria-current` together. The list is not a live region; say what
+  happened with `GK.announce()`. Give the message `role="alert"` only when it appears while
+  the person is looking; a log that is rendered with the page needs none.
+
+### Portrait video frame (`.gk-video-frame`, since 1.96.0)
+
+A frame for a 9:16 video or picture — a short, a story, a phone screenshot. A bare `<video>`
+of a vertical file is as wide as its column and three screens tall; the frame keeps the shape.
+Markup and classes only.
+
+```html
+<figure class="gk-video-frame">
+  <div class="gk-video-frame-media">
+    <video controls playsinline preload="metadata" poster="/p/3.jpg" aria-label="Version 3 of the short" src="/v/3.mp4"></video>
+  </div>
+  <figcaption class="gk-video-frame-caption">Version 3 · 24 s</figcaption>
+</figure>
+```
+
+- **The box:** `.gk-video-frame-media` is `aspect-ratio: 9 / 16`, rounded (`--gk-radius-lg`) and
+  cuts what lies in it. The `<video>` or `<img>` fills it and is **shown whole** (`object-fit:
+  contain`, on black): whoever approves a video has to see all of it. It lies in the box
+  (absolute), so a portrait file cannot give the box a height of its own.
+- **Limits:** never wider than its column, never taller than `--gk-video-frame-max-h` — 75% of
+  the window (`75dvh`, `75vh` behind it). The frame takes its WIDTH from that limit,
+  `min(100%, limit × 9/16)`, so the shape holds when the limit bites (a `max-height` alone would
+  leave a wide, flat box). A page changes the limit on the frame (`--gk-video-frame-max-h`), not
+  with a width of its own. It is left-aligned; add `gk-mx-auto` to the `<figure>` to centre it.
+- **No autoplay, ever:** write `controls` and `playsinline` (a phone opens a video without
+  `playsinline` full screen on its own), give the `<video>` an `aria-label`, never `autoplay`.
+- **Safe zones — `gk-video-frame-safe`:** a second class on the `<figure>` draws, over the
+  picture, the zones a platform covers with its own buttons — the top 10% and the bottom 20% — as
+  hatching with a dashed edge. They are guide lines: they take no room and **never catch a click**
+  (the video's controls lie in the bottom zone). The two numbers are `--gk-video-safe-top` and
+  `--gk-video-safe-bottom` on the frame (YouTube Shorts and Instagram Reels differ). Toggle the
+  class with your own button; there is no script.
+- **Nothing to show yet — `gk-video-frame-busy`:** the empty state, reused. `.gk-empty` fills the
+  box; the symbol pulses (and stands still under reduced motion). Mark it `role="status"`.
+- **It broke — `gk-video-frame-error`:** the same box, in the error colour: say what happened
+  and what to do in `.gk-empty-title` and `.gk-empty-hint`.
+
+```html
+<figure class="gk-video-frame gk-video-frame-busy">
+  <div class="gk-video-frame-media">
+    <div class="gk-empty" role="status"><div class="gk-empty-inner">
+      <span class="material-icons gk-empty-icon" aria-hidden="true">movie</span>
+      <div class="gk-empty-title">Video is being made</div>
+      <div class="gk-empty-hint">This takes a minute or two. You can leave the page.</div>
+    </div></div>
+  </div>
+  <figcaption class="gk-video-frame-caption">Version 3</figcaption>
+</figure>
+```
+
+A box with nothing in it has a dashed edge, so it shows on a page of the same grey. A long
+caption or message breaks; in a frame 120px wide the message scrolls inside the box instead of
+being cut. Colours are roles (light and both dark spellings follow), apart from the black behind
+a video and the guide lines, which lie over any picture; the empty states measured 5.52 / 5.62 / 5.62
+(light / dark / dark class, weakest of title, hint, symbol and caption in all six themes).
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -1945,6 +2077,10 @@ Features:
 | `gk-message-actions` | Actions on the right of a `.gk-message` |
 | `gk-message-sm` | A small message (since 1.95.0): denser than `.gk-message-compact` and with no margin of its own; the tone comes from `-info` `-success` `-warning` `-error` |
 | `gk-announce` | A live region that is always on the page (since 1.93.0): empty it has no box but stays in the accessibility tree; `GK.announce()` writes its words |
+| `gk-timeline` `gk-timeline-step` `gk-timeline-marker` `gk-timeline-body` `gk-timeline-head` `gk-timeline-title` `gk-timeline-state` `gk-timeline-time` `gk-timeline-chips` `gk-timeline-detail` `gk-timeline-error` | A log of steps (since 1.96.0): `<ol role="list">`, one `<li>` per step, a symbol and a word for the state, title, time, chips, a detail and an error block |
+| `gk-timeline-ok` `gk-timeline-failed` `gk-timeline-running` `gk-timeline-waiting` `gk-timeline-skipped` | The state of a step, on its `<li>`: check, cross, a turning ring (still under reduced motion), an empty ring, a dash |
+| `gk-video-frame` `gk-video-frame-media` `gk-video-frame-caption` | A 9:16 frame for a video or picture (since 1.96.0): never wider than the column or taller than 75% of the window, the picture shown whole, no autoplay |
+| `gk-video-frame-safe` `gk-video-frame-busy` `gk-video-frame-error` | On the frame: guide lines for the zones a platform covers (top 10%, bottom 20%, no click caught) / nothing to show yet / it broke — the last two reuse `.gk-empty` |
 | `gk-show-mobile` | Shown at 768px and below only — the counterpart of `gk-hide-mobile` |
 | `gk-choice` `gk-choice-mark` `gk-choice-text` `gk-choice-title` `gk-choice-hint` | A radio or checkbox as an answer tile with a letter (Form `'choice'`) |
 

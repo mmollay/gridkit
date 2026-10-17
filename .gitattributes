@@ -46,4 +46,5 @@
 # ── Line endings ─────────────────────────────────────────────────────────────
 * text=auto eol=lf
 *.png binary
+*.webm binary
 *.ico binary

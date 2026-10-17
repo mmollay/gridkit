@@ -7,6 +7,121 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.96.0] - 2026-10-17
+
+### Added — a timeline: `.gk-timeline`
+A log of steps, one under the other: what ran, in which order, how each step ended. The SSI Panel's
+"Shorts" module makes a short video in several steps and has to show the person who approves it where
+the time and the money went and where a step broke; any admin that runs a pipeline needs the same list.
+Markup and classes only — the page that has the steps writes them, so there is no PHP class and no script.
+
+```html
+<ol class="gk-timeline" role="list" aria-label="Steps of the run">
+  <li class="gk-timeline-step gk-timeline-failed">
+    <span class="gk-timeline-marker" aria-hidden="true"></span>
+    <div class="gk-timeline-body">
+      <div class="gk-timeline-head">
+        <span class="gk-timeline-title">Make the pictures</span>
+        <span class="gk-timeline-state">Failed</span>
+        <span class="gk-timeline-time"><time datetime="2026-10-17T09:12:08">09:12:08</time> · 31 s</span>
+      </div>
+      <div class="gk-timeline-chips"><span class="gk-label gk-label-gray">Image service</span></div>
+      <p class="gk-timeline-error">The image service did not answer after 3 tries.</p>
+    </div>
+  </li>
+</ol>
+```
+
+- **A real ordered list**, named and with `role="list"`: the numbers and bullets are off (the markers
+  and the line draw the sequence), and a screen reader that sees `list-style: none` drops the list
+  unless the role says it is one.
+- **Five states, each a shape AND a word — never colour alone.** `gk-timeline-ok` (a check),
+  `gk-timeline-failed` (a cross), `gk-timeline-running` (a ring with a gap, turning), `gk-timeline-waiting`
+  (an empty dashed ring with a dot), `gk-timeline-skipped` (a dash) on the `<li>`; the word stands
+  beside the title in `.gk-timeline-state`; the marker is empty and `aria-hidden`, CSS draws it. The
+  symbols are lines and borders in the colour of the text, not fills, so `forced-colors` keeps them.
+  `aria-current="step"` goes on the running step.
+- **Parts:** `.gk-timeline-head` (title, state word and time on a row; on a phone the time goes under
+  them), `.gk-timeline-time`, `.gk-timeline-chips` (the `.gk-label` GridKit has — cost, provider — allowed
+  to wrap), `.gk-timeline-detail`, and `.gk-timeline-error`: the message of a failed step as a tinted block
+  with a 4px edge in the error container pair. A title, detail, message or chip with an address in it breaks
+  inside the column from 320px up.
+- **Roles only, no dark rule**, so light, `[data-gk-mode="dark"]` and `.gk-dark` follow from the tokens. The
+  word of a tone uses the text-safe variants (`--gk-success-text`, `--gk-danger-text`, `--gk-primary-text`),
+  the marker the container pair of its tone.
+- **The one thing that moves** is the ring of the running step (`gk-spin`, reused); it stands still under
+  `prefers-reduced-motion`.
+
+Text measured in a browser in all six themes and without one, light and both dark spellings, on a card
+and on the page, weakest value (light / dark / dark class): title, word, time and detail 5.36 / 5.62 / 5.62,
+the symbol on its disc 6.50 / 4.95 / 4.95 (the skipped dash and the gray chip), the error message
+7.97 / 7.97 / 7.97 (WCAG AA asks 4.5:1).
+
+### Added — a portrait video frame: `.gk-video-frame`
+A frame for a 9:16 video or picture — a short, a story, a phone screenshot. A bare `<video>` of a vertical
+file is as wide as its column and three screens tall.
+
+```html
+<figure class="gk-video-frame gk-video-frame-safe">
+  <div class="gk-video-frame-media">
+    <video controls playsinline preload="metadata" aria-label="Version 3 of the short" src="/v/3.mp4"></video>
+  </div>
+  <figcaption class="gk-video-frame-caption">Version 3 · 24 s</figcaption>
+</figure>
+```
+
+- **The shape and its limits.** `.gk-video-frame-media` is `aspect-ratio: 9 / 16`, rounded and cut at the
+  corners; the `<video>` or `<img>` lies IN it (absolute — a portrait file in the flow gives an aspect-ratio
+  box a height of its own) and is shown whole (`object-fit: contain`, on black). The height is limited by
+  `--gk-video-frame-max-h` — 75% of the window, `75dvh` with `75vh` behind it — and the frame takes its WIDTH
+  from that limit, `min(100%, limit × 9/16)`: with `width: 100%` and a `max-height` alone, a limit that bites
+  leaves a wide, flat box. Never wider than its column, 9:16 at every width and window height.
+- **No autoplay.** The documented markup has `controls` and `playsinline` and a name; the stylesheet has
+  nothing to do with playing.
+- **Safe zones: `gk-video-frame-safe`.** Guide lines over the picture for the zones a platform covers with
+  its own buttons — the top 10% and the bottom 20% — as hatching with a dashed edge. They take no room and
+  never catch a click (the video's controls lie in the bottom zone); the two numbers are
+  `--gk-video-safe-top` and `--gk-video-safe-bottom`, because YouTube Shorts and Instagram Reels differ.
+- **Nothing to show yet, and it broke: `gk-video-frame-busy`, `gk-video-frame-error`.** `.gk-empty` is
+  reused, filling the box (its 56px of padding would not fit a frame 150px wide); the busy symbol pulses
+  (`gk-dot-pulse`, reused) and stands still under reduced motion; the failed state is in the error colour. A
+  box with nothing in it has a dashed edge, so it shows on a page of the same grey. A message too long for a
+  small frame scrolls inside the box.
+- Colours are roles, apart from the black behind a video and the guide lines. Weakest text value of the empty
+  states and the caption, six themes, both modes (light / dark / dark class): 5.52 / 5.62 / 5.62.
+
+### Tests
+- `tests/timeline.test.php` (new) and `tests/video-frame.test.php` (new): the rules of each block as written
+  above, read from the stylesheet — five different symbols, the word beside the title, roles only and no dark
+  rule, the ring and the pulse the only motion and both stopped under reduced motion, long words, the width
+  formula, the safe zones on request and click-through, `.gk-empty` reused, its place before the last block
+  — the text of every state computed from the tokens, light and dark, and the documented markup (list role,
+  hidden marker, a word in every step; a figure, `controls`, `playsinline`, no `autoplay`).
+  `tests/css-helpers.php` holds the small readers both use. 279 and 148 assertions; the suite 7022
+  (6489 before).
+- `ci/browser-timeline-video.js` (new, 53 cases, with the fixture mode `--timeline-video`): the blocks in a browser —
+  the accessibility tree, five distinct symbols centred in their discs, the line, the animation and its
+  stopping, the error block, both dark spellings, forced colours, the keyboard, 360 and 320px; the frame's
+  9:16 at every column width and window height, the picture in the box, the zones' height, a click on the
+  play button through the bottom zone, the empty states, a phone.
+- `ci/farben.js` (+62 texts, 167 in all): every text of both blocks (title, word, time, detail, chip, symbol,
+  message; title, sentence, symbol, caption) against the ground it stands on, on a card and on the page, in every
+  theme and mode.
+- `tests/blocks.test.php`: the marks window moved to 1.96 / 1.95 — the timeline and the frame are the blocks
+  new in 1.96, the message the one changed in 1.95, the picker (1.94) has fallen out of the window.
+  `css/blocks.json`: the blocks "Timeline" and "Portrait video frame"; the demo shows both (a sample video of
+  9 KB and a picture in `demo/media/`); SPEC.md, the README and the skill describe them.
+- Counter-checks (`scripts/gegenprobe.php` of the Panel): 74 mutations of `css/gridkit.css`, each turns the named
+  check red — 30 in the suite, 33 in `ci/browser-timeline-video.js`, 11 in `ci/farben.js`; the order mutation
+  (both blocks moved behind the last block) was done by hand. Three mutations first stayed green and changed
+  things: a disc that ignored the mode (the check now compares the disc, not only its symbol), a cross whose
+  second stroke was `display: none` (the stroke has to be drawn), and a `min-width: 0` on the body that proved
+  dead (the grid track `minmax(0, 1fr)` does that work; the declaration, and two like it on the title and the
+  frame, are gone). Several runs of the browser script failed on a loaded server with a timeout in
+  `scrollIntoViewIfNeeded`; the script now waits for animation frames and for the loaded video instead of fixed
+  pauses, and its default timeout is 20 s.
+
+---
 ## [1.95.0] - 2026-10-17
 
 ### Added — a small message: `.gk-message-sm`

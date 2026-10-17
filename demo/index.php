@@ -248,6 +248,12 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
             font:600 12px/1.5 system-ui,sans-serif; text-align:center; }
         .demo-rule { border:none; border-top:1px solid var(--gk-outline-variant); margin:40px 0; }
 
+        /* ── Timeline and portrait video frame (1.96.0) ─────────────────── */
+        .demo-timelines { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px; }
+        .demo-timelines h4 { margin:0 0 12px; font-size:13px; font-weight:600; color:var(--gk-on-surface-variant); }
+        .demo-frames { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start; }
+        .demo-frames .gk-video-frame { flex:0 1 220px; }
+
         /* ── Beispiel mit ausklappbarem Code ─────────────────────────────
            <details> statt eines Divs mit Klick-Handler: es funktioniert ohne
            JavaScript, ist von Haus aus mit der Tastatur bedienbar und wird von
@@ -1789,6 +1795,61 @@ GK.lightbox.show([{ src: '/g/1.webp', caption: 'Fireplace', meta: 'Own image' }]
 // Lightbox: arrow keys, Escape, click outside to close
 // data-lazy: load images only when visible</pre></div>
 
+    <hr class="demo-rule">
+
+    <h3 class="demo-h3" id="video-frame">Portrait video frame <?= since('video-frame') ?></h3>
+    <p class="demo-intro">A frame for a 9:16 video or picture — a short, a story, a phone screenshot. It keeps its shape, is never wider than its column and never taller than 75 % of the window, and shows the whole picture. <code>gk-video-frame-safe</code> draws the zones a platform covers with its own buttons (about the top tenth and the bottom fifth) as guide lines — they never catch a click, so the controls still work. Nothing to show yet, or it broke: <code>gk-video-frame-busy</code> and <code>gk-video-frame-error</code> reuse the empty state. No autoplay.</p>
+        <?php
+        showcase(function () {
+            echo <<<'HTML'
+            <div class="demo-frames">
+              <figure class="gk-video-frame">
+                <div class="gk-video-frame-media">
+                  <video controls playsinline preload="metadata" aria-label="Sample video, 3 seconds" src="media/sample-portrait.webm"></video>
+                </div>
+                <figcaption class="gk-video-frame-caption">Version 2 · 3 s</figcaption>
+              </figure>
+              <figure class="gk-video-frame gk-video-frame-safe">
+                <div class="gk-video-frame-media">
+                  <video controls playsinline preload="metadata" aria-label="Sample video with the safe zones shown" src="media/sample-portrait.webm"></video>
+                </div>
+                <figcaption class="gk-video-frame-caption">Safe zones shown: top 10 %, bottom 20 %</figcaption>
+              </figure>
+              <figure class="gk-video-frame">
+                <div class="gk-video-frame-media">
+                  <img src="media/sample-portrait.svg" alt="The first frame of the video: a blue field with a pale disc">
+                </div>
+                <figcaption class="gk-video-frame-caption">A picture shows in the same frame</figcaption>
+              </figure>
+              <figure class="gk-video-frame gk-video-frame-busy">
+                <div class="gk-video-frame-media">
+                  <div class="gk-empty" role="status">
+                    <div class="gk-empty-inner">
+                      <span class="material-icons gk-empty-icon" aria-hidden="true">movie</span>
+                      <div class="gk-empty-title">Video is being made</div>
+                      <div class="gk-empty-hint">This takes a minute or two. You can leave the page.</div>
+                    </div>
+                  </div>
+                </div>
+                <figcaption class="gk-video-frame-caption">Version 3</figcaption>
+              </figure>
+              <figure class="gk-video-frame gk-video-frame-error">
+                <div class="gk-video-frame-media">
+                  <div class="gk-empty">
+                    <div class="gk-empty-inner">
+                      <span class="material-icons gk-empty-icon" aria-hidden="true">error</span>
+                      <div class="gk-empty-title">No video</div>
+                      <div class="gk-empty-hint">The image service did not answer. Try again, or change the topic.</div>
+                    </div>
+                  </div>
+                </div>
+                <figcaption class="gk-video-frame-caption">Version 3 failed</figcaption>
+              </figure>
+            </div>
+            HTML;
+        });
+        ?>
+
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 </div>
 
@@ -1862,6 +1923,121 @@ GK.toast.info('3 new entries');</pre></div>
               if (b) GK.announce('demo-announce', b.getAttribute('data-demo-announce'), b.getAttribute('data-tone'));
             });
             </script>
+            HTML;
+        });
+        ?>
+
+    <h3 class="demo-h3" id="timeline">Timeline <?= since('timeline') ?></h3>
+    <p class="demo-intro">A log of steps, one under the other: what ran, in which order, how each step ended. A real ordered list, so the order is the information; each state has its own symbol <em>and</em> a word beside the title, never a colour alone. Small chips carry cost or provider, a failed step shows its message as a block. The ring of the running step turns, and stands still when the person asked for less motion. Light and dark follow from the roles; long addresses break.</p>
+        <?php
+        showcase(function () {
+            echo <<<'HTML'
+            <div class="demo-timelines">
+              <div>
+                <h4>A run in progress</h4>
+                <ol class="gk-timeline" role="list" aria-label="Steps of the run in progress">
+                  <li class="gk-timeline-step gk-timeline-ok">
+                    <span class="gk-timeline-marker" aria-hidden="true"></span>
+                    <div class="gk-timeline-body">
+                      <div class="gk-timeline-head">
+                        <span class="gk-timeline-title">Write the script</span>
+                        <span class="gk-timeline-state">Done</span>
+                        <span class="gk-timeline-time"><time datetime="2026-10-17T09:12:03">09:12:03</time> · 4.2 s</span>
+                      </div>
+                      <div class="gk-timeline-chips"><span class="gk-label gk-label-gray">Claude</span><span class="gk-label gk-label-gray">$0.03</span></div>
+                      <p class="gk-timeline-detail">Three scenes, 38 words, ends with a question.</p>
+                    </div>
+                  </li>
+                  <li class="gk-timeline-step gk-timeline-ok">
+                    <span class="gk-timeline-marker" aria-hidden="true"></span>
+                    <div class="gk-timeline-body">
+                      <div class="gk-timeline-head">
+                        <span class="gk-timeline-title">Record the voice</span>
+                        <span class="gk-timeline-state">Done</span>
+                        <span class="gk-timeline-time"><time datetime="2026-10-17T09:12:08">09:12:08</time> · 11 s</span>
+                      </div>
+                      <div class="gk-timeline-chips"><span class="gk-label gk-label-gray">Text to speech</span><span class="gk-label gk-label-gray">$0.11</span></div>
+                    </div>
+                  </li>
+                  <li class="gk-timeline-step gk-timeline-running" aria-current="step">
+                    <span class="gk-timeline-marker" aria-hidden="true"></span>
+                    <div class="gk-timeline-body">
+                      <div class="gk-timeline-head">
+                        <span class="gk-timeline-title">Make the pictures</span>
+                        <span class="gk-timeline-state">Running</span>
+                        <span class="gk-timeline-time"><time datetime="2026-10-17T09:12:19">09:12:19</time> · 8 s so far</span>
+                      </div>
+                      <p class="gk-timeline-detail">Picture 2 of 3.</p>
+                    </div>
+                  </li>
+                  <li class="gk-timeline-step gk-timeline-waiting">
+                    <span class="gk-timeline-marker" aria-hidden="true"></span>
+                    <div class="gk-timeline-body">
+                      <div class="gk-timeline-head">
+                        <span class="gk-timeline-title">Assemble the video</span>
+                        <span class="gk-timeline-state">Waiting</span>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="gk-timeline-step gk-timeline-waiting">
+                    <span class="gk-timeline-marker" aria-hidden="true"></span>
+                    <div class="gk-timeline-body">
+                      <div class="gk-timeline-head">
+                        <span class="gk-timeline-title">Check the safe zones</span>
+                        <span class="gk-timeline-state">Waiting</span>
+                      </div>
+                    </div>
+                  </li>
+                </ol>
+              </div>
+              <div>
+                <h4>A run that broke</h4>
+                <ol class="gk-timeline" role="list" aria-label="Steps of the run that broke">
+                  <li class="gk-timeline-step gk-timeline-ok">
+                    <span class="gk-timeline-marker" aria-hidden="true"></span>
+                    <div class="gk-timeline-body">
+                      <div class="gk-timeline-head">
+                        <span class="gk-timeline-title">Write the script</span>
+                        <span class="gk-timeline-state">Done</span>
+                        <span class="gk-timeline-time"><time datetime="2026-10-17T10:40:11">10:40:11</time> · 3.9 s</span>
+                      </div>
+                      <div class="gk-timeline-chips"><span class="gk-label gk-label-gray">Claude</span><span class="gk-label gk-label-gray">$0.03</span></div>
+                    </div>
+                  </li>
+                  <li class="gk-timeline-step gk-timeline-failed">
+                    <span class="gk-timeline-marker" aria-hidden="true"></span>
+                    <div class="gk-timeline-body">
+                      <div class="gk-timeline-head">
+                        <span class="gk-timeline-title">Make the pictures</span>
+                        <span class="gk-timeline-state">Failed</span>
+                        <span class="gk-timeline-time"><time datetime="2026-10-17T10:40:15">10:40:15</time> · 31 s</span>
+                      </div>
+                      <div class="gk-timeline-chips"><span class="gk-label gk-label-gray">Image service</span></div>
+                      <p class="gk-timeline-error">The image service did not answer after 3 tries (https://example.org/api/v1/images/generate?scene=2&amp;attempt=3, timeout after 30 s).</p>
+                    </div>
+                  </li>
+                  <li class="gk-timeline-step gk-timeline-skipped">
+                    <span class="gk-timeline-marker" aria-hidden="true"></span>
+                    <div class="gk-timeline-body">
+                      <div class="gk-timeline-head">
+                        <span class="gk-timeline-title">Assemble the video</span>
+                        <span class="gk-timeline-state">Skipped</span>
+                      </div>
+                      <p class="gk-timeline-detail">Needs the pictures.</p>
+                    </div>
+                  </li>
+                  <li class="gk-timeline-step gk-timeline-skipped">
+                    <span class="gk-timeline-marker" aria-hidden="true"></span>
+                    <div class="gk-timeline-body">
+                      <div class="gk-timeline-head">
+                        <span class="gk-timeline-title">Check the safe zones</span>
+                        <span class="gk-timeline-state">Skipped</span>
+                      </div>
+                    </div>
+                  </li>
+                </ol>
+              </div>
+            </div>
             HTML;
         });
         ?>

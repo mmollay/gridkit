@@ -220,6 +220,79 @@ if (isset($argv[1]) && $argv[1] === '--picker') {
     exit;
 }
 
+// The timeline and the portrait video frame (1.96.0), driven by ci/browser-timeline-video.js:
+// a timeline with one step in each of the five states (chips, a detail, an error, the running
+// step marked as current), a second one whose words are long addresses, and a column of frames —
+// a video, a picture, a landscape picture, the safe zones, a busy state, a failed one with a long
+// reason. The video is the demo's own 3 s file; pictures are SVG data URIs. A link in a detail and
+// a button before and after are for the keyboard.
+if (isset($argv[1]) && $argv[1] === '--timeline-video') {
+    $svg = static function (int $w, int $h, int $i): string {
+        $hue = ($i * 47) % 360;
+        $s = '<svg xmlns="http://www.w3.org/2000/svg" width="' . $w . '" height="' . $h . '" viewBox="0 0 ' . $w . ' ' . $h . '">'
+           . '<rect width="100%" height="100%" fill="hsl(' . $hue . ',55%,45%)"/>'
+           . '<circle cx="' . intdiv($w, 2) . '" cy="' . intdiv($h, 2) . '" r="' . intdiv(min($w, $h), 4) . '" fill="hsl(' . $hue . ',60%,75%)"/></svg>';
+        return 'data:image/svg+xml;base64,' . base64_encode($s);
+    };
+    $step = static function (string $id, string $state, string $title, string $word, string $inner = '', string $time = '', string $extra = ''): string {
+        return '<li class="gk-timeline-step gk-timeline-' . $state . '" id="' . $id . '"' . $extra . '>'
+             . '<span class="gk-timeline-marker" aria-hidden="true"></span>'
+             . '<div class="gk-timeline-body"><div class="gk-timeline-head">'
+             . '<span class="gk-timeline-title">' . $title . '</span><span class="gk-timeline-state">' . $word . '</span>'
+             . ($time !== '' ? '<span class="gk-timeline-time">' . $time . '</span>' : '')
+             . '</div>' . $inner . '</div></li>';
+    };
+    $chips = static fn (string ...$c): string => '<div class="gk-timeline-chips">'
+           . implode('', array_map(static fn (string $t): string => '<span class="gk-label gk-label-gray">' . $t . '</span>', $c)) . '</div>';
+    $long = 'https://example.org/an/address/that/is/much/longer/than/the/column/it/is/in/and/has/no/space/anywhere/in/it/at/all';
+    $media = 'file://' . $root . '/demo/media/sample-portrait.webm';
+    $frame = static fn (string $id, string $class, string $inner, string $caption): string =>
+        '<figure class="gk-video-frame' . ($class !== '' ? ' ' . $class : '') . '" id="' . $id . '"><div class="gk-video-frame-media">' . $inner . '</div>'
+      . '<figcaption class="gk-video-frame-caption">' . $caption . '</figcaption></figure>';
+    $video = '<video controls playsinline preload="metadata" aria-label="Sample" src="' . $media . '"></video>';
+    echo '<!DOCTYPE html><html lang="en">' . $head . '<body class="gk-root">' . Lang::jsConfig()
+       . '<style>body{background:var(--gk-surface);color:var(--gk-on-surface);margin:0}#page{max-width:960px;margin:0 auto;padding:16px}</style>'
+       . '<main id="page">'
+       . '<button type="button" id="before">Before</button>'
+       . '<section id="tl-box"><ol class="gk-timeline" role="list" aria-label="Steps" id="tl">'
+       . $step('s-ok', 'ok', 'Write the script', 'Done', $chips('Claude', '$0.03') . '<p class="gk-timeline-detail">Three scenes, 38 words.</p>',
+               '<time datetime="2026-10-17T09:12:03">09:12:03</time> · 4.2 s')
+       . $step('s-failed', 'failed', 'Make the pictures', 'Failed', $chips('Image service') . '<p class="gk-timeline-error">The image service did not answer after 3 tries.</p>',
+               '<time datetime="2026-10-17T09:12:08">09:12:08</time> · 31 s')
+       . $step('s-running', 'running', 'Assemble the video', 'Running', '<p class="gk-timeline-detail">Scene 2 of 3.</p>',
+               '<time datetime="2026-10-17T09:12:40">09:12:40</time> · 8 s so far', ' aria-current="step"')
+       . $step('s-waiting', 'waiting', 'Check the safe zones', 'Waiting')
+       . $step('s-skipped', 'skipped', 'Upload', 'Skipped', '<p class="gk-timeline-detail">Needs an approved video.</p>')
+       . '</ol></section>'
+       . '<section id="tl-long-box"><ol class="gk-timeline" role="list" aria-label="Long words" id="tl-long">'
+       . $step('l-title', 'failed', $long, 'Failed',
+               $chips('A provider with a very long name that cannot fit on one line of a phone', str_replace('/', '', $long), '$0.0312')
+             . '<p class="gk-timeline-detail">See <a href="#log" id="l-link">the log</a> or ' . $long . '</p>'
+             . '<p class="gk-timeline-error">' . $long . $long . '</p>',
+               '<time datetime="2026-10-17T09:12:03">09:12:03</time> · 4.2 s')
+       . $step('l-last', 'ok', 'Last', 'Done')
+       . '</ol></section>'
+       // Something wide that cannot break (a table, a pre): it may overflow its own box — here clipped by the section, so the page
+       // does not scroll — but it must not widen the column of the step.
+       . '<section id="tl-wide-box" style="overflow-x:hidden"><ol class="gk-timeline" role="list" aria-label="A wide result">'
+       . $step('l-wide', 'ok', 'A step with a long result that stays in its column', 'Done',
+               '<p class="gk-timeline-detail"><span style="display:inline-block;width:900px">wide, unbreakable</span></p>', '<time datetime="2026-10-17T09:12:03">09:12:03</time> · 4.2 s')
+       . '</ol></section>'
+       . '<div id="vf-box"><div id="vf-row">'
+       . $frame('vf-video', '', $video, 'Version 2 · 3 s')
+       . $frame('vf-safe', 'gk-video-frame-safe', $video, 'Safe zones')
+       . $frame('vf-img', '', '<img src="' . $svg(540, 960, 3) . '" alt="Portrait picture">', 'A portrait picture')
+       . $frame('vf-wide', '', '<img src="' . $svg(1600, 900, 5) . '" alt="Landscape picture">', 'A landscape picture ' . $long)
+       . $frame('vf-busy', 'gk-video-frame-busy', '<div class="gk-empty" role="status"><div class="gk-empty-inner"><span class="material-icons gk-empty-icon" aria-hidden="true">movie</span>'
+             . '<div class="gk-empty-title">Video is being made</div><div class="gk-empty-hint">This takes a minute or two.</div></div></div>', 'Version 3')
+       . $frame('vf-error', 'gk-video-frame-error', '<div class="gk-empty"><div class="gk-empty-inner"><span class="material-icons gk-empty-icon" aria-hidden="true">error</span>'
+             . '<div class="gk-empty-title">No video</div><div class="gk-empty-hint">' . $long . $long . '</div></div></div>', 'Version 3 failed')
+       . '</div></div>'
+       . '<button type="button" id="after">After</button>'
+       . '</main>' . $script . '</body></html>';
+    exit;
+}
+
 // An application page: GridKit's own fixed header with its user menu, the list
 // below it and the sheet the list opens. On a wide screen the sheet docks
 // beside the list — and the header's menu, which opens over the sheet's top

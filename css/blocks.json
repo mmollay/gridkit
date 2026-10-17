@@ -532,6 +532,38 @@
                 "gk-picker-zoom": "1.94.0"
             }
         },
+        "timeline": {
+            "name": "Timeline",
+            "classes": {
+                "gk-timeline": "1.96.0",
+                "gk-timeline-body": "1.96.0",
+                "gk-timeline-chips": "1.96.0",
+                "gk-timeline-detail": "1.96.0",
+                "gk-timeline-error": "1.96.0",
+                "gk-timeline-failed": "1.96.0",
+                "gk-timeline-head": "1.96.0",
+                "gk-timeline-marker": "1.96.0",
+                "gk-timeline-ok": "1.96.0",
+                "gk-timeline-running": "1.96.0",
+                "gk-timeline-skipped": "1.96.0",
+                "gk-timeline-state": "1.96.0",
+                "gk-timeline-step": "1.96.0",
+                "gk-timeline-time": "1.96.0",
+                "gk-timeline-title": "1.96.0",
+                "gk-timeline-waiting": "1.96.0"
+            }
+        },
+        "video-frame": {
+            "name": "Portrait video frame",
+            "classes": {
+                "gk-video-frame": "1.96.0",
+                "gk-video-frame-busy": "1.96.0",
+                "gk-video-frame-caption": "1.96.0",
+                "gk-video-frame-error": "1.96.0",
+                "gk-video-frame-media": "1.96.0",
+                "gk-video-frame-safe": "1.96.0"
+            }
+        },
         "breadcrumb": {
             "name": "Breadcrumb",
             "classes": {

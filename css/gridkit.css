@@ -8607,6 +8607,342 @@ label.gk-setting-title {
   border: 0;
 }
 
+/* === TIMELINE (1.96.0): .gk-timeline ======================================
+   A log of steps, one under the other: what ran, in which order, how each step
+   ended. A real ordered list — <ol class="gk-timeline" role="list"> — because the
+   order is the information; the numbers and bullets are off (the markers and the
+   line draw the sequence), and role="list" keeps the list for a screen reader that
+   drops the semantics of a list without markers.
+
+   Five states, each told apart by a SHAPE and by a WORD, never by colour alone:
+   ok (check), failed (cross), running (a ring with a gap, turning), waiting (an empty
+   ring with a dot), skipped (a dash). The word stands beside the title
+   (.gk-timeline-state); the marker is decoration (aria-hidden). The symbols are
+   lines and borders in the colour of the text — a high-contrast mode keeps borders
+   and repaints backgrounds, so a fill would turn into a blank disc.
+
+   Roles only, so light, [data-gk-mode="dark"] and .gk-dark follow from the tokens
+   and there is no dark rule here. The one thing that moves is the ring of the
+   running step, and it stands still under prefers-reduced-motion. */
+.gk-timeline {
+  --gk-timeline-marker: 28px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gk-timeline-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--gk-timeline-marker) minmax(0, 1fr);
+  column-gap: 14px;
+  padding-bottom: 20px;
+}
+.gk-timeline-step:last-child {
+  padding-bottom: 0;
+}
+/* The line from this marker to the next one; the last step has none. */
+.gk-timeline-step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--gk-timeline-marker) + 4px);
+  bottom: 4px;
+  left: calc(var(--gk-timeline-marker) / 2 - 1px);
+  width: 2px;
+  background: color-mix(in oklab, var(--gk-outline) 45%, transparent);
+}
+.gk-timeline-marker {
+  position: relative;
+  box-sizing: border-box;
+  width: var(--gk-timeline-marker);
+  height: var(--gk-timeline-marker);
+  border: 2px solid var(--gk-outline);
+  border-radius: 50%;
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface-variant);
+}
+/* Each state: the pair of its tone (container + on-container) and its own symbol. */
+.gk-timeline-ok .gk-timeline-marker {
+  border-color: var(--gk-success);
+  background: var(--gk-success-container);
+  color: var(--gk-on-success-container);
+}
+.gk-timeline-failed .gk-timeline-marker {
+  border-color: var(--gk-error);
+  background: var(--gk-error-container);
+  color: var(--gk-on-error-container);
+}
+.gk-timeline-running .gk-timeline-marker {
+  border-color: var(--gk-primary);
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+}
+.gk-timeline-waiting .gk-timeline-marker {
+  border-style: dashed;
+  border-color: var(--gk-on-surface-variant);
+  background: var(--gk-surface);
+}
+/* The symbols sit in the middle of the disc (inset 0 + margin auto, so a size is all a state has to say) and are drawn with borders. */
+.gk-timeline-marker::before,
+.gk-timeline-failed .gk-timeline-marker::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  box-sizing: border-box;
+}
+.gk-timeline-ok .gk-timeline-marker::before {
+  width: 7px;
+  height: 12px;
+  border: solid currentColor;
+  border-width: 0 2.5px 2.5px 0;
+  transform: translateY(-2px) rotate(45deg);
+}
+.gk-timeline-failed .gk-timeline-marker::before,
+.gk-timeline-failed .gk-timeline-marker::after {
+  width: 0;
+  height: 14px;
+  border-left: 2.5px solid currentColor;
+}
+.gk-timeline-failed .gk-timeline-marker::before {
+  transform: rotate(45deg);
+}
+.gk-timeline-failed .gk-timeline-marker::after {
+  transform: rotate(-45deg);
+}
+.gk-timeline-running .gk-timeline-marker::before {
+  width: 14px;
+  height: 14px;
+  border: 2.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: gk-spin 0.9s linear infinite;
+}
+.gk-timeline-waiting .gk-timeline-marker::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.gk-timeline-skipped .gk-timeline-marker::before {
+  width: 12px;
+  height: 0;
+  border-top: 2.5px solid currentColor;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gk-timeline-running .gk-timeline-marker::before {
+    animation: none;
+  }
+}
+/* Everything right of the marker starts 4px down: the title's first line (about 20px high) lies level with the middle of the 28px marker.
+   The column cannot be pushed wider than the grid gives it — its track is minmax(0, 1fr), which also switches off the automatic minimum. */
+.gk-timeline-body {
+  padding-top: 4px;
+}
+.gk-timeline-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+}
+.gk-timeline-title {
+  font-size: var(--gk-text-body);
+  font-weight: 600;
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface);
+  overflow-wrap: anywhere;
+}
+.gk-timeline-waiting .gk-timeline-title,
+.gk-timeline-skipped .gk-timeline-title {
+  color: var(--gk-on-surface-variant);
+}
+/* The word for the state. The text-safe variants of the tone colours, because here the colour IS the text. */
+.gk-timeline-state {
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+  line-height: var(--gk-leading-snug);
+  white-space: nowrap;
+  color: var(--gk-on-surface-variant);
+}
+.gk-timeline-ok .gk-timeline-state {
+  color: var(--gk-success-text);
+}
+.gk-timeline-failed .gk-timeline-state {
+  color: var(--gk-danger-text);
+}
+.gk-timeline-running .gk-timeline-state {
+  color: var(--gk-primary-text);
+}
+.gk-timeline-time {
+  margin-left: auto;
+  font-size: var(--gk-text-caption);
+  line-height: var(--gk-leading-snug);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--gk-on-surface-variant);
+}
+@media (max-width: 480px) {
+  .gk-timeline-time {
+    flex-basis: 100%;
+    margin-left: 0;
+    text-align: left;
+  }
+}
+/* Small chips (cost, provider): the .gk-label GridKit has, allowed to break. */
+.gk-timeline-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.gk-timeline-chips .gk-label {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.gk-timeline-detail {
+  margin: 6px 0 0;
+  font-size: var(--gk-text-label);
+  line-height: 1.45;
+  color: var(--gk-on-surface-variant);
+  overflow-wrap: anywhere;
+}
+/* The message of a step that broke: a tinted block with a thick edge, not a coloured sentence. */
+.gk-timeline-error {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--gk-error);
+  border-left-width: 4px;
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-error-container);
+  color: var(--gk-on-error-container);
+  font-size: var(--gk-text-label);
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+/* === VIDEO FRAME (1.96.0): .gk-video-frame ================================
+   A frame for a portrait video or picture (9:16): a short, a story, a phone screenshot.
+   A bare <video> of a vertical file is as wide as its column and three screens tall, so
+   the frame limits the height (75% of the window, dvh with vh behind it) and takes its
+   WIDTH from that limit — min(column, limit × 9/16) — because a max-height alone would
+   leave a wide, flat box once it bites. The box is 9:16 (aspect-ratio), rounded, and the
+   <video> or <img> lies IN it (absolute): a portrait file in the flow gives an aspect-ratio
+   box a height of its own, and the 9:16 is gone. It shows the whole picture (contain);
+   whoever approves a video has to see all of it. No autoplay, ever: the markup has controls.
+
+   .gk-video-frame-safe draws the zones a platform covers with its own buttons — about the
+   top tenth and the bottom fifth — as guide lines over the picture, on request. They are
+   two numbers a page may change (--gk-video-safe-top, --gk-video-safe-bottom, because
+   YouTube Shorts and Instagram Reels differ) and they never catch a click: the video's
+   controls lie in the bottom zone.
+
+   Nothing to show yet, or nothing to show because it broke: .gk-empty, reused, in the
+   box (.gk-video-frame-busy, .gk-video-frame-error). Colours are roles, apart from the
+   black behind a video (a letterbox is black in both modes, as in the lightbox) and the
+   guide lines, which lie over any picture. */
+.gk-video-frame {
+  --gk-video-frame-max-h: 75vh;
+  --gk-video-safe-top: 10%;
+  --gk-video-safe-bottom: 20%;
+  width: min(100%, calc(var(--gk-video-frame-max-h) * 9 / 16));
+  margin: 0;
+}
+@supports (height: 1dvh) {
+  .gk-video-frame {
+    --gk-video-frame-max-h: 75dvh;
+  }
+}
+.gk-video-frame-media {
+  position: relative;
+  box-sizing: border-box;
+  aspect-ratio: 9 / 16;
+  max-height: var(--gk-video-frame-max-h);
+  overflow: hidden;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-lg);
+  background: var(--gk-surface-container);
+}
+.gk-video-frame-media > video,
+.gk-video-frame-media > img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+.gk-video-frame-caption {
+  margin: 8px 0 0;
+  font-size: var(--gk-text-caption);
+  line-height: var(--gk-leading-snug);
+  color: var(--gk-on-surface-variant);
+  overflow-wrap: anywhere;
+}
+/* The safe zones: hatching so a bright and a dark picture both show it, and a dashed edge with a dark line under it. */
+.gk-video-frame-safe .gk-video-frame-media::before,
+.gk-video-frame-safe .gk-video-frame-media::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.38) 0 6px, rgba(255, 255, 255, 0.18) 6px 12px);
+}
+.gk-video-frame-safe .gk-video-frame-media::before {
+  top: 0;
+  height: var(--gk-video-safe-top);
+  border-bottom: 2px dashed #fff;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+.gk-video-frame-safe .gk-video-frame-media::after {
+  bottom: 0;
+  height: var(--gk-video-safe-bottom);
+  border-top: 2px dashed #fff;
+  box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.6);
+}
+/* .gk-empty in the box: it keeps its look and drops its 56px of padding, which a 150px frame has no room for. */
+.gk-video-frame-media > .gk-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 16px 12px;
+  overflow: auto;
+}
+.gk-video-frame-media .gk-empty-hint {
+  overflow-wrap: anywhere;
+}
+.gk-video-frame-busy .gk-empty-icon {
+  color: var(--gk-primary-text);
+  opacity: 1;
+  animation: gk-dot-pulse 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gk-video-frame-busy .gk-empty-icon {
+    animation: none;
+  }
+}
+/* A box with nothing in it has a dashed edge: on a page of the same grey it would not be there at all. */
+.gk-video-frame-busy .gk-video-frame-media,
+.gk-video-frame-error .gk-video-frame-media {
+  border-style: dashed;
+  border-color: var(--gk-outline);
+}
+.gk-video-frame-error .gk-video-frame-media {
+  border-color: var(--gk-error);
+}
+.gk-video-frame-error .gk-empty-icon {
+  color: var(--gk-danger-text);
+  opacity: 1;
+}
+.gk-video-frame-error .gk-empty-title {
+  color: var(--gk-danger-text);
+}
+
 /* === IMAGE PICKER (1.94.0): .gk-picker ===================================
    Choose one image out of many. A grid of 16:9 tiles instead of a full row each:
    with ten images the row list filled the screen, with thirty it was unusable.
