@@ -328,6 +328,23 @@ if (isset($argv[1]) && $argv[1] === '--admin') {
        // Shown the old way: an inline display and the attribute left on. It stood
        // on the page before 1.92.0 and still does — the guard only adds.
        . '<div class="gk-message gk-message-info" id="msg-inline" hidden style="display:block">Shown by a script</div>'
+       // 1.95.0, the small message: a tone each with the message of the same tone beside it (the colours
+       // must be the same), a long address, a margin utility, an empty announcement, the compact one it
+       // is not, and the one without a tone.
+       . '<div id="sm-box">'
+       . implode('', array_map(static fn (string $t): string =>
+            '<div class="gk-message gk-message-' . $t . ' gk-message-sm" id="sm-' . $t . '"><span class="material-icons" aria-hidden="true">info</span>'
+            . '<div class="gk-message-content"><div class="gk-message-header">Title</div>Text of the ' . $t . ' message.</div></div>'
+            . '<div class="gk-message gk-message-' . $t . '" id="ref-' . $t . '"><span class="material-icons" aria-hidden="true">info</span>'
+            . '<div class="gk-message-content"><div class="gk-message-header">Title</div>Text of the ' . $t . ' message.</div></div>',
+            ['info', 'success', 'warning', 'error']))
+       . '<div class="gk-message gk-message-warning gk-message-sm" id="sm-long"><span class="material-icons" aria-hidden="true">warning</span>'
+       . '<div class="gk-message-content">https://example.org/an/address/that/is/much/longer/than/the/box/it/is/in/and/has/no/space/anywhere/in/it</div></div>'
+       . '<div class="gk-message gk-message-info gk-message-sm gk-mb-3" id="sm-mb"><div class="gk-message-content">With a margin utility.</div></div>'
+       . '<div class="gk-message gk-message-sm gk-announce" id="sm-empty" role="status" aria-live="polite" aria-atomic="true"></div>'
+       . '<div class="gk-message gk-message-info gk-message-compact" id="ref-compact"><div class="gk-message-content">Compact.</div></div>'
+       . '<div class="gk-message gk-message-sm" id="sm-neutral"><div class="gk-message-content">No tone.</div></div>'
+       . '</div>'
        . '<label class="gk-choice" id="choice-hidden" hidden><input type="radio" name="h"><span class="gk-choice-mark">A</span></label>'
        . '<button type="button" class="gk-btn gk-btn-text gk-btn-icon-only gk-btn-sm gk-btn-touch" id="touch-icon" aria-label="Edit"><span aria-hidden="true">E</span></button>'
        . '<span class="gk-show-mobile" id="only-phone">phone only</span>'

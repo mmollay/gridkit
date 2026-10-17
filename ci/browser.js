@@ -1053,6 +1053,80 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
     check("admin: a block a script shows with an inline display stays shown although hidden is still on it — the guard only adds",
       inline.display === "block" && inline.h > 0);
 
+    // ── The small message, .gk-message-sm (1.95.0) ───────────────────────────
+    // The box in a real browser: the numbers of the rule, what a phone and a margin utility do to
+    // them (the order in the file), a long address, the colours of the tone in both modes, and the
+    // classes next to it as they were.
+    {
+      const lies = () => adm.evaluate(() => {
+        const st = (id, sel) => getComputedStyle(sel ? document.getElementById(id).querySelector(sel) : document.getElementById(id));
+        const kasten = (id) => { const c = st(id); return { padding: c.padding, margin: c.margin, gap: c.gap, schrift: c.fontSize, zeile: parseFloat(c.lineHeight) }; };
+        return {
+          klein: kasten("sm-info"), meldung: kasten("ref-info"), kompakt: kasten("ref-compact"),
+          symbol: st("sm-info", ".material-icons").fontSize, meldungSymbol: st("ref-info", ".material-icons").fontSize,
+          titel: st("sm-info", ".gk-message-header").marginBottom, inhalt: st("sm-info", ".gk-message-content").minWidth,
+          nutzen: st("sm-mb").marginBottom,
+        };
+      });
+      const breit = await lies();
+      check("message-sm: padding 10px 14px, gap 10px, no margin, 13px text over a 1.45 line, the symbol 18px, the title 2px above its text, the text allowed to shrink",
+        breit.klein.padding === "10px 14px" && breit.klein.gap === "10px" && breit.klein.margin === "0px" && breit.klein.schrift === "13px"
+        && Math.abs(breit.klein.zeile - 13 * 1.45) < 0.01 && breit.symbol === "18px" && breit.titel === "2px" && breit.inhalt === "0px");
+      if (breit.klein.padding !== "10px 14px") console.log("   message-sm: " + JSON.stringify(breit));
+      check("message-sm: … and the message beside it is as it was — 14px 20px, a 16px margin, a 20px symbol; the compact one 10px 16px with the same 16px margin",
+        breit.meldung.padding === "14px 20px" && breit.meldung.margin === "0px 0px 16px" && breit.meldungSymbol === "20px"
+        && breit.kompakt.padding === "10px 16px" && breit.kompakt.margin === "0px 0px 16px");
+      check("message-sm: a margin utility on it still wins — gk-mb-3 is 12px, not the margin: 0 of the rule", breit.nutzen === "12px");
+
+      // A long address breaks inside the box (300px), on a second line, instead of pushing out of it.
+      const lang = await adm.evaluate(() => {
+        document.getElementById("sm-box").style.width = "300px";
+        const m = document.getElementById("sm-long"), c = m.querySelector(".gk-message-content");
+        const r = m.getBoundingClientRect(), cr = c.getBoundingClientRect();
+        const ergebnis = { quer: m.scrollWidth - m.clientWidth, breite: Math.round(r.width), innen: cr.right <= r.right + 0.5,
+                           zeilen: Math.round(cr.height / parseFloat(getComputedStyle(c).lineHeight)) };
+        document.getElementById("sm-box").style.width = "";
+        return ergebnis;
+      });
+      check("message-sm: a long address in a box 300px wide breaks onto further lines — nothing pushes out of the box",
+        lang.quer <= 0 && lang.breite === 300 && lang.innen && lang.zeilen >= 2);
+      if (!(lang.quer <= 0 && lang.zeilen >= 2)) console.log("   message-sm long address: " + JSON.stringify(lang));
+
+      // An empty announcement keeps taking no room (.gk-announce:empty is the stronger rule).
+      const leer = await adm.evaluate(() => {
+        const r = document.getElementById("sm-empty").getBoundingClientRect();
+        return { w: r.width, h: r.height, anzeige: getComputedStyle(document.getElementById("sm-empty")).display };
+      });
+      check("message-sm: an empty announcement in the small box is still 1px — no box, no gap", leer.w <= 1 && leer.h <= 1 && leer.anzeige !== "none");
+
+      // On a phone .gk-message gets 12px 14px at the same weight; the small one has to stay at 10px.
+      await adm.setViewportSize({ width: 390, height: 900 });
+      const phone = await lies();
+      await adm.setViewportSize({ width: 1440, height: 1000 });
+      check("message-sm: on a phone it stays at 10px 14px, while the message itself is 12px 14px there (the phone rule of .gk-message is not touched)",
+        phone.klein.padding === "10px 14px" && phone.meldung.padding === "12px 14px" && phone.klein.margin === "0px");
+      if (phone.klein.padding !== "10px 14px") console.log("   message-sm phone: " + JSON.stringify(phone.klein));
+
+      // The colours come from the tone class alone: the same as the message of that tone, in light
+      // and in dark, different from the one without a tone and different between the modes.
+      const toene = ["info", "success", "warning", "error"];
+      const farben = (modus) => adm.evaluate(([modus, toene]) => {
+        document.body.setAttribute("data-gk-mode", modus);
+        document.getAnimations().filter((a) => isFinite(a.effect.getComputedTiming().endTime)).forEach((a) => a.finish());
+        const f = (id) => { const c = getComputedStyle(document.getElementById(id)); return [c.color, c.backgroundColor, c.borderTopColor].join(" | "); };
+        return { toene: Object.fromEntries(toene.map((t) => [t, { klein: f("sm-" + t), meldung: f("ref-" + t) }])), ohneTon: f("sm-neutral") };
+      }, [modus, toene]);
+      const hell = await farben("light"), dunkel = await farben("dark");
+      await adm.evaluate(() => document.body.setAttribute("data-gk-mode", "light"));
+      const gleich = (f) => toene.filter((t) => f.toene[t].klein !== f.toene[t].meldung);
+      check("message-sm: each of the four tones wears the colours of the message of that tone — text, ground and border — in light and in dark",
+        gleich(hell).length === 0 && gleich(dunkel).length === 0);
+      if (gleich(hell).length || gleich(dunkel).length) console.log("   message-sm colours: light " + gleich(hell) + ", dark " + gleich(dunkel));
+      check("message-sm: the tones differ from each other and from the one without a tone, and dark is another set than light",
+        new Set(toene.map((t) => hell.toene[t].klein).concat(hell.ohneTon)).size === 5
+        && toene.every((t) => hell.toene[t].klein !== dunkel.toene[t].klein));
+    }
+
     const kopfzeile = () => adm.evaluate(() => {
       const h1 = document.querySelector(".gk-header-title h1");
       const meta = document.getElementById("head-meta");

@@ -378,6 +378,7 @@ roles only; light and dark follow from them.
 | Chart colours | `--gk-series-1` … `-5`; `.gk-swatch .gk-swatch-1` … `-5`, `.gk-series-fill-1` … `-5`, `.gk-series-stroke-1` … `-5` | — |
 | Touch button | `.gk-btn.gk-btn-touch` — min `--gk-target-min` (44px) both ways | — |
 | Message actions | `.gk-message > .gk-message-actions`; an outlined button in it stands on `--gk-surface` | — |
+| Small message | `.gk-message.gk-message-sm` (+ a tone class, or none): padding 10px 14px, gap 10px, `--gk-text-label` over 1.45, symbol `--gk-icon-sm`, title margin 2px, margin 0 (`gk-mb-*` still wins), a long word wraps; colours from the tone class only. `.gk-message-compact` is unchanged (keeps the 16px margin) | — |
 | Phone only | `.gk-show-mobile` | — |
 | Answer tile | `label.gk-choice > input + .gk-choice-mark + .gk-choice-text > (-title, -hint)` | `'choice'` (`'multiple'`) |
 

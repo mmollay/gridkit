@@ -124,16 +124,20 @@ return [
 
 'the marks are GridKit\'s own green and blue labels, in both modes' => function () use ($css, $rule): void {
     Lang::set('en');
-    $new = since('announce');
+    $new = since('picker');
     T::contains($new, 'gk-label gk-label-green', 'a new block is not marked with the green label');
-    T::contains($new, 'New in 1.93', 'the mark does not say what is new');
-    T::contains($new, 'since 1.93', 'the heading does not say since when');
+    T::contains($new, 'New in 1.94', 'the mark does not say what is new');
+    T::contains($new, 'since 1.94', 'the heading does not say since when');
 
     // The window moves with every minor (the last two): the block that shows "changed" is the one a
-    // new class marked changed by itself — the lightbox, which learned a second line and a button in 1.94.
-    $changed = since('lightbox');
+    // new class marked changed by itself — the message, which learned its small box in 1.95.
+    $changed = since('message');
     T::contains($changed, 'gk-label gk-label-blue', 'a changed block is not marked with the blue label');
-    T::contains($changed, 'Changed in 1.94', 'the mark does not say when it changed');
+    T::contains($changed, 'Changed in 1.95', 'the mark does not say when it changed');
+
+    // A block that fell out of the window (new in 1.93, the window is 1.95 and 1.94) carries no mark.
+    T::notContains(since('announce'), 'gk-label', 'a block older than the last two minors carries a mark');
+    T::contains(since('announce'), 'since 1.93', 'a block that fell out of the window does not say since when');
 
     $old = since('toast');
     T::notContains($old, 'gk-label', 'a block unchanged for years carries a mark');
@@ -147,8 +151,8 @@ return [
     }
 
     Lang::set('de');
-    T::contains(since('announce'), 'Neu in 1.93', 'a German demo marks in English');
-    T::contains(since('lightbox'), 'Geändert in 1.94', 'a German demo marks in English');
+    T::contains(since('picker'), 'Neu in 1.94', 'a German demo marks in English');
+    T::contains(since('message'), 'Geändert in 1.95', 'a German demo marks in English');
     Lang::set('en');
 },
 
@@ -186,13 +190,13 @@ return [
     $both = since('row-link', 'sheet');
     T::eq(substr_count($both, '>since '), 1, 'two blocks in one heading say "since" twice');
     T::eq(substr_count($both, 'class="demo-since"'), 1, 'two blocks in one heading give two marks');
-    // "since" is the older block's: the region (1.93) beside the message (1.0).
-    $mixed = since('announce', 'message');
+    // "since" is the older block's: the picker (1.94) beside the message (1.0).
+    $mixed = since('picker', 'message');
     T::contains($mixed, 'since ' . gkMinor(gkBlocks()['message']['since']) . '<', 'the heading does not say since when the older block exists');
-    T::contains($mixed, 'New in 1.93', 'the new block of the two is not marked');
-    // A block changed in 1.94 beside one new in 1.93: each mark once.
-    T::eq(substr_count(since('announce', 'lightbox'), 'Changed in 1.94'), 1, '"Changed in 1.94" twice in one heading');
-    T::eq(substr_count(since('announce', 'lightbox'), 'New in 1.93'), 1, '"New in 1.93" twice in one heading');
+    T::contains($mixed, 'New in 1.94', 'the new block of the two is not marked');
+    // A block changed in 1.95 beside one new in 1.94: each mark once.
+    T::eq(substr_count(since('picker', 'message'), 'Changed in 1.95'), 1, '"Changed in 1.95" twice in one heading');
+    T::eq(substr_count(since('picker', 'message'), 'New in 1.94'), 1, '"New in 1.94" twice in one heading');
     // One new in 1.94 beside one changed in 1.94: "New in" says it all.
     $newAndChanged = since('picker', 'lightbox');
     T::contains($newAndChanged, 'New in 1.94', 'the new block of the two is not marked');

@@ -110,6 +110,7 @@ const PROBEN = [
   [".gk-accordion-body",      '<div class="gk-accordion"><div class="gk-accordion-body">x</div></div>', ".gk-accordion-body"],
   [".gk-label-text",          '<label class="gk-label-text">x</label>', ".gk-label-text"],
   [".gk-message",             '<div class="gk-message">x</div>', ".gk-message"],
+  [".gk-message-sm",          '<div class="gk-message gk-message-sm">x</div>', ".gk-message-sm"],
   [".gk-btn-tonal neutral",   '<button class="gk-btn gk-btn-tonal gk-btn-neutral">x</button>', ".gk-btn-tonal"],
   [".gk-table thead th",      '<table class="gk-table"><thead><tr><th>x</th></tr></thead></table>', ".gk-table thead th"],
   [".gk-table-definition td", '<table class="gk-table gk-table-definition"><tbody><tr><td>x</td><td>y</td></tr></tbody></table>', ".gk-table-definition td:first-child"],
@@ -259,6 +260,8 @@ const CHIPROLLEN = {
   neutral: "--gk-surface-container-highest",
 };
 const ALLE_CHIPS = [...new Set([...CHIPFARBEN, ...Object.keys(CHIPROLLEN), "blue"])];
+/* 1.95.0: die Töne einer Meldung. Ohne Ton ist es die neutrale (.gk-message allein). */
+const MELDUNGSTOENE = ["neutral", "info", "success", "warning", "error"];
 const BAUSTEINE = `
 <div class="gk-card" id="karte">
   <span class="gk-avatar gk-avatar-initials gk-avatar-tone-1" id="ton-1">AB</span>
@@ -278,6 +281,8 @@ const BAUSTEINE = `
 <div class="gk-stat-tiles"><div class="gk-stat-tile" id="kachel-seite"><span class="gk-stat-tile-value">1</span><span class="gk-stat-tile-label">x</span><span class="gk-stat-tile-sub">y</span></div></div>
 ${[["warning", "warning"], ["error", "danger"], ["success", "success"], ["info", "primary"], ["warning", "neutral"]].map(([band, knopf]) =>
   `<div class="gk-message gk-message-${band}" id="band-${band}-${knopf}"><span>Text</span><div class="gk-message-actions"><button type="button" class="gk-btn gk-btn-outlined gk-btn-${knopf} gk-btn-touch">Prüfen</button></div></div>`).join("\n")}
+${MELDUNGSTOENE.flatMap((ton) => ["", "-klein"].map((art) =>
+  `<div class="gk-message${ton === "neutral" ? "" : ` gk-message-${ton}`}${art ? " gk-message-sm" : ""}" id="meldung${art}-${ton}"><span class="material-icons" aria-hidden="true">info</span><div class="gk-message-content"><div class="gk-message-header">Titel</div>Text</div></div>`)).join("\n")}
 <div class="gk-table-wrap gk-table-list"><table class="gk-table"><tbody>
 <tr class="gk-row-link" id="zeile"><td><button type="button" class="gk-row-target">N</button><span class="gk-cell-sub">a@b</span></td><td><span class="gk-num-empty">—</span></td></tr>
 <tr class="gk-row-link" aria-current="true" id="zeile-offen"><td><button type="button" class="gk-row-target">N</button><span class="gk-cell-sub">a@b</span></td><td><span class="gk-num-empty">—</span></td></tr>
@@ -335,6 +340,14 @@ const TEXTPROBEN = [
      4,35:1. Jede Meldungsfarbe mit ihrem Knopf, dazu der neutrale. */
   ...[["warning", "warning"], ["error", "danger"], ["success", "success"], ["info", "primary"], ["warning", "neutral"]].map(([band, knopf]) =>
     [`Meldung ${band} · Knopf ${knopf}`, `band-${band}-${knopf}`, ".gk-btn"]),
+  /* 1.95.0: die kleine Meldung (.gk-message-sm). Sie malt keine Farbe selbst, ihr Text
+     und ihr Titel tragen die Farbe des Tons — gemessen auf dem getönten Band, das
+     wirklich unter ihnen liegt, neben der Meldung ohne -sm (bisher nirgends gemessen). */
+  ...MELDUNGSTOENE.flatMap((ton) => [
+    [`Meldung ${ton} · Text`, `meldung-${ton}`, ".gk-message-content"],
+    [`Meldung ${ton} klein · Text`, `meldung-klein-${ton}`, ".gk-message-content"],
+    [`Meldung ${ton} klein · Titel`, `meldung-klein-${ton}`, ".gk-message-header"],
+  ]),
   /* Der leere Wert (.gk-num-empty) ist Text: dunkel stand er bei 2,1:1 auf der
      Tabelle und 1,6:1 in der Zeile des offenen Blatts. Die Adresse darunter
      (.gk-cell-sub) in derselben Zeile gleich mit. */
@@ -710,6 +723,8 @@ function bausteineBerichten(wie, zeilen) {
   // hier nur die Zahlen der Marken, darum ohne Rückgabe addiert.
   markenBerichten("mit themes.css", bausteineMitThemes);
   markenBerichten("ohne themes.css", bausteineOhneThemes);
+  markenBerichten("mit themes.css", bausteineMitThemes, "Meldungen 1.95.0 (Text und Titel auf dem getönten Band)", /^Meldung .* · (Text|Titel)$/);
+  markenBerichten("ohne themes.css", bausteineOhneThemes, "Meldungen 1.95.0 (Text und Titel auf dem getönten Band)", /^Meldung .* · (Text|Titel)$/);
   markenBerichten("mit themes.css", bausteineMitThemes, "Chips 1.93.3/1.93.4 (Zahl und Beschriftung)", /^Chip /);
   markenBerichten("ohne themes.css", bausteineOhneThemes, "Chips 1.93.3/1.93.4 (Zahl und Beschriftung)", /^Chip /);
 

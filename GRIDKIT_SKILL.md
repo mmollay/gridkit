@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.94.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.95.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -1343,6 +1343,22 @@ writes one). In a message an outlined button stands on the surface, not on the
 tinted band — its text colour is chosen for the surface (a warning's measured
 4.35:1 on the band).
 
+**A small message (`.gk-message-sm`)** — for a notice that sits among other
+things and has to be seen: the sentence above a chat, a hint beside a form. It
+has the look of `.gk-message` (tone, tint, symbol, `.gk-message-header`) in a
+smaller box: padding 10px 14px, 13px text, a symbol one step down, and **no
+margin** — the surroundings set the spacing (`gk-mb-*` still works on it, and a
+flex column with `gk-gap-*` stacks several). The tone classes give the colours,
+so it takes all four and none. `.gk-message-compact` is a different thing and
+unchanged: it keeps the 16px margin of `.gk-message`.
+
+```html
+<div class="gk-message gk-message-info gk-message-sm">
+  <span class="material-icons" aria-hidden="true">lock</span>
+  <div class="gk-message-content">The conversation is stored on our server and never passed on.</div>
+</div>
+```
+
 ```html
 <div class="gk-message gk-message-warning">
   <span>2 runs are stuck.</span>
@@ -1927,6 +1943,7 @@ Features:
 | `gk-swatch` `gk-swatch-1` … `gk-swatch-5`, `gk-series-fill-1` … `-5`, `gk-series-stroke-1` … `-5` | Chart colours from `--gk-series-1` … `-5`: legend mark, SVG fill, SVG stroke |
 | `gk-btn-touch` | A button at least `--gk-target-min` (44px) in both directions, type unchanged |
 | `gk-message-actions` | Actions on the right of a `.gk-message` |
+| `gk-message-sm` | A small message (since 1.95.0): denser than `.gk-message-compact` and with no margin of its own; the tone comes from `-info` `-success` `-warning` `-error` |
 | `gk-announce` | A live region that is always on the page (since 1.93.0): empty it has no box but stays in the accessibility tree; `GK.announce()` writes its words |
 | `gk-show-mobile` | Shown at 768px and below only — the counterpart of `gk-hide-mobile` |
 | `gk-choice` `gk-choice-mark` `gk-choice-text` `gk-choice-title` `gk-choice-hint` | A radio or checkbox as an answer tile with a letter (Form `'choice'`) |

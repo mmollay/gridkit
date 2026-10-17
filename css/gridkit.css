@@ -5431,6 +5431,38 @@ a.gk-stat-card:hover {
   }
 }
 
+/* ── A small message: .gk-message-sm (1.95.0) ──────────────────────────────
+   A notice that has to be seen but sits among other things — the sentence above
+   a chat, a hint beside a form. The look is the message's own (tone, tint,
+   symbol, title); only the box is smaller: 10px 14px, 13px text, a symbol one
+   step down, and NO margin — the surroundings set the spacing, and `gk-mb-*`
+   still works. The text may wrap: a long address breaks instead of pushing out
+   of the box. Next to .gk-message-compact, which keeps its 16px margin and is
+   used as such: the small one is for a place that brings its own gaps.
+
+   Its place in the file is part of the rule. Here, after the phone rules,
+   because `.gk-message` gets padding 12px 14px on a phone at the same weight
+   and the later one wins; before the margin utilities (.gk-mb-0 …) for the same
+   reason the other way round. It sets no colour: the tone classes (and their
+   dark rules) decide, so it works with all four and without one. */
+.gk-message-sm {
+  margin: 0;
+  padding: 10px 14px;
+  gap: 10px;
+  font-size: var(--gk-text-label);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.gk-message-sm .material-icons {
+  font-size: var(--gk-icon-sm);
+}
+.gk-message-sm .gk-message-header {
+  margin-bottom: 2px;
+}
+.gk-message-sm .gk-message-content {
+  min-width: 0;
+}
+
 /* === AVATAR === */
 .gk-avatar {
   display: inline-flex;

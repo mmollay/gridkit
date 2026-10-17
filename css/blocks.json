@@ -437,6 +437,7 @@
                 "gk-message-header": "1.0.0",
                 "gk-message-info": "1.0.0",
                 "gk-message-list": "1.0.0",
+                "gk-message-sm": "1.95.0",
                 "gk-message-success": "1.0.0",
                 "gk-message-warning": "1.0.0"
             }

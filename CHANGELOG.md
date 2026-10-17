@@ -7,6 +7,61 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.95.0] - 2026-10-17
+
+### Added — a small message: `.gk-message-sm`
+The SSI Panel put a privacy sentence above its chat as a `.gk-field-hint`: 12px grey text that read
+like body copy. A `.gk-message` has the look such a sentence needs — tinted ground, border, a symbol in
+the signal colour, `.gk-message-header` as the title — but it is too heavy for that place: padding
+14px 20px and a 16px margin underneath. `.gk-message-sm` keeps the look and shrinks the box:
+
+```html
+<div class="gk-message gk-message-info gk-message-sm">
+  <span class="material-icons" aria-hidden="true">lock</span>
+  <div class="gk-message-content">The conversation is stored on our server and never passed on.</div>
+</div>
+```
+
+- **The box:** padding `10px 14px`, gap `10px`, text `--gk-text-label` (13px) over a line height of
+  1.45, the symbol one step down (`--gk-icon-sm`, 18px), the title 2px above its text, and **no margin**
+  (`margin: 0`) — the surroundings set the spacing; a `gk-mb-*` on it still wins. The text may wrap:
+  `min-width: 0` on `.gk-message-content` and `overflow-wrap: anywhere`, so a long address breaks
+  instead of pushing out of the box.
+- **No colour of its own.** It takes the tone from `.gk-message-info`, `-success`, `-warning`,
+  `-error` or none, light and dark, exactly as the message does — there is no dark rule for it.
+- **Its place in the file is part of the rule.** After the phone rules, because `.gk-message` gets
+  padding `12px 14px` on a phone at the same weight and the later rule wins (on a phone the small one
+  stays at 10px); before the margin utilities, for the same reason the other way round.
+- **`.gk-message-compact` is not this, and is unchanged.** It already existed (padding `10px 16px`,
+  13px) and keeps the 16px margin of `.gk-message`; some twenty Panel views use it and count on that
+  margin, so taking it away would have moved all of them. The small message is a class of its own.
+
+Text on the tinted band, measured in a browser in all six themes and without one, light and both dark
+spellings (`[data-gk-mode="dark"]`, `.gk-dark`), with and without `themes.css` — weakest value per
+tone, light / dark / dark class: neutral 16.30 / 14.03 / 14.64, info 7.40 / 5.66 / 6.76, success
+8.31 / 7.92 / 9.45, warning 6.11 / 8.24 / 9.76, error 7.91 / 6.93 / 8.12 (WCAG AA asks 4.5:1). The
+message without `-sm` is identical to the digit — the same colours — and had not been measured at
+all before.
+
+### Tests
+- `tests/message-sm.test.php` (new): the box as written above and denser than `.gk-message` and
+  `.gk-message-compact`, read from their rules; the text size a token between 12px and the body
+  size; the rule after the phone rule of `.gk-message` and before `.gk-mb-0`; no colour, background
+  or border in any rule of `.gk-message-sm` and no dark rule of its own; `.gk-message` and
+  `.gk-message-compact` as they were; the dark text of every tone on its tint over each dark ground a
+  message sits on, computed, at least 4.5:1.
+- `ci/farben.js`: the neutral small message in the palette check, and Text and Title of every tone —
+  with and without `-sm` — against the band that really lies under them, in every theme and mode.
+- `ci/browser.js`: the small message in a browser — box, symbol, title, a long address that breaks,
+  `gk-mb-3` that still wins, the empty announcement that still takes no room, phone width and dark
+  mode.
+- `tests/blocks.test.php`: the marks speak of the last two minors, and those moved to 1.95 and 1.94 —
+  the picker is the block new in 1.94, the message the one changed in 1.95, and the region (1.93) is
+  now the block that has fallen out of the window and carries no mark.
+- `css/blocks.json`: `gk-message-sm` in the Message block; the demo shows it; SPEC.md and the skill
+  describe it.
+
+---
 ## [1.94.0] - 2026-10-12
 
 ### Added — the image picker: choose one image out of many, in a compact grid

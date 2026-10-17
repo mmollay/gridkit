@@ -1263,11 +1263,21 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
     <h3 style="margin: 32px 0 16px;">Compact</h3>
     <div class="gk-message gk-message-info gk-message-compact"><span class="material-icons" aria-hidden="true">info</span><div class="gk-message-content">Compact message for less space.</div></div>
 
+    <h3 class="demo-h3">Small <?= since('message') ?></h3>
+    <p class="demo-intro">A notch denser and without a margin of its own, for a place that sets its own gaps: the sentence above a chat, a hint beside a form. All four tones work, light and dark; a long address wraps.</p>
+    <div class="gk-flex-col gk-gap-md">
+        <div class="gk-message gk-message-info gk-message-sm"><span class="material-icons" aria-hidden="true">lock</span><div class="gk-message-content"><div class="gk-message-header">Your data stays with us</div>The conversation is stored on our server and never passed on.</div></div>
+        <div class="gk-message gk-message-success gk-message-sm"><span class="material-icons" aria-hidden="true">check_circle</span><div class="gk-message-content">Saved. Nothing else to do.</div></div>
+        <div class="gk-message gk-message-warning gk-message-sm"><span class="material-icons" aria-hidden="true">warning</span><div class="gk-message-content">The link expires in 7 days.</div></div>
+        <div class="gk-message gk-message-error gk-message-sm"><span class="material-icons" aria-hidden="true">error</span><div class="gk-message-content">Could not reach the server. Try again in a minute.</div></div>
+    </div>
+
     <h3 style="margin: 32px 0 16px;">Dismissible</h3>
     <div class="gk-message gk-message-warning" id="demo-dismiss-msg"><span class="material-icons" aria-hidden="true">warning</span><div class="gk-message-content">This message can be closed.</div><button class="gk-message-dismiss" onclick="this.parentElement.style.display='none'"><span class="material-icons" aria-hidden="true">close</span></button></div>
 
     <div class="demo-code"><pre>.gk-message / .gk-message-info / .gk-message-success
 .gk-message-warning / .gk-message-error / .gk-message-compact
+.gk-message-sm       // Denser, no margin of its own
 .gk-message-dismiss  // Close button</pre></div>
 </div>
 
