@@ -131,8 +131,10 @@ return [
         T::contains($c, $key, "the script never reads the key $key");
     }
     T::contains($c, 'rtl', 'left and right do not swap in a right-to-left container');
-    // Up and down in a grid move a whole row; the row length is measured, not assumed.
-    T::contains($c, 'getBoundingClientRect', 'nothing is measured: a grid cannot know its row length');
+    // Up and down in a grid move a whole row; the row length is measured, not assumed — by the layout
+    // (offsetTop), because an entry that is still gliding is drawn away from its row.
+    T::ok((bool) preg_match('/function rowLength\([^)]*\)\s*\{[^}]*offsetTop[^}]*\}/s', $c), 'nothing is measured by the layout: a grid cannot know its row length');
+    T::ok(!preg_match('/function rowLength\([^)]*\)\s*\{[^}]*getBoundingClientRect[^}]*\}/s', $c), 'the row length is read from where entries are drawn, and a glide in flight falsifies it');
     // The lifted state ends when the handle loses the focus.
     T::contains($c, 'focusout', 'a lifted entry stays lifted when the focus leaves');
 },
@@ -165,6 +167,8 @@ return [
     T::contains($c, 'bubbles: true', 'the event does not bubble');
     T::contains($c, 'behaelter', 'the event detail has no behaelter');
     T::contains($c, 'sortierbar_gespeichert', 'success is not announced');
+    // The put-down words and "saved" are one message: two a moment apart let the second wipe the first.
+    T::ok((bool) preg_match('/sortierbar_gespeichert"\)\s*,\s*true\)/', $c), 'saved is announced on its own, and can wipe out the words of the drop');
     T::contains($c, 'sortierbar_fehler', 'failure is not said in words');
     // The address comes from the page; the library knows no route of its own.
     T::ok(!preg_match('#\bfetch\(\s*[\'"]/#', $c), 'the script fetches a fixed path');
@@ -173,6 +177,8 @@ return [
 'motion stands still when asked, and the script writes no style but a position' => function () use ($code): void {
     $c = $code();
     T::contains($c, 'prefers-reduced-motion', 'the script does not look at prefers-reduced-motion');
+    // A move that comes while the entries still glide starts from where they are drawn, not from a half-way point.
+    T::contains($c, '.cancel()', 'the glide of an earlier move is not stopped before the next is measured');
     T::notContains($c, 'cssText', 'the script writes a whole style attribute');
     T::notContains($c, 'setAttribute("style"', 'the script writes a style attribute');
     T::notContains($c, 'style="', 'the script writes markup with an inline style');

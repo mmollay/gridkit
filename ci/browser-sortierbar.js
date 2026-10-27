@@ -279,7 +279,7 @@ const contrastLine = (page, cls) => page.evaluate(new Function("cls", `${PIXEL}
       check(`S06 ${label}: a visible sentence with a symbol and role=alert says it could not be saved`,
         f.hidden === false && f.role === "alert" && f.icon && f.box > 20 && /The order could not be saved\. Please try again\./.test(f.text), f);
       check(`S06 ${label}: gk:sortiert fired for the drop and again, marked as back, for the return`, evs.length === 2 && evs[1].back === true && JSON.stringify(evs[1].ids) === before, evs);
-      if (how === "error") { await page.evaluate(() => document.querySelector("#liste").scrollIntoView({ block: "start" })); await shot(page, "sortierbar-fehler-hell"); }
+      if (how === "error") { await page.evaluate(() => document.querySelector("#liste").scrollIntoView({ block: "start" })); await sleep(400); await shot(page, "sortierbar-fehler-hell"); }
     }
     // the failure line leaves with the next try that works
     behave = "ok";
@@ -338,9 +338,12 @@ const contrastLine = (page, cls) => page.evaluate(new Function("cls", `${PIXEL}
     reqs.length = 0;
     await events(page);
     await page.locator("#raster").scrollIntoViewIfNeeded();
+    await page.evaluate(() => getSelection().removeAllRanges());   // S10 pulled a card by its body, which selects text: start clean
     await pull(page, await handleAt(page, "#raster", "a"), await entryAt(page, "#raster", "e"), true);
-    const gridFly = await page.evaluate(() => ({ children: [...document.getElementById("raster").children].map((c) => c.getAttribute("data-gk-sort-id") || (c.classList.contains("gk-sort-platz") ? "gap" : "?")), over: document.documentElement.scrollWidth - document.documentElement.clientWidth }));
+    await sleep(350);   // the neighbours have glided into their places: the picture shows a rest, not a frame of the move
+    const gridFly = await page.evaluate(() => ({ selected: String(getSelection()), children: [...document.getElementById("raster").children].map((c) => c.getAttribute("data-gk-sort-id") || (c.classList.contains("gk-sort-platz") ? "gap" : "?")), over: document.documentElement.scrollWidth - document.documentElement.clientWidth }));
     await shot(page, "sortierbar-gezogen-raster-hell");
+    check("S11 pulling a card by its handle selects no text on the way", gridFly.selected === "", gridFly.selected);
     await page.mouse.up();
     await settle(page);
     check("S11 a card pulled from the first place to the fifth ends up there: b c d e a f", JSON.stringify(await order(page, "#raster")) === '["b","c","d","e","a","f"]', { gridFly, now: await order(page, "#raster") });
@@ -392,7 +395,8 @@ const contrastLine = (page, cls) => page.evaluate(new Function("cls", `${PIXEL}
     const ev12 = await events(page);
     check("S12 Space, ArrowUp, Space: the row is one place up, put down, saved once, and the event fired once",
       reqs.length === 1 && ev12.length === 1 && JSON.parse(reqs[0].body).ids.join() === (await order(page, "#liste")).join() && (await order(page, "#liste")).join() !== JSON.parse(startOrder).join(), { reqs: reqs.length, ev12 });
-    check("S12 … and the live region says it was put down", /put down at position/.test(await live(page, "#liste")), await live(page, "#liste"));
+    await waitFor(async () => /put down at position/.test(await live(page, "#liste")), 1500);
+    check("S12 … and the live region says it was put down, then that the order is saved, in one message", /put down at position \d of 4\. Order saved/.test(await live(page, "#liste")), await live(page, "#liste"));
     await page.keyboard.press("Space");
     await page.keyboard.press("Tab");
     await sleep(60);
@@ -437,7 +441,7 @@ const contrastLine = (page, cls) => page.evaluate(new Function("cls", `${PIXEL}
       h.focus();
       h.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
       h.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
-      const n = document.getAnimations().length;
+      const n = document.getAnimations().filter((a) => a.id === "gk-sort-glide").length;
       h.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
       return n;
     });

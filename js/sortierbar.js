@@ -33,6 +33,8 @@
   var EDGE = 64;       // px from the window edge where a drag scrolls the page
   var FLIP_MS = 200;   // = --gk-dur-2, the movement of an entry into its new place
   var OK_MS = 2500;    // how long "saved" stays on the screen
+  var SAY_MS = 3000;   // "saved" follows the words of a drop that are younger than this
+  var GLIDE = "gk-sort-glide";   // the name of the animations this file starts, so that it stops only its own
   var started = new WeakSet();
   var counter = 0;
 
@@ -72,10 +74,16 @@
   /* ── Telling the person ──────────────────────────────────────────────── */
 
   // Emptied first, filled a moment later: the same words twice in a row (the same position at the end
-  // of a row) are announced twice, not swallowed as "no change".
-  function announce(st, text) {
+  // of a row) are announced twice, not swallowed as "no change". With `append` the words follow the
+  // ones just said, in one message: "put down at position 2 of 4. Order saved" – two messages a moment
+  // apart would let the second wipe out the first for a screen reader.
+  function announce(st, text, append) {
+    var said = append && Date.now() - st.saidAt < SAY_MS ? st.said + " " : "";
+    st.said = said + text;
+    st.saidAt = Date.now();
     st.live.textContent = "";
-    setTimeout(function () { st.live.textContent = text; }, 20);
+    clearTimeout(st.sayTimer);
+    st.sayTimer = setTimeout(function () { st.live.textContent = st.said; }, 20);
   }
 
   function position(st, el) {
@@ -100,7 +108,7 @@
     st.ok.hidden = false;
     clearTimeout(st.okTimer);
     st.okTimer = setTimeout(function () { st.ok.hidden = true; }, OK_MS);
-    announce(st, t("sortierbar_gespeichert"));
+    announce(st, t("sortierbar_gespeichert"), true);
   }
 
   function showFailure(st) {
@@ -119,10 +127,19 @@
     return list.map(function (el) { return el.getBoundingClientRect(); });
   }
 
+  // Stops the glides of an earlier move, so that the next measure is the place in the layout and not
+  // a point on the way there.
+  function settle(list) {
+    list.forEach(function (el) {
+      if (el.getAnimations) el.getAnimations().forEach(function (a) { if (a.id === GLIDE) a.cancel(); });
+    });
+  }
+
   // First, last, invert, play: whatever moved glides from where it was to where it is. Not at all
   // under prefers-reduced-motion – the entry is simply there.
   function play(list, before) {
     if (reduced()) return;
+    settle(list);
     list.forEach(function (el, i) {
       var now = el.getBoundingClientRect();
       var dx = before[i].left - now.left;
@@ -131,7 +148,7 @@
         el.animate(
           [{ transform: "translate(" + dx + "px, " + dy + "px)" }, { transform: "none" }],
           { duration: FLIP_MS, easing: "cubic-bezier(0.2, 0, 0, 1)" }
-        );
+        ).id = GLIDE;
       }
     });
   }
@@ -279,11 +296,12 @@
 
   /* ── The keyboard ────────────────────────────────────────────────────── */
 
-  // How many entries stand in the first row: 1 for a column, all of them for a single row.
+  // How many entries stand in the first row: 1 for a column, all of them for a single row. Measured by
+  // the layout (offsetTop), not by where an entry is drawn: one that is still gliding is not in its row yet.
   function rowLength(list) {
-    var first = list[0].getBoundingClientRect();
+    var top = list[0].offsetTop;
     var n = 0;
-    while (n < list.length && Math.abs(list[n].getBoundingClientRect().top - first.top) < first.height / 2) n++;
+    while (n < list.length && Math.abs(list[n].offsetTop - top) < list[0].offsetHeight / 2) n++;
     return n;
   }
 
@@ -485,6 +503,7 @@
     } catch (err) {
       return;
     }
+    handle.focus({ preventScroll: true });
     st.drag = { el: el, handle: handle, pointer: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, started: false };
   }
 
@@ -538,7 +557,7 @@
     var st;
     if (started.has(box)) return;
     started.add(box);
-    st = { box: box, drag: null, key: null, saving: null, okTimer: 0, confirmed: ids(box) };
+    st = { box: box, drag: null, key: null, saving: null, okTimer: 0, said: "", saidAt: 0, sayTimer: 0, confirmed: ids(box) };
     st.noSelect = function (e) { e.preventDefault(); };
     st.dragKey = function (e) {
       if (e.key !== "Escape" || !st.drag) return;
@@ -547,6 +566,8 @@
       endDrag(st, true);
     };
     makeMessages(st);
+    // A press on a handle starts no text selection: pulled across the other entries it would paint them blue.
+    box.addEventListener("mousedown", function (e) { if (e.button === 0 && e.target.closest && e.target.closest(HANDLE)) e.preventDefault(); });
     box.addEventListener("pointerdown", function (e) { onDown(st, e); });
     box.addEventListener("pointermove", function (e) { onMove(st, e); });
     box.addEventListener("pointerup", function (e) { onUp(st, e, false); });
