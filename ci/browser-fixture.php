@@ -293,6 +293,53 @@ if (isset($argv[1]) && $argv[1] === '--timeline-video') {
     exit;
 }
 
+// The sortable container (1.97.0): a list of four with an address and a token, a grid of six cards
+// (three columns on a wide window, one on a phone, a link in each, one entry named by data-gk-sort-titel), a container with no address,
+// one with its own header name, one entry alone, a long list for the scroll at the window's edge and an
+// empty slot the test fills later. js/sortierbar.js is inline, as a page of its own would load it.
+// ci/browser-sortierbar.js serves this page over http, because a save needs an address.
+if (isset($argv[1]) && $argv[1] === '--sortierbar') {
+    $sort = '<script>' . file_get_contents($root . '/js/sortierbar.js') . '</script>';
+    $entry = static fn (string $tag, string $id, string $title, string $text, string $attr = ''): string =>
+        '<' . $tag . ' data-gk-sort-id="' . $id . '"' . $attr . '><h3>' . $title . '</h3><p>' . $text . '</p></' . $tag . '>';
+    $rows = '';
+    foreach (['10' => 'Alpha', '20' => 'Bravo', '30' => 'Charlie', '40' => 'Delta'] as $id => $t) {
+        $rows .= $entry('li', (string) $id, $t, 'The row of ' . $t);
+    }
+    $cards = '';
+    foreach (['a' => 'survivaltraining.at', 'b' => 'manifestor-akademie.net', 'c' => 'paneon.ssi.at', 'd' => 'deike.at', 'e' => 'lohr.example', 'f' => 'a-very-long-name-of-a-website-that-has-no-space-anywhere-in-it.example'] as $id => $t) {
+        $cards .= '<div data-gk-sort-id="' . $id . '"' . ($id === 'd' ? ' data-gk-sort-titel="Deike Pfeil"' : '') . '><h3>' . $t . '</h3>'
+                . '<p>Online · <a href="#open-' . $id . '" id="open-' . $id . '">Open</a></p></div>';
+    }
+    $long = '';
+    for ($i = 1; $i <= 25; $i++) {
+        $long .= $entry('li', 'n' . $i, 'Row ' . $i, 'A long list, so that the page scrolls');
+    }
+    echo '<!DOCTYPE html><html lang="en">' . $head . '<body class="gk-root">' . Lang::jsConfig()
+       . '<style>body{background:var(--gk-surface);color:var(--gk-on-surface);margin:0}#page{max-width:960px;margin:0 auto;padding:16px}'
+       . 'ul{list-style:none;margin:0 0 24px;padding:0}[data-gk-sort-id]{padding:16px 64px 16px 16px;border:1px solid var(--gk-outline-variant);'
+       . 'border-radius:var(--gk-radius);background:var(--gk-surface-container);margin:0 0 8px}'
+       . '#raster{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px}#raster [data-gk-sort-id]{margin:0;overflow-wrap:anywhere}'
+       . 'h3{margin:0 0 4px;font-size:15px}p{margin:0;font-size:13px;color:var(--gk-on-surface-variant)}h2{font-size:16px;margin:24px 0 8px}</style>'
+       . '<main id="page">'
+       . '<h2>List with an address</h2>'
+       . '<ul id="liste" data-gk-sortierbar data-gk-sortierbar-url="/api/liste" data-gk-sortierbar-csrf="tok123">' . $rows . '</ul>'
+       . '<h2>Grid of cards, saved</h2>'
+       . '<div id="raster" data-gk-sortierbar data-gk-sortierbar-url="/api/raster" data-gk-sortierbar-csrf="tok456">' . $cards . '</div>'
+       . '<h2>No address, only the event</h2>'
+       . '<ul id="ohne" data-gk-sortierbar>' . $entry('li', 'x', 'Xray', 'one') . $entry('li', 'y', 'Yankee', 'two') . $entry('li', 'z', 'Zulu', 'three') . '</ul>'
+       . '<h2>Its own header name</h2>'
+       . '<ul id="eigener" data-gk-sortierbar data-gk-sortierbar-url="/api/eigener" data-gk-sortierbar-csrf="abc" data-gk-sortierbar-csrf-header="X-My-Token">'
+       . $entry('li', 'p', 'Papa', 'one') . $entry('li', 'q', 'Quebec', 'two') . '</ul>'
+       . '<h2>One entry alone</h2>'
+       . '<ul id="einzel" data-gk-sortierbar>' . $entry('li', 'solo', 'Solo', 'nothing to reorder') . '</ul>'
+       . '<div id="slot"></div>'
+       . '<h2>A long list</h2>'
+       . '<ul id="lang" data-gk-sortierbar data-gk-sortierbar-url="/api/lang" data-gk-sortierbar-csrf="tok789">' . $long . '</ul>'
+       . '</main>' . $sort . '</body></html>';
+    exit;
+}
+
 // An application page: GridKit's own fixed header with its user menu, the list
 // below it and the sheet the list opens. On a wide screen the sheet docks
 // beside the list — and the header's menu, which opens over the sheet's top

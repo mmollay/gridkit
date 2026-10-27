@@ -7,6 +7,54 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.97.0] - 2026-10-27
+
+### Added — a sortable container: `data-gk-sortierbar`, in its own file `js/sortierbar.js`
+Cards or rows a person puts in order by hand, and the server remembers it. The SSI Panel's overview of
+websites needs it first (the site that matters most goes to the front); every admin with a list that
+has an order of its own needs the same. GridKit had sorting by column in the table and nothing that
+moves an entry; two pages of the Panel's invoicing had built their own dragging, with inline styles.
+The script is a file of its own, so `js/gridkit.js` is untouched and the dashboard's copy of it is
+not in the way. A page loads it after `gridkit.js` (`skeleton.php` and the demo do):
+`<script src=".../js/sortierbar.js" defer></script>`. There is no global and no call to make: it finds
+every `[data-gk-sortierbar]`, also one that is written into the page later.
+
+```html
+<div data-gk-sortierbar data-gk-sortierbar-url="/websites/reihenfolge" data-gk-sortierbar-csrf="TOKEN">
+  <article data-gk-sort-id="12"><h3>survivaltraining.at</h3> ...</article>
+  <article data-gk-sort-id="7" data-gk-sort-titel="Manifestor">...</article>
+</div>
+```
+
+- **The handle is made by the script**: a `<button type="button" class="gk-sort-griff">` with the symbol
+  `drag_indicator` and the name "Move: <title>" (from `data-gk-sort-titel`, else the first heading), in the top
+  right corner of each entry — only while the container (`gk-sort-aktiv`) has two entries or more. Only the
+  handle drags: links and buttons in the entry keep working, and the rest of the entry still scrolls the
+  page on a phone (`touch-action: none` is on the handle alone). `--gk-sort-griff-oben` and
+  `--gk-sort-griff-rand` move it.
+- **Mouse, pen and finger** through pointer events: the entry flies (`gk-sort-zieht`, `gk-sort-frei`) over a
+  dashed gap (`gk-sort-platz`); near the window's edge the page scrolls. **Keyboard**: Space lifts, the arrow
+  keys move (left/right and up/down in a grid, Home and End, reversed in `rtl`), Space puts down, Escape gives
+  back; the focus stays on the handle; a polite live region says "Position 2 of 5". Under
+  `prefers-reduced-motion` nothing glides.
+- **Saving** only with `data-gk-sortierbar-url`: `POST` as JSON `{"ids":["12","7",...]}` (all ids, as text, in the new
+  order) with `credentials: same-origin` and the token in `X-CSRF-Token` (or the header named in
+  `data-gk-sortierbar-csrf-header`). A second drop cancels the request still on its way. "Order saved" shows
+  for a moment (`gk-sort-ok`, `gk-sort-meldungen`); on a refusal, a bad status or no network the entry goes back
+  to the last saved place and a sentence beside a symbol says so (`gk-sort-fehler`, `role="alert"`).
+- **Event** `gk:sortiert` (bubbles; `detail.ids`, `detail.behaelter`, and `detail.zurueck` when the order went
+  back) after every change, with or without an address.
+- Words in `lang/` as `js.sortierbar_*` (English and German), delivered by `Lang::jsConfig()`.
+- New classes: `gk-sort-griff`, `gk-sort-aktiv`, `gk-sort-zieht`, `gk-sort-frei`, `gk-sort-platz`,
+  `gk-sort-meldungen`, `gk-sort-ok`, `gk-sort-fehler`. Block "Sortable container" in `css/blocks.json`, a
+  section in the demo, the skill and the spec, a test (`tests/sortierbar.test.php`) and a browser test
+  (`ci/browser-sortierbar.js`, fixture `--sortierbar`).
+
+### Wish, not done here
+The two hand-made drag lists in the Panel (`views/faktura/invoice-edit.php`, `views/faktura/recurring.php`)
+can move to this block, and lose their inline styles with it.
+
+---
 ## [1.96.0] - 2026-10-17
 
 ### Added — a timeline: `.gk-timeline`
