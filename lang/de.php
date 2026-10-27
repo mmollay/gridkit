@@ -150,6 +150,14 @@ return [
     'js.remove'             => 'Entfernen',
     'js.uploading'          => 'Lädt…',
     'js.uploaded'           => 'Hochgeladen',
+    'js.sortierbar_griff'       => 'Verschieben: {titel}',
+    'js.sortierbar_hilfe'       => 'Die Leertaste hebt den Eintrag auf, die Pfeiltasten verschieben ihn, die Leertaste setzt ihn ab, Escape bricht ab.',
+    'js.sortierbar_aufgehoben'  => '{titel} aufgehoben. Position {n} von {m}.',
+    'js.sortierbar_position'    => 'Position {n} von {m}',
+    'js.sortierbar_abgelegt'    => '{titel} abgelegt auf Position {n} von {m}.',
+    'js.sortierbar_abgebrochen' => 'Abgebrochen. {titel} ist wieder auf Position {n} von {m}.',
+    'js.sortierbar_gespeichert' => 'Reihenfolge gespeichert',
+    'js.sortierbar_fehler'      => 'Die Reihenfolge konnte nicht gespeichert werden. Bitte noch einmal versuchen.',
 
     // Pagination, Seitengroesse, Select, Tabellenkopf, Jahresfilter
     'format.decimal'           => ',',

@@ -564,6 +564,19 @@
                 "gk-video-frame-safe": "1.96.0"
             }
         },
+        "sortierbar": {
+            "name": "Sortable container",
+            "classes": {
+                "gk-sort-aktiv": "1.97.0",
+                "gk-sort-fehler": "1.97.0",
+                "gk-sort-frei": "1.97.0",
+                "gk-sort-griff": "1.97.0",
+                "gk-sort-meldungen": "1.97.0",
+                "gk-sort-ok": "1.97.0",
+                "gk-sort-platz": "1.97.0",
+                "gk-sort-zieht": "1.97.0"
+            }
+        },
         "breadcrumb": {
             "name": "Breadcrumb",
             "classes": {

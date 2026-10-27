@@ -254,6 +254,15 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-frames { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start; }
         .demo-frames .gk-video-frame { flex:0 1 220px; }
 
+        /* ── Sortable container (1.97.0) ────────────────────────────────── */
+        .demo-sort-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; }
+        .demo-sort-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+        .demo-sort-grid > *, .demo-sort-list > * { padding:16px 64px 16px 16px; border:1px solid var(--gk-outline-variant);
+            border-radius:var(--gk-radius); background:var(--gk-surface-container); }
+        .demo-sort-grid + .demo-sort-list { margin-top:24px; }
+        .demo-sort-grid h4, .demo-sort-list h4 { margin:0 0 4px; font-size:15px; }
+        .demo-sort-grid p, .demo-sort-list p { margin:0; font-size:13px; color:var(--gk-on-surface-variant); }
+
         /* ── Beispiel mit ausklappbarem Code ─────────────────────────────
            <details> statt eines Divs mit Klick-Handler: es funktioniert ohne
            JavaScript, ist von Haus aus mit der Tastatur bedienbar und wird von
@@ -1220,6 +1229,29 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
               <span>2 runs are stuck.</span>
               <div class="gk-message-actions"><button type="button" class="gk-btn gk-btn-outlined gk-btn-warning gk-btn-touch">Check now</button></div>
             </div>
+            HTML;
+        });
+        ?>
+    <h3 class="demo-h3" id="sortierbar">Sortable container <?= since('sortierbar') ?></h3>
+    <p class="demo-intro">Entries a person puts in order by hand. Write the container with <code>data-gk-sortierbar</code> and give each entry a <code>data-gk-sort-id</code>; <code>js/sortierbar.js</code> adds a handle to every entry (from two entries on). Drag the handle with a mouse or a finger, or focus it and press <kbd>Space</kbd>, move with the arrow keys, press <kbd>Space</kbd> again to put it down or <kbd>Esc</kbd> to cancel. Links and buttons inside an entry keep working. With <code>data-gk-sortierbar-url</code> and <code>-csrf</code> the new order is posted as <code>{"ids":[…]}</code>; without a url the container only fires <code>gk:sortiert</code>, as here.</p>
+        <?php
+        showcase(function () {
+            echo <<<'HTML'
+            <div class="demo-sort-grid" data-gk-sortierbar aria-label="Websites, in the order you want them">
+              <div data-gk-sort-id="12"><h4>survivaltraining.at</h4><p>Online, 14 pages</p></div>
+              <div data-gk-sort-id="7"><h4>manifestor-akademie.net</h4><p>Draft, 6 pages</p></div>
+              <div data-gk-sort-id="31"><h4>paneon.ssi.at</h4><p>Online, 9 pages</p></div>
+              <div data-gk-sort-id="18" data-gk-sort-titel="Deike Pfeil"><h4>deike.at</h4><p>Online, 4 pages · <a href="#sortierbar">Open</a></p></div>
+              <div data-gk-sort-id="22"><h4>lohr.example</h4><p>Draft, 2 pages</p></div>
+            </div>
+            <ul class="demo-sort-list" data-gk-sortierbar>
+              <li data-gk-sort-id="a"><h4>Welcome mail</h4><p>Sent right after the sign-up</p></li>
+              <li data-gk-sort-id="b"><h4>Reminder</h4><p>Two days later</p></li>
+              <li data-gk-sort-id="c"><h4>Offer</h4><p>A week later</p></li>
+            </ul>
+            <script>
+              document.addEventListener('gk:sortiert', function (e) { console.log('gk:sortiert', e.detail.ids); });
+            </script>
             HTML;
         });
         ?>
@@ -2649,6 +2681,7 @@ Auth::renderLogin([...]);    // Login page</div>
 </div><!-- /gk-with-sidebar -->
 
 <script src="<?= Layout::asset('../js/gridkit.js') ?>"></script>
+<script src="<?= Layout::asset('../js/sortierbar.js') ?>" defer></script>
 <script>
 (function() {
     var sections = document.querySelectorAll('.demo-section');

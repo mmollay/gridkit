@@ -8943,6 +8943,152 @@ label.gk-setting-title {
   color: var(--gk-danger-text);
 }
 
+/* === SORTABLE (1.97.0): [data-gk-sortierbar] ================================
+   Entries that a person puts in order by hand – cards in a grid, rows in a list –
+   and that the server remembers. The page writes the container and the entries
+   (data-gk-sort-id); js/sortierbar.js adds one handle to each entry, moves them
+   and says what happened. This sheet draws the three things that script makes:
+   the handle, the entry in the air and the gap it left, and the two short lines
+   under the container (saved / not saved).
+
+   Roles only, so light, [data-gk-mode="dark"] and .gk-dark follow from the tokens.
+   The handle is the only thing that takes the finger: the rest of an entry still
+   scrolls the page, and links and buttons inside it still work. */
+
+/* An entry is the positioning parent of its handle, but only in a container that
+   has handles (two entries or more), and :where() keeps this at the lowest weight:
+   a card that is already positioned by its own class keeps its own. */
+:where([data-gk-sortierbar]) {
+  --gk-sort-griff-oben: 8px;
+  --gk-sort-griff-rand: 8px;
+}
+:where([data-gk-sortierbar].gk-sort-aktiv) > [data-gk-sort-id] {
+  position: relative;
+}
+.gk-sort-griff {
+  position: absolute;
+  inset-block-start: var(--gk-sort-griff-oben);
+  inset-inline-end: var(--gk-sort-griff-rand);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--gk-target-min);
+  height: var(--gk-target-min);
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-sm);
+  background: color-mix(in oklab, var(--gk-surface) 92%, transparent);
+  color: var(--gk-on-surface-variant);
+  font: inherit;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.gk-sort-griff .material-icons {
+  font-size: 24px;
+  pointer-events: none;
+}
+.gk-sort-griff:hover {
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface);
+}
+.gk-sort-griff:active {
+  cursor: grabbing;
+}
+.gk-sort-griff:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+/* Lifted with the keyboard: the handle says so by its colours and its border, not by colour alone
+   (the entry carries the outline of .gk-sort-zieht, the live region says it in words). */
+.gk-sort-griff[aria-pressed="true"] {
+  border-color: var(--gk-primary);
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+}
+
+/* The entry in the air – with the pointer (also .gk-sort-frei) and with the keyboard. */
+.gk-sort-zieht {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+  box-shadow: var(--gk-shadow-lg);
+  cursor: grabbing;
+}
+/* Dragged with the pointer: out of the flow and above its neighbours. !important because this
+   must hold whatever the card's own class says about position and margin – the script sets
+   left, top, width and height; where the entry stands is not the page's business while it flies. */
+.gk-sort-frei {
+  position: fixed !important;
+  z-index: 1000 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+/* The gap it left: an empty element of the same tag and size, a dashed slot. */
+.gk-sort-platz {
+  box-sizing: border-box;
+  border: 2px dashed var(--gk-outline);
+  border-radius: var(--gk-radius);
+  background: color-mix(in oklab, var(--gk-primary) 6%, transparent);
+  list-style: none;
+}
+
+/* Under the container: what was saved, or why not. A shape and words, never colour alone. */
+.gk-sort-meldungen {
+  margin-top: 8px;
+}
+.gk-sort-meldungen:not(:has(.gk-sort-ok:not([hidden]), .gk-sort-fehler:not([hidden]))) {
+  margin-top: 0;
+}
+.gk-sort-ok,
+.gk-sort-fehler {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--gk-radius-sm);
+  font-size: var(--gk-text-label);
+}
+.gk-sort-ok[hidden],
+.gk-sort-fehler[hidden] {
+  display: none;
+}
+.gk-sort-ok {
+  background: color-mix(in oklab, var(--gk-success) 8%, transparent);
+  border-color: color-mix(in oklab, var(--gk-success) 25%, transparent);
+  color: var(--gk-on-success-container);
+}
+.gk-sort-fehler {
+  background: color-mix(in oklab, var(--gk-error) 8%, transparent);
+  border-color: color-mix(in oklab, var(--gk-error) 25%, transparent);
+  color: var(--gk-on-error-container);
+}
+.gk-sort-ok .material-icons,
+.gk-sort-fehler .material-icons {
+  font-size: 18px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gk-sort-griff {
+    transition: var(--gk-transition-state);
+  }
+  .gk-sort-zieht {
+    transition: box-shadow var(--gk-dur-2) var(--gk-ease-out);
+  }
+}
+@media print {
+  .gk-sort-griff,
+  .gk-sort-meldungen {
+    display: none;
+  }
+}
+
 /* === IMAGE PICKER (1.94.0): .gk-picker ===================================
    Choose one image out of many. A grid of 16:9 tiles instead of a full row each:
    with ten images the row list filled the screen, with thirty it was unusable.

@@ -68,6 +68,9 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-timeline-ok` `gk-timeline-failed` `gk-timeline-running` `gk-timeline-waiting` `gk-timeline-skipped` | The state of a step, on its `<li>`: check, cross, a turning ring (still under reduced motion), an empty ring, a dash |
 | `gk-video-frame` `gk-video-frame-media` `gk-video-frame-caption` | A 9:16 frame for a video or picture (since 1.96.0): never wider than the column or taller than 75% of the window, the picture shown whole, no autoplay |
 | `gk-video-frame-safe` `gk-video-frame-busy` `gk-video-frame-error` | On the frame: guide lines for the zones a platform covers (top 10%, bottom 20%, no click caught) / nothing to show yet / it broke — the last two reuse `.gk-empty` |
+| `gk-sort-griff` `gk-sort-aktiv` | The handle the script puts in an entry (since 1.97.0) and the mark on a container that has handles (two entries or more) |
+| `gk-sort-zieht` `gk-sort-frei` `gk-sort-platz` | The entry in the air (outline, shadow), the entry flying with the pointer (fixed), and the dashed gap it left |
+| `gk-sort-meldungen` `gk-sort-ok` `gk-sort-fehler` | Under a sortable container: the wrapper of the two lines, "saved" for a moment, and the failure as a sentence beside a symbol |
 | `gk-show-mobile` | Shown at 768px and below only — the counterpart of `gk-hide-mobile` |
 | `gk-choice` `gk-choice-mark` `gk-choice-text` `gk-choice-title` `gk-choice-hint` | A radio or checkbox as an answer tile with a letter (Form `'choice'`) |
 

@@ -231,7 +231,9 @@ colours, chart colours, settings rows, read-only fields, finger-sized buttons,
 actions in a message — are classes since 1.92.0, so such a page needs no
 stylesheet of its own. Two blocks are markup and classes as well: a timeline
 (`.gk-timeline`, since 1.96.0) for a log of steps whose state is a symbol and a word,
-and a portrait video frame (`.gk-video-frame`) for a 9:16 video or picture.
+and a portrait video frame (`.gk-video-frame`) for a 9:16 video or picture. A sortable
+container (`data-gk-sortierbar`, `js/sortierbar.js`, since 1.97.0) lets a person put cards
+or rows in order by dragging or by keyboard, and tells the server.
 
 ---
 

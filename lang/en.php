@@ -150,6 +150,14 @@ return [
     'js.remove'             => 'Remove',
     'js.uploading'          => 'Uploading…',
     'js.uploaded'           => 'Uploaded',
+    'js.sortierbar_griff'       => 'Move: {titel}',
+    'js.sortierbar_hilfe'       => 'Space lifts the entry, the arrow keys move it, Space puts it down, Escape cancels.',
+    'js.sortierbar_aufgehoben'  => '{titel} lifted. Position {n} of {m}.',
+    'js.sortierbar_position'    => 'Position {n} of {m}',
+    'js.sortierbar_abgelegt'    => '{titel} put down at position {n} of {m}.',
+    'js.sortierbar_abgebrochen' => 'Cancelled. {titel} is back at position {n} of {m}.',
+    'js.sortierbar_gespeichert' => 'Order saved',
+    'js.sortierbar_fehler'      => 'The order could not be saved. Please try again.',
 
     // Pagination, page size, select, table header, year filter
     'format.decimal'           => '.',

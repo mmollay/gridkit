@@ -59,6 +59,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Announcement (JS/CSS) | `.gk-announce` / `GK.announce` | The line that says "Saved." where the person works, read by a screen reader; empty it draws no box (since 1.93.0) |
 | Timeline | `.gk-timeline` | A log of steps, one under the other: a real ordered list, each step with a symbol and a word for its state (ok · failed · running · waiting · skipped), title, time, small chips, a detail and — when it broke — a message block (since 1.96.0) |
 | Portrait video frame | `.gk-video-frame` | A 9:16 frame for a video or picture: never wider than its column or taller than the window, optional guide lines for the zones a platform covers, an empty "being made" state and a failed state, a caption (since 1.96.0) |
+| Sortable container (JS) | `[data-gk-sortierbar]` / `js/sortierbar.js` | Cards or rows a person puts in order by hand: a handle in every entry (from two entries on), dragging with mouse or finger, Space and arrow keys, a spoken position, the order posted as JSON when there is a `url`, and a sentence beside a symbol when saving failed (since 1.97.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
 
@@ -1551,6 +1552,56 @@ being cut. Colours are roles (light and both dark spellings follow), apart from 
 a video and the guide lines, which lie over any picture; the empty states measured 5.52 / 5.62 / 5.62
 (light / dark / dark class, weakest of title, hint, symbol and caption in all six themes).
 
+### Sortable container (`data-gk-sortierbar`, since 1.97.0)
+
+Entries a person puts in order by hand — website cards on an overview, the steps of a mail
+series — and the server remembers it. It is its own file, **`js/sortierbar.js`**, loaded with
+`defer` after `gridkit.js` (`skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/sortierbar.js" defer></script>`). There is no global and no call: the
+script finds every `[data-gk-sortierbar]`, also one inserted later.
+
+```html
+<div class="my-cards" data-gk-sortierbar
+     data-gk-sortierbar-url="/websites/reihenfolge" data-gk-sortierbar-csrf="<?= $csrf ?>">
+  <article class="my-card" data-gk-sort-id="12"><h3>survivaltraining.at</h3> … <a href="…">Open</a></article>
+  <article class="my-card" data-gk-sort-id="7" data-gk-sort-titel="Manifestor">…</article>
+</div>
+```
+
+- **The container** carries `data-gk-sortierbar`; its **children are the entries**, each with
+  `data-gk-sort-id` (any element; a card in a grid is as good as a `<li>`). The name of an entry
+  for a screen reader is `data-gk-sort-titel`, else its first heading, else its text.
+- **The handle is made by the script:** a `<button type="button" class="gk-sort-griff">` with
+  the icon `drag_indicator` and the name "Move: <title>", in the top right corner of every entry,
+  only while the container has **two entries or more** (`gk-sort-aktiv` on the container).
+  Give the entry room for it (padding of 56px or more on that side) or move the handle with
+  `--gk-sort-griff-oben` / `--gk-sort-griff-rand`. Only the handle drags: links and buttons in an
+  entry keep working, and the rest of the entry still scrolls the page on a phone
+  (`touch-action: none` is on the handle alone).
+- **With the pointer** (mouse, pen, finger): press the handle and move more than 4px. The
+  entry follows (`.gk-sort-zieht`, `.gk-sort-frei`), a dashed gap (`.gk-sort-platz`) marks
+  the place it would take; near the window's edge the page scrolls. **With the keyboard:**
+  Space lifts the entry (the handle is `aria-pressed`), the arrow keys move it (left/right and
+  up/down both work in a grid, Home and End go to the ends, `rtl` is respected), Space puts it
+  down, Escape gives it back. The focus stays on the handle all the time. A polite live region
+  says "Position 2 of 5".
+- **Saving** happens only with `data-gk-sortierbar-url`: after the drop
+  `POST` with `Content-Type: application/json`, `credentials: same-origin`, the header
+  `X-CSRF-Token: <data-gk-sortierbar-csrf>` (another name in `data-gk-sortierbar-csrf-header`) and
+  the body `{"ids":["12","7",…]}` — **all ids, as text, in the new order**. Answer with a 2xx
+  (a body of `{"ok":false}` counts as a refusal). "Order saved" shows for a moment; on a
+  refusal, an error status or no network the entry goes back to the last saved place and a line
+  with a symbol and the words "The order could not be saved. Please try again." stays until the
+  next try. Never two requests at once: a second drop aborts the first.
+- **The event** `gk:sortiert` is fired on the container after every change of order, with or
+  without a url (`bubbles`; `event.detail.ids`, `event.detail.behaelter`, and `detail.zurueck`
+  when the order went back after a failure).
+- **Words** come from `js.sortierbar_*` in `lang/` and reach the page with `Lang::jsConfig()`
+  as `GK_LANG.sortierbar_*`. Motion (the small slide of the neighbours) stands still under
+  `prefers-reduced-motion`. Colours are roles, so light and dark follow.
+- **Do not** write the handle yourself, add a second drag script, or set `position` on the
+  entry to something other than static/relative (the handle needs a positioned parent).
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -2081,6 +2132,9 @@ Features:
 | `gk-timeline-ok` `gk-timeline-failed` `gk-timeline-running` `gk-timeline-waiting` `gk-timeline-skipped` | The state of a step, on its `<li>`: check, cross, a turning ring (still under reduced motion), an empty ring, a dash |
 | `gk-video-frame` `gk-video-frame-media` `gk-video-frame-caption` | A 9:16 frame for a video or picture (since 1.96.0): never wider than the column or taller than 75% of the window, the picture shown whole, no autoplay |
 | `gk-video-frame-safe` `gk-video-frame-busy` `gk-video-frame-error` | On the frame: guide lines for the zones a platform covers (top 10%, bottom 20%, no click caught) / nothing to show yet / it broke — the last two reuse `.gk-empty` |
+| `gk-sort-griff` `gk-sort-aktiv` | The handle the script puts in an entry (since 1.97.0) and the mark on a container that has handles (two entries or more) |
+| `gk-sort-zieht` `gk-sort-frei` `gk-sort-platz` | The entry in the air (outline, shadow), the entry flying with the pointer (fixed), and the dashed gap it left |
+| `gk-sort-meldungen` `gk-sort-ok` `gk-sort-fehler` | Under a sortable container: the wrapper of the two lines, "saved" for a moment, and the failure as a sentence beside a symbol |
 | `gk-show-mobile` | Shown at 768px and below only — the counterpart of `gk-hide-mobile` |
 | `gk-choice` `gk-choice-mark` `gk-choice-text` `gk-choice-title` `gk-choice-hint` | A radio or checkbox as an answer tile with a letter (Form `'choice'`) |
 
