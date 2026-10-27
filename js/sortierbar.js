@@ -503,7 +503,6 @@
     } catch (err) {
       return;
     }
-    handle.focus({ preventScroll: true });
     st.drag = { el: el, handle: handle, pointer: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, started: false };
   }
 
@@ -566,8 +565,6 @@
       endDrag(st, true);
     };
     makeMessages(st);
-    // A press on a handle starts no text selection: pulled across the other entries it would paint them blue.
-    box.addEventListener("mousedown", function (e) { if (e.button === 0 && e.target.closest && e.target.closest(HANDLE)) e.preventDefault(); });
     box.addEventListener("pointerdown", function (e) { onDown(st, e); });
     box.addEventListener("pointermove", function (e) { onMove(st, e); });
     box.addEventListener("pointerup", function (e) { onUp(st, e, false); });

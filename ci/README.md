@@ -128,6 +128,24 @@ GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-tim
 GK_SHOTS=/some/dir node ci/browser-timeline-video.js     # also saves pictures to look at
 ```
 
+The sortable container (`data-gk-sortierbar`, `js/sortierbar.js`, 1.97.0) has one as
+well, `ci/browser-sortierbar.js` on `ci/browser-fixture.php --sortierbar`, because what it
+does only shows in a browser: it pulls a row with the mouse, a card across a grid and a
+row with a finger (touch events through the DevTools protocol), moves it with the keys
+(space, arrows, Home, End, Escape; a three-column grid and a right-to-left one), and
+holds the pull at the window edge so that the page scrolls. A small local server plays
+the address the order is saved to: it answers ok, 500, `{"ok":false}`, nothing at all,
+or slowly, so that the save, the failure that puts the row back and the cancelled earlier
+request are seen. It also measures the handle (44 × 44 px, the name, the corner), the
+contrast of handle and lines in light, dark and the dark class, the phone width and
+reduced motion. About two minutes; the glyphs of the icon font are not on the page unless
+`GK_ICONFONT` names a Material Icons file (`.woff2`), which only matters for the pictures.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-sortierbar.js
+GK_SHOTS=/some/dir GK_ICONFONT=/some/MaterialIcons.woff2 node ci/browser-sortierbar.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in
