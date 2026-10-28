@@ -814,9 +814,13 @@ echo (new Header())
 ```
 
 On the dashboard itself leave `'modul'` out: "Dashboard" is then the current
-page and no link. **Use `->sticky()`, not `->fixed()`, with it** — a fixed header
-has a fixed height and the page under it a fixed offset (56px), and a line that
-wraps on a phone would cover the page's first row.
+page and no link. On a phone the line takes a row of its own under the menu
+button and the user menu, so the header grows (105–181px at 390px).
+**Use `->sticky()`, not `->fixed()`, with it** — a fixed header has a fixed
+height and the page under it a fixed offset (56px), and a line that wraps would
+cover the page's first rows. Put the sticky header in the content column of the
+sidebar-first layout (or on a page without a sidebar); in the header-first
+layout the fixed sidebar would start at `top: 56px`, below a gap.
 
 **The menu button with its word, the sidebar it points at, a way past both.**
 `->sidebarToggle(true, ['label' => true, 'controls' => 'main-nav'])` writes

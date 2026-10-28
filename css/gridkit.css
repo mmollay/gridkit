@@ -4392,6 +4392,13 @@ a.gk-stat-card:hover {
   padding-top: 56px;
 }
 
+/* A sticky header scrolls with the page, so nothing has to clear it: the 56px
+   above are for the fixed one. Without this a sticky header in the content
+   column stood under a blank band (1.98.0). */
+.gk-with-sidebar:has(> .gk-header-sticky) {
+  padding-top: 0;
+}
+
 /* Mobile: always header-first */
 @media (max-width: 768px) {
   [data-gk-layout="sidebar-first"] .gk-header-fixed {
@@ -4400,6 +4407,10 @@ a.gk-stat-card:hover {
   [data-gk-layout="sidebar-first"] .gk-sidebar {
     top: 0;
     height: 100vh;
+    /* Above the overlay (999), as in the header-first layout: at 300 the open
+       menu lay under its own overlay — greyed, and a tap on a link shut it
+       instead of following it (1.98.0). */
+    z-index: 1000;
   }
 }
 
@@ -4618,8 +4629,9 @@ a.gk-stat-card:hover {
   .gk-ortszeile-link {
     min-height: var(--gk-target-min);
   }
+  /* Not a target (it is no link): a row of the same height keeps the rhythm. */
   .gk-ortszeile-current {
-    min-height: var(--gk-target-min);
+    min-height: 32px;
   }
   /* A page after at least two steps takes a row of its own, so its title is
      read whole as far as the screen allows instead of in what is left of the
@@ -4630,11 +4642,23 @@ a.gk-stat-card:hover {
   .gk-ortszeile li:nth-child(n + 3):last-child::before {
     content: none;
   }
-  /* The header was fixed at 56px on a phone; the line wraps, so it grows. */
+  /* The header was fixed at 56px on a phone; the line wraps, so it grows. Its first
+     row keeps the menu button and the user menu; the line takes a row of its own
+     below them, the whole width (the two wrappers around it step aside). */
   .gk-header:has(.gk-ortszeile) {
     height: auto;
+    flex-wrap: wrap;
+    row-gap: 4px;
     padding-top: 6px;
     padding-bottom: 6px;
+  }
+  .gk-header-left:has(.gk-ortszeile),
+  .gk-header-left:has(.gk-ortszeile) > .gk-header-title {
+    display: contents;
+  }
+  .gk-header:has(.gk-ortszeile) .gk-ortszeile {
+    order: 1;
+    flex: 1 1 100%;
   }
 }
 

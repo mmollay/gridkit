@@ -387,6 +387,30 @@ return [
     }
 },
 
+'on a phone the line takes a row of its own below the menu button and the user menu' => function () use ($css, $phone): void {
+    $block = $phone($css(), '.gk-ortszeile-link');
+    T::ok((bool) preg_match('/\.gk-header:has\(\.gk-ortszeile\)\s*\{[^}]*flex-wrap: wrap/s', $block), 'the header does not wrap');
+    T::ok((bool) preg_match('/\.gk-header:has\(\.gk-ortszeile\) \.gk-ortszeile\s*\{[^}]*order: 1;[^}]*flex: 1 1 100%/s', $block), 'the line does not take the row below');
+    T::ok((bool) preg_match('/\.gk-header-left:has\(\.gk-ortszeile\)[^{]*\{[^}]*display: contents/s', $block), 'the wrappers around the line do not step aside');
+},
+
+'a sticky header in the content column is not pushed down by the room a fixed one needs' => function () use ($css): void {
+    $c = $css();
+    $at = strpos($c, '.gk-with-sidebar:has(> .gk-header-sticky) {');
+    T::ok($at !== false, 'no rule for the sticky header');
+    T::contains(substr($c, (int) $at, 120), 'padding-top: 0', 'the sticky header keeps the 56px band');
+    // Equal weight as the layout rules (an attribute and a class): the later one wins, so it must come after both.
+    T::ok($at > (int) strrpos($c, '[data-gk-layout="sidebar-first"] .gk-with-sidebar'), 'the rule stands before the layout rules and loses');
+},
+
+'on a phone the open menu lies above its overlay in the sidebar-first layout too' => function () use ($css): void {
+    $c = $css();
+    preg_match('/\.gk-sidebar-overlay \{[^}]*z-index: (\d+)/s', $c, $o);
+    preg_match('/@media \(max-width: 768px\) \{\s*\[data-gk-layout="sidebar-first"\] \.gk-header-fixed.*?\[data-gk-layout="sidebar-first"\] \.gk-sidebar \{[^}]*z-index: (\d+)/s', $c, $m);
+    T::ok(isset($o[1], $m[1]), 'the z-index of the overlay or of the sidebar on a phone is not there');
+    T::ok((int) $m[1] > (int) $o[1], 'the menu lies under its overlay: ' . ($m[1] ?? '?') . ' against ' . ($o[1] ?? '?'));
+},
+
 'the skill file teaches the new calls' => function (): void {
     $doc = (string) file_get_contents(__DIR__ . '/../GRIDKIT_SKILL.md');
     foreach (['->ortszeile(', 'Layout::skipLink(', '->mobileClose(', '->elementId(', "'controls'"] as $call) {
