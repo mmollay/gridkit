@@ -142,6 +142,8 @@ return [
 'in a toned message the focus ring takes the tone, and on a phone the actions stand under the text' => function () use ($media): void {
     foreach (['info', 'success', 'warning', 'error'] as $t) {
         T::eq(gkCssDeclFor(":where(.gk-message-$t) .gk-btn:focus-visible")['outline-color'] ?? '', "var(--gk-on-$t-container)", "the focus ring in a $t message is the violet of the primary colour");
+        $dark = gkCssDeclFor("[data-gk-mode=\"dark\"] .gk-message-$t")['color'] ?? 'none';
+        T::eq(gkCssDeclFor(":where([data-gk-mode=\"dark\"] .gk-message-$t) .gk-btn:focus-visible")['outline-color'] ?? '', $dark, "in dark mode the focus ring in a $t message is not the text colour of the message");
     }
     $phone = $media('(max-width: 480px)');
     T::ok(preg_match('/\.gk-message-actions\s*\{[^}]*flex-direction:\s*column[^}]*align-items:\s*stretch[^}]*width:\s*100%[^}]*margin-left:\s*0/', $phone) === 1, 'on a phone two buttons of a message stand side by side at different widths');

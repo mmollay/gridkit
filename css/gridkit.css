@@ -9596,6 +9596,11 @@ label.gk-setting-title {
 :where(.gk-message-success) .gk-btn:focus-visible { outline-color: var(--gk-on-success-container); }
 :where(.gk-message-warning) .gk-btn:focus-visible { outline-color: var(--gk-on-warning-container); }
 :where(.gk-message-error) .gk-btn:focus-visible { outline-color: var(--gk-on-error-container); }
+/* Dark messages set their text colour directly (see [data-gk-mode="dark"] .gk-message-*), so the ring follows it. */
+:where([data-gk-mode="dark"] .gk-message-info) .gk-btn:focus-visible, :where(.gk-dark .gk-message-info) .gk-btn:focus-visible { outline-color: #38bdf8; }
+:where([data-gk-mode="dark"] .gk-message-success) .gk-btn:focus-visible, :where(.gk-dark .gk-message-success) .gk-btn:focus-visible { outline-color: #6ee7b7; }
+:where([data-gk-mode="dark"] .gk-message-warning) .gk-btn:focus-visible, :where(.gk-dark .gk-message-warning) .gk-btn:focus-visible { outline-color: #fcd34d; }
+:where([data-gk-mode="dark"] .gk-message-error) .gk-btn:focus-visible, :where(.gk-dark .gk-message-error) .gk-btn:focus-visible { outline-color: #fda4af; }
 /* On a phone the actions of a message stand under its text, one under the other and as wide as the message:
    two buttons side by side in a narrow band end up at different widths and edges. */
 @media (max-width: 480px) {
