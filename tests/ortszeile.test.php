@@ -210,7 +210,9 @@ return [
     $all = $rules($c, '.gk-ortszeile-link') . $rules($c, '.gk-ortszeile-current') . $rules($c, '.gk-ortszeile li + li::before');
     T::ok((bool) preg_match('/var\(--gk-on-surface/', $all), 'text from a token');
     T::notContains($all, '#', 'no colour of its own');
-    T::contains($c, '.gk-ortszeile-link:focus-visible', 'a link shows where the keyboard is');
+    $focus = $rules($c, '.gk-ortszeile-link:focus-visible');
+    T::contains($focus, 'outline: 2px solid', 'a link shows where the keyboard is');
+    T::notContains($focus, 'outline: none', 'the ring is switched off');
 },
 
 // ---- the breadcrumb (2) and the house without style (6) ----------------
