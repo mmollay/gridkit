@@ -13,6 +13,7 @@ class FilterChips
     private ?string $defaultValue = null;
     private string $baseUrl = '';
     private array $preserveParams = [];
+    private ?string $segmentedLabel = null;
 
     public function __construct(string $id, string $paramName = 'status')
     {
@@ -53,6 +54,19 @@ class FilterChips
         return $this;
     }
 
+    /**
+     * Draw the chips as a segmented button (.gk-segmented, 1.99.0): one choice of a
+     * few, joined, the chosen one tinted and ticked. For a choice that switches the
+     * view of a page — a period, an overview — not for a filter of a list. The links,
+     * the value that is lit and the URLs stay the same; $label names the group for a
+     * screen reader ("Zeitraum"). An icon is drawn, a count is not.
+     */
+    public function segmented(string $label): static
+    {
+        $this->segmentedLabel = $label;
+        return $this;
+    }
+
     public function chip(string $value, string $label, array $opts = []): static
     {
         $this->chips[] = ['value' => $value, 'label' => $label, ...$opts];
@@ -63,7 +77,10 @@ class FilterChips
     {
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
-        echo '<div class="gk-filter-chips" data-gk-chips="' . $e($this->id) . '">';
+        $seg = $this->segmentedLabel !== null;
+        echo $seg
+            ? '<div class="gk-segmented" role="group" aria-label="' . $e($this->segmentedLabel) . '" data-gk-chips="' . $e($this->id) . '">'
+            : '<div class="gk-filter-chips" data-gk-chips="' . $e($this->id) . '">';
         // The page default is lit while the URL names no filter — and also when it
         // names one no chip carries: a controller falls back to its default for a
         // value it does not know, and a row with nothing lit would contradict the
@@ -79,9 +96,13 @@ class FilterChips
         foreach ($this->chips as $chip) {
             $val = $chip['value'];
             $isActive = $active === $val;
-            $cls = 'gk-chip';
-            if ($isActive) $cls .= ' gk-chip-active';
-            if (isset($chip['color'])) $cls .= ' gk-chip-' . $chip['color'];
+            if ($seg) {
+                $cls = 'gk-segmented-item' . ($isActive ? ' gk-active' : '');
+            } else {
+                $cls = 'gk-chip';
+                if ($isActive) $cls .= ' gk-chip-active';
+                if (isset($chip['color'])) $cls .= ' gk-chip-' . $chip['color'];
+            }
 
             // Build URL
             $params = [];
@@ -105,9 +126,9 @@ class FilterChips
             // reader — "true", not "page": a filter is not a page.
             echo '<a href="' . $e($url) . '" class="' . $cls . '"' . ($isActive ? ' aria-current="true"' : '') . '>';
             if (isset($chip['icon'])) {
-                echo '<span class="gk-chip-icon material-icons" aria-hidden="true">' . $e($chip['icon']) . '</span>';
+                echo '<span class="' . ($seg ? '' : 'gk-chip-icon ') . 'material-icons" aria-hidden="true">' . $e($chip['icon']) . '</span>';
             }
-            if (isset($chip['count'])) {
+            if (isset($chip['count']) && !$seg) {
                 echo $e($chip['label']) . ' <span class="gk-chip-count">' . $e((string)$chip['count']) . '</span>';
             } else {
                 echo $e($chip['label']);

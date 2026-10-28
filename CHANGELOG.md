@@ -7,6 +7,44 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.99.0] - 2026-10-28
+
+### Added — tabs as links, a segmented button, steps, a disclosure, a to-do in a timeline
+The head of the SSI Panel's landing pages was built out of local parts: register tabs with their own
+backgrounds, a pill group for a second row, single chips for a period, a card with a 6px edge for the
+status and numbered cards for what is still open (Martin, 28.10.2026: "ugly tabs, a strange card with a
+thick edge, terrible pill group and chips, no inline home constructions"). Each of them is something
+another SSI system needs, so GridKit learns them. Roles only, no dark rule; every rule that sets
+`display` is wrapped in `:where()`, so a consumer's hiding class still wins.
+
+- **Tabs as links:** `a.gk-tab-btn[aria-current="page"]` looks like `.gk-active` (a `<nav>` of pages,
+  no tablist, no script); `.gk-tab-icon` (a symbol before the word); `.gk-tab-nav-fill` (44px; up to
+  600px the tabs share the width, the symbol over the word, each as wide as its word);
+  `.gk-tab-nav-secondary` (a quieter second row: no rule of its own, 13px, the text colour); a visible
+  focus ring on every tab.
+- **Segmented button:** `.gk-segmented` / `.gk-segmented-item` — one choice of 2–5, joined; the chosen
+  one (`aria-current` other than "false", `aria-pressed="true"` or `.gk-active`) is tinted AND ticked;
+  44px on a touch screen; a row too wide scrolls. `FilterChips::segmented($label)` draws the same links
+  in it (labelled `role="group"`; an icon is drawn, a count is not).
+- **Steps:** `.gk-steps`, `.gk-steps-item`, `.gk-steps-done` (a tick on a disc), `.gk-steps-current` (a dot in a ring, bold,
+  `aria-current="step"`), open (an empty ring).
+- **Timeline:** `gk-timeline-todo` (open, next: a ring and a word in the primary colour),
+  `.gk-timeline-actions` (a button beside the sentence of its step, under it up to 480px),
+  `.gk-timeline-compact` (20px markers, a regular title — a short list inside a message).
+- **Disclosure:** `.gk-disclosure` — a quiet native `<details>`: link-coloured summary, an arrow that
+  turns, 44px, a focus ring.
+
+### Changed
+- The active tab (`.gk-tab-btn.gk-active`) is in `--gk-primary-text` and weight 600: `--gk-primary`
+  measured 4.47:1 on white, and colour alone told it apart.
+- A message with actions keeps its symbol at the top (it slid to the middle of a tall one), and a
+  symbol inside a `.gk-btn` keeps its button's colour (`.gk-message-warning .material-icons` painted
+  it orange).
+
+Tests: `tests/reiter.test.php`; colours of the new texts in `ci/farben.js`; the demo shows them in
+"Tabs".
+
+---
 ## [1.97.0] - 2026-10-27
 
 ### Added — a sortable container: `data-gk-sortierbar`, in its own file `js/sortierbar.js`

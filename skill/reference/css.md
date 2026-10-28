@@ -1,4 +1,4 @@
-# GridKit 1.97.0 — CSS
+# GridKit 1.99.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -113,6 +113,30 @@ Since 1.69.0 both shapes get the full tablist structure from the library —
 `role="tabpanel"` with `aria-labelledby`, and a roving tabindex so the set is
 one tab stop with **Left / Right / Home / End** moving inside it. **Write none
 of that yourself**; ids are supplied only where you have not.
+
+**Tabs as links between pages** (since 1.99.0) — when each tab is a page of its own, write
+links in a `<nav>` and mark the current page with `aria-current="page"`; it looks exactly like
+`.gk-active`. No `.gk-tabs` around it (that would turn the links into a tablist), no script:
+
+```html
+<nav class="gk-tab-nav gk-tab-nav-fill" aria-label="Areas of this page">
+    <a class="gk-tab-btn" href="/page/7/edit"><span class="material-icons gk-tab-icon" aria-hidden="true">edit</span><span>Edit</span></a>
+    <a class="gk-tab-btn" href="/page/7/results" aria-current="page"><span class="material-icons gk-tab-icon" aria-hidden="true">bar_chart</span><span>Results</span></a>
+</nav>
+<nav class="gk-tab-nav gk-tab-nav-secondary" aria-label="Views">
+    <a class="gk-tab-btn" href="…/signups">Sign-ups</a>
+    <a class="gk-tab-btn" href="…/stats" aria-current="page">Statistics</a>
+</nav>
+```
+
+- `.gk-tab-icon` — a symbol before the word (20px).
+- `.gk-tab-nav-fill` — the main row of a page: 44px targets; up to 600px the tabs share the width,
+  the symbol over the word, each as wide as its word needs.
+- `.gk-tab-nav-secondary` — a second row under the first, one step quieter: no rule of its own,
+  13px words, the chosen one in the text colour with its line. A third row is never a tab row —
+  use a segmented button.
+- The active tab (`.gk-active` too) is in `--gk-primary-text` and 600 since 1.99.0 (`--gk-primary`
+  measured 4.47:1 on white); every tab has a visible focus ring.
 
 ### Accordion
 

@@ -1472,6 +1472,52 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
     &lt;div class="gk-tab-panel" data-tab="tab-2"&gt;Content 2&lt;/div&gt;
 &lt;/div&gt;</pre></div>
 
+    <h3 class="demo-h3" id="tabs-links">Tabs between pages, steps, a quiet disclosure <?= since('steps', 'disclosure') ?></h3>
+    <p class="demo-intro">When each tab is a page of its own: links in a <code>&lt;nav&gt;</code>, the current page marked with <code>aria-current="page"</code> (it looks like <code>.gk-active</code>). <code>.gk-tab-nav-fill</code> is the main row (44px; on a phone the symbol stands over the word), <code>.gk-tab-nav-secondary</code> a quieter row under it. Above them a status band: a message with steps, a short to-do list (a compact timeline) and a disclosure.</p>
+    <div class="demo-card">
+        <section class="gk-message gk-message-info" aria-label="Status of this page">
+            <span class="material-icons" aria-hidden="true">fact_check</span>
+            <div class="gk-message-content">
+                <div class="gk-message-header">Proposed for approval</div>
+                <ol class="gk-steps" aria-label="Way to live">
+                    <li class="gk-steps-item gk-steps-done">Draft<span class="gk-sr-only"> (done)</span></li>
+                    <li class="gk-steps-item gk-steps-current" aria-current="step">Approval</li>
+                    <li class="gk-steps-item">Live</li>
+                </ol>
+                <ol class="gk-timeline gk-timeline-compact" role="list" aria-label="Still open">
+                    <li class="gk-timeline-step gk-timeline-todo"><span class="gk-timeline-marker" aria-hidden="true"></span>
+                        <div class="gk-timeline-body"><div class="gk-timeline-head"><span class="gk-timeline-title">Choose where the sign-ups go.</span><span class="gk-timeline-state">Open</span></div></div>
+                        <div class="gk-timeline-actions"><a class="gk-btn gk-btn-outlined gk-btn-primary gk-btn-sm" href="#tabs-links"><span class="material-icons" aria-hidden="true">arrow_forward</span><span>To step 5</span></a></div></li>
+                    <li class="gk-timeline-step gk-timeline-todo"><span class="gk-timeline-marker" aria-hidden="true"></span>
+                        <div class="gk-timeline-body"><div class="gk-timeline-head"><span class="gk-timeline-title">The legal notice has to be confirmed first.</span><span class="gk-timeline-state">Open</span></div></div></li>
+                    <li class="gk-timeline-step gk-timeline-waiting"><span class="gk-timeline-marker" aria-hidden="true"></span>
+                        <div class="gk-timeline-body"><div class="gk-timeline-head"><span class="gk-timeline-title">Publish</span><span class="gk-timeline-state">Afterwards</span></div></div></li>
+                </ol>
+                <details class="gk-disclosure"><summary>Show 3 completed checks</summary>
+                    <ul><li>Title and text are there.</li><li>The date lies ahead.</li><li>The picture is uploaded.</li></ul>
+                </details>
+            </div>
+        </section>
+        <nav class="gk-tab-nav gk-tab-nav-fill" aria-label="Areas of this page">
+            <a class="gk-tab-btn" href="#tabs-links"><span class="material-icons gk-tab-icon" aria-hidden="true">edit</span><span>Edit</span></a>
+            <a class="gk-tab-btn" href="#tabs-links"><span class="material-icons gk-tab-icon" aria-hidden="true">rocket_launch</span><span>Publish</span></a>
+            <a class="gk-tab-btn" href="#tabs-links" aria-current="page"><span class="material-icons gk-tab-icon" aria-hidden="true">bar_chart</span><span>Results</span></a>
+            <a class="gk-tab-btn" href="#tabs-links"><span class="material-icons gk-tab-icon" aria-hidden="true">mail</span><span>Mails</span></a>
+        </nav>
+        <nav class="gk-tab-nav gk-tab-nav-secondary" aria-label="Views">
+            <a class="gk-tab-btn" href="#tabs-links">Sign-ups</a>
+            <a class="gk-tab-btn" href="#tabs-links" aria-current="page">Statistics</a>
+        </nav>
+    </div>
+    <div class="demo-code"><pre>&lt;nav class="gk-tab-nav gk-tab-nav-fill" aria-label="Areas"&gt;
+    &lt;a class="gk-tab-btn" href="/edit"&gt;&lt;span class="material-icons gk-tab-icon" aria-hidden="true"&gt;edit&lt;/span&gt;&lt;span&gt;Edit&lt;/span&gt;&lt;/a&gt;
+    &lt;a class="gk-tab-btn" href="/results" aria-current="page"&gt;…&lt;/a&gt;
+&lt;/nav&gt;
+&lt;nav class="gk-tab-nav gk-tab-nav-secondary" aria-label="Views"&gt;…&lt;/nav&gt;
+&lt;ol class="gk-steps"&gt;&lt;li class="gk-steps-item gk-steps-done"&gt;Draft&lt;/li&gt;
+  &lt;li class="gk-steps-item gk-steps-current" aria-current="step"&gt;Approval&lt;/li&gt;&lt;li class="gk-steps-item"&gt;Live&lt;/li&gt;&lt;/ol&gt;
+&lt;details class="gk-disclosure"&gt;&lt;summary&gt;Show 3 completed checks&lt;/summary&gt;…&lt;/details&gt;</pre></div>
+
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
     <h3 style="margin: 32px 0 16px;">Combinations</h3>
@@ -1591,6 +1637,17 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 $chips->chip('', 'All', ['count' => 152])
     ->chip('active', 'Active', ['count' => 89, 'color' => 'green'])
     ->render();</pre></div>
+    </div>
+
+    <h3 class="demo-h3" id="segmented">Segmented button <?= since('segmented') ?></h3>
+    <p class="demo-intro">One choice of a few that switches the view of a page — a period, overview or visitors. Joined; the chosen one is tinted <em>and</em> ticked. <code>FilterChips::segmented($label)</code> draws the same links in it.</p>
+    <div class="demo-pair">
+    <div class="demo-card">
+        <?php (new FilterChips('demo-period', 'demo_days'))->current('7')->segmented('Period')
+            ->chip('1', 'Today')->chip('7', '7 days')->chip('30', '30 days')->chip('90', '90 days')->render(); ?>
+    </div>
+    <div class="demo-code"><pre>(new FilterChips('period', 'days'))->current('7')->segmented('Period')
+    ->chip('1', 'Today')->chip('7', '7 days')->chip('30', '30 days')->render();</pre></div>
     </div>
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">

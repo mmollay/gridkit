@@ -9399,3 +9399,187 @@ label.gk-setting-title {
     font-size: 16px;
   }
 }
+
+/* === TABS AS LINKS, SEGMENTED, STEPS, DISCLOSURE, A TO-DO IN A TIMELINE (1.99.0) ==========
+   Built for the head of the SSI Panel's landing pages (Martin, 28.10.2026: "ugly tabs, a strange
+   card with a thick edge, terrible pill group and chips, no inline home constructions"). Every part
+   is something another SSI system needs too. Roles only, so light, [data-gk-mode="dark"] and
+   .gk-dark follow from the tokens and there is no dark rule here. A rule that sets display stays
+   as weak as one class (:where), so a consumer's hiding class still wins. */
+
+/* ── Tabs: a link between pages is a tab too ─────────────────────────────
+   <nav class="gk-tab-nav"><a class="gk-tab-btn" href="…" aria-current="page">…</a></nav> — the
+   current page is told by aria-current (a screen reader hears "current page"), and it looks like
+   .gk-active. The active colour is the text-safe primary: --gk-primary measured 4.47:1 on white,
+   and the weight joins the line, so the active tab is not told by colour alone. */
+.gk-tab-btn.gk-active,
+.gk-tab-btn[aria-current="page"] {
+  color: var(--gk-primary-text);
+  border-bottom-color: var(--gk-primary);
+  font-weight: 600;
+}
+:where(a).gk-tab-btn { text-decoration: none; }
+.gk-tab-btn:focus-visible { outline: 2px solid var(--gk-primary); outline-offset: -2px; }
+/* A symbol before the word: <span class="material-icons gk-tab-icon" aria-hidden="true">edit</span> */
+.gk-tab-icon { font-size: var(--gk-icon-md); line-height: 1; }
+/* .gk-tab-nav-fill: the main row of a page — 44px targets; on a phone the tabs share the width,
+   the symbol over the word. Each tab is as wide as its word needs (1 1 auto): equal widths broke
+   "Veröffentlichen" in the middle of the word at 390px. */
+.gk-tab-nav-fill .gk-tab-btn { min-height: var(--gk-target-min); }
+/* .gk-tab-nav-secondary: a second row under the first, one step quieter — no rule of its own
+   (two full lines read as one), smaller words, the chosen one in the plain text colour. */
+.gk-tab-nav-secondary { gap: 4px; border-bottom: 0; margin-bottom: 16px; }
+.gk-tab-nav-secondary .gk-tab-btn {
+  padding: 8px 14px;
+  font-size: var(--gk-text-label);
+  margin-bottom: 0;
+  border-radius: var(--gk-radius-sm) var(--gk-radius-sm) 0 0;
+}
+.gk-tab-nav-secondary .gk-tab-btn.gk-active,
+.gk-tab-nav-secondary .gk-tab-btn[aria-current="page"] { color: var(--gk-on-surface); }
+@media (max-width: 600px) {
+  .gk-tab-nav-fill { gap: 0; }
+  .gk-tab-nav-fill .gk-tab-btn { flex: 1 1 auto; flex-direction: column; justify-content: center; gap: 2px; padding: 6px 2px; font-size: var(--gk-text-caption); text-align: center; overflow-wrap: anywhere; }
+  .gk-tab-nav-secondary { flex-wrap: nowrap; }
+  .gk-tab-nav-secondary .gk-tab-btn { flex: 1 1 auto; justify-content: center; padding: 8px 6px; text-align: center; }
+}
+
+/* ── Segmented button: one choice of a few (2–5), joined ─────────────────
+   <div class="gk-segmented" role="group" aria-label="Zeitraum"><a class="gk-segmented-item"
+   href="…" aria-current="true">7 Tage</a>…</div> — links (aria-current) or buttons (aria-pressed).
+   The chosen one is tinted AND ticked. Too wide for a phone, the row scrolls; it never takes the
+   whole width by itself (two full-width rows read as one bar). FilterChips::segmented() draws it. */
+:where(.gk-segmented) { display: inline-flex; }
+.gk-segmented {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: 1px solid var(--gk-outline);
+  border-radius: 9999px;
+  background: var(--gk-surface);
+}
+:where(.gk-segmented-item) { display: inline-flex; }
+.gk-segmented-item {
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-left: 1px solid var(--gk-outline);
+  background: transparent;
+  color: var(--gk-on-surface);
+  font: inherit;
+  font-size: var(--gk-text-label);
+  font-weight: 500;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--gk-transition-state);
+}
+.gk-segmented-item:first-child { border-left: 0; }
+.gk-segmented-item:hover { background: var(--gk-state-hover); color: var(--gk-on-surface); }
+.gk-segmented-item:focus-visible { outline: 2px solid var(--gk-primary); outline-offset: -3px; border-radius: 9999px; }
+.gk-segmented-item[aria-current]:not([aria-current="false"]),
+.gk-segmented-item[aria-pressed="true"],
+.gk-segmented-item.gk-active {
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+  font-weight: 600;
+}
+.gk-segmented-item[aria-current]:not([aria-current="false"])::before,
+.gk-segmented-item[aria-pressed="true"]::before,
+.gk-segmented-item.gk-active::before {
+  content: "";
+  flex: none;
+  width: 5px;
+  height: 10px;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+@media (pointer: coarse) { .gk-segmented-item { min-height: var(--gk-target-min); } }
+@media (max-width: 480px) { .gk-segmented-item { padding: 0 12px; } }
+
+/* ── Steps: where something stands on a short way ────────────────────────
+   <ol class="gk-steps" aria-label="…"><li class="gk-steps-item gk-steps-done">Entwurf<span
+   class="gk-sr-only"> (erledigt)</span></li><li class="gk-steps-item gk-steps-current"
+   aria-current="step">Freigabe</li><li class="gk-steps-item">Live</li></ol>
+   Done is a tick on a disc, now is a dot in a ring and bold, open is an empty ring: three shapes. */
+:where(.gk-steps) { display: flex; }
+.gk-steps { flex-wrap: wrap; align-items: center; gap: 4px 0; margin: 0; padding: 0; list-style: none; font-size: var(--gk-text-label); }
+:where(.gk-steps-item) { display: inline-flex; }
+.gk-steps-item { align-items: center; gap: 6px; color: var(--gk-on-surface-variant); }
+.gk-steps-item:not(:last-child)::after { content: ""; width: 24px; height: 2px; margin: 0 8px; background: color-mix(in oklab, var(--gk-outline) 60%, transparent); }
+.gk-steps-item::before {
+  content: "";
+  box-sizing: border-box;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--gk-outline);
+  border-radius: 50%;
+  background: var(--gk-surface);
+}
+.gk-steps-done { color: var(--gk-on-surface); }
+.gk-steps-done::before {
+  content: "✓";
+  content: "✓" / "";
+  display: inline-grid;
+  place-items: center;
+  border-color: var(--gk-success);
+  background: var(--gk-success);
+  color: var(--gk-on-success);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+.gk-steps-current { color: var(--gk-on-surface); font-weight: 700; }
+.gk-steps-current::before { border-color: var(--gk-primary); background: radial-gradient(circle, var(--gk-primary) 0 3px, var(--gk-surface) 3.5px); }
+
+/* ── Timeline: a step still to do, a button in a step, a compact size ─────
+   gk-timeline-todo: open, to be done next — a ring in the primary colour and its word. A button
+   stands right beside the sentence of its step (.gk-timeline-actions after .gk-timeline-body), on a
+   phone under it. gk-timeline-compact: 20px markers and a regular title, for a short to-do list
+   inside a message. */
+.gk-timeline-todo .gk-timeline-marker { border-color: var(--gk-primary); background: var(--gk-surface); color: var(--gk-primary); }
+.gk-timeline-todo .gk-timeline-state { color: var(--gk-primary-text); }
+.gk-timeline-step:has(> .gk-timeline-actions) { grid-template-columns: var(--gk-timeline-marker) minmax(0, max-content) auto; justify-content: start; }
+.gk-timeline-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; align-self: start; }
+.gk-timeline-compact { --gk-timeline-marker: 20px; }
+.gk-timeline-compact .gk-timeline-step { column-gap: 10px; padding-bottom: 10px; }
+.gk-timeline-compact .gk-timeline-step:last-child { padding-bottom: 0; }
+.gk-timeline-compact .gk-timeline-title { font-weight: 500; }
+.gk-timeline-compact .gk-timeline-step:not(:last-child)::before { top: calc(var(--gk-timeline-marker) + 2px); bottom: 2px; }
+@media (max-width: 480px) {
+  .gk-timeline-step:has(> .gk-timeline-actions) { grid-template-columns: var(--gk-timeline-marker) minmax(0, 1fr); }
+  .gk-timeline-actions { grid-column: 2; margin-top: 8px; }
+}
+
+/* ── Disclosure: a quiet "show more" ─────────────────────────────────────
+   <details class="gk-disclosure"><summary>5 erledigte Prüfungen ansehen</summary>…</details> —
+   native, no script; an arrow that turns, 44px, a focus ring. (.gk-accordion is a framed box.) */
+:where(.gk-disclosure) > summary { display: inline-flex; }
+.gk-disclosure > summary {
+  align-items: center;
+  gap: 6px;
+  min-height: var(--gk-target-min);
+  color: var(--gk-primary-text);
+  font-size: var(--gk-text-label);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.gk-disclosure > summary::-webkit-details-marker { display: none; }
+.gk-disclosure > summary::after { content: ""; width: 7px; height: 7px; border: solid currentColor; border-width: 0 2px 2px 0; transform: translateY(-2px) rotate(45deg); transition: transform var(--gk-dur-1); }
+.gk-disclosure[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
+.gk-disclosure > summary:hover { text-decoration: underline; }
+.gk-disclosure > summary:focus-visible { outline: 2px solid var(--gk-primary); outline-offset: 2px; border-radius: 4px; }
+
+/* ── Message: the symbol stays at the top, a button keeps its own colour ──
+   With actions a message centres its items, and the symbol slid to the middle of a tall one. And
+   ".gk-message-warning .material-icons" coloured the symbol inside a button orange too. */
+.gk-message:has(> .gk-message-actions) > .material-icons { align-self: flex-start; }
+:where(.gk-message) .gk-btn .material-icons { color: inherit; }

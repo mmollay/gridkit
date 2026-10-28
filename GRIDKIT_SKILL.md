@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.97.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.99.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -883,6 +883,21 @@ A page with `current()` is the one exception: there "absent" means the default a
 the controller has to tell them apart — `$status = is_string($_GET['status'] ?? null) ? $_GET['status'] : 'open';`.
 Read the usual way, `?status=` would filter the list by the default while the All chip is lit.
 
+**As a segmented button** (since 1.99.0): `->segmented('Period')` draws the same links as
+`.gk-segmented` — one joined row, the chosen value tinted and ticked, a labelled `role="group"`.
+For a choice that switches the view of a page (a period, overview / visitors), not for a filter
+of a list. Everything else (URLs, `current()`, `preserve()`) is unchanged; an icon is drawn, a count is not.
+
+```html
+<div class="gk-segmented" role="group" aria-label="Period">
+    <a class="gk-segmented-item" href="?days=1">Today</a>
+    <a class="gk-segmented-item gk-active" href="?days=7" aria-current="true">7 days</a>
+</div>
+```
+
+The chosen one is `aria-current` (any value but "false"), `aria-pressed="true"` (buttons) or
+`.gk-active`. A row too wide for a phone scrolls; it never takes the whole width by itself.
+
 ### YearFilter
 
 ```php
@@ -1495,6 +1510,53 @@ no script, because the page that has the steps writes them.
   word and, if it moved, `aria-current` together. The list is not a live region; say what
   happened with `GK.announce()`. Give the message `role="alert"` only when it appears while
   the person is looking; a log that is rendered with the page needs none.
+
+**A to-do list** (since 1.99.0) — the same list for what is still open, e.g. in a status band:
+
+- `gk-timeline-todo` — open, to be done next: a ring in the primary colour, its word
+  (`Open`) in `--gk-primary-text`. "Afterwards" is the `waiting` state.
+- `.gk-timeline-actions` — after `.gk-timeline-body` inside the `<li>`: a button right beside the
+  sentence of its step; up to 480px under it.
+- `.gk-timeline-compact` on the `<ol>` — 20px markers, a regular title, less space; for a short
+  list inside a `.gk-message`.
+
+```html
+<ol class="gk-timeline gk-timeline-compact" role="list" aria-label="Still open">
+  <li class="gk-timeline-step gk-timeline-todo"><span class="gk-timeline-marker" aria-hidden="true"></span>
+    <div class="gk-timeline-body"><div class="gk-timeline-head"><span class="gk-timeline-title">Approve the page.</span><span class="gk-timeline-state">Open</span></div></div>
+    <div class="gk-timeline-actions"><a class="gk-btn gk-btn-outlined gk-btn-primary gk-btn-sm" href="…">To the approval</a></div></li>
+  <li class="gk-timeline-step gk-timeline-waiting">…<span class="gk-timeline-state">Afterwards</span>…</li>
+</ol>
+```
+
+### Steps (`.gk-steps`, since 1.99.0)
+
+Where something stands on a short way (2–5 stages): a draft, a release, live; the pages of a form.
+
+```html
+<ol class="gk-steps" aria-label="Way to live">
+  <li class="gk-steps-item gk-steps-done">Draft<span class="gk-sr-only"> (done)</span></li>
+  <li class="gk-steps-item gk-steps-current" aria-current="step">Approval</li>
+  <li class="gk-steps-item">Live</li>
+</ol>
+```
+
+Three shapes, never colour alone: done is a tick on a disc (`--gk-success` / `--gk-on-success`),
+now is a dot in a ring and bold, open is an empty ring; a short line between two steps. The tick
+is a pseudo-element with an empty alternative text — say "done" with `.gk-sr-only`.
+
+### Disclosure (`.gk-disclosure`, since 1.99.0)
+
+A quiet "show more" for a native `<details>`: a link-coloured summary with an arrow that turns,
+44px high, a focus ring, no script. `.gk-accordion` is the framed box for sections of a page.
+
+```html
+<details class="gk-disclosure"><summary>Show 5 completed checks</summary><ul>…</ul></details>
+```
+
+**A message as the status band of a page** (since 1.99.0): with `.gk-message-actions` the
+symbol stays at the top of a tall message, and a symbol inside a `.gk-btn` keeps the colour of
+its button instead of the tone of the message.
 
 ### Portrait video frame (`.gk-video-frame`, since 1.96.0)
 
@@ -2234,6 +2296,30 @@ Since 1.69.0 both shapes get the full tablist structure from the library —
 `role="tabpanel"` with `aria-labelledby`, and a roving tabindex so the set is
 one tab stop with **Left / Right / Home / End** moving inside it. **Write none
 of that yourself**; ids are supplied only where you have not.
+
+**Tabs as links between pages** (since 1.99.0) — when each tab is a page of its own, write
+links in a `<nav>` and mark the current page with `aria-current="page"`; it looks exactly like
+`.gk-active`. No `.gk-tabs` around it (that would turn the links into a tablist), no script:
+
+```html
+<nav class="gk-tab-nav gk-tab-nav-fill" aria-label="Areas of this page">
+    <a class="gk-tab-btn" href="/page/7/edit"><span class="material-icons gk-tab-icon" aria-hidden="true">edit</span><span>Edit</span></a>
+    <a class="gk-tab-btn" href="/page/7/results" aria-current="page"><span class="material-icons gk-tab-icon" aria-hidden="true">bar_chart</span><span>Results</span></a>
+</nav>
+<nav class="gk-tab-nav gk-tab-nav-secondary" aria-label="Views">
+    <a class="gk-tab-btn" href="…/signups">Sign-ups</a>
+    <a class="gk-tab-btn" href="…/stats" aria-current="page">Statistics</a>
+</nav>
+```
+
+- `.gk-tab-icon` — a symbol before the word (20px).
+- `.gk-tab-nav-fill` — the main row of a page: 44px targets; up to 600px the tabs share the width,
+  the symbol over the word, each as wide as its word needs.
+- `.gk-tab-nav-secondary` — a second row under the first, one step quieter: no rule of its own,
+  13px words, the chosen one in the text colour with its line. A third row is never a tab row —
+  use a segmented button.
+- The active tab (`.gk-active` too) is in `--gk-primary-text` and 600 since 1.99.0 (`--gk-primary`
+  measured 4.47:1 on white); every tab has a visible focus ring.
 
 ### Accordion
 
