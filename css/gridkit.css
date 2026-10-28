@@ -9430,6 +9430,7 @@ label.gk-setting-title {
    (two full lines read as one), smaller words, the chosen one in the plain text colour. */
 .gk-tab-nav-secondary { gap: 4px; border-bottom: 0; margin-bottom: 16px; }
 .gk-tab-nav-secondary .gk-tab-btn {
+  min-height: var(--gk-target-min);
   padding: 8px 14px;
   font-size: var(--gk-text-label);
   margin-bottom: 0;
@@ -9500,7 +9501,9 @@ label.gk-setting-title {
   border-width: 0 2px 2px 0;
   transform: translateY(-1px) rotate(45deg);
 }
-@media (pointer: coarse) { .gk-segmented-item { min-height: var(--gk-target-min); } }
+/* A finger needs 44px: on a touch screen, and on a phone-wide one even when the browser reports a mouse
+   (a chip of .gk-filter-chips is as tall there). */
+@media (pointer: coarse), (max-width: 600px) { .gk-segmented-item { min-height: var(--gk-target-min); } }
 @media (max-width: 480px) { .gk-segmented-item { padding: 0 12px; } }
 
 /* ── Steps: where something stands on a short way ────────────────────────
@@ -9586,6 +9589,19 @@ label.gk-setting-title {
    With actions a message centres its items, and the symbol slid to the middle of a tall one. And
    ".gk-message-warning .material-icons" coloured the symbol inside a button orange too. */
 .gk-message:has(> .gk-message-actions) > .material-icons { align-self: flex-start; }
+/* The focus ring of a button in a toned message takes the tone of the message — the violet of the primary
+   colour on a warning band read as a second, foreign colour (Panel, 28.10.2026). It is the text colour of the
+   message, so it keeps the contrast of the text on its tint. */
+:where(.gk-message-info) .gk-btn:focus-visible { outline-color: var(--gk-on-info-container); }
+:where(.gk-message-success) .gk-btn:focus-visible { outline-color: var(--gk-on-success-container); }
+:where(.gk-message-warning) .gk-btn:focus-visible { outline-color: var(--gk-on-warning-container); }
+:where(.gk-message-error) .gk-btn:focus-visible { outline-color: var(--gk-on-error-container); }
+/* On a phone the actions of a message stand under its text, one under the other and as wide as the message:
+   two buttons side by side in a narrow band end up at different widths and edges. */
+@media (max-width: 480px) {
+  .gk-message-actions { flex-direction: column; align-items: stretch; width: 100%; margin-left: 0; }
+  .gk-message-actions .gk-btn { justify-content: center; }
+}
 :where(.gk-message) .gk-btn .material-icons { color: inherit; font-size: 18px; }
 /* … and its size: .gk-message .material-icons gave a symbol in a button the 24px of the message's own symbol.
    The sizes are those GridKit\Button writes (xs 14, sm 16, md 18, lg 22), for a button written by hand too. */

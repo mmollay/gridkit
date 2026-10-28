@@ -35,6 +35,12 @@ another SSI system needs, so GridKit learns them. Roles only, no dark rule; ever
   turns, 44px, a focus ring.
 
 ### Changed
+- **44px:** a tab of `.gk-tab-nav-secondary` is 44px tall; a `.gk-segmented-item` also on a phone-wide screen
+  (`max-width: 600px`), not only with `pointer: coarse` — the Panel's browser tests measured 36px at 390px.
+- **Focus ring in a toned message:** a `.gk-btn` in `.gk-message-info|success|warning|error` shows its focus
+  ring in the text colour of the message (`--gk-on-*-container`), not in the violet of the primary colour.
+- **Actions of a message on a phone (≤480px):** `.gk-message-actions` stand under the text, one under the other,
+  as wide as the message and flush with it.
 - **A symbol in a button inside a message** keeps the size of its button (18px, xs 14, sm 16, lg 22 —
   the sizes `GridKit\Button` writes); `.gk-message .material-icons` gave it the 24px of the message symbol.
 - **An outlined button of a to-do step inside a message** stands on `--gk-surface` like one in

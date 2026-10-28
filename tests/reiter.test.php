@@ -78,6 +78,7 @@ return [
     $nav = gkCssDeclFor('.gk-tab-nav-secondary');
     T::eq($nav['border-bottom'] ?? '', '0', 'the second row draws a second full line under the first');
     T::eq(gkCssDeclFor('.gk-tab-nav-secondary .gk-tab-btn')['font-size'] ?? '', 'var(--gk-text-label)', 'the second row is as loud as the first');
+    T::eq(gkCssDeclFor('.gk-tab-nav-secondary .gk-tab-btn')['min-height'] ?? '', 'var(--gk-target-min)', 'a tab of the second row is smaller than a finger');
     T::eq(gkCssDeclFor('.gk-tab-nav-secondary .gk-tab-btn[aria-current="page"]')['color'] ?? '', 'var(--gk-on-surface)', 'the second row is coloured like the first');
 },
 
@@ -92,6 +93,7 @@ return [
     }
     T::ok(str_starts_with(gkCssDeclFor('.gk-segmented-item:focus-visible')['outline'] ?? '', '2px solid'), 'a segment has no visible focus ring');
     T::ok((bool) preg_match('/\.gk-segmented-item\s*\{\s*min-height: var\(--gk-target-min\)/', $media('(pointer: coarse)')), 'on a touch screen a segment is smaller than a finger');
+    T::ok(str_contains(gkCssBare(), '@media (pointer: coarse), (max-width: 600px) { .gk-segmented-item { min-height: var(--gk-target-min)'), 'on a phone-wide screen with a mouse a segment is smaller than a finger');
     T::ok(!str_contains($media('(max-width: 480px)'), '.gk-segmented { display: flex; width: 100%'),
         'two segmented rows at full width look like one bar on a phone');
 },
@@ -135,6 +137,14 @@ return [
         T::eq(gkCssDeclFor(":where(.gk-message) $btn .material-icons")['font-size'] ?? '', $px, "the symbol in a $btn inside a message takes the 24px of the message symbol");
     }
     T::eq(gkCssDeclFor(':where(.gk-message) .gk-timeline-actions .gk-btn-outlined')['background-color'] ?? '', 'var(--gk-surface)', 'an outlined button of a to-do step stands on the tint of the message (4.35:1 in a warning)');
+},
+
+'in a toned message the focus ring takes the tone, and on a phone the actions stand under the text' => function () use ($media): void {
+    foreach (['info', 'success', 'warning', 'error'] as $t) {
+        T::eq(gkCssDeclFor(":where(.gk-message-$t) .gk-btn:focus-visible")['outline-color'] ?? '', "var(--gk-on-$t-container)", "the focus ring in a $t message is the violet of the primary colour");
+    }
+    $phone = $media('(max-width: 480px)');
+    T::ok(preg_match('/\.gk-message-actions\s*\{[^}]*flex-direction:\s*column[^}]*align-items:\s*stretch[^}]*width:\s*100%[^}]*margin-left:\s*0/', $phone) === 1, 'on a phone two buttons of a message stand side by side at different widths');
 },
 
 'what sets display stays as weak as one class, so a consumer\'s hiding class still wins' => function () use ($anywhere): void {
