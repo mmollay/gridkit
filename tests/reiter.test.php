@@ -91,7 +91,7 @@ return [
         T::eq(gkCssDeclFor("$s::before")['content'] ?? '', '""', "$s is told apart by colour alone — it needs its tick");
     }
     T::ok(str_starts_with(gkCssDeclFor('.gk-segmented-item:focus-visible')['outline'] ?? '', '2px solid'), 'a segment has no visible focus ring');
-    T::ok(str_contains($media('(pointer: coarse)'), 'min-height: var(--gk-target-min)'), 'on a touch screen a segment is smaller than a finger');
+    T::ok((bool) preg_match('/\.gk-segmented-item\s*\{\s*min-height: var\(--gk-target-min\)/', $media('(pointer: coarse)')), 'on a touch screen a segment is smaller than a finger');
     T::ok(!str_contains($media('(max-width: 480px)'), '.gk-segmented { display: flex; width: 100%'),
         'two segmented rows at full width look like one bar on a phone');
 },

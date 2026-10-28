@@ -277,7 +277,18 @@ const rahmen = (wo, art) => `<figure class="gk-video-frame gk-video-frame-${art}
 const ZEIT_UND_RAHMEN = `
 <div class="gk-card" id="zeit-karte">${zeitleiste("karte")}${RAHMEN_ZUSTAENDE.map((a) => rahmen("karte", a)).join("")}</div>
 <div id="zeit-seite">${zeitleiste("seite")}${RAHMEN_ZUSTAENDE.map((a) => rahmen("seite", a)).join("")}</div>`;
-const BAUSTEINE = `${ZEIT_UND_RAHMEN}
+/* 1.99.0: Reiter als Links, zweite Reihe, segmentierte Wahl, Stufen, To-do in der Zeitleiste, Aufklapper —
+   auf der Seite und in einer Info-Meldung (dem Zustandsband, in dem Stufen, To-do und Aufklapper stehen). */
+const REITER = `
+<div id="reiter-seite"><nav class="gk-tab-nav gk-tab-nav-fill"><a class="gk-tab-btn" href="#" id="reiter-aus">Aus</a><a class="gk-tab-btn" href="#" aria-current="page" id="reiter-an">An</a></nav>
+<nav class="gk-tab-nav gk-tab-nav-secondary"><a class="gk-tab-btn" href="#" id="reiter2-aus">Aus</a><a class="gk-tab-btn" href="#" aria-current="page" id="reiter2-an">An</a></nav>
+<div class="gk-segmented" role="group" aria-label="x"><a class="gk-segmented-item" href="#" id="seg-aus">Aus</a><a class="gk-segmented-item" href="#" aria-current="true" id="seg-an">An</a></div></div>
+${["", "info", "warning", "success"].map((ton) => `<section class="gk-message${ton ? ` gk-message-${ton}` : ""}" id="zb-${ton || "neutral"}"><div class="gk-message-content">
+<ol class="gk-steps"><li class="gk-steps-item gk-steps-done" id="st-${ton || "neutral"}-done">A</li><li class="gk-steps-item gk-steps-current" id="st-${ton || "neutral"}-current">B</li><li class="gk-steps-item" id="st-${ton || "neutral"}-open">C</li></ol>
+<ol class="gk-timeline gk-timeline-compact" role="list"><li class="gk-timeline-step gk-timeline-todo" id="todo-${ton || "neutral"}"><span class="gk-timeline-marker" aria-hidden="true"></span><div class="gk-timeline-body"><div class="gk-timeline-head"><span class="gk-timeline-title">T</span><span class="gk-timeline-state">Offen</span></div></div>
+<div class="gk-timeline-actions"><a class="gk-btn gk-btn-outlined gk-btn-primary gk-btn-sm" href="#"><span class="material-icons" aria-hidden="true">x</span><span>K</span></a></div></li></ol>
+<details class="gk-disclosure" id="auf-${ton || "neutral"}"><summary>Mehr</summary></details></div></section>`).join("\n")}`;
+const BAUSTEINE = `${ZEIT_UND_RAHMEN}${REITER}
 <div class="gk-card" id="karte">
   <span class="gk-avatar gk-avatar-initials gk-avatar-tone-1" id="ton-1">AB</span>
   <span class="gk-avatar gk-avatar-initials gk-avatar-tone-2" id="ton-2">AB</span>
@@ -362,6 +373,17 @@ const TEXTPROBEN = [
     [`Meldung ${ton} · Text`, `meldung-${ton}`, ".gk-message-content"],
     [`Meldung ${ton} klein · Text`, `meldung-klein-${ton}`, ".gk-message-content"],
     [`Meldung ${ton} klein · Titel`, `meldung-klein-${ton}`, ".gk-message-header"],
+  ]),
+  /* 1.99.0: Reiter (an/aus, erste und zweite Reihe), die segmentierte Wahl (an/aus), und im Zustandsband jeder
+     Tonart: die drei Stufen, Titel und Wort eines To-dos, der Knopf darin und der Aufklapper. */
+  ...[["reiter-an", "Reiter an"], ["reiter-aus", "Reiter aus"], ["reiter2-an", "Reiter 2. Reihe an"], ["reiter2-aus", "Reiter 2. Reihe aus"],
+      ["seg-an", "Segment an"], ["seg-aus", "Segment aus"]].map(([id, name]) => [name, id, null]),
+  ...["neutral", "info", "warning", "success"].flatMap((ton) => [
+    ...["done", "current", "open"].map((st) => [`Stufe ${ton} ${st}`, `st-${ton}-${st}`, null]),
+    [`To-do ${ton} · Titel`, `todo-${ton}`, ".gk-timeline-title"],
+    [`To-do ${ton} · Wort`, `todo-${ton}`, ".gk-timeline-state"],
+    [`To-do ${ton} · Knopf`, `todo-${ton}`, ".gk-btn"],
+    [`Aufklapper ${ton}`, `auf-${ton}`, "summary"],
   ]),
   /* 1.96.0: die Zeitleiste und der Hochformat-Rahmen. Jede Schrift gegen den Grund, auf dem sie wirklich steht:
      Titel, Wort des Zustands, Zeit, Detail, Chip, das Symbol auf seiner Scheibe (Farbe der Schrift gegen die

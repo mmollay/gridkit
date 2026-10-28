@@ -41,8 +41,10 @@ another SSI system needs, so GridKit learns them. Roles only, no dark rule; ever
   symbol inside a `.gk-btn` keeps its button's colour (`.gk-message-warning .material-icons` painted
   it orange).
 
-Tests: `tests/reiter.test.php`; colours of the new texts in `ci/farben.js`; the demo shows them in
-"Tabs".
+Tests: `tests/reiter.test.php` (suite 7254 -> 7409 assertions); `ci/farben.js` measures 34 new texts
+(201 in all) in six themes and without one, light / dark / dark class — weakest new one: an open step in a
+warning band, dark, 4.63:1. Counter-checks: 16 mutations of the stylesheet, one of FilterChips and one of
+a colour, each turns its check red. The demo shows them under "Tabs" and "FilterChips".
 
 ---
 ## [1.97.0] - 2026-10-27
