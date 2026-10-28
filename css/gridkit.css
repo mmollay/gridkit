@@ -9548,6 +9548,10 @@ label.gk-setting-title {
 .gk-timeline-todo .gk-timeline-state { color: var(--gk-primary-text); }
 .gk-timeline-step:has(> .gk-timeline-actions) { grid-template-columns: var(--gk-timeline-marker) minmax(0, max-content) auto; justify-content: start; }
 .gk-timeline-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; align-self: start; }
+/* In a message an outlined button of a step stands on the tint, not on the surface its colour was chosen
+   for — a warning one measured 4.35:1, as in .gk-message-actions. It carries the surface, hovered too. */
+:where(.gk-message) .gk-timeline-actions .gk-btn-outlined { background-color: var(--gk-surface); }
+:where(.gk-message) .gk-timeline-actions .gk-btn-outlined:hover { background: linear-gradient(var(--gk-state-hover), var(--gk-state-hover)), var(--gk-surface); }
 .gk-timeline-compact { --gk-timeline-marker: 20px; }
 .gk-timeline-compact .gk-timeline-step { column-gap: 10px; padding-bottom: 10px; }
 .gk-timeline-compact .gk-timeline-step:last-child { padding-bottom: 0; }

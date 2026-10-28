@@ -35,6 +35,9 @@ another SSI system needs, so GridKit learns them. Roles only, no dark rule; ever
   turns, 44px, a focus ring.
 
 ### Changed
+- **An outlined button of a to-do step inside a message** stands on `--gk-surface` like one in
+  `.gk-message-actions`: a warning-coloured one on the warning tint measured 4.35:1 (`ci/farben.js` now
+  checks it in the warning message).
 - The active tab (`.gk-tab-btn.gk-active`) is in `--gk-primary-text` and weight 600: `--gk-primary`
   measured 4.47:1 on white, and colour alone told it apart.
 - A message with actions keeps its symbol at the top (it slid to the middle of a tall one), and a

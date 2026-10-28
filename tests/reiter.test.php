@@ -131,6 +131,7 @@ return [
 'a message with actions keeps its symbol at the top, and a button in it keeps its own colour' => function (): void {
     T::eq(gkCssDeclFor('.gk-message:has(> .gk-message-actions) > .material-icons')['align-self'] ?? '', 'flex-start', 'the symbol slides to the middle of a tall message');
     T::eq(gkCssDeclFor(':where(.gk-message) .gk-btn .material-icons')['color'] ?? '', 'inherit', 'the symbol in a button takes the tone of the message, not the colour of its button');
+    T::eq(gkCssDeclFor(':where(.gk-message) .gk-timeline-actions .gk-btn-outlined')['background-color'] ?? '', 'var(--gk-surface)', 'an outlined button of a to-do step stands on the tint of the message (4.35:1 in a warning)');
 },
 
 'what sets display stays as weak as one class, so a consumer\'s hiding class still wins' => function () use ($anywhere): void {

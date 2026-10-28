@@ -286,7 +286,7 @@ const REITER = `
 ${["", "info", "warning", "success"].map((ton) => `<section class="gk-message${ton ? ` gk-message-${ton}` : ""}" id="zb-${ton || "neutral"}"><div class="gk-message-content">
 <ol class="gk-steps"><li class="gk-steps-item gk-steps-done" id="st-${ton || "neutral"}-done">A</li><li class="gk-steps-item gk-steps-current" id="st-${ton || "neutral"}-current">B</li><li class="gk-steps-item" id="st-${ton || "neutral"}-open">C</li></ol>
 <ol class="gk-timeline gk-timeline-compact" role="list"><li class="gk-timeline-step gk-timeline-todo" id="todo-${ton || "neutral"}"><span class="gk-timeline-marker" aria-hidden="true"></span><div class="gk-timeline-body"><div class="gk-timeline-head"><span class="gk-timeline-title">T</span><span class="gk-timeline-state">Offen</span></div></div>
-<div class="gk-timeline-actions"><a class="gk-btn gk-btn-outlined gk-btn-primary gk-btn-sm" href="#"><span class="material-icons" aria-hidden="true">x</span><span>K</span></a></div></li></ol>
+<div class="gk-timeline-actions"><a class="gk-btn gk-btn-outlined gk-btn-${ton === "warning" ? "warning" : "primary"} gk-btn-sm" href="#"><span class="material-icons" aria-hidden="true">x</span><span>K</span></a></div></li></ol>
 <details class="gk-disclosure" id="auf-${ton || "neutral"}"><summary>Mehr</summary></details></div></section>`).join("\n")}`;
 const BAUSTEINE = `${ZEIT_UND_RAHMEN}${REITER}
 <div class="gk-card" id="karte">
