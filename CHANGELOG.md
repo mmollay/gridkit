@@ -35,6 +35,8 @@ another SSI system needs, so GridKit learns them. Roles only, no dark rule; ever
   turns, 44px, a focus ring.
 
 ### Changed
+- **A symbol in a button inside a message** keeps the size of its button (18px, xs 14, sm 16, lg 22 —
+  the sizes `GridKit\Button` writes); `.gk-message .material-icons` gave it the 24px of the message symbol.
 - **An outlined button of a to-do step inside a message** stands on `--gk-surface` like one in
   `.gk-message-actions`: a warning-coloured one on the warning tint measured 4.35:1 (`ci/farben.js` now
   checks it in the warning message).

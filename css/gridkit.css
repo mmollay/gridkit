@@ -9586,4 +9586,9 @@ label.gk-setting-title {
    With actions a message centres its items, and the symbol slid to the middle of a tall one. And
    ".gk-message-warning .material-icons" coloured the symbol inside a button orange too. */
 .gk-message:has(> .gk-message-actions) > .material-icons { align-self: flex-start; }
-:where(.gk-message) .gk-btn .material-icons { color: inherit; }
+:where(.gk-message) .gk-btn .material-icons { color: inherit; font-size: 18px; }
+/* … and its size: .gk-message .material-icons gave a symbol in a button the 24px of the message's own symbol.
+   The sizes are those GridKit\Button writes (xs 14, sm 16, md 18, lg 22), for a button written by hand too. */
+:where(.gk-message) .gk-btn-xs .material-icons { font-size: 14px; }
+:where(.gk-message) .gk-btn-sm .material-icons { font-size: 16px; }
+:where(.gk-message) .gk-btn-lg .material-icons { font-size: 22px; }

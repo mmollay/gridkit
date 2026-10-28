@@ -131,6 +131,9 @@ return [
 'a message with actions keeps its symbol at the top, and a button in it keeps its own colour' => function (): void {
     T::eq(gkCssDeclFor('.gk-message:has(> .gk-message-actions) > .material-icons')['align-self'] ?? '', 'flex-start', 'the symbol slides to the middle of a tall message');
     T::eq(gkCssDeclFor(':where(.gk-message) .gk-btn .material-icons')['color'] ?? '', 'inherit', 'the symbol in a button takes the tone of the message, not the colour of its button');
+    foreach (['.gk-btn' => '18px', '.gk-btn-xs' => '14px', '.gk-btn-sm' => '16px', '.gk-btn-lg' => '22px'] as $btn => $px) {
+        T::eq(gkCssDeclFor(":where(.gk-message) $btn .material-icons")['font-size'] ?? '', $px, "the symbol in a $btn inside a message takes the 24px of the message symbol");
+    }
     T::eq(gkCssDeclFor(':where(.gk-message) .gk-timeline-actions .gk-btn-outlined')['background-color'] ?? '', 'var(--gk-surface)', 'an outlined button of a to-do step stands on the tint of the message (4.35:1 in a warning)');
 },
 
