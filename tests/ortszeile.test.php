@@ -411,9 +411,54 @@ return [
     T::ok((int) $m[1] > (int) $o[1], 'the menu lies under its overlay: ' . ($m[1] ?? '?') . ' against ' . ($o[1] ?? '?'));
 },
 
+// ---- one row ('einzeilig') ----------------------------------------------
+
+'one row: a class of its own, and the full text in title where it can be shortened' => function () use ($tiefe): void {
+    $html = (new Header())->ortszeile($tiefe(['einzeilig' => true]))->render();
+    T::contains($html, '<nav class="gk-ortszeile gk-ortszeile-einzeilig" aria-label=', 'the one-row line has no class of its own');
+    T::contains($html, '<a class="gk-ortszeile-link" href="/shorts/liste" title="Alle Shorts">', 'a step that may be shortened keeps its text in title');
+    T::contains($html, 'aria-current="page" title="Bunkertraining"', 'the page keeps its title');
+    T::ok((bool) preg_match('#<a class="gk-ortszeile-link" href="/" title="[^"]+">#', $html), 'the dashboard, its house alone on a phone, has no title');
+    T::contains($html, '<a class="gk-ortszeile-link" href="/shorts">', 'the module anchor, never shortened, repeats its word as a tooltip');
+    $plain = (new Header())->ortszeile($tiefe())->render();
+    T::contains($plain, '<nav class="gk-ortszeile" aria-label=', 'without the option the class changed');
+    T::notContains($plain, 'gk-ortszeile-link" href="/shorts/liste" title=', 'without the option a link got a title');
+},
+
+'one row never wraps: the anchors keep their size, the rest shortens at its end' => function () use ($css, $rules): void {
+    $c = $css();
+    T::contains($rules($c, '.gk-ortszeile-einzeilig ol'), 'flex-wrap: nowrap', 'the one-row line wraps');
+    T::contains($rules($c, '.gk-ortszeile-einzeilig li:nth-child(-n + 2)'), 'flex: 0 0 auto', 'an anchor gives way');
+    T::contains($rules($c, '.gk-ortszeile-einzeilig li:last-child'), 'flex: 1 1 0', 'the page does not take what is left');
+    $text = $rules($c, '.gk-ortszeile-einzeilig .gk-ortszeile-link .gk-ortszeile-text');
+    T::contains($text, 'text-overflow: ellipsis', 'a shortened step is cut without a sign');
+    T::contains($rules($c, '.gk-ortszeile-einzeilig .gk-ortszeile-link'), 'min-width: 0', 'a step cannot shorten');
+},
+
+'one row on a phone: the page stays in the row, the targets keep their height' => function () use ($css, $rules, $phone): void {
+    $block = $phone($css(), '.gk-ortszeile-einzeilig');
+    T::ok($block !== '', 'the phone has no rule for one row');
+    T::contains($rules($block, '.gk-ortszeile-einzeilig li:nth-child(n + 3):last-child'), 'flex: 1 1 0', 'the page still takes a row of its own');
+    T::notContains($rules($block, '.gk-ortszeile-einzeilig .gk-ortszeile-link'), 'min-height', 'one row lowers the target on a phone');
+    T::notContains($block, 'display: none', 'one row hides a step');
+    $word = $rules($block, '.gk-ortszeile-einzeilig li:first-child:not(:last-child) .gk-ortszeile-text');
+    T::contains($word, 'clip-path: inset(50%)', 'the dashboard\'s word takes the room of the steps on a phone');
+    T::notContains($word, 'display: none', 'the dashboard\'s word is gone for a screen reader too');
+    T::contains($rules($block, '.gk-ortszeile-einzeilig li:first-child:not(:last-child) .gk-ortszeile-link'), 'min-width: var(--gk-target-min)', 'the house alone is smaller than a target');
+},
+
+'a page change without a full load takes the new line into the header' => function () use ($root): void {
+    $js = (string) file_get_contents($root . '/js/gridkit.js');
+    $at = strpos($js, '_render: function');
+    T::ok($at !== false, 'GK.navigate has no _render');
+    $render = substr($js, (int) $at, 2500);
+    T::contains($render, "doc.querySelector('header .gk-ortszeile')", 'the new page\'s line is not read');
+    T::contains($render, 'oldLine.replaceWith(', 'the old line stays');
+},
+
 'the skill file teaches the new calls' => function (): void {
     $doc = (string) file_get_contents(__DIR__ . '/../GRIDKIT_SKILL.md');
-    foreach (['->ortszeile(', 'Layout::skipLink(', '->mobileClose(', '->elementId(', "'controls'"] as $call) {
+    foreach (['->ortszeile(', "'einzeilig'", 'Layout::skipLink(', '->mobileClose(', '->elementId(', "'controls'"] as $call) {
         T::contains($doc, $call, "the skill does not mention $call");
     }
 },

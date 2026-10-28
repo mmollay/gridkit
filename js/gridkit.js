@@ -2539,6 +2539,11 @@
         });
         var newTitle = doc.querySelector('title');
         if (newTitle) document.title = newTitle.textContent;
+        // "Du bist hier" (Header::ortszeile, 1.100.0) stands in the header, outside
+        // the swapped block: without this it kept naming the page one came from.
+        var newLine = doc.querySelector('header .gk-ortszeile');
+        var oldLine = document.querySelector('header .gk-ortszeile');
+        if (newLine && oldLine) oldLine.replaceWith(document.importNode(newLine, true));
         if (pushState) history.pushState({ gkNav: true }, '', url);
         self._lastPath = location.pathname + location.search;
         self.updateActive(url);

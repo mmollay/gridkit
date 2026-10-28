@@ -697,6 +697,8 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
     const gridkitJs = fs.readFileSync(path.join(__dirname, "..", "js", "gridkit.js"), "utf8");
     const shell = (title, head, body) =>
       "<!DOCTYPE html><html><head><meta charset='utf-8'><title>" + title + "</title>" + head + "</head><body class='gk-root'>" +
+      // "Du bist hier" in the header, outside the swapped block (1.100.0).
+      "<header class='gk-header'><nav class='gk-ortszeile' aria-label='Du bist hier'><ol><li><span class='gk-ortszeile-current' aria-current='page'>" + title + "</span></li></ol></nav></header>" +
       "<aside data-gk-sidebar data-gk-ajax-nav><nav class='gk-sidebar-nav'><a id='to-a' href='/a'>A</a><a id='to-b' href='/b'>B</a><a id='to-c' href='/c'>C</a><a id='to-d' href='/d'>D</a></nav></aside>" +
       "<main data-gk-content>" + body + "</main><script src='/gridkit.js'></script></body></html>";
     const site = {
@@ -754,6 +756,8 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
     }));
     check("navigating to a page with its own head stylesheet and <style>: both apply, without a full load",
       onB.indent === "42px" && onB.spacing === "3px" && (await stayed()));
+    const lineOnB = await nav.evaluate(() => Array.from(document.querySelectorAll("header .gk-ortszeile")).map((n) => n.textContent));
+    check("… and the header's \"you are here\" line names the new page, once", lineOnB.length === 1 && lineOnB[0] === "B" && (await stayed()));
     await nav.click("#to-c");
     await nav.waitForFunction(() => document.getElementById("where").textContent === "page c");
     const onC = await nav.evaluate(() => getComputedStyle(document.getElementById("styled-b")).textIndent);

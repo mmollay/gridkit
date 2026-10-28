@@ -47,6 +47,19 @@ echo (new Header())
   105px (dashboard), 137px (module), 181px (deep page, long title) high; at 1440px it is one row, 61px.
   The first try let the steps stack in a column inside the old one-row header (208 – 252px); that is why
   the line has its own row now.
+- **One row: `'einzeilig' => true`** (class `gk-ortszeile-einzeilig`). For a header of fixed height (the
+  SSI Panel's is 98px on a phone), which a wrapping line would push open. The line never wraps; the two
+  anchors keep their size, the steps in between and then the page shorten at their end with an
+  ellipsis, and every link that can be shortened carries its full text in `title` (the steps, and the
+  dashboard, see below; the module anchor never shortens, so it gets no tooltip that repeats it). On a phone the page stays in the row and
+  the pills are narrower (10px padding instead of 12px) — the 44px target height stays. With more after
+  it, the dashboard anchor is its house alone on a phone (a 44px square); the word stays for a screen
+  reader (hidden like `.gk-sr-only`) and in `title`. Measured at 390px in the Panel: without that,
+  "Dashboard › Faktura › Rechnungen › Rechnung …" left "Re…" for the last two.
+- **`GK.navigate` takes the new page's line into the header.** The line stands in the header, outside
+  the swapped `[data-gk-content]`; after a page change without a full load it kept naming the page one
+  came from. `_render` now replaces `header .gk-ortszeile` with the one of the loaded page (when both
+  exist). Before, the Panel copied it over itself from a `<template>`.
 - **Put it in a `->sticky()` header**, in the content column of a layout with the sidebar first (or on a
   page without a sidebar). The fixed header has a fixed height and the page below it a fixed offset
   (56px): a line that wraps would cover the first rows. In the header-first layout a sticky header in

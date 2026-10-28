@@ -4619,6 +4619,33 @@ a.gk-stat-card:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* One row, always ('einzeilig', 1.100.0) — for a header of fixed height, which a
+   wrapping line would push open. The two anchors keep their size; the steps in
+   between and the page shorten at their end, the page last of all. The full
+   text of a shortened step stays in its title. */
+.gk-ortszeile-einzeilig ol {
+  flex-wrap: nowrap;
+}
+.gk-ortszeile-einzeilig li {
+  flex: 0 1 auto;
+  min-width: 2.75rem;
+}
+.gk-ortszeile-einzeilig li:nth-child(-n + 2) {
+  flex: 0 0 auto;
+}
+.gk-ortszeile-einzeilig li:last-child {
+  flex: 1 1 0;
+  min-width: 4rem;
+}
+.gk-ortszeile-einzeilig .gk-ortszeile-link {
+  min-width: 0;
+  max-width: 100%;
+}
+.gk-ortszeile-einzeilig .gk-ortszeile-link .gk-ortszeile-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 /* The line shares the header with the user menu: the left side may shrink for
    it, as it does for .gk-header-meta; the header's other children keep theirs. */
 .gk-header-left:has(.gk-ortszeile) {
@@ -4641,6 +4668,37 @@ a.gk-stat-card:hover {
   }
   .gk-ortszeile li:nth-child(n + 3):last-child::before {
     content: none;
+  }
+  /* In one row the page stays in the row of the steps, and the pills are narrower
+     there: the height of a target stays, the room around the word gives way. */
+  .gk-ortszeile-einzeilig li:nth-child(n + 3):last-child {
+    flex: 1 1 0;
+  }
+  .gk-ortszeile-einzeilig li:nth-child(n + 3):last-child::before {
+    content: "";
+  }
+  .gk-ortszeile-einzeilig .gk-ortszeile-link {
+    gap: 4px;
+    padding: 0 10px;
+  }
+  .gk-ortszeile-einzeilig li + li::before {
+    margin: 0 7px 0 3px;
+  }
+  /* With more after it, the dashboard anchor is its house alone: the word stays
+     for a screen reader (hidden like .gk-sr-only, not removed) and in title. The
+     room goes to the steps — at 390px "Rechnungen" was "Re…" beside it. */
+  .gk-ortszeile-einzeilig li:first-child:not(:last-child) .gk-ortszeile-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .gk-ortszeile-einzeilig li:first-child:not(:last-child) .gk-ortszeile-link {
+    justify-content: center;
+    min-width: var(--gk-target-min);
+    padding: 0;
   }
   /* The header was fixed at 56px on a phone; the line wraps, so it grows. Its first
      row keeps the menu button and the user menu; the line takes a row of its own

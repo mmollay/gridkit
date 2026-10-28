@@ -509,6 +509,9 @@ echo (new Header())
 On the dashboard itself leave `'modul'` out: "Dashboard" is then the current
 page and no link. On a phone the line takes a row of its own under the menu
 button and the user menu, so the header grows (105–181px at 390px).
+A header of fixed height passes `'einzeilig' => true` instead: the line then
+never wraps — the two anchors keep their size, the steps in between and the
+page shorten at their end, each with its full text in `title`.
 **Use `->sticky()`, not `->fixed()`, with it** — a fixed header has a fixed
 height and the page under it a fixed offset (56px), and a line that wraps would
 cover the page's first rows. Put the sticky header in the content column of the

@@ -2463,6 +2463,8 @@ echo $header->title('Invoices')
             ->ortszeile(['modul' => $ortModul, 'stufen' => ['Invoices' => '#'], 'aktuell' => 'Invoice INV-2026-001']),
         'A very long title' => (new Header())->title('Quarterly statement')
             ->ortszeile(['modul' => $ortModul, 'stufen' => ['Statements' => '#', '2026' => '#'], 'aktuell' => 'Quarterly statement of the fixed assets, annex 3 to the annual accounts, draft of 28 October']),
+        'One row, for a header of fixed height (einzeilig)' => (new Header())->title('Quarterly statement')
+            ->ortszeile(['modul' => $ortModul, 'stufen' => ['Statements of the year' => '#'], 'aktuell' => 'Quarterly statement of the fixed assets, annex 3 to the annual accounts', 'einzeilig' => true]),
     ];
     foreach ($ortFaelle as $titel => $zeile) {
         echo '<div class="demo-card demo-card-flush"><p class="demo-intro demo-intro-pad">' . htmlspecialchars($titel) . '</p>'

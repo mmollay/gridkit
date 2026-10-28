@@ -610,6 +610,7 @@
             "classes": {
                 "gk-ortszeile": "1.100.0",
                 "gk-ortszeile-current": "1.100.0",
+                "gk-ortszeile-einzeilig": "1.100.0",
                 "gk-ortszeile-link": "1.100.0",
                 "gk-ortszeile-text": "1.100.0"
             }

@@ -43,6 +43,9 @@ class Header
      *   stufen     array   — steps in between, ['Label' => '/url'] (an empty url makes plain text)
      *   aktuell    string  — the page; without it the last step above is the current one
      *   label      string  — name of the nav landmark (default: "Du bist hier" / "You are here")
+     *   einzeilig  bool    — one row, always: for a header of fixed height. The anchors keep
+     *                        their size, steps in between and the page shorten at their end
+     *                        (the full text in title); without it the line wraps on a phone
      */
     public function ortszeile(array $o): self
     {
@@ -276,7 +279,8 @@ class Header
         if (($o['aktuell'] ?? '') !== '') $steps[] = ['label' => (string) $o['aktuell'], 'href' => ''];
 
         $last = array_key_last($steps);
-        $html = '<nav class="gk-ortszeile" aria-label="' . $e((string) ($o['label'] ?? Lang::t('ortszeile.aria'))) . '"><ol>';
+        $oneRow = !empty($o['einzeilig']);
+        $html = '<nav class="gk-ortszeile' . ($oneRow ? ' gk-ortszeile-einzeilig' : '') . '" aria-label="' . $e((string) ($o['label'] ?? Lang::t('ortszeile.aria'))) . '"><ol>';
         foreach ($steps as $i => $step) {
             $label = (string) ($step['label'] ?? '');
             $href  = (string) ($step['href'] ?? '');
@@ -289,7 +293,10 @@ class Header
             } elseif ($href === '') {
                 $html .= '<li>' . $inner . '</li>';
             } else {
-                $html .= '<li><a class="gk-ortszeile-link" href="' . $e($href) . '">' . $inner . '</a></li>';
+                // In one row a step may be shortened, and on a phone the dashboard is its house
+                // alone: their full text stays in title. The module anchor never shortens.
+                $tip = $oneRow && !($i === 1 && !empty($o['modul']));
+                $html .= '<li><a class="gk-ortszeile-link" href="' . $e($href) . '"' . ($tip ? ' title="' . $e($label) . '"' : '') . '>' . $inner . '</a></li>';
             }
         }
         return $html . '</ol></nav>';
