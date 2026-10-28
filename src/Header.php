@@ -14,6 +14,8 @@ class Header
     private bool $sticky = false;
     private bool $fixed = false;
     private bool $sidebarToggle = true;
+    private array $toggleOpts = [];
+    private ?array $ortszeile = null;
 
     public function title(string $title, bool $raw = false): self
     {
@@ -26,6 +28,25 @@ class Header
     public function breadcrumb(array $items): self
     {
         $this->breadcrumb = $items;
+        return $this;
+    }
+
+    /**
+     * "Du bist hier" (1.98.0) — the line that says where the visitor is: two
+     * fixed anchors, the dashboard and the module, then the steps in between,
+     * then the page itself, which is not a link and says so to a screen reader.
+     * It replaces the breadcrumb when both are given: one trail, not two.
+     *
+     * @param array $o Keys, all optional:
+     *   dashboard  array   — label, href, icon of the first anchor (default: "Dashboard", "/", home)
+     *   modul      array   — label, href, icon of the second; absent on the dashboard itself
+     *   stufen     array   — steps in between, ['Label' => '/url'] (an empty url makes plain text)
+     *   aktuell    string  — the page; without it the last step above is the current one
+     *   label      string  — name of the nav landmark (default: "Du bist hier" / "You are here")
+     */
+    public function ortszeile(array $o): self
+    {
+        $this->ortszeile = $o;
         return $this;
     }
 
@@ -70,9 +91,16 @@ class Header
         return $this;
     }
 
-    public function sidebarToggle(bool $enabled = true): self
+    /**
+     * @param array $opts Keys, both optional:
+     *   label     bool|string — a word beside the symbol: true = "Menü"/"Menu", a string = your own.
+     *                           Default false: the symbol alone, as before.
+     *   controls  string      — id of the sidebar (Sidebar::elementId()), written as aria-controls
+     */
+    public function sidebarToggle(bool $enabled = true, array $opts = []): self
     {
         $this->sidebarToggle = $enabled;
+        $this->toggleOpts = $opts;
         return $this;
     }
 
@@ -92,24 +120,26 @@ class Header
             // The control that opens the navigation on a phone — where it is
             // often the only way in. Its glyph is decoration; without a name
             // of its own it announced as "button".
-            $menuLabel = htmlspecialchars(Lang::t('sidebar.open'), ENT_QUOTES, 'UTF-8');
-            $html .= '<button class="gk-header-menu-toggle" aria-label="' . $menuLabel . '" title="' . $menuLabel . '" aria-expanded="false" data-gk-sidebar-action="toggle">';
-            $html .= '<span class="material-icons" aria-hidden="true">menu</span>';
-            $html .= '</button>';
+            $html .= $this->menuToggle($e);
         }
-        if ($this->title !== '' || !empty($this->breadcrumb)) {
+        if ($this->title !== '' || !empty($this->breadcrumb) || $this->ortszeile !== null) {
             $html .= '<div class="gk-header-title">';
             if ($this->title !== '') {
                 $html .= '<h1>' . ($this->titleRaw ? $this->title : $e($this->title)) . '</h1>';
             }
-            if (!empty($this->breadcrumb)) {
-                $html .= '<nav class="gk-breadcrumb">';
+            if ($this->ortszeile !== null) {
+                $html .= $this->ortszeileHtml($this->ortszeile, $e);
+            } elseif (!empty($this->breadcrumb)) {
+                // Named, like the sidebar's nav, and the last step says it is the page (1.98.0).
+                $html .= '<nav class="gk-breadcrumb" aria-label="' . $e(Lang::t('breadcrumb.aria')) . '">';
                 $parts = [];
                 foreach ($this->breadcrumb as $key => $value) {
                     if (is_int($key)) {
-                        $parts[] = '<span class="gk-breadcrumb-current">' . $e($value) . '</span>';
+                        $parts[] = '<span class="gk-breadcrumb-current" aria-current="page">' . $e($value) . '</span>';
                     } elseif ($key === 'home') {
-                        $parts[] = '<a href="' . $e($value) . '" title="Dashboard" style="display:inline-flex;align-items:center;"><span class="material-icons" style="font-size:16px;vertical-align:middle;" aria-hidden="true">home</span></a>';
+                        // The house was sized by two inline styles; .gk-breadcrumb-home and
+                        // the .gk-breadcrumb .material-icons rule do the same (1.98.0).
+                        $parts[] = '<a class="gk-breadcrumb-home" href="' . $e($value) . '" title="Dashboard"><span class="material-icons" aria-hidden="true">home</span></a>';
                     } else {
                         $parts[] = '<a href="' . $e($value) . '">' . $e($key) . '</a>';
                     }
@@ -211,6 +241,58 @@ class Header
 
         $html .= '</header>';
         return $html;
+    }
+
+    /** The button that opens the navigation on a phone, with or without its word. */
+    private function menuToggle(\Closure $e): string
+    {
+        $open     = $e(Lang::t('sidebar.open'));
+        $word     = $this->toggleOpts['label'] ?? false;
+        $word     = $word === true ? Lang::t('header.menu') : (string) ($word ?: '');
+        $controls = (string) ($this->toggleOpts['controls'] ?? '');
+        $cls      = 'gk-header-menu-toggle' . ($word !== '' ? ' gk-header-menu-toggle-word' : '');
+
+        // With a word the visible text is the name; an aria-label that differs from
+        // it would be what a voice-control user cannot say (WCAG 2.5.3). The longer
+        // sentence stays as the tooltip.
+        $html  = '<button class="' . $cls . '"' . ($word === '' ? ' aria-label="' . $open . '"' : '')
+               . ' title="' . $open . '" aria-expanded="false"'
+               . ($controls !== '' ? ' aria-controls="' . $e($controls) . '"' : '')
+               . ' data-gk-sidebar-action="toggle">';
+        $html .= '<span class="material-icons" aria-hidden="true">menu</span>';
+        if ($word !== '') $html .= '<span class="gk-header-menu-label">' . $e($word) . '</span>';
+        return $html . '</button>';
+    }
+
+    /** The "Du bist hier" nav — see ortszeile(). */
+    private function ortszeileHtml(array $o, \Closure $e): string
+    {
+        $dash = (array) ($o['dashboard'] ?? []);
+        $steps = [array_merge(['label' => Lang::t('ortszeile.dashboard'), 'href' => '/', 'icon' => 'home'], $dash)];
+        if (!empty($o['modul'])) $steps[] = $o['modul'];
+        foreach ((array) ($o['stufen'] ?? []) as $label => $href) {
+            $steps[] = ['label' => (string) $label, 'href' => (string) $href];
+        }
+        if (($o['aktuell'] ?? '') !== '') $steps[] = ['label' => (string) $o['aktuell'], 'href' => ''];
+
+        $last = array_key_last($steps);
+        $html = '<nav class="gk-ortszeile" aria-label="' . $e((string) ($o['label'] ?? Lang::t('ortszeile.aria'))) . '"><ol>';
+        foreach ($steps as $i => $step) {
+            $label = (string) ($step['label'] ?? '');
+            $href  = (string) ($step['href'] ?? '');
+            $icon  = (string) ($step['icon'] ?? '');
+            $inner = ($icon !== '' ? '<span class="material-icons" aria-hidden="true">' . $e($icon) . '</span>' : '')
+                   . '<span class="gk-ortszeile-text">' . $e($label) . '</span>';
+            if ($i === $last) {
+                // The page you are on: no link to itself, the full title in title for when CSS shortens it.
+                $html .= '<li><span class="gk-ortszeile-current" aria-current="page" title="' . $e($label) . '">' . $inner . '</span></li>';
+            } elseif ($href === '') {
+                $html .= '<li>' . $inner . '</li>';
+            } else {
+                $html .= '<li><a class="gk-ortszeile-link" href="' . $e($href) . '">' . $inner . '</a></li>';
+            }
+        }
+        return $html . '</ol></nav>';
     }
 
     /**

@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.97.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.98.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -95,7 +95,7 @@ about a third more rows on a screen, `weit` gives them room, and the default
 leaves the rhythm alone. It names no colour, so it composes with every theme
 and both modes; an unknown value is ignored.
 | `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
-| `Lang::jsConfig()` | `Pagination::build()` | |
+| `Lang::jsConfig()` | `Pagination::build()` | `Layout::skipLink()` |
 
 `Header::render()` is the exception that catches people: every other component
 you construct with `new` prints, and this one does not. `<?php (new Header())
@@ -792,6 +792,49 @@ off — a user menu written inside it could not be seen or tapped at 402px.
 </div>
 ```
 
+**"You are here" (`->ortszeile()`, since 1.98.0).** A page more than one click deep
+should say where it is and give a way back: the dashboard and the module as two
+links (word and symbol), the steps in between, and the page last — not a link,
+`aria-current="page"`, the whole title in `title`. Only the page's title is ever
+shortened (an ellipsis at its end); the links and steps never are, and on a
+phone nothing is hidden — the line wraps. It replaces `->breadcrumb()` when both
+are given (one trail, not two).
+
+```php
+echo (new Header())
+    ->title('Invoice INV-2026-001')
+    ->ortszeile([
+        'dashboard' => ['label' => 'Dashboard', 'href' => '/', 'icon' => 'home'],   // the defaults
+        'modul'     => ['label' => 'Billing', 'href' => '/billing', 'icon' => 'receipt_long'],
+        'stufen'    => ['Invoices' => '/billing/invoices'],   // optional; '' as URL = plain text
+        'aktuell'   => 'Invoice INV-2026-001',                // the page itself
+        'label'     => 'You are here',                        // the nav landmark's name (language default)
+    ])
+    ->sticky()->render();
+```
+
+On the dashboard itself leave `'modul'` out: "Dashboard" is then the current
+page and no link. **Use `->sticky()`, not `->fixed()`, with it** — a fixed header
+has a fixed height and the page under it a fixed offset (56px), and a line that
+wraps on a phone would cover the page's first row.
+
+**The menu button with its word, the sidebar it points at, a way past both.**
+`->sidebarToggle(true, ['label' => true, 'controls' => 'main-nav'])` writes
+a word beside the symbol (`true` = the language file's `header.menu`, or pass
+your own; the default is the symbol alone) and `aria-controls`; the sidebar carries the same
+id through `Sidebar::elementId('main-nav')`. With a word the button has no
+`aria-label` — what is read is what is said (WCAG 2.5.3). A shut sidebar on a
+phone is `visibility: hidden`: its links are out of the tab order and out of
+what a screen reader reads. `Layout::skipLink('#main')` returns the skip
+link (`layout.skip`); echo it first in `<body>` and give the content `<main id="main" tabindex="-1">`.
+In the header-first layout the header may come before the `<aside>` in the
+source — the sidebar is `position: fixed`, nothing depends on the order.
+
+```php
+echo Layout::skipLink('#main');                                  // first thing in <body>
+echo (new Header())->title('Billing')->sidebarToggle(true, ['label' => true, 'controls' => 'main-nav'])->render();
+```
+
 ### Sidebar
 
 `Sidebar::render()` PRINTS. It is `position: fixed`, so whatever sits beside it
@@ -823,6 +866,22 @@ one is derived from the label otherwise).
 
 `Sidebar::toggleButton()` prints the hamburger for a page with no `Header`;
 `Header::sidebarToggle(true)` is the usual way.
+
+**Since 1.98.0:** `->brand($title, $icon, $version, $href)` — with the fourth
+argument the symbol and the name are one link (the way home), so nothing has to
+be patched into the markup afterwards. A sidebar **without** a brand calls
+`->mobileClose()`: on a phone it still gets a bar with the close button and its word
+(`sidebar.close_short`), which is not drawn at a desk. `->elementId('main-nav')` writes the `id` on the
+`<aside>` for `aria-controls` (see *Header*).
+
+```php
+(new Sidebar('main'))
+    ->elementId('main-nav')
+    ->brand('My project', 'widgets', 'v2.1', '/')   // a link home
+    ->item('Dashboard', '/', 'dashboard')
+    ->render();
+(new Sidebar('side'))->mobileClose()->item('Dashboard', '/', 'dashboard')->render();
+```
 
 **No `onclick` (since 1.92.0).** The sidebar's controls carry
 `data-gk-sidebar-action="toggle"`, `"close"` or `"collapse"`, and gridkit.js

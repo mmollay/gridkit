@@ -74,7 +74,15 @@ return [
     // Header
     'header.search'         => 'Search...',
 
+    // Ortszeile, breadcrumb, menu button, skip link (1.98.0)
+    'ortszeile.aria'        => 'You are here',
+    'ortszeile.dashboard'   => 'Dashboard',
+    'breadcrumb.aria'       => 'Breadcrumb',
+    'header.menu'           => 'Menu',
+    'layout.skip'           => 'Skip to content',
+
     // Sidebar
+    'sidebar.close_short'   => 'Close',
     'sidebar.close'         => 'Close navigation',
     'sidebar.open'          => 'Open navigation',
     'sidebar.toggle'        => 'Toggle',

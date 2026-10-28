@@ -3612,6 +3612,44 @@ a.gk-stat-card:hover {
 .gk-sidebar-close-mobile:hover {
   color: var(--gk-sidebar-text-hover);
 }
+/* The brand as a link: Sidebar::brand() with an address (1.98.0). Symbol and name
+   are one target; the version and the close button stay as they were. */
+.gk-sidebar-brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.gk-sidebar-brand-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: var(--gk-radius-sm);
+}
+/* A bar with the close button only: Sidebar::mobileClose() without a brand
+   (1.98.0). Not drawn at a desk — there it would be an empty stripe — and on a
+   phone (rule in the block below) a bar of its own with a full-size button. */
+.gk-sidebar-brand-bare {
+  display: none;
+  justify-content: flex-end;
+}
+.gk-sidebar-close-label {
+  white-space: nowrap;
+}
+.gk-sidebar-brand-bare .gk-sidebar-close-mobile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: var(--gk-target-min);
+  min-height: var(--gk-target-min);
+  padding: 0 12px;
+  border: 1px solid var(--gk-sidebar-border);
+  border-radius: var(--gk-radius-sm);
+  font: inherit;
+  font-weight: 600;
+}
 .gk-sidebar-nav {
   flex: 1;
   padding: 12px 10px;
@@ -3824,6 +3862,9 @@ a.gk-stat-card:hover {
 .gk-sidebar.collapsed .gk-sidebar-close-mobile {
   display: none;
 }
+.gk-sidebar.collapsed .gk-sidebar-brand-link {
+  display: none;
+}
 .gk-sidebar.collapsed .gk-sidebar-collapse-btn {
   margin: 0 auto;
   width: 40px;
@@ -3962,11 +4003,28 @@ a.gk-stat-card:hover {
 }
 
 @media (max-width: 768px) {
+  /* Shut, the sidebar was only moved off the screen: every link in it stayed in
+     the tab order and in what a screen reader reads (1.98.0). visibility: hidden
+     takes it out of both, as `inert` would, without a line of script — and waits
+     for the slide to finish, so it is still seen going out. */
   .gk-sidebar {
     transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      width 0.25s ease,
+      transform 0.25s ease,
+      visibility 0s linear 0.25s;
   }
   .gk-sidebar.open {
     transform: translateX(0);
+    visibility: visible;
+    transition:
+      width 0.25s ease,
+      transform 0.25s ease,
+      visibility 0s;
+  }
+  .gk-sidebar-brand-bare {
+    display: flex;
   }
   .gk-sidebar-close-mobile {
     display: block;
@@ -4447,6 +4505,10 @@ a.gk-stat-card:hover {
 .gk-breadcrumb a:hover {
   color: var(--gk-primary);
 }
+.gk-breadcrumb-home {
+  display: inline-flex;
+  align-items: center;
+}
 .gk-breadcrumb-sep {
   font-size: var(--gk-text-overline);
   color: var(--gk-on-surface-variant);
@@ -4463,6 +4525,141 @@ a.gk-stat-card:hover {
 .gk-breadcrumb .material-icons {
   font-size: var(--gk-icon-xs);
   vertical-align: middle;
+}
+
+/* === ORTSZEILE ("Du bist hier", Header::ortszeile, 1.98.0) ===
+   Dashboard and module as two fixed anchors, steps in between, then the page.
+   The anchors and the steps never give way; only the page's title is shortened,
+   at its end. Nothing is hidden on a phone — the steps wrap. The separators are
+   drawn here, not written, so a screen reader does not read them out. */
+.gk-ortszeile {
+  min-width: 0;
+}
+.gk-ortszeile ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+.gk-ortszeile li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+.gk-ortszeile li + li::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin: 0 10px 0 6px;
+  border-top: 2px solid var(--gk-on-surface-variant);
+  border-right: 2px solid var(--gk-on-surface-variant);
+  transform: rotate(45deg);
+}
+.gk-ortszeile li:last-child {
+  flex: 1 1 0;
+  min-width: 5rem;
+}
+.gk-ortszeile .material-icons {
+  flex: 0 0 auto;
+  font-size: var(--gk-icon-md);
+}
+.gk-ortszeile-text {
+  white-space: nowrap;
+}
+.gk-ortszeile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--gk-outline);
+  border-radius: 9999px;
+  background: var(--gk-surface);
+  color: var(--gk-primary-text);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--gk-dur-1);
+}
+.gk-ortszeile-link:hover {
+  background: var(--gk-surface-container);
+}
+.gk-ortszeile-link:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+.gk-ortszeile-current {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 32px;
+  color: var(--gk-on-surface);
+  font-weight: 700;
+}
+.gk-ortszeile-current .gk-ortszeile-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The line shares the header with the user menu: the left side may shrink for
+   it, as it does for .gk-header-meta; the header's other children keep theirs. */
+.gk-header-left:has(.gk-ortszeile) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+@media (max-width: 768px) {
+  .gk-ortszeile-link {
+    min-height: var(--gk-target-min);
+  }
+  .gk-ortszeile-current {
+    min-height: var(--gk-target-min);
+  }
+  /* A page after at least two steps takes a row of its own, so its title is
+     read whole as far as the screen allows instead of in what is left of the
+     row; the separator has nothing to point from there. */
+  .gk-ortszeile li:nth-child(n + 3):last-child {
+    flex: 1 1 100%;
+  }
+  .gk-ortszeile li:nth-child(n + 3):last-child::before {
+    content: none;
+  }
+  /* The header was fixed at 56px on a phone; the line wraps, so it grows. */
+  .gk-header:has(.gk-ortszeile) {
+    height: auto;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+}
+
+/* The link that jumps over the header to the content (Layout::skipLink, 1.98.0):
+   above the page until the keyboard reaches it — moved, not display: none, which
+   no keyboard could land on. */
+.gk-skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2000;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--gk-target-min);
+  padding: 0 16px;
+  border: 2px solid var(--gk-primary);
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface);
+  color: var(--gk-on-surface);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.gk-skip-link:focus {
+  transform: none;
 }
 
 /* Header Search (pill) */
@@ -4507,6 +4704,21 @@ a.gk-stat-card:hover {
 }
 .gk-header-menu-toggle:hover {
   background: var(--gk-surface-container-high);
+}
+/* With its word (Header::sidebarToggle label option, 1.98.0): an outlined
+   button a first-time visitor takes for a button, and a full-size target. */
+.gk-header-menu-toggle-word {
+  align-items: center;
+  gap: 8px;
+  min-height: var(--gk-target-min);
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--gk-outline);
+  border-radius: var(--gk-radius-sm);
+  font: inherit;
+  font-weight: 600;
+}
+.gk-header-menu-label {
+  white-space: nowrap;
 }
 
 /* Avatar */

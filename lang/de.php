@@ -74,7 +74,15 @@ return [
     // Header
     'header.search'         => 'Suchen...',
 
+    // Ortszeile, Krume, Menü-Knopf, Sprunglink (1.98.0)
+    'ortszeile.aria'        => 'Du bist hier',
+    'ortszeile.dashboard'   => 'Dashboard',
+    'breadcrumb.aria'       => 'Brotkrume',
+    'header.menu'           => 'Menü',
+    'layout.skip'           => 'Zum Inhalt',
+
     // Sidebar
+    'sidebar.close_short'   => 'Schließen',
     'sidebar.close'         => 'Navigation schließen',
     'sidebar.open'          => 'Navigation öffnen',
     'sidebar.toggle'        => 'Ein-/Ausklappen',
