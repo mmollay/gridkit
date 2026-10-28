@@ -2456,9 +2456,9 @@ echo $header->title('Invoices')
     $ortModul = ['label' => 'Billing', 'href' => '#', 'icon' => 'receipt_long'];
     $ortFaelle = [
         'On the dashboard itself' => (new Header())->title('Dashboard')
-            ->ortszeile(['aktuell' => 'Dashboard']),
+            ->ortszeile([]),   // only the dashboard step, as the current page — never "Dashboard › Dashboard"
         'On the start page of a module' => (new Header())->title('Billing')
-            ->ortszeile(['modul' => $ortModul, 'aktuell' => 'Billing']),
+            ->ortszeile(['modul' => $ortModul]),   // the module anchor is the current page — no second "Billing"
         'Deep in a module' => (new Header())->title('Invoice INV-2026-001')
             ->ortszeile(['modul' => $ortModul, 'stufen' => ['Invoices' => '#'], 'aktuell' => 'Invoice INV-2026-001']),
         'A very long title' => (new Header())->title('Quarterly statement')
@@ -2473,7 +2473,7 @@ echo $header->title('Invoices')
     ?>
     <div class="demo-card demo-card-flush">
         <p class="demo-intro demo-intro-pad">The menu button with its word, for a first-time visitor</p>
-        <?= (new Header())->title('Billing')->sidebarToggle(true, ['label' => true])->ortszeile(['modul' => $ortModul, 'aktuell' => 'Billing'])->sticky()->render() ?>
+        <?= (new Header())->title('Billing')->sidebarToggle(true, ['label' => true])->ortszeile(['modul' => $ortModul])->sticky()->render() ?>
     </div>
     <div class="demo-code"><pre>echo (new Header())
     -&gt;sidebarToggle(true, ['label' =&gt; true, 'controls' =&gt; 'main-nav'])   // "Menü" beside the symbol
