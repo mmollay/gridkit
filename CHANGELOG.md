@@ -7,6 +7,134 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.100.0] - 2026-10-28
+
+This is the work once numbered 1.98.0 on the branch `ortszeile`. It was never released, and 1.99.0
+(the tab and step blocks) went out first, so it comes now as 1.100.0, on top of 1.99.0.
+
+### Added — the "you are here" line: `Header::ortszeile()`
+The SSI Panel's navigation was reworked (design B, chosen 28.10.): a person in a nested page must see
+at once where they are, and be one tap from the dashboard and from the module. A line like that is
+wanted by every system built on GridKit, so it lives here and the Panel only uses it.
+
+```php
+echo (new Header())
+    ->title('Invoice INV-2026-001')
+    ->ortszeile([
+        'dashboard' => ['label' => 'Dashboard', 'href' => '/', 'icon' => 'home'],   // the defaults
+        'modul'     => ['label' => 'Billing', 'href' => '/faktura', 'icon' => 'receipt_long'],
+        'stufen'    => ['Invoices' => '/faktura/rechnungen'],                       // optional steps
+        'aktuell'   => 'Invoice INV-2026-001',                                      // the page, no link
+    ])
+    ->sticky()->render();
+```
+
+- **`Header::ortszeile(array $o)`** (new). `<nav class="gk-ortszeile" aria-label="Du bist hier">` around an
+  ordered list: the dashboard and the module as links (word + symbol), the steps in between, and the
+  page last — **not a link**, `aria-current="page"`, its full title in `title`. On the dashboard itself
+  leave `modul` out: "Dashboard" is then the current page and no link. A step with an empty URL is plain
+  text. `label` renames the landmark; the default comes from the language file (`ortszeile.aria`).
+- **Classes:** `gk-ortszeile`, `gk-ortszeile-link`, `gk-ortszeile-current`, `gk-ortszeile-text` (own block
+  "Ortszeile" in `css/blocks.json`). Only the title of the current page is shortened, at its end, with an
+  ellipsis; the anchors and the steps never are. Targets are 32px high at a desk and
+  `var(--gk-target-min)` (44px) on a phone; nothing is hidden on a phone, the line wraps. Colours are
+  tokens (`--gk-primary-text`, `--gk-on-surface`, `--gk-outline`), so light and dark follow by themselves.
+  The separators are drawn by CSS and are not read out.
+- **On a phone the line takes a row of its own** under the menu button and the user menu, the whole
+  width (`.gk-header:has(.gk-ortszeile)` wraps; the two wrappers `.gk-header-left` and
+  `.gk-header-title` step aside with `display: contents`; the line has `order: 1`). A page after two or
+  more steps takes a row of its own again, so its title is read whole. Measured at 390px: the header is
+  105px (dashboard), 137px (module), 181px (deep page, long title) high; at 1440px it is one row, 61px.
+  The first try let the steps stack in a column inside the old one-row header (208 – 252px); that is why
+  the line has its own row now.
+- **Put it in a `->sticky()` header**, in the content column of a layout with the sidebar first (or on a
+  page without a sidebar). The fixed header has a fixed height and the page below it a fixed offset
+  (56px): a line that wraps would cover the first rows. In the header-first layout a sticky header in
+  the content column leaves the fixed sidebar starting at `top: 56px`, under a gap — **not solved here**.
+- **One trail, not two.** When `ortszeile()` and `breadcrumb()` are both given, the line wins.
+- **`Header::breadcrumb()`** keeps its markup and gains `aria-label` (`breadcrumb.aria`: "Brotkrume" /
+  "Breadcrumb") on the `<nav>` and `aria-current="page"` on the last step. The home symbol loses its
+  inline style and becomes `gk-breadcrumb-home` (new class). These are the only differences from 1.97.0
+  — a test removes exactly those attributes and compares the rest byte for byte.
+### Added — a linked sidebar brand, a close button without a brand, a menu button with its word, a skip link
+Small parts the new navigation needs, each an option; nothing changes for a page that does not ask.
+
+- **`Sidebar::brand($title, $icon, $version, $href = '')`** — with a fourth argument the symbol and the
+  name are one link (`<a class="gk-sidebar-brand-link">`); the Panel no longer needs to patch the text in
+  afterwards. Without it the output is byte-for-byte the old one. New class `gk-sidebar-brand-link`.
+- **`Sidebar::mobileClose(bool $enabled = true)`** — a sidebar with **no brand** keeps its close button on a
+  phone: a bar of its own (`gk-sidebar-brand gk-sidebar-brand-bare`) with the button and the word
+  "Schließen" / "Close" (`gk-sidebar-close-label`, language key `sidebar.close_short`). Not drawn at a
+  desk. With a brand there is one close button, as before. New classes `gk-sidebar-brand-bare`,
+  `gk-sidebar-close-label`.
+- **`Sidebar::elementId(string $id)`** — writes `id` on the `<aside>`, so that a button can point at it
+  with `aria-controls`. Without the call there is no `id`, as before.
+- **`Header::sidebarToggle(bool $enabled = true, array $opts = [])`** — `label` (`true` = "Menü" / "Menu",
+  or a word of your own; default `false` = the symbol alone, as before) and `controls` (the sidebar's id
+  → `aria-controls`). With a word the button has **no** `aria-label`: the visible word is its name, so
+  what a voice-control user says is what they see (WCAG 2.5.3); "Navigation öffnen" stays as the
+  tooltip. New classes `gk-header-menu-toggle-word`, `gk-header-menu-label`. `aria-expanded` was
+  already kept up to date by `GK.sidebar` and is untouched.
+- **`Layout::skipLink(string $target = '#main', string $label = '')`** — "Zum Inhalt" / "Skip to
+  content" (`layout.skip`): `<a class="gk-skip-link">`, out of sight above the page until the keyboard
+  reaches it. Print it first in `<body>`; the target is `<main id="main" tabindex="-1">`. Opt-in: no
+  existing page changes. New class `gk-skip-link`.
+- New language keys in `lang/de.php` and `lang/en.php`: `ortszeile.aria`, `ortszeile.dashboard`,
+  `breadcrumb.aria`, `header.menu`, `layout.skip`, `sidebar.close_short`.
+
+
+### Fixed — found while measuring the line in a browser
+- **Sidebar-first layout on a phone: the open menu lay under its own overlay.** `.gk-sidebar` had
+  `z-index: 300` there and `.gk-sidebar-overlay` 999, so the menu was greyed and a tap on a link shut
+  the menu instead of following the link. It is `1000` on a phone now, as in the header-first layout.
+  This is a bug of 1.97.0 and earlier, not of the new line; it is shipped here because it was found
+  here. Only the attribute form `data-gk-layout="sidebar-first"` is changed (the only one the phone
+  block knows); the class form `gk-layout-sidebar-first` has no phone rules at all and is left alone.
+- **A sticky header in `.gk-with-sidebar` stood under a blank 56px band.** The padding is for the
+  fixed header; `.gk-with-sidebar:has(> .gk-header-sticky)` now has `padding-top: 0`, before the
+  layout rules so that they do not win. A page that has a fixed header is not touched. **This is the one
+  visible difference for an existing page**, and only for one that put a sticky header straight into the
+  content wrapper.
+
+### Changed — the shut menu leaves the tab order, and the order in the source
+- **The shut menu leaves the tab order.** On a phone the sidebar was only moved off the screen: all its
+  links could still be reached by Tab and were read out. `visibility: hidden` now takes it out of both
+  when it is shut (after the slide, `visibility 0s linear .25s`) and `.open` makes it visible at once.
+  A rule in the stylesheet instead of `inert` set by script, so `js/gridkit.js` — which the PawBot
+  dashboard has extended — is not touched.
+- **Order in the source.** The sidebar is `position: fixed`, and its only sibling coupling in the
+  stylesheet is the sidebar-first layout (`.gk-sidebar.collapsed + .gk-header-fixed`). In the header-first
+  layout the header may therefore stand in the source before the `<aside>` — brand, anchors and the
+  header's links first, then the menu — with no change to the look. That is a convention for the page
+  (and is now documented and tested), not a change of the code: an existing page that has the sidebar first
+  keeps it, and the sidebar-first layout needs it there.
+
+**Compatibility.** Every call that is in use today gives the same output as before, except the two
+attributes and the home class of the breadcrumb named above (`tests/ortszeile.test.php` holds the
+hashes of the old output for `Header`, `Sidebar` with a brand, without, and collapsed). A stylesheet
+selector `.gk-breadcrumb a` still matches the home link.
+
+**Measured** (Chromium, 390 and 1440px, light and dark): no horizontal overflow; links 44px high on a
+phone and 32px at a desk; every step visible; contrast of a link 6.05:1 (light) and 5.71:1 (dark), of
+the current page 16.3:1 and 11.9:1; with the menu shut, Tab goes skip link → menu button → the line's
+links → user menu → content and reaches nothing of the sidebar; with the menu open and the header
+before the `<aside>` in the source it goes on into the sidebar (brand, close button, items). With the
+`<aside>` first it does not, until the tab order has wrapped round. Header, sidebar and content stand at
+the same places whichever comes first in the source (fixed header, header-first layout).
+
+**Not checked.** Focus moving into the menu when it opens and back to the button when it shuts, and
+closing with Esc, are not built (they need script in `gridkit.js`). A **fixed** header with a line that
+wraps on a phone covers the first rows of the page (the offset is fixed) — hence "sticky". Header-first
+layout with a sticky header in the content column: see above. Nothing was tried in a real screen reader,
+nor inside the Panel. The Panel's own `r-teilmenge.sh` was not run.
+
+**For the PawBot dashboard:** `src/Sidebar.php` there is its own extension and must not be overwritten.
+Carry over by hand: the `$href` parameter of `brand()` with the `gk-sidebar-brand-link` wrapper,
+`mobileClose()` with the bare bar, `elementId()` and the `id` attribute. `Auth.php` and `js/gridkit.js`
+are untouched by this release.
+
+**Rollback:** the branch `ortszeile` is the whole change; set `VERSION` back to 1.97.0 and drop the
+branch. No data, no schema.
 ## [1.99.0] - 2026-10-28
 
 ### Added — tabs as links, a segmented button, steps, a disclosure, a to-do in a timeline

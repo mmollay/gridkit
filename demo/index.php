@@ -210,6 +210,9 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-section h3.demo-h3 { margin:32px 0 8px; }
         .demo-section .gk-form { max-width:none; }
         .demo-section .gk-richtext-wrap { border-width:1px; }
+        .demo-card-flush { padding:0; overflow:hidden; }
+        .demo-rule { border:none; border-top:1px solid var(--gk-outline-variant); margin:40px 0; }
+        .demo-intro-pad { padding:16px 24px 0; margin:0; }
         .demo-card { background:var(--gk-surface, #fff); border-radius:8px; padding:24px; border:1px solid transparent; box-shadow:var(--gk-shadow); margin-bottom:24px; }
         [data-gk-mode="dark"] .demo-card, .gk-dark .demo-card {
             background:var(--gk-surface-container);
@@ -2445,6 +2448,48 @@ echo $header->title('Invoices')
     ->sticky()->render();</pre></div>
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
+
+    <h3>Ortszeile <?= since('ortszeile') ?></h3>
+    <p class="demo-intro">"You are here": the dashboard and the module as links, the steps between, the page last and without a link. Only the page's title is shortened. Put it in a <code>sticky()</code> header — it wraps on a phone. Resize the window to see it.</p>
+    <?php
+    $ortUser = ['menu' => [['label' => 'Sign out', 'href' => '/logout', 'icon' => 'logout']]];
+    $ortModul = ['label' => 'Billing', 'href' => '#', 'icon' => 'receipt_long'];
+    $ortFaelle = [
+        'On the dashboard itself' => (new Header())->title('Dashboard')
+            ->ortszeile(['aktuell' => 'Dashboard']),
+        'On the start page of a module' => (new Header())->title('Billing')
+            ->ortszeile(['modul' => $ortModul, 'aktuell' => 'Billing']),
+        'Deep in a module' => (new Header())->title('Invoice INV-2026-001')
+            ->ortszeile(['modul' => $ortModul, 'stufen' => ['Invoices' => '#'], 'aktuell' => 'Invoice INV-2026-001']),
+        'A very long title' => (new Header())->title('Quarterly statement')
+            ->ortszeile(['modul' => $ortModul, 'stufen' => ['Statements' => '#', '2026' => '#'], 'aktuell' => 'Quarterly statement of the fixed assets, annex 3 to the annual accounts, draft of 28 October']),
+    ];
+    foreach ($ortFaelle as $titel => $zeile) {
+        echo '<div class="demo-card demo-card-flush"><p class="demo-intro demo-intro-pad">' . htmlspecialchars($titel) . '</p>'
+            . $zeile->user('Anna K.', $ortUser)->sticky()->render() . '</div>';
+    }
+    ?>
+    <div class="demo-card demo-card-flush">
+        <p class="demo-intro demo-intro-pad">The menu button with its word, for a first-time visitor</p>
+        <?= (new Header())->title('Billing')->sidebarToggle(true, ['label' => true])->ortszeile(['modul' => $ortModul, 'aktuell' => 'Billing'])->sticky()->render() ?>
+    </div>
+    <div class="demo-code"><pre>echo (new Header())
+    -&gt;sidebarToggle(true, ['label' =&gt; true, 'controls' =&gt; 'main-nav'])   // "Menü" beside the symbol
+    -&gt;ortszeile([
+        'dashboard' =&gt; ['label' =&gt; 'Dashboard', 'href' =&gt; '/', 'icon' =&gt; 'home'],   // the defaults
+        'modul'     =&gt; ['label' =&gt; 'Billing', 'href' =&gt; '/faktura', 'icon' =&gt; 'receipt_long'],
+        'stufen'    =&gt; ['Invoices' =&gt; '/faktura/rechnungen'],
+        'aktuell'   =&gt; 'Invoice INV-2026-001',   // the page: no link, aria-current="page"
+    ])
+    -&gt;sticky()-&gt;render();
+
+echo Layout::skipLink('#main');                   // first in &lt;body&gt;; &lt;main id="main" tabindex="-1"&gt;
+(new Sidebar('main'))-&gt;elementId('main-nav')       // the button's aria-controls
+    -&gt;brand('Panel', 'dashboard', 'v1', '/')       // the brand as a link
+    -&gt;mobileClose()                                // a brand-less sidebar keeps its close button
+    -&gt;render();</pre></div>
+
+    <hr class="demo-rule">
 
     <h3>Sidebar <?= since('sidebar') ?></h3>
     <div class="demo-pair">

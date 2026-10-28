@@ -601,7 +601,17 @@
             "classes": {
                 "gk-breadcrumb": "0.9.0",
                 "gk-breadcrumb-current": "0.9.0",
+                "gk-breadcrumb-home": "1.100.0",
                 "gk-breadcrumb-sep": "0.9.0"
+            }
+        },
+        "ortszeile": {
+            "name": "Ortszeile",
+            "classes": {
+                "gk-ortszeile": "1.100.0",
+                "gk-ortszeile-current": "1.100.0",
+                "gk-ortszeile-link": "1.100.0",
+                "gk-ortszeile-text": "1.100.0"
             }
         },
         "tabs": {
@@ -846,14 +856,17 @@
                 "gk-header-center": "0.9.0",
                 "gk-header-fixed": "0.9.0",
                 "gk-header-left": "0.9.0",
+                "gk-header-menu-label": "1.100.0",
                 "gk-header-menu-toggle": "0.9.0",
+                "gk-header-menu-toggle-word": "1.100.0",
                 "gk-header-meta": "1.92.0",
                 "gk-header-right": "0.9.0",
                 "gk-header-search": "0.9.0",
                 "gk-header-sticky": "0.9.0",
                 "gk-header-title": "0.9.0",
                 "gk-header-user": "0.9.0",
-                "gk-header-user-name": "0.9.0"
+                "gk-header-user-name": "0.9.0",
+                "gk-skip-link": "1.100.0"
             }
         },
         "sidebar": {
@@ -863,11 +876,14 @@
                 "gk-sidebar": "0.9.0",
                 "gk-sidebar-badge": "0.9.0",
                 "gk-sidebar-brand": "0.9.0",
+                "gk-sidebar-brand-bare": "1.100.0",
                 "gk-sidebar-brand-icon": "0.9.0",
+                "gk-sidebar-brand-link": "1.100.0",
                 "gk-sidebar-brand-text": "0.9.0",
                 "gk-sidebar-brand-title": "0.9.0",
                 "gk-sidebar-brand-version": "0.9.0",
                 "gk-sidebar-chevron": "0.9.0",
+                "gk-sidebar-close-label": "1.100.0",
                 "gk-sidebar-close-mobile": "0.9.0",
                 "gk-sidebar-collapse-bottom": "0.9.0",
                 "gk-sidebar-collapse-btn": "0.9.0",

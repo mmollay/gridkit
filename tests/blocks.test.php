@@ -124,26 +124,27 @@ return [
 
 'the marks are GridKit\'s own green and blue labels, in both modes' => function () use ($css, $rule): void {
     Lang::set('en');
-    $new = since('segmented');
+    $new = since('ortszeile');
     T::contains($new, 'gk-label gk-label-green', 'a new block is not marked with the green label');
-    T::contains($new, 'New in 1.99', 'the mark does not say what is new');
-    T::contains($new, 'since 1.99', 'the heading does not say since when');
-    T::contains(since('sortierbar'), 'New in 1.97', 'the block of the minor before is not marked as new');
+    T::contains($new, 'New in 1.100', 'the mark does not say what is new');
+    T::contains($new, 'since 1.100', 'the heading does not say since when');
+    T::contains(since('segmented'), 'New in 1.99', 'the block of the minor before is not marked as new');
 
-    // The window moves with every minor (the last two in the changelog: 1.99 and 1.97 — 1.98 is on
-    // another branch and not in this changelog). The message changed in 1.99 (the symbol stays at the
-    // top, a button keeps its colour), so it carries the blue label; so does the timeline, which is new
-    // in 1.96 (out of the window) and learned its to-do in 1.99.
+    // The window moves with every minor (the last two in the changelog: 1.100 and 1.99 — 1.98 was never
+    // released, its entry became 1.100). The header, the sidebar and the breadcrumb got a new class each in
+    // 1.100, so they carry the blue label; the message changed in 1.99 (the symbol stays at the top, a button
+    // keeps its colour), and so did the timeline, which is new in 1.96 (out of the window).
     $changed = gkMark('changed', '1.95');
+    T::contains(since('header'), 'Changed in 1.100', 'a block that got a new class is not marked as changed');
     T::contains($changed, 'gk-label gk-label-blue', 'a changed block is not marked with the blue label');
     T::contains($changed, 'Changed in 1.95', 'the mark does not say when it changed');
     T::contains(since('message'), 'Changed in 1.99', 'the message, changed in 1.99, carries no mark');
     T::notContains(since('timeline'), 'New in 1.96', 'the timeline, new in 1.96, is out of the window and still marked new');
     T::contains(since('timeline'), 'Changed in 1.99', 'the timeline, changed in 1.99, carries no mark');
 
-    // A block that fell out of the window (the picker is new in 1.94, the window is 1.97 and 1.96; the
-    // announcement is older still) carries no mark.
-    foreach (['picker' => '1.94', 'announce' => '1.93'] as $key => $minor) {
+    // A block that fell out of the window (the sortable container is new in 1.97, the window is 1.100 and 1.99;
+    // the picker and the announcement are older still — the timeline, new in 1.96, is marked changed above) carries no mark.
+    foreach (['sortierbar' => '1.97', 'picker' => '1.94', 'announce' => '1.93'] as $key => $minor) {
         T::notContains(since($key), 'gk-label', "a block older than the last two minors carries a mark ($key)");
         T::contains(since($key), "since $minor", "a block that fell out of the window does not say since when ($key)");
     }
@@ -160,7 +161,7 @@ return [
     }
 
     Lang::set('de');
-    T::contains(since('sortierbar'), 'Neu in 1.97', 'a German demo marks in English');
+    T::contains(since('segmented'), 'Neu in 1.99', 'a German demo marks in English');
     T::contains(gkMark('changed', '1.95'), 'Geändert in 1.95', 'a German demo marks in English');
     Lang::set('en');
 },
@@ -199,21 +200,23 @@ return [
     $both = since('row-link', 'sheet');
     T::eq(substr_count($both, '>since '), 1, 'two blocks in one heading say "since" twice');
     T::eq(substr_count($both, 'class="demo-since"'), 1, 'two blocks in one heading give two marks');
-    // "since" is the older block's: the sortable container (1.97) beside the message (1.0).
-    $mixed = since('sortierbar', 'message');
+    // "since" is the older block's: the segmented control (1.99) beside the message (1.0).
+    $mixed = since('segmented', 'message');
     T::contains($mixed, 'since ' . gkMinor(gkBlocks()['message']['since']) . '<', 'the heading does not say since when the older block exists');
-    T::contains($mixed, 'New in 1.97', 'the new block of the two is not marked');
-    T::eq(substr_count($mixed, 'New in 1.97'), 1, '"New in 1.97" twice in one heading');
+    T::contains($mixed, 'New in 1.99', 'the new block of the two is not marked');
+    T::eq(substr_count($mixed, 'New in 1.99'), 1, '"New in 1.99" twice in one heading');
     // Two blocks new in two minors of the window: each mark once.
-    $two = since('segmented', 'sortierbar');
-    T::eq(substr_count($two, 'New in 1.99') + substr_count($two, 'New in 1.97'), 2, 'two blocks new in 1.99 and 1.97 do not give one mark each');
+    $two = since('ortszeile', 'segmented');
+    T::eq(substr_count($two, 'New in 1.100') + substr_count($two, 'New in 1.99'), 2, 'two blocks new in 1.100 and 1.99 do not give one mark each');
     // Two blocks new in the same minor: the mark once.
     T::eq(substr_count(since('steps', 'disclosure'), 'New in 1.99'), 1, 'two blocks new in 1.99 give "New in 1.99" twice in one heading');
-    // One new beside one changed in the SAME minor: "New in" says it all. The index of the day has no such pair (the
-    // blocks of 1.97 and 1.96 are all new and none was only changed), so the rule is held where it is made.
-    $recent = ['1.97', '1.96'];
-    T::eq(gkBlockState(['since' => '1.97.0', 'changed' => '1.97.0'], $recent), ['new' => '1.97', 'changed' => null], 'a block new in this minor is also marked changed in it');
-    T::eq(gkBlockState(['since' => '1.0.0', 'changed' => '1.97.0'], $recent), ['new' => null, 'changed' => '1.97'], 'a block changed in this minor is not marked');
+    // One new beside one changed in the SAME minor: "New in" says it all (the line of 1.100 and the header that got it).
+    $same = since('ortszeile', 'header');
+    T::eq(substr_count($same, 'New in 1.100'), 1, '"New in 1.100" is not given once beside a block changed in the same minor');
+    T::notContains($same, 'Changed in 1.100', 'a block changed in the minor of its new neighbour repeats the news');
+    $recent = ['1.100', '1.99'];
+    T::eq(gkBlockState(['since' => '1.100.0', 'changed' => '1.100.0'], $recent), ['new' => '1.100', 'changed' => null], 'a block new in this minor is also marked changed in it');
+    T::eq(gkBlockState(['since' => '1.0.0', 'changed' => '1.100.0'], $recent), ['new' => null, 'changed' => '1.100'], 'a block changed in this minor is not marked');
     T::eq(since('toast', 'toast'), since('toast'), 'a key named twice is not one block');
     $threw = false;
     try { since('toast', 'no-such-block'); } catch (InvalidArgumentException $e) { $threw = true; }
@@ -238,7 +241,7 @@ return [
             $shown++;
         }
     }
-    // A guard against a box that read nothing: at least three headings (1.97 and 1.96 together have four).
+    // A guard against a box that read nothing: at least three headings (1.100 and 1.99 together have more).
     T::ok($shown >= 3, "the box shows $shown headings");
     T::notContains($box, '>Tests<', 'the box lists how a release was tested as news');
     T::contains($box, 'gk-label-green', 'the box does not mark the new blocks');

@@ -8,7 +8,7 @@ description: >-
   GridKit in composer.json.
 ---
 
-# GridKit 1.99.0
+# GridKit 1.100.0
 
 PHP components for admin dashboards. Zero dependencies, no build step,
 PHP 8.2+. A checkout is a working install.
@@ -60,7 +60,7 @@ about a third more rows on a screen, `weit` gives them room, and the default
 leaves the rhythm alone. It names no colour, so it composes with every theme
 and both modes; an unknown value is ignored.
 | `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
-| `Lang::jsConfig()` | `Pagination::build()` | |
+| `Lang::jsConfig()` | `Pagination::build()` | `Layout::skipLink()` |
 
 `Header::render()` is the exception that catches people: every other component
 you construct with `new` prints, and this one does not. `<?php (new Header())

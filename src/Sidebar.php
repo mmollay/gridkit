@@ -15,17 +15,39 @@ class Sidebar
     private string $collapsePosition = 'bottom';
     private bool $headerOffset = false;
     private bool $ajaxNavEnabled = false;
+    private string $brandHref = '';
+    private bool $mobileClose = false;
+    private string $elementId = '';
 
     public function __construct(string $id = 'main')
     {
         $this->id = $id;
     }
 
-    public function brand(string $title, string $icon = 'dashboard', string $version = ''): self
+    /** $href (1.100.0): where the brand leads — symbol and name become one link. */
+    public function brand(string $title, string $icon = 'dashboard', string $version = '', string $href = ''): self
     {
         $this->brand = $title;
         $this->brandIcon = $icon;
         $this->version = $version;
+        $this->brandHref = $href;
+        return $this;
+    }
+
+    /**
+     * A bar without a brand that still keeps the close button on a phone (1.100.0).
+     * With a brand the bar has its own button already; this adds nothing then.
+     */
+    public function mobileClose(bool $enabled = true): self
+    {
+        $this->mobileClose = $enabled;
+        return $this;
+    }
+
+    /** The id of the <aside> (1.100.0), so Header::sidebarToggle() can name it in aria-controls. */
+    public function elementId(string $id): self
+    {
+        $this->elementId = $id;
         return $this;
     }
 
@@ -100,7 +122,8 @@ class Sidebar
         $sidebarCls = 'gk-sidebar';
         if ($this->headerOffset) $sidebarCls .= ' gk-sidebar-with-header';
         $ajaxAttr = $this->ajaxNavEnabled ? ' data-gk-ajax-nav' : '';
-        echo '<aside class="' . $sidebarCls . '" data-gk-sidebar="' . $e($this->id) . '"' . $ajaxAttr . '>';
+        $idAttr = $this->elementId !== '' ? ' id="' . $e($this->elementId) . '"' : '';
+        echo '<aside class="' . $sidebarCls . '"' . $idAttr . ' data-gk-sidebar="' . $e($this->id) . '"' . $ajaxAttr . '>';
 
         // Brand
         if ($this->brand !== '') {
@@ -110,6 +133,7 @@ class Sidebar
                 echo '<span class="material-icons" aria-hidden="true">menu</span>';
                 echo '</button>';
             }
+            if ($this->brandHref !== '') echo '<a class="gk-sidebar-brand-link" href="' . $e($this->brandHref) . '">';
             if ($this->brandIcon) {
                 echo '<span class="material-icons gk-sidebar-brand-icon" aria-hidden="true">' . $e($this->brandIcon) . '</span>';
             }
@@ -119,6 +143,7 @@ class Sidebar
                 echo '<span class="gk-sidebar-brand-version">' . $e($this->version) . '</span>';
             }
             echo '</div>';
+            if ($this->brandHref !== '') echo '</a>';
             // The glyph is hidden from the accessibility tree, as decoration
             // should be — which leaves the button with nothing to be named by
             // unless it says so itself. It read as "close" before, by accident
@@ -126,6 +151,17 @@ class Sidebar
             $closeLabel = $e(Lang::t('sidebar.close'));
             echo '<button class="gk-sidebar-close-mobile" aria-label="' . $closeLabel . '" title="' . $closeLabel . '" data-gk-sidebar-action="close">';
             echo '<span class="material-icons" aria-hidden="true">close</span>';
+            echo '</button>';
+            echo '</div>';
+        } elseif ($this->mobileClose) {
+            // No brand, but the way out of the open menu on a phone stays — and
+            // with its word, since a bare cross is the thing a first-time visitor
+            // looks twice at. Hidden at a desk by CSS: an empty bar there is a stripe.
+            $closeLabel = $e(Lang::t('sidebar.close'));
+            echo '<div class="gk-sidebar-brand gk-sidebar-brand-bare">';
+            echo '<button class="gk-sidebar-close-mobile" aria-label="' . $closeLabel . '" title="' . $closeLabel . '" data-gk-sidebar-action="close">';
+            echo '<span class="material-icons" aria-hidden="true">close</span>';
+            echo '<span class="gk-sidebar-close-label">' . $e(Lang::t('sidebar.close_short')) . '</span>';
             echo '</button>';
             echo '</div>';
         }

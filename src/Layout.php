@@ -63,6 +63,21 @@ class Layout {
         return htmlspecialchars($path . $sep . 'v=' . $stamp, ENT_QUOTES, 'UTF-8');
     }
 
+    /**
+     * The link that lets a keyboard user jump over the header and the menu
+     * straight to the content (1.100.0). Print it as the FIRST thing in <body>
+     * and give the content element the id and `tabindex="-1"`:
+     *
+     *     <?= Layout::skipLink('#main') ?> … <main id="main" tabindex="-1">
+     *
+     * It is out of sight above the page until the keyboard reaches it.
+     */
+    public static function skipLink(string $target = '#main', string $label = ''): string
+    {
+        $e = fn(string $s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+        return '<a class="gk-skip-link" href="' . $e($target) . '">' . $e($label !== '' ? $label : Lang::t('layout.skip')) . '</a>';
+    }
+
     // Convenience: body tag with all attributes (theme + layout)
     public static function bodyTag(string $class = ''): string {
         $attrs = self::attributes();
