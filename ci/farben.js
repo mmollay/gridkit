@@ -294,16 +294,27 @@ ${["", "info", "warning", "success"].map((ton) => `<section class="gk-message${t
 <div class="gk-tab-panel gk-tab-flaeche gk-active" id="karte-flaeche"><nav class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary" id="karte2-linie">
 <a class="gk-tab-btn" href="#" aria-current="page" id="karte2-an">An</a><a class="gk-tab-btn" href="#" id="karte2-aus">Aus</a></nav></div></div></div>
 ${["linie", "kapsel", "text"].flatMap((stil) => [["", ""], ["-neutral", " gk-tab-nav-neutral"]].map(([id, klasse]) =>
-  `<nav class="gk-tab-nav gk-tab-nav-${stil}${klasse}" aria-label="x"><a class="gk-tab-btn" href="#" aria-current="page" id="v-${stil}${id}-an">An</a><a class="gk-tab-btn" href="#" id="v-${stil}${id}-aus">Aus <span class="gk-tab-count" id="v-${stil}${id}-zaehler">3</span></a></nav>`)).join("\n")}
+  `<nav class="gk-tab-nav gk-tab-nav-${stil}${klasse}" aria-label="x" id="v-${stil}${id}"><a class="gk-tab-btn" href="#" aria-current="page" id="v-${stil}${id}-an">An</a><a class="gk-tab-btn" href="#" id="v-${stil}${id}-aus">Aus <span class="gk-tab-count" id="v-${stil}${id}-zaehler">3</span></a></nav>`)).join("\n")}
 <div class="gk-card" id="fenster"><nav class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary" id="fenster-linie">
 <a class="gk-tab-btn" href="#" aria-current="page" id="fenster-an">An</a><a class="gk-tab-btn" href="#" id="fenster-aus">Aus</a></nav></div>`;
-/* 1.101.0: Kanten, an denen man einen Karteireiter erkennt — [Name, Element-ID, Seite]. Gemessen gegen den
-   Grund, auf dem das Element steht (die Hintergründe ab seinem Elternteil); Sollwert 3:1 (WCAG 1.4.11). */
+/* 1.103.1: zwei Arten von Linien am Reiter, zwei Sollwerte. Was den Reiter KENNZEICHNET (der gewählte: Strich oder
+   Füllung in der Hauptfarbe) bleibt bei ≥ 3:1 (WCAG 1.4.11). Was ihn nur RAHMT (Kante des Karteireiters, Rand der Fläche,
+   Spur der Linie) ist ruhig wie die Karte daneben und liegt zwischen deren Haarlinie (--gk-outline-variant) und dem Rand
+   eines Steuerelements (--gk-outline) — nie leiser als die Karte, nie härter als der Steuerrand. Erkannt wird der Reiter
+   am Wort (≥ 4,5:1, oben), an seiner Füllung und am Strich des gewählten, nicht an der Kante.
+   [Name, Element-ID, Seite] bzw. [Name, Element-ID, Art: "schatten" | "rand" | "fuellung"]; gemessen gegen den Grund,
+   auf dem die Linie liegt. */
 const KANTENPROBEN = [
   ["Karteireiter an · Kante", "karte-an", "top"], ["Karteireiter aus · Kante", "karte-aus", "top"],
   ["Karteireiter · Fläche", "karte-flaeche", "top"],
-  ["Unterreiter an · Strich", "karte2-an", "bottom"], ["Unterreiter · Linie", "karte2-linie", "bottom"],
-  ["Reiter im Fenster an · Strich", "fenster-an", "bottom"], ["Reiter im Fenster · Linie", "fenster-linie", "bottom"],
+  ["Unterreiter · Linie", "karte2-linie", "bottom"], ["Reiter im Fenster · Linie", "fenster-linie", "bottom"],
+  ["Linie · Spur", "v-linie", "schatten"], ["Linie neutral · Spur", "v-linie-neutral", "schatten"],
+];
+const KENNZEICHENPROBEN = [
+  ["Karteireiter an · Strich", "karte-an", "schatten"],
+  ["Unterreiter an · Strich", "karte2-an", "rand"], ["Reiter im Fenster an · Strich", "fenster-an", "rand"],
+  ...["linie", "text"].flatMap((st) => [["", ""], ["-neutral", " neutral"]].map(([id, wort]) => [`${st === "linie" ? "Linie" : "Text"}${wort} an · Strich`, `v-${st}${id}-an`, "schatten"])),
+  ["Kapsel an · Füllung", "v-kapsel-an", "fuellung"], ["Kapsel neutral an · Füllung", "v-kapsel-neutral-an", "fuellung"],
 ];
 const BAUSTEINE = `${ZEIT_UND_RAHMEN}${REITER}
 <div class="gk-card" id="karte">
@@ -508,7 +519,7 @@ async function bausteineMessen(browser, mitThemes) {
       const { nodeId } = await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector: wahl });
       await cdp.send("CSS.forcePseudoState", { nodeId, forcedPseudoClasses: ["hover"] });
     }
-    const zeilen = await page.evaluate(([proben, themen, modi, rollen, kantenproben]) => {
+    const zeilen = await page.evaluate(([proben, themen, modi, rollen, kantenproben, kennzeichen]) => {
       const c = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
       const rgba = (f) => { c.clearRect(0, 0, 1, 1); c.fillStyle = "#000"; c.fillStyle = f; c.fillRect(0, 0, 1, 1);
         const d = c.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
@@ -548,10 +559,22 @@ async function bausteineMessen(browser, mitThemes) {
             const t = ueber(rgba(getComputedStyle(schrift).color), g);
             texte.push({ name, kontrast: kontrast(t, g) });
           }
+          /* Rahmende Linien: das Band liegt zwischen der Haarlinie der Karte und dem Steuerrand, beide gemessen auf demselben Grund. */
           const kanten = kantenproben.map(([name, id, seite]) => {
-            const el = document.getElementById(id);
+            const el = document.getElementById(id), cs = getComputedStyle(el);
             const g = grund(el.parentElement);
-            return { name, kontrast: kontrast(ueber(rgba(getComputedStyle(el)[`border-${seite}-color`]), g), g) };
+            const gegen = (f) => kontrast(ueber(f, g), g);
+            // Die Spur der Linien-Reiter ist ein innerer Schatten der Reihe, die übrigen Linien sind Ränder.
+            const farbe = seite === "schatten" ? (cs.boxShadow.match(/^(.*?)\s+-?[\d.]+px/) || (() => { throw new Error(`${name}: keine Spur im Schatten (${cs.boxShadow})`); })())[1] : cs[`border-${seite}-color`];
+            return { name, kontrast: gegen(rgba(farbe)),
+              unten: gegen(aufloesen("--gk-outline-variant")), oben: gegen(aufloesen("--gk-outline")) };
+          });
+          /* Kennzeichnende Linien: Strich (innerer Schatten oder Rand) bzw. Füllung des gewählten Reiters. */
+          const kennzeichnend = kennzeichen.map(([name, id, art]) => {
+            const el = document.getElementById(id), cs = getComputedStyle(el);
+            const farbe = art === "schatten" ? (cs.boxShadow.match(/^(.*?)\s+-?[\d.]+px/) || (() => { throw new Error(`${name}: kein Strich im Schatten (${cs.boxShadow})`); })())[1] : art === "rand" ? cs.borderBottomColor : cs.backgroundColor;
+            const g = art === "fuellung" ? grund(el.parentElement) : grund(el);
+            return { name, kontrast: kontrast(ueber(rgba(farbe), g), g) };
           });
           const knopf = document.getElementById("knopf-primaer");
           const kg = grund(knopf);
@@ -567,13 +590,13 @@ async function bausteineMessen(browser, mitThemes) {
             soll: hex(aufloesen(variable)),
             ohneRolle: hex(grund(document.getElementById(`chip-aktiv${z}`))),
           })));
-          ergebnis.push({ thema: thema || "(ohne Thema)", modus, texte, kanten, primaerknopf, flaeche, reihen, chipRollen,
+          ergebnis.push({ thema: thema || "(ohne Thema)", modus, texte, kanten, kennzeichnend, primaerknopf, flaeche, reihen, chipRollen,
             reihenKontrast: reihen.map((r) => kontrast(r.slice(0, 3), flaeche)) });
         }
       }
       sonde.remove();
       return ergebnis;
-    }, [TEXTPROBEN, mitThemes ? THEMEN : [""], MODI, CHIPROLLEN, KANTENPROBEN]);
+    }, [TEXTPROBEN, mitThemes ? THEMEN : [""], MODI, CHIPROLLEN, KANTENPROBEN, KENNZEICHENPROBEN]);
     await page.close();
     return zeilen;
   } finally {
@@ -631,13 +654,19 @@ function bausteineBerichten(wie, zeilen) {
         ? ` — zurückgestellt: ${zurueckZeile.map((t) => `${t.name} ${t.kontrast.toFixed(2)}:1`).join(", ")}, offene Zeile seit 1.91 (.gk-dark mit themes.css: Flächen aus gridkit.css)`
         : ""));
     }
-    /* 1.101.0: die Kanten der Karteireiter ≥ 3:1. */
-    const schwacheKanten = z.kanten.filter((k) => k.kontrast < 3);
-    const schwaechsteKante = z.kanten.reduce((a, b) => (a.kontrast <= b.kontrast ? a : b));
-    if (schwacheKanten.length) {
+    /* 1.103.1: was den Reiter kennzeichnet ≥ 3:1; was ihn rahmt ruhig, im Band der Karte. */
+    const schwacheZeichen = z.kennzeichnend.filter((k) => k.kontrast < 3);
+    const schwaechstesZeichen = z.kennzeichnend.reduce((a, b) => (a.kontrast <= b.kontrast ? a : b));
+    if (schwacheZeichen.length) {
       schlecht++;
-      console.log(`FAIL  ${kopf}  ${schwacheKanten.length} Reiterkante(n) unter 3:1: ${schwacheKanten.map((k) => `${k.name} ${k.kontrast.toFixed(2)}:1`).join(", ")}`);
-    } else console.log(`ok    ${kopf}  alle ${z.kanten.length} Reiterkanten ≥ 3:1 (schwächste: ${schwaechsteKante.name} ${schwaechsteKante.kontrast.toFixed(2)}:1)`);
+      console.log(`FAIL  ${kopf}  ${schwacheZeichen.length} Reiter-Kennzeichen unter 3:1: ${schwacheZeichen.map((k) => `${k.name} ${k.kontrast.toFixed(2)}:1`).join(", ")}`);
+    } else console.log(`ok    ${kopf}  alle ${z.kennzeichnend.length} Kennzeichen des gewählten Reiters ≥ 3:1 (schwächstes: ${schwaechstesZeichen.name} ${schwaechstesZeichen.kontrast.toFixed(2)}:1)`);
+    const ausDemBand = z.kanten.filter((k) => k.kontrast < k.unten - 0.005 || k.kontrast > k.oben + 0.005);
+    const niedrigste = z.kanten.reduce((a, b) => (a.kontrast <= b.kontrast ? a : b)), hoechste = z.kanten.reduce((a, b) => (a.kontrast >= b.kontrast ? a : b));
+    if (ausDemBand.length) {
+      schlecht++;
+      console.log(`FAIL  ${kopf}  ${ausDemBand.length} Rahmenlinie(n) außerhalb des Bandes Karte–Steuerrand: ${ausDemBand.map((k) => `${k.name} ${k.kontrast.toFixed(2)}:1 (Band ${k.unten.toFixed(2)}–${k.oben.toFixed(2)})`).join(", ")}`);
+    } else console.log(`ok    ${kopf}  alle ${z.kanten.length} Rahmenlinien zwischen Kartenkante und Steuerrand (${niedrigste.kontrast.toFixed(2)}–${hoechste.kontrast.toFixed(2)}:1; Band ${niedrigste.unten.toFixed(2)}–${niedrigste.oben.toFixed(2)})`);
     /* 1.93.4: aktive Chips mit Farbrolle tragen ihre Rolle, nicht den Chip ohne Rolle. */
     const ohneFarbe = z.chipRollen.filter((r) => r.grund !== r.soll || r.grund === r.ohneRolle);
     chipsGeprueft += z.chipRollen.length;

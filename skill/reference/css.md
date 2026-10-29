@@ -1,4 +1,4 @@
-# GridKit 1.103.0 — CSS
+# GridKit 1.103.1 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -200,9 +200,12 @@ Links between pages take the same classes (`<nav class="gk-tab-nav gk-tab-nav-ka
   is set from the layout, so a phone, where a side row is horizontal again, gets Left / Right), and a
   disabled tab is stepped over (1.103.0). Link rows are ordinary links with
   `aria-current="page"` and need no script.
-- **Contrast:** the edge `--gk-tab-kante` (outline mixed with 30% text colour) holds ≥ 3:1 against its
-  ground, every text ≥ 4.5:1 — measured in all six themes, light and both dark spellings
-  (`ci/farben.js`). The chosen tab is never told by colour alone: surface, accent and weight.
+- **Contrast:** the edge `--gk-tab-kante` is a calm frame line, the middle between the card hairline
+  (`--gk-outline-variant`) and the control edge (`--gk-outline`) — about 1.5–1.8:1 against its ground,
+  like the edge of a card (1.103.1; do not harden it, a test fails on any other mix). The chosen tab is
+  told by its stroke or fill (≥ 3:1) and its word (≥ 4.5:1), never by the edge or by colour alone:
+  surface, accent and weight — measured in all six themes, light and both dark spellings
+  (`ci/farben.js`).
 - **Nesting:** a `.gk-tabs` inside a panel of another is fine since 1.101.0 — a click on an outer tab
   touches only its own row and panels; the inner choice stays. The inner row takes the second-row
   shape. `data-tab` keys may repeat between levels.
@@ -239,7 +242,8 @@ Put exactly one **style** class on the row, at most one **alignment**, any numbe
   and `--gk-tab-seitenbreite` (14rem, the widest a side column grows). Set them on the row itself — they
   do not pass into a row inside a panel. Write no colour or `border` of your own on `.gk-tab-btn`.
 - **Light and dark** are measured (`ci/farben.js`, `ci/browser-reiter-varianten.js`): the chosen word
-  ≥ 4.5:1, the track and the focus ring ≥ 3:1. On a phone every tab of the line, pill and text styles
+  ≥ 4.5:1, the stroke or fill of the chosen tab and the focus ring ≥ 3:1; the track is a calm frame line
+  like a card edge. On a phone every tab of the line, pill and text styles
   is at least 44px high; a row too wide for the screen scrolls sideways (the card style becomes the grid).
 - **Side rows** sit in the `.gk-tabs` as its direct child; the panels follow in the same wrapper.
   `aria-orientation="vertical"` and the Up / Down keys come from the layout, not from a class.

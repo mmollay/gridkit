@@ -214,7 +214,14 @@ return [
 
 'Karteireiter: the chosen tab grows into its surface, taller, bold and with a 3px accent; the others lie grey behind' => function (): void {
     $tok = gkCssDeclFor('.gk-tab-flaeche');
-    T::eq($tok['--gk-tab-kante'] ?? '', 'color-mix(in oklab, var(--gk-outline) 70%, var(--gk-on-surface))', 'the edge is not the outline mixed up to 3:1');
+    T::eq($tok['--gk-tab-kante'] ?? '', 'color-mix(in oklab, var(--gk-outline-variant) 50%, var(--gk-outline))', 'the edge is not the middle of the card hairline and the control outline');
+    // 1.103.1: every declaration of the edge (the Karteireiter AND the three new styles) is the same mix of the two
+    // roles cards, tables and inputs already use — no text colour in it (that was 30 % near-black: "far too black"),
+    // no literal. Contrast is held in ci/farben.js (the edge is never quieter than a card's, never harder than the outline).
+    preg_match_all('/--gk-tab-kante:\s*([^;]+);/', gkCssBare(), $kanten);
+    T::eq(array_unique($kanten[1]), ['color-mix(in oklab, var(--gk-outline-variant) 50%, var(--gk-outline))'], 'a declaration of --gk-tab-kante differs from the others');
+    T::ok(count($kanten[1]) === 2, 'the edge is declared ' . count($kanten[1]) . ' times (Karteireiter, new styles), expected 2');
+    T::ok(!preg_match('/on-surface|#[0-9a-f]{3,8}\b|rgba?\(/i', implode(' ', $kanten[1])), 'the edge reaches for a text colour or a literal instead of the roles of the system');
     T::eq($tok, gkCssDeclFor('.gk-tab-nav-karte'), 'the row and its surface do not carry the same tokens (set on the element, not :root, so dark mode reaches them)');
     $nav = gkCssDeclFor('.gk-tab-nav.gk-tab-nav-karte');
     T::eq([$nav['margin-bottom'] ?? '', $nav['border-bottom'] ?? ''], ['-1px', '0'], 'the tabs do not sit on the top edge of their surface');

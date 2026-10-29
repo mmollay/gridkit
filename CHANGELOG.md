@@ -7,6 +7,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.103.1] - 2026-10-29
+
+Calmer tab edges and a tidier "What's new" box in the demo. The edge of the Karteireiter, the track of the line tabs and the frame of the panel (`gk-tab-flaeche`) had been drawn a tone too hard — now they are one family with the edge of a card. No new class, no new token; what a tab does and how it is built stays as it was.
+
+### Changed
+- **Calmer tab edge** (`--gk-tab-kante`): from `color-mix(in oklab, var(--gk-outline) 70%, var(--gk-on-surface))` (30% near-black mixed in) to `color-mix(in oklab, var(--gk-outline-variant) 50%, var(--gk-outline))` — the middle between the hairline of cards, tables, inputs and dialogs and the edge of a control. Against the surface it measures 1.75:1 (light) and 1.55:1 (dark) instead of 4.67:1 and 3.55:1; for comparison the card hairline is 1.23:1 / 1.27:1 and the control edge 2.56:1 / 1.93:1. Both places that set it (the surface block and the block of the three flat rows) carry the same value; a test fails on any other mix, a hex or an `rgb()`.
+- **Recognition without a hard edge** — the chosen tab is told by its word (≥ 4.5:1), its fill (≥ 3:1) and its stroke or fill (≥ 3:1). `ci/farben.js` now measures that as nine recognition marks, and its frame lines (seven, among them the track of both line looks) must lie between the card hairline and the control edge. The weakest recognition mark is 4.08:1 (light, "line on · stroke"), in dark at least 5.18:1.
+- **Snapshot re-set on purpose** (`ci/reiter-bestand.json`), and only for this: 77 values, all of them `border-{top,right,bottom,left}-color` of the shapes `alt-karte`, `alt-karte-secondary` and `alt-links`. Every other rule of the old forms stays byte for byte; `ci/browser-reiter.js` (116 of 116) and `ci/browser-reiter-varianten.js` (293 of 293) hold.
+- **Skill document** (`GRIDKIT_SKILL.md`): the contrast rule of the tab section describes the new edge.
+
+### Added
+- **"What's new" box in the demo, ordered by version** — one card per version: version, date, a one-sentence summary, the entries grouped as Added / Changed / Fixed with a count and the first lines of each, the new classes from `css/blocks.json` as small labels, and a jump to the demo section that shows them. The newest three are open, older ones are single rows in a native `<details>`, "All versions in the changelog" leads to the full text. Tests, notes and other headings stay out of the short view. Built from existing parts (`gk-card`, `gk-label`, `gk-disclosure`); the source stays `CHANGELOG.md` and `css/blocks.json`, nothing is written twice. On a phone the box starts folded as before. Checked at 390 px and 1440 px, light and dark, in three themes (weakest text 5.18:1), with the keyboard (summary and links are native).
+
+### Tests
+- `tests/reiter.test.php`: the new edge as expected value, plus a watcher (exactly two declarations, equal, no `on-surface`, hex or `rgb()`).
+- `tests/blocks.test.php`: the old "news box" test replaced by seven — parser on a fixture changelog, section lookup, the box (three open cards, twelve rows in `<details>`, no inline style, no script), the cards of 1.103.0 and 1.102.0 with counts, classes and jump, the German wording, the demo's call and CSS rules, and a new entry that becomes the first card.
+- Whole suite: 7912 assertions (the 13 fewer than before the version bump are the test "a class new in this version is named in its entry", which has no class to check in a release without a new class). Each change was also broken on purpose and the tests had to turn red (edge back to the old mix, a hex literal, an edge harder than the control edge, a too faint stroke, a changed gap in an old form; a fourth open card, code blocks counted, the whole paragraph instead of the first sentence, an inline style, the last instead of the first section, a changed German word, a missing CSS rule, labels without a limit). One hole was found and closed this way: an edge harder than the control edge got through until the track of the line tabs was measured as well.
+
+---
 ## [1.103.0] - 2026-10-29
 
 Tab variants: four looks, five places, a handful of options — every one a class on the one row

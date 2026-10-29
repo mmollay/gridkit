@@ -9752,12 +9752,15 @@ label.gk-setting-title {
    auf einer Linie; auch die Reiter IN einem Fenster, das Fenster ist schon die Fläche) > Segment
    (.gk-segmented). Am Handy (≤ 600 px) wird jede Karteireiter-Zeile ein Raster: alles sichtbar,
    nichts zu schieben, ≤ 480 px zwei Spalten.
-   Die Kante: --gk-outline allein misst 2,6:1 (hell) und 2,3:1 (dunkel); mit 30 % Textfarbe kommt sie
-   in beiden Modi über 3:1. Gesetzt an Zeile und Fläche selbst, damit sie den Modus des Elements
-   trägt, nicht den von :root. */
+   Die Kante (1.103.1): ruhig, aus den Tönen, die Karten, Tabellen und Eingaben schon tragen — die
+   Mitte zwischen --gk-outline-variant (Haarlinie der Karte) und --gk-outline (Rand eines Steuerelements),
+   hell 1,75:1 und dunkel 1,55:1 gegen die Fläche. Vorher 30 % Textfarbe darin (4,7:1 / 3,6:1): hart, fast
+   schwarz neben der Karte. Erkannt wird der Reiter am Wort, an der Füllung und — der gewählte — am Strich
+   in der Hauptfarbe (≥ 3:1, ci/farben.js), nicht an der Kante. Gesetzt an Zeile und Fläche selbst, damit sie
+   den Modus des Elements trägt, nicht den von :root. */
 .gk-tab-nav-karte,
 .gk-tab-flaeche {
-  --gk-tab-kante: color-mix(in oklab, var(--gk-outline) 70%, var(--gk-on-surface));
+  --gk-tab-kante: color-mix(in oklab, var(--gk-outline-variant) 50%, var(--gk-outline));
   --gk-tab-flaeche: var(--gk-surface);
 }
 /* Etikett und Zähler in einem Reiter (jede Gestalt). Ein Etikett meldet nur eine Abweichung
@@ -9970,7 +9973,7 @@ label.gk-setting-title {
    Ausrichtung anders überstimmt werden müsste, und Reihe in Reihe verformt sich nicht. Selektoren tragen
    mindestens Reihe + Stil + Reiter, weil die Regeln von 1.0 und 1.99 sonst gleich stark sind. */
 :where(.gk-tab-nav-linie, .gk-tab-nav-kapsel, .gk-tab-nav-text) {
-  --gk-tab-kante: color-mix(in oklab, var(--gk-outline) 70%, var(--gk-on-surface));
+  --gk-tab-kante: color-mix(in oklab, var(--gk-outline-variant) 50%, var(--gk-outline));
   --gk-tab-akzent: var(--gk-primary);
   --gk-tab-akzent-text: var(--gk-primary-text);
   --gk-tab-akzent-auf: var(--gk-surface);   /* hell: weiß auf der Hauptfarbe (≥ 6:1); dunkel: dunkle Schrift auf der hellen Hauptfarbe */

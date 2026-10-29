@@ -239,30 +239,205 @@ return [
     T::ok($threw, 'an unknown second key renders instead of failing');
 },
 
-'the news box is the changelog\'s own headings for the last two minors' => function () use ($demo): void {
+/*
+ * The news box (1.103.1): one card per release. The parser is tested on a changelog of its own making (what it keeps,
+ * what it leaves out), the box on the real entries 1.103.0 and 1.102.0 — historic, so their numbers do not move.
+ */
+
+'the changelog reader keeps what a release brings and leaves out how it was checked' => function (): void {
+    $md = <<<'MD'
+# Changelog
+
+---
+## [2.0.1] - 2026-01-02
+
+Intro sentence one. A second sentence that must not show.
+
+### Added
+- **Bold lead** (details): more words
+- `gk-x` — a wrapped entry
+  that goes on here
+```html
+- not an entry, it is inside a code block
+```
+### Changed — a titled change
+Some prose under it.
+- a bullet under a titled heading is part of the title, not counted
+### Fixed
+- First fix: the cause
+### Notes
+- not news
+### Tests
+- 100 assertions pass
+
+---
+## [2.0.0] - 2026-01-01
+
+### Added — the old style
+The first paragraph of an old entry. More words.
+MD;
+    $file = tempnam(sys_get_temp_dir(), 'gk-cl-');
+    file_put_contents($file, $md);
+    try {
+        $e = gkChangelog($file);
+    } finally {
+        unlink($file);
+    }
+    T::eq(array_column($e, 'version'), ['2.0.1', '2.0.0'], 'the entries are not read newest first');
+    T::eq($e[0]['date'], '2026-01-02', 'the date is not read');
+    T::eq($e[0]['intro'], 'Intro sentence one.', 'the intro is not the first sentence of the paragraph under the heading');
+    T::eq(array_keys($e[0]['groups']), ['Added', 'Changed', 'Fixed'], 'Notes or Tests count as what a release brings');
+    T::eq($e[0]['groups']['Added']['count'], 2, 'a "- " inside a code block, or a wrapped entry, is counted');
+    T::eq($e[0]['groups']['Added']['items'], ['Bold lead', '`gk-x` — a wrapped entry that goes on here'], 'the lead of an entry is not its bold start or its first words');
+    T::eq($e[0]['groups']['Changed'], ['count' => 1, 'items' => ['a titled change']], 'a titled heading is one entry, its title');
+    T::eq($e[0]['groups']['Fixed']['items'], ['First fix'], 'the lead does not stop at the colon');
+    T::notContains(json_encode($e[0]), '100 assertions', 'the Tests section is part of what is new');
+    T::eq($e[1]['intro'], 'The first paragraph of an old entry.', 'an entry without introduction takes its first prose paragraph');
+    T::eq($e[1]['groups']['Added']['items'], ['the old style'], 'the old heading "Added — title" is not read');
+
+    // A cut never leaves half a code span or half a bold pair.
+    $cut = gkShorten('A long text with `a code span that is cut in the middle` and more words after it', 40);
+    T::eq(substr_count($cut, '`') % 2, 0, 'a cut text keeps half a code span');
+    T::ok(str_ends_with($cut, '…') && mb_strlen($cut) <= 41, 'a cut text does not end in an ellipsis within the length');
+    T::eq(gkShorten('short', 40), 'short', 'a short text is changed');
+},
+
+'the demo section of a block is read from the demo, the first heading wins' => function () use ($demo): void {
+    $file = tempnam(sys_get_temp_dir(), 'gk-demo-');
+    file_put_contents($file, <<<'PHP'
+<style>[data-section="css-only"] .x { color: red; }</style>
+<div class="demo-section active" data-section="a"><h2><?= since('x') ?></h2></div>
+<div class="demo-section" data-section="b"><h2><?= since('x', 'y') ?></h2></div>
+PHP);
+    try {
+        $map = gkBlockSections($file);
+    } finally {
+        unlink($file);
+    }
+    T::eq($map, ['x' => 'a', 'y' => 'b'], 'the section of a block is not the first one that shows it, or a CSS rule counted as a section');
+    $real = gkBlockSections();
+    T::eq($real['tabs'] ?? null, 'tabs', 'the tabs block is not found in the demo section "tabs"');
+    foreach (array_unique($real) as $section) {
+        T::contains($demo(), 'data-section="' . $section . '"', "the box would jump to a section \"$section\" the demo does not have");
+    }
+},
+
+'the news box is one card per release, the newest three open and the rest folded' => function (): void {
     Lang::set('en');
     $entries = gkChangelog();
-    $recent = gkRecentMinors($entries);
-    T::eq(count($recent), 2, 'the changelog names fewer than two minors');
     $box = whatsNew();
-    T::contains($box, 'What is new in ' . $recent[0] . ' and ' . $recent[1], 'the box does not say which releases it covers');
-    $shown = 0;
-    foreach ($entries as $e) {
-        if (!in_array(gkMinor($e['version']), $recent, true)) {
-            T::notContains($box, '>' . $e['version'] . ' ', "the box shows $e[version], older than the last two minors");
-            continue;
-        }
-        foreach ($e['headings'] as $h) {
-            T::contains($box, gkInlineMd($h), "the box leaves out \"$h\" of $e[version]");
-            $shown++;
+    T::contains($box, 'What is new in ' . implode(', ', array_slice(array_column($entries, 'version'), 0, 2)) . ' and ' . $entries[2]['version'],
+        'the summary does not say which releases the box covers');
+    preg_match_all('/<article class="gk-card demo-news-card" aria-labelledby="(demo-news-v-[0-9-]+)"/', $box, $m);
+    T::eq(count($m[1]), 3, 'the box does not open exactly three cards');
+    foreach ([0, 1, 2] as $i) {
+        T::eq($m[1][$i], 'demo-news-v-' . str_replace('.', '-', $entries[$i]['version']), "card $i is not the release number $i of the changelog");
+    }
+    T::contains($box, '<details class="gk-disclosure demo-news-older"><summary>Older versions (12)</summary>', 'the older releases are not folded into a native <details>');
+    T::eq(substr_count($box, 'class="demo-news-row"'), 12, 'the folded part is not the next twelve releases');
+    T::notContains($box, $entries[15]['version'] . '</strong>', 'the box lists more than the twelve older releases — the changelog has them');
+    T::contains($box, '<a href="#changelog">All versions in the changelog</a>', 'there is no way to the whole changelog');
+    // What the box shows, it shows with GridKit's parts and the demo's classes — no style attribute, no script.
+    T::notContains($box, ' style=', 'the news box carries an inline style');
+    T::notContains($box, '<script', 'the news box carries a script');
+    // Native and operable: summary and links are focusable by themselves; a card names itself for a screen reader.
+    T::contains($box, '<summary class="demo-news-summary">', 'the box has no summary line');
+    T::eq(substr_count($box, '<article'), substr_count($box, 'aria-labelledby='), 'a card does not name itself');
+    T::notContains($box, '>Tests<', 'the box lists how a release was tested as news');
+    T::notContains($box, '>Notes<', 'the box lists the notes of a release as news');
+},
+
+'a card has the version, the date, a sentence, the kinds counted and the classes of the release' => function () use ($demo): void {
+    Lang::set('en');
+    $all = whatsNew(60, 0);
+    $card = static function (string $version) use ($all): string {
+        preg_match('#<article class="gk-card demo-news-card" aria-labelledby="demo-news-v-' . str_replace('.', '-', $version) . '">.*?</article>#s', $all, $m);
+        return $m[0] ?? '';
+    };
+    $byVersion = array_column(gkChangelog(), null, 'version');
+
+    $c = $card('1.103.0');
+    T::ok($c !== '', 'there is no card for 1.103.0');
+    T::contains($c, '>1.103.0</h3>', 'the card has no version');
+    T::contains($c, '<time class="demo-news-date" datetime="2026-10-29">2026-10-29</time>', 'the card has no date');
+    T::contains($c, 'Tab variants: four looks, five places', 'the card does not carry the first sentence of the introduction');
+    T::notContains($c, 'A count (', 'the card carries more than the first sentence of the entry');
+    // The numbers of a historic entry: if they move, an old entry was edited.
+    T::eq(array_map(static fn(array $g): int => $g['count'], $byVersion['1.103.0']['groups']), ['Added' => 7, 'Changed' => 2], '1.103.0 is not 7 added, 2 changed (Notes and Tests left out)');
+    T::contains($c, '<span class="gk-label gk-label-green">Added</span> <span class="demo-news-count">7<span class="gk-sr-only"> entries</span></span>', 'the count of Added is not beside its label');
+    T::contains($c, '<span class="gk-label gk-label-blue">Changed</span> <span class="demo-news-count">2', 'the count of Changed is not beside its label');
+    T::notContains($c, 'gk-label-orange', '1.103.0 has no Fixed and the card shows one');
+    T::contains($c, '<li class="demo-news-more">+3 more</li>', 'the entries beyond the fourth are not counted as "+3 more"');
+    T::eq(substr_count($c, '<li>'), 4 + 2, 'a group shows more than its first four leads');
+
+    $c2 = $card('1.102.0');
+    T::eq(array_map(static fn(array $g): int => $g['count'], $byVersion['1.102.0']['groups']), ['Added' => 6, 'Changed' => 2, 'Fixed' => 1], '1.102.0 is not 6 added, 2 changed, 1 fixed');
+    T::contains($c2, 'gk-label-orange">Fixed</span>', 'the Fixed group of 1.102.0 has no orange label');
+
+    // The classes are the index's: those of the release, six as labels, the rest counted.
+    $own = [];
+    foreach (gkBlocks() as $b) foreach ($b['classes'] as $class => $v) if ($v === '1.103.0') $own[] = $class;
+    sort($own);
+    T::ok(count($own) > 6, 'the check needs more than six new classes in 1.103.0');
+    foreach (array_slice($own, 0, 6) as $class) T::contains($c, '>' . $class . '</code>', "$class, new in 1.103.0, is not a label on its card");
+    T::notContains($c, '>' . $own[6] . '</code>', 'a seventh class is a label too');
+    T::contains($c, '<span class="demo-news-more">+' . (count($own) - 6) . '</span>', 'the classes beyond the sixth are not counted');
+    T::contains($c2, '>gk-tab-nav-raster</code>', 'a class new in 1.102.0 is not on its card');
+    T::contains($c2, '>gk-tab-badge-error</code>', 'a class new in 1.102.0 is not on its card');
+    T::notContains($c2, 'gk-tab-nav-linie', 'a class of 1.103.0 is on the card of 1.102.0');
+
+    // The way to the demo: where the blocks of the release are shown.
+    T::contains($c, '<p class="demo-news-jump">Examples: <a href="#tabs">Tabs</a></p>', 'the card does not lead to the demo section of the tabs');
+    foreach (gkChangelog() as $e) {
+        foreach (gkReleaseBlocks($e['version'])['sections'] as $section => $names) {
+            T::contains($demo(), 'data-section="' . $section . '"', "$e[version] leads to a section \"$section\" the demo does not have");
         }
     }
-    // A guard against a box that read nothing: at least three headings (1.103 and 1.102 together have more).
-    T::ok($shown >= 3, "the box shows $shown headings");
-    T::notContains($box, '>Tests<', 'the box lists how a release was tested as news');
-    // The window of 1.103 and 1.102 brings no new block, only a changed one (the tabs).
-    T::contains($box, 'gk-label-blue', 'the box does not mark the changed blocks');
+
+    // A release without a sentence has no empty paragraph, and no group counts nothing more.
+    T::notContains($all, '<p class="demo-news-intro"></p>', 'an empty sentence is a paragraph');
+    T::notContains($all, 'class="demo-news-more">+0', 'a count of nothing');
+},
+
+'the news box speaks the language of the page' => function (): void {
+    Lang::set('de');
+    $de = whatsNew();
+    $deAll = whatsNew(60, 0);
+    Lang::set('en');
+    $entries = gkChangelog();
+    T::contains($de, 'Neu in ' . $entries[0]['version'], 'the German summary does not say "Neu in"');
+    T::contains($de, 'gk-label-green">Neu</span>', 'the German kind label is not "Neu"');
+    T::contains($de, 'Beispiele: <a href="#tabs">Tabs</a>', 'the German jump is not "Beispiele"');
+    T::contains($de, 'Ältere Versionen (12)', 'the German fold is not "Ältere Versionen"');
+    T::contains($de, 'Alle Versionen im Changelog', 'the German way to the changelog is not named');
+    T::contains($deAll, 'datetime="2026-10-29">29.10.2026</time>', 'the date of a German page is not 29.10.2026');
+},
+
+'the news box is in the demo, and the demo folds it on a phone' => function () use ($demo): void {
     T::contains($demo(), '<?= whatsNew() ?>', 'the demo does not show the box');
+    T::contains($demo(), "document.querySelector('.demo-news')", 'the demo does not fold the box on a phone');
+    // Every class the box uses is styled in the demo — and the old ones of the unstructured box are gone.
+    foreach (['demo-news-card', 'demo-news-head', 'demo-news-version', 'demo-news-date', 'demo-news-intro', 'demo-news-group-title', 'demo-news-count',
+        'demo-news-list', 'demo-news-more', 'demo-news-classes', 'demo-news-class', 'demo-news-jump', 'demo-news-older', 'demo-news-rows', 'demo-news-row'] as $class) {
+        T::contains($demo(), '.' . $class . ' ', "the demo has no rule for .$class");
+    }
+    foreach (['demo-news-entry', 'demo-news-blocks'] as $gone) {
+        T::notContains($demo(), $gone, "the demo still styles .$gone of the old box");
+    }
+},
+
+'the box changes with the changelog, not with the code: a new entry is the first card' => function (): void {
+    Lang::set('en');
+    $md = file_get_contents(__DIR__ . '/../CHANGELOG.md');
+    $file = tempnam(sys_get_temp_dir(), 'gk-cl-');
+    file_put_contents($file, preg_replace('/^---\n## \[/m', "---\n## [9.9.9] - 2099-01-01\n\nA release from the future.\n\n### Added\n- **A thing**: it is new\n\n---\n## [", $md, 1));
+    try {
+        $first = gkChangelog($file)[0];
+    } finally {
+        unlink($file);
+    }
+    T::eq($first['version'], '9.9.9', 'a new entry at the top is not the first the reader sees');
+    T::eq($first['groups']['Added']['items'], ['A thing'], 'a new entry is not read like the others');
 },
 
 // ── The announcement ─────────────────────────────────────────────────────
