@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.102.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.103.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -51,7 +51,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | ActionGroup | `GridKit\ActionGroup` | Container for action buttons inside table columns (since v1.16.0) |
 | SortLink | `GridKit\SortLink` | Sortable column headers for hand-built tables (server-side sort) |
 | Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
-| Tabs (JS) | `.gk-tabs` / `[data-gk-tabs]` | Tab navigation, two shapes — full tablist semantics and arrow keys since 1.69.0; the Karteireiter shape `.gk-tab-nav-karte` + `.gk-tab-flaeche`, nesting and a phone grid since 1.101.0; a row that does not fit its box becomes the grid by itself (`GK.tabsFit`) and `gk-tab-badge-error` since 1.102.0; line tabs for the second row, `--gk-tab-radius` and link tabs that keep their place (`GK.tabsScroll`) since 1.102.0 |
+| Tabs (JS) | `.gk-tabs` / `[data-gk-tabs]` | Tab navigation, two shapes — full tablist semantics and arrow keys since 1.69.0; the Karteireiter shape `.gk-tab-nav-karte` + `.gk-tab-flaeche`, nesting and a phone grid since 1.101.0; a row that does not fit its box becomes the grid by itself (`GK.tabsFit`) and `gk-tab-badge-error` since 1.102.0; line tabs for the second row, `--gk-tab-radius` and link tabs that keep their place (`GK.tabsScroll`) since 1.102.0; three more styles (line, pill, text), four alignments (left, right, bottom, fixed bar) and options (size, full width, symbol above or only, neutral, disabled) as classes on the row since 1.103.0 |
 | Accordion (JS) | `.gk-accordion` | Collapsible sections, optional single-open (`data-gk-single`) |
 | Tooltips (JS/CSS) | `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` | Hint popups — plain, CSS-only, or with HTML in them |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
@@ -2224,6 +2224,9 @@ Features:
 | `gk-tabs` `gk-tab-nav` `gk-tab-btn` `gk-tab-panel` | Tabs, authored markup (state class: `gk-active`) |
 | `gk-tab-nav-karte` `gk-tab-flaeche` `gk-tab-badge` `gk-tab-count` | Karteireiter: framed tabs on their surface, badge, count (1.101.0) |
 | `gk-tab-nav-raster` `gk-tab-badge-error` | Karteireiter row as a grid when it does not fit its box (set by `GK.tabsFit`, not by hand); the error badge (1.102.0) |
+| `gk-tab-nav-linie` `gk-tab-nav-kapsel` `gk-tab-nav-text` | Tab row styles beside `gk-tab-nav-karte`: line with a stroke under the chosen tab, pill with the chosen tab filled, words only (1.103.0) |
+| `gk-tab-nav-links` `gk-tab-nav-rechts` `gk-tab-nav-unten` `gk-tab-nav-fest` | Tab row alignment: a side column from 601px (the horizontal row below), the row after the panels, a bar that sticks to the lower edge (1.103.0) |
+| `gk-tab-nav-sm` `gk-tab-nav-lg` `gk-tab-nav-fluid` `gk-tab-nav-icon-oben` `gk-tab-nav-nur-icon` `gk-tab-nav-neutral` | Tab row options: size, full width, symbol above the word, symbol only (`aria-label` + `title`), the chosen tab in the text colour (1.103.0) |
 | `gk-tabs-nav` `gk-tab` | Tabs, generated nav (state class: `gk-tab-active`) |
 | `gk-accordion` `gk-accordion-item` `gk-accordion-trigger` `gk-accordion-content` `gk-accordion-body` | Accordion (state class: `open` on the item) |
 | `gk-gallery` `gk-gallery-item` `gk-gallery-overlay` | Image gallery |
@@ -2442,7 +2445,9 @@ Links between pages take the same classes (`<nav class="gk-tab-nav gk-tab-nav-ka
   `#` target, another origin, Ctrl/Shift/middle click, back/forward/reload, or a note older than 15 s.
   Switch it off with `data-gk-tab-scroll="off"` on the row or any ancestor.
 - **Keyboard:** `.gk-tabs` rows get `role="tablist"`, `aria-selected` and a roving tabindex from the
-  library; Left / Right / Home / End move inside ONE row. Link rows are ordinary links with
+  library; Left / Right / Home / End move inside ONE row — Up / Down in a side row (`aria-orientation`
+  is set from the layout, so a phone, where a side row is horizontal again, gets Left / Right), and a
+  disabled tab is stepped over (1.103.0). Link rows are ordinary links with
   `aria-current="page"` and need no script.
 - **Contrast:** the edge `--gk-tab-kante` (outline mixed with 30% text colour) holds ≥ 3:1 against its
   ground, every text ≥ 4.5:1 — measured in all six themes, light and both dark spellings
@@ -2453,6 +2458,51 @@ Links between pages take the same classes (`<nav class="gk-tab-nav gk-tab-nav-ka
 - **Steps on a phone:** `.gk-steps` draws a shorter line before each step up to 480px; three steps
   of the length "Changes · Approval · Publish" fit in 340px, and when a band wraps after all, no line
   hangs at the end or the start of a row.
+
+**Tab variants** (since 1.103.0) — three choices, each a class on the row (`.gk-tab-nav`), and they
+combine freely. One script serves every form; a row without any of these classes looks as before.
+Put exactly one **style** class on the row, at most one **alignment**, any number of **options**.
+
+| Choice | Class on `.gk-tab-nav` | Example |
+|---|---|---|
+| **Style** — card (1.101.0) | `gk-tab-nav-karte` + `gk-tab-flaeche` on the panels | `<div class="gk-tab-nav gk-tab-nav-karte">` |
+| Style — line | `gk-tab-nav-linie`: words on a thin track, a 3px stroke under the chosen tab | `<div class="gk-tab-nav gk-tab-nav-linie">` |
+| Style — pill | `gk-tab-nav-kapsel`: the row on a quiet track, the chosen tab filled | `<div class="gk-tab-nav gk-tab-nav-kapsel">` |
+| Style — text | `gk-tab-nav-text`: only words, the chosen one bold with a thin line | `<div class="gk-tab-nav gk-tab-nav-text">` |
+| **Alignment** — top | none (the default) | `<div class="gk-tab-nav gk-tab-nav-linie">` |
+| Alignment — left | `gk-tab-nav-links`: a column beside the panels from 601px; below that the horizontal row | `<div class="gk-tab-nav gk-tab-nav-linie gk-tab-nav-links">` |
+| Alignment — right | `gk-tab-nav-rechts`: the same, on the right (the stroke on the outer edge) | `<div class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-rechts">` |
+| Alignment — bottom | `gk-tab-nav-unten`: the row stands AFTER the panels in the markup | `<div class="gk-tab-nav gk-tab-nav-kapsel gk-tab-nav-unten">` |
+| Alignment — fixed bar | `gk-tab-nav-unten gk-tab-nav-fest`: sticks to the lower edge of its box, symbol above the word, tabs share the width, keeps clear of a phone's home bar (`env(safe-area-inset-bottom)`); up to five tabs | `<div class="gk-tab-nav gk-tab-nav-linie gk-tab-nav-unten gk-tab-nav-fest">` |
+| **Option** — size | `gk-tab-nav-sm` / `gk-tab-nav-lg` (the card style takes them from 601px up) | `<div class="gk-tab-nav gk-tab-nav-linie gk-tab-nav-lg">` |
+| Option — full width | `gk-tab-nav-fluid`: the tabs share the row equally | `<nav class="gk-tab-nav gk-tab-nav-kapsel gk-tab-nav-fluid">` |
+| Option — symbol above | `gk-tab-nav-icon-oben` | `<div class="gk-tab-nav gk-tab-nav-linie gk-tab-nav-icon-oben">` |
+| Option — symbol only | `gk-tab-nav-nur-icon`: the word stays for a screen reader; **`aria-label` and `title` on every tab are required** | `<button class="gk-tab-btn" data-tab="a" aria-label="Overview" title="Overview"><span class="material-icons gk-tab-icon" aria-hidden="true">dashboard</span><span>Overview</span></button>` |
+| Option — neutral | `gk-tab-nav-neutral`: the chosen tab in the text colour, not the main colour | `<div class="gk-tab-nav gk-tab-nav-kapsel gk-tab-nav-neutral">` |
+| Option — disabled | `disabled` on a button or `aria-disabled="true"`: dimmed, no hand, no hover; arrow keys step over it, a click does nothing | `<button class="gk-tab-btn" data-tab="b" disabled>Reports</button>` |
+| Option — count, label | `gk-tab-count`, `gk-tab-badge`, `gk-tab-badge-error` inside the tab | `<span class="gk-tab-count">3</span>` |
+
+- **Colours and sizes are tokens on the row** — `--gk-tab-akzent` (the stroke or the fill),
+  `--gk-tab-akzent-text` (the chosen word on the surface), `--gk-tab-akzent-auf` (the word on a fill),
+  `--gk-tab-kante` (the track), `--gk-tab-pad-y` / `-pad-x` / `-font`, `--gk-tab-linie` (stroke width),
+  and `--gk-tab-seitenbreite` (14rem, the widest a side column grows). Set them on the row itself — they
+  do not pass into a row inside a panel. Write no colour or `border` of your own on `.gk-tab-btn`.
+- **Light and dark** are measured (`ci/farben.js`, `ci/browser-reiter-varianten.js`): the chosen word
+  ≥ 4.5:1, the track and the focus ring ≥ 3:1. On a phone every tab of the line, pill and text styles
+  is at least 44px high; a row too wide for the screen scrolls sideways (the card style becomes the grid).
+- **Side rows** sit in the `.gk-tabs` as its direct child; the panels follow in the same wrapper.
+  `aria-orientation="vertical"` and the Up / Down keys come from the layout, not from a class.
+- **Combining rows** (a row inside a panel of another): each `.gk-tabs` answers for its own tabs,
+  `data-tab` keys may repeat between levels, and each row's arrow keys stay inside it. Mixing styles
+  is the point: card outside and line inside, a side column outside and a line row inside, a fixed bar
+  around a card row, a pill row over a card row (all four in the demo, topic "Tabs").
+- **Link tabs keep their place** (`<nav class="gk-tab-nav gk-tab-nav-linie">` with `<a class="gk-tab-btn"
+  aria-current="page">`): the new styles take them too, and `GK.tabsScroll` keeps the row where it
+  stood. Keep a row of links OUTSIDE any `.gk-tabs` wrapper — a link inside a panel of a wrapper would
+  be taken for a tab.
+- **Not supported:** the `gk-tab-nav-secondary` shape together with `gk-tab-nav-unten`; a
+  `position: fixed` bar (`gk-tab-nav-fest` is sticky — it follows its box, so a page-wide bar is the
+  page's own job).
 
 ### Accordion
 

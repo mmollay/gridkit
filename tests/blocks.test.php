@@ -124,17 +124,18 @@ return [
 
 'the marks are GridKit\'s own green and blue labels, in both modes' => function () use ($css, $rule): void {
     Lang::set('en');
-    // The window moves with every minor (the last two in the changelog: 1.102 and 1.101). No block is new in
+    // The window moves with every minor (the last two in the changelog: 1.103 and 1.102). No block is new in
     // it — the green label is tested through the mark itself; the line "you are here" (new in 1.100) fell out.
-    // The tabs got two classes in 1.102 and changed in 1.101 (with the steps), so they carry the blue label.
+    // The tabs got thirteen classes in 1.103 (the styles, the sides, the options), so they carry the blue label;
+    // the steps changed in 1.101 and are out of the window.
     // The header, the sidebar and the breadcrumb changed in 1.100, the message and the timeline in 1.99.
     $new = gkMark('new', '1.100');
     T::contains($new, 'gk-label gk-label-green', 'a new block is not marked with the green label');
     T::contains($new, 'New in 1.100', 'the mark does not say what is new');
     T::contains(since('ortszeile'), 'since 1.100', 'the heading does not say since when');
     T::notContains(since('ortszeile'), 'gk-label', 'the line "you are here", new in 1.100, is out of the window and still marked');
-    T::contains(since('steps'), 'Changed in 1.101', 'a block changed in the second minor of the window is not marked as changed');
-    T::contains(since('tabs'), 'Changed in 1.102', 'a block that got a new class in the newest minor is not marked as changed');
+    T::notContains(since('steps'), 'gk-label', 'the steps, changed in 1.101, are out of the window and still marked');
+    T::contains(since('tabs'), 'Changed in 1.103', 'a block that got a new class in the newest minor is not marked as changed');
     $changed = gkMark('changed', '1.95');
     T::notContains(since('header'), 'gk-label', 'the header, changed in 1.100, is out of the window and still marked');
     T::contains($changed, 'gk-label gk-label-blue', 'a changed block is not marked with the blue label');
@@ -144,7 +145,7 @@ return [
     T::notContains(since('timeline'), 'gk-label', 'the timeline, changed in 1.99, is out of the window and still marked');
 
     // A block that fell out of the window (the line "you are here" is new in 1.100, the sortable container in 1.97,
-    // the window is 1.102 and 1.101; the picker and the announcement are older still) carries no mark.
+    // the window is 1.103 and 1.102; the picker and the announcement are older still) carries no mark.
     foreach (['ortszeile' => '1.100', 'sortierbar' => '1.97', 'picker' => '1.94', 'announce' => '1.93'] as $key => $minor) {
         T::notContains(since($key), 'gk-label', "a block older than the last two minors carries a mark ($key)");
         T::contains(since($key), "since $minor", "a block that fell out of the window does not say since when ($key)");
@@ -201,14 +202,15 @@ return [
     $both = since('row-link', 'sheet');
     T::eq(substr_count($both, '>since '), 1, 'two blocks in one heading say "since" twice');
     T::eq(substr_count($both, 'class="demo-since"'), 1, 'two blocks in one heading give two marks');
-    // "since" is the older block's: the tabs (changed in 1.102) beside the message (1.0).
+    // "since" is the older block's: the tabs (changed in 1.103) beside the message (1.0).
     $mixed = since('tabs', 'message');
     T::contains($mixed, 'since ' . gkMinor(gkBlocks()['message']['since']) . '<', 'the heading does not say since when the older block exists');
-    T::contains($mixed, 'Changed in 1.102', 'the changed block of the two is not marked');
-    T::eq(substr_count($mixed, 'Changed in 1.102'), 1, '"Changed in 1.102" twice in one heading');
+    T::contains($mixed, 'Changed in 1.103', 'the changed block of the two is not marked');
+    T::eq(substr_count($mixed, 'Changed in 1.103'), 1, '"Changed in 1.103" twice in one heading');
     // Two blocks marked in two minors of the window: each mark once.
     $two = since('tabs', 'steps');
-    T::eq(substr_count($two, 'Changed in 1.102') + substr_count($two, 'Changed in 1.101'), 2, 'a block changed in 1.102 and one changed in 1.101 do not give one mark each');
+    T::eq(substr_count($two, 'Changed in 1.103'), 1, 'a block changed in the window beside one that fell out does not give one mark');
+    T::notContains($two, 'Changed in 1.101', 'the steps, changed in 1.101, are out of the window and still marked');
     // The rest depends on which blocks the window marks, so the pairs are found, not named: they move with every minor.
     $window = gkRecentMinors(gkChangelog());
     $marked = ['new' => [], 'changed' => []];
@@ -255,10 +257,10 @@ return [
             $shown++;
         }
     }
-    // A guard against a box that read nothing: at least three headings (1.102 and 1.101 together have more).
+    // A guard against a box that read nothing: at least three headings (1.103 and 1.102 together have more).
     T::ok($shown >= 3, "the box shows $shown headings");
     T::notContains($box, '>Tests<', 'the box lists how a release was tested as news');
-    // The window of 1.102 and 1.101 brings no new block, only changed ones (the tabs, the steps).
+    // The window of 1.103 and 1.102 brings no new block, only a changed one (the tabs).
     T::contains($box, 'gk-label-blue', 'the box does not mark the changed blocks');
     T::contains($demo(), '<?= whatsNew() ?>', 'the demo does not show the box');
 },

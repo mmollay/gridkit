@@ -4605,14 +4605,33 @@
             panel.setAttribute("aria-labelledby", b.id);
           }
         });
+        // A side row (.gk-tab-nav-links / -rechts) is a column from 601px up and a row below it: the
+        // orientation is read from the layout, so the arrow keys follow what is on the screen (1.103.0).
+        var vertical = function () {
+          return getComputedStyle(nav).flexDirection === "column";
+        };
+        var orient = function () {
+          nav.setAttribute("aria-orientation", vertical() ? "vertical" : "horizontal");
+        };
+        orient();
+        if (window.ResizeObserver) new ResizeObserver(orient).observe(nav);
+        // A disabled tab is stepped over; Home/End land on the first/last one that is not.
+        var step = function (from, dir) {
+          for (var k = 1; k <= btns.length; k++) {
+            var j = (from + dir * k + btns.length * btns.length) % btns.length;
+            if (!btns[j].disabled && btns[j].getAttribute("aria-disabled") !== "true") return j;
+          }
+          return -1;
+        };
         nav.addEventListener("keydown", function (e) {
           var i = btns.indexOf(document.activeElement);
           if (i < 0) return;
           var to = -1;
-          if (e.key === "ArrowRight") to = (i + 1) % btns.length;
-          else if (e.key === "ArrowLeft") to = (i - 1 + btns.length) % btns.length;
-          else if (e.key === "Home") to = 0;
-          else if (e.key === "End") to = btns.length - 1;
+          var col = vertical();
+          if (e.key === (col ? "ArrowDown" : "ArrowRight")) to = step(i, 1);
+          else if (e.key === (col ? "ArrowUp" : "ArrowLeft")) to = step(i, -1);
+          else if (e.key === "Home") to = step(-1, 1);
+          else if (e.key === "End") to = step(btns.length, -1);
           if (to < 0) return;
           e.preventDefault();
           btns[to].focus();
@@ -4625,6 +4644,10 @@
   document.addEventListener("click", function (e) {
     var btn = e.target.closest(".gk-tab-btn");
     if (!btn) return;
+    if (btn.getAttribute("aria-disabled") === "true") {
+      e.preventDefault();
+      return;
+    }
     var tabs = btn.closest(".gk-tabs");
     if (!tabs) return;
     var target = btn.dataset.tab;
@@ -4669,7 +4692,8 @@
     },
     init(root) {
       var self = this;
-      (root || document).querySelectorAll(".gk-tab-nav-karte").forEach(function (nav) {
+      // a side row (column) never becomes the grid: from 601px it is a column, below it the phone grid is there anyway
+      (root || document).querySelectorAll(".gk-tab-nav-karte:not(.gk-tab-nav-links):not(.gk-tab-nav-rechts)").forEach(function (nav) {
         if (nav._gkTabsFit) return;
         nav._gkTabsFit = true;
         self.fit(nav);

@@ -51,6 +51,15 @@ $media = static function (string $query): string {
     return $all;
 };
 
+/** The variants section of the stylesheet (1.103.0), comments stripped. */
+$gkTabVariantsFn = static function (bool $bare = false): string {
+    $css = gkCssText();
+    $from = strpos($css, '/* ── Reiter-Varianten (1.103.0)');
+    $to = strpos($css, '/* ── Segmented button', (int) $from);
+    if ($from === false || $to === false) return '';
+    return (string) preg_replace('#/\*.*?\*/#s', '', substr($css, $from, $to - $from));
+};
+
 return [
 
 'a tab can be a link: aria-current="page" looks like the active tab, without an underline' => function (): void {
@@ -325,7 +334,7 @@ return [
     $rules = gkCssRulesNaming('gk-tab-nav-raster');
     T::ok(count($rules) >= 6, 'the rules of the fitted grid are gone');
     foreach ($rules as [$list]) {
-        foreach (array_map('trim', explode(',', $list)) as $sel) {
+        foreach (array_map('trim', preg_split('/,(?![^()]*\))/', $list)) as $sel) {
             T::contains($sel, 'gk-tab-nav-karte', "$sel reaches tab rows that did not order the Karteireiter");
         }
     }
@@ -390,6 +399,83 @@ return [
     T::contains($js, 'if (GK.tabsScroll) GK.tabsScroll.restore();', 'the page does not restore the place at start (GK.init)');
     T::ok(substr_count($js, 'GK.tabsScroll.restore()') === 1, 'the place is restored more than once');
     T::ok(is_int(strpos($code, 'removeItem')), 'the note is not deleted after it is read');
+},
+
+// ── Reiter-Varianten (1.103.0) ───────────────────────────────────────────
+
+'tab variants: three styles beside the Karteireiter, four sides, six options — each a class, the bare row untouched' => function () use ($gkTabVariantsFn): void {
+    $sec = $gkTabVariantsFn();
+    foreach (['linie', 'kapsel', 'text', 'links', 'rechts', 'unten', 'fest', 'sm', 'lg', 'fluid', 'icon-oben', 'nur-icon', 'neutral'] as $name) {
+        T::contains($sec, '.gk-tab-nav-' . $name, "the class gk-tab-nav-$name has no rule in the variants section");
+    }
+    $bare = gkCssDeclFor('.gk-tab-nav');
+    T::eq($bare['border-bottom'] ?? '', '2px solid var(--gk-border)', 'the bare row (no variant class) lost its line');
+    T::eq($bare['margin-bottom'] ?? '', '20px', 'the bare row lost its space under it');
+    T::eq(gkCssDeclFor('.gk-tab-btn.gk-active')['border-bottom-color'] ?? '', 'var(--gk-primary)', 'the bare active tab lost its line');
+},
+
+'tab variants speak tokens: no colour or size literal for a colour, the stroke is an inset shadow steered by --gk-tab-sx/-sy' => function () use ($gkTabVariantsFn): void {
+    $sec = $gkTabVariantsFn();
+    T::ok(!preg_match('/#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(|\boklch\(|\boklab\(/', $sec), 'the variants section names a colour literal — every colour is a token');
+    T::contains($sec, 'box-shadow: inset calc(var(--gk-tab-sx) * var(--gk-tab-linie)) calc(var(--gk-tab-sy) * var(--gk-tab-linie)) 0 0 var(--gk-tab-akzent)', 'the stroke of the chosen tab is not steered by --gk-tab-sx/-sy');
+    T::contains($sec, 'box-shadow: inset calc(var(--gk-tab-sx) * 1px) calc(var(--gk-tab-sy) * 1px) 0 0 var(--gk-tab-kante)', 'the track of the line style is not steered by --gk-tab-sx/-sy');
+    T::ok((bool) preg_match('/:where\(\.gk-tab-nav-linie, \.gk-tab-nav-kapsel, \.gk-tab-nav-text\)\s*\{[^}]*--gk-tab-sx: 0;[^}]*--gk-tab-sy: -1;/', $sec), 'the top side (stroke below) is not the default');
+    foreach ([':where(.gk-tab-nav-unten)' => ['0', '1']] as $sel => [$x, $y]) {
+        T::ok((bool) preg_match('/' . preg_quote($sel, '/') . '\s*\{[^}]*--gk-tab-sx: ' . $x . ';[^}]*--gk-tab-sy: ' . $y . ';/', $sec), "$sel does not put the stroke on the top");
+    }
+    T::ok((bool) preg_match('/\.gk-tab-nav-links \{ --gk-tab-sx: -1; --gk-tab-sy: 0; \}/', $sec), 'the left side does not put the stroke on the right');
+    T::ok((bool) preg_match('/\.gk-tab-nav-rechts \{ --gk-tab-sx: 1; --gk-tab-sy: 0; \}/', $sec), 'the right side does not put the stroke on the left');
+    T::ok((bool) preg_match('/:where\(\.gk-tab-nav-text\)\s*\{\s*--gk-tab-linie: 2px;/', $sec), 'the text style has no thinner line');
+    T::contains($sec, '--gk-tab-akzent-auf: var(--gk-surface)', 'the text on a filled tab is not the surface colour (on-primary measured 4.37:1 in dark)');
+    T::ok((bool) preg_match('/\.gk-tab-nav-kapsel \.gk-tab-btn:is\(\.gk-active, \[aria-current="page"\]\)\s*\{\s*background: var\(--gk-tab-akzent-text\);\s*color: var\(--gk-tab-akzent-auf\)/', $sec), 'the filled tab is not the text-safe main colour with its own text colour');
+},
+
+'tab variants: a side row is a column only from 601px, a phone gets the horizontal row; every new style has 44px targets there' => function () use ($media, $gkTabVariantsFn): void {
+    $sec = $gkTabVariantsFn();
+    $wide = $media('(min-width: 601px)');
+    foreach (['.gk-tab-nav.gk-tab-nav-links', 'flex-direction: column', 'fit-content(var(--gk-tab-seitenbreite))', '.gk-tabs:has(> .gk-tab-nav-links)', '.gk-tabs:has(> .gk-tab-nav-rechts)'] as $part) {
+        T::contains($wide, $part, "the side row has lost a part of its 601px block: $part");
+    }
+    // outside the media blocks the side rows set no column and no grid
+    $outside = preg_replace('/@media[^{]*\{(?:[^{}]|\{[^{}]*\})*\}/', '', $sec);
+    T::notContains((string) $outside, 'fit-content(', 'a side row builds its grid below 601px — a phone must get the horizontal row');
+    T::notContains((string) $outside, 'aria-orientation', 'nothing in the stylesheet should know the orientation');
+    T::ok(!preg_match('/\.gk-tab-nav\.gk-tab-nav-links\s*[,{][^}]*flex-direction/', (string) $outside), 'a side row is a column below 601px');
+    T::contains($media('(max-width: 600px)'), '.gk-tab-nav:is(.gk-tab-nav-linie, .gk-tab-nav-kapsel, .gk-tab-nav-text) .gk-tab-btn { min-height: var(--gk-target-min); }', 'a tab of a new style is smaller than a finger on a phone');
+},
+
+'tab variants: the bottom bar sticks, keeps clear of the home bar and shares the width; icon-only keeps its word readable' => function () use ($gkTabVariantsFn): void {
+    $fest = gkCssDeclFor('.gk-tab-nav.gk-tab-nav-fest');
+    T::eq($fest['position'] ?? '', 'sticky', 'the bottom bar does not stick');
+    T::eq($fest['bottom'] ?? '', '0', 'the bottom bar does not sit on the lower edge');
+    T::eq($fest['padding-bottom'] ?? '', 'env(safe-area-inset-bottom, 0px)', 'the bottom bar ignores the home bar of a phone');
+    $tab = gkCssDeclFor('.gk-tab-nav.gk-tab-nav-fest .gk-tab-btn');
+    T::eq($tab['flex-direction'] ?? '', 'column', 'the symbol of a bottom tab is not above the word');
+    T::eq($tab['flex'] ?? '', '1 1 0', 'the bottom tabs do not share the width');
+    T::ok((int) ($tab['min-height'] ?? 0) >= 44, 'a bottom tab is smaller than a finger');
+    $sec = $gkTabVariantsFn();
+    T::contains($sec, 'clip-path: inset(50%)', 'icon-only hides the word by taking it out of the tree instead of clipping it');
+    T::ok(!preg_match('/\.gk-tab-nav-nur-icon[^{]*\{[^}]*display:\s*none/', $sec), 'icon-only hides the word with display: none — a screen reader loses it');
+    T::eq(gkCssDeclFor('.gk-tab-nav.gk-tab-nav-nur-icon .gk-tab-btn')['min-width'] ?? '', 'var(--gk-target-min)', 'an icon-only tab is narrower than a finger');
+},
+
+'tab variants: a disabled tab is dimmed, shows no pointer and no hover tint — in every style' => function () use ($gkTabVariantsFn): void {
+    $sec = $gkTabVariantsFn();
+    T::ok((bool) preg_match('/\.gk-tab-btn:is\(:disabled, \[aria-disabled="true"\]\)\s*\{\s*opacity: 0\.45;\s*cursor: not-allowed;/', $sec), 'a disabled tab looks like the others');
+    T::contains($sec, ':is(:disabled, [aria-disabled="true"]):hover:not(.gk-active)', 'a disabled tab still takes a hover tint');
+    T::contains($sec, '.gk-tab-nav-karte, .gk-tab-nav-linie, .gk-tab-nav-kapsel, .gk-tab-nav-text', 'the Karteireiter has no disabled look');
+},
+
+'GK.tabsMarkup 1.103: orientation from the layout, arrows by axis, disabled tabs stepped over, a side row is not a grid' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    $from = strpos($js, 'GK.tabsMarkup = {');
+    T::ok($from !== false, 'GK.tabsMarkup is gone');
+    $code = substr($js, (int) $from, (int) strpos($js, 'GK.tabsFit = {', (int) $from) - (int) $from);
+    foreach (['getComputedStyle(nav).flexDirection === "column"', 'aria-orientation', 'new ResizeObserver(orient)', '"ArrowDown"', '"ArrowUp"', '"ArrowRight"', '"ArrowLeft"',
+        'btns[j].disabled', 'aria-disabled', 'step(-1, 1)', 'step(btns.length, -1)'] as $part) {
+        T::contains($code, $part, 'tabsMarkup lost a part of the orientation: ' . $part);
+    }
+    T::contains($js, '.gk-tab-nav-karte:not(.gk-tab-nav-links):not(.gk-tab-nav-rechts)', 'a side Karteireiter row would be measured as a row (and become a grid)');
 },
 ];
 })();

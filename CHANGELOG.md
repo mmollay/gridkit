@@ -7,6 +7,92 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.103.0] - 2026-10-29
+
+Tab variants: four looks, five places, a handful of options — every one a class on the one row
+`nav.gk-tab-nav`, every one combinable. The Karteireiter (`gk-tab-nav-karte`) stays what it is; the
+old unstyled row (no modifier) keeps its look byte for byte (a test compares the rules of every older
+tab class with the 1.102.0 stylesheet), and nothing changes for a system that orders none of the new
+classes. One script (`GK.tabsMarkup`) serves all of them.
+
+### Added
+- **Looks** (one per row): `gk-tab-nav-karte` (exists), `gk-tab-nav-linie` — underline tabs: a 1px
+  track under the row, the chosen tab a 3px line in `--gk-tab-akzent` and bold `--gk-primary-text`;
+  `gk-tab-nav-kapsel` — the chosen tab is a filled capsule (`--gk-primary-text` as fill,
+  `--gk-surface` as text: white on `--gk-primary` is only 4.47:1 in the base palette), corners from
+  `--gk-tab-radius`; `gk-tab-nav-text` — words only, the chosen one bold with a thin line. In line and text the corners on
+  the side of the stroke are straight (the stroke does not curve at its ends), the other two keep the
+  token radius.
+- **Places**: `gk-tab-nav-links` and `gk-tab-nav-rechts` — a side row (vertical; the wrapper
+  `.gk-tabs` becomes a two-column grid through `:has(> nav)`, only its direct child, so nested tabs stay
+  untouched; the column is as wide as its words up to `--gk-tab-seitenbreite`, 14rem). Side rows
+  exist from 601px; on a phone they fall back to the horizontal row (Karteireiter: the phone grid).
+  `gk-tab-nav-unten` — the row under the panels (put it last in the markup; the Karteireiter hangs under
+  its surface, mirrored, with the 3px line at the foot of the chosen tab). `gk-tab-nav-fest` — a bar stuck to the lower edge (`position: sticky`, icon
+  above text, 56px high, `env(safe-area-inset-bottom)` as padding), meant for up to five tabs, combined
+  with `gk-tab-nav-unten`.
+- **Options**: `gk-tab-nav-sm` and `gk-tab-nav-lg` (size), `gk-tab-nav-fluid` (the row full width, tabs
+  of equal share), `gk-tab-nav-icon-oben` (icon above the word), `gk-tab-nav-nur-icon` (icon only — the
+  word stays for screen readers; give every tab `aria-label` and `title`), `gk-tab-nav-neutral` (the
+  grey role instead of the primary). A count (`gk-tab-count`) and a badge (`gk-tab-badge`,
+  `gk-tab-badge-error`) work in every look. A disabled tab: `disabled` on a button, `aria-disabled="true"`
+  on a link — greyed, never focused by the arrows, a click does nothing.
+- Tokens (set on the row or an ancestor): `--gk-tab-kante`, `--gk-tab-akzent`, `--gk-tab-akzent-text`,
+  `--gk-tab-akzent-auf`, `--gk-tab-pad-y`, `--gk-tab-pad-x`, `--gk-tab-font`, `--gk-tab-linie`,
+  `--gk-tab-sx`/`--gk-tab-sy` (on which side the line lies), and in `:root` `--gk-tab-seitenbreite`.
+  Light and dark share the same classes; the line, the fill and every text are measured at ≥ 3:1 and
+  ≥ 4.5:1; focus ring on every tab; every target ≥ 44px on a phone.
+- Keyboard and roles: `GK.tabsMarkup` sets `aria-orientation` from the computed direction of the row
+  (kept up to date when the window changes) and knows Arrow Up/Down on a vertical row; disabled tabs are
+  skipped by the arrows and by Home/End.
+- Demo, topic "Tabs": a builder at the top (look, place, size, width, icon, count or label — a live
+  preview, the markup beside it and a copy button with a fallback), sections per look
+  (`#tabs-stile`), place (`#tabs-ausrichtung`), option (`#tabs-optionen`) and "Combinations"
+  (`#tabs-kombinationen`): outer Karteireiter with line tabs inside, side row with line tabs in the
+  panel, fixed bottom bar with Karteireiter on top, capsules above Karteireiter.
+- `GRIDKIT_SKILL.md`: the section "Tab variants" (table look × place × option, the tokens, what is not
+  supported) — the installable skill is rebuilt.
+
+### Changed
+- `GK.tabsFit` leaves side rows alone (they never become the grid); a Karteireiter side row stretches
+  its surface to the height of the tabs, so the surface is never shorter than the row.
+- `tests/blocks.test.php`: the window of the blocks moved to 1.103/1.102.
+
+### Notes
+- Link tabs keep their place (`GK.tabsScroll`, 1.102.0) — keep a row of link tabs OUTSIDE a `.gk-tabs`
+  wrapper: `GK.tabsMarkup` turns every link row inside a panel of such a wrapper into switch tabs.
+- Not supported: `gk-tab-nav-secondary` with `-unten`; `position: fixed` for the bar (it is sticky).
+- Looks without a box (line, capsule, text) scroll sideways when their words are wider than the box;
+  only the Karteireiter turns into the grid.
+
+### Tests
+- `tests/reiter.test.php` (+ the whole suite: 7984 assertions): every new class is in the sheet and
+  the older ones are byte-equal to 1.102.0; tokens instead of colour literals; which side the line lies;
+  side rows only from 601px, 44px on a phone; the fixed bar (sticky, safe area, icon-only stays readable);
+  disabled; `aria-orientation`, arrows, disabled skipped.
+- `ci/browser-reiter-varianten.js`: 293 checks in Chromium — every look × every place × the options,
+  light and dark, roles `tablist`/`tab`/`tabpanel`, arrows/Home/End/Up/Down, the phone fall-back, the
+  fixed bar with the safe area, no overflow, contrast, and the four combinations (click, keyboard,
+  `aria-selected`, only the own panel switches, link and button tabs mixed). Red against 1.102.0:
+  147 of 293 checks fail there. The old forms (plain row, `-fill`, `-secondary`, Karteireiter, its second
+  row, link tabs, and the oldest `gk-tabs-nav` / `gk-tab`) are compared by computed style — layout, borders
+  and their colours, fill, text, shadow, cursor — in three states against `ci/reiter-bestand.json`, made
+  from the 1.102.0 sheet: unchanged.
+- `ci/browser-reiter.js`: 116 checks (unchanged). `ci/farben.js`: exit 0, every edge ≥ 3:1 and 229 texts (211 + 18 new) ≥ 4.5:1 per theme and mode; the new looks (line,
+  capsule, text, also neutral: chosen, other, count) are in its 229 texts, all ≥ 4.5:1.
+  `ci/browser.js` 138, `browser-picker.js` 83, `browser-timeline-video.js` 53;
+  `browser-sortierbar.js`: 62 of 63 hold, the one known old case S17 (390px) remains.
+- Counter-proofs: 27 breaks in two runs (the side of the line per place, safe area, sticky, the 601px
+  threshold, the capsule fill and its text colour, the icon-only hiding, 44px on a phone, the 56px bar,
+  the line colour and track, a changed old rule, the column direction of a side row, `aria-orientation`,
+  its update on resize, Arrow Up/Down, stepping over disabled tabs, Home, the click guard on
+  `aria-disabled`, `GK.tabsFit` leaving side rows alone, `--gk-tab-seitenbreite`, the stretched surface
+  of a Karteireiter side row; the straight corners of line and text, three breaks). 23 turned a test red at once; 4 got through (the width cap of the side
+  row, the stretched surface, the click guard, and a changed rule of the oldest `gk-tab-active` — the
+  signature of the old forms did not read border colours). Each got its check, and all four turned red
+  on the second run; `git diff` was empty after every run.
+
+---
 ## [1.102.0] - 2026-10-29
 
 Karteireiter, second round: a row that does not fit its box, an error badge, cells of equal height,

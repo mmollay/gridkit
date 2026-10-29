@@ -293,6 +293,8 @@ ${["", "info", "warning", "success"].map((ton) => `<section class="gk-message${t
 <button class="gk-tab-btn" id="karte-aus">Aus <span class="gk-tab-badge" id="etikett">Angepasst</span> <span class="gk-tab-badge gk-tab-badge-error" id="etikett-fehler">Fehler</span> <span class="gk-tab-count" id="zaehler-aus">3</span></button></div>
 <div class="gk-tab-panel gk-tab-flaeche gk-active" id="karte-flaeche"><nav class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary" id="karte2-linie">
 <a class="gk-tab-btn" href="#" aria-current="page" id="karte2-an">An</a><a class="gk-tab-btn" href="#" id="karte2-aus">Aus</a></nav></div></div></div>
+${["linie", "kapsel", "text"].flatMap((stil) => [["", ""], ["-neutral", " gk-tab-nav-neutral"]].map(([id, klasse]) =>
+  `<nav class="gk-tab-nav gk-tab-nav-${stil}${klasse}" aria-label="x"><a class="gk-tab-btn" href="#" aria-current="page" id="v-${stil}${id}-an">An</a><a class="gk-tab-btn" href="#" id="v-${stil}${id}-aus">Aus <span class="gk-tab-count" id="v-${stil}${id}-zaehler">3</span></a></nav>`)).join("\n")}
 <div class="gk-card" id="fenster"><nav class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary" id="fenster-linie">
 <a class="gk-tab-btn" href="#" aria-current="page" id="fenster-an">An</a><a class="gk-tab-btn" href="#" id="fenster-aus">Aus</a></nav></div>`;
 /* 1.101.0: Kanten, an denen man einen Karteireiter erkennt — [Name, Element-ID, Seite]. Gemessen gegen den
@@ -398,7 +400,10 @@ const TEXTPROBEN = [
       ["fenster-an", "Reiter im Fenster an"], ["fenster-aus", "Reiter im Fenster aus"],
       ["etikett", "Reiter · Etikett"], ["zaehler-an", "Reiter an · Zähler"], ["zaehler-aus", "Reiter aus · Zähler"],
       /* 1.102.0: das Fehler-Etikett (das Wort „Fehler“ bleibt; hier zählt nur, dass es lesbar ist). */
-      ["etikett-fehler", "Reiter · Fehler-Etikett"]].map(([id, name]) => [name, id, null]),
+      ["etikett-fehler", "Reiter · Fehler-Etikett"],
+      /* 1.103.0: Linie, Kapsel, Text — der gewählte (Strich-/Füllfarbe), der andere, der Zähler; auch neutral. */
+      ...["linie", "kapsel", "text"].flatMap((stil) => ["", "-neutral"].flatMap((art) =>
+        [["an", "gewählt"], ["aus", "ungewählt"], ["zaehler", "Zähler"]].map(([teil, wort]) => [`v-${stil}${art}-${teil}`, `Reiter ${stil}${art} ${wort}`])))].map(([id, name]) => [name, id, null]),
   ...["neutral", "info", "warning", "success"].flatMap((ton) => [
     ...["done", "current", "open"].map((st) => [`Stufe ${ton} ${st}`, `st-${ton}-${st}`, null]),
     [`To-do ${ton} · Titel`, `todo-${ton}`, ".gk-timeline-title"],
