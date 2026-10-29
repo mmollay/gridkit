@@ -208,6 +208,7 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-section.active { display:block; }
         .demo-section h2 { font-size:20px; margin:0 0 16px; color:var(--gk-on-surface, #374151); }
         .demo-section h3.demo-h3 { margin:32px 0 8px; }
+        .demo-tabs-oben { margin-top:16px; }
         .demo-section .gk-form { max-width:none; }
         .demo-section .gk-richtext-wrap { border-width:1px; }
         .demo-card-flush { padding:0; overflow:hidden; }
@@ -355,6 +356,7 @@ $sidebar->brand('', 'widgets')
     ->item('Form', '#form', 'edit_note')
     ->item('Cards', '#cards', 'grid_view')
     ->item('Layout', '#layout', 'layers')
+    ->item('Tabs', '#tabs', 'tab')
     ->item('Navigation', '#navigation', 'filter_list')
     ->item('Gallery', '#gallery', 'photo_library')
     ->item('Search', '#suche', 'search')
@@ -1322,6 +1324,132 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 .gk-message-dismiss  // Close button</pre></div>
 </div>
 
+<!-- ===== TABS (1.101.0: Karteireiter) ===== -->
+<div class="demo-section" data-section="tabs">
+    <h2>Tabs <?= since('tabs', 'steps') ?></h2>
+    <p class="demo-intro">Karteireiter: the tabs sit framed on their surface, the chosen one grows into it — taller, bold, a 3px accent on top. Ordered with <code>.gk-tab-nav-karte</code> and <code>.gk-tab-flaeche</code>; without them every tab row keeps the <a href="#navigation">previous shape</a>. Levels: page tabs &gt; second row (on a line, also inside a window) &gt; segmented button. On a phone every Karteireiter row is a grid, two columns up to 480px — nothing scrolls, nothing is cut.</p>
+
+    <h3 class="demo-h3">Page tabs with symbol, badge and count</h3>
+    <p class="demo-intro">A badge only reports a deviation from the default (“Customised”, “Error”) — never “Default” on every tab. A count is a number of things behind the tab.</p>
+    <div class="demo-card">
+        <div class="gk-tabs">
+            <div class="gk-tab-nav gk-tab-nav-karte" aria-label="Texts of this page">
+                <button class="gk-tab-btn gk-active" data-tab="k-anmeldung"><span class="material-icons gk-tab-icon" aria-hidden="true">edit_note</span><span>Sign-up</span></button>
+                <button class="gk-tab-btn" data-tab="k-bestaetigung"><span class="material-icons gk-tab-icon" aria-hidden="true">task_alt</span><span>Confirmation page</span><span class="gk-tab-badge">Customised</span></button>
+                <button class="gk-tab-btn" data-tab="k-willkommen"><span class="material-icons gk-tab-icon" aria-hidden="true">mail</span><span>Welcome mail</span></button>
+                <button class="gk-tab-btn" data-tab="k-erinnerung"><span class="material-icons gk-tab-icon" aria-hidden="true">alarm</span><span>Reminders</span><span class="gk-tab-count">3</span></button>
+                <button class="gk-tab-btn" data-tab="k-abmeldung"><span class="material-icons gk-tab-icon" aria-hidden="true">logout</span><span>Unsubscribe</span></button>
+                <button class="gk-tab-btn" data-tab="k-recht"><span class="material-icons gk-tab-icon" aria-hidden="true">gavel</span><span>Legal</span></button>
+            </div>
+            <div class="gk-tab-panel gk-tab-flaeche gk-active" data-tab="k-anmeldung"><p>The sign-up form — our default texts apply.</p></div>
+            <div class="gk-tab-panel gk-tab-flaeche" data-tab="k-bestaetigung"><p>Your own text for the confirmation page.</p></div>
+            <div class="gk-tab-panel gk-tab-flaeche" data-tab="k-willkommen"><p>The welcome mail.</p></div>
+            <div class="gk-tab-panel gk-tab-flaeche" data-tab="k-erinnerung"><p>Three reminders.</p></div>
+            <div class="gk-tab-panel gk-tab-flaeche" data-tab="k-abmeldung"><p>The unsubscribe page.</p></div>
+            <div class="gk-tab-panel gk-tab-flaeche" data-tab="k-recht"><p>Legal notice and privacy.</p></div>
+        </div>
+    </div>
+    <div class="demo-code"><pre>&lt;div class="gk-tabs"&gt;
+    &lt;div class="gk-tab-nav gk-tab-nav-karte"&gt;
+        &lt;button class="gk-tab-btn gk-active" data-tab="a"&gt;&lt;span class="material-icons gk-tab-icon" aria-hidden="true"&gt;edit_note&lt;/span&gt;&lt;span&gt;Sign-up&lt;/span&gt;&lt;/button&gt;
+        &lt;button class="gk-tab-btn" data-tab="b"&gt;…&lt;span&gt;Confirmation page&lt;/span&gt;&lt;span class="gk-tab-badge"&gt;Customised&lt;/span&gt;&lt;/button&gt;
+        &lt;button class="gk-tab-btn" data-tab="c"&gt;…&lt;span&gt;Reminders&lt;/span&gt;&lt;span class="gk-tab-count"&gt;3&lt;/span&gt;&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class="gk-tab-panel gk-tab-flaeche gk-active" data-tab="a"&gt;…&lt;/div&gt;
+    &lt;div class="gk-tab-panel gk-tab-flaeche" data-tab="b"&gt;…&lt;/div&gt;
+&lt;/div&gt;</pre></div>
+
+    <h3 class="demo-h3" id="tabs-seiten">Tabs between pages, with a second row</h3>
+    <p class="demo-intro">Links in a <code>&lt;nav&gt;</code>, the current page with <code>aria-current="page"</code>. The second row stands quieter on a line inside the surface; a third level is a segmented button, never a tab row.</p>
+    <div class="demo-card">
+        <ol class="gk-steps" aria-label="Way to live">
+            <li class="gk-steps-item gk-steps-done">Changes<span class="gk-sr-only"> (done)</span></li>
+            <li class="gk-steps-item gk-steps-current" aria-current="step">Approval</li>
+            <li class="gk-steps-item">Publish</li>
+        </ol>
+        <nav class="gk-tab-nav gk-tab-nav-karte demo-tabs-oben" aria-label="Areas of this page">
+            <a class="gk-tab-btn" href="#tabs-seiten"><span class="material-icons gk-tab-icon" aria-hidden="true">edit</span><span>Edit</span></a>
+            <a class="gk-tab-btn" href="#tabs-seiten"><span class="material-icons gk-tab-icon" aria-hidden="true">rocket_launch</span><span>Publish</span></a>
+            <a class="gk-tab-btn" href="#tabs-seiten" aria-current="page"><span class="material-icons gk-tab-icon" aria-hidden="true">bar_chart</span><span>Results</span></a>
+            <a class="gk-tab-btn" href="#tabs-seiten"><span class="material-icons gk-tab-icon" aria-hidden="true">mail</span><span>Mails</span></a>
+        </nav>
+        <div class="gk-tab-flaeche">
+            <nav class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary" aria-label="Views">
+                <a class="gk-tab-btn" href="#tabs-seiten">Sign-ups</a>
+                <a class="gk-tab-btn" href="#tabs-seiten" aria-current="page">Statistics</a>
+            </nav>
+            <div class="gk-segmented" role="group" aria-label="Period">
+                <a class="gk-segmented-item" href="#tabs-seiten">Today</a>
+                <a class="gk-segmented-item" href="#tabs-seiten" aria-current="true">7 days</a>
+                <a class="gk-segmented-item" href="#tabs-seiten">30 days</a>
+            </div>
+        </div>
+    </div>
+    <div class="demo-code"><pre>&lt;nav class="gk-tab-nav gk-tab-nav-karte" aria-label="Areas"&gt;
+    &lt;a class="gk-tab-btn" href="/results" aria-current="page"&gt;…&lt;/a&gt;
+&lt;/nav&gt;
+&lt;div class="gk-tab-flaeche"&gt;
+    &lt;nav class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary" aria-label="Views"&gt;…&lt;/nav&gt;
+    &lt;div class="gk-segmented" role="group" aria-label="Period"&gt;…&lt;/div&gt;
+&lt;/div&gt;</pre></div>
+
+    <h3 class="demo-h3">Nested tabs</h3>
+    <p class="demo-intro">A <code>.gk-tabs</code> inside a panel of another: a click on an outer tab leaves the inner choice alone (fixed in 1.101.0 — it used to clear every inner tab). Arrow keys move inside one row only.</p>
+    <div class="demo-card">
+        <div class="gk-tabs">
+            <div class="gk-tab-nav gk-tab-nav-karte">
+                <button class="gk-tab-btn gk-active" data-tab="n-kunde">Customer</button>
+                <button class="gk-tab-btn" data-tab="n-rechnung">Invoices</button>
+            </div>
+            <div class="gk-tab-panel gk-tab-flaeche gk-active" data-tab="n-kunde">
+                <div class="gk-tabs">
+                    <div class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary">
+                        <button class="gk-tab-btn gk-active" data-tab="n-stamm">Master data</button>
+                        <button class="gk-tab-btn" data-tab="n-kontakt">Contacts</button>
+                        <button class="gk-tab-btn" data-tab="n-notiz">Notes</button>
+                    </div>
+                    <div class="gk-tab-panel gk-active" data-tab="n-stamm"><p>Name, address, tax number.</p></div>
+                    <div class="gk-tab-panel" data-tab="n-kontakt"><p>Two contacts.</p></div>
+                    <div class="gk-tab-panel" data-tab="n-notiz"><p>No notes yet.</p></div>
+                </div>
+            </div>
+            <div class="gk-tab-panel gk-tab-flaeche" data-tab="n-rechnung"><p>Twelve invoices.</p></div>
+        </div>
+    </div>
+
+    <h3 class="demo-h3">Tabs inside a window</h3>
+    <p class="demo-intro">The window is already the surface, so its tabs take the second-row shape and no <code>.gk-tab-flaeche</code>.</p>
+    <div class="demo-card">
+        <div class="gk-tabs">
+            <div class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary">
+                <button class="gk-tab-btn gk-active" data-tab="f-allg"><span class="material-icons gk-tab-icon" aria-hidden="true">business</span><span>General</span></button>
+                <button class="gk-tab-btn" data-tab="f-bank"><span class="material-icons gk-tab-icon" aria-hidden="true">account_balance</span><span>Bank</span></button>
+                <button class="gk-tab-btn" data-tab="f-logo"><span class="material-icons gk-tab-icon" aria-hidden="true">image</span><span>Logo</span></button>
+            </div>
+            <div class="gk-tab-panel gk-active" data-tab="f-allg"><p>Company name and address.</p></div>
+            <div class="gk-tab-panel" data-tab="f-bank"><p>IBAN and BIC.</p></div>
+            <div class="gk-tab-panel" data-tab="f-logo"><p>The logo for invoices.</p></div>
+        </div>
+    </div>
+
+    <h3 class="demo-h3">Light and dark side by side</h3>
+    <p class="demo-intro">Roles only: the edge is the outline mixed with 30% text colour (≥ 3:1 in every theme, light and dark).</p>
+    <div class="gk-grid gk-grid-2">
+        <?php foreach (['light', 'dark'] as $modus): ?>
+        <div class="demo-card" data-gk-mode="<?= $modus ?>">
+            <div class="gk-tabs">
+                <div class="gk-tab-nav gk-tab-nav-karte">
+                    <button class="gk-tab-btn gk-active" data-tab="m-<?= $modus ?>-a">Overview</button>
+                    <button class="gk-tab-btn" data-tab="m-<?= $modus ?>-b">Details<span class="gk-tab-count">2</span></button>
+                </div>
+                <div class="gk-tab-panel gk-tab-flaeche gk-active" data-tab="m-<?= $modus ?>-a"><p><?= $modus === 'dark' ? 'Dark' : 'Light' ?> mode.</p></div>
+                <div class="gk-tab-panel gk-tab-flaeche" data-tab="m-<?= $modus ?>-b"><p>Two details.</p></div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+
 <!-- ===== NAVIGATION (merged: filterchips + yearfilter + formatter) ===== -->
 <div class="demo-section" data-section="navigation">
     <h2>Navigation & Filter</h2>
@@ -1446,8 +1574,8 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
 
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 
-    <h3 style="margin: 32px 0 16px;">Tabs <?= since('tabs') ?></h3>
-    <p class="demo-intro">Tab navigation for switching between content areas.</p>
+    <h3 style="margin: 32px 0 16px;">Tabs — previous shape <?= since('tabs') ?></h3>
+    <p class="demo-intro">The line shape every tab row keeps unless it orders the Karteireiter. The current shape, levels, nesting and the phone grid are under <a href="#tabs">Tabs</a>.</p>
 
     <div class="gk-tabs">
         <div class="gk-tab-nav">
@@ -1475,7 +1603,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
     &lt;div class="gk-tab-panel" data-tab="tab-2"&gt;Content 2&lt;/div&gt;
 &lt;/div&gt;</pre></div>
 
-    <h3 class="demo-h3" id="tabs-links">Tabs between pages, steps, a quiet disclosure <?= since('steps', 'disclosure') ?></h3>
+    <h3 class="demo-h3" id="tabs-links">Tabs between pages (previous shape), steps, a quiet disclosure <?= since('steps', 'disclosure') ?></h3>
     <p class="demo-intro">When each tab is a page of its own: links in a <code>&lt;nav&gt;</code>, the current page marked with <code>aria-current="page"</code> (it looks like <code>.gk-active</code>). <code>.gk-tab-nav-fill</code> is the main row (44px; on a phone the symbol stands over the word), <code>.gk-tab-nav-secondary</code> a quieter row under it. Above them a status band: a message with steps, a short to-do list (a compact timeline) and a disclosure.</p>
     <div class="demo-card">
         <section class="gk-message gk-message-info" aria-label="Status of this page">

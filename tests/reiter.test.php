@@ -177,5 +177,100 @@ return [
     T::contains($plain, 'class="gk-filter-chips"', 'without segmented() the chips have changed');
 },
 
+
+/* ── 1.101.0: Karteireiter, Raster am Handy, Reiter in Reitern, Stufen am Handy ─────────────────── */
+
+'a Karteireiter row is ordered with a class, and without it every tab row looks as it did' => function (): void {
+    // The shapes every other SSI system uses today, held literally.
+    $nav = gkCssDeclFor('.gk-tab-nav');
+    T::eq([$nav['display'] ?? '', $nav['border-bottom'] ?? '', $nav['margin-bottom'] ?? ''], ['flex', '2px solid var(--gk-border)', '20px'], 'the plain tab row changed');
+    $btn = gkCssDeclFor('.gk-tab-btn');
+    T::eq([$btn['padding'] ?? '', $btn['background'] ?? '', $btn['border-bottom'] ?? ''], ['9px 18px', 'none', '2px solid transparent'], 'the plain tab changed');
+    T::eq(gkCssDeclFor('.gk-tab-nav-secondary')['border-bottom'] ?? '', '0', 'the quiet second row changed');
+    T::eq(gkCssDeclFor('.gk-tab-nav-fill .gk-tab-btn')['min-height'] ?? '', 'var(--gk-target-min)', 'the filled row changed');
+    T::ok(gkCssDeclFor('.gk-tabs-nav') !== [] && gkCssDeclFor('.gk-tab') !== [] && gkCssDeclFor('.gk-tab-active') !== [], 'the older pair for [data-gk-tabs] is gone');
+    // Every rule in a media block of the Karteireiter names the ordered shape.
+    T::ok(preg_match_all('/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/', gkCssBare(), $blocks) > 0, 'no @media blocks read');
+    foreach ($blocks[0] as $b) {
+        if (!str_contains($b, '.gk-tab-nav-karte') && !str_contains($b, '.gk-tab-flaeche')) continue;
+        preg_match_all('/([^{}]+)\{[^{}]*\}/', substr($b, strpos($b, '{') + 1), $rules);
+        foreach ($rules[1] as $list) {
+            foreach (array_map('trim', explode(',', $list)) as $s) {
+                T::ok(str_contains($s, 'gk-tab-nav-karte') || str_contains($s, 'gk-tab-flaeche') || !str_contains($s, 'gk-tab'),
+                    "$s in a media block of the Karteireiter reaches tabs that did not order it");
+            }
+        }
+    }
+},
+
+'Karteireiter: the chosen tab grows into its surface, taller, bold and with a 3px accent; the others lie grey behind' => function (): void {
+    $tok = gkCssDeclFor('.gk-tab-flaeche');
+    T::eq($tok['--gk-tab-kante'] ?? '', 'color-mix(in oklab, var(--gk-outline) 70%, var(--gk-on-surface))', 'the edge is not the outline mixed up to 3:1');
+    T::eq($tok, gkCssDeclFor('.gk-tab-nav-karte'), 'the row and its surface do not carry the same tokens (set on the element, not :root, so dark mode reaches them)');
+    $nav = gkCssDeclFor('.gk-tab-nav.gk-tab-nav-karte');
+    T::eq([$nav['margin-bottom'] ?? '', $nav['border-bottom'] ?? ''], ['-1px', '0'], 'the tabs do not sit on the top edge of their surface');
+    $off = gkCssDeclFor('.gk-tab-nav-karte .gk-tab-btn');
+    T::eq([$off['border'] ?? '', $off['background'] ?? '', $off['min-height'] ?? ''], ['1px solid var(--gk-tab-kante)', 'var(--gk-surface-container-high)', 'var(--gk-target-min)'], 'a tab that is not chosen is not a framed grey tab of 44px');
+    $on = gkCssDeclFor('.gk-tab-nav-karte .gk-tab-btn.gk-active');
+    T::eq($on, gkCssDeclFor('.gk-tab-nav-karte .gk-tab-btn[aria-current="page"]'), 'a link Karteireiter with aria-current looks different from .gk-active');
+    T::eq([$on['background'] ?? '', $on['border-bottom-color'] ?? '', $on['font-weight'] ?? '', $on['box-shadow'] ?? ''],
+        ['var(--gk-tab-flaeche)', 'var(--gk-tab-flaeche)', '700', 'inset 0 3px 0 var(--gk-primary)'], 'the chosen tab does not grow into its surface with weight and accent');
+    T::ok((int) ($on['padding-top'] ?? '0') > (int) ($off['padding'] ?? '0'), 'the chosen tab is not taller than the others');
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte ~ .gk-tab-flaeche')['border'] ?? '', '1px solid var(--gk-tab-kante)', 'the surface has no edge');
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte .gk-tab-btn:focus-visible')['outline-offset'] ?? '', '2px', 'the focus ring lies on the edge of the tab');
+},
+
+'Karteireiter, second row and inside a window: on a line, no fill, no accent, only the chosen one framed' => function (): void {
+    $nav = gkCssDeclFor('.gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-secondary');
+    T::eq($nav['border-bottom'] ?? '', '1px solid var(--gk-tab-kante)', 'the second row stands on no line');
+    $off = gkCssDeclFor('.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn');
+    T::eq([$off['background'] ?? '', $off['border-color'] ?? '', $off['font-size'] ?? ''], ['transparent', 'transparent', 'var(--gk-text-label)'], 'the second row is as loud as the first');
+    $on = gkCssDeclFor('.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn.gk-active');
+    T::eq([$on['border-color'] ?? '', $on['box-shadow'] ?? '', $on['font-weight'] ?? ''], ['var(--gk-tab-kante)', 'none', '600'], 'the chosen tab of the second row is not framed, or carries the accent of the first');
+},
+
+'a badge and a count in a tab; the count of the chosen tab is a pair that reads (4.47:1 on the filled primary)' => function (): void {
+    T::eq(gkCssDeclFor('.gk-tab-badge')['white-space'] ?? '', 'nowrap', 'a badge breaks inside');
+    T::eq(gkCssDeclFor('.gk-tab-count')['font-variant-numeric'] ?? '', 'tabular-nums', 'the digits of a count jump');
+    $on = gkCssDeclFor('.gk-tab-btn.gk-active .gk-tab-count');
+    T::eq([$on['background'] ?? '', $on['color'] ?? ''], ['var(--gk-primary-container)', 'var(--gk-on-primary-container)'], 'the count of the chosen tab is not the tonal pair');
+    T::eq($on, gkCssDeclFor('.gk-tab-btn[aria-current="page"] .gk-tab-count'), 'a link tab counts differently');
+},
+
+'on a phone a Karteireiter row is a grid: everything visible, two columns up to 480px, symbol over the word' => function () use ($media): void {
+    $p600 = $media('(max-width: 600px)');
+    T::contains($p600, '.gk-tab-nav-karte { display: grid; }', 'on a phone the Karteireiter still scroll or are cut (and display must stay one class strong)');
+    T::ok((bool) preg_match('/\.gk-tab-nav-karte \.gk-tab-btn,\s*\.gk-tab-nav-karte\.gk-tab-nav-secondary \.gk-tab-btn\s*\{[^}]*flex-direction: column[^}]*white-space: normal/', $p600),
+        'in the grid the symbol does not stand over the word, or a long word cannot break');
+    T::ok(!preg_match('/gk-tab-nav-karte[^{]*\{[^}]*overflow-x/', $p600), 'a Karteireiter row on a phone hides tabs behind a scroll');
+    T::contains($media('(max-width: 480px)'), 'grid-template-columns: repeat(2, minmax(0, 1fr))', 'up to 480px the grid is not two columns');
+},
+
+'nested tabs: a tab and its panels are those of its own .gk-tabs, never of one inside a panel' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    $from = strpos($js, 'GK.tabsMarkup = {');
+    $code = substr($js, $from, strpos($js, '// === AJAX PAGINATION ===', $from) - $from);
+    T::contains($code, 'return el.closest(".gk-tabs") === wrap;', 'tabsMarkup.own() does not stop at the nearest .gk-tabs');
+    T::notContains($code, 'tabs.querySelectorAll(".gk-tab-btn")', 'the click handler clears the tabs of every inner .gk-tabs too');
+    T::notContains($code, 'tabs.querySelectorAll(".gk-tab-panel")', 'the click handler closes the panels of every inner .gk-tabs too');
+    T::notContains($code, "wrap.querySelector('.gk-tab-panel[data-tab=", 'init() pairs a tab with a panel of the same key one level down');
+    T::eq(substr_count($code, 'GK.tabsMarkup.own('), 4, 'not every lookup of tabs, panels and the nav goes through own()');
+    foreach (['ArrowRight', 'ArrowLeft', '"Home"', '"End"', 'aria-selected', 'role", "tablist"', 'aria-controls'] as $k) {
+        T::contains($code, $k, "the authored tabs lost $k");
+    }
+},
+
+'steps on a phone: a shorter line BEFORE its step, cut at the start of a row, so none hangs at the end' => function () use ($media): void {
+    $p = $media('(max-width: 480px)');
+    T::ok((bool) preg_match('/\.gk-steps \{ --gk-steps-vorlauf: (\d+)px; margin-left: calc\(-1 \* var\(--gk-steps-vorlauf\)\); clip-path: inset\(0 0 0 var\(--gk-steps-vorlauf\)\); \}/', $p, $v),
+        'on a phone the list does not move left by the cut margin');
+    T::ok((bool) preg_match('/\.gk-steps-item:not\(:last-child\)::after,\s*\.gk-steps-item:last-child::after \{ content: ""; order: -1; flex: none; width: (\d+)px; height: 2px; margin: 0 0 0 (\d+)px;/', $p, $l),
+        'on a phone the line does not stand before its step');
+    T::ok((int) $l[1] < 24, 'the line is not shorter on a phone');
+    // margin + line + the 6px gap of the step = the margin cut away: the first disc stands where it stood.
+    T::eq((int) $l[2] + (int) $l[1] + (int) (gkCssDeclFor('.gk-steps-item')['gap'] ?? 0), (int) $v[1], 'the cut margin is not exactly the line before a step');
+    T::eq(gkCssDeclFor('.gk-steps-item:not(:last-child)::after')['width'] ?? '', '24px', 'the steps changed at a desk');
+},
+
 ];
 })();

@@ -4567,17 +4567,29 @@
    */
   GK.tabsMarkup = {
     _n: 0,
+    /* The tabs and panels of THIS .gk-tabs, never those of a .gk-tabs inside one of its panels:
+       a click on an outer tab used to clear every inner one too (1.101.0). */
+    own(wrap, sel) {
+      return Array.prototype.filter.call(wrap.querySelectorAll(sel), function (el) {
+        return el.closest(".gk-tabs") === wrap;
+      });
+    },
+    panel(wrap, key) {
+      return this.own(wrap, ".gk-tab-panel").filter(function (p) {
+        return p.dataset.tab === key;
+      })[0] || null;
+    },
     init(root) {
       var self = this;
       (root || document).querySelectorAll(".gk-tabs").forEach(function (wrap) {
-        var nav = wrap.querySelector(".gk-tab-nav");
+        var nav = GK.tabsMarkup.own(wrap, ".gk-tab-nav")[0];
         if (!nav || nav._gkTabsA11y) return;
         nav._gkTabsA11y = true;
         var uid = "gk-tabs-m" + ++self._n;
         nav.setAttribute("role", "tablist");
-        var btns = Array.prototype.slice.call(nav.querySelectorAll(".gk-tab-btn"));
+        var btns = GK.tabsMarkup.own(wrap, ".gk-tab-btn");
         btns.forEach(function (b, i) {
-          var panel = wrap.querySelector('.gk-tab-panel[data-tab="' + b.dataset.tab + '"]');
+          var panel = GK.tabsMarkup.panel(wrap, b.dataset.tab);
           var on = b.classList.contains("gk-active");
           if (!b.id) b.id = uid + "-tab-" + i;
           b.setAttribute("role", "tab");
@@ -4613,7 +4625,7 @@
     var tabs = btn.closest(".gk-tabs");
     if (!tabs) return;
     var target = btn.dataset.tab;
-    tabs.querySelectorAll(".gk-tab-btn").forEach(function (b) {
+    GK.tabsMarkup.own(tabs, ".gk-tab-btn").forEach(function (b) {
       b.classList.remove("gk-active");
       // Only where init() put a role on: see the note above.
       if (b.getAttribute("role") === "tab") {
@@ -4621,7 +4633,7 @@
         b.tabIndex = -1;
       }
     });
-    tabs.querySelectorAll(".gk-tab-panel").forEach(function (p) {
+    GK.tabsMarkup.own(tabs, ".gk-tab-panel").forEach(function (p) {
       p.classList.remove("gk-active");
     });
     btn.classList.add("gk-active");
@@ -4629,7 +4641,7 @@
       btn.setAttribute("aria-selected", "true");
       btn.tabIndex = 0;
     }
-    var panel = tabs.querySelector('.gk-tab-panel[data-tab="' + target + '"]');
+    var panel = GK.tabsMarkup.panel(tabs, target);
     if (panel) panel.classList.add("gk-active");
   });
 

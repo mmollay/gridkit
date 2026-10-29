@@ -1,4 +1,4 @@
-# GridKit 1.100.0 — CSS
+# GridKit 1.101.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -30,6 +30,7 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-page-header-actions` | The action area itself (since 1.88.0): a wrapping flex row, right-aligned. Outside every media query — a rule of your own must load after gridkit.css or be more specific |
 | `gk-empty` | Empty state (centered, padded) |
 | `gk-tabs` `gk-tab-nav` `gk-tab-btn` `gk-tab-panel` | Tabs, authored markup (state class: `gk-active`) |
+| `gk-tab-nav-karte` `gk-tab-flaeche` `gk-tab-badge` `gk-tab-count` | Karteireiter: framed tabs on their surface, badge, count (1.101.0) |
 | `gk-tabs-nav` `gk-tab` | Tabs, generated nav (state class: `gk-tab-active`) |
 | `gk-accordion` `gk-accordion-item` `gk-accordion-trigger` `gk-accordion-content` `gk-accordion-body` | Accordion (state class: `open` on the item) |
 | `gk-gallery` `gk-gallery-item` `gk-gallery-overlay` | Image gallery |
@@ -137,6 +138,54 @@ links in a `<nav>` and mark the current page with `aria-current="page"`; it look
   use a segmented button.
 - The active tab (`.gk-active` too) is in `--gk-primary-text` and 600 since 1.99.0 (`--gk-primary`
   measured 4.47:1 on white); every tab has a visible focus ring.
+
+**Karteireiter** (since 1.101.0) — the shape for new pages, ordered with a class; without it every
+tab row keeps the line shape above. The tabs sit framed on their surface (`.gk-tab-flaeche`); the
+chosen one grows into it — taller, bold, a 3px accent on top — the others lie grey behind it.
+
+```html
+<div class="gk-tabs">
+    <div class="gk-tab-nav gk-tab-nav-karte">
+        <button class="gk-tab-btn gk-active" data-tab="signup"><span class="material-icons gk-tab-icon" aria-hidden="true">edit_note</span><span>Sign-up</span></button>
+        <button class="gk-tab-btn" data-tab="confirm"><span>Confirmation page</span><span class="gk-tab-badge">Customised</span></button>
+        <button class="gk-tab-btn" data-tab="remind"><span>Reminders</span><span class="gk-tab-count">3</span></button>
+    </div>
+    <div class="gk-tab-panel gk-tab-flaeche gk-active" data-tab="signup">…</div>
+    <div class="gk-tab-panel gk-tab-flaeche" data-tab="confirm">…</div>
+    <div class="gk-tab-panel gk-tab-flaeche" data-tab="remind">…</div>
+</div>
+```
+
+Links between pages take the same classes (`<nav class="gk-tab-nav gk-tab-nav-karte">` with
+`aria-current="page"`, the content in one `<div class="gk-tab-flaeche">` after the nav).
+
+| Level | Shape | Classes |
+|---|---|---|
+| Page tabs (the main row of a page or section) | Karteireiter, filled, accent | `gk-tab-nav gk-tab-nav-karte` + `gk-tab-flaeche` |
+| Second row (inside the surface of the first) | quiet, on a line, only the chosen one framed | `gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary` |
+| Tabs inside a window (modal, sheet) | the second-row shape — the window is the surface | `gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary`, no `gk-tab-flaeche` |
+| A third level (period, view of a list) | never a tab row | `gk-segmented` |
+
+- **Never mix** `gk-tab-nav-karte` with `gk-tab-nav-fill` or with local tab rules of your own
+  (backgrounds, borders, a phone grid on `.gk-tab-btn`) — the shapes mix and the edge breaks.
+- **Phone:** up to 600px a Karteireiter row is a grid, as many columns as fit; up to 480px exactly
+  two. Every tab stays visible (nothing scrolls, nothing is cut), each cell is a framed 44px target,
+  the symbol stands over the word, a badge or count under it. Write no phone grid of your own.
+- **Badge (`gk-tab-badge`) only for a deviation from the default** — "Customised", "Error". A badge
+  that says "Default" on every tab is noise: a tab with nothing special carries no badge. A count
+  (`gk-tab-count`) is a number of things behind the tab, not a status.
+- **Keyboard:** `.gk-tabs` rows get `role="tablist"`, `aria-selected` and a roving tabindex from the
+  library; Left / Right / Home / End move inside ONE row. Link rows are ordinary links with
+  `aria-current="page"` and need no script.
+- **Contrast:** the edge `--gk-tab-kante` (outline mixed with 30% text colour) holds ≥ 3:1 against its
+  ground, every text ≥ 4.5:1 — measured in all six themes, light and both dark spellings
+  (`ci/farben.js`). The chosen tab is never told by colour alone: surface, accent and weight.
+- **Nesting:** a `.gk-tabs` inside a panel of another is fine since 1.101.0 — a click on an outer tab
+  touches only its own row and panels; the inner choice stays. The inner row takes the second-row
+  shape. `data-tab` keys may repeat between levels.
+- **Steps on a phone:** `.gk-steps` draws a shorter line before each step up to 480px; three steps
+  of the length "Changes · Approval · Publish" fit in 340px, and when a band wraps after all, no line
+  hangs at the end or the start of a row.
 
 ### Accordion
 

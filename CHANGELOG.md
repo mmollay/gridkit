@@ -7,6 +7,41 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.101.0] - 2026-10-29
+
+Tabs that do not get lost: the "Karteireiter" shape, ordered with a class. Every existing tab class
+and its look stay exactly as they were for every system that does not order the new shape.
+
+### Added
+- `gk-tab-nav-karte` — framed tabs on a surface: the chosen tab grows into the surface (taller, bold,
+  3px accent on top), the others lie grey behind it. Works on `.gk-tabs` (buttons) and on link rows
+  (`aria-current="page"`).
+- `gk-tab-nav-karte gk-tab-nav-secondary` — the quiet second row (on a line, only the chosen tab
+  framed); also the shape for tabs inside a window (the window is the surface).
+- `gk-tab-flaeche` — the surface under a Karteireiter row (panel or wrapper after a link row).
+- `gk-tab-badge` (a deviation such as "Customised") and `gk-tab-count` (a number); the count on the
+  chosen tab uses `--gk-primary-container` (on-primary on primary measured 4.47:1).
+- Tokens `--gk-tab-kante` (edge, outline mixed with 30% text colour, ≥ 3:1) and `--gk-tab-flaeche`,
+  set on the Karteireiter classes only, not on `:root`.
+- Phone grid: up to 600px a Karteireiter row is a grid (`auto-fit`, 150px), up to 480px two columns;
+  every tab visible, framed 44px cells, nothing scrolls or is cut, no script.
+- `--gk-steps-vorlauf` — steps up to 480px draw a 12px line before each step instead of a 24px line
+  after it; three steps fit in 340px and a wrapped band leaves no line hanging at a row end.
+- Demo: own topic "Tabs" (page tabs, sub tabs, nested, in a window, segment, light and dark); the old
+  examples under Navigation are named "previous shape" and link to it.
+- `ci/browser-reiter.js` (nesting, keys, backward look at 1440, phone grid at 390, steps at 340 and
+  190px); `ci/farben.js` measures the Karteireiter texts and seven edges (3:1) in all themes.
+
+### Fixed
+- Nested `.gk-tabs`: a click on an outer tab reset the inner row (the handler took every button and
+  panel below the wrapper). `GK.tabsMarkup.own()` / `panel()` now take only a wrapper's own row and
+  panels — init, click and arrow keys.
+
+### Removed
+- The proposal files of the branch `reiter-vorschlag` (`css/vorschlag-reiter.css`,
+  `js/vorschlag-reiter.js`, `demo/reiter.php`, `demo/reiter-demo.css`) — never released.
+
+---
 ## [1.100.0] - 2026-10-28
 
 This is the work once numbered 1.98.0 on the branch `ortszeile`. It was never released, and 1.99.0

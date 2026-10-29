@@ -287,7 +287,22 @@ ${["", "info", "warning", "success"].map((ton) => `<section class="gk-message${t
 <ol class="gk-steps"><li class="gk-steps-item gk-steps-done" id="st-${ton || "neutral"}-done">A</li><li class="gk-steps-item gk-steps-current" id="st-${ton || "neutral"}-current">B</li><li class="gk-steps-item" id="st-${ton || "neutral"}-open">C</li></ol>
 <ol class="gk-timeline gk-timeline-compact" role="list"><li class="gk-timeline-step gk-timeline-todo" id="todo-${ton || "neutral"}"><span class="gk-timeline-marker" aria-hidden="true"></span><div class="gk-timeline-body"><div class="gk-timeline-head"><span class="gk-timeline-title">T</span><span class="gk-timeline-state">Offen</span></div></div>
 <div class="gk-timeline-actions"><a class="gk-btn gk-btn-outlined gk-btn-${ton === "warning" ? "warning" : "primary"} gk-btn-sm" href="#"><span class="material-icons" aria-hidden="true">x</span><span>K</span></a></div></li></ol>
-<details class="gk-disclosure" id="auf-${ton || "neutral"}"><summary>Mehr</summary></details></div></section>`).join("\n")}`;
+<details class="gk-disclosure" id="auf-${ton || "neutral"}"><summary>Mehr</summary></details></div></section>`).join("\n")}
+<div id="karte-seite"><div class="gk-tabs"><div class="gk-tab-nav gk-tab-nav-karte">
+<button class="gk-tab-btn gk-active" id="karte-an">An <span class="gk-tab-count" id="zaehler-an">3</span></button>
+<button class="gk-tab-btn" id="karte-aus">Aus <span class="gk-tab-badge" id="etikett">Angepasst</span> <span class="gk-tab-count" id="zaehler-aus">3</span></button></div>
+<div class="gk-tab-panel gk-tab-flaeche gk-active" id="karte-flaeche"><nav class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary" id="karte2-linie">
+<a class="gk-tab-btn" href="#" aria-current="page" id="karte2-an">An</a><a class="gk-tab-btn" href="#" id="karte2-aus">Aus</a></nav></div></div></div>
+<div class="gk-card" id="fenster"><nav class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary" id="fenster-linie">
+<a class="gk-tab-btn" href="#" aria-current="page" id="fenster-an">An</a><a class="gk-tab-btn" href="#" id="fenster-aus">Aus</a></nav></div>`;
+/* 1.101.0: Kanten, an denen man einen Karteireiter erkennt — [Name, Element-ID, Seite]. Gemessen gegen den
+   Grund, auf dem das Element steht (die Hintergründe ab seinem Elternteil); Sollwert 3:1 (WCAG 1.4.11). */
+const KANTENPROBEN = [
+  ["Karteireiter an · Kante", "karte-an", "top"], ["Karteireiter aus · Kante", "karte-aus", "top"],
+  ["Karteireiter · Fläche", "karte-flaeche", "top"],
+  ["Unterreiter an · Kante", "karte2-an", "top"], ["Unterreiter · Linie", "karte2-linie", "bottom"],
+  ["Reiter im Fenster an · Kante", "fenster-an", "top"], ["Reiter im Fenster · Linie", "fenster-linie", "bottom"],
+];
 const BAUSTEINE = `${ZEIT_UND_RAHMEN}${REITER}
 <div class="gk-card" id="karte">
   <span class="gk-avatar gk-avatar-initials gk-avatar-tone-1" id="ton-1">AB</span>
@@ -377,7 +392,11 @@ const TEXTPROBEN = [
   /* 1.99.0: Reiter (an/aus, erste und zweite Reihe), die segmentierte Wahl (an/aus), und im Zustandsband jeder
      Tonart: die drei Stufen, Titel und Wort eines To-dos, der Knopf darin und der Aufklapper. */
   ...[["reiter-an", "Reiter an"], ["reiter-aus", "Reiter aus"], ["reiter2-an", "Reiter 2. Reihe an"], ["reiter2-aus", "Reiter 2. Reihe aus"],
-      ["seg-an", "Segment an"], ["seg-aus", "Segment aus"]].map(([id, name]) => [name, id, null]),
+      ["seg-an", "Segment an"], ["seg-aus", "Segment aus"],
+      /* 1.101.0: Karteireiter, Unterreiter, Reiter im Fenster (an/aus), Etikett und Zähler. */
+      ["karte-an", "Karteireiter an"], ["karte-aus", "Karteireiter aus"], ["karte2-an", "Unterreiter an"], ["karte2-aus", "Unterreiter aus"],
+      ["fenster-an", "Reiter im Fenster an"], ["fenster-aus", "Reiter im Fenster aus"],
+      ["etikett", "Reiter · Etikett"], ["zaehler-an", "Reiter an · Zähler"], ["zaehler-aus", "Reiter aus · Zähler"]].map(([id, name]) => [name, id, null]),
   ...["neutral", "info", "warning", "success"].flatMap((ton) => [
     ...["done", "current", "open"].map((st) => [`Stufe ${ton} ${st}`, `st-${ton}-${st}`, null]),
     [`To-do ${ton} · Titel`, `todo-${ton}`, ".gk-timeline-title"],
@@ -482,7 +501,7 @@ async function bausteineMessen(browser, mitThemes) {
       const { nodeId } = await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector: wahl });
       await cdp.send("CSS.forcePseudoState", { nodeId, forcedPseudoClasses: ["hover"] });
     }
-    const zeilen = await page.evaluate(([proben, themen, modi, rollen]) => {
+    const zeilen = await page.evaluate(([proben, themen, modi, rollen, kantenproben]) => {
       const c = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
       const rgba = (f) => { c.clearRect(0, 0, 1, 1); c.fillStyle = "#000"; c.fillStyle = f; c.fillRect(0, 0, 1, 1);
         const d = c.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
@@ -522,6 +541,11 @@ async function bausteineMessen(browser, mitThemes) {
             const t = ueber(rgba(getComputedStyle(schrift).color), g);
             texte.push({ name, kontrast: kontrast(t, g) });
           }
+          const kanten = kantenproben.map(([name, id, seite]) => {
+            const el = document.getElementById(id);
+            const g = grund(el.parentElement);
+            return { name, kontrast: kontrast(ueber(rgba(getComputedStyle(el)[`border-${seite}-color`]), g), g) };
+          });
           const knopf = document.getElementById("knopf-primaer");
           const kg = grund(knopf);
           const primaerknopf = kontrast(ueber(rgba(getComputedStyle(knopf).color), kg), kg);
@@ -536,13 +560,13 @@ async function bausteineMessen(browser, mitThemes) {
             soll: hex(aufloesen(variable)),
             ohneRolle: hex(grund(document.getElementById(`chip-aktiv${z}`))),
           })));
-          ergebnis.push({ thema: thema || "(ohne Thema)", modus, texte, primaerknopf, flaeche, reihen, chipRollen,
+          ergebnis.push({ thema: thema || "(ohne Thema)", modus, texte, kanten, primaerknopf, flaeche, reihen, chipRollen,
             reihenKontrast: reihen.map((r) => kontrast(r.slice(0, 3), flaeche)) });
         }
       }
       sonde.remove();
       return ergebnis;
-    }, [TEXTPROBEN, mitThemes ? THEMEN : [""], MODI, CHIPROLLEN]);
+    }, [TEXTPROBEN, mitThemes ? THEMEN : [""], MODI, CHIPROLLEN, KANTENPROBEN]);
     await page.close();
     return zeilen;
   } finally {
@@ -600,6 +624,13 @@ function bausteineBerichten(wie, zeilen) {
         ? ` — zurückgestellt: ${zurueckZeile.map((t) => `${t.name} ${t.kontrast.toFixed(2)}:1`).join(", ")}, offene Zeile seit 1.91 (.gk-dark mit themes.css: Flächen aus gridkit.css)`
         : ""));
     }
+    /* 1.101.0: die Kanten der Karteireiter ≥ 3:1. */
+    const schwacheKanten = z.kanten.filter((k) => k.kontrast < 3);
+    const schwaechsteKante = z.kanten.reduce((a, b) => (a.kontrast <= b.kontrast ? a : b));
+    if (schwacheKanten.length) {
+      schlecht++;
+      console.log(`FAIL  ${kopf}  ${schwacheKanten.length} Reiterkante(n) unter 3:1: ${schwacheKanten.map((k) => `${k.name} ${k.kontrast.toFixed(2)}:1`).join(", ")}`);
+    } else console.log(`ok    ${kopf}  alle ${z.kanten.length} Reiterkanten ≥ 3:1 (schwächste: ${schwaechsteKante.name} ${schwaechsteKante.kontrast.toFixed(2)}:1)`);
     /* 1.93.4: aktive Chips mit Farbrolle tragen ihre Rolle, nicht den Chip ohne Rolle. */
     const ohneFarbe = z.chipRollen.filter((r) => r.grund !== r.soll || r.grund === r.ohneRolle);
     chipsGeprueft += z.chipRollen.length;

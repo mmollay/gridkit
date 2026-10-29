@@ -9739,6 +9739,162 @@ label.gk-setting-title {
   .gk-tab-nav-secondary .gk-tab-btn { flex: 1 1 auto; justify-content: center; padding: 8px 6px; text-align: center; }
 }
 
+/* ── Karteireiter (1.101.0): .gk-tab-nav-karte + .gk-tab-flaeche ──────────
+   Bestellt, nicht Vorgabe: ohne die Klasse bleibt jede Reiterzeile, wie sie war. Wie das „tabular
+   menu“ von Fomantic-UI sitzen die Reiter gerahmt auf ihrer Fläche; der gewählte ist mit ihr
+   verwachsen, höher, fett und trägt oben einen 3-px-Akzent, die anderen liegen grau dahinter.
+   Ebenen: Seitenreiter .gk-tab-nav-karte > Unterreiter .gk-tab-nav-karte.gk-tab-nav-secondary (ruhig,
+   auf einer Linie; auch die Reiter IN einem Fenster, das Fenster ist schon die Fläche) > Segment
+   (.gk-segmented). Am Handy (≤ 600 px) wird jede Karteireiter-Zeile ein Raster: alles sichtbar,
+   nichts zu schieben, ≤ 480 px zwei Spalten.
+   Die Kante: --gk-outline allein misst 2,6:1 (hell) und 2,3:1 (dunkel); mit 30 % Textfarbe kommt sie
+   in beiden Modi über 3:1. Gesetzt an Zeile und Fläche selbst, damit sie den Modus des Elements
+   trägt, nicht den von :root. */
+.gk-tab-nav-karte,
+.gk-tab-flaeche {
+  --gk-tab-kante: color-mix(in oklab, var(--gk-outline) 70%, var(--gk-on-surface));
+  --gk-tab-flaeche: var(--gk-surface);
+}
+/* Etikett und Zähler in einem Reiter (jede Gestalt). Ein Etikett meldet nur eine Abweichung
+   („Angepasst“, „Fehler“), nie den Vorgabewert. */
+.gk-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 9999px;
+  background: var(--gk-secondary-container);
+  color: var(--gk-on-secondary-container);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.gk-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: var(--gk-surface-container-highest);
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.gk-tab-btn.gk-active .gk-tab-count,
+.gk-tab-btn[aria-current="page"] .gk-tab-count { background: var(--gk-primary-container); color: var(--gk-on-primary-container); }
+
+.gk-tab-nav.gk-tab-nav-karte {
+  position: relative;
+  z-index: 1;
+  align-items: flex-end;
+  gap: 4px;
+  margin-bottom: -1px;          /* der Reiter liegt auf der Oberkante der Fläche */
+  padding: 0 12px;
+  border-bottom: 0;
+}
+.gk-tab-nav-karte .gk-tab-btn {
+  min-height: var(--gk-target-min);
+  margin: 6px 0 0;
+  padding: 10px 18px;
+  border: 1px solid var(--gk-tab-kante);
+  border-radius: var(--gk-radius-sm) var(--gk-radius-sm) 0 0;
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: var(--gk-transition-state);
+}
+.gk-tab-nav-karte .gk-tab-btn:hover { background: var(--gk-surface-container-highest); color: var(--gk-on-surface); }
+.gk-tab-nav-karte .gk-tab-btn:focus-visible { outline-offset: 2px; }   /* der Ring liegt außen, nicht auf der Kante */
+.gk-tab-nav-karte .gk-tab-btn.gk-active,
+.gk-tab-nav-karte .gk-tab-btn[aria-current="page"] {
+  margin-top: 0;
+  padding-top: 13px;            /* höher als die anderen: er steht vorn */
+  border-bottom-color: var(--gk-tab-flaeche);
+  background: var(--gk-tab-flaeche);
+  color: var(--gk-on-surface);
+  font-weight: 700;
+  box-shadow: inset 0 3px 0 var(--gk-primary);
+}
+.gk-tab-nav-karte .gk-tab-btn.gk-active .gk-tab-icon,
+.gk-tab-nav-karte .gk-tab-btn[aria-current="page"] .gk-tab-icon { color: var(--gk-primary-text); }
+.gk-tab-nav-karte ~ .gk-tab-flaeche {
+  padding: 24px;
+  border: 1px solid var(--gk-tab-kante);
+  border-radius: 0 var(--gk-radius) var(--gk-radius) var(--gk-radius);
+  background: var(--gk-tab-flaeche);
+  color: var(--gk-on-surface);
+}
+/* Unterreiter (und Reiter im Fenster): kleiner und ruhiger — keine graue Füllung, kein Akzent;
+   eine Linie, auf der nur der gewählte Reiter mit Rahmen steht. */
+.gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-secondary {
+  margin: 0 0 20px;
+  padding: 0;
+  gap: 2px;
+  border-bottom: 1px solid var(--gk-tab-kante);
+}
+.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn {
+  margin: 0 0 -1px;
+  padding: 8px 14px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+}
+.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn:hover { background: var(--gk-state-hover); color: var(--gk-on-surface); }
+.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn.gk-active,
+.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn[aria-current="page"] {
+  padding-top: 8px;
+  border-color: var(--gk-tab-kante);
+  border-bottom-color: var(--gk-tab-flaeche);
+  background: var(--gk-tab-flaeche);
+  font-weight: 600;
+  box-shadow: none;
+}
+/* Handy: ein Raster statt einer Zeile — jeder Reiter sichtbar, nichts schiebt, nichts wird
+   abgeschnitten. Jede Zelle ist ein ganzer gerahmter Reiter, das Symbol steht über dem Wort,
+   Etikett und Zähler darunter. Bis 600 px so viele Spalten wie passen, bis 480 px genau zwei. */
+@media (max-width: 600px) {
+  .gk-tab-nav-karte { display: grid; }   /* eine Klasse stark: eine Versteck-Klasse der Seite gewinnt */
+  .gk-tab-nav.gk-tab-nav-karte,
+  .gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-secondary {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 0;
+    border-bottom: 0;
+  }
+  .gk-tab-nav-karte .gk-tab-btn,
+  .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn {
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    margin: 0;
+    padding: 8px 6px;
+    border: 1px solid var(--gk-tab-kante);
+    border-radius: var(--gk-radius-sm);
+    font-size: var(--gk-text-label);
+    white-space: normal;
+    overflow-wrap: break-word;
+    text-align: center;
+    line-height: 1.25;
+  }
+  .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn { border-color: var(--gk-outline-variant); }
+  .gk-tab-nav-karte .gk-tab-btn.gk-active,
+  .gk-tab-nav-karte .gk-tab-btn[aria-current="page"] { padding-top: 8px; border-bottom-color: var(--gk-tab-kante); }
+  .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn.gk-active,
+  .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn[aria-current="page"] { border-color: var(--gk-primary); }
+  .gk-tab-nav-karte ~ .gk-tab-flaeche { padding: 16px 12px; border-radius: var(--gk-radius); }
+}
+@media (max-width: 480px) {
+  .gk-tab-nav.gk-tab-nav-karte,
+  .gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-secondary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .gk-tab-nav-karte .gk-tab-btn { transition: none; } }
+
 /* ── Segmented button: one choice of a few (2–5), joined ─────────────────
    <div class="gk-segmented" role="group" aria-label="Zeitraum"><a class="gk-segmented-item"
    href="…" aria-current="true">7 Tage</a>…</div> — links (aria-current) or buttons (aria-pressed).
@@ -9835,6 +9991,15 @@ label.gk-setting-title {
 }
 .gk-steps-current { color: var(--gk-on-surface); font-weight: 700; }
 .gk-steps-current::before { border-color: var(--gk-primary); background: radial-gradient(circle, var(--gk-primary) 0 3px, var(--gk-surface) 3.5px); }
+/* Handy (1.101.0): ein kürzerer Strich, der VOR seiner Stufe steht (order: -1), so passen
+   „Änderungen · Freigabe · Veröffentlichen“ in 340 px. Bricht das Band doch um, steht der Strich am
+   Zeilenanfang — und dort schneidet clip-path ihn ab; die Liste rückt um genau diesen Rand nach
+   links, die erste Scheibe steht also, wo sie stand. Am Zeilenende hängt nie ein Strich. */
+@media (max-width: 480px) {
+  .gk-steps { --gk-steps-vorlauf: 24px; margin-left: calc(-1 * var(--gk-steps-vorlauf)); clip-path: inset(0 0 0 var(--gk-steps-vorlauf)); }
+  .gk-steps-item:not(:last-child)::after,
+  .gk-steps-item:last-child::after { content: ""; order: -1; flex: none; width: 12px; height: 2px; margin: 0 0 0 6px; background: color-mix(in oklab, var(--gk-outline) 60%, transparent); }
+}
 
 /* ── Timeline: a step still to do, a button in a step, a compact size ─────
    gk-timeline-todo: open, to be done next — a ring in the primary colour and its word. A button
