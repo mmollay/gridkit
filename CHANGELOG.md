@@ -7,6 +7,65 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.102.0] - 2026-10-29
+
+Karteireiter, second round: a row that does not fit its box, an error badge, cells of equal height,
+sharper corners, quiet line tabs for the second row, and link tabs that keep their place on the page.
+Only classes new in 1.101.0 change their look (`gk-tab-nav-karte`, `gk-tab-flaeche`, `gk-tab-badge`,
+`gk-tab-count`) — every older tab class is untouched; a row that fits stays the same single line, and
+without the script nothing but the look of the new classes changes.
+
+### Added
+- `gk-tab-nav-raster` — the phone grid, at any window width: put on a `.gk-tab-nav-karte` row by
+  `GK.tabsFit` when the row does not fit the box it stands in (six tabs beside a side column are too
+  wide at a 1280px window and fit at 1440px — no fixed width suits every set of words), taken off
+  again when it fits. Not set by hand. Columns: as many as fit, at least two (also in a box under 306px).
+- `GK.tabsFit` (`.fit(nav)`, `.init(root)`) — measures every `.gk-tab-nav-karte` as a row (class off,
+  its own overflow decides, class on) at start, when the row or one of its tabs changes size, and when
+  a hidden row is shown. Called from `GK.initContent()`, so content loaded later is covered too.
+- `gk-tab-badge-error` — the error variant of `gk-tab-badge`: `--gk-error-container` on
+  `--gk-on-error-container` (the roles of `gk-label-red`), the word "Error" stays — colour alone never
+  says it. Replaces a local `.gk-tab-badge.<system>-error` rule.
+- Demo, topic "Tabs": an error badge on a tab and the example "A row that does not fit its box" (six
+  tabs in boxes of 700, 560 and 340px).
+
+- `--gk-tab-radius` (4px, in `:root`) — the one corner token of the Karteireiter: tab corners, corners
+  of `gk-tab-flaeche` and the phone cells read it (before: `--gk-radius-sm` 8px and `--gk-radius` 12px,
+  which made the tabs look bubbly). Buttons, cards and inputs keep their radii. An ancestor can set it.
+- `GK.tabsScroll` — link tabs keep their place: a click on `a.gk-tab-btn` in a `.gk-tab-nav` notes the
+  target, the row (its `aria-label`, else its order) and where it stands in the window
+  (`sessionStorage`, every access guarded); the page it lands on scrolls so the row stands there
+  again. Left alone: a `#` target, another origin, `target`/`download`, Ctrl/Shift/Meta/Alt or the
+  middle button, an address with a `#` anchor, a note older than 15 s, back/forward/reload, a row that
+  is missing. `data-gk-tab-scroll="off"` on the row or an ancestor switches it off.
+
+### Changed
+- `gk-tab-nav-karte gk-tab-nav-secondary` (the second row, also tabs inside a window) is now quiet line
+  tabs instead of boxes: no fill or frame at rest, a 1px line under the row, the chosen tab a 3px
+  accent line (`--gk-primary`) and bold `--gk-primary-text`, hover only a faint tint
+  (`--gk-state-hover`), focus ring inside the tab. On a phone the cells keep the line (1px, chosen 3px).
+  Markup is unchanged; contrast is measured as before (line ≥ 3:1, text ≥ 4.5:1, light and dark).
+- Karteireiter corners: 4px on top of the tab, the surface `0 4 4 4` (before: 8px/12px), a clean
+  corner where tab and surface meet.
+
+### Fixed
+- Phone grid (up to 600px): cells with a badge or count were taller than their neighbours, because the
+  row aligned its cells at the bottom (`align-items: flex-end`). In the grid they now stretch and the
+  rows are equal in height (`grid-auto-rows: 1fr`); the single-line row is untouched.
+
+### Tests
+- `tests/reiter.test.php` (+ the whole suite: 7828 assertions): the grid and its equal-height cells, the
+  error badge pair, `GK.tabsFit`, the one corner token (every Karteireiter rule reads it), the line tabs
+  of the second row, `GK.tabsScroll` (guarded storage, every exception, the opt-out, started once).
+- `ci/browser-reiter.js`: 116 checks in Chromium, among them the window width 1138/900/700/560/340px
+  (light and dark), corners, line tabs, focus ring, hover tint, the phone grid, and — new — the place of
+  a link tab across two pages with a different head height (±2px), no memory for a `#` target, another
+  origin, Ctrl/Shift/middle click, `data-gk-tab-scroll="off"`, a blocked `sessionStorage`, an old memory.
+- `ci/farben.js`: all tab edges ≥ 3:1 and every text ≥ 4.5:1 in the six themes, light and dark (the
+  error badge included); `tests/blocks.test.php` moved its window to 1.102/1.101.
+- Counter-proofs: every guard of the above was broken on purpose (35 breaks) and the test turned red.
+
+---
 ## [1.101.0] - 2026-10-29
 
 Tabs that do not get lost: the "Karteireiter" shape, ordered with a class. Every existing tab class

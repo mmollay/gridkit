@@ -220,13 +220,42 @@ return [
     T::eq(gkCssDeclFor('.gk-tab-nav-karte .gk-tab-btn:focus-visible')['outline-offset'] ?? '', '2px', 'the focus ring lies on the edge of the tab');
 },
 
-'Karteireiter, second row and inside a window: on a line, no fill, no accent, only the chosen one framed' => function (): void {
+'Karteireiter, second row and inside a window: a LINE tab row — words on a thin line, no box, no fill; the chosen one a 3px stroke in the main colour' => function () use ($media): void {
     $nav = gkCssDeclFor('.gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-secondary');
-    T::eq($nav['border-bottom'] ?? '', '1px solid var(--gk-tab-kante)', 'the second row stands on no line');
+    T::eq($nav['border-bottom'] ?? '', '1px solid var(--gk-tab-kante)', 'the second row stands on no thin line');
     $off = gkCssDeclFor('.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn');
-    T::eq([$off['background'] ?? '', $off['border-color'] ?? '', $off['font-size'] ?? ''], ['transparent', 'transparent', 'var(--gk-text-label)'], 'the second row is as loud as the first');
+    T::eq([$off['border'] ?? '', $off['border-bottom'] ?? '', $off['background'] ?? '', $off['font-size'] ?? ''],
+        ['0', '3px solid transparent', 'transparent', 'var(--gk-text-label)'], 'a tab of the second row is a box, or grey, or as loud as the first row');
+    T::ok(!isset($off['border-radius']), 'the second row sets its own corners (it takes those of the Karteireiter: the hover tint is the only thing that shows them)');
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn:hover')['background'] ?? '', 'var(--gk-state-hover)', 'the hover of the second row is not the faint tint');
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn:focus-visible')['outline-offset'] ?? '', '-2px', 'the focus ring of the second row lies outside, where a scrolling row cuts it');
     $on = gkCssDeclFor('.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn.gk-active');
-    T::eq([$on['border-color'] ?? '', $on['box-shadow'] ?? '', $on['font-weight'] ?? ''], ['var(--gk-tab-kante)', 'none', '600'], 'the chosen tab of the second row is not framed, or carries the accent of the first');
+    T::eq($on, gkCssDeclFor('.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn[aria-current="page"]'), 'a link tab of the second row looks different from .gk-active');
+    T::eq([$on['border-bottom-color'] ?? '', $on['color'] ?? '', $on['background'] ?? '', $on['font-weight'] ?? '', $on['box-shadow'] ?? ''],
+        ['var(--gk-primary)', 'var(--gk-primary-text)', 'transparent', '600', 'none'], 'the chosen tab of the second row is not the main colour, a stroke and bold — or it carries the accent of the first row');
+    // The levels never look alike: the first row is framed and grey, the second is neither.
+    $erste = gkCssDeclFor('.gk-tab-nav-karte .gk-tab-btn');
+    T::ok(($erste['border'] ?? '') !== ($off['border'] ?? '') && ($erste['background'] ?? '') !== ($off['background'] ?? ''), 'the two levels of tabs look alike');
+    // On a phone and in the fitted grid the second row stays a line row: one word on its own line per cell, no frame.
+    T::contains($media('(max-width: 600px)'), '.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn { border-width: 0 0 1px;', 'on a phone the cells of the second row are boxes again');
+    T::contains($media('(max-width: 600px)'), '.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn[aria-current="page"] { border-bottom-width: 3px; }', 'on a phone the chosen cell of the second row has no stroke');
+},
+
+'the corners of the Karteireiter are ONE token (--gk-tab-radius, 4px): tab, surface and cells; none of them rounds like a button' => function (): void {
+    T::ok((bool) preg_match('/--gk-tab-radius:\s*4px;/', gkCssBare()), 'the token --gk-tab-radius is not 4px');
+    T::ok((int) preg_match('/--gk-radius-sm:\s*8px;/', gkCssBare()) === 1 && (int) preg_match('/--gk-radius:\s*12px;/', gkCssBare()) === 1, 'the radii of the other components changed');
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte')['--gk-tab-radius'] ?? '', '', 'the row sets the token itself, so a consumer cannot change it on an ancestor');
+    $n = 0;
+    foreach (array_merge(gkCssRulesNaming('gk-tab-nav-karte'), gkCssRulesNaming('gk-tab-flaeche')) as [$list, $body]) {
+        $d = gkCssDecl($body);
+        if (!isset($d['border-radius'])) continue;
+        $n++;
+        T::contains($d['border-radius'], '--gk-tab-radius', "$list rounds with something else than the token");
+        T::notContains($d['border-radius'], '--gk-radius', "$list rounds like a button or a card");
+    }
+    T::ok($n >= 6, 'the corner rules of the Karteireiter are gone (found ' . $n . ')');
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte ~ .gk-tab-flaeche')['border-radius'] ?? '', '0 var(--gk-tab-radius) var(--gk-tab-radius) var(--gk-tab-radius)', 'the corner under the chosen tab is not square, or the others differ from the tabs');
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte .gk-tab-btn')['border-radius'] ?? '', 'var(--gk-tab-radius) var(--gk-tab-radius) 0 0', 'the top corners of a tab differ from those of the surface');
 },
 
 'a badge and a count in a tab; the count of the chosen tab is a pair that reads (4.47:1 on the filled primary)' => function (): void {
@@ -272,5 +301,95 @@ return [
     T::eq(gkCssDeclFor('.gk-steps-item:not(:last-child)::after')['width'] ?? '', '24px', 'the steps changed at a desk');
 },
 
+
+/* ── 1.102.0: eine Reihe, die nicht in ihren Kasten passt; das Fehler-Etikett; gleich hohe Zellen ── */
+
+'a Karteireiter row that does not fit its box becomes the phone grid by a class; a row that fits stays the line of 1.101.0' => function () use ($media): void {
+    // The line of 1.101.0, held literally: the bottoms stay level, the tabs stay one line.
+    $line = gkCssDeclFor('.gk-tab-nav.gk-tab-nav-karte');
+    T::eq([$line['align-items'] ?? '', $line['gap'] ?? '', $line['padding'] ?? ''], ['flex-end', '4px', '0 12px'], 'the single-line Karteireiter row changed');
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte .gk-tab-btn')['white-space'] ?? '', 'nowrap', 'a tab of the single-line row breaks inside');
+    // The class: a grid at any window width, as weak as one class so a hiding class of the page still wins.
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte:where(.gk-tab-nav-raster)')['display'] ?? '', 'grid', 'the class does not turn the row into a grid (and it must stay as weak as one class)');
+    $nav = gkCssDeclFor('.gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-raster');
+    T::eq($nav['grid-template-columns'] ?? '', 'repeat(auto-fit, minmax(min(150px, calc(50% - 3px)), 1fr))', 'the grid is not "as many as fit, at least two" (a box under 306px has two columns)');
+    T::eq([$nav['align-items'] ?? '', $nav['gap'] ?? '', $nav['padding'] ?? '', $nav['border-bottom'] ?? ''], ['stretch', '6px', '0', '0'], 'the grid row keeps a line, a padding or cells that do not stretch');
+    // The cell is the cell of the phone — one shape, held in two places, so the two are compared.
+    T::ok((bool) preg_match('/\.gk-tab-nav-karte \.gk-tab-btn,\s*\.gk-tab-nav-karte\.gk-tab-nav-secondary \.gk-tab-btn\s*\{([^}]*)\}/', $media('(max-width: 600px)'), $ph), 'the cell of the phone grid is gone');
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte.gk-tab-nav-raster .gk-tab-btn'), gkCssDecl($ph[1]), 'a cell of the fitted grid differs from a cell of the phone grid');
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte.gk-tab-nav-raster .gk-tab-btn.gk-active'), gkCssDeclFor('.gk-tab-nav-karte.gk-tab-nav-raster .gk-tab-btn[aria-current="page"]'), 'a link tab in the fitted grid looks different from .gk-active');
+    $an = gkCssDeclFor('.gk-tab-nav-karte.gk-tab-nav-secondary.gk-tab-nav-raster .gk-tab-btn.gk-active');
+    T::eq([$an['border-bottom-width'] ?? '', $an['border-bottom-color'] ?? ''], ['3px', 'var(--gk-primary)'], 'the chosen cell of a fitted second row has no stroke in the main colour');
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte.gk-tab-nav-secondary.gk-tab-nav-raster .gk-tab-btn')['border-width'] ?? '', '0 0 1px', 'a cell of a fitted second row is framed');
+    // Nothing here reaches a tab row that did not order the Karteireiter shape.
+    $rules = gkCssRulesNaming('gk-tab-nav-raster');
+    T::ok(count($rules) >= 6, 'the rules of the fitted grid are gone');
+    foreach ($rules as [$list]) {
+        foreach (array_map('trim', explode(',', $list)) as $sel) {
+            T::contains($sel, 'gk-tab-nav-karte', "$sel reaches tab rows that did not order the Karteireiter");
+        }
+    }
+    // The same specificity as the second-row rules: the later one wins, so the grid comes after them.
+    $css = gkCssBare();
+    T::ok(strpos($css, '.gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-raster {') > strpos($css, '.gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-secondary {'), 'the fitted grid lies before the second row and loses its padding and line to it');
+    T::ok(strpos($css, '.gk-tab-nav-karte.gk-tab-nav-raster .gk-tab-btn {') > strpos($css, '.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn {'), 'the cell of the fitted grid lies before the cell of the second row');
+},
+
+'the cells of a grid are equally tall, also with a badge or a count (the phone and the fitted grid)' => function () use ($media): void {
+    $line = gkCssDeclFor('.gk-tab-nav.gk-tab-nav-karte');
+    T::eq($line['grid-auto-rows'] ?? '', '1fr', 'the rows of the grid are not equal in height');
+    // The row aligned its cells at the bottom (flex-end): in a grid a cell with a badge was taller than one without.
+    T::contains($media('(max-width: 600px)'), '.gk-tab-nav.gk-tab-nav-karte { align-items: stretch; }', 'on a phone the cells do not stretch to the height of their row');
+    T::eq(gkCssDeclFor('.gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-raster')['align-items'] ?? '', 'stretch', 'in the fitted grid the cells do not stretch');
+    T::eq(gkCssDeclFor('.gk-tab-nav-karte .gk-tab-btn')['min-height'] ?? '', 'var(--gk-target-min)', 'a cell is smaller than a finger');
+},
+
+'the error badge is the tonal error pair, comes after the plain badge, and the demo and the skill keep the word' => function (): void {
+    $e = gkCssDeclFor('.gk-tab-badge-error');
+    T::eq([$e['background'] ?? '', $e['color'] ?? ''], ['var(--gk-error-container)', 'var(--gk-on-error-container)'], 'the error badge is not the tonal error pair');
+    $red = gkCssDeclFor('.gk-label-red');
+    T::eq([$e['background'] ?? '', $e['color'] ?? ''], [$red['background'] ?? '', $red['color'] ?? ''], 'the error badge differs from the red label in its roles');
+    $css = gkCssBare();
+    T::ok(strpos($css, '.gk-tab-badge-error {') > strpos($css, ".gk-tab-badge {\n"), 'the error badge lies before the plain badge and loses to it (same specificity)');
+    T::ok(!isset($e['font-size']) && !isset($e['padding']), 'the error variant restates the shape of the badge instead of only changing its colour');
+    $demo = (string) file_get_contents(__DIR__ . '/../demo/index.php');
+    T::contains($demo, 'class="gk-tab-badge gk-tab-badge-error">Error</span>', 'the demo shows no error badge with its word');
+    $skill = (string) preg_replace('/\s+/', ' ', (string) file_get_contents(__DIR__ . '/../GRIDKIT_SKILL.md'));   // lines wrap
+    foreach (['gk-tab-badge-error', 'gk-tab-nav-raster', 'GK.tabsFit', 'the word stays'] as $k) {
+        T::contains($skill, $k, "the skill does not say $k");
+    }
+},
+
+'GK.tabsFit puts the grid on a row that overflows and takes it off when it fits; new content is covered' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    $from = strpos($js, 'GK.tabsFit = {');
+    T::ok($from !== false, 'GK.tabsFit is gone');
+    $code = substr($js, (int) $from, (int) strpos($js, '// === AJAX PAGINATION ===', (int) $from) - (int) $from);
+    T::contains($code, 'cls: "gk-tab-nav-raster"', 'tabsFit does not set the grid class');
+    T::ok((bool) preg_match('/nav\.classList\.remove\(this\.cls\);\s*if \(nav\.scrollWidth > nav\.clientWidth\) nav\.classList\.add\(this\.cls\);/', $code),
+        'tabsFit does not measure the row as a row (class off, overflow decides, class on)');
+    T::contains($code, '.gk-tab-nav-karte', 'tabsFit looks at other rows than the Karteireiter');
+    T::contains($code, 'new ResizeObserver', 'a row that changes size (a font arrives, a badge appears) is not measured again');
+    T::contains($code, 'requestAnimationFrame', 'the re-measure is not put off one frame (ResizeObserver loop error)');
+    T::contains($code, 'nav._gkTabsFit', 'a row is watched twice');
+    T::contains($js, "if (GK.tabsFit) GK.tabsFit.init(root);", 'content loaded later is not measured (GK.initContent)');
+},
+
+'GK.tabsScroll: link tabs keep their place — guarded storage, the exceptions, the opt-out, started once' => function (): void {
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    $from = strpos($js, 'GK.tabsScroll = {');
+    T::ok($from !== false, 'GK.tabsScroll is gone');
+    $code = substr($js, (int) $from, (int) strpos($js, '// === AJAX PAGINATION ===', (int) $from) - (int) $from);
+    T::ok(substr_count($code, 'sessionStorage') === 3, 'sessionStorage is used outside the three guarded places');
+    T::ok(substr_count($code, 'try {') === 3 && substr_count($code, 'catch (e)') === 3, 'a storage or scroll call is not in try/catch');
+    foreach (['maxAge: 15000,', 'location.hash', 'm.url !== location.pathname + location.search', 'nav.type !== "navigate"',
+        'data-gk-tab-scroll="off"', 'e.ctrlKey', 'e.metaKey', 'e.shiftKey', 'e.altKey', 'e.button !== 0', 'e.defaultPrevented',
+        'href.indexOf("#") !== -1', 'link.origin !== location.origin', 'behavior: "instant"'] as $part) {
+        T::contains($code, $part, 'tabsScroll lost its guard: ' . $part);
+    }
+    T::contains($js, 'if (GK.tabsScroll) GK.tabsScroll.restore();', 'the page does not restore the place at start (GK.init)');
+    T::ok(substr_count($js, 'GK.tabsScroll.restore()') === 1, 'the place is restored more than once');
+    T::ok(is_int(strpos($code, 'removeItem')), 'the note is not deleted after it is read');
+},
 ];
 })();

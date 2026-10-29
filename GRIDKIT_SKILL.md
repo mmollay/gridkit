@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.101.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.102.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -51,7 +51,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | ActionGroup | `GridKit\ActionGroup` | Container for action buttons inside table columns (since v1.16.0) |
 | SortLink | `GridKit\SortLink` | Sortable column headers for hand-built tables (server-side sort) |
 | Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
-| Tabs (JS) | `.gk-tabs` / `[data-gk-tabs]` | Tab navigation, two shapes — full tablist semantics and arrow keys since 1.69.0; the Karteireiter shape `.gk-tab-nav-karte` + `.gk-tab-flaeche`, nesting and a phone grid since 1.101.0 |
+| Tabs (JS) | `.gk-tabs` / `[data-gk-tabs]` | Tab navigation, two shapes — full tablist semantics and arrow keys since 1.69.0; the Karteireiter shape `.gk-tab-nav-karte` + `.gk-tab-flaeche`, nesting and a phone grid since 1.101.0; a row that does not fit its box becomes the grid by itself (`GK.tabsFit`) and `gk-tab-badge-error` since 1.102.0; line tabs for the second row, `--gk-tab-radius` and link tabs that keep their place (`GK.tabsScroll`) since 1.102.0 |
 | Accordion (JS) | `.gk-accordion` | Collapsible sections, optional single-open (`data-gk-single`) |
 | Tooltips (JS/CSS) | `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` | Hint popups — plain, CSS-only, or with HTML in them |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
@@ -2223,6 +2223,7 @@ Features:
 | `gk-empty` | Empty state (centered, padded) |
 | `gk-tabs` `gk-tab-nav` `gk-tab-btn` `gk-tab-panel` | Tabs, authored markup (state class: `gk-active`) |
 | `gk-tab-nav-karte` `gk-tab-flaeche` `gk-tab-badge` `gk-tab-count` | Karteireiter: framed tabs on their surface, badge, count (1.101.0) |
+| `gk-tab-nav-raster` `gk-tab-badge-error` | Karteireiter row as a grid when it does not fit its box (set by `GK.tabsFit`, not by hand); the error badge (1.102.0) |
 | `gk-tabs-nav` `gk-tab` | Tabs, generated nav (state class: `gk-tab-active`) |
 | `gk-accordion` `gk-accordion-item` `gk-accordion-trigger` `gk-accordion-content` `gk-accordion-body` | Accordion (state class: `open` on the item) |
 | `gk-gallery` `gk-gallery-item` `gk-gallery-overlay` | Image gallery |
@@ -2411,18 +2412,35 @@ Links between pages take the same classes (`<nav class="gk-tab-nav gk-tab-nav-ka
 | Level | Shape | Classes |
 |---|---|---|
 | Page tabs (the main row of a page or section) | Karteireiter, filled, accent | `gk-tab-nav gk-tab-nav-karte` + `gk-tab-flaeche` |
-| Second row (inside the surface of the first) | quiet, on a line, only the chosen one framed | `gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary` |
+| Second row (inside the surface of the first) | quiet line tabs: no boxes, the chosen one carries a 3px accent line (1.102.0) | `gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary` |
 | Tabs inside a window (modal, sheet) | the second-row shape — the window is the surface | `gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary`, no `gk-tab-flaeche` |
 | A third level (period, view of a list) | never a tab row | `gk-segmented` |
 
+- **Corners** (since 1.102.0): one token, `--gk-tab-radius` (4px — sharper than a button's 8px): the
+  tab corners, the corners of the surface and the phone cells all read it, so they always match. Set it
+  on an ancestor to change it for a region; never write a `border-radius` of your own on these classes.
 - **Never mix** `gk-tab-nav-karte` with `gk-tab-nav-fill` or with local tab rules of your own
   (backgrounds, borders, a phone grid on `.gk-tab-btn`) — the shapes mix and the edge breaks.
 - **Phone:** up to 600px a Karteireiter row is a grid, as many columns as fit; up to 480px exactly
   two. Every tab stays visible (nothing scrolls, nothing is cut), each cell is a framed 44px target,
-  the symbol stands over the word, a badge or count under it. Write no phone grid of your own.
+  the symbol stands over the word, a badge or count under it; the cells of a row are equally tall,
+  also with a badge or count (1.102.0). Write no phone grid of your own.
+- **A row that does not fit its box** (since 1.102.0): the row is one line while it fits; when it is
+  too wide for its box (a side column, a narrow card, a window), `GK.tabsFit` puts `gk-tab-nav-raster`
+  on it and it becomes the same grid as on a phone — at any window width, measured, not guessed. Never
+  set `gk-tab-nav-raster` by hand and never write `overflow-x: auto`, a scrolling row or a media query on
+  `.gk-tab-nav-karte` for this. It covers link rows too; without the script the row stays a line.
 - **Badge (`gk-tab-badge`) only for a deviation from the default** — "Customised", "Error". A badge
   that says "Default" on every tab is noise: a tab with nothing special carries no badge. A count
   (`gk-tab-count`) is a number of things behind the tab, not a status.
+- **Error badge** (since 1.102.0): `<span class="gk-tab-badge gk-tab-badge-error">Error</span>` — the
+  word stays, colour alone never says it. Contrast ≥ 4.5:1 light and dark (`ci/farben.js`). Write no
+  `.gk-tab-badge.<system>-error` rule of your own.
+- **Link tabs keep their place** (since 1.102.0): a click on a link tab (`<a class="gk-tab-btn">` in a
+  `.gk-tab-nav`) notes where the row stands in the window; the page it lands on scrolls so the row
+  stands there again, as if only the content below the tabs changed. Nothing to write. Not done for a
+  `#` target, another origin, Ctrl/Shift/middle click, back/forward/reload, or a note older than 15 s.
+  Switch it off with `data-gk-tab-scroll="off"` on the row or any ancestor.
 - **Keyboard:** `.gk-tabs` rows get `role="tablist"`, `aria-selected` and a roving tabindex from the
   library; Left / Right / Home / End move inside ONE row. Link rows are ordinary links with
   `aria-current="page"` and need no script.

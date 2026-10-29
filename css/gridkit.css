@@ -221,6 +221,9 @@ a:hover {
   --gk-radius: 12px;
   --gk-radius-sm: 8px;
   --gk-radius-lg: 16px;
+  /* The corners of the Karteireiter (1.102.0): the top corners of a tab and the corners of its surface.
+     Sharper than a button (8px) on purpose; a consumer sets it on any ancestor. */
+  --gk-tab-radius: 4px;
 
   /* The rhythm of a table, as tokens rather than numbers scattered through the
      rules. The defaults ARE what tables looked like before these existed, so
@@ -9800,7 +9803,7 @@ label.gk-setting-title {
   margin: 6px 0 0;
   padding: 10px 18px;
   border: 1px solid var(--gk-tab-kante);
-  border-radius: var(--gk-radius-sm) var(--gk-radius-sm) 0 0;
+  border-radius: var(--gk-tab-radius) var(--gk-tab-radius) 0 0;
   background: var(--gk-surface-container-high);
   color: var(--gk-on-surface);
   font-weight: 500;
@@ -9824,33 +9827,37 @@ label.gk-setting-title {
 .gk-tab-nav-karte ~ .gk-tab-flaeche {
   padding: 24px;
   border: 1px solid var(--gk-tab-kante);
-  border-radius: 0 var(--gk-radius) var(--gk-radius) var(--gk-radius);
+  border-radius: 0 var(--gk-tab-radius) var(--gk-tab-radius) var(--gk-tab-radius);
   background: var(--gk-tab-flaeche);
   color: var(--gk-on-surface);
 }
-/* Unterreiter (und Reiter im Fenster): kleiner und ruhiger — keine graue Füllung, kein Akzent;
-   eine Linie, auf der nur der gewählte Reiter mit Rahmen steht. */
+/* Unterreiter (und Reiter im Fenster): die zweite Ebene ist ein Linienreiter, kein Karteireiter —
+   Wörter auf einer dünnen Linie, kein Kasten, keine Füllung im Ruhezustand. Der gewählte trägt einen
+   3-px-Strich in der Hauptfarbe auf der Linie, die Hauptfarbe in der Schrift und mehr Gewicht; der
+   Strich ist die Randlinie des Reiters selbst (so liegt er genau über der Linie). Hover nur als zarte
+   Tönung; der Fokusring liegt innen, damit eine scrollende Zeile ihn nicht abschneidet. */
 .gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-secondary {
   margin: 0 0 20px;
   padding: 0;
-  gap: 2px;
+  gap: 4px;
   border-bottom: 1px solid var(--gk-tab-kante);
 }
 .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn {
   margin: 0 0 -1px;
-  padding: 8px 14px;
-  border-color: transparent;
+  padding: 8px 14px 6px;
+  border: 0;
+  border-bottom: 3px solid transparent;
   background: transparent;
   color: var(--gk-on-surface-variant);
   font-size: var(--gk-text-label);
 }
 .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn:hover { background: var(--gk-state-hover); color: var(--gk-on-surface); }
+.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn:focus-visible { outline-offset: -2px; }
 .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn.gk-active,
 .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn[aria-current="page"] {
-  padding-top: 8px;
-  border-color: var(--gk-tab-kante);
-  border-bottom-color: var(--gk-tab-flaeche);
-  background: var(--gk-tab-flaeche);
+  border-bottom-color: var(--gk-primary);
+  background: transparent;
+  color: var(--gk-primary-text);
   font-weight: 600;
   box-shadow: none;
 }
@@ -9875,25 +9882,70 @@ label.gk-setting-title {
     margin: 0;
     padding: 8px 6px;
     border: 1px solid var(--gk-tab-kante);
-    border-radius: var(--gk-radius-sm);
+    border-radius: var(--gk-tab-radius);
     font-size: var(--gk-text-label);
     white-space: normal;
     overflow-wrap: break-word;
     text-align: center;
     line-height: 1.25;
   }
-  .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn { border-color: var(--gk-outline-variant); }
+  /* die zweite Ebene bleibt auch als Raster ein Linienreiter: jede Zelle ein Wort auf eigener Linie */
+  .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn { border-width: 0 0 1px; border-radius: var(--gk-tab-radius) var(--gk-tab-radius) 0 0; }
   .gk-tab-nav-karte .gk-tab-btn.gk-active,
   .gk-tab-nav-karte .gk-tab-btn[aria-current="page"] { padding-top: 8px; border-bottom-color: var(--gk-tab-kante); }
   .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn.gk-active,
-  .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn[aria-current="page"] { border-color: var(--gk-primary); }
-  .gk-tab-nav-karte ~ .gk-tab-flaeche { padding: 16px 12px; border-radius: var(--gk-radius); }
+  .gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn[aria-current="page"] { border-bottom-width: 3px; }
+  .gk-tab-nav-karte ~ .gk-tab-flaeche { padding: 16px 12px; border-radius: var(--gk-tab-radius); }
 }
 @media (max-width: 480px) {
   .gk-tab-nav.gk-tab-nav-karte,
   .gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-secondary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { .gk-tab-nav-karte .gk-tab-btn { transition: none; } }
+
+/* ── Karteireiter, Nachbesserung (1.102.0) ─────────────────────────────────
+   Nur additiv; keine Regel von 1.101.0 ist angefasst. Drei Dinge:
+   1. Eine Reihe, die nicht in ihren Kasten passt, wird dasselbe Raster wie am Handy. Die Klasse
+      .gk-tab-nav-raster setzt GK.tabsFit (js/gridkit.js) nach dem, was die Reihe wirklich braucht: sechs
+      Reiter neben einer Spalte sind bei 1280 px zu breit, bei 1440 px knapp nicht, und kein fester Wert
+      trifft jeden Satz Wörter. Passt die Reihe, bleibt sie die Zeile von 1.101.0, Pixel für Pixel.
+   2. Die Zellen des Rasters sind gleich hoch (auch am Handy): sonst werden Zellen mit Etikett oder Zähler
+      höher als die ohne. Im Raster dehnen sich die Zellen (stretch), in der Zeile bleiben sie unten (flex-end).
+   3. Das Etikett kennt die Fehler-Variante (.gk-tab-badge-error): dieselben Farbrollen wie .gk-label-red;
+      das Wort „Fehler“ bleibt, die Farbe allein sagt es nicht. */
+.gk-tab-nav.gk-tab-nav-karte { grid-auto-rows: 1fr; }   /* wirkt nur im Raster; eine Zeile (flex) kennt es nicht */
+@media (max-width: 600px) { .gk-tab-nav.gk-tab-nav-karte { align-items: stretch; } }
+.gk-tab-nav-karte:where(.gk-tab-nav-raster) { display: grid; }   /* wie oben: so schwach wie eine Klasse */
+.gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-raster {   /* auch die ruhige zweite Reihe: gleich stark, später */
+  /* mindestens zwei Spalten, auch in einem Kasten unter 306 px */
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, calc(50% - 3px)), 1fr));
+  align-items: stretch;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 0;
+  border-bottom: 0;
+}
+.gk-tab-nav-karte.gk-tab-nav-raster .gk-tab-btn {
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  margin: 0;
+  padding: 8px 6px;
+  border: 1px solid var(--gk-tab-kante);
+  border-radius: var(--gk-tab-radius);
+  font-size: var(--gk-text-label);
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: center;
+  line-height: 1.25;
+}
+.gk-tab-nav-karte.gk-tab-nav-secondary.gk-tab-nav-raster .gk-tab-btn { border-width: 0 0 1px; border-radius: var(--gk-tab-radius) var(--gk-tab-radius) 0 0; }
+.gk-tab-nav-karte.gk-tab-nav-raster .gk-tab-btn.gk-active,
+.gk-tab-nav-karte.gk-tab-nav-raster .gk-tab-btn[aria-current="page"] { padding-top: 8px; border-bottom-color: var(--gk-tab-kante); }
+.gk-tab-nav-karte.gk-tab-nav-secondary.gk-tab-nav-raster .gk-tab-btn.gk-active,
+.gk-tab-nav-karte.gk-tab-nav-secondary.gk-tab-nav-raster .gk-tab-btn[aria-current="page"] { border-bottom-width: 3px; border-bottom-color: var(--gk-primary); }
+.gk-tab-nav-karte.gk-tab-nav-raster ~ .gk-tab-flaeche { border-radius: var(--gk-tab-radius); }
+.gk-tab-badge-error { background: var(--gk-error-container); color: var(--gk-on-error-container); }
 
 /* ── Segmented button: one choice of a few (2–5), joined ─────────────────
    <div class="gk-segmented" role="group" aria-label="Zeitraum"><a class="gk-segmented-item"

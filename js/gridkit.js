@@ -3896,6 +3896,7 @@
     if (GK.liveTable) GK.liveTable.init(root);
     if (GK.tabs) GK.tabs.init(root);
     if (GK.tabsMarkup) GK.tabsMarkup.init(root);
+    if (GK.tabsFit) GK.tabsFit.init(root);
     // Defined further down, so absent on the very first GK.init() of an
     // already-loaded document; the ready-aware call beside its definition
     // covers that pass, and this one covers everything added later.
@@ -3912,6 +3913,8 @@
   GK.init = function () {
     _origInit.call(GK);
     GK.initContent(document);
+    // After everything that can change the layout, still before the first paint.
+    if (GK.tabsScroll) GK.tabsScroll.restore();
   };
 
   /*
@@ -4643,6 +4646,134 @@
     }
     var panel = GK.tabsMarkup.panel(tabs, target);
     if (panel) panel.classList.add("gk-active");
+  });
+
+  /*
+   * === TABS: a Karteireiter row that does not fit becomes a grid (1.102.0) ===
+   *
+   * A row (.gk-tab-nav-karte) is one line while it fits the box it stands in, and the grid of framed
+   * cells (the phone shape) when it does not: `.gk-tab-nav-raster` is put on and taken off here. The
+   * window width cannot decide this — six tabs beside a to-do column are too wide at 1280px and just
+   * fit at 1440px, and no fixed width suits every set of words, badges and counts. So the row is
+   * measured as a row (the class off, its own overflow decides, the class back on, all before the
+   * next paint) at start, when the row or one of its tabs changes size (a font arrives, a badge
+   * appears) and when a hidden row is shown. Without a script, or a row that fits, nothing changes.
+   * The re-measure waits one frame: a change of the row's own size from inside the observer would end
+   * in "ResizeObserver loop completed with undelivered notifications".
+   */
+  GK.tabsFit = {
+    cls: "gk-tab-nav-raster",
+    fit(nav) {
+      nav.classList.remove(this.cls);
+      if (nav.scrollWidth > nav.clientWidth) nav.classList.add(this.cls);
+    },
+    init(root) {
+      var self = this;
+      (root || document).querySelectorAll(".gk-tab-nav-karte").forEach(function (nav) {
+        if (nav._gkTabsFit) return;
+        nav._gkTabsFit = true;
+        self.fit(nav);
+        if (!window.ResizeObserver) return;
+        var queued = false;
+        var watch = new ResizeObserver(function () {
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(function () {
+            queued = false;
+            self.fit(nav);
+          });
+        });
+        watch.observe(nav);
+        Array.prototype.forEach.call(nav.children, function (tab) {
+          watch.observe(tab);
+        });
+      });
+    },
+  };
+
+  /*
+   * === TABS: a link tab keeps its place on the page (1.102.0) ===
+   *
+   * The tabs of a page are often real links (<a class="gk-tab-btn" href="…"> in a .gk-tab-nav, the
+   * current one with aria-current="page"): every click loads a page that starts at the top, so whoever
+   * had scrolled down to the tabs lands at the top again while only the content below them changed.
+   * Here the click writes down where the row stood in the window (sessionStorage, a few lines), and the
+   * page it lands on scrolls so that the same row stands in the same place again — as if only the
+   * content under the tabs changed. No fetch, no swapping of page parts: the page brings its own scripts.
+   * Left alone: a link with a # target, another origin, target/download, a click with Shift/Ctrl/Meta/
+   * Alt or the middle button, an address with a # anchor, a memory older than 15 s, back/forward and
+   * reload (the browser keeps those itself), a row that is not on the new page. A row, or any
+   * ancestor, with data-gk-tab-scroll="off" opts out. Every storage access is guarded: a browser that
+   * blocks sessionStorage just behaves as before. The scroll jumps (no smooth scrolling).
+   */
+  GK.tabsScroll = {
+    key: "gk-tab-scroll",
+    maxAge: 15000,
+    // The rows of link tabs, in page order: a row is named by its aria-label, else by its place here.
+    rows() {
+      return Array.prototype.filter.call(document.querySelectorAll(".gk-tab-nav"), function (nav) {
+        return nav.querySelector("a.gk-tab-btn");
+      });
+    },
+    off(el) {
+      return !!el.closest('[data-gk-tab-scroll="off"]');
+    },
+    // A click on a link tab: write down the target and where its row stands in the window.
+    remember(link) {
+      var nav = link.closest(".gk-tab-nav");
+      try {
+        sessionStorage.setItem(
+          this.key,
+          JSON.stringify({
+            url: link.pathname + link.search,
+            label: nav.getAttribute("aria-label") || "",
+            index: this.rows().indexOf(nav),
+            top: nav.getBoundingClientRect().top,
+            t: Date.now(),
+          }),
+        );
+      } catch (e) {}
+    },
+    // Read the memory and delete it: it counts once, whatever came of it.
+    take() {
+      try {
+        var raw = sessionStorage.getItem(this.key);
+        sessionStorage.removeItem(this.key);
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    },
+    // At the start of the page the row it lands on goes back to where the finger was.
+    restore() {
+      var m = this.take();
+      if (!m || typeof m.top !== "number" || location.hash) return;
+      var nav = window.performance && performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+      var age = Date.now() - m.t;
+      if ((nav && nav.type !== "navigate") || !(age >= 0 && age <= this.maxAge)) return;
+      if (m.url !== location.pathname + location.search) return;
+      var rows = this.rows();
+      var row = m.label
+        ? rows.filter(function (r) {
+            return r.getAttribute("aria-label") === m.label;
+          })[0]
+        : rows[m.index];
+      if (!row || this.off(row)) return;
+      var top = window.scrollY + row.getBoundingClientRect().top - m.top;
+      try {
+        window.scrollTo({ top: top, behavior: "instant" });
+      } catch (e) {
+        window.scrollTo(0, top);
+      }
+    },
+  };
+  document.addEventListener("click", function (e) {
+    var link = e.target.closest && e.target.closest("a.gk-tab-btn");
+    if (!link || e.defaultPrevented || e.button !== 0 || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (!link.closest(".gk-tab-nav") || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
+    var href = link.getAttribute("href");
+    if (!href || href.indexOf("#") !== -1 || link.origin !== location.origin || GK.tabsScroll.off(link)) return;
+    GK.tabsScroll.remember(link);
   });
 
   // === AJAX PAGINATION ===

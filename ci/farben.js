@@ -290,7 +290,7 @@ ${["", "info", "warning", "success"].map((ton) => `<section class="gk-message${t
 <details class="gk-disclosure" id="auf-${ton || "neutral"}"><summary>Mehr</summary></details></div></section>`).join("\n")}
 <div id="karte-seite"><div class="gk-tabs"><div class="gk-tab-nav gk-tab-nav-karte">
 <button class="gk-tab-btn gk-active" id="karte-an">An <span class="gk-tab-count" id="zaehler-an">3</span></button>
-<button class="gk-tab-btn" id="karte-aus">Aus <span class="gk-tab-badge" id="etikett">Angepasst</span> <span class="gk-tab-count" id="zaehler-aus">3</span></button></div>
+<button class="gk-tab-btn" id="karte-aus">Aus <span class="gk-tab-badge" id="etikett">Angepasst</span> <span class="gk-tab-badge gk-tab-badge-error" id="etikett-fehler">Fehler</span> <span class="gk-tab-count" id="zaehler-aus">3</span></button></div>
 <div class="gk-tab-panel gk-tab-flaeche gk-active" id="karte-flaeche"><nav class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary" id="karte2-linie">
 <a class="gk-tab-btn" href="#" aria-current="page" id="karte2-an">An</a><a class="gk-tab-btn" href="#" id="karte2-aus">Aus</a></nav></div></div></div>
 <div class="gk-card" id="fenster"><nav class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary" id="fenster-linie">
@@ -300,8 +300,8 @@ ${["", "info", "warning", "success"].map((ton) => `<section class="gk-message${t
 const KANTENPROBEN = [
   ["Karteireiter an · Kante", "karte-an", "top"], ["Karteireiter aus · Kante", "karte-aus", "top"],
   ["Karteireiter · Fläche", "karte-flaeche", "top"],
-  ["Unterreiter an · Kante", "karte2-an", "top"], ["Unterreiter · Linie", "karte2-linie", "bottom"],
-  ["Reiter im Fenster an · Kante", "fenster-an", "top"], ["Reiter im Fenster · Linie", "fenster-linie", "bottom"],
+  ["Unterreiter an · Strich", "karte2-an", "bottom"], ["Unterreiter · Linie", "karte2-linie", "bottom"],
+  ["Reiter im Fenster an · Strich", "fenster-an", "bottom"], ["Reiter im Fenster · Linie", "fenster-linie", "bottom"],
 ];
 const BAUSTEINE = `${ZEIT_UND_RAHMEN}${REITER}
 <div class="gk-card" id="karte">
@@ -396,7 +396,9 @@ const TEXTPROBEN = [
       /* 1.101.0: Karteireiter, Unterreiter, Reiter im Fenster (an/aus), Etikett und Zähler. */
       ["karte-an", "Karteireiter an"], ["karte-aus", "Karteireiter aus"], ["karte2-an", "Unterreiter an"], ["karte2-aus", "Unterreiter aus"],
       ["fenster-an", "Reiter im Fenster an"], ["fenster-aus", "Reiter im Fenster aus"],
-      ["etikett", "Reiter · Etikett"], ["zaehler-an", "Reiter an · Zähler"], ["zaehler-aus", "Reiter aus · Zähler"]].map(([id, name]) => [name, id, null]),
+      ["etikett", "Reiter · Etikett"], ["zaehler-an", "Reiter an · Zähler"], ["zaehler-aus", "Reiter aus · Zähler"],
+      /* 1.102.0: das Fehler-Etikett (das Wort „Fehler“ bleibt; hier zählt nur, dass es lesbar ist). */
+      ["etikett-fehler", "Reiter · Fehler-Etikett"]].map(([id, name]) => [name, id, null]),
   ...["neutral", "info", "warning", "success"].flatMap((ton) => [
     ...["done", "current", "open"].map((st) => [`Stufe ${ton} ${st}`, `st-${ton}-${st}`, null]),
     [`To-do ${ton} · Titel`, `todo-${ton}`, ".gk-timeline-title"],

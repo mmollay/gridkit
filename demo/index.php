@@ -209,6 +209,10 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-section h2 { font-size:20px; margin:0 0 16px; color:var(--gk-on-surface, #374151); }
         .demo-section h3.demo-h3 { margin:32px 0 8px; }
         .demo-tabs-oben { margin-top:16px; }
+        .demo-tabs-box { max-width:100%; margin:0 0 24px; }
+        .demo-tabs-box-700 { width:700px; }
+        .demo-tabs-box-560 { width:560px; }
+        .demo-tabs-box-340 { width:340px; }
         .demo-section .gk-form { max-width:none; }
         .demo-section .gk-richtext-wrap { border-width:1px; }
         .demo-card-flush { padding:0; overflow:hidden; }
@@ -1330,7 +1334,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
     <p class="demo-intro">Karteireiter: the tabs sit framed on their surface, the chosen one grows into it — taller, bold, a 3px accent on top. Ordered with <code>.gk-tab-nav-karte</code> and <code>.gk-tab-flaeche</code>; without them every tab row keeps the <a href="#navigation">previous shape</a>. Levels: page tabs &gt; second row (on a line, also inside a window) &gt; segmented button. On a phone every Karteireiter row is a grid, two columns up to 480px — nothing scrolls, nothing is cut.</p>
 
     <h3 class="demo-h3">Page tabs with symbol, badge and count</h3>
-    <p class="demo-intro">A badge only reports a deviation from the default (“Customised”, “Error”) — never “Default” on every tab. A count is a number of things behind the tab.</p>
+    <p class="demo-intro">A badge only reports a deviation from the default (“Customised”, “Error”) — never “Default” on every tab. <code>gk-tab-badge-error</code> is the red one: the word stays, because colour alone says nothing. A count is a number of things behind the tab.</p>
     <div class="demo-card">
         <div class="gk-tabs">
             <div class="gk-tab-nav gk-tab-nav-karte" aria-label="Texts of this page">
@@ -1339,7 +1343,7 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
                 <button class="gk-tab-btn" data-tab="k-willkommen"><span class="material-icons gk-tab-icon" aria-hidden="true">mail</span><span>Welcome mail</span></button>
                 <button class="gk-tab-btn" data-tab="k-erinnerung"><span class="material-icons gk-tab-icon" aria-hidden="true">alarm</span><span>Reminders</span><span class="gk-tab-count">3</span></button>
                 <button class="gk-tab-btn" data-tab="k-abmeldung"><span class="material-icons gk-tab-icon" aria-hidden="true">logout</span><span>Unsubscribe</span></button>
-                <button class="gk-tab-btn" data-tab="k-recht"><span class="material-icons gk-tab-icon" aria-hidden="true">gavel</span><span>Legal</span></button>
+                <button class="gk-tab-btn" data-tab="k-recht"><span class="material-icons gk-tab-icon" aria-hidden="true">gavel</span><span>Legal</span><span class="gk-tab-badge gk-tab-badge-error">Error</span></button>
             </div>
             <div class="gk-tab-panel gk-tab-flaeche gk-active" data-tab="k-anmeldung"><p>The sign-up form — our default texts apply.</p></div>
             <div class="gk-tab-panel gk-tab-flaeche" data-tab="k-bestaetigung"><p>Your own text for the confirmation page.</p></div>
@@ -1354,10 +1358,64 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
         &lt;button class="gk-tab-btn gk-active" data-tab="a"&gt;&lt;span class="material-icons gk-tab-icon" aria-hidden="true"&gt;edit_note&lt;/span&gt;&lt;span&gt;Sign-up&lt;/span&gt;&lt;/button&gt;
         &lt;button class="gk-tab-btn" data-tab="b"&gt;…&lt;span&gt;Confirmation page&lt;/span&gt;&lt;span class="gk-tab-badge"&gt;Customised&lt;/span&gt;&lt;/button&gt;
         &lt;button class="gk-tab-btn" data-tab="c"&gt;…&lt;span&gt;Reminders&lt;/span&gt;&lt;span class="gk-tab-count"&gt;3&lt;/span&gt;&lt;/button&gt;
+        &lt;button class="gk-tab-btn" data-tab="d"&gt;…&lt;span&gt;Legal&lt;/span&gt;&lt;span class="gk-tab-badge gk-tab-badge-error"&gt;Error&lt;/span&gt;&lt;/button&gt;
     &lt;/div&gt;
     &lt;div class="gk-tab-panel gk-tab-flaeche gk-active" data-tab="a"&gt;…&lt;/div&gt;
     &lt;div class="gk-tab-panel gk-tab-flaeche" data-tab="b"&gt;…&lt;/div&gt;
 &lt;/div&gt;</pre></div>
+
+    <h3 class="demo-h3" id="tabs-seite">A page of tabs: page tabs, surface, second row, card</h3>
+    <p class="demo-intro">The shape of an editor page. The page tabs are cards on their surface; the second row inside the surface is a <em>line</em> tab row — words on a thin line, the chosen one with a 3px stroke in the main colour, no boxes, no grey. The levels never look alike. The corners of both are <code>--gk-tab-radius</code> (4px; set it on any ancestor to change it).</p>
+    <div class="demo-card">
+        <nav class="gk-tab-nav gk-tab-nav-karte" aria-label="Areas of this page">
+            <a class="gk-tab-btn" href="#tabs-seite" aria-current="page"><span class="material-icons gk-tab-icon" aria-hidden="true">edit</span><span>Edit</span></a>
+            <a class="gk-tab-btn" href="#tabs-seite"><span class="material-icons gk-tab-icon" aria-hidden="true">rocket_launch</span><span>Publish</span></a>
+            <a class="gk-tab-btn" href="#tabs-seite"><span class="material-icons gk-tab-icon" aria-hidden="true">bar_chart</span><span>Results</span></a>
+            <a class="gk-tab-btn" href="#tabs-seite"><span class="material-icons gk-tab-icon" aria-hidden="true">mail</span><span>Mails</span><span class="gk-tab-count">2</span></a>
+        </nav>
+        <div class="gk-tab-flaeche">
+            <nav class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary" aria-label="Ways to edit">
+                <a class="gk-tab-btn" href="#tabs-seite" aria-current="page">Step by step</a>
+                <a class="gk-tab-btn" href="#tabs-seite">With AI <span class="gk-tab-badge">New</span></a>
+                <a class="gk-tab-btn" href="#tabs-seite">Change in the picture</a>
+            </nav>
+            <div class="gk-card">
+                <div class="gk-card-body">
+                    <ol class="gk-steps" aria-label="Way to live">
+                        <li class="gk-steps-item gk-steps-current" aria-current="step">Changes</li>
+                        <li class="gk-steps-item">Approval</li>
+                        <li class="gk-steps-item">Publish</li>
+                    </ol>
+                    <p>Two steps to go until publishing: the preview is not up to date, and the page changed after it was approved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="demo-code"><pre>&lt;nav class="gk-tab-nav gk-tab-nav-karte" aria-label="Areas"&gt;…&lt;/nav&gt;
+&lt;div class="gk-tab-flaeche"&gt;
+    &lt;nav class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-secondary" aria-label="Ways to edit"&gt;…&lt;/nav&gt;
+    &lt;div class="gk-card"&gt;…&lt;/div&gt;
+&lt;/div&gt;</pre></div>
+
+    <h3 class="demo-h3" id="tabs-schmal">A row that does not fit its box</h3>
+    <p class="demo-intro">Six tabs in boxes of 700, 560 and 340px. A row that fits stays the one line above; one that does not becomes the grid of the phone — every tab whole, every cell as tall as its row, the chosen one still grown into the surface. <code>GK.tabsFit</code> measures the row itself, so no window width has to be guessed (it puts <code>.gk-tab-nav-raster</code> on and takes it off). Without the script the row simply stays a line.</p>
+    <div class="demo-card">
+        <?php $schmal = ['preview' => 'Preview', 'script' => 'Script', 'talk' => 'Conversation', 'material' => 'Material &amp; rights', 'log' => 'Log &amp; costs', 'publish' => 'Publication']; ?>
+        <?php foreach ([700, 560, 340] as $breite): ?>
+        <div class="demo-tabs-box demo-tabs-box-<?= $breite ?>" id="tabs-schmal-<?= $breite ?>">
+            <div class="gk-tabs">
+                <div class="gk-tab-nav gk-tab-nav-karte" aria-label="Areas of this short, <?= $breite ?>px">
+                    <?php $erster = true; foreach ($schmal as $schluessel => $name): ?>
+                    <button type="button" class="gk-tab-btn<?= $erster ? ' gk-active' : '' ?>" data-tab="b<?= $breite ?>-<?= $schluessel ?>"><?= $name ?><?php if ($schluessel === 'publish'): ?><span class="gk-tab-badge gk-tab-badge-error">Error</span><?php endif; ?></button>
+                    <?php $erster = false; endforeach; ?>
+                </div>
+                <?php $erster = true; foreach ($schmal as $schluessel => $name): ?>
+                <div class="gk-tab-panel gk-tab-flaeche<?= $erster ? ' gk-active' : '' ?>" data-tab="b<?= $breite ?>-<?= $schluessel ?>"><p><?= $name ?>, <?= $breite ?>px box.</p></div>
+                <?php $erster = false; endforeach; ?>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
 
     <h3 class="demo-h3" id="tabs-seiten">Tabs between pages, with a second row</h3>
     <p class="demo-intro">Links in a <code>&lt;nav&gt;</code>, the current page with <code>aria-current="page"</code>. The second row stands quieter on a line inside the surface; a third level is a segmented button, never a tab row.</p>
