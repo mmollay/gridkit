@@ -10242,6 +10242,12 @@ label.gk-setting-title {
     min-height: var(--gk-target-min);
     padding-block: 6px;
   }
+  /* Das Symbol bleibt so breit wie sein Bild: lädt die Symbolschrift nicht, schiebt der Name des Symbols das Wort nicht aus der Zelle. */
+  .gk-tab-nav-karte.gk-tab-nav-flach .gk-tab-icon {
+    flex: none;
+    width: var(--gk-icon-md);
+    overflow: hidden;
+  }
 }
 
 /* ── Segmented button: one choice of a few (2–5), joined ─────────────────

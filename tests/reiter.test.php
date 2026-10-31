@@ -366,6 +366,10 @@ return [
     T::ok((bool) preg_match('/\.gk-tab-nav-karte\.gk-tab-nav-flach \.gk-tab-btn,[^{}]*\{([^}]*)\}/', $phone, $f), 'the cell rule of the flat class is gone');
     $flat = gkCssDecl($f[1] ?? '');
     T::eq([$flat['flex-direction'] ?? '', $flat['align-items'] ?? '', $flat['min-height'] ?? '', $flat['padding-block'] ?? ''], ['row', 'center', 'var(--gk-target-min)', '6px'], 'the flat class is not "icon beside the word, 44px high"');
+    // The icon keeps the width of its picture: without the icon font its name must not push the word out of the cell.
+    T::ok((bool) preg_match('/\.gk-tab-nav-karte\.gk-tab-nav-flach \.gk-tab-icon\s*\{([^}]*)\}/', $phone, $ic), 'the icon of the flat class has no rule inside @media (max-width: 600px)');
+    $icon = gkCssDecl($ic[1] ?? '');
+    T::eq([$icon['flex'] ?? '', $icon['width'] ?? '', $icon['overflow'] ?? ''], ['none', 'var(--gk-icon-md)', 'hidden'], 'the icon of the flat class is not "as wide as its picture, the rest cut off"');
     // Opt-in: every rule that names either class also names the Karteireiter shape; nothing reaches a row that did not order them.
     $rules = array_merge(gkCssRulesNaming('gk-tab-nav-einzeilig'), gkCssRulesNaming('gk-tab-nav-flach'));
     T::ok(count($rules) >= 2, 'the rules of the flat and one-row classes are gone');
