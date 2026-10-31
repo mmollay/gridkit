@@ -1,4 +1,4 @@
-# GridKit 1.103.1 — CSS
+# GridKit 1.104.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -32,6 +32,7 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-tabs` `gk-tab-nav` `gk-tab-btn` `gk-tab-panel` | Tabs, authored markup (state class: `gk-active`) |
 | `gk-tab-nav-karte` `gk-tab-flaeche` `gk-tab-badge` `gk-tab-count` | Karteireiter: framed tabs on their surface, badge, count (1.101.0) |
 | `gk-tab-nav-raster` `gk-tab-badge-error` | Karteireiter row as a grid when it does not fit its box (set by `GK.tabsFit`, not by hand); the error badge (1.102.0) |
+| `gk-tab-nav-einzeilig` `gk-tab-nav-flach` | Karteireiter on a phone (up to 600px), opt-in: ONE row of equal cells instead of two columns; icon beside the word, cell 44px high instead of about 56px (1.104.0) |
 | `gk-tab-nav-linie` `gk-tab-nav-kapsel` `gk-tab-nav-text` | Tab row styles beside `gk-tab-nav-karte`: line with a stroke under the chosen tab, pill with the chosen tab filled, words only (1.103.0) |
 | `gk-tab-nav-links` `gk-tab-nav-rechts` `gk-tab-nav-unten` `gk-tab-nav-fest` | Tab row alignment: a side column from 601px (the horizontal row below), the row after the panels, a bar that sticks to the lower edge (1.103.0) |
 | `gk-tab-nav-sm` `gk-tab-nav-lg` `gk-tab-nav-fluid` `gk-tab-nav-icon-oben` `gk-tab-nav-nur-icon` `gk-tab-nav-neutral` | Tab row options: size, full width, symbol above the word, symbol only (`aria-label` + `title`), the chosen tab in the text colour (1.103.0) |

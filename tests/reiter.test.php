@@ -351,6 +351,35 @@ return [
     T::ok(strpos($css, '.gk-tab-nav-karte.gk-tab-nav-raster .gk-tab-btn {') > strpos($css, '.gk-tab-nav-karte.gk-tab-nav-secondary .gk-tab-btn {'), 'the cell of the fitted grid lies before the cell of the second row');
 },
 
+// 1.104.0 — Martin, 31.10.2026 (iPhone): the second row of three tabs took two rows, four main tabs a 118px grid.
+'Karteireiter on a phone can stand flat and in one row: opt-in, phone only, as strong as the grid (1.104.0)' => function () use ($media): void {
+    $phone = $media('(max-width: 600px)');
+    $css = gkCssBare();
+    // One row: a single row of equal cells, however many tabs.
+    T::ok((bool) preg_match('/\.gk-tab-nav\.gk-tab-nav-karte\.gk-tab-nav-einzeilig\s*\{([^}]*)\}/', $phone, $e), 'the one-row class is not inside @media (max-width: 600px) (it must not reach the computer)');
+    $one = gkCssDecl($e[1] ?? '');
+    T::eq([$one['grid-template-columns'] ?? '', $one['grid-auto-flow'] ?? '', $one['grid-auto-columns'] ?? ''], ['none', 'column', 'minmax(0, 1fr)'], 'the one-row class is not "one row of equal cells"');
+    // Flat: icon beside the word, a cell as high as a tap target, in the cell and in the chosen cell.
+    foreach (['.gk-tab-nav-karte.gk-tab-nav-flach .gk-tab-btn', '.gk-tab-nav-karte.gk-tab-nav-flach .gk-tab-btn.gk-active', '.gk-tab-nav-karte.gk-tab-nav-flach .gk-tab-btn[aria-current="page"]'] as $sel) {
+        T::ok(str_contains($phone, $sel), "$sel is not inside @media (max-width: 600px)");
+    }
+    T::ok((bool) preg_match('/\.gk-tab-nav-karte\.gk-tab-nav-flach \.gk-tab-btn,[^{}]*\{([^}]*)\}/', $phone, $f), 'the cell rule of the flat class is gone');
+    $flat = gkCssDecl($f[1] ?? '');
+    T::eq([$flat['flex-direction'] ?? '', $flat['align-items'] ?? '', $flat['min-height'] ?? '', $flat['padding-block'] ?? ''], ['row', 'center', 'var(--gk-target-min)', '6px'], 'the flat class is not "icon beside the word, 44px high"');
+    // Opt-in: every rule that names either class also names the Karteireiter shape; nothing reaches a row that did not order them.
+    $rules = array_merge(gkCssRulesNaming('gk-tab-nav-einzeilig'), gkCssRulesNaming('gk-tab-nav-flach'));
+    T::ok(count($rules) >= 2, 'the rules of the flat and one-row classes are gone');
+    foreach ($rules as [$list]) {
+        foreach (array_map('trim', explode(',', $list)) as $sel) {
+            T::contains($sel, 'gk-tab-nav-karte', "$sel reaches tab rows that did not order the Karteireiter");
+        }
+    }
+    // Three classes like the rows of the grid, so the order decides: the one-row rule comes after the second row (two columns up to 480px) and after the fitted grid.
+    $at = strpos($css, '.gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-einzeilig {');
+    T::ok($at > strrpos($css, '.gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-secondary { grid-template-columns: repeat(2'), 'the one-row rule is before the two columns of the second row: it would lose');
+    T::ok($at > strpos($css, '.gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-raster {'), 'the one-row rule is before the fitted grid: it would lose');
+},
+
 'the cells of a grid are equally tall, also with a badge or a count (the phone and the fitted grid)' => function () use ($media): void {
     $line = gkCssDeclFor('.gk-tab-nav.gk-tab-nav-karte');
     T::eq($line['grid-auto-rows'] ?? '', '1fr', 'the rows of the grid are not equal in height');

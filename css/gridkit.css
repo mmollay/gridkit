@@ -10211,6 +10211,31 @@ label.gk-setting-title {
   .gk-tab-nav:is(.gk-tab-nav-linie, .gk-tab-nav-kapsel, .gk-tab-nav-text) .gk-tab-btn { transition: none; }
 }
 
+/* ── Karteireiter am Handy, flach und einzeilig (1.104.0) ─────────────────────
+   Nur additiv und nur mit Klasse: ohne sie bleibt jede Reihe, wie sie war (Raster mit Symbol über dem Wort,
+   bis 480 px zwei Spalten). Beide Klassen wirken nur bis 600 px; am Computer ändert sich nichts.
+   .gk-tab-nav-einzeilig  EINE Zeile aus gleich breiten Zellen, so viele Reiter wie da sind (statt zwei Spalten
+                          und damit Zeilen darunter); lange Wörter brechen an den Wortgrenzen, nie mitten im Wort.
+   .gk-tab-nav-flach      Symbol NEBEN dem Wort, die Zelle so hoch wie die Tippfläche (44 px) statt Symbol über
+                          dem Wort (rund 56 px): Vier Reiter im 2 × 2-Raster brauchen so 94 statt 118 px.
+   Gleich stark wie die Regeln des Rasters (drei Klassen) und später im Blatt; eine Klasse der Seite (eine) bleibt schwächer. */
+@media (max-width: 600px) {
+  .gk-tab-nav.gk-tab-nav-karte.gk-tab-nav-einzeilig {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+  .gk-tab-nav-karte.gk-tab-nav-flach .gk-tab-btn,
+  .gk-tab-nav-karte.gk-tab-nav-flach .gk-tab-btn.gk-active,
+  .gk-tab-nav-karte.gk-tab-nav-flach .gk-tab-btn[aria-current="page"] {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--gk-target-min);
+    padding-block: 6px;
+  }
+}
+
 /* ── Segmented button: one choice of a few (2–5), joined ─────────────────
    <div class="gk-segmented" role="group" aria-label="Zeitraum"><a class="gk-segmented-item"
    href="…" aria-current="true">7 Tage</a>…</div> — links (aria-current) or buttons (aria-pressed).

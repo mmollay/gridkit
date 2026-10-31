@@ -7,6 +7,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.104.0] - 2026-10-31
+
+Karteireiter on the phone can stand flat and in one row. Martin, 31.10.2026, with a photo from his iPhone: "Please adapt the panel to the smartphone. There is room for improvement." The Karteireiter of 1.101.0 turn into a grid on a phone — the calm second row of three tabs took two rows (94 px) and four main tabs a 2 × 2 grid of 118 px, before any content. Two classes, opt-in: without them every tab row stays as it was.
+
+### Added
+- **`gk-tab-nav-einzeilig`** (with `gk-tab-nav-karte`) — up to 600 px ONE row of equally wide cells, however many tabs there are, instead of two columns and the rows below them. Long words wrap at word boundaries inside the cell. No effect above 600 px.
+- **`gk-tab-nav-flach`** (with `gk-tab-nav-karte`) — up to 600 px the icon stands BESIDE the word and the cell is as high as a tap target (44 px) instead of the icon above the word (about 56 px). Four tabs in the 2 × 2 grid need 94 instead of 118 px. No effect above 600 px.
+
+### Tests
+- `tests/reiter.test.php`: both classes exist only inside `@media (max-width: 600px)`, are exactly as strong as the grid rules before them (three classes, later in the sheet) and set what the entry says.
+- `css/blocks.json`: both classes under the block `tabs`, version 1.104.0.
+
+---
 ## [1.103.1] - 2026-10-29
 
 Calmer tab edges and a tidier "What's new" box in the demo. The edge of the Karteireiter, the track of the line tabs and the frame of the panel (`gk-tab-flaeche`) had been drawn a tone too hard — now they are one family with the edge of a card. No new class, no new token; what a tab does and how it is built stays as it was.
