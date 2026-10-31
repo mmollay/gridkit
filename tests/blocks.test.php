@@ -125,7 +125,7 @@ return [
 'the marks are GridKit\'s own green and blue labels, in both modes' => function () use ($css, $rule): void {
     Lang::set('en');
     // The window moves with every minor (the last two in the changelog: 1.104 and 1.103). No block is new in
-    // it — the green label is tested through the mark itself; the line "you are here" (new in 1.100) fell out.
+    // it — the green label is tested through the mark itself; the line "you are here" (new in 1.100) got a class in 1.104 (blue label).
     // The tabs got two classes in 1.104 (flat, one row; thirteen in 1.103), so they carry the blue label;
     // the steps changed in 1.101 and are out of the window.
     // The header, the sidebar and the breadcrumb changed in 1.100, the message and the timeline in 1.99.
@@ -133,7 +133,7 @@ return [
     T::contains($new, 'gk-label gk-label-green', 'a new block is not marked with the green label');
     T::contains($new, 'New in 1.100', 'the mark does not say what is new');
     T::contains(since('ortszeile'), 'since 1.100', 'the heading does not say since when');
-    T::notContains(since('ortszeile'), 'gk-label', 'the line "you are here", new in 1.100, is out of the window and still marked');
+    T::contains(since('ortszeile'), 'Changed in 1.104', 'the line "you are here", new in 1.100, got the class "schlicht" in 1.104 and is not marked as changed');
     T::notContains(since('steps'), 'gk-label', 'the steps, changed in 1.101, are out of the window and still marked');
     T::contains(since('tabs'), 'Changed in 1.104', 'a block that got a new class in the newest minor is not marked as changed');
     $changed = gkMark('changed', '1.95');
@@ -144,9 +144,9 @@ return [
     T::notContains(since('timeline'), 'New in 1.96', 'the timeline, new in 1.96, is out of the window and still marked new');
     T::notContains(since('timeline'), 'gk-label', 'the timeline, changed in 1.99, is out of the window and still marked');
 
-    // A block that fell out of the window (the line "you are here" is new in 1.100, the sortable container in 1.97,
-    // the window is 1.103 and 1.102; the picker and the announcement are older still) carries no mark.
-    foreach (['ortszeile' => '1.100', 'sortierbar' => '1.97', 'picker' => '1.94', 'announce' => '1.93'] as $key => $minor) {
+    // A block that fell out of the window (the sortable container is new in 1.97,
+    // the window is 1.104 and 1.103; the picker and the announcement are older still) carries no mark.
+    foreach (['sortierbar' => '1.97', 'picker' => '1.94', 'announce' => '1.93'] as $key => $minor) {
         T::notContains(since($key), 'gk-label', "a block older than the last two minors carries a mark ($key)");
         T::contains(since($key), "since $minor", "a block that fell out of the window does not say since when ($key)");
     }

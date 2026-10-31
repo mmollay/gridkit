@@ -4725,6 +4725,14 @@ a.gk-stat-card:hover {
   }
 }
 
+/* Schlicht (1.104.0, opt-in: Header::ortszeile(['schlicht' => true])): up to 768px the steps of the line are plain
+   links, no pill outline around each; the target keeps its 44px, the focus ring and the hover surface stay.
+   One class weak (:where), so a rule of the page decides when it wants the pill back. */
+@media (max-width: 768px) {
+  :where(.gk-ortszeile-schlicht) .gk-ortszeile-link { border-color: transparent; background: transparent; }
+  :where(.gk-ortszeile-schlicht) .gk-ortszeile-link:hover { background: var(--gk-surface-container); }
+}
+
 /* The link that jumps over the header to the content (Layout::skipLink, 1.100.0):
    above the page until the keyboard reaches it — moved, not display: none, which
    no keyboard could land on. */

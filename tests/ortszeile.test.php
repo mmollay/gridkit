@@ -425,6 +425,17 @@ return [
     T::notContains($plain, 'gk-ortszeile-link" href="/shorts/liste" title=', 'without the option a link got a title');
 },
 
+'schlicht (1.104.0): opt-in class, phone only, one class weak, the 44px target stays' => function () use ($tiefe, $css, $rules): void {
+    $html = (new Header())->ortszeile($tiefe(['schlicht' => true]))->render();
+    T::contains($html, '<nav class="gk-ortszeile gk-ortszeile-schlicht" aria-label=', 'the plain line has no class of its own');
+    T::notContains((new Header())->ortszeile($tiefe())->render(), 'gk-ortszeile-schlicht', 'without the option the class is there');
+    $c = $css();
+    $from = strpos($c, '@media (max-width: 768px) {' . "\n" . '  :where(.gk-ortszeile-schlicht)');
+    T::ok($from !== false, 'the rule of the plain line is not inside @media (max-width: 768px) (it must not reach the computer)');
+    T::contains($rules($c, ':where(.gk-ortszeile-schlicht) .gk-ortszeile-link'), 'border-color: transparent', 'the plain step keeps its outline');
+    T::notContains($rules($c, ':where(.gk-ortszeile-schlicht) .gk-ortszeile-link'), 'min-height', 'the plain line changes the height of a target');
+},
+
 'one row never wraps: the anchors keep their size, the rest shortens at its end' => function () use ($css, $rules): void {
     $c = $css();
     T::contains($rules($c, '.gk-ortszeile-einzeilig ol'), 'flex-wrap: nowrap', 'the one-row line wraps');

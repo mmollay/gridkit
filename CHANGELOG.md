@@ -15,7 +15,10 @@ Karteireiter on the phone can stand flat and in one row. Martin, 31.10.2026, wit
 - **`gk-tab-nav-einzeilig`** (with `gk-tab-nav-karte`) — up to 600 px ONE row of equally wide cells, however many tabs there are, instead of two columns and the rows below them. Long words wrap at word boundaries inside the cell. No effect above 600 px.
 - **`gk-tab-nav-flach`** (with `gk-tab-nav-karte`) — up to 600 px the icon stands BESIDE the word and the cell is as high as a tap target (44 px) instead of the icon above the word (about 56 px). Four tabs in the 2 × 2 grid need 94 instead of 118 px. No effect above 600 px.
 
+- **`gk-ortszeile-schlicht`** (`Header::ortszeile(['schlicht' => true])`) — up to 768 px the steps of the "you are here" line are plain links without the pill outline; the 44 px target, the focus ring and the hover surface stay. One class weak (`:where`), no effect above 768 px.
+
 ### Tests
+- `tests/ortszeile.test.php`: the option adds the class, the rule sits in `@media (max-width: 768px)` and stays one class weak.
 - `tests/reiter.test.php`: both classes exist only inside `@media (max-width: 600px)`, are exactly as strong as the grid rules before them (three classes, later in the sheet) and set what the entry says.
 - `css/blocks.json`: both classes under the block `tabs`, version 1.104.0.
 

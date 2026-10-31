@@ -46,6 +46,8 @@ class Header
      *   einzeilig  bool    — one row, always: for a header of fixed height. The anchors keep
      *                        their size, steps in between and the page shorten at their end
      *                        (the full text in title); without it the line wraps on a phone
+     *   schlicht   bool    — on a phone (up to 768px) the steps are plain links without the
+     *                        outline of a pill; the height of a target (44px) stays (1.104.0)
      */
     public function ortszeile(array $o): self
     {
@@ -280,7 +282,7 @@ class Header
 
         $last = array_key_last($steps);
         $oneRow = !empty($o['einzeilig']);
-        $html = '<nav class="gk-ortszeile' . ($oneRow ? ' gk-ortszeile-einzeilig' : '') . '" aria-label="' . $e((string) ($o['label'] ?? Lang::t('ortszeile.aria'))) . '"><ol>';
+        $html = '<nav class="gk-ortszeile' . ($oneRow ? ' gk-ortszeile-einzeilig' : '') . (!empty($o['schlicht']) ? ' gk-ortszeile-schlicht' : '') . '" aria-label="' . $e((string) ($o['label'] ?? Lang::t('ortszeile.aria'))) . '"><ol>';
         foreach ($steps as $i => $step) {
             $label = (string) ($step['label'] ?? '');
             $href  = (string) ($step['href'] ?? '');
