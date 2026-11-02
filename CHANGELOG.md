@@ -7,6 +7,37 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.105.0] - 2026-11-02
+
+Four things an admin page keeps writing by hand are methods now: fill a form from a record, show a failed save's messages, put your own actions in the bulk bar, download a table as CSV, and show a field only while another has a value. The demo shows what it did not show, the skill names every option the code reads, and the examples use the new calls. Nothing that was there changes: every call below is an addition.
+
+### Added
+- **`Form::values($record)`** fills every field whose name is a key of the array (keys without a field are ignored, so a whole database row can be passed). A field's own `'value'` wins, and a second call adds to the first. It replaces `'value' => $row['x'] ?? ''` on each field: `examples/invoices/form.php` carried it eight times.
+- **`Form::errors($messages)`** puts each message where the field's own `'error'` option would (under the field, `aria-invalid`, announced); a field's own non-empty `'error'` wins. A message whose key names no field (`'_form'`, say) is shown once in a message above the form. This is how a POST is shown again after a failed save; an AJAX form still gets its errors from the server's JSON.
+- **`Table::bulkAction($name, $opts)`**: a button in the bulk bar beside delete. It fires `gk:bulkaction` on the table with `{ action, ids, tableId }`, the shape `gk:bulkdelete` has, and the application decides what it does. Options `label`, `icon`, `confirm` (`true` or the question to ask) and `color` (`'danger'` makes the question a danger one). It turns `selectable()` on when it is not on yet.
+- **`Table::exportCsv($filename, $opts)`**: a toolbar button that downloads the table as CSV. A `setData()` table builds the file in the browser from the rows it holds, after the search and the filters and in the order they are sorted in; a column with `'export' => false` is left out. A `rows()` or `query()` table reloads the page with `?gk_export=csv`, which the page answers with **`Table::wantsCsv()`** and **`Table::sendCsv($rows, $columns, $filename)`**; **`Table::csv()`** returns the text. RFC 4180 with CRLF, UTF-8 with a byte-order mark, a delimiter of `','` or `';'` (German Excel), and a cell a spreadsheet would read as a formula (`=`, `+`, `-`, `@`, a tab or a carriage return first, and not a plain number) gets a leading apostrophe. The file name is made safe for the header it goes into. New strings: `table.export_csv`, `table.confirm_action` (en, de).
+- **`'showIf'` on a form field**: `['field' => 'kind', 'equals' => 'company']`, with exactly one of `equals`, `not`, `in` (a list) or `filled` (`true`/`false`). A field that is not shown is hidden and disabled: not posted, `required` blocks nothing, no focus. A condition on a field that is itself hidden counts as empty, so a chain folds away together; what was disabled before stays disabled. Forms that arrive later (a modal) are evaluated through `GK.initContent`. An unusable condition raises `E_USER_WARNING` and the field stays visible.
+- **`ci/demo-coverage.js`** opens the demo, visits every section, triggers what opens on a click and fails when a class of `css/blocks.json` is neither on the page nor listed, with a reason, in `ci/demo-coverage-allow.json`. 606 of the 780 classes are shown; the 174 that are not are state classes, opt-in markup and single modifiers, each group with its reason.
+
+### Changed
+- **The demo shows what it did not show** (405 of 780 classes in the DOM before, 606 now): `selectable()` with its bulk bar, `footer()`, `loadTime()`, `toolbarHtml()` and a link with a second line in a cell; `ActionGroup`, which was nowhere on the page; the Button options `xs`, `iconPosition`, `fullWidth`, `data` and `attrs`; an overview of all 139 utility classes generated from `css/blocks.json`; card variants; the page header; chip role names and icons; `Pagination`, `PageSize` and `gk-skeleton`; KPI colour roles and trends; and the four additions above.
+- **`demo/index.php` is one file per section.** 3,726 lines became 627 plus thirteen files in `demo/sections/`. The page is unchanged: rendered before and after, in English and German, it is byte for byte the same apart from the random ids, the `?v=` file times and the clock in a date field.
+- **`GRIDKIT_SKILL.md` names every option the code reads.** 24 keys were written down nowhere (`clearable`, `maxFiles`, `minSize`, `maxSize`, `maxTotalSize`, `accept`, `label_text`, `labelField`, `valueField`, `subtextField`, `minChars`, `searchParam`, `uploadHeaders`, `hideOnMobile`, `maxWidth`, `blankZero`, `dateFormat`, `hideIf`, `iconPosition`, `fullWidth`, `iconStyle`, `data`, `attrs`, `listId`, `invalid`); the skill has a column-options table now.
+- **`examples/invoices`** fills its edit form with `values()` and offers `exportCsv()` on the list (German gets a semicolon).
+- `SPEC.md` no longer lists export, bulk actions, drag and drop sorting and file upload as out of scope without saying since when.
+
+### Tests
+- `tests/form-values-errors` (57 assertions): the markup of a form filled by `values()` is byte for byte the one whose fields carry the same `'value'` options, for 17 field types; the same for `errors()`.
+- `tests/form-show-if` (82): the attribute, the four tests, text values, escaping, every field type, eight kinds of unusable condition.
+- `tests/table-bulk-csv` (52): the bulk bar markup, the export button, the file name, the CSV text (RFC 4180, formulas, numbers, delimiters, `export => false`).
+- `tests/options-documented`: every option key `src/` reads is named in the skill. A new undocumented option fails there.
+- `ci/browser-1105.js` (29 cases) in a real browser: the event of a bulk action with and without a question; the CSV file the browser builds compared byte for byte with what `Table::csv()` writes for the same rows (whole table, after a search, after a sort, a semicolon table); the reload of a server table; conditional fields (select, radio, switch, a chain, injected markup, what is posted, validity). Each rule of both implementations was mutated in turn and the cases turned red.
+- Whole suite: 8,859 assertions (8,372 at 1.104.3). `ci/browser*.js` as before (138, 83, 116, 293); `ci/browser-sortierbar.js` S17 still fails in the cloud sandbox as it did before.
+
+### Notes
+- **`js/gridkit.js`: one block at the end, one line elsewhere.** The three scripted additions are a single block at the end of the file (`1.105.0 — additions that need script`), plus one line in `renderStatic` that keeps the rows the search left (`wrap._gkMatching`). A copy of the file without them, such as the PawBot dashboard's, renders the same pages: the bulk bar shows only its delete button, the CSV button does nothing, every conditional field is visible.
+
+---
 ## [1.104.4] - 2026-11-02
 
 One hand-typed link could hold a PHP worker: `?gk_page=99999999999999999999` on a table with `paginate()`. The page a table may be asked for is capped now, and a page far past the end shows the empty state as before.

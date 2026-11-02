@@ -195,5 +195,19 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
         <div class="gk-card"><img class="gk-card-image" src="<?= ph(640, 240, 7) ?>" alt=""><div class="gk-card-body">A picture flush with the top.</div></div>
         <a class="gk-card gk-card-link" href="#cards"><div class="gk-card-header"><span class="gk-card-title">Link</span></div><div class="gk-card-body">The whole card is the link.</div></a>
     </div>
+
+    <h3 class="demo-h3" id="stat-roles">KPI cards: colour roles and trends <?= since('card') ?></h3>
+    <p class="demo-intro">A card takes a colour role (<code>primary</code>, <code>success</code>, <code>info</code>, <code>warning</code>, <code>danger</code>) as well as the colour names; <code>'trend'</code> with a sign draws the arrow, <code>'highlight'</code> frames the card that needs attention.</p>
+        <?php
+        showcase(function () {
+            (new StatCards('demo-stat-roles'))
+                ->card('Revenue', 12450.80, ['format' => 'currency', 'icon' => 'euro', 'color' => 'primary', 'trend' => '+12%'])
+                ->card('Paid', 98, ['format' => 'number', 'icon' => 'check_circle', 'color' => 'success', 'trend' => '+3%'])
+                ->card('Open', 14, ['format' => 'number', 'icon' => 'schedule', 'color' => 'info', 'trend' => '-2%'])
+                ->card('Late', 6, ['format' => 'number', 'icon' => 'warning', 'color' => 'warning'])
+                ->card('Errors', 3, ['format' => 'number', 'icon' => 'error', 'color' => 'danger', 'highlight' => true])
+                ->render();
+        });
+        ?>
 </div>
 

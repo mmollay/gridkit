@@ -214,11 +214,11 @@ Geschätzt: ~300-400 Zeilen JS.
 
 ## Nicht im Scope v1.0
 
-- Export (CSV/Excel/PDF)
-- Bulk-Actions (Checkboxen + Massenaktionen)
-- Drag & Drop Sortierung
+- Export (CSV/Excel/PDF) — CSV seit 1.105.0 (`Table::exportCsv()`)
+- Bulk-Actions (Checkboxen + Massenaktionen) — seit 1.46 (`selectable()`), eigene Aktionen seit 1.105.0 (`bulkAction()`)
+- Drag & Drop Sortierung — seit 1.97.0 (`data-gk-sortierbar`)
 - Inline-Editing
-- File-Upload im Form
+- File-Upload im Form — vorhanden (`file`)
 
 Diese Features können in v1.1+ dazu, aber v1.0 muss FUNKTIONIEREN, schlank und fehlerfrei.
 

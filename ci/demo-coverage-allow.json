@@ -1,0 +1,361 @@
+{
+  "accordion": {
+    "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
+    "classes": [
+      "gk-accordion-flush"
+    ]
+  },
+  "avatar": {
+    "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
+    "classes": [
+      "gk-avatar-square"
+    ]
+  },
+  "beleg": {
+    "reason": "The document preview modal opens on a click and needs a file to show; markup is in the skill.",
+    "classes": [
+      "gk-beleg-btn-label",
+      "gk-beleg-mobile-icon",
+      "gk-beleg-modal-actions",
+      "gk-beleg-modal-body",
+      "gk-beleg-modal-box",
+      "gk-beleg-modal-frame",
+      "gk-beleg-modal-mobile",
+      "gk-beleg-modal-overlay"
+    ]
+  },
+  "breadcrumb": {
+    "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
+    "classes": [
+      "gk-breadcrumb-home"
+    ]
+  },
+  "button": {
+    "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
+    "classes": [
+      "gk-btn-group-bordered",
+      "gk-btn-icon",
+      "gk-btn-icon-text"
+    ]
+  },
+  "cell-who": {
+    "reason": "Hand-written markup of the 'rows of people' recipe in the skill (or 'format' => 'html'); not a PHP component.",
+    "classes": [
+      "gk-cell-sub-wrap",
+      "gk-cell-who",
+      "gk-cell-who-text"
+    ]
+  },
+  "checkbox-radio": {
+    "reason": "Written only for a page that sets the matching option or markup; the demo shows the common case and the skill lists this one.",
+    "classes": [
+      "gk-checkbox-label",
+      "gk-radio-label"
+    ]
+  },
+  "chips": {
+    "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
+    "classes": [
+      "gk-chip-warning"
+    ]
+  },
+  "col-priority": {
+    "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
+    "classes": [
+      "gk-col-p5"
+    ]
+  },
+  "dot": {
+    "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
+    "classes": [
+      "gk-dot-danger",
+      "gk-dot-muted"
+    ]
+  },
+  "empty": {
+    "reason": "The empty row and its action appear when a table has no rows; the demo's tables have rows.",
+    "classes": [
+      "gk-empty-action",
+      "gk-empty-row"
+    ]
+  },
+  "form": {
+    "reason": "Widths a field asks for with 'width' => N and the error state a failed save sets; the demo uses the widths it needs, the skill lists the scale.",
+    "classes": [
+      "gk-field-has-error",
+      "gk-form-col-1",
+      "gk-form-col-10",
+      "gk-form-col-11",
+      "gk-form-col-12",
+      "gk-form-col-13",
+      "gk-form-col-14",
+      "gk-form-col-15",
+      "gk-form-col-2",
+      "gk-form-col-3",
+      "gk-form-col-4",
+      "gk-form-col-7",
+      "gk-form-col-9",
+      "gk-form-col-auto",
+      "gk-form-page",
+      "gk-form-wide",
+      "gk-has-error",
+      "gk-section-title",
+      "gk-w-1",
+      "gk-w-10",
+      "gk-w-11",
+      "gk-w-12",
+      "gk-w-13",
+      "gk-w-14",
+      "gk-w-15",
+      "gk-w-16",
+      "gk-w-2",
+      "gk-w-3",
+      "gk-w-4",
+      "gk-w-5",
+      "gk-w-6",
+      "gk-w-7",
+      "gk-w-8",
+      "gk-w-9"
+    ]
+  },
+  "formatter": {
+    "reason": "Number cells in the 'number' format; the demo's formatter table uses currency, percent, date, boolean, label and email.",
+    "classes": [
+      "gk-num",
+      "gk-num-empty"
+    ]
+  },
+  "gallery": {
+    "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
+    "classes": [
+      "gk-gallery-lg",
+      "gk-gallery-masonry",
+      "gk-gallery-sm"
+    ]
+  },
+  "global-search": {
+    "reason": "The search overlay opens from the header and talks to an endpoint the demo has only as a stub.",
+    "classes": [
+      "gk-search-betrag",
+      "gk-search-box",
+      "gk-search-feld",
+      "gk-search-gruppe",
+      "gk-search-hinweis",
+      "gk-search-icon",
+      "gk-search-laedt",
+      "gk-search-liste",
+      "gk-search-overlay",
+      "gk-search-text",
+      "gk-search-titel",
+      "gk-search-treffer",
+      "gk-search-unter"
+    ]
+  },
+  "header": {
+    "reason": "Written only for a page that sets the matching option or markup; the demo shows the common case and the skill lists this one.",
+    "classes": [
+      "gk-body-with-header",
+      "gk-header-meta",
+      "gk-skip-link"
+    ]
+  },
+  "label": {
+    "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
+    "classes": [
+      "gk-label-plain"
+    ]
+  },
+  "lightbox": {
+    "reason": "Appears only while someone acts on the page (a click, a drag, a file dropped, an open overlay); a still page cannot show it.",
+    "classes": [
+      "gk-lightbox-pick"
+    ]
+  },
+  "loading": {
+    "reason": "Appears only while someone acts on the page (a click, a drag, a file dropped, an open overlay); a still page cannot show it.",
+    "classes": [
+      "gk-live-loading",
+      "gk-loading"
+    ]
+  },
+  "ortszeile": {
+    "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
+    "classes": [
+      "gk-ortszeile-schlicht"
+    ]
+  },
+  "page": {
+    "reason": "Layout attributes and page-level wrappers that the demo's own shell replaces.",
+    "classes": [
+      "gk-layout-header-first",
+      "gk-layout-sidebar-first",
+      "gk-main"
+    ]
+  },
+  "pagination": {
+    "reason": "A disabled pager button: shown when the pager stands on its first or last page.",
+    "classes": [
+      "gk-pg-off"
+    ]
+  },
+  "richtext": {
+    "reason": "CKEditor (1.4 MB) is loaded on demand and not on the demo's first paint; the field is shown by the form demos only as the hidden carrier until then.",
+    "classes": [
+      "gk-richtext",
+      "gk-richtext-btn",
+      "gk-richtext-content",
+      "gk-richtext-toolbar"
+    ]
+  },
+  "segment": {
+    "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
+    "classes": [
+      "gk-segment-basic",
+      "gk-segment-padded"
+    ]
+  },
+  "select": {
+    "reason": "Written only for a page that sets the matching option or markup; the demo shows the common case and the skill lists this one.",
+    "classes": [
+      "gk-select-disabled",
+      "gk-select-empty",
+      "gk-select-option-sub"
+    ]
+  },
+  "series": {
+    "reason": "Fill and stroke classes of an SVG chart you draw; the swatches above show the same five colours.",
+    "classes": [
+      "gk-series-fill-1",
+      "gk-series-fill-2",
+      "gk-series-fill-3",
+      "gk-series-fill-4",
+      "gk-series-fill-5",
+      "gk-series-stroke-1",
+      "gk-series-stroke-2",
+      "gk-series-stroke-3",
+      "gk-series-stroke-4",
+      "gk-series-stroke-5"
+    ]
+  },
+  "sheet": {
+    "reason": "Written only for a page that sets the matching option or markup; the demo shows the common case and the skill lists this one.",
+    "classes": [
+      "gk-sheet-meta",
+      "gk-sheet-push"
+    ]
+  },
+  "sidebar": {
+    "reason": "The demo's own page sidebar is the live example; brand, badge, sub-items and the mobile close button appear only on a page that sets them.",
+    "classes": [
+      "gk-sidebar-badge",
+      "gk-sidebar-brand",
+      "gk-sidebar-brand-bare",
+      "gk-sidebar-brand-icon",
+      "gk-sidebar-brand-link",
+      "gk-sidebar-brand-text",
+      "gk-sidebar-brand-title",
+      "gk-sidebar-brand-version",
+      "gk-sidebar-chevron",
+      "gk-sidebar-close-label",
+      "gk-sidebar-close-mobile",
+      "gk-sidebar-divider",
+      "gk-sidebar-group-toggle",
+      "gk-sidebar-subitem",
+      "gk-sidebar-subitems",
+      "gk-sidebar-toggle"
+    ]
+  },
+  "sortierbar": {
+    "reason": "Appears only while someone acts on the page (a click, a drag, a file dropped, an open overlay); a still page cannot show it.",
+    "classes": [
+      "gk-sort-frei",
+      "gk-sort-platz",
+      "gk-sort-zieht"
+    ]
+  },
+  "stat-cards": {
+    "reason": "Written only for a page that sets the matching option or markup; the demo shows the common case and the skill lists this one.",
+    "classes": [
+      "gk-stat-grid"
+    ]
+  },
+  "stat-tiles": {
+    "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
+    "classes": [
+      "gk-stat-tile-warning"
+    ]
+  },
+  "table": {
+    "reason": "State classes the script sets on interaction (selected row, sort direction) and containers and sizes of hand-built tables, listed in the skill's CSS reference.",
+    "classes": [
+      "gk-row",
+      "gk-row-selected",
+      "gk-sort-icon",
+      "gk-sort-link",
+      "gk-sortable-mi",
+      "gk-sorted-asc",
+      "gk-sorted-desc",
+      "gk-table-card",
+      "gk-table-container",
+      "gk-table-fixed",
+      "gk-table-section",
+      "gk-table-single-line",
+      "gk-table-title",
+      "gk-table-title-actions",
+      "gk-table-very-compact",
+      "gk-table-xs"
+    ]
+  },
+  "tabs": {
+    "reason": "Earlier names of the tab markup, kept for pages that still use them; the demo shows the current forms.",
+    "classes": [
+      "gk-tab",
+      "gk-tab-active",
+      "gk-tab-nav-einzeilig",
+      "gk-tab-nav-flach",
+      "gk-tabs-nav"
+    ]
+  },
+  "theme": {
+    "reason": "The `dark` class is set by the theme switch; the demo switches by attribute.",
+    "classes": [
+      "gk-dark"
+    ]
+  },
+  "toolbar": {
+    "reason": "Written only for a page that sets the matching option or markup; the demo shows the common case and the skill lists this one.",
+    "classes": [
+      "gk-toolbar-row",
+      "gk-toolbar-row-filters",
+      "gk-toolbar-row-search",
+      "gk-toolbar-stacked"
+    ]
+  },
+  "tooltip": {
+    "reason": "Built by script on the first hover.",
+    "classes": [
+      "gk-tip",
+      "gk-tooltip"
+    ]
+  },
+  "upload": {
+    "reason": "The upload queue is drawn while files are dropped or chosen.",
+    "classes": [
+      "gk-dragover",
+      "gk-uq-done",
+      "gk-uq-error",
+      "gk-uq-icon",
+      "gk-uq-img",
+      "gk-uq-info",
+      "gk-uq-item",
+      "gk-uq-name",
+      "gk-uq-pending",
+      "gk-uq-remove",
+      "gk-uq-removing",
+      "gk-uq-size",
+      "gk-uq-status",
+      "gk-uq-thumb",
+      "gk-uq-uploading"
+    ]
+  }
+}

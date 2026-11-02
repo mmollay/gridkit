@@ -12,6 +12,8 @@ use GridKit\Button;
 use GridKit\Theme;
 use GridKit\Layout;
 use GridKit\Lang;
+use GridKit\PageSize;
+use GridKit\Pagination;
 ?>
 <!-- ===== NAVIGATION (merged: filterchips + yearfilter + formatter) ===== -->
 <div class="demo-section" data-section="navigation">
@@ -443,6 +445,24 @@ $years->range(2022, 2026)->render();</pre></div>
                 ->chip('me', 'Mine', ['color' => 'primary', 'icon' => 'person'])
                 ->chip('rest', 'Others', ['color' => 'neutral', 'icon' => 'group'])
                 ->render();
+        });
+        ?>
+
+    <h3 class="demo-h3" id="pager">Pagination, page size and a loading state <?= since('pagination') ?></h3>
+    <p class="demo-intro"><code>Pagination::build()</code> is the pager for a list you page yourself, <code>PageSize</code> the rows-per-page choice that belongs next to it. Both keep the other query parameters (<code>'params'</code>, <code>preserve()</code>). While something loads, <code>gk-skeleton</code> stands in for the text.</p>
+        <?php
+        showcase(function () {
+            echo Pagination::build(['page' => 5, 'totalPages' => 12, 'baseUrl' => '#pager', 'total' => 238, 'label' => 'invoices']);
+            (new PageSize())->options([10, 25, 50, 100])->current(25)->baseUrl('#pager')->render();
+        });
+        ?>
+        <?php
+        showcase(function () {
+            echo '<div class="gk-flex gk-flex-col gk-gap-sm" aria-busy="true">';
+            echo '<div class="gk-skeleton" style="height:14px;width:60%"></div>';
+            echo '<div class="gk-skeleton" style="height:14px;width:90%"></div>';
+            echo '<div class="gk-skeleton" style="height:14px;width:40%"></div>';
+            echo '</div>';
         });
         ?>
 </div>

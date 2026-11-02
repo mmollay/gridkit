@@ -17,9 +17,19 @@ Every tracked file that does not start with a dot is served. Tool notes live und
   `php tests/run.php blocks` runs one file. A fresh shallow clone has no tags and fails
   one package test until `git fetch --depth=1 origin '+refs/tags/*:refs/tags/*'`.
 - `ci/*.js` check behaviour in a real browser (`browser.js`, `browser-picker.js`,
-  `browser-reiter.js`, `browser-reiter-varianten.js`, `browser-sortierbar.js`) and
+  `browser-reiter.js`, `browser-reiter-varianten.js`, `browser-sortierbar.js`,
+  `browser-1105.js` for bulk actions, CSV export and conditional fields) and
   contrast (`farben.js`). They are not part of the suite and need the `playwright`
   package. Run them when touching `js/gridkit.js` or the markup they exercise.
+- `node ci/demo-coverage.js` opens the demo and fails when a class of `css/blocks.json` is
+  neither shown nor listed, with a reason, in `ci/demo-coverage-allow.json`.
+- `tests/golden-form` and `tests/golden-table` hold the markup of every field type and many
+  tables, byte for byte (`tests/golden/*.json`); a deliberate change is recorded with
+  `GK_UPDATE_GOLDEN=1 php tests/run.php golden-form` and its diff is read. A refactoring leaves them untouched.
+- The demo is `demo/index.php` plus one file per section in `demo/sections/`. Tests that look for
+  what the demo shows read it through `demoSource()` (in `tests/run.php`).
+- Every option key the code reads must be named in `GRIDKIT_SKILL.md` (`tests/options-documented`),
+  and so must every public method.
 - The demo: `php -S 127.0.0.1:8099 -t .`, then `/demo/`.
 
 ## Release order
