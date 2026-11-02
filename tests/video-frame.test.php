@@ -182,7 +182,7 @@ return [
 
 'the documented markup is a figure with a video that has controls and no autoplay, and a name' => function () use ($root): void {
     foreach (['GRIDKIT_SKILL.md', 'demo/index.php'] as $file) {
-        $src = (string) file_get_contents("$root/$file");
+        $src = sourceOf($file);
         preg_match_all('~<figure class="gk-video-frame[^"]*".*?</figure>~s', $src, $frames);
         T::ok(count($frames[0]) >= 1, "$file shows no <figure class=\"gk-video-frame\">");
         $withVideo = 0;

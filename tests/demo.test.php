@@ -109,7 +109,7 @@ return [
 },
 
 'every demo section is reachable from the navigation' => function (): void {
-    $demo = (string) file_get_contents(DEMO);
+    $demo = demoSource();
 
     preg_match_all('/data-section="([a-z]+)"/', $demo, $sections);
     preg_match_all('/->item\([^,]+,\s*\'#([a-z]+)\'/', $demo, $links);
@@ -121,7 +121,7 @@ return [
 },
 
 'the demo does not depend on a third-party image service' => function (): void {
-    $demo = (string) file_get_contents(DEMO);
+    $demo = demoSource();
 
     foreach (['picsum.photos', 'pravatar.cc', 'placehold', 'placekitten', 'unsplash.com'] as $host) {
         // The comment explaining why they are gone may name them; the markup may not.
@@ -134,7 +134,7 @@ return [
 },
 
 'the demo carries no German in its own copy' => function (): void {
-    $demo = (string) file_get_contents(DEMO);
+    $demo = demoSource();
 
     // The changelog section quotes German release notes on purpose; everything
     // else is the demo's own writing.
@@ -197,7 +197,7 @@ return [
  * download.
  */
 'the demo does not load the editor before anyone asks for it' => function (): void {
-    $src = (string) file_get_contents(__DIR__ . '/../demo/index.php');
+    $src = demoSource();
 
     T::ok(!preg_match('/<script[^>]+src="[^"]*ckeditor5\.umd\.js"/', $src),
         'the demo loads CKEditor from a blocking script tag again — 1.4 MB before first paint');

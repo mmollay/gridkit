@@ -401,7 +401,7 @@ return [
     $css = gkCssBare();
     T::ok(strpos($css, '.gk-tab-badge-error {') > strpos($css, ".gk-tab-badge {\n"), 'the error badge lies before the plain badge and loses to it (same specificity)');
     T::ok(!isset($e['font-size']) && !isset($e['padding']), 'the error variant restates the shape of the badge instead of only changing its colour');
-    $demo = (string) file_get_contents(__DIR__ . '/../demo/index.php');
+    $demo = demoSource();
     T::contains($demo, 'class="gk-tab-badge gk-tab-badge-error">Error</span>', 'the demo shows no error badge with its word');
     $skill = (string) preg_replace('/\s+/', ' ', (string) file_get_contents(__DIR__ . '/../GRIDKIT_SKILL.md'));   // lines wrap
     foreach (['gk-tab-badge-error', 'gk-tab-nav-raster', 'GK.tabsFit', 'the word stays'] as $k) {

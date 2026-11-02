@@ -58,6 +58,26 @@ final class T
     }
 }
 
+/**
+ * The demo's source: index.php plus every file in demo/sections/. The page used to be one file;
+ * tests that look for what the demo shows read it through here.
+ */
+function demoSource(): string
+{
+    $root = dirname(__DIR__) . '/demo';
+    $src = (string) file_get_contents($root . '/index.php');
+    $sections = glob($root . '/sections/*.php') ?: [];
+    sort($sections);
+    foreach ($sections as $file) $src .= "\n" . file_get_contents($file);
+    return $src;
+}
+
+/** A file of the repository by its relative path; the demo is read through demoSource(). */
+function sourceOf(string $rel): string
+{
+    return $rel === 'demo/index.php' ? demoSource() : (string) file_get_contents(dirname(__DIR__) . '/' . $rel);
+}
+
 $filter = $argv[1] ?? '';
 $files  = glob(__DIR__ . '/*.test.php') ?: [];
 sort($files);

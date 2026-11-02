@@ -254,7 +254,7 @@ return [
         T::eq($blocks['sortierbar']['classes'][$class] ?? '', '1.97.0', "$class is not in the index as new in 1.97.0");
     }
     T::contains((string) file_get_contents($root . '/skeleton.php'), 'js/sortierbar.js', 'skeleton.php never loads js/sortierbar.js');
-    $demo = (string) file_get_contents($root . '/demo/index.php');
+    $demo = demoSource();
     T::contains($demo, "since('sortierbar')", 'the demo has no marked heading for the block');
     T::contains($demo, 'id="sortierbar"', 'the demo heading has no anchor');
     T::contains($demo, 'data-gk-sortierbar', 'the demo shows no container');

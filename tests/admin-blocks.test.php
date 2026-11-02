@@ -535,7 +535,7 @@ return [
 'every new block is in the skill, its class table, the specification and the demo' => function () use ($doc, $root): void {
     $md   = $doc();
     $spec = (string) file_get_contents($root . '/SPEC.md');
-    $demo = (string) file_get_contents($root . '/demo/index.php');
+    $demo = demoSource();
     preg_match('/^## CSS Classes Reference\n(.*?)(?=^### |^## )/ms', $md, $ref);
     $table = $ref[1] ?? '';
     T::ok(strlen($table) > 1000, 'the CSS Classes Reference table was not found');

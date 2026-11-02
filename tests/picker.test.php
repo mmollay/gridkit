@@ -390,7 +390,7 @@ return [
     T::contains($doc, 'gk:pickeraction', 'that names the event');
     T::contains($doc, 'ImagePicker::html', 'and the PHP call');
     T::ok((bool) preg_match('/\| Image picker[^\n]*ImagePicker/', $doc), 'a row in the component table');
-    $demo = (string) file_get_contents(__DIR__ . '/../demo/index.php');
+    $demo = demoSource();
     T::contains($demo, 'ImagePicker::', 'the demo shows it');
     T::contains($demo, "since('picker')", 'with its "new in" mark');
 },

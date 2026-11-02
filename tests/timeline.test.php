@@ -223,7 +223,7 @@ return [
 
 'the documented markup is an ordered list with a role, a hidden marker and a word for the state in every step' => function () use ($root): void {
     foreach (['GRIDKIT_SKILL.md' => 'skill', 'demo/index.php' => 'demo'] as $file => $where) {
-        $src = (string) file_get_contents("$root/$file");
+        $src = sourceOf($file);
         preg_match_all('~<ol class="gk-timeline".*?</ol>~s', $src, $lists);
         T::ok(count($lists[0]) >= ($where === 'demo' ? 2 : 1), "$file shows only " . count($lists[0]) . ' timelines');
         $steps = 0;

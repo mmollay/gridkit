@@ -330,7 +330,7 @@ function gkInlineMd(string $text): string
 
 /**
  * Where the demo shows a block: the data-section of the first page part whose
- * headings carry its since() mark — read from demo/index.php, never listed twice.
+ * headings carry its since() mark — read from demo/index.php and demo/sections/, never listed twice.
  *
  * @return array<string, string> block key → section id ("tabs")
  */
@@ -341,6 +341,14 @@ function gkBlockSections(?string $demoFile = null): array
     if (isset($cache[$file])) return $cache[$file];
 
     $src = is_file($file) ? (string) file_get_contents($file) : '';
+    if ($demoFile === null) {
+        // The demo is index.php plus one file per section; the order of the sections is the order of the sidebar.
+        $sections = glob(dirname($file) . '/sections/*.php') ?: [];
+        $order = [];
+        foreach ($sections as $s) $order[$s] = strpos($src, "sections/" . basename($s)) ?: PHP_INT_MAX;
+        asort($order);
+        foreach (array_keys($order) as $s) $src = str_replace("<?php require __DIR__ . '/sections/" . basename($s) . "'; ?>", (string) file_get_contents($s), $src);
+    }
     preg_match_all('/class="demo-section[^"]*"\s+data-section="([a-z0-9-]+)"|\bsince\(([^)]*)\)/', $src, $hits, PREG_SET_ORDER);
     $map = [];
     $section = null;

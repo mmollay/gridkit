@@ -27,7 +27,7 @@ $version = static fn (): string => trim((string) file_get_contents($root . '/VER
 $css = static fn (): string => (string) file_get_contents($root . '/css/gridkit.css');
 $js  = static fn (): string => (string) file_get_contents($root . '/js/gridkit.js');
 $doc = static fn (): string => (string) file_get_contents($root . '/GRIDKIT_SKILL.md');
-$demo = static fn (): string => (string) file_get_contents($root . '/demo/index.php');
+$demo = static fn (): string => demoSource();
 
 /** Every gk- class a selector of both stylesheets names, comments stripped. @return list<string> */
 $sheetClasses = static function () use ($root): array {

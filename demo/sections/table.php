@@ -1,0 +1,341 @@
+<?php
+use GridKit\Table;
+use GridKit\Form;
+use GridKit\Modal;
+use GridKit\StatCards;
+use GridKit\Sidebar;
+use GridKit\FilterChips;
+use GridKit\YearFilter;
+use GridKit\TableHeader;
+use GridKit\Header;
+use GridKit\Button;
+use GridKit\Theme;
+use GridKit\Layout;
+use GridKit\Lang;
+?>
+<!-- ===== TABLE ===== -->
+<div class="demo-section active" data-section="table">
+    <h2>Table <?= since('table') ?></h2>
+
+    <h3 style="margin: 32px 0 16px;">Complete table with all features</h3>
+        <?php
+        $articles = $demoRows([
+            ['article_id' => 1, 'article_number' => 'ART-001', 'name' => 'Webdesign Paket S', 'unit' => 'psch', 'net_price' => 1200.00, 'tax_rate' => 20, 'is_active' => 'active'],
+            ['article_id' => 2, 'article_number' => 'ART-002', 'name' => 'Hosting Standard', 'unit' => 'Stk', 'net_price' => 9.90, 'tax_rate' => 20, 'is_active' => 'active'],
+            ['article_id' => 3, 'article_number' => 'ART-003', 'name' => 'SEO Beratung', 'unit' => 'h', 'net_price' => 95.00, 'tax_rate' => 20, 'is_active' => 'inactive'],
+            ['article_id' => 4, 'article_number' => 'ART-004', 'name' => 'Logo Design', 'unit' => 'psch', 'net_price' => 450.00, 'tax_rate' => 20, 'is_active' => 'draft'],
+            ['article_id' => 5, 'article_number' => 'ART-005', 'name' => 'Newsletter Setup', 'unit' => 'psch', 'net_price' => 350.00, 'tax_rate' => 20, 'is_active' => 'active'],
+            ['article_id' => 6, 'article_number' => 'ART-006', 'name' => 'Social Media Paket', 'unit' => 'psch', 'net_price' => 680.00, 'tax_rate' => 20, 'is_active' => 'active'],
+            ['article_id' => 7, 'article_number' => 'ART-007', 'name' => 'E-Mail Marketing', 'unit' => 'psch', 'net_price' => 420.00, 'tax_rate' => 20, 'is_active' => 'draft'],
+            ['article_id' => 8, 'article_number' => 'ART-008', 'name' => 'Content Erstellung', 'unit' => 'h', 'net_price' => 75.00, 'tax_rate' => 20, 'is_active' => 'active'],
+            ['article_id' => 9, 'article_number' => 'ART-009', 'name' => 'Server Administration', 'unit' => 'h', 'net_price' => 110.00, 'tax_rate' => 20, 'is_active' => 'inactive'],
+            ['article_id' => 10, 'article_number' => 'ART-010', 'name' => 'SSL Zertifikat', 'unit' => 'Stk', 'net_price' => 49.00, 'tax_rate' => 20, 'is_active' => 'active'],
+            ['article_id' => 11, 'article_number' => 'ART-011', 'name' => 'Domain Registration', 'unit' => 'Stk', 'net_price' => 15.00, 'tax_rate' => 20, 'is_active' => 'active'],
+            ['article_id' => 12, 'article_number' => 'ART-012', 'name' => 'Webdesign Paket L', 'unit' => 'psch', 'net_price' => 3500.00, 'tax_rate' => 20, 'is_active' => 'active'],
+            ['article_id' => 13, 'article_number' => 'ART-013', 'name' => 'App Entwicklung', 'unit' => 'h', 'net_price' => 125.00, 'tax_rate' => 20, 'is_active' => 'draft'],
+            ['article_id' => 14, 'article_number' => 'ART-014', 'name' => 'Datenbank Migration', 'unit' => 'psch', 'net_price' => 890.00, 'tax_rate' => 20, 'is_active' => 'active'],
+            ['article_id' => 15, 'article_number' => 'ART-015', 'name' => 'Security Audit', 'unit' => 'psch', 'net_price' => 1500.00, 'tax_rate' => 20, 'is_active' => 'inactive'],
+        ]);
+        showcase(function () use ($articles) {
+                    $table = new Table('articles');
+                    $table->setData($articles)
+                        ->search(['article_number', 'name'])
+                        ->column('article_number', 'Article No.', ['width' => '120px', 'sortable' => true, 'nowrap' => true, 'muted' => true])
+                        ->column('name', 'Description', ['sortable' => true, 'nowrap' => true])
+                        ->column('unit', 'Unit', ['width' => '80px', 'nowrap' => true])
+                        ->column('net_price', 'Net', ['format' => 'currency', 'align' => 'right', 'width' => '100px', 'nowrap' => true])
+                        ->column('tax_rate', 'VAT', ['format' => 'percent', 'width' => '80px', 'nowrap' => true])
+                        ->column('is_active', 'Status', ['format' => 'label', 'nowrap' => true])
+                        ->filter('is_active', 'select', ['options' => ['active' => 'Active', 'inactive' => 'Inactive', 'draft' => 'Draft'], 'placeholder' => 'All Status'])
+                        ->button('edit', ['icon' => 'edit', 'class' => 'primary', 'position' => 'right', 'params' => ['id' => 'article_id']])
+                        ->button('delete', ['icon' => 'delete', 'class' => 'danger', 'position' => 'right', 'params' => ['id' => 'article_id']])
+                        ->newButton('New Article', ['icon' => 'add'])
+                        ->nowrap(true)
+                        ->paginate(5)
+                        ->render();
+        });
+        ?>
+
+    <h3 style="margin: 32px 0 16px;">Invoice list with date and currency formatting</h3>
+        <?php
+        $invoiceData = [
+            ['number' => 'RE-2026-001', 'customer' => 'Mustermann GmbH', 'date' => '2026-02-01', 'due_date' => '2026-03-01', 'total' => 1450.00, 'status' => 'paid'],
+            ['number' => 'RE-2026-002', 'customer' => 'Tech Solutions AG', 'date' => '2026-02-05', 'due_date' => '2026-03-05', 'total' => 3200.00, 'status' => 'pending'],
+            ['number' => 'RE-2026-003', 'customer' => 'Weber & Partner', 'date' => '2026-02-08', 'due_date' => '2026-03-08', 'total' => 890.50, 'status' => 'overdue'],
+            ['number' => 'RE-2026-004', 'customer' => 'Digital Agentur Wien', 'date' => '2026-02-10', 'due_date' => '2026-03-10', 'total' => 5600.00, 'status' => 'draft'],
+            ['number' => 'RE-2026-005', 'customer' => 'Startup Hub Vienna', 'date' => '2026-02-12', 'due_date' => '2026-03-12', 'total' => 2100.00, 'status' => 'paid'],
+            ['number' => 'RE-2026-006', 'customer' => 'Cafe Central KG', 'date' => '2026-02-14', 'due_date' => '2026-03-14', 'total' => 780.00, 'status' => 'pending'],
+            ['number' => 'RE-2026-007', 'customer' => 'Alpen Consulting', 'date' => '2026-02-15', 'due_date' => '2026-03-15', 'total' => 4200.00, 'status' => 'paid'],
+            ['number' => 'RE-2026-008', 'customer' => 'Donau Logistics', 'date' => '2026-02-17', 'due_date' => '2026-03-17', 'total' => 1890.00, 'status' => 'pending'],
+            ['number' => 'RE-2026-009', 'customer' => 'Wiener Werkstatt', 'date' => '2026-02-18', 'due_date' => '2026-03-18', 'total' => 560.00, 'status' => 'draft'],
+            ['number' => 'RE-2026-010', 'customer' => 'Graz IT Services', 'date' => '2026-02-20', 'due_date' => '2026-03-20', 'total' => 3450.00, 'status' => 'paid'],
+            ['number' => 'RE-2026-011', 'customer' => 'Salzburg Media', 'date' => '2026-02-22', 'due_date' => '2026-03-22', 'total' => 1200.00, 'status' => 'overdue'],
+            ['number' => 'RE-2026-012', 'customer' => 'Linz Digital', 'date' => '2026-02-25', 'due_date' => '2026-03-25', 'total' => 2750.00, 'status' => 'pending'],
+        ];
+        $invoiceTable = new Table('invoices');
+        $invoiceTable->setData($invoiceData)
+            ->search(['number', 'customer'])
+            ->column('number', 'Inv. No.', ['width' => '120px', 'nowrap' => true, 'sortable' => true])
+            ->column('customer', 'Customer', ['sortable' => true, 'nowrap' => true])
+            ->column('date', 'Date', ['format' => 'date', 'width' => '100px', 'sortable' => true])
+            ->column('due_date', 'Due', ['format' => 'date', 'width' => '100px'])
+            ->column('total', 'Amount', ['format' => 'currency', 'align' => 'right', 'width' => '120px', 'sortable' => true])
+            ->column('status', 'Status', ['format' => 'label', 'width' => '100px'])
+            ->button('view', ['icon' => 'visibility', 'position' => 'left'])
+            ->button('edit', ['icon' => 'edit', 'class' => 'primary'])
+            ->button('pdf', ['icon' => 'picture_as_pdf'])
+            ->button('delete', ['icon' => 'delete', 'class' => 'danger'])
+            ->newButton('New Invoice', ['icon' => 'add'])
+            ->nowrap(true)
+            ->paginate(5)
+            ->render();
+        ?>
+
+    <h3 style="margin: 32px 0 16px;">Compact table without toolbar</h3>
+        <?php
+        $userData = [
+            ['name' => 'Martin Huber', 'email' => 'martin@example.com', 'role' => 'admin', 'active' => 1],
+            ['name' => 'Anna Schneider', 'email' => 'anna@example.com', 'role' => 'editor', 'active' => 1],
+            ['name' => 'Thomas Berger', 'email' => 'thomas@example.com', 'role' => 'viewer', 'active' => 0],
+            ['name' => 'Lisa Wagner', 'email' => 'lisa@example.com', 'role' => 'editor', 'active' => 1],
+            ['name' => 'Peter Gruber', 'email' => 'peter@example.com', 'role' => 'admin', 'active' => 0],
+        ];
+        $miniTable = new Table('users');
+        $miniTable->setData($userData)
+            ->column('name', 'Name', ['sortable' => true])
+            ->column('email', 'E-Mail', ['format' => 'email'])
+            ->column('role', 'Role', ['format' => 'label'])
+            ->column('active', 'Active', ['format' => 'boolean'])
+            ->toolbar(false)
+            ->paginate(false)
+            ->render();
+        ?>
+
+    <h3 class="demo-h3">Rows that open a side sheet <?= since('row-link', 'sheet') ?></h3>
+    <p class="demo-intro">List table <?= since('table-list') ?> · column priority <?= since('col-priority') ?> · who cell <?= since('cell-who') ?></p>
+    <p class="demo-intro">Read in the row, change in the sheet: a click anywhere on a row opens its record beside the list — full screen on a phone. One name cell with two lines, groups instead of a status label per row, and colour only for what needs acting on. The six rules behind it are in the agent skill. <code>size('list')</code> sets the row they describe, and <code>'priority'</code> lets columns give way by the list's own width — open the sheet or narrow the window and watch "Last seen" go first.</p>
+        <?php
+        $people = require __DIR__ . '/../form/_people.php';
+        showcase(function () use ($people) {
+            // Rule 4: colour only where something needs acting on — a count that
+            // is fine stays plain text.
+            foreach ($people as &$p) {
+                $p['failing_html'] = $p['failing'] > 0
+                    ? '<span class="gk-label gk-label-red">' . (int) $p['failing'] . ' failing</span>'
+                    : '—';
+            }
+            unset($p);
+
+            (new Table('demo-people'))
+                ->setData($people)
+                ->caption('Users')
+                ->size('list')
+                ->groupBy('access', ['with' => 'With access', 'without' => 'Without access'])
+                ->rowLink(['sheet' => 'demo-person-sheet', 'url' => 'form/f_person_sheet.php'])
+                ->column('name', 'User', ['sub' => 'email'])
+                ->column('plan', 'Plan', ['priority' => 3])
+                ->column('seen', 'Last seen', ['muted' => true, 'priority' => 4])
+                ->column('failing_html', 'Last 30 days', ['format' => 'html', 'priority' => 2])
+                ->toolbar(false)
+                ->render();
+        });
+        ?>
+    <div class="gk-sheet" id="demo-person-sheet" hidden>
+        <div class="gk-sheet-header">
+            <h2 class="gk-sheet-title">User</h2>
+            <button type="button" class="gk-sheet-close">&times;</button>
+        </div>
+        <div class="gk-sheet-body"></div>
+        <div class="gk-sheet-footer">
+            <button type="button" class="gk-btn gk-btn-outlined gk-btn-neutral" data-gk-sheet-close>Done</button>
+        </div>
+    </div>
+
+    <h3 class="demo-h3">One row standing for many <?= since('table-more') ?></h3>
+    <p class="demo-intro">What is rarely needed folds into one row. The toggle shows and hides the rows its <code>aria-controls</code> names; the chevron and <code>aria-expanded</code> carry the state, so the label never has to change.</p>
+        <?php
+        showcase(function () {
+            echo <<<'HTML'
+            <div class="gk-table-wrap gk-table-mobile-card">
+              <table class="gk-table">
+                <caption class="gk-sr-only">Users and chart profiles</caption>
+                <thead><tr><th scope="col">User</th><th scope="col">Plan</th></tr></thead>
+                <tbody>
+                  <tr><td data-label="User">Anna Schneider</td><td data-label="Plan">Pro</td></tr>
+                  <tr><td data-label="User">Thomas Berger</td><td data-label="Plan">Team</td></tr>
+                  <tr class="gk-table-more"><td colspan="2">
+                    <button type="button" class="gk-table-more-toggle" aria-expanded="false" aria-controls="demo-profiles">
+                      <span class="gk-table-more-name">3 chart profiles</span>
+                      <span class="gk-cell-sub">Created from charts — they cannot sign in and have no plan.</span>
+                    </button>
+                  </td></tr>
+                </tbody>
+                <tbody id="demo-profiles" hidden>
+                  <tr><td data-label="User">Profile: Berlin, 1984</td><td data-label="Plan">—</td></tr>
+                  <tr><td data-label="User">Profile: Graz, 1991</td><td data-label="Plan">—</td></tr>
+                  <tr><td data-label="User">Profile: Linz, 2002</td><td data-label="Plan">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+            HTML;
+        });
+        ?>
+
+    <h3 style="margin: 32px 0 16px;">Sizes</h3>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px;">
+        <?php
+        $sizeData = [
+            ['name' => 'Widget A', 'value' => '1.200 €', 'status' => 'active'],
+            ['name' => 'Widget B', 'value' => '340 €', 'status' => 'inactive'],
+            ['name' => 'Widget C', 'value' => '890 €', 'status' => 'active'],
+        ];
+        $sizeLabels = ['sm' => 'Compact', 'md' => 'Standard', 'lg' => 'Spacious'];
+        foreach (['sm', 'md', 'lg'] as $sz) {
+            echo '<div>';
+            echo '<div style="font-size:13px;font-weight:500;color:var(--gk-on-surface-variant);display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="font-size:11px;font-family:monospace;background:var(--gk-surface-container);padding:2px 8px;border-radius:4px;color:var(--gk-on-surface-variant)">size(\'' . $sz . '\')</span> ' . $sizeLabels[$sz] . '</div>';
+            $t = new Table('size-' . $sz);
+            $t->setData($sizeData)
+                ->column('name', 'Name')
+                ->column('value', 'Value')
+                ->column('status', 'Status', ['format' => 'label'])
+                ->size($sz)->toolbar(false)->paginate(false)->render();
+            echo "</div>";
+        }
+        ?>
+    </div>
+    <div class="demo-code"><pre>$table->size('sm');  // compact
+$table->size('md');  // standard (default)
+$table->size('lg');  // spacious</pre></div>
+
+    <h3 style="margin: 32px 0 16px;">Display variants</h3>
+    <?php
+    $varData = $demoRows([
+        ['name' => 'Webdesign Paket', 'price' => '1.200 €', 'status' => 'active'],
+        ['name' => 'Hosting Standard', 'price' => '9,90 €', 'status' => 'active'],
+        ['name' => 'SEO Beratung', 'price' => '95 €', 'status' => 'inactive'],
+        ['name' => 'Logo Design', 'price' => '450 €', 'status' => 'draft'],
+    ]);
+    $variants = [
+        'default'      => 'Default',
+        'bordered'     => 'Bordered',
+        'striped'      => 'Striped',
+        'celled'       => 'Celled',
+        'padded'       => 'Padded',
+        'compact'      => 'Compact',
+        'selectable'   => 'Selectable',
+        'minimal'      => 'Minimal',
+        'flat'         => 'Flat',
+        'inverted'     => 'Inverted',
+    ];
+    echo '<div style="display:flex;flex-direction:column;gap:24px;margin-bottom:24px;">';
+    foreach ($variants as $var => $label) {
+        echo '<div>';
+        echo '<div style="font-size:13px;font-weight:500;color:var(--gk-on-surface-variant);display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="font-size:11px;font-family:monospace;background:var(--gk-surface-container);padding:2px 8px;border-radius:4px;color:var(--gk-on-surface-variant)">variant(\'' . $var . '\')</span> ' . $label . '</div>';
+        $t = new Table('var-' . $var);
+        $t->setData($varData)
+            ->column('name', 'Description')
+            ->column('price', 'Price')
+            ->column('status', 'Status', ['format' => 'label'])
+            ->variant($var)->toolbar(false)->paginate(false)->render();
+        echo '</div>';
+    }
+    echo '</div>';
+    ?>
+    <h3 style="margin: 32px 0 16px;">Definition table</h3>
+    <p class="demo-intro">First column as label/key — ideal for detail views.</p>
+    <div class="gk-table-wrap">
+        <table class="gk-table gk-table-definition">
+            <tbody>
+                <tr><td>Company name</td><td>SSI Schaefer IT Solutions GmbH</td></tr>
+                <tr><td>Founded</td><td>2003</td></tr>
+                <tr><td>Location</td><td>Wien, Oesterreich</td></tr>
+                <tr><td>Employees</td><td>24</td></tr>
+                <tr><td>Website</td><td>ssi.at</td></tr>
+                <tr><td>Status</td><td><span class="gk-label gk-label-green">Active</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="demo-code"><pre>$table->variant('default');     // Default
+$table->variant('bordered');    // Full border lines
+$table->variant('striped');     // Zebra stripes
+$table->variant('celled');      // Grid lines around each cell
+$table->variant('padded');      // Extra spacing
+$table->variant('compact');     // Compact, more rows
+$table->variant('selectable');  // Hover cursor, clickable
+$table->variant('minimal');     // Only separator, no border
+$table->variant('flat');        // Completely flat
+$table->variant('inverted');    // Dark table (also in Light Mode)
+
+// A variant is one slot: a second call REPLACES the first, it does not add.
+$table->variant('celled')->variant('padded');   // celled is dropped — padded wins
+
+// Variant and size are separate slots, so those two do stack:
+$table->variant('striped')->size('sm');</pre></div>
+
+    <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
+    <p class="demo-intro">Resize the browser window to &lt;768px to see the mobile layout.</p>
+
+    <div style="overflow:hidden">
+        <div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">mobile('card') – Standard</div>
+        <?php
+        $mobileData = [
+            ['nr' => 'ART-001', 'name' => 'Webdesign Paket S', 'price' => '1.200 €', 'status' => 'active'],
+            ['nr' => 'ART-002', 'name' => 'Hosting Standard', 'price' => '9,90 €', 'status' => 'active'],
+            ['nr' => 'ART-003', 'name' => 'SEO Beratung', 'price' => '95 €', 'status' => 'inactive'],
+        ];
+        $t = new Table('mobile-card');
+        $t->setData($mobileData)
+            ->column('nr', 'Article No.')
+            ->column('name', 'Description')
+            ->column('price', 'Price')
+            ->column('status', 'Status', ['format' => 'label'])
+            ->mobile('card')->toolbar(false)->paginate(false)->render();
+        ?>
+    </div>
+    <div style="margin-top:16px;overflow:hidden">
+        <div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">mobile('scroll') – Horizontal Scroll</div>
+        <?php
+        $t = new Table('mobile-scroll');
+        $t->setData($mobileData)
+            ->column('nr', 'Article No.')
+            ->column('name', 'Description')
+            ->column('price', 'Price')
+            ->column('status', 'Status', ['format' => 'label'])
+            ->mobile('scroll')->toolbar(false)->paginate(false)->render();
+        ?>
+    </div>
+    <div style="margin-top:16px;overflow:hidden">
+        <div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">hideOnMobile – Hide columns</div>
+        <?php
+        $t = new Table('mobile-hide');
+        $t->setData($mobileData)
+            ->column('nr', 'Article No.')
+            ->column('name', 'Description')
+            ->column('price', 'Price', ['hideOnMobile' => true])
+            ->column('status', 'Status', ['format' => 'label'])
+            ->mobile('scroll')->toolbar(false)->paginate(false)->render();
+        ?>
+    </div>
+
+    <div class="demo-code"><pre>// Demo 1: Complete article table with pagination
+$table = new Table('articles');
+$table->setData($articles)
+    ->search(['article_number', 'name'])
+    ->column('name', 'Description', ['sortable' => true])
+    ->column('net_price', 'Net', ['format' => 'currency'])
+    ->column('tax_rate', 'VAT', ['format' => 'percent'])
+    ->column('is_active', 'Status', ['format' => 'label'])
+    ->button('edit', ['icon' => 'edit', 'class' => 'primary'])
+    ->button('delete', ['icon' => 'delete', 'class' => 'danger'])
+    ->newButton('New Article', ['icon' => 'add'])
+    ->nowrap(true)
+    ->paginate(5)
+    ->render();
+
+// Mobile-Responsive
+$table->mobile('card');      // Cards on mobile (default)
+$table->mobile('scroll');    // Horizontal Scroll
+$table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
+</div>
+

@@ -63,7 +63,8 @@ return [
 'the name is spelled the same everywhere' => function (): void {
     // GRIDKit appeared in <title>, og:title, og:site_name and twitter:title —
     // exactly the strings a search result and a shared link show.
-    $files = ['index.php', 'demo/index.php', 'GRIDKIT_SKILL.md', 'README.md',
+    $files = ['index.php', 'demo/index.php', ...array_map(fn($f) => 'demo/sections/' . basename($f), glob(dirname(__DIR__) . '/demo/sections/*.php') ?: []),
+              'GRIDKIT_SKILL.md', 'README.md',
               'js/gridkit.js', 'lang/en.php', 'lang/de.php',
               'src/Auth.php', 'src/Lang.php', 'src/Icon.php'];
 
