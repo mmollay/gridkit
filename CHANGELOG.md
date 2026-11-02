@@ -7,6 +7,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.104.3] - 2026-11-02
+
+`Form` and `Table` declare `strict_types=1` now, the last two classes of `src/` that did not. A date column that holds a timestamp and a multiselect that holds one number keep working, and nothing a page can see changes.
+
+### Changed
+- **`declare(strict_types=1)`** in `Form` and `Table`. Every class in `src/` has it now, and a test says so. Where the declaration would have turned a value that a database really hands over into a `TypeError`, the conversion PHP used to do silently is written out — for scalars only, so an array or an object still fails as it did:
+  - `Table`, `format => date` and `datetime`: `strtotime()` takes a string and `date()` an int. A timestamp (an int) or a float reaches `strtotime()` as the string it used to become, and a text that is no date (`strtotime()` answers `false`) reaches `date()` as 0, as before.
+  - `Form`, `multiselect`: `explode()` takes a string. A value that is one number, a selected id, is turned into its string first.
+- This is the follow-up the notes of 1.104.2 left open. Rendering 9,699 combinations before and after (every format, option and field type with values of eleven kinds) showed 276 that behaved differently under the declaration; after the two changes above 48 are left, all of them an option the documentation calls a string and that somebody passed as a number or a bool (see Notes). One more combination differs only because its output is the current time (`'x'` is a time zone letter to `strtotime()`), and renders the same when both are asked in the same minute.
+
+### Tests
+- `tests/strict-types.test.php` (46 assertions): every class of `src/` declares `strict_types=1`; a `date` and a `datetime` column with an int, a float, a bool, a numeric string, a text that is no date, an empty value and null; a multiselect with `5`, `'5'`, `'5,6'` and `[5, 6]`; an action whose label is a number. Each of the casts was taken out in turn and the test turned red, as did taking the declaration out of `Table`.
+- Whole suite: 8369 assertions (8323 before). The browser checks give the numbers they gave before, `ci/browser-sortierbar.js` S17 included. The whole demo page (613 KB) renders byte for byte as in 1.104.2, apart from the random ids and the `?v=` file times.
+
+### Notes
+- **Stricter on purpose:** an option that the documentation calls a string and that is passed as a number or a bool — a row button's `icon`, a column's `currency` or `dateFormat`, a field name given a second time through the options — is a `TypeError` now where PHP used to convert it. That is a programming error, found the first time the page is opened; none of it is a value a database holds.
+
+---
 ## [1.104.2] - 2026-11-02
 
 Housekeeping: the two longest methods of the form and the table are cut into parts, and the notes for coding sessions say what is true again. Nothing a page can see changes — no class, no option, no markup, byte for byte, and a recording of 150 renderings holds that to account.
