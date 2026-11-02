@@ -337,5 +337,25 @@ $table->setData($articles)
 $table->mobile('card');      // Cards on mobile (default)
 $table->mobile('scroll');    // Horizontal Scroll
 $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
+
+    <h3 class="demo-h3" id="table-select">Selection, footer, load time, a link in a cell <?= since('table') ?></h3>
+    <p class="demo-intro"><code>selectable()</code> adds a checkbox column, a select-all in the header and a bulk bar that appears while rows are ticked; its delete button fires <code>gk:bulkdelete</code> with <code>{ ids, tableId }</code>. <code>footer()</code> writes a summary row, <code>loadTime()</code> the milliseconds, <code>toolbarHtml()</code> puts your own markup into the toolbar, and <code>'href'</code> turns a cell into a link with a quiet second line from <code>'sub'</code>.</p>
+        <?php
+        showcase(function () use ($articles) {
+            (new Table('demo-select'))
+                ->setData(array_slice($articles, 0, 6))
+                ->caption('Articles with a selection')
+                ->selectable('article_id')
+                ->search(['name'])
+                ->toolbarHtml('<span class="gk-label gk-label-blue">toolbarHtml()</span>')
+                ->column('article_number', 'No.', ['muted' => true, 'width' => '110px'])
+                ->column('name', 'Description', ['href' => '#table-select', 'sub' => 'unit', 'sortable' => true])
+                ->column('net_price', 'Net', ['format' => 'currency', 'align' => 'right'])
+                ->column('is_active', 'Status', ['format' => 'label'])
+                ->footer(['Total', ['text' => '2,849.40', 'align' => 'right', 'bold' => true]])
+                ->loadTime(37)
+                ->render();
+        });
+        ?>
 </div>
 

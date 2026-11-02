@@ -431,5 +431,19 @@ $years->range(2022, 2026)->render();</pre></div>
 ->column('status', 'Status', ['format' => 'label'])       // Colored label
 ->column('email', 'E-Mail', ['format' => 'email'])        // mailto: Link</pre></div>
     </div>
+
+    <h3 class="demo-h3" id="chip-colours">FilterChips: colour names and icons <?= since('chips') ?></h3>
+    <p class="demo-intro">A chip takes <code>green</code>, <code>orange</code>, <code>blue</code> and <code>red</code> or the role names <code>success</code>, <code>danger</code>, <code>primary</code>, <code>neutral</code>; <code>'icon'</code> puts a symbol in front. A colour shows on the chip that is active, here the first.</p>
+        <?php
+        showcase(function () {
+            (new FilterChips('demo-chip-roles', 'role_status'))
+                ->current('ok')
+                ->chip('ok', 'Done', ['color' => 'success', 'icon' => 'check_circle'])
+                ->chip('stop', 'Failed', ['color' => 'danger', 'icon' => 'error'])
+                ->chip('me', 'Mine', ['color' => 'primary', 'icon' => 'person'])
+                ->chip('rest', 'Others', ['color' => 'neutral', 'icon' => 'group'])
+                ->render();
+        });
+        ?>
 </div>
 

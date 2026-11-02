@@ -359,6 +359,10 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-news-row-text { display:flex; flex-direction:column; gap:6px; }
         .demo-news-counts { display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; }
         .demo-news-all { margin:16px 0 0; }
+        .demo-util-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:8px; }
+        .demo-util-cell { border:1px solid var(--gk-outline-variant); border-radius:6px; padding:8px; display:flex; flex-direction:column; gap:6px; min-width:0; overflow:hidden; }
+        .demo-util-cell code { font-size:11px; overflow-wrap:anywhere; }
+        .demo-util-box { min-height:32px; background:var(--gk-surface-variant, rgba(0,0,0,.04)); border-radius:4px; overflow:hidden; }
         @media (max-width:600px) { .demo-news-row { grid-template-columns:minmax(0, 1fr); } }
         .demo-announce-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
         .demo-pair { display:flex; flex-direction:column; gap:16px; margin-bottom:24px; }

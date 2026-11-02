@@ -12,6 +12,7 @@ use GridKit\Button;
 use GridKit\Theme;
 use GridKit\Layout;
 use GridKit\Lang;
+use GridKit\ActionGroup;
 ?>
 <!-- ===== UI (merged: buttons + header + sidebar + themes) ===== -->
 <div class="demo-section" data-section="ui">
@@ -377,5 +378,39 @@ GK.sidebar.toggle(); GK.sidebar.open(); GK.sidebar.close();</pre></div>
 echo Theme::bodyTag('gk-root');
 echo Theme::switcher();
 GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
+
+    <h3 class="demo-h3" id="action-group">Action group <?= since('action-group') ?></h3>
+    <p class="demo-intro"><code>ActionGroup::html()</code> returns a row of small buttons in one go; <code>render()</code> prints it. An item with <code>'showIf' => false</code> is left out, <code>'pill'</code> rounds it, and an icon-only item needs <code>'title'</code> for its name.</p>
+        <?php
+        showcase(function () {
+            echo ActionGroup::html([
+                ['icon' => 'edit', 'title' => 'Edit'],
+                ['icon' => 'content_copy', 'title' => 'Duplicate'],
+                ['label' => 'Archive', 'icon' => 'archive', 'variant' => 'tonal', 'color' => 'warning'],
+                ['icon' => 'delete', 'title' => 'Delete', 'color' => 'danger', 'showIf' => false],
+                ['label' => 'Send', 'icon' => 'send', 'variant' => 'filled', 'color' => 'primary', 'pill' => true],
+            ]);
+        });
+        ?>
+
+    <h3 class="demo-h3" id="button-options">Button: size xs, icon on the right, full width, data and aria attributes</h3>
+        <?php
+        showcase(function () {
+            echo '<div class="gk-flex gk-gap-md gk-items-center" style="flex-wrap:wrap">';
+            echo Button::render('Extra small', ['variant' => 'outlined', 'size' => 'xs']);
+            echo Button::render('Next', ['icon' => 'arrow_forward', 'iconPosition' => 'right', 'variant' => 'filled', 'color' => 'primary']);
+            echo Button::render('Page 3', ['variant' => 'tonal', 'data' => ['row' => 3], 'attrs' => ['aria-current' => 'page']]);
+            echo '</div>';
+            echo '<div class="gk-mt-2">' . Button::render('Full width', ['variant' => 'outlined', 'fullWidth' => true]) . '</div>';
+        });
+        ?>
+
+    <h3 class="demo-h3" id="utilities">Utility classes <?= since('utilities') ?></h3>
+    <p class="demo-intro">Every utility class on a small sample, generated from <code>css/blocks.json</code>, so a new class shows up here without anyone writing it twice. Spacing and size classes act on the sample's box, colours and type on its text.</p>
+    <div class="demo-util-grid">
+        <?php foreach (array_keys(gkBlocks()['utilities']['classes']) as $utilityClass): ?>
+        <div class="demo-util-cell"><code><?= htmlspecialchars($utilityClass) ?></code><div class="demo-util-box"><span class="<?= htmlspecialchars($utilityClass) ?>">Aa</span></div></div>
+        <?php endforeach; ?>
+    </div>
 </div>
 

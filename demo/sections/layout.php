@@ -73,5 +73,16 @@ use GridKit\Lang;
 .gk-message-warning / .gk-message-error / .gk-message-compact
 .gk-message-sm       // Denser, no margin of its own
 .gk-message-dismiss  // Close button</pre></div>
+
+    <h3 class="demo-h3" id="page-header">Page header <?= since('page') ?></h3>
+    <p class="demo-intro">The title on the left and the actions on the right. A long title pushes the buttons to the next line instead of squeezing them.</p>
+        <?php
+        showcase(function () {
+            echo '<div class="gk-page-header"><h1>Customers</h1><div class="gk-page-header-actions">';
+            echo Button::render('Export', ['variant' => 'outlined', 'icon' => 'download']);
+            echo Button::render('New customer', ['variant' => 'filled', 'color' => 'primary', 'icon' => 'add', 'shape' => 'pill']);
+            echo '</div></div>';
+        });
+        ?>
 </div>
 

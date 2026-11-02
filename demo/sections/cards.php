@@ -186,5 +186,14 @@ $stats->card('Customers', 248, ['format' => 'number', 'color' => 'blue'])
             HTML;
         });
         ?>
+
+    <h3 class="demo-h3" id="card-variants">Card variants <?= since('card') ?></h3>
+    <p class="demo-intro"><code>gk-card-elevated</code> trades the border for a shadow, <code>gk-card-flat</code> keeps a hairline, <code>gk-card-image</code> puts a picture flush with the top, <code>gk-card-title</code> and <code>gk-card-actions</code> fill a header, and <code>gk-card-link</code> makes the whole card a link.</p>
+    <div class="gk-cards gk-cards-4">
+        <div class="gk-card gk-card-elevated"><div class="gk-card-header"><span class="gk-card-title">Elevated</span><div class="gk-card-actions"><button type="button" class="gk-btn gk-btn-text gk-btn-neutral gk-btn-sm">Edit</button></div></div><div class="gk-card-body">A shadow instead of a border.</div></div>
+        <div class="gk-card gk-card-flat"><div class="gk-card-header"><span class="gk-card-title">Flat</span></div><div class="gk-card-body">A hairline and nothing else.</div></div>
+        <div class="gk-card"><img class="gk-card-image" src="<?= ph(640, 240, 7) ?>" alt=""><div class="gk-card-body">A picture flush with the top.</div></div>
+        <a class="gk-card gk-card-link" href="#cards"><div class="gk-card-header"><span class="gk-card-title">Link</span></div><div class="gk-card-body">The whole card is the link.</div></a>
+    </div>
 </div>
 
