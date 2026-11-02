@@ -716,6 +716,16 @@ class Table
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
         $tableClass = 'gk-table' . ($this->globalNowrap ? ' gk-table-nowrap' : '');
+
+        $leftButtons = array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'left');
+        $rightButtons = array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'right');
+        // How wide a full-width row is. The group heading, the empty state and
+        // the footer each used to work this out again from the same four
+        // terms; a column kind added to one of the three would have left the
+        // other two spanning the wrong width.
+        $colCount = count($this->columns)
+                  + ($leftButtons ? 1 : 0) + ($rightButtons ? 1 : 0) + ($this->selectable ? 1 : 0);
+
         /*
          * Where the client says what just happened.
          *
@@ -732,6 +742,19 @@ class Table
         echo '<table class="' . $tableClass . '">'
            . ($this->caption !== '' ? '<caption class="gk-sr-only">' . $e($this->caption) . '</caption>' : '')
            . '<thead><tr>';
+        $this->renderTableHead($leftButtons, $rightButtons, $e);
+        $this->renderTableBody($leftButtons, $rightButtons, $colCount, $e);
+        $this->renderTableFoot($colCount, $e);
+
+        echo '</table>';
+
+        // Pagination
+        $this->renderPager($e);
+    }
+
+    /** The header row up to its end: the select-all cell, one cell per column, the empty cells over the buttons. */
+    private function renderTableHead(array $leftButtons, array $rightButtons, \Closure $e): void
+    {
         if ($this->selectable) {
             // aria-label, not title alone: a title is announced inconsistently
             // and never on touch, so this control read as an unnamed checkbox.
@@ -741,73 +764,80 @@ class Table
                . ' title="' . $e(Lang::t('table.select_all')) . '"></th>';
         }
         foreach ($this->columns as $key => $col) {
-            $styles = [];
-            if (isset($col['width']) && $col['width'] !== 'auto') $styles[] = 'width:' . $e($col['width']);
-            if (isset($col['minWidth'])) $styles[] = 'min-width:' . $e($col['minWidth']);
-            if (isset($col['maxWidth'])) $styles[] = 'max-width:' . $e($col['maxWidth']);
-            if (!empty($col['nowrap'])) $styles[] = 'white-space:nowrap';
-            $style = $styles ? ' style="' . implode(';', $styles) . '"' : '';
-            $sortable = $col['sortable'] ?? false;
-            $clsList = [];
-            if ($sortable) $clsList[] = 'gk-sortable';
-            if (!empty($col['hideOnMobile'])) $clsList[] = 'gk-hide-mobile';
-            // Header and cells give way together (a list's 'priority').
-            if (isset($col['priority'])) $clsList[] = 'gk-col-p' . $col['priority'];
-            // A header stands where its column stands. The cells have carried
-            // 'align' and the numeric class all along; the header got neither, so
-            // a right-aligned column of figures sat under a left-aligned heading.
-            if (($alignCls = self::headerAlignClass($col)) !== '') $clsList[] = $alignCls;
-            $attrs = '';
-            $sortBtn = null;
-            if ($sortable) {
-                $newDir = ($this->sortCol === $key && $this->sortDir === 'asc') ? 'desc' : 'asc';
-                // A sortable header is a control, so it has to behave like
-                // one: reachable by Tab, announced as a button, and reporting
-                // the direction it is currently sorted in.
-                $ariaSort = $this->sortCol === $key
-                    ? ($this->sortDir === 'asc' ? 'ascending' : 'descending')
-                    : 'none';
-                // aria-sort belongs on the header; the control goes inside it.
-                // This used to be one element doing both — a <th> carrying
-                // tabindex, role="button" and aria-sort. role="button" replaces
-                // the columnheader role, so the cell stopped being announced as
-                // a column header at all, and aria-sort, which is only defined
-                // on a header, became invalid on it. The W3C validator rejects
-                // that pair; a screen reader user simply lost the column.
-                $attrs = ' aria-sort="' . $ariaSort . '"';
-                $sortBtn = [$e($key), $newDir];
-                if ($this->sortCol === $key) {
-                    $clsList[] = 'gk-sorted-' . $this->sortDir;
-                }
-            }
-            $cls = $clsList ? ' class="' . implode(' ', $clsList) . '"' : '';
-            $inner = $e($col['label']);
-            if ($sortBtn !== null) {
-                $inner = '<button type="button" class="gk-sort-btn"'
-                       . ' data-gk-sort="' . $sortBtn[0] . '"'
-                       . ' data-gk-dir="' . $sortBtn[1] . '">' . $inner . '</button>';
-            }
-            // scope="col": without it a screen reader has to guess which
-            // header a cell belongs to, and on a table with an action column or
-            // a checkbox column it guesses wrong. This is the one attribute a
-            // data table cannot do without.
-            echo "<th scope=\"col\"{$cls}{$style}{$attrs}>" . $inner . "</th>";
+            $this->renderHeadCell($key, $col, $e);
         }
-        $leftButtons = array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'left');
-        $rightButtons = array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'right');
-        // How wide a full-width row is. The group heading, the empty state and
-        // the footer each used to work this out again from the same four
-        // terms; a column kind added to one of the three would have left the
-        // other two spanning the wrong width.
-        $colCount = count($this->columns)
-                  + ($leftButtons ? 1 : 0) + ($rightButtons ? 1 : 0) + ($this->selectable ? 1 : 0);
         // Empty header cells still need the scope, or the cells beneath them
         // inherit the association of the last real header to their left.
         if ($leftButtons) echo '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">'
             . $e(Lang::t('table.actions')) . '</span></th>';
         if ($rightButtons) echo '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">'
             . $e(Lang::t('table.actions')) . '</span></th>';
-        echo '</tr></thead><tbody>';
+        echo '</tr></thead>';
+    }
+
+    /**
+     * One header cell: width, classes, aria-sort and the sort button.
+     * $key keeps its type — a numeric column key is an int, and `$this->sortCol === $key` relies on that.
+     */
+    private function renderHeadCell(int|string $key, array $col, \Closure $e): void
+    {
+        $styles = [];
+        if (isset($col['width']) && $col['width'] !== 'auto') $styles[] = 'width:' . $e($col['width']);
+        if (isset($col['minWidth'])) $styles[] = 'min-width:' . $e($col['minWidth']);
+        if (isset($col['maxWidth'])) $styles[] = 'max-width:' . $e($col['maxWidth']);
+        if (!empty($col['nowrap'])) $styles[] = 'white-space:nowrap';
+        $style = $styles ? ' style="' . implode(';', $styles) . '"' : '';
+        $sortable = $col['sortable'] ?? false;
+        $clsList = [];
+        if ($sortable) $clsList[] = 'gk-sortable';
+        if (!empty($col['hideOnMobile'])) $clsList[] = 'gk-hide-mobile';
+        // Header and cells give way together (a list's 'priority').
+        if (isset($col['priority'])) $clsList[] = 'gk-col-p' . $col['priority'];
+        // A header stands where its column stands. The cells have carried
+        // 'align' and the numeric class all along; the header got neither, so
+        // a right-aligned column of figures sat under a left-aligned heading.
+        if (($alignCls = self::headerAlignClass($col)) !== '') $clsList[] = $alignCls;
+        $attrs = '';
+        $sortBtn = null;
+        if ($sortable) {
+            $newDir = ($this->sortCol === $key && $this->sortDir === 'asc') ? 'desc' : 'asc';
+            // A sortable header is a control, so it has to behave like
+            // one: reachable by Tab, announced as a button, and reporting
+            // the direction it is currently sorted in.
+            $ariaSort = $this->sortCol === $key
+                ? ($this->sortDir === 'asc' ? 'ascending' : 'descending')
+                : 'none';
+            // aria-sort belongs on the header; the control goes inside it.
+            // This used to be one element doing both — a <th> carrying
+            // tabindex, role="button" and aria-sort. role="button" replaces
+            // the columnheader role, so the cell stopped being announced as
+            // a column header at all, and aria-sort, which is only defined
+            // on a header, became invalid on it. The W3C validator rejects
+            // that pair; a screen reader user simply lost the column.
+            $attrs = ' aria-sort="' . $ariaSort . '"';
+            $sortBtn = [$e($key), $newDir];
+            if ($this->sortCol === $key) {
+                $clsList[] = 'gk-sorted-' . $this->sortDir;
+            }
+        }
+        $cls = $clsList ? ' class="' . implode(' ', $clsList) . '"' : '';
+        $inner = $e($col['label']);
+        if ($sortBtn !== null) {
+            $inner = '<button type="button" class="gk-sort-btn"'
+                   . ' data-gk-sort="' . $sortBtn[0] . '"'
+                   . ' data-gk-dir="' . $sortBtn[1] . '">' . $inner . '</button>';
+        }
+        // scope="col": without it a screen reader has to guess which
+        // header a cell belongs to, and on a table with an action column or
+        // a checkbox column it guesses wrong. This is the one attribute a
+        // data table cannot do without.
+        echo "<th scope=\"col\"{$cls}{$style}{$attrs}>" . $inner . "</th>";
+    }
+
+    /** The rows: group headings, one row per visible record, the empty state. */
+    private function renderTableBody(array $leftButtons, array $rightButtons, int $colCount, \Closure $e): void
+    {
+        echo '<tbody>';
 
         $groupCounts = [];
         if ($this->groupCol !== '') {
@@ -850,51 +880,7 @@ class Table
                     $lastGroup = $gk;
                 }
             }
-            $rowId = $this->selectable ? $e($row[$this->selectKey] ?? '') : '';
-            $rowIdAttr = $this->selectable ? ' data-gk-row-id="' . $rowId . '"' : '';
-            $target = $linkKey !== null ? $this->rowTarget($row, $e) : null;
-            echo '<tr' . ($target !== null ? ' class="gk-row-link"' : '') . $rowIdAttr . '>';
-            if ($this->selectable) {
-                // Named like the one in the header: unnamed, every row read as
-                // "checkbox" and nothing else.
-                echo '<td class="gk-cb-col"><input type="checkbox" aria-label="' . $e(Lang::t('table.select_row')) . '" value="' . $rowId . '"></td>';
-            }
-            if ($leftButtons) {
-                echo '<td class="gk-actions gk-actions-left"><div class="gk-btn-group">';
-                $this->renderButtons($leftButtons, $row, $e);
-                echo '</div></td>';
-            }
-            foreach ($this->columns as $key => $col) {
-                $val = $row[$key] ?? '';
-                $tdStyles = [];
-                $tdCls = [];
-                if (isset($col['align'])) $tdStyles[] = 'text-align:' . $e($col['align']);
-                if (isset($col['width']) && $col['width'] !== 'auto') $tdStyles[] = 'width:' . $e($col['width']);
-                if (isset($col['minWidth'])) $tdStyles[] = 'min-width:' . $e($col['minWidth']);
-                if (isset($col['maxWidth'])) $tdStyles[] = 'max-width:' . $e($col['maxWidth']);
-                if (!empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
-                if (($col['format'] ?? '') === 'currency' || ($col['format'] ?? '') === 'number') {
-                    $tdCls[] = 'gk-td-num';
-                    if (empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
-                }
-                if (!empty($col['hideOnMobile'])) $tdCls[] = 'gk-hide-mobile';
-                if (isset($col['priority'])) $tdCls[] = 'gk-col-p' . $col['priority'];
-                // Secondary columns (numbers, identifiers) step back in text color
-                // so that the actual name is what gets the attention.
-                if (!empty($col['muted'])) $tdCls[] = 'gk-td-muted';
-                $tdStyle = $tdStyles ? ' style="' . implode(';', $tdStyles) . '"' : '';
-                $tdClass = $tdCls ? ' class="' . implode(' ', $tdCls) . '"' : '';
-                $dataLabel = ' data-label="' . $e($col['label']) . '"';
-                // (string): a key like '2024' is an integer in a PHP array.
-                $formatted = $this->cellContent($val, $col, $row, $e, (string) $key === $linkKey ? $target : null);
-                echo "<td{$tdClass}{$tdStyle}{$dataLabel}>{$formatted}</td>";
-            }
-            if ($rightButtons) {
-                echo '<td class="gk-actions gk-actions-right"><div class="gk-btn-group">';
-                $this->renderButtons($rightButtons, $row, $e);
-                echo '</div></td>';
-            }
-            echo '</tr>';
+            $this->renderRow($row, $leftButtons, $rightButtons, $linkKey, $e);
         }
 
         // $visible, not $this->rows: a static table slices its own page here,
@@ -906,7 +892,67 @@ class Table
         }
 
         echo '</tbody>';
+    }
 
+    /** One row: its selection cell, the buttons on both sides and one cell per column. */
+    private function renderRow(array $row, array $leftButtons, array $rightButtons, ?string $linkKey, \Closure $e): void
+    {
+        $rowId = $this->selectable ? $e($row[$this->selectKey] ?? '') : '';
+        $rowIdAttr = $this->selectable ? ' data-gk-row-id="' . $rowId . '"' : '';
+        $target = $linkKey !== null ? $this->rowTarget($row, $e) : null;
+        echo '<tr' . ($target !== null ? ' class="gk-row-link"' : '') . $rowIdAttr . '>';
+        if ($this->selectable) {
+            // Named like the one in the header: unnamed, every row read as
+            // "checkbox" and nothing else.
+            echo '<td class="gk-cb-col"><input type="checkbox" aria-label="' . $e(Lang::t('table.select_row')) . '" value="' . $rowId . '"></td>';
+        }
+        if ($leftButtons) {
+            echo '<td class="gk-actions gk-actions-left"><div class="gk-btn-group">';
+            $this->renderButtons($leftButtons, $row, $e);
+            echo '</div></td>';
+        }
+        foreach ($this->columns as $key => $col) {
+            $this->renderCell($key, $col, $row, $linkKey, $target, $e);
+        }
+        if ($rightButtons) {
+            echo '<td class="gk-actions gk-actions-right"><div class="gk-btn-group">';
+            $this->renderButtons($rightButtons, $row, $e);
+            echo '</div></td>';
+        }
+        echo '</tr>';
+    }
+
+    /** One cell: alignment, widths, classes, the label of the column for the card layout, the formatted value. */
+    private function renderCell(int|string $key, array $col, array $row, ?string $linkKey, ?array $target, \Closure $e): void
+    {
+        $val = $row[$key] ?? '';
+        $tdStyles = [];
+        $tdCls = [];
+        if (isset($col['align'])) $tdStyles[] = 'text-align:' . $e($col['align']);
+        if (isset($col['width']) && $col['width'] !== 'auto') $tdStyles[] = 'width:' . $e($col['width']);
+        if (isset($col['minWidth'])) $tdStyles[] = 'min-width:' . $e($col['minWidth']);
+        if (isset($col['maxWidth'])) $tdStyles[] = 'max-width:' . $e($col['maxWidth']);
+        if (!empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
+        if (($col['format'] ?? '') === 'currency' || ($col['format'] ?? '') === 'number') {
+            $tdCls[] = 'gk-td-num';
+            if (empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
+        }
+        if (!empty($col['hideOnMobile'])) $tdCls[] = 'gk-hide-mobile';
+        if (isset($col['priority'])) $tdCls[] = 'gk-col-p' . $col['priority'];
+        // Secondary columns (numbers, identifiers) step back in text color
+        // so that the actual name is what gets the attention.
+        if (!empty($col['muted'])) $tdCls[] = 'gk-td-muted';
+        $tdStyle = $tdStyles ? ' style="' . implode(';', $tdStyles) . '"' : '';
+        $tdClass = $tdCls ? ' class="' . implode(' ', $tdCls) . '"' : '';
+        $dataLabel = ' data-label="' . $e($col['label']) . '"';
+        // (string): a key like '2024' is an integer in a PHP array.
+        $formatted = $this->cellContent($val, $col, $row, $e, (string) $key === $linkKey ? $target : null);
+        echo "<td{$tdClass}{$tdStyle}{$dataLabel}>{$formatted}</td>";
+    }
+
+    /** The footer: the cells the caller gave, and the load time or the row count. */
+    private function renderTableFoot(int $colCount, \Closure $e): void
+    {
         // Footer: custom cells or load time
         if ($this->footerCells || $this->loadTimeMs !== null) {
             echo '<tfoot><tr class="gk-table-footer">';
@@ -946,10 +992,11 @@ class Table
 
             echo '</tr></tfoot>';
         }
+    }
 
-        echo '</table>';
-
-        // Pagination
+    /** The pager under the table, for a table with more rows than one page. */
+    private function renderPager(\Closure $e): void
+    {
         if ($this->perPage > 0 && $this->totalRows > $this->perPage) {
             $pages = (int)ceil($this->totalRows / $this->perPage);
             // nav, so the pager is a landmark a screen reader can jump to and
