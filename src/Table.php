@@ -10,6 +10,9 @@ class Table
     /** Formats that write a link of their own — no row control may wrap them. */
     private const ROW_LINK_REFUSED = ['html', 'email'];
 
+    /** The highest page a request may ask for. A page past the end shows the empty state anyway. */
+    private const MAX_PAGE = 1000000;
+
     private string $id;
     private array $columns = [];
     private array $buttons = [];
@@ -52,7 +55,10 @@ class Table
         $this->id = $id;
         $this->sortCol = self::param('gk_sort');
         $this->sortDir = ($_GET['gk_dir'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
-        $this->currentPage = max(1, (int)($_GET['gk_page'] ?? 1));
+        // Capped: "?gk_page=99999999999999999999" is PHP_INT_MAX, and the offset worked out from it
+        // overflowed to a float (a TypeError in array_slice) while the pager's loop, which counts from
+        // the page to the page + 2, never ended — one hand-typed link held a PHP worker.
+        $this->currentPage = min(self::MAX_PAGE, max(1, (int)($_GET['gk_page'] ?? 1)));
         $this->searchQuery = trim(self::param('gk_search'));
     }
 
