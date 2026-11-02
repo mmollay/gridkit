@@ -7,6 +7,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.104.4] - 2026-11-02
+
+One hand-typed link could hold a PHP worker: `?gk_page=99999999999999999999` on a table with `paginate()`. The page a table may be asked for is capped now, and a page far past the end shows the empty state as before.
+
+### Fixed
+- **`Table`: `gk_page` without an upper bound.** The number is `PHP_INT_MAX` after the cast. On a table with `rows()` or `query()` the pager counts from the page to the page + 2, and past `PHP_INT_MAX` the counter stops moving, so the request never ended (until the server's time limit). On a table with `setData()` the offset overflowed to a float and `array_slice()` threw a `TypeError`, a server error. The page is capped at 1,000,000 (`Table::MAX_PAGE`); nothing below that changes, and a page past the last one still shows the empty state.
+
+### Tests
+- `tests/hostile-params.test.php` (24 assertions) renders `Table` (static and server-driven), `FilterChips`, `PageSize`, `YearFilter` and `Pagination` once for every pair of ten query parameters and nine hostile values (array, nested array, a number beyond `PHP_INT_MAX`, `PHP_INT_MAX`, negative, zero, a float, a script tag, a null byte), each component in a child process with a time limit so a relapse fails the test instead of stopping the suite. Without the cap it fails with the hang and the `TypeError`; with it the other four components were clean already.
+
+---
 ## [1.104.3] - 2026-11-02
 
 `Form` and `Table` declare `strict_types=1` now, the last two classes of `src/` that did not. A date column that holds a timestamp and a multiselect that holds one number keep working, and nothing a page can see changes.
