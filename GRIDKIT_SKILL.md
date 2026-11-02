@@ -488,6 +488,28 @@ adds more, and mapping `id` yourself overrides the default.
 **`showIf`:** `->button('preview', ['icon' => 'open_in_new', 'params' => ['url' => 'url'], 'showIf' => 'has_preview'])`
 — button only renders if the row's `has_preview` value is truthy.
 
+**`hideIf`:** the opposite: `->button('edit', ['icon' => 'edit', 'hideIf' => 'archived'])` leaves the
+button out when the row's `archived` value is truthy.
+
+**Column options** (the 3rd argument of `column()`):
+
+| Option | Effect |
+|---|---|
+| `sortable` | the header becomes a sort button (`aria-sort`) |
+| `width`, `minWidth`, `maxWidth` | CSS lengths on header and cells (`'120px'`, `'20%'`); `width` also takes `'auto'` |
+| `nowrap` | the cell never wraps |
+| `align` | `'left'`, `'center'` or `'right'`; `number` and `currency` columns are right-aligned without it |
+| `muted` | quieter text colour for secondary columns (numbers, identifiers) |
+| `hideOnMobile` | header and cells are gone at 768px and below |
+| `priority` | `2` to `5`, how early the column gives way in a `size('list')` table (see below) |
+| `format` | `currency`, `number`, `percent`, `date`, `datetime`, `boolean`, `email`, `label`, `html` |
+| `decimals` | digits after the decimal sign for `number` and `percent` |
+| `blankZero` | `number` only: `0`, an empty value and `null` show an em dash; `false` shows the `0` |
+| `currency` | `currency` only: the pattern with the amount at `{value}`, e.g. `'{value} CHF'` (default from the locale) |
+| `dateFormat` | `date` and `datetime`: a PHP `date()` format, e.g. `'d.m.Y'` (default from the locale) |
+| `labels` | `label` only: `'value' => 'green'`, or `'value' => ['color' => 'green', 'text' => 'Paid']` |
+| `href`, `sub` | the cell links to `'/customers/{id}'`; `sub` names a row key shown as a quiet second line |
+
 **`->selectable('id')`:** checkbox column, a select-all in the header, and a bulk bar. Deleting fires `gk:bulkdelete` with `{ ids, tableId }` — the application does the deleting. Every change fires `gk:selectionchange` with `{ ids, tableId, count }`, bulk bar or not. Shift-click selects a range. Without the `Table` class: `data-gk-table` + `data-gk-selectable`, rows carrying `data-gk-row-id` and a `td.gk-cb-col`. A row without `data-gk-row-id` cannot be selected. Select-all covers the visible rows only. After a live reload (`gk-live-reloaded`) GridKit re-binds the table.
 
 **`->emptyState($title, $opts)`** sets the wording for a table with no rows —
@@ -683,6 +705,13 @@ echo Button::render('Label', [
                               // Setting it makes the button a submit button,
                               // because a type="button" cannot submit anything
                               // — the attribute would just sit there inert.
+    'data'    => ['row' => 3],              // data-row="3": the key is written without `data-`
+    'attrs'   => ['aria-current' => 'page'], // only `aria-*`, `role`, `lang`, `dir` and `tabindex`;
+                                            // anything else is dropped, so a caller cannot add `onclick`
+    'iconPosition' => 'right', // left (default) | right — which side of the label
+    'fullWidth'    => true,    // fills the row (class gk-btn-full)
+    'iconStyle'    => 'svg',   // auto (default: GridKit's own outline icon when it has the
+                               // name, else the icon font) | svg | material (force the font)
 ]);
 
 // A floating action button — round, fixed, bottom right.
@@ -915,6 +944,9 @@ echo Select::searchable('country', ['at' => 'Austria', 'de' => 'Germany'], [
     'label'             => 'Country',
     'id'                => 'country',
     'class'             => 'my-extra-class',
+    'invalid'           => true,                 // aria-invalid="true" on the control
+    'listId'            => 'country-list',       // id of the options list (aria-controls);
+                                                 // derived from `id` when not given
 ]);
 ```
 
@@ -1267,6 +1299,14 @@ searchable select is plain `'select'`.
 | `placeholder` | input types, `select`, `multiselect`, `ajaxselect` | the input's placeholder — on `select` the empty-state text, on `multiselect`/`ajaxselect` the search box's. `textarea` and `richtext` are not in that list: they drop it silently, and `rows` is `textarea`'s only extra option |
 | `options` | `select`, `multiselect`, `radio` | `value => label` map |
 | `rows` | `textarea` | height in rows (default `3`) |
+| `clearable` | text-type inputs (`text`, `number`, `date`, …) | a small button inside the box that empties it; it shows only while there is something to clear |
+| `accept` | `file` | which files the zone takes: an array `['pdf', 'jpg']` or a string `'.pdf,.jpg'`; also the `accept` of the input |
+| `maxSize`, `minSize`, `maxTotalSize`, `maxFiles` | `file` | limits the browser checks before anything is sent: sizes as text (`'5 MB'`, `'200 KB'`), `maxTotalSize` for all files together, `maxFiles` a count. `maxSize` also fills the hint line (`Max. 5 MB`) unless `hint` is given |
+| `multiple`, `preview` | `file` | several files, posted as `name[]`; thumbnails of the chosen pictures |
+| `label_text`, `icon`, `hint` | `file` | the wording of the zone, its icon (default `cloud_upload`) and the quiet line under it |
+| `labelField`, `valueField`, `subtextField` | `ajaxselect` | which keys of each JSON result the list reads: the text shown (default `name`), the value posted (default `id`), and an optional second line (default none) |
+| `minChars`, `searchParam` | `ajaxselect` | how many characters before the first request (default `2`) and the query parameter the typed text travels in (default `q`) |
+| `uploadHeaders` | `richtext` with `upload` | extra headers for the upload request, typically a CSRF token: `['X-CSRF-Token' => $token]` |
 | `preset` | `richtext` | `'full'` (default) or `'basic'` — how much toolbar |
 | `upload` | `richtext` | a URL. Turns pictures on: an upload button, drag & drop, paste, **alignment** (left/right with text flowing beside it, own line centred), size handles and alt text. Off without it, because an upload button with nowhere to put the file is worse than none. The endpoint takes a POST with the file under `upload` and answers `{"url":"https://…"}`, or `{"error":{"message":"…"}}` — CKEditor's SimpleUploadAdapter contract. **Return an absolute URL**: relative ones work on the page and break the moment the content is mailed. Pictures render as a plain `<img>` in the paragraph with the size as an inline `style`, deliberately not as `<figure class="image">`, so the same content survives being sent as an e-mail |
 | `min`, `max`, `step` | `range`, `number`, `date`/`time` | bounds (`range` defaults to `0`/`100`/`1` and starts at `min`) |
