@@ -7,6 +7,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.104.2] - 2026-11-02
+
+Housekeeping: the two longest methods of the form and the table are cut into parts, and the notes for coding sessions say what is true again. Nothing a page can see changes — no class, no option, no markup, byte for byte, and a recording of 150 renderings holds that to account.
+
+### Changed
+- **`Form::renderField()`** from 598 to 121 lines (most of it the comments of the shared preamble): one private method per field type — `renderTextarea`, `renderSelect`, `renderMultiselect`, `renderAjaxSelect`, `renderToggle`, `renderCheckbox`, `renderRadio`, `renderRange`, `renderFile`, `renderColor`, `renderRichtext`, `renderInput` — and the switch only dispatches. What the preamble works out is handed on as one array. The rich-text script, by far the longest part, is split three ways (the alignment buttons, the picture options, the initial value). No method of the class is longer than 66 lines now.
+- **`Table::renderInner()`** from 295 to 39 lines: `renderTableHead()`, `renderTableBody()`, `renderTableFoot()` and `renderPager()`, with `renderHeadCell()`, `renderRow()` and `renderCell()` below them. The column key is passed as `int|string`, never as `string`: a numeric column key is an int in a PHP array and `$this->sortCol === $key` depends on that.
+- **`declare(strict_types=1)`** in `Modal`, `ActionGroup` and `BelegModal`, the three small classes that lacked it. `ActionGroup` casts a scalar label before it reaches `Button::render(string …)`, so a label that is a number keeps working; an array still fails as before. Rendering `ActionGroup` with values of eleven kinds in each of twelve options, before and after, gave the same output or the same exception in all 145 cases.
+- **`.claude/CLAUDE.md`** replaces `.CLAUDE.md`, a blueprint of version 1.1.0 that described `app/`, `core/` and `themes/`, none of which exist; its leading dot kept it off the website and also meant no coding session ever loaded it. The new file says what is true now (this directory is the website, how the tests and the browser checks run, the release order, the generated `skill/`, the three files the dashboard keeps its own versions of). It stays in a dot-directory, which `.htaccess` answers 403 for. `/.claude` is `export-ignore`, `.claude/settings.local.json` is git-ignored.
+
+### Tests
+- `tests/golden-form.test.php` (92 cases) and `tests/golden-table.test.php` (58 cases) render every field type and a table in all its variants (sorting, selection, row buttons, every cell format, grouping, `rowLink`, the pager at its edges, empty states, toolbar, footer, load time, the data block, the AJAX fragment) and compare the markup with `tests/golden/form.json` and `tests/golden/table.json`. Each case is rendered twice and must agree; the six hex digits that colour and rich-text ids append are normalised. A deliberate change of markup is recorded with `GK_UPDATE_GOLDEN=1 php tests/run.php golden-form` (or `golden-table`) and the diff of the JSON is read before it is committed. Recorded on the old code, then the methods were moved: the files did not change. Checked by changing one class name in five places of the form and eleven of the table — each turned the test red.
+- Whole suite: 8323 assertions (7958 before). The browser checks give the numbers they gave before (138, 83, 116, 293); `ci/browser-sortierbar.js` S17 (390 px, sideways overflow of 50 px) fails in the cloud sandbox as it did before this release. The whole demo page (613 KB) renders byte for byte as before, apart from the random ids and the `?v=` file times.
+
+### Notes
+- **Why `Form` and `Table` still lack `strict_types`.** Rendering 9,699 combinations (every format, option and field type with values of every kind) with and without it shows what would change: a `date` or `datetime` column whose value is an int or a float (`strtotime()` gets a number) and a `multiselect` whose value is a single number (`explode()`) would throw a `TypeError` where they work today, and, unlikely in practice, a field name, an icon or a `currency` that is not a string. None of that is in the tests. A cast keeps today's behaviour; adding it is a separate decision.
+- **Found on the way, not changed:** a `date` column with an int timestamp as its value shows 1970 — `strtotime("1700000000")` is `false`, and `date()` turns that into 0.
+
+---
 ## [1.104.1] - 2026-11-02
 
 The demo opens with an example instead of the changelog. The "What's new" box stood open above the first example on every visit — most of the first screen on a laptop — so the table the demo is about began below the fold. Demo only: no class, no token and no rule of the stylesheet changes.
