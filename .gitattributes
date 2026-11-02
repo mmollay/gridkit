@@ -21,7 +21,7 @@
 /SECURITY.md      export-ignore
 /tests            export-ignore
 /SPEC.md          export-ignore
-/.CLAUDE.md       export-ignore
+/.claude          export-ignore
 /.gitattributes   export-ignore
 /.gitignore       export-ignore
 # The site's Apache configuration, and it says so in its own first line. It

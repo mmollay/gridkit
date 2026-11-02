@@ -3,6 +3,9 @@
 .env
 *.mp3
 
+# Per-machine settings of a coding session. .claude/CLAUDE.md is tracked; this is not.
+.claude/settings.local.json
+
 # Design audit: the embedded canvas is a ~2.5 MB generated file. The .dc.html
 # sources next to it are the working files and do belong in the repository.
 .design/gridkit-design-audit.html
