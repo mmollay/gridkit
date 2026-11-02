@@ -29,6 +29,16 @@ if (isset($_GET['reset'])) {
 
 /* ── The table ─────────────────────────────────────────────────────────── */
 
+// The export button of a server-driven table reloads the page with ?gk_export=csv and waits for a file:
+// the same search, filter and sort as the table shows, without the paging (one page as long as the list).
+if (Table::wantsCsv()) {
+    Table::sendCsv(queryInvoices(PHP_INT_MAX)['rows'], [
+        'number' => t('number'), 'customer' => t('customer'), 'issued' => t('issued'),
+        'due' => t('due'), 'amount' => t('amount'), 'status' => t('status'),
+    ], 'invoices.csv', ['delimiter' => $lang === 'de' ? ';' : ',']);   // German Excel reads a semicolon
+    exit;
+}
+
 $result = queryInvoices();
 
 $table = (new Table('invoices'))
@@ -51,6 +61,7 @@ $table = (new Table('invoices'))
         'overdue' => ['color' => 'red',    'text' => t('st_overdue')],
     ]])
     ->filter('status', 'select', ['options' => statuses()])
+    ->exportCsv('invoices.csv', ['delimiter' => $lang === 'de' ? ';' : ','])
     ->button('edit',   ['icon' => 'edit',   'modal' => 'invoice_form', 'title' => t('edit')])
     // A modal, because the dialog names the invoice it is about. The shorter
     // route is ['confirm' => true], which asks with a standard dialog and then

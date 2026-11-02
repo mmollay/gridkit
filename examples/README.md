@@ -12,7 +12,8 @@ break it, and read every line that makes it work.
 ![The invoice example](../docs/screenshots/example-invoices.png)
 
 List, create, edit, delete. Search, filter, sort and paging, all answered by the
-server over AJAX. Runs in English and German. About 300 lines across five files,
+server over AJAX, a CSV download of what the table shows (`exportCsv()`), and an edit
+form filled by `values()`. Runs in English and German. About 300 lines across five files,
 with no database and no build step.
 
 ```bash

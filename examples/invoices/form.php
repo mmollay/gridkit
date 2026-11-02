@@ -17,6 +17,15 @@ use GridKit\Form;
 $id      = (int) ($_POST['id'] ?? 0);
 $invoice = $id ? findInvoice($id) : null;
 
+// What the form starts with: the invoice being edited, or the defaults of a new one.
+// values() fills every field by its name — no 'value' => $invoice['x'] ?? '' on each of them.
+$start = $invoice ?? [
+    'number' => nextNumber(),
+    'status' => 'draft',
+    'issued' => date('Y-m-d'),
+    'due'    => date('Y-m-d', strtotime('+30 days')),
+];
+
 $form = new Form('invoice_form');
 $form->action('save.php')
     ->ajax()
@@ -24,33 +33,16 @@ $form->action('save.php')
     ->hidden('id', $invoice['id'] ?? '')
     ->hidden('lang', $lang)
     ->row()
-        ->field('number', t('number'), 'text', [
-            'required' => true, 'width' => 6,
-            'value' => $invoice['number'] ?? nextNumber(),
-        ])
-        ->field('status', t('status'), 'select', [
-            'width' => 5, 'options' => statuses(),
-            'value' => $invoice['status'] ?? 'draft',
-        ])
-        ->field('amount', t('amount'), 'text', [
-            'required' => true, 'width' => 5,
-            'value' => $invoice['amount'] ?? '',
-        ])
+        ->field('number', t('number'), 'text', ['required' => true, 'width' => 6])
+        ->field('status', t('status'), 'select', ['width' => 5, 'options' => statuses()])
+        ->field('amount', t('amount'), 'text', ['required' => true, 'width' => 5])
     ->endRow()
-    ->field('customer', t('customer'), 'text', [
-        'required' => true,
-        'value' => $invoice['customer'] ?? '',
-    ])
+    ->field('customer', t('customer'), 'text', ['required' => true])
     ->row()
-        ->field('issued', t('issued'), 'date', [
-            'width' => 8, 'value' => $invoice['issued'] ?? date('Y-m-d'),
-        ])
-        ->field('due', t('due'), 'date', [
-            'width' => 8, 'value' => $invoice['due'] ?? date('Y-m-d', strtotime('+30 days')),
-        ])
+        ->field('issued', t('issued'), 'date', ['width' => 8])
+        ->field('due', t('due'), 'date', ['width' => 8])
     ->endRow()
-    ->field('notes', t('notes'), 'textarea', [
-        'rows' => 2, 'value' => $invoice['notes'] ?? '',
-    ])
+    ->field('notes', t('notes'), 'textarea', ['rows' => 2])
+    ->values($start)
     ->submit(t('save'))
     ->render();
