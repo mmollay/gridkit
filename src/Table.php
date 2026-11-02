@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace GridKit;
 
 use GridKit\Button;
@@ -1352,11 +1354,13 @@ class Table
             // decimal sign, 'decimals' when asked, a space before the sign. The
             // cell cut to a whole number and wrote "12%" under a card saying "12,5 %".
             'percent' => $e(self::percent($val, isset($col['decimals']) ? (int) $col['decimals'] : null)),
+            // strtotime() takes a string and date() an int. A timestamp from the database is an int and
+            // an unreadable date makes strtotime() answer false; both used to be coerced silently.
             'date' => $val
-                ? $e(date($col['dateFormat'] ?? Lang::t('format.date'), strtotime($val)))
+                ? $e(date($col['dateFormat'] ?? Lang::t('format.date'), (int) strtotime(is_scalar($val) ? (string) $val : $val)))
                 : '',
             'datetime' => $val
-                ? $e(date($col['dateFormat'] ?? Lang::t('format.datetime'), strtotime($val)))
+                ? $e(date($col['dateFormat'] ?? Lang::t('format.datetime'), (int) strtotime(is_scalar($val) ? (string) $val : $val)))
                 : '',
             'boolean' => (int)$val ? '<span class="gk-bool gk-bool-yes">✓</span>' : '<span class="gk-bool gk-bool-no">–</span>',
             // The empty guard the date formats two lines up already have. An

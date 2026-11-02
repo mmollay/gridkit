@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace GridKit;
 
 use GridKit\Button;
@@ -309,7 +311,8 @@ class Form
     {
         ['name' => $name, 'label' => $label, 'value' => $value, 'req' => $req, 'showLabel' => $showLabel, 'labelId' => $labelId] = $x;
         $options = $f['options'] ?? [];
-        $selectedValues = is_array($value) ? $value : ($value ? explode(',', $value) : []);
+        // A single selected id from the database is a number, not "5": explode() takes a string.
+        $selectedValues = is_array($value) ? $value : ($value ? explode(',', is_scalar($value) ? (string) $value : $value) : []);
         $placeholder = $f['placeholder'] ?? Lang::t('form.search');
         $searchable = !empty($f['searchable']);
         echo '<div class="gk-multiselect" data-gk-multiselect>';
