@@ -30,6 +30,10 @@ class Form
     private bool $wrapCard = false;
     private string $cancelLabel = '';
     private string $cancelHref = '';
+    /** @var array<string,mixed> */
+    private array $values = [];
+    /** @var array<string,string> */
+    private array $errors = [];
 
     public function __construct(string $id)
     {
@@ -42,6 +46,37 @@ class Form
     public function card(bool $wrap = true): static { $this->wrapCard = $wrap; return $this; }
     public function cancel(string $label, string $href): static { $this->cancelLabel = $label; $this->cancelHref = $href; return $this; }
     public function submit(string $label): static { $this->submitLabel = $label; return $this; }
+
+    /**
+     * Fill the fields from a record, by field name: `->values($invoice)`.
+     *
+     * Every field whose name is a key of the array takes that value as its `value`; keys with no field
+     * are ignored, so a whole database row can be passed. A field's own `'value'` option wins, and
+     * calling it again adds to what was given before. Replaces `'value' => $row['x'] ?? ''` on each field.
+     *
+     * @param array<string,mixed> $values
+     */
+    public function values(array $values): static
+    {
+        $this->values = $values + $this->values;
+        return $this;
+    }
+
+    /**
+     * Show validation messages by field name: `->errors(['email' => 'Not an address'])`.
+     *
+     * Each message goes where the field's own `'error'` option would put it (red under the field,
+     * `aria-invalid`, announced). A field's own non-empty `'error'` wins. A message whose key names no
+     * field — `'_form'` or any other — is shown in one message above the form. This is the way to show
+     * the errors of a POST that is redisplayed; an AJAX form gets them from the server's JSON as before.
+     *
+     * @param array<string,string> $errors
+     */
+    public function errors(array $errors): static
+    {
+        $this->errors = $errors + $this->errors;
+        return $this;
+    }
 
     public function hidden(string $name, mixed $value): static
     {
@@ -79,7 +114,10 @@ class Form
         if ($this->wrapCard) echo '<div class="gk-card" style="padding:24px;">';
         echo "<form {$attrs}>";
 
-        foreach ($this->fields as $f) {
+        [$fields, $unmatched] = $this->withValuesAndErrors();
+        if ($unmatched) echo $this->renderFormErrors($unmatched, $e);
+
+        foreach ($fields as $f) {
             match ($f['type']) {
                 // `->hidden()` always sets a value; `->field($n, $l, 'hidden')`
                 // reaches the same arm and need not.
@@ -107,6 +145,46 @@ class Form
 
         echo '</form>';
         if ($this->wrapCard) echo '</div>';
+    }
+
+    /**
+     * The fields with what values() and errors() gave them, and the error messages no field took.
+     * A field's own 'value' and its own non-empty 'error' stay as they are.
+     *
+     * @return array{0: list<array<string,mixed>>, 1: list<string>}
+     */
+    private function withValuesAndErrors(): array
+    {
+        $fields = [];
+        $taken = [];
+        foreach ($this->fields as $f) {
+            $name = isset($f['name']) && is_string($f['name']) ? $f['name'] : null;
+            if ($name !== null) {
+                if (!array_key_exists('value', $f) && array_key_exists($name, $this->values)) {
+                    $f['value'] = $this->values[$name];
+                }
+                if (array_key_exists($name, $this->errors)) {
+                    $taken[$name] = true;
+                    if (trim((string) ($f['error'] ?? '')) === '') $f['error'] = (string) $this->errors[$name];
+                }
+            }
+            $fields[] = $f;
+        }
+        $unmatched = [];
+        foreach ($this->errors as $key => $message) {
+            if (!isset($taken[(string) $key]) && trim((string) $message) !== '') $unmatched[] = (string) $message;
+        }
+        return [$fields, $unmatched];
+    }
+
+    /** One message above the form for the errors that belong to no field. */
+    private function renderFormErrors(array $messages, \Closure $e): string
+    {
+        $body = count($messages) === 1
+            ? $e($messages[0])
+            : '<ul class="gk-message-list"><li>' . implode('</li><li>', array_map($e, $messages)) . '</li></ul>';
+        return '<div class="gk-message gk-message-error" role="alert"><span class="material-icons" aria-hidden="true">error</span>'
+             . '<div class="gk-message-content">' . $body . '</div></div>';
     }
 
     private function renderRowStart(array $f): void

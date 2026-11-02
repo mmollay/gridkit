@@ -159,6 +159,8 @@ selects, rich text. Same fluent API as everything else.
     ->field('name',  'Product', 'text',     ['required' => true, 'width' => 12])
     ->field('notes', 'Notes',   'textarea', ['width' => 16])
     ->field('unit',  'Unit',    'select',   ['options' => $units, 'width' => 6])
+    ->values($product)                  // fill every field from a record, by name
+    ->errors($errors)                   // show a failed save's messages, by name
     ->render();
 ```
 

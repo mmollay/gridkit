@@ -375,5 +375,21 @@ $form->row()
   &lt;/div&gt;
 &lt;/div&gt;</pre>
     </div>
+
+    <h3 class="demo-h3" id="form-values">Fill from a record, show errors</h3>
+    <p class="demo-intro"><code>values()</code> fills every field whose name is a key of the record (a field's own <code>'value'</code> wins), <code>errors()</code> puts each message under its field, and a message that names no field is shown once above the form. Together they are an edit form shown again after a failed save.</p>
+        <?php
+        showcase(function () {
+            $invoice = ['number' => 'INV-2026-007', 'customer' => '', 'status' => 'draft', 'amount' => '12,5', 'ignored' => 'a key without a field'];
+            (new Form('demo-values'))
+                ->field('number', 'Number', 'text', ['width' => 8, 'required' => true])
+                ->field('status', 'Status', 'select', ['width' => 8, 'options' => ['draft' => 'Draft', 'paid' => 'Paid']])
+                ->field('customer', 'Customer', 'text', ['required' => true])
+                ->field('amount', 'Amount', 'text')
+                ->values($invoice)
+                ->errors(['customer' => 'Required', 'amount' => 'Not a number', '_form' => 'The invoice was not saved.'])
+                ->render();
+        });
+        ?>
 </div>
 

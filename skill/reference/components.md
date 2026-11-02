@@ -967,6 +967,30 @@ underline. The close button is `--gk-target-min` (44px) docked and on a phone.
     ->render();
 ```
 
+**Filling a form from a record, and showing errors (since 1.105.0).** `->values($record)` fills every
+field whose name is a key of the array (keys without a field are ignored, so a whole database row can
+be passed); a field's own `'value'` wins, and a second call adds to the first. `->errors($errors)` puts
+each message where the field's own `'error'` would (red under the field, `aria-invalid`); a field's own
+non-empty `'error'` wins, and a message whose key names no field (`'_form'`, say) is shown once in a
+message above the form. Both change nothing else in the markup.
+
+```php
+// An edit form, shown again after a failed POST:
+$statuses = ['draft' => 'Draft', 'paid' => 'Paid'];
+$invoice  = ['number' => 'INV-7', 'customer' => 'Acme', 'status' => 'paid'];
+$errors   = ['customer' => 'Required', '_form' => 'Could not save'];
+
+(new Form('invoice'))
+    ->action('save.php')
+    ->field('number',   'Number',   'text',   ['required' => true, 'width' => 8])
+    ->field('customer', 'Customer', 'text',   ['required' => true])
+    ->field('status',   'Status',   'select', ['options' => $statuses])
+    ->values($_POST ?: $invoice)                 // instead of 'value' => $invoice['x'] ?? '' on each field
+    ->errors($errors)                            // ['customer' => 'Required', '_form' => 'Could not save']
+    ->submit('Save')
+    ->render();
+```
+
 **Field types.** Twelve have rendering of their own:
 
 `textarea` · `select` (searchable) · `multiselect` · `ajaxselect` · `checkbox` ·
