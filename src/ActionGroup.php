@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace GridKit;
 
 /**
@@ -41,7 +43,10 @@ class ActionGroup
         $out = '<div class="gk-action-group' . $extraClass . '">';
         foreach ($actions as $a) {
             if (array_key_exists('showIf', $a) && !$a['showIf']) continue;
-            $out .= Button::render($a['label'] ?? '', self::mapOpts($a));
+            // Button::render() takes a string, and a label that is a number (a count) has always been
+            // accepted as one. Under strict_types that has to be said here; an array still fails, as before.
+            $label = $a['label'] ?? '';
+            $out .= Button::render(is_scalar($label) ? (string) $label : $label, self::mapOpts($a));
         }
         $out .= '</div>';
         return $out;
