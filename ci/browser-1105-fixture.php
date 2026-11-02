@@ -63,9 +63,22 @@ echo '<hr>';
     ->render();
 $tables = ob_get_clean();
 
+ob_start();
+(new Form('cond'))->action('/x')
+    ->field('kind', 'Kind', 'select', ['options' => ['person' => 'Person', 'company' => 'Company', 'other' => 'Other'], 'native' => true, 'value' => 'person'])
+    ->field('company', 'Company name', 'text', ['required' => true, 'showIf' => ['field' => 'kind', 'equals' => 'company']])
+    ->field('vat', 'VAT id', 'text', ['showIf' => ['field' => 'company', 'filled' => true]])
+    ->field('plain', 'Not a person', 'text', ['showIf' => ['field' => 'kind', 'not' => 'person']])
+    ->field('newsletter', 'Newsletter', 'toggle')
+    ->field('email', 'Email', 'text', ['showIf' => ['field' => 'newsletter', 'equals' => '1']])
+    ->field('channel', 'Channel', 'radio', ['options' => ['a' => 'A', 'b' => 'B'], 'value' => 'a'])
+    ->field('detail', 'Detail', 'text', ['showIf' => ['field' => 'channel', 'in' => ['b', 'c']]])
+    ->render();
+$cond = ob_get_clean();
+
 $head = '<head><meta charset="utf-8"><title>1.105.0</title><style>' . file_get_contents($root . '/css/gridkit.css') . '</style></head>';
 $script = '<script>' . file_get_contents($root . '/js/gridkit.js') . '</script>';
 
 echo '<!DOCTYPE html><html lang="en">' . $head . '<body class="gk-root">' . Lang::jsConfig()
-   . '<main style="padding:16px;max-width:900px">' . $tables . '</main>'
+   . '<main style="padding:16px;max-width:900px">' . $tables . '<hr>' . $cond . '<div id="late"></div></main>'
    . $script . '</body></html>';

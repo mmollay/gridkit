@@ -6334,3 +6334,90 @@ document.addEventListener("click", function (ev) {
   link.remove();
   setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
 });
+
+// 3 ── conditional fields: `data-gk-show-if='{"field":"kind","equals":"company"}'` on a .gk-field.
+// A field that is not shown is hidden AND disabled, so it is neither posted nor validated and
+// cannot take the focus; what was disabled before stays disabled when it is shown again.
+
+/** What the controlling field holds: a string, or a list of strings for a group of checkboxes. */
+function _gkShowIfValue(form, name) {
+  var els = Array.prototype.filter.call(form.elements, function (el) {
+    return el.name === name || el.name === name + "[]";
+  });
+  if (!els.length) return "";
+  // A controlling field that is itself hidden holds nothing: a chain of conditions folds away together.
+  var wrapper = els[0].closest("[data-gk-show-if]");
+  if (wrapper && wrapper.hidden) return "";
+  var first = els[0];
+  if (first.type === "radio") {
+    var on = els.filter(function (el) { return el.checked; })[0];
+    return on ? on.value : "";
+  }
+  if (first.type === "checkbox") {
+    var ticked = els.filter(function (el) { return el.checked; }).map(function (el) { return el.value; });
+    return els.length > 1 || first.name.slice(-2) === "[]" ? ticked : ticked.length ? ticked[0] : "";
+  }
+  // A multiselect keeps its choices as a comma list in one hidden input.
+  if (first.closest("[data-gk-multiselect]")) return first.value === "" ? [] : first.value.split(",");
+  return first.value;
+}
+
+function _gkShowIfMatch(cond, value) {
+  var vals = Array.isArray(value) ? value : [value];
+  if ("equals" in cond) return vals.indexOf(String(cond.equals)) > -1;
+  if ("not" in cond) return vals.indexOf(String(cond.not)) === -1;
+  if ("in" in cond) return vals.some(function (v) { return cond.in.map(String).indexOf(v) > -1; });
+  if ("filled" in cond) return vals.some(function (v) { return v !== ""; }) === !!cond.filled;
+  return true;
+}
+
+function _gkShowIfApply(form) {
+  form.querySelectorAll("[data-gk-show-if]").forEach(function (box) {
+    var cond;
+    try { cond = JSON.parse(box.getAttribute("data-gk-show-if")); } catch (e) { return; }
+    if (!cond || !cond.field) return;
+    var show = _gkShowIfMatch(cond, _gkShowIfValue(form, cond.field));
+    if (box.hidden === !show) return;
+    box.hidden = !show;
+    box.querySelectorAll("input, select, textarea, button").forEach(function (c) {
+      if (!show) {
+        if (c.disabled) c.setAttribute("data-gk-was-disabled", "");
+        c.disabled = true;
+      } else if (c.hasAttribute("data-gk-was-disabled")) {
+        c.removeAttribute("data-gk-was-disabled");
+      } else {
+        c.disabled = false;
+      }
+    });
+  });
+}
+
+function _gkShowIfInit(root) {
+  var forms = [];
+  if (root.closest && root.closest("form")) forms.push(root.closest("form"));
+  if (root.querySelectorAll) forms = forms.concat(Array.prototype.slice.call(root.querySelectorAll("form")));
+  forms.forEach(function (form) {
+    if (form.querySelector("[data-gk-show-if]")) _gkShowIfApply(form);
+  });
+}
+
+["input", "change"].forEach(function (type) {
+  document.addEventListener(type, function (ev) {
+    var form = ev.target.closest ? ev.target.closest("form") : null;
+    if (form && form.querySelector("[data-gk-show-if]")) _gkShowIfApply(form);
+  });
+});
+
+// Forms that arrive later (a modal, a live reload) go through GK.initContent; the first pass is now.
+(function () {
+  var original = GK.initContent;
+  if (typeof original === "function") {
+    GK.initContent = function (root) {
+      var result = original.apply(GK, arguments);
+      _gkShowIfInit(root || document);
+      return result;
+    };
+  }
+  _gkReady(function () { _gkShowIfInit(document); });
+})();
+

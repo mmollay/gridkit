@@ -127,6 +127,67 @@ const COLUMNS = { name: "Name", email: "Email", note: "Note", qty: "Qty" }; // "
     // ── CSV export, a server-driven table ────────────────────────────────
     await Promise.all([page.waitForURL(/gk_export=csv/), page.click('[data-gk-table="server"] [data-gk-export-csv]')]);
     check("a table with no rows in the browser reloads the page with ?gk_export=csv", /gk_export=csv/.test(page.url()), page.url());
+
+    // ── Conditional form fields ──────────────────────────────────────────
+    const state = (name) => page.evaluate((n) => {
+      const el = document.querySelector('#cond [name="' + n + '"]');
+      const box = el.closest(".gk-field");
+      return { hidden: box.hidden, disabled: el.disabled, shown: el.offsetParent !== null };
+    }, name);
+    const posted = () => page.evaluate(() => [...new FormData(document.getElementById("cond")).keys()]);
+
+    let s = {};
+    for (const n of ["company", "vat", "plain", "email", "detail"]) s[n] = await state(n);
+    check("a field whose condition does not hold starts hidden and disabled",
+      ["company", "vat", "plain", "email", "detail"].every((n) => s[n].hidden && s[n].disabled && !s[n].shown), JSON.stringify(s));
+    check("a hidden field is not posted and its 'required' blocks nothing",
+      !(await posted()).includes("company") && (await page.evaluate(() => document.getElementById("cond").checkValidity())));
+
+    await page.selectOption('#cond [name="kind"]', "company");
+    s = { company: await state("company"), vat: await state("vat"), plain: await state("plain") };
+    check("equals: choosing the value shows the field, enabled and posted",
+      !s.company.hidden && !s.company.disabled && s.company.shown && (await posted()).includes("company"), JSON.stringify(s.company));
+    check("…and it is required again: the form is not valid while it is empty",
+      !(await page.evaluate(() => document.getElementById("cond").checkValidity())));
+    check("not: 'company' is not 'person', so that field shows too", !s.plain.hidden && !s.plain.disabled);
+    check("filled: a field that waits for text in another stays hidden while it is empty", s.vat.hidden);
+
+    await page.fill('#cond [name="company"]', "Acme");
+    check("filled: it shows as soon as there is text", !(await state("vat")).hidden);
+
+    await page.selectOption('#cond [name="kind"]', "other");
+    s = { company: await state("company"), vat: await state("vat") };
+    check("a chain folds away together: hiding a field hides what waits for it",
+      s.company.hidden && s.company.disabled && s.vat.hidden && s.vat.disabled, JSON.stringify(s));
+    await page.selectOption('#cond [name="kind"]', "company");
+    check("…and back: the text typed before is still there", (await page.inputValue('#cond [name="company"]')) === "Acme" && !(await state("vat")).hidden);
+
+    await page.click("#cond label.gk-toggle");
+    check("a switch: ticked is '1', so equals '1' shows the field", !(await state("email")).hidden);
+    await page.click("#cond label.gk-toggle");
+    check("…and unticked hides it again", (await state("email")).hidden);
+
+    await page.click('#cond label.gk-radio-wrap:has([value="b"])');
+    check("in: one radio of the list shows the field", !(await state("detail")).hidden);
+    await page.click('#cond label.gk-radio-wrap:has([value="a"])');
+    check("…and another hides it", (await state("detail")).hidden);
+
+    // Forms that arrive later, and a control that was disabled before it was hidden.
+    await page.evaluate(() => {
+      document.getElementById("late").innerHTML =
+        '<form id="raw"><select name="k"><option value="a">a</option><option value="b">b</option></select>' +
+        '<div class="gk-field" data-gk-show-if=\'{"field":"k","equals":"b"}\'><input name="x" disabled><input name="y"></div></form>';
+      GK.initContent(document.getElementById("late"));
+    });
+    const raw = () => page.evaluate(() => ({
+      hidden: document.querySelector("#raw .gk-field").hidden,
+      x: document.querySelector('#raw [name="x"]').disabled,
+      y: document.querySelector('#raw [name="y"]').disabled,
+    }));
+    check("injected markup is evaluated through GK.initContent", (await raw()).hidden && (await raw()).y);
+    await page.selectOption('#raw [name="k"]', "b");
+    const shown = await raw();
+    check("shown again: what was enabled is enabled, what was disabled stays disabled", !shown.hidden && shown.x && !shown.y, JSON.stringify(shown));
   } finally {
     await browser.close();
   }

@@ -391,5 +391,19 @@ $form->row()
                 ->render();
         });
         ?>
+
+    <h3 class="demo-h3" id="form-show-if">Conditional fields</h3>
+    <p class="demo-intro"><code>'showIf'</code> shows a field only while another field has a value: <code>equals</code>, <code>not</code>, <code>in</code> or <code>filled</code>. A field that is not shown is hidden and disabled, so it is not posted and <code>required</code> blocks nothing. Choose a kind below; the VAT id waits for the company name, which waits for the kind.</p>
+        <?php
+        showcase(function () {
+            (new Form('demo-show-if'))
+                ->field('kind', 'Kind', 'select', ['native' => true, 'value' => 'person', 'options' => ['person' => 'Person', 'company' => 'Company', 'club' => 'Club']])
+                ->field('company', 'Company name', 'text', ['required' => true, 'showIf' => ['field' => 'kind', 'equals' => 'company']])
+                ->field('vat', 'VAT id', 'text', ['showIf' => ['field' => 'company', 'filled' => true]])
+                ->field('birthday', 'Date of birth', 'date', ['showIf' => ['field' => 'kind', 'equals' => 'person']])
+                ->field('board', 'Board members', 'text', ['showIf' => ['field' => 'kind', 'in' => ['company', 'club']]])
+                ->render();
+        });
+        ?>
 </div>
 

@@ -34,6 +34,8 @@ class Form
     private array $values = [];
     /** @var array<string,string> */
     private array $errors = [];
+    /** @var array<string,true> the names of the fields of this form, for showIf */
+    private array $names = [];
 
     public function __construct(string $id)
     {
@@ -115,6 +117,8 @@ class Form
         echo "<form {$attrs}>";
 
         [$fields, $unmatched] = $this->withValuesAndErrors();
+        $this->names = [];
+        foreach ($fields as $f) if (isset($f['name']) && is_string($f['name'])) $this->names[$f['name']] = true;
         if ($unmatched) echo $this->renderFormErrors($unmatched, $e);
 
         foreach ($fields as $f) {
@@ -145,6 +149,45 @@ class Form
 
         echo '</form>';
         if ($this->wrapCard) echo '</div>';
+    }
+
+    /**
+     * `data-gk-show-if` for a field with a 'showIf' option (1.105.0): the field shows only while another
+     * field of the form has a given value. `['field' => 'kind', 'equals' => 'company']`; the test is one of
+     * 'equals', 'not' (a value), 'in' (a list of values) or 'filled' (true: anything entered, false: empty).
+     * An unusable condition is reported and ignored — the field stays visible, which is the safe side.
+     *
+     * @param array<string,mixed> $f
+     */
+    private function showIfAttribute(array $f, \Closure $e): string
+    {
+        if (!array_key_exists('showIf', $f)) return '';
+        $c = $f['showIf'];
+        $tests = ['equals', 'not', 'in', 'filled'];
+        $problem = null;
+        if (!is_array($c)) {
+            $problem = "it is not an array";
+        } elseif (!isset($c['field']) || !is_string($c['field']) || $c['field'] === '') {
+            $problem = "it names no 'field'";
+        } elseif (!isset($this->names[$c['field']])) {
+            $problem = "no field '{$c['field']}' in this form";
+        } elseif (array_diff(array_keys($c), ['field', ...$tests]) !== []) {
+            $problem = "unknown keys " . implode(', ', array_diff(array_keys($c), ['field', ...$tests]));
+        } elseif (count(array_intersect(array_keys($c), $tests)) !== 1) {
+            $problem = "it needs exactly one of 'equals', 'not', 'in' or 'filled'";
+        } elseif (isset($c['in']) && !is_array($c['in'])) {
+            $problem = "'in' is not a list";
+        }
+        if ($problem !== null) {
+            trigger_error("GridKit: field '" . ($f['name'] ?? '') . "' has an unusable 'showIf' ($problem). The field stays visible.", E_USER_WARNING);
+            return '';
+        }
+        // Text on both sides: the browser compares what a control holds, and that is always text.
+        foreach (['equals', 'not'] as $k) if (isset($c[$k])) $c[$k] = (string) $c[$k];
+        if (isset($c['in'])) $c['in'] = array_map('strval', array_values($c['in']));
+        if (isset($c['filled'])) $c['filled'] = (bool) $c['filled'];
+        $json = json_encode($c, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        return $json === false ? '' : ' data-gk-show-if="' . $e($json) . '"';
     }
 
     /**
@@ -267,7 +310,7 @@ class Form
         $inlineClass = $inline ? ' gk-field-inline' : '';
         $cls = "gk-field {$colClass}{$inlineClass}";
 
-        echo "<div class=\"{$cls}\"{$colStyle}>";
+        echo "<div class=\"{$cls}\"{$colStyle}{$this->showIfAttribute($f, $e)}>";
 
         // A toggle with a 'hint' is a settings row (.gk-setting, 1.92.0): its
         // title and its sentence stand beside the switch, not a label above it.
