@@ -334,7 +334,7 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-news-summary { cursor:pointer; font-size:17px; font-weight:600; }
         .demo-news-summary:focus-visible { outline:2px solid var(--gk-primary); outline-offset:2px; }
         .demo-news a { color:var(--gk-primary-text, var(--gk-primary)); text-decoration:underline; text-underline-offset:2px; }
-        .demo-news-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap:16px; margin-top:12px; }
+        .demo-news-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap:16px; margin-top:12px; align-items:start; }
         .demo-news-card { margin:0; display:flex; flex-direction:column; gap:12px; padding:16px 20px; min-width:0; }
         .demo-news-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; }
         .demo-news-version { margin:0; font-size:18px; font-weight:700; }
@@ -3581,10 +3581,23 @@ Auth::renderLogin([...]);    // Login page</div>
     } else {
         showSection('table');
     }
-    // On a phone the news box starts folded: open, it stood a screen and a half
-    // above the first example. Its summary line still says what is new.
+    // The news box is open while it has news for this browser: on a first visit and
+    // whenever the newest release is one it has not shown yet. After that it starts
+    // folded, so the first example is on the first screen; its summary line still names
+    // the newest versions. On a phone it always starts folded: open, it stood a screen
+    // and a half above the first example. Without storage (a private window) it stays open.
     var news = document.querySelector('.demo-news');
-    if (news && window.matchMedia && window.matchMedia('(max-width: 768px)').matches) news.open = false;
+    if (news) {
+        var card = news.querySelector('.demo-news-card');
+        var newest = card ? card.getAttribute('aria-labelledby') || '' : '';
+        var seen = '';
+        try {
+            seen = localStorage.getItem('gk-demo-news-seen') || '';
+            if (newest !== '') localStorage.setItem('gk-demo-news-seen', newest);
+        } catch (e) { /* no storage: nothing is remembered */ }
+        var phone = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+        if (phone || (newest !== '' && seen === newest)) news.open = false;
+    }
 
     // "All release notes" in the news box is a plain link, not a sidebar item.
     window.addEventListener('hashchange', function () {

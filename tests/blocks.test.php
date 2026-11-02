@@ -407,15 +407,25 @@ PHP);
     $entries = gkChangelog();
     T::contains($de, 'Neu in ' . $entries[0]['version'], 'the German summary does not say "Neu in"');
     T::contains($de, 'gk-label-green">Neu</span>', 'the German kind label is not "Neu"');
-    T::contains($de, 'Beispiele: <a href="#tabs">Tabs</a>', 'the German jump is not "Beispiele"');
+    // $deAll, not $de: the jump of 1.103.0 is only in the newest three until the next release pushes it out (1.104.1 did).
+    T::contains($deAll, 'Beispiele: <a href="#tabs">Tabs</a>', 'the German jump is not "Beispiele"');
     T::contains($de, 'Ältere Versionen (12)', 'the German fold is not "Ältere Versionen"');
     T::contains($de, 'Alle Versionen im Changelog', 'the German way to the changelog is not named');
     T::contains($deAll, 'datetime="2026-10-29">29.10.2026</time>', 'the date of a German page is not 29.10.2026');
 },
 
-'the news box is in the demo, and the demo folds it on a phone' => function () use ($demo): void {
+'the news box is in the demo, and the demo folds it on a phone and once it has been seen' => function () use ($demo): void {
     T::contains($demo(), '<?= whatsNew() ?>', 'the demo does not show the box');
     T::contains($demo(), "document.querySelector('.demo-news')", 'the demo does not fold the box on a phone');
+    // 1.104.1: open for news, folded for a release this browser has shown already; storage may be missing.
+    T::contains($demo(), "localStorage.getItem('gk-demo-news-seen')", 'the demo does not look up the release it showed last');
+    T::contains($demo(), "localStorage.setItem('gk-demo-news-seen', newest)", 'the demo does not remember the release it shows');
+    T::contains($demo(), 'seen === newest', 'the demo does not fold a box whose release it has shown already');
+    // The release number sits in the card's aria-labelledby (demo-news-v-1-104-1), not in an id — the first version of this read `.id` and remembered nothing.
+    T::contains($demo(), "card.getAttribute('aria-labelledby')", 'the demo reads the newest release from the wrong attribute of the card');
+    T::ok(preg_match('/catch \(e\) \{[^}]*\}\s*var phone/', $demo()) === 1, 'the storage calls are not guarded — a private window would stop the demo script');
+    // The three cards keep their own height instead of being stretched to the tallest one.
+    T::ok(preg_match('/\.demo-news-grid \{[^}]*align-items:start/', $demo()) === 1, 'the cards of the box are stretched to the tallest one');
     // Every class the box uses is styled in the demo — and the old ones of the unstructured box are gone.
     foreach (['demo-news-card', 'demo-news-head', 'demo-news-version', 'demo-news-date', 'demo-news-intro', 'demo-news-group-title', 'demo-news-count',
         'demo-news-list', 'demo-news-more', 'demo-news-classes', 'demo-news-class', 'demo-news-jump', 'demo-news-older', 'demo-news-rows', 'demo-news-row'] as $class) {

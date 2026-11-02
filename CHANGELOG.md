@@ -7,6 +7,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.104.1] - 2026-11-02
+
+The demo opens with an example instead of the changelog. The "What's new" box stood open above the first example on every visit — most of the first screen on a laptop — so the table the demo is about began below the fold. Demo only: no class, no token and no rule of the stylesheet changes.
+
+### Changed
+- **The "What's new" box folds once it has been seen** — it is open on a first visit and whenever the newest release is one this browser has not shown yet; on every later visit it starts folded and its summary line still names the three newest versions. The newest release is remembered in `localStorage` (`gk-demo-news-seen`). Without storage, in a private window for instance, the box stays open as before. On a phone it starts folded as before.
+- **The cards of the box keep their own height** (`align-items: start` on `.demo-news-grid`) — the three cards were stretched to the tallest one, so the two shorter ones stood half empty. The "Examples" link now follows the last line of its own card instead of sitting at the bottom of the row.
+
+### Tests
+- `tests/blocks.test.php`: the demo looks up and remembers the newest release, folds a box whose release it has shown, guards the storage calls with `try`/`catch`, and the grid of the box does not stretch its cards.
+- `tests/blocks.test.php`: the German jump ("Beispiele: Tabs") is looked for in the list of all releases instead of the newest three. It belonged to 1.103.0 and went red as soon as a new release pushed that card out of the box — the test depended on which releases are newest, which its own title says the box must not.
+
+---
 ## [1.104.0] - 2026-10-31
 
 Karteireiter on the phone can stand flat and in one row. Martin, 31.10.2026, with a photo from his iPhone: "Please adapt the panel to the smartphone. There is room for improvement." The Karteireiter of 1.101.0 turn into a grid on a phone — the calm second row of three tabs took two rows (94 px) and four main tabs a 2 × 2 grid of 118 px, before any content. Two classes, opt-in: without them every tab row stays as it was.
