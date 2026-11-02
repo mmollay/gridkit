@@ -45,6 +45,8 @@ return [
     'table.sorted_asc'      => 'sorted ascending',
     'table.sorted_desc'     => 'sorted descending',
     'table.selected'        => '{n} selected',
+    'table.export_csv'      => 'Export CSV',
+    'table.confirm_action'  => 'Apply this to the selected rows?',
     'table.delete'          => 'Delete',
     'table.cancel'          => 'Cancel',
     'table.empty_hint'      => 'Entries will appear here once they exist.',

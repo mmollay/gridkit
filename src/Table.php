@@ -44,6 +44,11 @@ class Table
     private string $selectKey = 'id';
     private ?int $loadTimeMs = null;
     private array $footerCells = [];
+    /** @var array<string,array<string,mixed>> */
+    private array $bulkActions = [];
+    private ?string $csvFile = null;
+    /** @var array<string,mixed> */
+    private array $csvOpts = [];
     private string $groupCol = '';
     private string $caption = '';
     private array $groupLabels = [];
@@ -236,6 +241,123 @@ class Table
         $this->selectable = true;
         $this->selectKey  = $key;
         return $this;
+    }
+
+    /**
+     * A button in the bulk bar, the bar that appears while rows are ticked (1.105.0).
+     *
+     * Clicking it fires `gk:bulkaction` on the table with `{ action, ids, tableId }` — the shape
+     * `gk:bulkdelete` has — and the application decides what it does. Calling it turns selectable()
+     * on (with the key 'id') when it is not on yet.
+     *
+     * Options: `label` (default: the name, or the catalogue's `action.<name>`), `icon`,
+     * `confirm` (`true` for the standard question, or the sentence to ask) and `color` (`'danger'`
+     * marks the confirmation as one).
+     *
+     * @param array{label?:string,icon?:string,confirm?:bool|string,color?:string} $opts
+     */
+    public function bulkAction(string $name, array $opts = []): static
+    {
+        if (!$this->selectable) $this->selectable();
+        $this->bulkActions[$name] = $opts;
+        return $this;
+    }
+
+    /**
+     * A button in the toolbar that downloads the table as CSV (1.105.0).
+     *
+     * A `setData()` table builds the file in the browser from the rows it already holds — after the
+     * search and the filters, in the order they are sorted in, every column except those with
+     * `'export' => false`. A `rows()` or `query()` table has no rows to hand: the button reloads
+     * the page with `?gk_export=csv` added and the application answers it with Table::sendCsv()
+     * (see Table::wantsCsv()). Option `delimiter` is `','` or `';'` (German Excel), `label` the button text.
+     *
+     * @param array{delimiter?:string,label?:string} $opts
+     */
+    public function exportCsv(string $filename = 'export.csv', array $opts = []): static
+    {
+        $this->csvFile = self::csvFilename($filename);
+        $this->csvOpts = $opts;
+        return $this;
+    }
+
+    /** Did the request come from the export button of a server-driven table (`?gk_export=csv`)? */
+    public static function wantsCsv(): bool
+    {
+        return ($_GET['gk_export'] ?? '') === 'csv';
+    }
+
+    /**
+     * Rows as CSV text: RFC 4180 (CRLF, quotes where needed), UTF-8 with a byte-order mark so Excel
+     * reads the encoding, and a cell that would be read as a formula (`=`, `+`, `-`, `@`, a tab or a
+     * carriage return first, and not a plain number) gets a leading apostrophe.
+     *
+     * `$columns` maps a row key to its heading, or to `['label' => …, 'export' => false]` to leave it out.
+     * Options: `delimiter` (default `','`), `bom` (default `true`).
+     *
+     * @param list<array<string,mixed>>                        $rows
+     * @param array<string,string|array{label?:string,export?:bool}> $columns
+     * @param array{delimiter?:string,bom?:bool}               $opts
+     */
+    public static function csv(array $rows, array $columns, array $opts = []): string
+    {
+        $delimiter = (string) ($opts['delimiter'] ?? ',');
+        if ($delimiter === '' || strlen($delimiter) !== 1) $delimiter = ',';
+        $keys = [];
+        $head = [];
+        foreach ($columns as $key => $col) {
+            if (is_array($col) && ($col['export'] ?? true) === false) continue;
+            $keys[] = (string) $key;
+            $head[] = self::csvCell(is_array($col) ? ($col['label'] ?? $key) : $col, $delimiter);
+        }
+        $lines = [implode($delimiter, $head)];
+        foreach ($rows as $row) {
+            $cells = [];
+            foreach ($keys as $key) $cells[] = self::csvCell($row[$key] ?? '', $delimiter);
+            $lines[] = implode($delimiter, $cells);
+        }
+        return (($opts['bom'] ?? true) ? "\xEF\xBB\xBF" : '') . implode("\r\n", $lines) . "\r\n";
+    }
+
+    /**
+     * Answer the export button of a server-driven table: the headers, then the file. Ends nothing —
+     * `exit` after it, like after an AJAX fragment (see isAjaxReload()).
+     *
+     * @param list<array<string,mixed>> $rows
+     * @param array<string,string|array{label?:string,export?:bool}> $columns
+     * @param array{delimiter?:string,bom?:bool} $opts
+     */
+    public static function sendCsv(array $rows, array $columns, string $filename = 'export.csv', array $opts = []): void
+    {
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . self::csvFilename($filename) . '"');
+        header('X-Content-Type-Options: nosniff');
+        echo self::csv($rows, $columns, $opts);
+    }
+
+    /** A file name that cannot break the header it is written into. */
+    private static function csvFilename(string $name): string
+    {
+        $name = preg_replace('/[^A-Za-z0-9._-]+/', '-', $name) ?? '';
+        $name = trim($name, '.-');
+        return $name === '' ? 'export.csv' : $name;
+    }
+
+    private static function csvCell(mixed $value, string $delimiter): string
+    {
+        $s = match (true) {
+            $value === null => '',
+            is_bool($value) => $value ? '1' : '0',
+            is_scalar($value) => (string) $value,
+            default => (string) json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        };
+        if ($s !== '' && preg_match('/^[=+\-@\t\r]/', $s) === 1 && preg_match('/^[+-]?\d+(?:[.,]\d+)?$/', $s) !== 1) {
+            $s = "'" . $s;
+        }
+        if (preg_match('/[' . preg_quote($delimiter, '/') . '"\r\n]/', $s) === 1) {
+            $s = '"' . str_replace('"', '""', $s) . '"';
+        }
+        return $s;
     }
 
     public function setData(array $rows): static
@@ -683,6 +805,16 @@ class Table
             }
             echo '</select>';
         }
+        if ($this->csvFile !== null) {
+            echo Button::render($this->csvOpts['label'] ?? Lang::t('table.export_csv'), [
+                'variant' => 'outlined',
+                'color' => 'neutral',
+                'size' => 'sm',
+                'shape' => 'pill',
+                'icon' => 'download',
+                'data' => ['gk-export-csv' => $this->csvFile, 'gk-export-delimiter' => $this->csvOpts['delimiter'] ?? ','],
+            ]);
+        }
         if ($this->newBtnLabel) {
             echo '<div class="gk-toolbar-spacer"></div>';
             $modal = $this->newBtnOpts['modal'] ?? '';
@@ -702,6 +834,7 @@ class Table
                . '<span class="material-icons" style="font-size:18px;" aria-hidden="true">check_box</span>'
                . '<span class="gk-bulk-count">0 ' . $e(Lang::t('table.selected', ['n' => ''])) . '</span>'
                . '<div class="gk-toolbar-spacer"></div>'
+               . $this->renderBulkActions($e)
                . '<button type="button" data-gk-bulk-delete>'
                .   '<span class="material-icons" aria-hidden="true">delete</span> ' . $e(Lang::t('table.delete'))
                . '</button>'
@@ -1421,6 +1554,28 @@ class Table
      * matches nothing. That is why it needs more than one grey sentence: a
      * statement, some context, and a way out.
      */
+    /** The buttons bulkAction() added to the bulk bar, written like the delete button beside them. */
+    private function renderBulkActions(\Closure $e): string
+    {
+        $html = '';
+        foreach ($this->bulkActions as $name => $o) {
+            $label = $o['label'] ?? null;
+            if ($label === null) {
+                $key = 'action.' . $name;
+                $translated = Lang::t($key);
+                $label = $translated !== $key ? $translated : ucfirst(str_replace(['_', '-'], ' ', (string) $name));
+            }
+            $confirm = '';
+            if (!empty($o['confirm'])) {
+                $question = is_string($o['confirm']) ? $o['confirm'] : Lang::t('table.confirm_action');
+                $confirm = ' data-gk-confirm="' . $e($question) . '"' . (($o['color'] ?? '') === 'danger' ? ' data-gk-danger' : '');
+            }
+            $icon = !empty($o['icon']) ? '<span class="material-icons" aria-hidden="true">' . $e($o['icon']) . '</span> ' : '';
+            $html .= '<button type="button" data-gk-bulk-action="' . $e($name) . '"' . $confirm . '>' . $icon . $e($label) . '</button>';
+        }
+        return $html;
+    }
+
     private function renderEmpty(int $colspan): string
     {
         $e = fn($x) => htmlspecialchars((string)$x, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

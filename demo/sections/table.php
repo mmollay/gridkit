@@ -338,8 +338,8 @@ $table->mobile('card');      // Cards on mobile (default)
 $table->mobile('scroll');    // Horizontal Scroll
 $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
 
-    <h3 class="demo-h3" id="table-select">Selection, footer, load time, a link in a cell <?= since('table') ?></h3>
-    <p class="demo-intro"><code>selectable()</code> adds a checkbox column, a select-all in the header and a bulk bar that appears while rows are ticked; its delete button fires <code>gk:bulkdelete</code> with <code>{ ids, tableId }</code>. <code>footer()</code> writes a summary row, <code>loadTime()</code> the milliseconds, <code>toolbarHtml()</code> puts your own markup into the toolbar, and <code>'href'</code> turns a cell into a link with a quiet second line from <code>'sub'</code>.</p>
+    <h3 class="demo-h3" id="table-select">Selection, bulk actions, CSV export, footer, a link in a cell <?= since('table') ?></h3>
+    <p class="demo-intro"><code>selectable()</code> adds a checkbox column, a select-all in the header and a bulk bar that appears while rows are ticked; its delete button fires <code>gk:bulkdelete</code> with <code>{ ids, tableId }</code>. <code>footer()</code> writes a summary row, <code>loadTime()</code> the milliseconds, <code>toolbarHtml()</code> puts your own markup into the toolbar, <code>'href'</code> turns a cell into a link with a quiet second line from <code>'sub'</code>, <code>bulkAction()</code> adds a button to the bulk bar (it fires <code>gk:bulkaction</code>; tick a row and try it) and <code>exportCsv()</code> a toolbar button that downloads what the table shows, after the search and the sort, as CSV.</p>
         <?php
         showcase(function () use ($articles) {
             (new Table('demo-select'))
@@ -354,8 +354,12 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
                 ->column('is_active', 'Status', ['format' => 'label'])
                 ->footer(['Total', ['text' => '2,849.40', 'align' => 'right', 'bold' => true]])
                 ->loadTime(37)
+                ->bulkAction('archive', ['icon' => 'archive', 'label' => 'Archive'])
+                ->bulkAction('void', ['icon' => 'block', 'confirm' => 'Void the selected articles?', 'color' => 'danger'])
+                ->exportCsv('articles.csv')
                 ->render();
         });
         ?>
+    <script>document.addEventListener('gk:bulkaction', function (e) { GK.toast.info(e.detail.action + ': ' + e.detail.ids.length + ' article(s)'); });</script>
 </div>
 

@@ -509,8 +509,50 @@ button out when the row's `archived` value is truthy.
 | `dateFormat` | `date` and `datetime`: a PHP `date()` format, e.g. `'d.m.Y'` (default from the locale) |
 | `labels` | `label` only: `'value' => 'green'`, or `'value' => ['color' => 'green', 'text' => 'Paid']` |
 | `href`, `sub` | the cell links to `'/customers/{id}'`; `sub` names a row key shown as a quiet second line |
+| `export` | `false` leaves the column out of the CSV file of `exportCsv()` |
 
 **`->selectable('id')`:** checkbox column, a select-all in the header, and a bulk bar. Deleting fires `gk:bulkdelete` with `{ ids, tableId }` — the application does the deleting. Every change fires `gk:selectionchange` with `{ ids, tableId, count }`, bulk bar or not. Shift-click selects a range. Without the `Table` class: `data-gk-table` + `data-gk-selectable`, rows carrying `data-gk-row-id` and a `td.gk-cb-col`. A row without `data-gk-row-id` cannot be selected. Select-all covers the visible rows only. After a live reload (`gk-live-reloaded`) GridKit re-binds the table.
+
+**`->bulkAction($name, $opts)` (since 1.105.0):** one more button in the bulk bar, beside the delete
+button. Clicking it fires `gk:bulkaction` on the table with `{ action, ids, tableId }` — the shape
+`gk:bulkdelete` has — and the application decides what it does. It turns `selectable()` on when it is
+not on yet. Options: `label` (default: the catalogue's `action.<name>`, else the name), `icon`,
+`confirm` (`true` asks the standard question, a string asks that one first) and `color` (`'danger'`
+makes the question a danger one). Needs `js/gridkit.js` 1.105.0; an older copy shows the bar without it.
+
+```php
+(new Table('invoices'))->setData($rows)
+    ->column('number', 'No.')
+    ->bulkAction('archive', ['icon' => 'archive', 'label' => 'Archive'])
+    ->bulkAction('void',    ['icon' => 'block', 'confirm' => 'Void these invoices?', 'color' => 'danger'])
+    ->render();
+// document.addEventListener('gk:bulkaction', e => { e.detail.action, e.detail.ids });
+```
+
+**`->exportCsv($filename, $opts)` (since 1.105.0):** a button in the toolbar that downloads the table as
+CSV. A `setData()` table builds the file in the browser from the rows it holds: after the search and
+the filters, in the order they are sorted in, every column except those with `'export' => false`. A
+`rows()` or `query()` table has no rows in the browser: the button reloads the page with `?gk_export=csv`,
+and the page answers it — `Table::wantsCsv()` says so, `Table::sendCsv($rows, $columns, $filename)` sends the
+headers and the file, and `exit` ends the request. `Table::csv($rows, $columns)` returns the text. The file is
+RFC 4180 (CRLF, quotes where needed) in UTF-8 with a byte-order mark so Excel reads the encoding; a cell
+a spreadsheet would read as a formula (`=`, `+`, `-`, `@`, a tab or a carriage return first, and not a plain
+number) gets a leading apostrophe. Options: `delimiter` (`','`, or `';'` for German Excel), `bom` (`Table::csv()` only, default `true`) and `label` (the button text).
+
+```php
+(new Table('people'))->setData($rows)
+    ->column('name',  'Name')
+    ->column('email', 'Email')
+    ->column('token', 'Token', ['export' => false])    // never in the file
+    ->exportCsv('people.csv', ['delimiter' => ';'])
+    ->render();
+
+// A server-driven table: the page answers the button itself.
+if (Table::wantsCsv()) {
+    Table::sendCsv($repo->all($_GET), ['name' => 'Name', 'email' => 'Email'], 'people.csv');
+    exit;
+}
+```
 
 **`->emptyState($title, $opts)`** sets the wording for a table with no rows —
 `['hint' => …, 'icon' => …, 'action' => …]`. GridKit works out by itself whether

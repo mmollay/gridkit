@@ -1197,6 +1197,7 @@
           });
         }
 
+        wrap._gkMatching = rows; // what the search and the filters left, sorted — CSV export reads it
         // Paging — after filtering, searching and sorting, so the page window
         // is a window onto what the user is actually looking at.
         const perPage = parseInt(data.perPage, 10) || 0;
@@ -6243,3 +6244,93 @@ GK.search = {
     return e.replace(new RegExp("(" + muster + ")", "ig"), "<mark>$1</mark>");
   },
 };
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 1.105.0 — additions that need script, in one block at the end of the file.
+ *
+ * Each is opt-in markup: a page that does not use it never meets this code, and a copy of this
+ * file without the block (the PawBot dashboard keeps its own) renders the same pages as before —
+ * the bulk bar shows only its delete button, no CSV button reacts, every conditional field stays visible.
+ *
+ *   1. Table bulk actions     [data-gk-bulk-action]   → the event gk:bulkaction
+ *   2. Table CSV export       [data-gk-export-csv]    → a file, or ?gk_export=csv for a server table
+ *   3. Conditional form field [data-gk-show-if]       → shown, or hidden and disabled
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+// 1 ── bulk actions: the same shape gk:bulkdelete has, so the application decides what happens.
+document.addEventListener("click", function (ev) {
+  var btn = ev.target.closest ? ev.target.closest("[data-gk-bulk-action]") : null;
+  if (!btn) return;
+  var wrap = btn.closest("[data-gk-table]");
+  if (!wrap) return;
+  var ids = wrap._gkSelected ? Array.from(wrap._gkSelected) : [];
+  if (!ids.length) return;
+  var fire = function () {
+    wrap.dispatchEvent(
+      new CustomEvent("gk:bulkaction", {
+        bubbles: true,
+        detail: { action: btn.getAttribute("data-gk-bulk-action"), ids: ids, tableId: wrap.dataset.gkTable },
+      }),
+    );
+  };
+  var question = btn.getAttribute("data-gk-confirm");
+  if (question && GK.confirm) {
+    GK.confirm(question, { danger: btn.hasAttribute("data-gk-danger") }).then(function (ok) {
+      if (ok) fire();
+    });
+  } else {
+    fire();
+  }
+});
+
+// 2 ── CSV export. Same rules as Table::csv(): RFC 4180, a byte-order mark, and a leading
+// apostrophe on a cell a spreadsheet would read as a formula (not a plain number).
+function _gkCsvCell(value, delimiter) {
+  var s =
+    value === null || value === undefined
+      ? ""
+      : typeof value === "boolean"
+        ? value ? "1" : "0"
+        : typeof value === "object"
+          ? JSON.stringify(value)
+          : String(value);
+  if (s !== "" && /^[=+\-@\t\r]/.test(s) && !/^[+-]?\d+(?:[.,]\d+)?$/.test(s)) s = "'" + s;
+  if (s.indexOf(delimiter) > -1 || /["\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+/** The CSV text of a static table, or null when the table holds no rows in the browser. */
+GK.tableCsv = function (wrap, delimiter) {
+  var data = wrap && wrap._gkData;
+  if (!data) return null;
+  delimiter = delimiter || ",";
+  var rows = wrap._gkMatching || data.rows;
+  var keys = Object.keys(data.columns).filter(function (k) { return data.columns[k].export !== false; });
+  var lines = [keys.map(function (k) { return _gkCsvCell(data.columns[k].label, delimiter); }).join(delimiter)];
+  rows.forEach(function (row) {
+    lines.push(keys.map(function (k) { return _gkCsvCell(row[k], delimiter); }).join(delimiter));
+  });
+  return "\uFEFF" + lines.join("\r\n") + "\r\n";
+};
+
+document.addEventListener("click", function (ev) {
+  var btn = ev.target.closest ? ev.target.closest("[data-gk-export-csv]") : null;
+  if (!btn) return;
+  var wrap = btn.closest("[data-gk-table]");
+  if (!wrap) return;
+  var csv = GK.tableCsv(wrap, btn.getAttribute("data-gk-export-delimiter") || ",");
+  if (csv === null) {
+    // A server-driven table: the page answers ?gk_export=csv (Table::wantsCsv(), Table::sendCsv()).
+    var url = new URL(window.location.href);
+    url.searchParams.set("gk_export", "csv");
+    window.location.href = url.toString();
+    return;
+  }
+  var link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  link.download = btn.getAttribute("data-gk-export-csv") || "export.csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
+});
