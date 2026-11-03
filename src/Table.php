@@ -1145,11 +1145,40 @@ class Table
         }
 
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        echo $this->wrapOpenTag($e);
+
+        // Embed JSON data + column config for client-side operations
+        if ($this->isStatic) $this->renderDataBlock();
+
+        // Asked here, once per page: an AJAX reload keeps the toolbar it has (and the menu in it).
+        // Asked without a toolbar too: then it is what says that a 'hidden' column shows.
+        $columnMenu = $this->columnMenu();
+        if ($this->showToolbar) $this->renderToolbar($columnMenu, $e);
+        if ($this->selectable) $this->renderBulkBar($e);
+
+        $this->renderInner();
+
+        $this->renderModalTemplates($e);
+        echo '</div>';
+    }
+
+    /**
+     * The opening tag of the wrap: its classes, the table id, and what the script reads off it —
+     * a static table, a selectable one, the config of an editable one.
+     */
+    private function wrapOpenTag(\Closure $e): string
+    {
         $staticAttr    = $this->isStatic   ? ' data-gk-static'    : '';
         $selectAttr    = $this->selectable ? ' data-gk-selectable' : '';
         $editAttr      = $this->editSpecs !== []
             ? ' data-gk-editable="' . $e(json_encode($this->editConfig(), JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) . '"'
             : '';
+        return '<div class="' . $this->wrapClasses() . '" data-gk-table="' . $e($this->id) . '"' . $staticAttr . $selectAttr . $editAttr . '>';
+    }
+
+    /** The classes of the wrap: size and variant, what a phone makes of the table, what sticks. */
+    private function wrapClasses(): string
+    {
         $wrapClasses   = 'gk-table-wrap';
         $wrapClasses  .= ' gk-table-' . $this->size;
         if ($this->variant !== 'default') $wrapClasses .= ' gk-table-' . $this->variant;
@@ -1168,159 +1197,174 @@ class Table
         // renderInner() is what scrolls.
         if ($this->stickyHead) $wrapClasses .= ' gk-table-sticky-head';
         if ($this->stickyColumn) $wrapClasses .= ' gk-table-sticky-col';
-        echo '<div class="' . $wrapClasses . '" data-gk-table="' . $e($this->id) . '"' . $staticAttr . $selectAttr . $editAttr . '>';
+        return $wrapClasses;
+    }
 
-        // Embed JSON data + column config for client-side operations
-        if ($this->isStatic) {
-            $colConfig = [];
-            foreach ($this->columns as $key => $col) {
-                $colConfig[$key] = $col;
-            }
-            echo '<script type="application/json" data-gk-data>' . json_encode([
-                'rows' => $this->rows,
-                // The key selectable() was told to use. Without it the client
-                // re-render fell back to "id", so on a table keyed by anything
-                // else every row's id became empty on the first sort or search
-                // — the whole selection collapsed to one blank entry.
-                'rowId' => $this->selectKey,
-                // The page size, so the client can page a static table itself.
-                // Without it the browser had every row and no way to slice
-                // them, so paginate() on a setData() table showed everything
-                // at once and its pager fired a server reload the page often
-                // could not answer.
-                'perPage' => $this->perPage,
-                'columns' => $colConfig,
-                // The label colour table, but only for a table that shows labels:
-                // the client used to carry a shorter copy of it and a sorted
-                // table changed its colours.
-                'labelColors' => array_reduce(
-                    $this->columns,
-                    static fn (?array $c, array $col): ?array =>
-                        $c ?? (($col['format'] ?? '') === 'label' ? self::labelColors() : null),
-                    null
-                ),
-                // The keys search() was told to use. Without them the client
-                // fell back to every rendered column, so a declared search key
-                // that is not itself a column was silently never searched —
-                // and the markup of an HTML column matched instead.
-                'search'  => array_values($this->withSubColumns($this->searchCols)),
-                // nowrap() and footer(), so the client-side rebuild keeps both — it
-                // used to write a bare <table class="gk-table"> without a <tfoot>.
-                'nowrap'  => $this->globalNowrap,
-                // loadTime(): the rebuild writes its meta cell too now — a loadTime()
-                // row on its own vanished on the first sort. The count beside it is
-                // the client's own (rows after search, before the page slice).
-                'loadTimeMs' => $this->loadTimeMs,
-                'footer'  => array_map(static fn ($c): array => is_string($c) ? ['text' => $c] : (array) $c, $this->footerCells),
-                'buttons' => $this->buttons,
-                // Rewritten by the client on every rebuild, like everything else here.
-                'caption' => $this->caption,
-                'groupBy' => $this->groupCol === '' ? null : [
-                    'column' => $this->groupCol,
-                    'labels' => $this->groupLabels,
-                ],
-                // rowLink(), with the column already resolved: the client must not
-                // guess "the first column" from an object whose numeric-looking
-                // keys JavaScript reorders.
-                'rowLink' => $this->rowLinkColumn() === null ? null
-                    : ['column' => $this->rowLinkColumn()] + $this->rowLink,
-            // SUBSTITUTE: one malformed byte made json_encode() answer false, the
-            // block came out empty and sort, search and paging died silently.
-            // HEX_TAG: "<!--<script" inside a cell puts the HTML parser into
-            // its double-escaped state and the block swallows the rest of the page.
-            ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_HEX_TAG) . '</script>';
-        }
+    /**
+     * The data block of a setData() table: its rows and what the browser needs to sort, search
+     * and page them itself and to draw the table again as the server drew it.
+     */
+    private function renderDataBlock(): void
+    {
+        $linkKey = $this->rowLinkColumn();
+        echo '<script type="application/json" data-gk-data>' . json_encode([
+            'rows' => $this->rows,
+            // The key selectable() was told to use. Without it the client
+            // re-render fell back to "id", so on a table keyed by anything
+            // else every row's id became empty on the first sort or search
+            // — the whole selection collapsed to one blank entry.
+            'rowId' => $this->selectKey,
+            // The page size, so the client can page a static table itself.
+            // Without it the browser had every row and no way to slice
+            // them, so paginate() on a setData() table showed everything
+            // at once and its pager fired a server reload the page often
+            // could not answer.
+            'perPage' => $this->perPage,
+            'columns' => $this->columns,
+            // The label colour table, but only for a table that shows labels:
+            // the client used to carry a shorter copy of it and a sorted
+            // table changed its colours.
+            'labelColors' => array_reduce(
+                $this->columns,
+                static fn (?array $c, array $col): ?array =>
+                    $c ?? (($col['format'] ?? '') === 'label' ? self::labelColors() : null),
+                null
+            ),
+            // The keys search() was told to use. Without them the client
+            // fell back to every rendered column, so a declared search key
+            // that is not itself a column was silently never searched —
+            // and the markup of an HTML column matched instead.
+            'search'  => array_values($this->withSubColumns($this->searchCols)),
+            // nowrap() and footer(), so the client-side rebuild keeps both — it
+            // used to write a bare <table class="gk-table"> without a <tfoot>.
+            'nowrap'  => $this->globalNowrap,
+            // loadTime(): the rebuild writes its meta cell too now — a loadTime()
+            // row on its own vanished on the first sort. The count beside it is
+            // the client's own (rows after search, before the page slice).
+            'loadTimeMs' => $this->loadTimeMs,
+            'footer'  => array_map(static fn ($c): array => is_string($c) ? ['text' => $c] : (array) $c, $this->footerCells),
+            'buttons' => $this->buttons,
+            // Rewritten by the client on every rebuild, like everything else here.
+            'caption' => $this->caption,
+            'groupBy' => $this->groupCol === '' ? null : [
+                'column' => $this->groupCol,
+                'labels' => $this->groupLabels,
+            ],
+            // rowLink(), with the column already resolved: the client must not
+            // guess "the first column" from an object whose numeric-looking
+            // keys JavaScript reorders.
+            'rowLink' => $linkKey === null ? null : ['column' => $linkKey] + $this->rowLink,
+        // SUBSTITUTE: one malformed byte made json_encode() answer false, the
+        // block came out empty and sort, search and paging died silently.
+        // HEX_TAG: "<!--<script" inside a cell puts the HTML parser into
+        // its double-escaped state and the block swallows the rest of the page.
+        ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_HEX_TAG) . '</script>';
+    }
 
-        // Asked here, once per page: an AJAX reload keeps the toolbar it has (and the menu in it).
-        $columnMenu = $this->columnMenu();
-
-        // Toolbar
-        if ($this->showToolbar) {
+    /**
+     * The toolbar, left to right: the search, the caller's own HTML, the filters, the column menu,
+     * the CSV button, the density control, and the new button at the far end.
+     */
+    private function renderToolbar(?array $columnMenu, \Closure $e): void
+    {
         echo '<div class="gk-toolbar">';
-        if ($this->searchCols) {
-            // A placeholder is not an accessible name: it is not always
-            // announced, and it disappears as soon as anything is typed.
-            $searchLabel = $e(Lang::t('table.search'));
-            echo '<input type="text" class="gk-search" data-gk-search'
-               . ' placeholder="' . $searchLabel . '" aria-label="' . $searchLabel . '"'
-               . ' value="' . $e($this->searchQuery) . '">';
-        }
-        if ($this->toolbarHtml !== '') {
-            echo $this->toolbarHtml;
-        }
-        foreach ($this->filters as $col => $f) {
-            // The active value comes back from the URL. Without this the
-            // dropdown snaps to "All" on every full page load while the table
-            // below it still shows filtered rows — which is what a shared link
-            // or a plain reload does.
-            $active = self::param('gk_filter_' . $col);
-            $sel = static fn(string $value): string => $value === $active ? ' selected' : '';
-
-            $filterLabel = $f['label']
-                ?? $this->columns[$col]['label']
-                ?? $f['placeholder']
-                ?? Lang::t('table.filter_all');
-            echo '<select class="gk-filter" data-gk-filter="' . $e($col) . '"'
-               . ' aria-label="' . $e($filterLabel) . '">';
-            echo '<option value=""' . $sel('') . '>'
-               . $e($f['placeholder'] ?? Lang::t('table.filter_all')) . '</option>';
-            foreach ($f['options'] ?? [] as $val => $label) {
-                echo '<option value="' . $e($val) . '"' . $sel((string) $val) . '>'
-                   . $e($label) . '</option>';
-            }
-            echo '</select>';
-        }
-        if ($columnMenu !== null) {
-            echo $this->renderColumnToggle($columnMenu, $e);
-        }
-        if ($this->csvFile !== null) {
-            echo Button::render($this->csvOpts['label'] ?? Lang::t('table.export_csv'), [
-                'variant' => 'outlined',
-                'color' => 'neutral',
-                'size' => 'sm',
-                'shape' => 'pill',
-                'icon' => 'download',
-                'data' => ['gk-export-csv' => $this->csvFile, 'gk-export-delimiter' => $this->csvOpts['delimiter'] ?? ','],
-            ]);
-        }
-        if ($this->densityToggle) {
-            echo $this->renderDensityToggle($e);
-        }
-        if ($this->newBtnLabel) {
-            echo '<div class="gk-toolbar-spacer"></div>';
-            $modal = $this->newBtnOpts['modal'] ?? '';
-            echo Button::render($this->newBtnLabel, [
-                'variant' => 'filled',
-                'color' => 'primary',
-                'icon' => $this->newBtnOpts['icon'] ?? 'add',
-                'shape' => 'pill',
-                'data' => $modal ? ['gk-modal' => $modal] : [],
-            ]);
-        }
+        if ($this->searchCols) $this->renderSearchField($e);
+        if ($this->toolbarHtml !== '') echo $this->toolbarHtml;
+        foreach ($this->filters as $col => $f) $this->renderFilter($col, $f, $e);
+        if ($columnMenu !== null) echo $this->renderColumnToggle($columnMenu, $e);
+        if ($this->csvFile !== null) $this->renderCsvButton();
+        if ($this->densityToggle) echo $this->renderDensityToggle($e);
+        if ($this->newBtnLabel) $this->renderNewButton();
         echo '</div>';
-        } // end toolbar
+    }
 
-        if ($this->selectable) {
-            echo '<div class="gk-bulk-bar" style="display:none;">'
-               . '<span class="material-icons" style="font-size:18px;" aria-hidden="true">check_box</span>'
-               . '<span class="gk-bulk-count">0 ' . $e(Lang::t('table.selected', ['n' => ''])) . '</span>'
-               . '<div class="gk-toolbar-spacer"></div>'
-               . $this->renderBulkActions($e)
-               . '<button type="button" data-gk-bulk-delete>'
-               .   '<span class="material-icons" aria-hidden="true">delete</span> ' . $e(Lang::t('table.delete'))
-               . '</button>'
-               . '<button type="button" data-gk-bulk-cancel>' . $e(Lang::t('table.cancel')) . '</button>'
-               . '</div>';
+    /** The search field of search(), holding the search the page was opened with. */
+    private function renderSearchField(\Closure $e): void
+    {
+        // A placeholder is not an accessible name: it is not always
+        // announced, and it disappears as soon as anything is typed.
+        $searchLabel = $e(Lang::t('table.search'));
+        echo '<input type="text" class="gk-search" data-gk-search'
+           . ' placeholder="' . $searchLabel . '" aria-label="' . $searchLabel . '"'
+           . ' value="' . $e($this->searchQuery) . '">';
+    }
+
+    /** One filter() as a select: "All" first, then its options, the one in the URL selected. */
+    private function renderFilter(int|string $col, array $f, \Closure $e): void
+    {
+        // The active value comes back from the URL. Without this the
+        // dropdown snaps to "All" on every full page load while the table
+        // below it still shows filtered rows — which is what a shared link
+        // or a plain reload does.
+        $active = self::param('gk_filter_' . $col);
+        $sel = static fn(string $value): string => $value === $active ? ' selected' : '';
+
+        $filterLabel = $f['label']
+            ?? $this->columns[$col]['label']
+            ?? $f['placeholder']
+            ?? Lang::t('table.filter_all');
+        echo '<select class="gk-filter" data-gk-filter="' . $e($col) . '"'
+           . ' aria-label="' . $e($filterLabel) . '">';
+        echo '<option value=""' . $sel('') . '>'
+           . $e($f['placeholder'] ?? Lang::t('table.filter_all')) . '</option>';
+        foreach ($f['options'] ?? [] as $val => $label) {
+            echo '<option value="' . $e($val) . '"' . $sel((string) $val) . '>'
+               . $e($label) . '</option>';
         }
+        echo '</select>';
+    }
 
-        $this->renderInner();
+    /** The download button of exportCsv(). */
+    private function renderCsvButton(): void
+    {
+        echo Button::render($this->csvOpts['label'] ?? Lang::t('table.export_csv'), [
+            'variant' => 'outlined',
+            'color' => 'neutral',
+            'size' => 'sm',
+            'shape' => 'pill',
+            'icon' => 'download',
+            'data' => ['gk-export-csv' => $this->csvFile, 'gk-export-delimiter' => $this->csvOpts['delimiter'] ?? ','],
+        ]);
+    }
 
-        // Modals
+    /** The button of newButton(), pushed to the end of the toolbar; with 'modal' it opens that modal. */
+    private function renderNewButton(): void
+    {
+        echo '<div class="gk-toolbar-spacer"></div>';
+        $modal = $this->newBtnOpts['modal'] ?? '';
+        echo Button::render($this->newBtnLabel, [
+            'variant' => 'filled',
+            'color' => 'primary',
+            'icon' => $this->newBtnOpts['icon'] ?? 'add',
+            'shape' => 'pill',
+            'data' => $modal ? ['gk-modal' => $modal] : [],
+        ]);
+    }
+
+    /**
+     * The bar that appears while rows are ticked: the count, the buttons of bulkAction(), delete
+     * and cancel. Written hidden; the script shows it.
+     */
+    private function renderBulkBar(\Closure $e): void
+    {
+        echo '<div class="gk-bulk-bar" style="display:none;">'
+           . '<span class="material-icons" style="font-size:18px;" aria-hidden="true">check_box</span>'
+           . '<span class="gk-bulk-count">0 ' . $e(Lang::t('table.selected', ['n' => ''])) . '</span>'
+           . '<div class="gk-toolbar-spacer"></div>'
+           . $this->renderBulkActions($e)
+           . '<button type="button" data-gk-bulk-delete>'
+           .   '<span class="material-icons" aria-hidden="true">delete</span> ' . $e(Lang::t('table.delete'))
+           . '</button>'
+           . '<button type="button" data-gk-bulk-cancel>' . $e(Lang::t('table.cancel')) . '</button>'
+           . '</div>';
+    }
+
+    /** One template per modal(): the title, URL and size a button with that 'modal' opens it with. */
+    private function renderModalTemplates(\Closure $e): void
+    {
         foreach ($this->modals as $mid => $m) {
             echo '<template data-gk-modal-tpl="' . $e($mid) . '" data-gk-modal-title="' . $e($m['title']) . '" data-gk-modal-url="' . $e($m['url']) . '" data-gk-modal-size="' . $e($m['size'] ?? 'medium') . '"></template>';
         }
-
-        echo '</div>';
     }
 
     private function renderInner(): void
@@ -1711,151 +1755,191 @@ class Table
         }
     }
 
+    /** The buttons on one side of a row, in the order they were added: each one that shows in this row. */
     private function renderButtons(array $buttons, array $row, \Closure $e): void
     {
         foreach ($buttons as $bname => $bopts) {
-            // showIf: only show the button when the row field is truthy
-            if (isset($bopts["showIf"])) {
-                $field = $bopts["showIf"];
-                if (empty($row[$field])) continue;
-            }
-            // hideIf: hide the button when the row field is truthy
-            if (isset($bopts["hideIf"])) {
-                $field = $bopts["hideIf"];
-                if (!empty($row[$field])) continue;
-            }
-            // Almost every row button needs to say which row it belongs to, and
-            // forgetting `'params' => ['id' => 'id']` failed silently: the edit
-            // modal opened as if it were a new record. The row's own id is sent
-            // unless the caller mapped one itself.
-            $params = self::rowParams($bopts['params'] ?? [], $row);
-
-            // Every other component in GridKit names this option `color` —
-            // Button::render(), ActionGroup items, StatCards. The row button
-            // read `class` and nothing else, so the `'color' => 'danger'` in
-            // the skill's own example produced a grey delete button. Both names
-            // work; `color` is the one to use.
-            $colorMap = ['danger' => 'danger', 'success' => 'success', 'warning' => 'warning', 'primary' => 'primary'];
-            $colorName = $bopts['color'] ?? $bopts['class'] ?? '';
-            $color = $colorMap[$colorName] ?? 'neutral';
-
-            // `'confirm' => true` (or a message) asks before the button acts.
-            // It was documented in the README and read by nothing at all, which
-            // left the delete button in the headline example deleting without
-            // asking — and, with neither onclick nor modal, doing nothing.
-            $confirmAttr = '';
-            $confirmMsg  = null;
-            if (!empty($bopts['confirm'])) {
-                $confirmMsg = is_string($bopts['confirm'])
-                    ? $bopts['confirm']
-                    : Lang::t('table.confirm_delete');
-                $confirmAttr = ' data-gk-confirm="' . $e($confirmMsg) . '"';
-            }
-
-            // Data attributes
-            $dataAttrs = ' data-gk-action="' . $e($bname) . '"'
-                       . " data-gk-params='" . $e(json_encode($params)) . "'"
-                       . $confirmAttr;
-            if (isset($bopts['modal'])) {
-                $dataAttrs .= ' data-gk-modal="' . $e($bopts['modal']) . '"';
-            }
-            // The accessible name. A row button is usually icon-only, so its
-            // whole content is an <svg> — nothing a screen reader can read. It
-            // announced as "button", six times over on a three-row table, and
-            // one of those six deletes the record.
-            //
-            // title is not enough on its own: GK.tip moves it into
-            // data-gk-tip on the first hover and removes the attribute, so a
-            // control named only by its title goes silent as the pointer
-            // crosses it. aria-label is the name; title stays for the tooltip.
-            $actionName = $bopts['aria'] ?? $bopts['title'] ?? null;
-            if ($actionName === null) {
-                $key = 'action.' . $bname;
-                $translated = Lang::t($key);
-                // Lang::t returns the key when it knows nothing about it.
-                $actionName = $translated !== $key
-                    ? $translated
-                    : ucfirst(str_replace(['_', '-'], ' ', $bname));
-            }
-            $ariaAttr  = ' aria-label="' . $e($actionName) . '"';
-            $titleAttr = !empty($bopts['title']) ? ' title="' . $e($bopts['title']) . '"' : '';
-
-            // 'href' => '/users/{id}' makes the row button a real link: middle
-            // click, "open in new tab" and the browser's status bar work again.
-            // Ten SSI Panel views pushed window.location.href into a <button>
-            // instead, and none of them could be opened in a second tab.
-            // 'modal' and 'onclick' keep what they had: a button that already
-            // opens something must not turn into a link because someone added
-            // href — it would lose its behaviour without a word.
-            $href = null;
-            if (isset($bopts['href']) && (string) $bopts['href'] !== ''
-                && !isset($bopts['modal']) && empty($bopts['onclick'])) {
-                $href = self::fillTarget((string) $bopts['href'], $row);
-            }
-            // A link carries no data-gk-action: the delegated handler would fire
-            // gk:rowaction on top of the navigation. The confirmation stays — the
-            // handler below asks before it follows the link.
-            // A question before a link cannot live on an <a>: a middle click, a
-            // Ctrl-click and Enter each take the native path, and a page whose
-            // JavaScript failed to load would follow it without asking at all.
-            // So a link WITH a confirmation is a button carrying its target.
-            $fragtVorher = $href !== null && $confirmMsg !== null;
-            if ($fragtVorher) {
-                // No data-gk-action: going somewhere is not a row action, and the
-                // delegated handler would ask its own question on top of this one.
-                $dataAttrs = " data-gk-params='" . $e(json_encode($params)) . "'"
-                    . $confirmAttr . ' data-gk-href="' . $e($href) . '"';
-                $href = null;
-            }
-            $linkAttrs = $href === null ? '' : ' href="' . $e($href) . '"'
-                . " data-gk-params='" . $e(json_encode($params)) . "'";
-            $clickAttr = '';
-            if (!empty($bopts['onclick'])) {
-                $js = preg_replace_callback('/\{(\w+)\}/', static function ($m) use ($row) {
-                    return json_encode($row[$m[1]] ?? null, JSON_UNESCAPED_UNICODE);
-                }, (string) $bopts['onclick']);
-                // An inline handler runs before any delegated listener could stop
-                // it, so the confirmation has to wrap the code itself.
-                if ($confirmMsg !== null) {
-                    $js = 'GK.confirm(' . json_encode($confirmMsg, JSON_UNESCAPED_UNICODE)
-                        . ',{danger:true}).then(function(ok){if(ok){' . $js . '}})';
-                }
-                $clickAttr = ' onclick="' . $e($js) . '"';
-            }
-
-            $hasText  = !empty($bopts['text']);
-            $iconName = $bopts['icon'] ?? '';
-            $iconHtml = $iconName ? $this->iconSvg($iconName) : '';
-
-            // $hasText alone, not $hasText && $iconHtml: a row button given
-            // 'text' and no 'icon' fell past both arms and rendered nothing at
-            // all. On a setData() table the client re-render draws that same
-            // button, so it appeared out of nowhere on the first sort.
-            if ($hasText) {
-                // Icon + Text button
-                $cls = 'gk-btn gk-btn-icon-text gk-btn-text gk-btn-' . $color;
-                if ($href !== null) {
-                    echo '<a class="' . $cls . '"' . $linkAttrs . $titleAttr . '>'
-                       . $iconHtml . '<span>' . $e($bopts['text']) . '</span></a>';
-                } else {
-                    echo '<button type="button" class="' . $cls . '"' . $titleAttr . $clickAttr . $dataAttrs . '>'
-                       . $iconHtml . '<span>' . $e($bopts['text']) . '</span></button>';
-                }
-            } elseif ($iconHtml) {
-                // Icon-only button (sm) — same classes as JS renderBtnGroup
-                // aria-label only here. The icon+text branch above is named by
-                // its visible text, and an aria-label would override that —
-                // which also breaks activating the control by speaking its
-                // visible name.
-                $cls = 'gk-btn gk-btn-icon-only gk-btn-text gk-btn-' . $color . ' gk-btn-sm';
-                if ($href !== null) {
-                    echo '<a class="' . $cls . '"' . $linkAttrs . $ariaAttr . $titleAttr . '>' . $iconHtml . '</a>';
-                } else {
-                    echo '<button type="button" class="' . $cls . '"' . $ariaAttr . $titleAttr . $clickAttr . $dataAttrs . '>'
-                       . $iconHtml . '</button>';
-                }
-            }
+            if (self::buttonShows($bopts, $row)) $this->renderButton($bname, $bopts, $row, $e);
         }
+    }
+
+    /** showIf and hideIf: does this button show in this row? */
+    private static function buttonShows(array $bopts, array $row): bool
+    {
+        // showIf: only show the button when the row field is truthy
+        if (isset($bopts["showIf"]) && empty($row[$bopts["showIf"]])) return false;
+        // hideIf: hide the button when the row field is truthy
+        if (isset($bopts["hideIf"]) && !empty($row[$bopts["hideIf"]])) return false;
+        return true;
+    }
+
+    /**
+     * One row button: a <button> that fires its row action, opens its modal or runs its onclick —
+     * or an <a> when it goes somewhere without asking first. It shows its text (after its icon,
+     * if it has one) or its icon alone; a button with neither is not written.
+     *
+     * $bname keeps its type: a button named '1' has the key 1, an int, and a `string` parameter
+     * would turn that button into a TypeError.
+     */
+    private function renderButton(int|string $bname, array $bopts, array $row, \Closure $e): void
+    {
+        // Almost every row button needs to say which row it belongs to, and
+        // forgetting `'params' => ['id' => 'id']` failed silently: the edit
+        // modal opened as if it were a new record. The row's own id is sent
+        // unless the caller mapped one itself.
+        $params = self::rowParams($bopts['params'] ?? [], $row);
+        $color = self::buttonColor($bopts);
+        $confirmMsg = self::buttonConfirm($bopts);
+        $confirmAttr = $confirmMsg !== null ? ' data-gk-confirm="' . $e($confirmMsg) . '"' : '';
+
+        // Data attributes
+        $paramsAttr = " data-gk-params='" . $e(json_encode($params)) . "'";
+        $dataAttrs = ' data-gk-action="' . $e($bname) . '"' . $paramsAttr . $confirmAttr;
+        if (isset($bopts['modal'])) {
+            $dataAttrs .= ' data-gk-modal="' . $e($bopts['modal']) . '"';
+        }
+        // aria-label is the name, title stays for the tooltip — see buttonName().
+        $ariaAttr  = ' aria-label="' . $e(self::buttonName($bname, $bopts)) . '"';
+        $titleAttr = !empty($bopts['title']) ? ' title="' . $e($bopts['title']) . '"' : '';
+
+        $href = self::buttonHref($bopts, $row);
+        // A link carries no data-gk-action: the delegated handler would fire
+        // gk:rowaction on top of the navigation. The confirmation stays — the
+        // handler below asks before it follows the link.
+        // A question before a link cannot live on an <a>: a middle click, a
+        // Ctrl-click and Enter each take the native path, and a page whose
+        // JavaScript failed to load would follow it without asking at all.
+        // So a link WITH a confirmation is a button carrying its target.
+        if ($href !== null && $confirmMsg !== null) {
+            // No data-gk-action: going somewhere is not a row action, and the
+            // delegated handler would ask its own question on top of this one.
+            $dataAttrs = $paramsAttr . $confirmAttr . ' data-gk-href="' . $e($href) . '"';
+            $href = null;
+        }
+        $linkAttrs = $href === null ? '' : ' href="' . $e($href) . '"' . $paramsAttr;
+        $clickAttr = self::buttonOnclick($bopts, $row, $confirmMsg, $e);
+
+        $hasText  = !empty($bopts['text']);
+        $iconName = $bopts['icon'] ?? '';
+        $iconHtml = $iconName ? $this->iconSvg($iconName) : '';
+
+        // $hasText alone, not $hasText && $iconHtml: a row button given
+        // 'text' and no 'icon' fell past both arms and rendered nothing at
+        // all. On a setData() table the client re-render draws that same
+        // button, so it appeared out of nowhere on the first sort.
+        if ($hasText) {
+            // Icon + Text button
+            $cls = 'gk-btn gk-btn-icon-text gk-btn-text gk-btn-' . $color;
+            $nameAttr = '';
+            $inner = $iconHtml . '<span>' . $e($bopts['text']) . '</span>';
+        } elseif ($iconHtml) {
+            // Icon-only button (sm) — same classes as JS renderBtnGroup
+            // aria-label only here. The icon+text branch above is named by
+            // its visible text, and an aria-label would override that —
+            // which also breaks activating the control by speaking its
+            // visible name.
+            $cls = 'gk-btn gk-btn-icon-only gk-btn-text gk-btn-' . $color . ' gk-btn-sm';
+            $nameAttr = $ariaAttr;
+            $inner = $iconHtml;
+        } else {
+            return;
+        }
+        if ($href !== null) {
+            echo '<a class="' . $cls . '"' . $linkAttrs . $nameAttr . $titleAttr . '>' . $inner . '</a>';
+        } else {
+            echo '<button type="button" class="' . $cls . '"' . $nameAttr . $titleAttr . $clickAttr . $dataAttrs . '>'
+               . $inner . '</button>';
+        }
+    }
+
+    /**
+     * The colour of a row button: 'color', or 'class'; neutral for anything else.
+     *
+     * Every other component in GridKit names this option `color` — Button::render(), ActionGroup
+     * items, StatCards. The row button read `class` and nothing else, so the `'color' => 'danger'`
+     * in the skill's own example produced a grey delete button. Both names work; `color` is the
+     * one to use.
+     */
+    private static function buttonColor(array $bopts): string
+    {
+        $colorMap = ['danger' => 'danger', 'success' => 'success', 'warning' => 'warning', 'primary' => 'primary'];
+        $colorName = $bopts['color'] ?? $bopts['class'] ?? '';
+        return $colorMap[$colorName] ?? 'neutral';
+    }
+
+    /**
+     * The question a row button asks before it acts, or null: `'confirm' => true` asks the
+     * standard one, a message asks itself.
+     *
+     * 'confirm' was documented in the README and read by nothing at all, which left the delete
+     * button in the headline example deleting without asking — and, with neither onclick nor
+     * modal, doing nothing.
+     */
+    private static function buttonConfirm(array $bopts): ?string
+    {
+        if (empty($bopts['confirm'])) return null;
+        return is_string($bopts['confirm'])
+            ? $bopts['confirm']
+            : Lang::t('table.confirm_delete');
+    }
+
+    /**
+     * The accessible name of a row button: 'aria', else 'title', else the catalogue's
+     * action.<name>, else the name itself made readable.
+     *
+     * A row button is usually icon-only, so its whole content is an <svg> — nothing a screen
+     * reader can read. It announced as "button", six times over on a three-row table, and one
+     * of those six deletes the record.
+     *
+     * title is not enough on its own: GK.tip moves it into data-gk-tip on the first hover and
+     * removes the attribute, so a control named only by its title goes silent as the pointer
+     * crosses it. aria-label is the name; title stays for the tooltip.
+     */
+    private static function buttonName(int|string $bname, array $bopts): string
+    {
+        $actionName = $bopts['aria'] ?? $bopts['title'] ?? null;
+        if ($actionName !== null) return (string) $actionName;
+        $key = 'action.' . $bname;
+        $translated = Lang::t($key);
+        // Lang::t returns the key when it knows nothing about it.
+        return $translated !== $key
+            ? $translated
+            : ucfirst(str_replace(['_', '-'], ' ', $bname));
+    }
+
+    /**
+     * Where a row button goes, filled from the row: null without 'href', for a target
+     * fillTarget() refuses, and for a button with 'modal' or 'onclick'.
+     *
+     * 'href' => '/users/{id}' makes the row button a real link: middle click, "open in new tab"
+     * and the browser's status bar work again. Ten SSI Panel views pushed window.location.href
+     * into a <button> instead, and none of them could be opened in a second tab. 'modal' and
+     * 'onclick' keep what they had: a button that already opens something must not turn into a
+     * link because someone added href — it would lose its behaviour without a word.
+     */
+    private static function buttonHref(array $bopts, array $row): ?string
+    {
+        if (isset($bopts['href']) && (string) $bopts['href'] !== ''
+            && !isset($bopts['modal']) && empty($bopts['onclick'])) {
+            return self::fillTarget((string) $bopts['href'], $row);
+        }
+        return null;
+    }
+
+    /** The onclick attribute of a row button, every {field} of its code filled from the row; '' without 'onclick'. */
+    private static function buttonOnclick(array $bopts, array $row, ?string $confirmMsg, \Closure $e): string
+    {
+        if (empty($bopts['onclick'])) return '';
+        $js = preg_replace_callback('/\{(\w+)\}/', static function ($m) use ($row) {
+            return json_encode($row[$m[1]] ?? null, JSON_UNESCAPED_UNICODE);
+        }, (string) $bopts['onclick']);
+        // An inline handler runs before any delegated listener could stop
+        // it, so the confirmation has to wrap the code itself.
+        if ($confirmMsg !== null) {
+            $js = 'GK.confirm(' . json_encode($confirmMsg, JSON_UNESCAPED_UNICODE)
+                . ',{danger:true}).then(function(ok){if(ok){' . $js . '}})';
+        }
+        return ' onclick="' . $e($js) . '"';
     }
 
     /**
