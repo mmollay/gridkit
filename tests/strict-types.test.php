@@ -72,4 +72,17 @@ return [
     }
 },
 
+
+'a row button with a numeric name and no aria or title renders, named after its number (1.110.2)' => function (): void {
+    // A button named '3' is the key 3 of the buttons array. Its fallback name went through
+    // str_replace(), which under strict_types refused the int: the whole table threw.
+    \GridKit\Lang::set('en');
+    try {
+        $html = T::capture(fn() => (new \GridKit\Table('t'))->setData([['id' => 1, 'a' => 'x']])
+            ->column('a', 'A')->button('3', ['icon' => 'edit'])->toolbar(false)->render());
+        T::contains($html, 'aria-label="3"', 'the button has no name');
+    } catch (\Throwable $e) {
+        T::ok(false, 'a numeric button name threw ' . get_class($e) . ': ' . $e->getMessage());
+    }
+},
 ];

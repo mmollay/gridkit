@@ -1902,9 +1902,11 @@ class Table
         $key = 'action.' . $bname;
         $translated = Lang::t($key);
         // Lang::t returns the key when it knows nothing about it.
+        // (string): a button named '3' arrives as the key 3, and str_replace() under strict_types
+        // refused the int — the whole table threw a TypeError (1.110.2). renderBulkActions() casts too.
         return $translated !== $key
             ? $translated
-            : ucfirst(str_replace(['_', '-'], ' ', $bname));
+            : ucfirst(str_replace(['_', '-'], ' ', (string) $bname));
     }
 
     /**

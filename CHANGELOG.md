@@ -7,6 +7,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.110.2] - 2026-11-03
+
+Housekeeping: `Table::render()` and `Table::renderButtons()`, the two longest methods left in the table, are cut into parts. Nothing a page can see changes — no class, no option, no markup, byte for byte — and a recording of 30,819 renderings holds that to account. One fault found on the way is fixed: a row button with a number for a name no longer stops the table.
+
+### Changed
+- **`Table::render()`** from 191 to 30 lines; it reads as the order of what it writes: `wrapOpenTag()` (with `wrapClasses()`), `renderDataBlock()`, `renderToolbar()` with `renderSearchField()`, `renderFilter()`, `renderCsvButton()` and `renderNewButton()`, `renderBulkBar()`, `renderInner()`, `renderModalTemplates()`. `columnMenu()` is still asked outside the toolbar: without one, it is what warns that a `'hidden'` column shows.
+- **`Table::renderButtons()`** from 146 to 6 lines: `buttonShows()` (`showIf`, `hideIf`), `renderButton()` for one button, and `buttonColor()`, `buttonConfirm()`, `buttonName()`, `buttonHref()` and `buttonOnclick()`. The `data-gk-params` attribute is built once instead of three times, and the four near-identical tag writes are one. The button name is passed as `int|string`: a button named `'1'` has the key 1. Every expression that can warn or throw runs in the order it did before. The longest method of the class is now `renderButton()`, 70 lines, about 30 of them comments.
+
+### Fixed
+- **A row button named with a number** (`->button('3', ['icon' => 'edit'])`, no `aria` and no `title`) threw a `TypeError` and the table did not render: its fallback name went through `str_replace()`, which under `strict_types` (1.104.3) refuses the int key PHP makes of `'3'`. The name is cast, as `renderBulkActions()` already did; the button is named "3".
+
+### Tests
+- `tests/golden-table` and `tests/golden-form` pass unrecorded. A recording of 30,819 renderings was made before the change and compared after every step: every option of `Table` alone and in pairs, `setData()`, `rows()`, empty, the AJAX fragment, sort, page, search, filter and hostile parameters, English and German, and hostile values in every button and toolbar option, alone and two at a time. It compares the markup, every warning in order with the byte offset at which it was raised, and every exception. The recording is identical. Two deliberate slips, evaluating a button's icon earlier and asking for the column menu only with a toolbar, each turned it red.
+- `tests/strict-types.test.php`: a numeric button name renders and is named after its number; without the cast it throws.
+- Whole suite: 9,682 assertions. The browser checks give the numbers they gave before (140, 29, 271, 417, 65, 252, 96, demo coverage ok). The demo page renders byte for byte as before in both languages, apart from the random ids.
+
+---
 ## [1.110.1] - 2026-11-03
 
 A table with buttons on the left had every heading one column before its cells; each heading now stands over its own column, as the server writes it and after a sort. And `columnToggle()` hides its columns in the box of `stickyHead()` and `stickyColumn()` too.
