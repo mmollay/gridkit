@@ -1,4 +1,4 @@
-# GridKit 1.113.0 — components
+# GridKit 1.114.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -1869,6 +1869,67 @@ Theme::set('indigo', 'light');  // themes: indigo, ocean, forest, rose, amber, s
 echo Theme::switcher();          // RETURNS the switcher HTML — must be echoed
 ```
 
+**The six themes (since 1.114.0).** The keys are what they always were; the colours were
+refined. A theme is an accent hue and the neutral it is paired with — every other value is
+derived in OKLCH at the same lightness steps, so all six have the same contrast:
+
+| Key | Accent (light / dark) | Neutrals | Character |
+|---|---|---|---|
+| `indigo` (default) | `#4e5ad7` / `#a1b2ff` | cool blue-grey | deep ink indigo |
+| `ocean` | `#00769f` / `#7fc1e3` | blue-grey | deep cerulean |
+| `forest` | `#0a7f60` / `#87c7ae` | sage | jade |
+| `rose` | `#b13276` / `#f595c0` | mauve | berry — kept away from the red of errors |
+| `amber` | `#a55115` / `#e8a681` | sand | copper |
+| `slate` | `#424852` / `#b3b8c0` | graphite | monochrome: a near-black accent (L 0.40) |
+
+White text on every light accent: 4.98:1 (forest) to 9.2:1 (slate); dark text on every dark
+accent 8:1 or more. `Theme::available()` carries these light accents as the swatch colours.
+
+**The switcher.** `Theme::switcher()` (and the *Appearance* part of `Header::user()`) shows six
+swatches — the chosen one with a ring in its colour, a check mark and `aria-pressed`, never colour
+alone — and one mode group. With `js/gridkit.js` 1.114.0 the group is **light | dark | auto**;
+*auto* follows the system setting (`prefers-color-scheme`) and is stored per browser beside the
+mode (`gk-mode-auto`, in the `GK.theme` scope). From code: `GK.theme.setMode('light' | 'dark' |
+'auto')`; `GK.theme.toggleMode()` still toggles and ends *auto*. A copy of `gridkit.js` without the
+1.114.0 block keeps the plain light/dark toggle — the auto button stays hidden. The markup since
+1.114.0: the swatches sit in `.gk-theme-colors` (`role="group"`), each dot is `type="button"` and
+carries its colour as `--gk-swatch`; the toggle and the auto button (`.gk-mode-auto`, rendered
+`hidden`) sit in `.gk-mode-group` (`role="group"`). The old classes and attributes are unchanged.
+
+### Colour system and roles
+
+GridKit's colour is a set of **roles** (`--gk-*` custom properties), never literals: write a role
+and a page follows the theme and both dark spellings (`[data-gk-mode="dark"]`, `.gk-dark`) by
+itself. The principles behind the values (1.114.0): the neutrals carry the interface and the
+accent is a signal (the one primary action, the selection, focus, links); neutrals are tinted
+towards their theme, under 0.02 chroma; each role sits at a fixed OKLCH lightness; dark mode is
+its own ladder of near-black with the theme's hue, layered upward; the semantic colours never
+follow the theme.
+
+| Role | Use it for | Light | Dark |
+|---|---|---|---|
+| `--gk-surface` | cards, the header, fields in focus, menus' paper | `#ffffff` | `#191b21` (L 0.222) |
+| `--gk-surface-container` | the page under the cards, a muted band | `#f4f5f8` (L 0.970) | `#111218` (L 0.185) |
+| `--gk-surface-container-low` | a subtle fill: card footer, resting field, stripe | `#f9fafc` | `#14161c` (recessed) |
+| `--gk-surface-container-high` | hover on a surface, a track | `#ecedf2` | `#22242b` (raised) |
+| `--gk-surface-container-highest` | pressed, the strongest neutral fill, menus in dark | `#e2e4e9` | `#2b2d36` |
+| `--gk-on-surface` | text | `#181a22` (17:1) | `#ebecf1` (14.6:1) |
+| `--gk-on-surface-variant` | secondary text, icons | `#565965` (7:1) | `#a4a7b2` (7.2:1) |
+| `--gk-outline-variant` | hairlines: card edges, dividers | `#e4e5ea` | white at 8 % |
+| `--gk-outline` | a control's edge | `#9b9ea9` | `#50525c` |
+| `--gk-primary` / `--gk-on-primary` | the one primary action, selection, focus | accent / white | light accent / dark text |
+| `--gk-primary-text` | the accent as text on a surface (links, chosen tab) | one step darker | = the accent, a step lower |
+| `--gk-primary-container` / `--gk-on-primary-container` | a tonal fill: chosen segment, count, hover of the grip | L 0.95 / L 0.36 | L 0.36 / L 0.92 |
+| `--gk-success` `--gk-warning` `--gk-error` `--gk-info` | dots, borders, icons — not text | emerald, amber, red, sky | lighter steps |
+| `--gk-*-text`, `--gk-*-fill` | the semantic colour as text / as a filled button with white text | 4.5:1 and more | |
+| `--gk-elev-1` … `-4` | shadow steps: card, raised card, menu, dialog | soft, two layers | deeper |
+
+The ladder runs the same way in both modes: cards are lighter than the page, a hover is a step
+away from its surface, a field is a step recessed. Prefer the role to the older alias
+(`--gk-bg`, `--gk-text-muted`, …) in new code; since 1.114.0 the aliases resolve to their role in
+dark mode too. The error role is a true red since 1.114.0 (`#dd2d34`, white 4.67:1), so a badge
+or a bulk-delete button in it reads; the rose theme's accent stays clearly apart from it.
+
 ### The small helpers
 
 ```php
@@ -2170,7 +2231,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Modal | `GridKit\Modal` | Dialog overlays |
 | Button | `GridKit\Button` | Filled/Outlined/Text/Tonal, icons, sizes |
 | Auth | `GridKit\Auth` | Session auth, bcrypt, remember-me |
-| Theme | `GridKit\Theme` | 6 themes (indigo/ocean/forest/rose/amber/slate), light/dark |
+| Theme | `GridKit\Theme` | 6 themes (indigo/ocean/forest/rose/amber/slate), light/dark — and auto with the switcher since 1.114.0, which also refined every colour |
 | Layout | `GridKit\Layout` | Layout modes (sidebar-first, header-first) |
 | StatCards | `GridKit\StatCards` | KPI cards with icon, color, format |
 | FilterChips | `GridKit\FilterChips` | URL-based filter chip buttons |
