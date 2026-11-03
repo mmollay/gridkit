@@ -125,23 +125,21 @@ return [
 'the marks are GridKit\'s own green and blue labels, in both modes' => function () use ($css, $rule): void {
     Lang::set('en');
     // The window moves with every minor (the last two in the changelog). Which blocks it marks is therefore
-    // found, not named, wherever a case depends on it — naming them made this test fail on every minor release
-    // until it was edited (1.104, 1.106). Named here are only blocks that fell out for good: the line "you are
-    // here" and the tabs (changed in 1.104), the steps (1.101), the header (1.100), the message and the timeline.
-    // The header, the sidebar and the breadcrumb changed in 1.100, the message and the timeline in 1.99.
+    // found, not named — naming them made this test fail on releases that touched them (1.104, 1.106, and
+    // 1.110.5 for the line "you are here"): every block in the window carries its mark, every other block none.
     $new = gkMark('new', '1.100');
     T::contains($new, 'gk-label gk-label-green', 'a new block is not marked with the green label');
     T::contains($new, 'New in 1.100', 'the mark does not say what is new');
     T::contains(since('ortszeile'), 'since 1.100', 'the heading does not say since when');
-    T::notContains(since('ortszeile'), 'gk-label', 'the line "you are here", changed in 1.104, is out of the window and still marked');
-    T::notContains(since('steps'), 'gk-label', 'the steps, changed in 1.101, are out of the window and still marked');
-    T::notContains(since('tabs'), 'gk-label', 'the tabs, changed in 1.104, are out of the window and still marked');
-    // Every block changed in the window carries its mark — found, not named: the window moves with every minor.
+    // Every block changed in the window carries its mark, and a block neither new nor changed in it none.
     $window = gkRecentMinors(gkChangelog());
     foreach (gkBlocks() as $key => $b) {
         $state = gkBlockState($b, $window);
         if ($state['changed'] !== null) {
             T::contains(since($key), "Changed in {$state['changed']}", "a block changed in {$state['changed']} is not marked as changed ($key)");
+        }
+        if ($state['new'] === null && $state['changed'] === null) {
+            T::notContains(since($key), 'gk-label', "a block out of the window is still marked ($key)");
         }
     }
     // A block that got a new class in the newest minor: no block of this window did, so a blocks file of its own.
@@ -153,12 +151,8 @@ return [
     T::eq($b['changed'], "$newest.0", 'a new class does not mark its block as changed');
     T::eq(gkBlockState($b, gkRecentMinors(gkChangelog())), ['new' => null, 'changed' => $newest], 'a block that got a new class in the newest minor is not marked as changed');
     $changed = gkMark('changed', '1.95');
-    T::notContains(since('header'), 'gk-label', 'the header, changed in 1.100, is out of the window and still marked');
     T::contains($changed, 'gk-label gk-label-blue', 'a changed block is not marked with the blue label');
     T::contains($changed, 'Changed in 1.95', 'the mark does not say when it changed');
-    T::notContains(since('message'), 'gk-label', 'the message, changed in 1.99, is out of the window and still marked');
-    T::notContains(since('timeline'), 'New in 1.96', 'the timeline, new in 1.96, is out of the window and still marked new');
-    T::notContains(since('timeline'), 'gk-label', 'the timeline, changed in 1.99, is out of the window and still marked');
 
     // A block that fell out of the window (the sortable container is new in 1.97,
     // the window is 1.106 and 1.105; the picker and the announcement are older still) carries no mark.

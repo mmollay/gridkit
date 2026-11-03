@@ -1357,6 +1357,13 @@ a:hover {
 .gk-btn-group .gk-btn:only-child {
   border-radius: 10px;
 }
+/* An outlined button draws its own edge. In a group every button gives up its right edge so
+   that two edges never stand side by side — the next button's left edge is the divider. The
+   last one has no neighbour: without its right edge the group stood open on the right, its
+   rounded corners running out into nothing (1.110.5). A bordered group draws its own frame. */
+.gk-btn-group:not(.gk-btn-group-bordered) .gk-btn.gk-btn-outlined:last-child {
+  border-right-width: 1.5px;
+}
 /* Bordered variant — explicit opt-in */
 .gk-btn-group-bordered {
   box-shadow: var(--gk-elev-1);
@@ -4467,6 +4474,12 @@ a.gk-stat-card:hover {
   justify-content: flex-start;
   align-items: baseline;
   gap: 12px;
+}
+/* The title above the line "you are here" (Header::ortszeile, 1.100.0): the two stood without a
+   gap, the title's descenders on the outline of the pills (1.110.5). On a phone the title
+   column steps aside (display: contents) and the header's own row gap applies. */
+.gk-header-title:has(> .gk-ortszeile) {
+  gap: 6px;
 }
 .gk-header-left:has(> .gk-header-title > .gk-header-meta) {
   flex: 1 1 auto;
