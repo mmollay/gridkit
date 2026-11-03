@@ -47,6 +47,7 @@ return [
     'table.selected'        => '{n} selected',
     'table.export_csv'      => 'Export CSV',
     'table.confirm_action'  => 'Apply this to the selected rows?',
+    'table.columns'         => 'Columns',
     'table.delete'          => 'Delete',
     'table.cancel'          => 'Cancel',
     'table.empty_hint'      => 'Entries will appear here once they exist.',

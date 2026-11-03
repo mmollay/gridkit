@@ -99,6 +99,14 @@
                 "gk-table-more-toggle": "1.91.0"
             }
         },
+        "col-toggle": {
+            "name": "Column toggle",
+            "classes": {
+                "gk-col-hidden": "1.108.0",
+                "gk-col-toggle": "1.108.0",
+                "gk-col-toggle-menu": "1.108.0"
+            }
+        },
         "sheet": {
             "name": "Side sheet",
             "changed": "1.92.0",

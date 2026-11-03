@@ -304,6 +304,26 @@ $table->variant('striped')->size('sm');</pre></div>
         });
         ?>
 
+    <h3 class="demo-h3" id="table-columns">Columns to show and hide <?= since('col-toggle') ?></h3>
+    <p class="demo-intro"><code>columnToggle()</code> puts a "Columns" button in the toolbar. Untick a column in its menu and it is gone from the header and the rows — through a sort, a search and a page change, and on your next visit too: the browser remembers it for this table. <code>'hidden' =&gt; true</code> starts a column hidden (here the unit and the VAT), <code>'toggle' =&gt; false</code> keeps one on screen (the article number). The CSV holds what the table shows; on a phone a hidden column is left out of the card, and if it was the card's title the next column takes its place.</p>
+        <?php
+        showcase(function () use ($articles) {
+            (new Table('demo-columns'))
+                ->setData(array_slice($articles, 0, 8))
+                ->search(['article_number', 'name'])
+                ->column('article_number', 'Article No.', ['muted' => true, 'toggle' => false])
+                ->column('name', 'Description', ['sortable' => true])
+                ->column('unit', 'Unit', ['hidden' => true])
+                ->column('net_price', 'Net', ['format' => 'currency', 'align' => 'right', 'sortable' => true])
+                ->column('tax_rate', 'VAT', ['format' => 'percent', 'hidden' => true])
+                ->column('is_active', 'Status', ['format' => 'label'])
+                ->columnToggle()
+                ->exportCsv('articles.csv')
+                ->paginate(5)
+                ->render();
+        });
+        ?>
+
     <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
     <p class="demo-intro">Resize the browser window to &lt;768px to see the mobile layout. In card mode the first line of a card is its head: the checkbox, the left buttons, the title and the right buttons side by side, then the other fields without rules (since 1.106.0). The title is the first column that is not <code>'muted'</code> — here the description, because the article number is muted; on a row with <code>rowLink()</code> it is the cell with the link.</p>
 

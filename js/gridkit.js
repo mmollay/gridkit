@@ -6552,4 +6552,339 @@ function _gkShowIfInit(root) {
   }
   _gkReady(function () { init(document); });
 })();
+// === 1.108.0 — column toggle (Table::columnToggle) ===
+/* ══════════════════════════════════════════════════════════════════════════
+ * The menu of Table::columnToggle(): a native popover in the toolbar with one checkbox per column.
+ *
+ * The hiding itself is CSS (css/gridkit.css, "1.108.0 — column toggle"): an unticked checkbox hides
+ * the cells at its place in a row, so a sort, a search, a page or an AJAX reload, which write the
+ * rows anew, need nobody to hide anything again. This block does what a stylesheet cannot:
+ *
+ *   1. remember the choice per table id — localStorage "gk-cols-<id>", only what differs from the
+ *      page's own default, so a column added later, or a default changed later, still reaches a
+ *      returning user; storage that is missing or throws remembers nothing and breaks nothing;
+ *   2. aria-expanded on the button, the menu under its button, the focus into it and back, the
+ *      arrow keys, Escape claimed (a modal underneath stays open), the menu closed when the focus
+ *      leaves it — opening, light dismiss and the Escape of a page without this block are the
+ *      browser's own;
+ *   3. after every redraw of the rows (renderStatic, an AJAX reload, rows put in by other code):
+ *      mark the hidden cells .gk-col-hidden — the title of a card passes over them, and a column
+ *      past the twentieth place is hidden by the mark alone — and narrow what spans the row: group
+ *      headings, the empty state, the footer;
+ *   4. keep one column: the last one shown cannot be unticked;
+ *   5. the CSV of a setData() table leaves hidden columns out; the export of a server table names
+ *      them (?gk_hidden=…) and Table::sendCsv() leaves them out.
+ *
+ * Without this block (the PawBot dashboard keeps its own copy of the file) the menu still opens
+ * and its checkboxes still hide and show columns; nothing is remembered, and a group heading keeps
+ * its full colspan, which a browser draws without a gap.
+ * ══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  var STORE = "gk-cols-";
 
+  function menuOf(wrap) {
+    return wrap.querySelector(":scope > .gk-toolbar .gk-col-toggle-menu");
+  }
+
+  /** The checkboxes that can hide a column: 'toggle' => false and the rowLink() column have no place. */
+  function boxesOf(wrap) {
+    var menu = menuOf(wrap);
+    return menu ? Array.prototype.slice.call(menu.querySelectorAll("input[data-gk-col-pos]")) : [];
+  }
+
+  function buttonOf(menu) {
+    return menu.parentNode ? menu.parentNode.querySelector("[popovertarget]") : null;
+  }
+
+  /** The column menu that is open, or null — also where a browser does not know :popover-open. */
+  function openMenu() {
+    try {
+      return document.querySelector(".gk-col-toggle-menu:popover-open");
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function close(menu, focusButton) {
+    try {
+      menu.hidePopover();
+    } catch (e) {}
+    var btn = buttonOf(menu);
+    if (focusButton && btn) btn.focus();
+  }
+
+  function stored(id) {
+    try {
+      var v = JSON.parse(localStorage.getItem(STORE + id) || "null");
+      return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function store(wrap) {
+    var diff = {};
+    var n = 0;
+    boxesOf(wrap).forEach(function (cb) {
+      if (cb.checked !== cb.defaultChecked) {
+        diff[cb.getAttribute("data-gk-col")] = cb.checked;
+        n++;
+      }
+    });
+    try {
+      if (n) localStorage.setItem(STORE + wrap.dataset.gkTable, JSON.stringify(diff));
+      else localStorage.removeItem(STORE + wrap.dataset.gkTable);
+    } catch (e) {}
+  }
+
+  /** The keys of the columns the user has hidden. */
+  function hiddenKeys(wrap) {
+    return boxesOf(wrap)
+      .filter(function (cb) { return !cb.checked; })
+      .map(function (cb) { return cb.getAttribute("data-gk-col"); });
+  }
+
+  /**
+   * At least one column stays. Without a column that cannot be hidden, the last one shown cannot be
+   * unticked — and when nothing would show at all (every column 'hidden', or a stored choice that
+   * says so), the first one comes back.
+   */
+  function keepOne(wrap) {
+    var menu = menuOf(wrap);
+    if (!menu) return;
+    var fixed = menu.querySelectorAll("input[data-gk-col]:not([data-gk-col-pos])").length;
+    var boxes = boxesOf(wrap);
+    if (!fixed && boxes.length && !boxes.some(function (cb) { return cb.checked; })) boxes[0].checked = true;
+    var on = boxes.filter(function (cb) { return cb.checked; });
+    boxes.forEach(function (cb) {
+      var last = !fixed && on.length === 1 && cb === on[0];
+      if (cb.disabled !== last) cb.disabled = last;
+    });
+  }
+
+  /**
+   * Row by row, by the places each cell takes (a colspan takes several): a cell whose every place
+   * is hidden gets .gk-col-hidden; a cell spanning hidden places loses them from its colspan, which
+   * it keeps in data-gk-span for when they come back. Rows written by renderStatic() or by the
+   * server carry the full colspan again, and are narrowed again. The header row counts its own
+   * places (data-gk-col-head): it writes the cell over the left buttons at its end.
+   */
+  function apply(wrap) {
+    var table = wrap.querySelector(":scope > .gk-table");
+    if (!table) return;
+    var hiddenCells = {};
+    var hiddenHeads = {};
+    boxesOf(wrap).forEach(function (cb) {
+      if (cb.checked) return;
+      hiddenCells[parseInt(cb.getAttribute("data-gk-col-pos"), 10)] = true;
+      hiddenHeads[parseInt(cb.getAttribute("data-gk-col-head"), 10)] = true;
+    });
+    Array.prototype.forEach.call(table.rows, function (tr) {
+      var hidden = tr.parentNode === table.tHead ? hiddenHeads : hiddenCells;
+      var pos = 1;
+      Array.prototype.forEach.call(tr.cells, function (cell) {
+        var span = parseInt(cell.getAttribute("data-gk-span"), 10) || cell.colSpan || 1;
+        var gone = 0;
+        for (var p = pos; p < pos + span; p++) if (hidden[p]) gone++;
+        pos += span;
+        var off = gone === span;
+        if (cell.classList.contains("gk-col-hidden") !== off) cell.classList.toggle("gk-col-hidden", off);
+        if (span > 1 && !off) {
+          if (gone && !cell.hasAttribute("data-gk-span")) cell.setAttribute("data-gk-span", String(span));
+          if (cell.colSpan !== span - gone) cell.colSpan = span - gone;
+        }
+      });
+    });
+  }
+
+  /**
+   * Under its button, from the button's left edge, moved left where it would leave the window, and
+   * above the button where there is more room there. A popover stands where the browser puts it —
+   * the middle of the window — until it is told otherwise.
+   */
+  function place(menu) {
+    var btn = buttonOf(menu);
+    if (!btn) return;
+    var r = btn.getBoundingClientRect();
+    var vw = document.documentElement.clientWidth;
+    var vh = document.documentElement.clientHeight;
+    var s = menu.style;
+    s.position = "fixed";
+    s.inset = "auto";
+    s.margin = "0";
+    // Measured only now, its old place cleared: where it stood before, the window's edge squeezed
+    // it, and a squeezed menu measured narrow would stay squeezed instead of moving left.
+    var w = menu.offsetWidth || 240; // 0 before it is shown (beforetoggle): about its least width
+    var h = menu.scrollHeight || 0;
+    var below = vh - r.bottom - 12;
+    var above = r.top - 12;
+    s.left = Math.round(Math.max(8, Math.min(r.left, vw - w - 8))) + "px";
+    if (h > below && above > below) {
+      s.bottom = Math.round(vh - r.top + 4) + "px";
+      s.maxHeight = Math.round(Math.max(120, Math.min(480, above))) + "px";
+    } else {
+      s.top = Math.round(r.bottom + 4) + "px";
+      s.maxHeight = Math.round(Math.max(120, Math.min(480, below))) + "px";
+    }
+  }
+
+  function follow() {
+    var menu = openMenu();
+    if (menu) place(menu);
+  }
+
+  function bind(wrap) {
+    if (wrap._gkColumns) return;
+    var menu = menuOf(wrap);
+    if (!menu) return;
+    wrap._gkColumns = true;
+    var choice = stored(wrap.dataset.gkTable || "");
+    boxesOf(wrap).forEach(function (cb) {
+      var key = cb.getAttribute("data-gk-col");
+      // The page's default unless a choice is stored — also over the state a browser restores
+      // into form controls on a reload, which would otherwise be a third source of truth.
+      cb.checked = typeof choice[key] === "boolean" ? choice[key] : cb.defaultChecked;
+    });
+    var btn = buttonOf(menu);
+    if (btn) btn.setAttribute("aria-expanded", "false");
+    keepOne(wrap);
+    apply(wrap);
+    // Every redraw of the rows: renderStatic() replaces the <table>, an AJAX reload everything but
+    // the toolbar, a page's own code a <tbody> or a row. The callback runs before the next paint.
+    if (typeof MutationObserver === "function") {
+      new MutationObserver(function (records) {
+        for (var i = 0; i < records.length; i++) {
+          for (var j = 0; j < records[i].addedNodes.length; j++) {
+            if (/^(TABLE|THEAD|TBODY|TFOOT|TR|TD|TH)$/.test(records[i].addedNodes[j].nodeName)) {
+              apply(wrap);
+              return;
+            }
+          }
+        }
+      }).observe(wrap, { childList: true, subtree: true });
+    }
+  }
+
+  function init(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    if (scope.matches && scope.matches("[data-gk-table]")) bind(scope);
+    scope.querySelectorAll("[data-gk-table]").forEach(bind);
+  }
+
+  document.addEventListener("change", function (e) {
+    var cb = e.target;
+    if (!cb.matches || !cb.matches(".gk-col-toggle-menu input[data-gk-col-pos]")) return;
+    var wrap = cb.closest("[data-gk-table]");
+    if (!wrap) return;
+    keepOne(wrap);
+    store(wrap);
+    apply(wrap);
+  });
+
+  // beforetoggle and toggle do not bubble: heard on the way down. beforetoggle comes at once, for
+  // every way a popover opens or closes (the button, Escape, a click elsewhere, hidePopover()), so
+  // aria-expanded never lags; toggle comes a task later, once the menu has a size and can take focus.
+  document.addEventListener("beforetoggle", function (e) {
+    var menu = e.target;
+    if (!menu.classList || !menu.classList.contains("gk-col-toggle-menu")) return;
+    var open = e.newState === "open";
+    var btn = buttonOf(menu);
+    if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) {
+      place(menu);
+      window.addEventListener("scroll", follow, true);
+      window.addEventListener("resize", follow);
+    } else {
+      window.removeEventListener("scroll", follow, true);
+      window.removeEventListener("resize", follow);
+    }
+  }, true);
+  document.addEventListener("toggle", function (e) {
+    var menu = e.target;
+    if (e.newState !== "open" || !menu.classList || !menu.classList.contains("gk-col-toggle-menu")) return;
+    place(menu); // its own size is known now
+    var first = menu.querySelector("input:not(:disabled)");
+    if (first && !menu.contains(document.activeElement)) first.focus();
+  }, true);
+
+  // Escape: closed here and claimed, so GK.modal (which asks defaultPrevented) keeps a modal the
+  // table stands in. The focus goes back to the button.
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape" || e.defaultPrevented) return;
+    var menu = openMenu();
+    if (!menu) return;
+    e.preventDefault();
+    close(menu, true);
+  }, true);
+
+  // Up and down (round the ends), Home and End move between the checkboxes that can be ticked.
+  var MOVES = ["Home", "ArrowUp", "ArrowDown", "End"];
+  document.addEventListener("keydown", function (e) {
+    var menu = e.target.closest ? e.target.closest(".gk-col-toggle-menu") : null;
+    var move = MOVES.indexOf(e.key);
+    if (!menu || move < 0) return;
+    var items = Array.prototype.slice.call(menu.querySelectorAll("input:not(:disabled)"));
+    if (!items.length) return;
+    var i = items.indexOf(e.target);
+    var n = items.length;
+    var next = move === 0 ? 0 : move === 3 ? n - 1 : (i + (move === 2 ? 1 : -1) + n) % n;
+    e.preventDefault();
+    items[next].focus();
+  });
+
+  // Tab out of the menu closes it: a popover stays open where the focus has gone, over the page.
+  document.addEventListener("focusout", function (e) {
+    var box = e.target.closest ? e.target.closest(".gk-col-toggle") : null;
+    var to = e.relatedTarget;
+    if (!box || !to || box.contains(to)) return;
+    var menu = box.querySelector(".gk-col-toggle-menu");
+    if (menu && menu === openMenu()) close(menu, false);
+  });
+
+  // The CSV holds what the table shows. A setData() table builds it from its columns (1.105.0);
+  // the hidden ones are taken out of the copy handed over.
+  if (typeof GK.tableCsv === "function") {
+    var buildCsv = GK.tableCsv;
+    GK.tableCsv = function (wrap, delimiter) {
+      var data = wrap && wrap._gkData;
+      var off = data ? hiddenKeys(wrap) : [];
+      if (!off.length) return buildCsv.apply(this, arguments);
+      var columns = {};
+      Object.keys(data.columns).forEach(function (k) {
+        if (off.indexOf(k) < 0) columns[k] = data.columns[k];
+      });
+      return buildCsv.call(this, { _gkData: Object.assign({}, data, { columns: columns }), _gkMatching: wrap._gkMatching }, delimiter);
+    };
+  }
+
+  // A server table has no rows here: its button reloads the page with ?gk_export=csv, and the
+  // columns the user hid go along as ?gk_hidden=…, which Table::sendCsv() leaves out. Heard on the
+  // way down, before the handler of 1.105.0 — and only when there is a column to name.
+  document.addEventListener("click", function (ev) {
+    var btn = ev.target.closest ? ev.target.closest("[data-gk-export-csv]") : null;
+    var wrap = btn ? btn.closest("[data-gk-table]") : null;
+    if (!wrap || wrap._gkData) return;
+    var off = hiddenKeys(wrap);
+    if (!off.length) return;
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    var url = new URL(window.location.href);
+    url.searchParams.set("gk_export", "csv");
+    url.searchParams.set("gk_hidden", off.join(","));
+    window.location.href = url.toString();
+  }, true);
+
+  // Tables come through GK.table.init: GK.init() calls it when the document is ready, and
+  // GK.initContent() for what arrives later — a modal, a live reload, AJAX navigation. The pass
+  // below is for a script that arrives after the document is ready: GK.init() has then run inside
+  // the main block, before this one wrapped anything.
+  if (GK.table && typeof GK.table.init === "function") {
+    var initTables = GK.table.init;
+    GK.table.init = function (root) {
+      var result = initTables.apply(this, arguments);
+      init(root);
+      return result;
+    };
+  }
+  init(document);
+})();

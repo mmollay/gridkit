@@ -10820,3 +10820,203 @@ label.gk-setting-title {
     padding-inline: 0;
   }
 }
+
+/* === 1.108.0 — column toggle === */
+/* Table::columnToggle(): a "Columns" button in the toolbar and a menu with one checkbox per column.
+   The checkbox IS the state. While one is unticked, the cells at its place in a row are gone
+   (data-gk-col-pos: the checkbox column and the left buttons stand before the first column), and
+   so are its header (data-gk-col-head: the header writes the cells over both button columns at
+   its end) and the footer cell that stands alone over the column (data-gk-col-foot). Group
+   headings, summary rows and the empty state span the row and are left alone here — the script
+   narrows them.
+
+   Why the stylesheet and not the script: the rows are written exactly as before, so a sort, a
+   search, a page (renderStatic) or an AJAX reload redraws them and the column stays hidden without
+   anybody re-applying anything; 'hidden' => true is hidden on the first paint, with no flash; and a
+   page without js/gridkit.js 1.108.0 (an older copy, or no script at all) can still show and hide
+   columns, since the menu is a native popover. Twenty places cover a checkbox, left buttons and
+   eighteen columns; beyond that the script's .gk-col-hidden does the hiding alone. One list, so a
+   browser without :has() drops all of it together and shows every column. */
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="1"]:not(:checked)) > .gk-table > thead > tr > :nth-child(1),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="1"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(1),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="1"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(1),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="2"]:not(:checked)) > .gk-table > thead > tr > :nth-child(2),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="2"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(2),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="2"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(2),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="3"]:not(:checked)) > .gk-table > thead > tr > :nth-child(3),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="3"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(3),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="3"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(3),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="4"]:not(:checked)) > .gk-table > thead > tr > :nth-child(4),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="4"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(4),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="4"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(4),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="5"]:not(:checked)) > .gk-table > thead > tr > :nth-child(5),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="5"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(5),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="5"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(5),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="6"]:not(:checked)) > .gk-table > thead > tr > :nth-child(6),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="6"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(6),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="6"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(6),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="7"]:not(:checked)) > .gk-table > thead > tr > :nth-child(7),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="7"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(7),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="7"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(7),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="8"]:not(:checked)) > .gk-table > thead > tr > :nth-child(8),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="8"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(8),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="8"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(8),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="9"]:not(:checked)) > .gk-table > thead > tr > :nth-child(9),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="9"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(9),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="9"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(9),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="10"]:not(:checked)) > .gk-table > thead > tr > :nth-child(10),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="10"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(10),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="10"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(10),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="11"]:not(:checked)) > .gk-table > thead > tr > :nth-child(11),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="11"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(11),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="11"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(11),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="12"]:not(:checked)) > .gk-table > thead > tr > :nth-child(12),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="12"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(12),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="12"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(12),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="13"]:not(:checked)) > .gk-table > thead > tr > :nth-child(13),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="13"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(13),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="13"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(13),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="14"]:not(:checked)) > .gk-table > thead > tr > :nth-child(14),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="14"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(14),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="14"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(14),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="15"]:not(:checked)) > .gk-table > thead > tr > :nth-child(15),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="15"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(15),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="15"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(15),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="16"]:not(:checked)) > .gk-table > thead > tr > :nth-child(16),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="16"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(16),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="16"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(16),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="17"]:not(:checked)) > .gk-table > thead > tr > :nth-child(17),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="17"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(17),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="17"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(17),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="18"]:not(:checked)) > .gk-table > thead > tr > :nth-child(18),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="18"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(18),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="18"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(18),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="19"]:not(:checked)) > .gk-table > thead > tr > :nth-child(19),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="19"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(19),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="19"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(19),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="20"]:not(:checked)) > .gk-table > thead > tr > :nth-child(20),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="20"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(20),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="20"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(20) {
+  display: none !important;
+}
+/* What the script marks: a hidden cell (also past the twentieth place), and a footer cell or a
+   spanning cell whose every column is hidden. Its own rule — a list with a :has() a browser does
+   not know is dropped as a whole. */
+.gk-table .gk-col-hidden {
+  display: none !important;
+}
+
+/* The button and its menu. The menu lies in the top layer (a popover): no card with
+   overflow: hidden cuts it off. Without the script it opens where a browser puts a popover, in
+   the middle of the window; the script puts it under its button. The look is the dropdown's
+   (.gk-dropdown-menu), and its rows are .gk-dropdown-item. */
+.gk-col-toggle {
+  display: inline-flex;
+}
+.gk-col-toggle > .gk-btn[aria-expanded="true"] {
+  background: var(--gk-surface-container-high);
+}
+.gk-col-toggle-menu {
+  min-width: 200px;
+  max-width: min(320px, calc(100vw - 16px));
+  max-height: min(70vh, 480px);
+  overflow: auto;
+  padding: 8px 0;
+  border: none;
+  border-radius: 12px;
+  background: var(--gk-surface);
+  color: var(--gk-text);
+  box-shadow: var(--gk-elev-2);
+}
+.gk-col-toggle-menu .gk-dropdown-item {
+  padding: 8px 16px;
+  cursor: pointer;
+}
+/* The row under the keyboard is as visible as the one under the pointer. */
+.gk-col-toggle-menu .gk-dropdown-item:focus-within {
+  background: var(--gk-surface-container-high);
+}
+.gk-col-toggle-menu input[type="checkbox"] {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--gk-primary);
+}
+/* 'toggle' => false (and the column of rowLink()): in the list, ticked, and plainly not a choice. */
+.gk-col-toggle-menu .gk-dropdown-item:has(input:disabled) {
+  cursor: default;
+  color: var(--gk-text-muted);
+}
+/* A browser that does not know popovers would show the menu as a block in the toolbar, always
+   open. It is hidden there; so are the checkboxes, and every column shows. */
+@supports not selector(:popover-open) {
+  .gk-col-toggle-menu {
+    display: none;
+  }
+}
+[data-gk-mode="dark"] .gk-col-toggle-menu,
+.gk-dark .gk-col-toggle-menu {
+  background: #2d333b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+[data-gk-mode="dark"] .gk-col-toggle-menu .gk-dropdown-item:focus-within,
+.gk-dark .gk-col-toggle-menu .gk-dropdown-item:focus-within,
+[data-gk-mode="dark"] .gk-col-toggle > .gk-btn[aria-expanded="true"],
+.gk-dark .gk-col-toggle > .gk-btn[aria-expanded="true"] {
+  background: #21262d;
+}
+
+/* A card whose title column is hidden. The title of a compact card (1.106.0) is the first cell
+   that is not muted and not hidden on a phone — chosen by class, so a cell the menu hid would stay
+   the title and leave the head of every card empty. These are the title rules of 1.106.0 once
+   more, with the script's .gk-col-hidden among the cells passed over: the next column takes the
+   title, and a card whose visible fields are all muted takes the first of them. (Without the
+   script the hidden cell is not marked, and the card has no title line.) Each rule on its own, as
+   there: a list with an :nth-child(of) or a :has() a browser does not know is dropped as a whole. */
+@media (max-width: 768px) {
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile, .gk-col-hidden)) {
+    grid-column: 3;
+    grid-row: 1;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 2px;
+    align-self: stretch;
+    padding: 0 0 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gk-outline-variant);
+    font-weight: 600;
+    color: var(--gk-on-surface);
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile, .gk-col-hidden))::before {
+    display: none;
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile, .gk-col-hidden)) .gk-cell-sub {
+    flex-basis: auto;
+    text-align: left;
+    font-weight: normal;
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link):not(:has(> td:not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile, .gk-col-hidden))) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile, .gk-col-hidden)) {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: stretch;
+    align-items: center;
+    padding: 0 0 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gk-outline-variant);
+    font-weight: 600;
+    color: var(--gk-on-surface);
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link):not(:has(> td:not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile, .gk-col-hidden))) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile, .gk-col-hidden))::before {
+    display: none;
+  }
+  .gk-table-mobile-card .gk-table tbody tr:has(> td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile, .gk-col-hidden)):nth-last-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile, .gk-col-hidden))) > td {
+    padding-bottom: 0 !important;
+    margin-bottom: 0;
+    border-bottom: none;
+  }
+}

@@ -60,6 +60,9 @@ class Table
     /** stickyColumn() (1.107.0): the first data column, and the cells before it, stay in view sideways. */
     private bool $stickyColumn = false;
 
+    /** columnToggle() (1.108.0): a toolbar button whose menu shows and hides columns. */
+    private bool $columnToggle = false;
+
     public function __construct(string $id)
     {
         $this->id = $id;
@@ -158,6 +161,17 @@ class Table
                 $shown = is_scalar($raw) ? var_export($raw, true) : get_debug_type($raw);
                 trigger_error("GridKit: column '$key' has 'priority' => $shown — it takes 2 to 5"
                     . " (5 gives way first) or 1 for never. The column always shows.", E_USER_WARNING);
+            }
+        }
+        // 'hidden' and 'toggle' (1.108.0, see columnToggle()) take true or false and nothing else:
+        // a 'hidden' => 'no' is true to PHP and would hide the column it meant to show. Anything
+        // else is dropped with a warning, and the column keeps the default (shown, can be hidden).
+        foreach (['hidden' => 'starts shown', 'toggle' => 'can be hidden'] as $flag => $fallback) {
+            if (array_key_exists($flag, $opts) && !is_bool($opts[$flag])) {
+                $raw = $opts[$flag];
+                $shown = is_scalar($raw) ? var_export($raw, true) : get_debug_type($raw);
+                trigger_error("GridKit: column '$key' has '$flag' => $shown — it takes true or false. The column $fallback.", E_USER_WARNING);
+                unset($opts[$flag]);
             }
         }
         $this->columns[$key] = ['label' => $label, ...$opts];
@@ -379,12 +393,20 @@ class Table
      * Answer the export button of a server-driven table: the headers, then the file. Ends nothing —
      * `exit` after it, like after an AJAX fragment (see isAjaxReload()).
      *
+     * The button of a table with columnToggle() names the columns the user has hidden
+     * (`gk_hidden=email,phone`, 1.108.0); they are left out, so the file holds what the table
+     * showed — as a setData() table's file does. A name that is not in `$columns` changes nothing.
+     *
      * @param list<array<string,mixed>> $rows
      * @param array<string,string|array{label?:string,export?:bool}> $columns
      * @param array{delimiter?:string,bom?:bool} $opts
      */
     public static function sendCsv(array $rows, array $columns, string $filename = 'export.csv', array $opts = []): void
     {
+        $hidden = self::param('gk_hidden');
+        if ($hidden !== '') {
+            foreach (explode(',', $hidden) as $key) unset($columns[$key]);
+        }
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . self::csvFilename($filename) . '"');
         header('X-Content-Type-Options: nosniff');
@@ -471,6 +493,163 @@ class Table
     {
         $this->caption = trim($text);
         return $this;
+    }
+
+    /**
+     * A "Columns" button in the toolbar (1.108.0). Its menu has one checkbox per column; unticking
+     * one hides the column — header, cells, and a footer cell that stands alone over it — and the
+     * browser remembers the choice per table id.
+     *
+     * Column options: `'hidden' => true` starts the column hidden (a stored choice wins), and
+     * `'toggle' => false` keeps it on screen — it stays in the menu, ticked and disabled, so the
+     * list still reads as the table's columns. The column that carries rowLink()'s control is
+     * kept the same way: hidden, the row would lose the one control the keyboard reaches.
+     *
+     * Hiding is CSS, keyed on the checkbox: the rows are written as before, so a sort, a search or
+     * an AJAX reload redraws them and the hidden column stays hidden. The menu is a native popover,
+     * so it opens and works without js/gridkit.js 1.108.0; the script adds the memory, aria-expanded,
+     * the place under the button, and narrower group rows, empty state and footer.
+     */
+    public function columnToggle(bool $enabled = true): static
+    {
+        $this->columnToggle = $enabled;
+        return $this;
+    }
+
+    /**
+     * What the menu of columnToggle() lists: one entry per column, with the place its cells take in
+     * a row (the checkbox and the left buttons stand before the first column), the place of its
+     * header, and the footer cell that stands alone over it, if one does. null when the table has
+     * no menu — and then a column marked 'hidden' is said to show, since nobody could show it again.
+     *
+     * The header has a place of its own because renderTableHead() — and renderStatic() after it —
+     * writes the header cell of the left buttons at the END of the header row, beside the one of
+     * the right buttons, while a row writes its left buttons before the first column. With left
+     * buttons a column's header therefore stands one place earlier than its cells.
+     *
+     * 'hidden' is read only where 'toggle' is true: a column that cannot be hidden is ticked anyway.
+     *
+     * @return list<array{key:string,label:string,pos:int,head:int,foot:?int,toggle:bool,hidden:bool}>|null
+     */
+    private function columnMenu(): ?array
+    {
+        if (!$this->columnToggle || !$this->showToolbar) {
+            foreach ($this->columns as $key => $col) {
+                if (($col['hidden'] ?? false) === true) {
+                    trigger_error("GridKit: column '$key' is 'hidden', but the table has no "
+                        . ($this->columnToggle ? 'toolbar for its columnToggle() menu' : 'columnToggle()')
+                        . ' — nobody could show it again. The column shows.', E_USER_WARNING);
+                }
+            }
+            if ($this->columnToggle) {
+                trigger_error('GridKit: columnToggle() puts its button in the toolbar, and toolbar(false) leaves none. Every column shows.', E_USER_WARNING);
+            }
+            return null;
+        }
+
+        $hasLeft = (bool) array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'left');
+        $hasRight = (bool) array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'right');
+        $lead = ($this->selectable ? 1 : 0) + ($hasLeft ? 1 : 0);
+        $foot = $this->footerCellAt($lead + count($this->columns) + ($hasRight ? 1 : 0));
+        $linkKey = $this->rowLinkColumn();
+
+        $menu = [];
+        $pos = $lead;
+        $head = $this->selectable ? 1 : 0;
+        foreach ($this->columns as $key => $col) {
+            $pos++;
+            $head++;
+            $key = (string) $key;
+            $toggle = ($col['toggle'] ?? true) !== false && $key !== $linkKey;
+            $hidden = ($col['hidden'] ?? false) === true;
+            if ($hidden && !$toggle) {
+                trigger_error("GridKit: column '$key' is 'hidden' and cannot be hidden ("
+                    . ($key === $linkKey ? "it carries the row's rowLink() control" : "'toggle' => false")
+                    . '). The column shows.', E_USER_WARNING);
+            }
+            $label = (string) $col['label'];
+            $menu[] = [
+                'key' => $key,
+                // A checkbox needs a name; a column with an empty heading gets its key.
+                'label' => trim($label) !== '' ? $label : $key,
+                'pos' => $pos,
+                'head' => $head,
+                'foot' => $foot[$pos] ?? null,
+                'toggle' => $toggle,
+                'hidden' => $hidden,
+            ];
+        }
+        return $menu;
+    }
+
+    /**
+     * Which footer cell stands alone over which column: place in the row => place in the footer
+     * row, for the cells renderTableFoot() writes with a colspan of 1. A cell spanning more than
+     * one column has no single column to go with; the script narrows it instead.
+     *
+     * @return array<int,int>
+     */
+    private function footerCellAt(int $colCount): array
+    {
+        if (!$this->footerCells && $this->loadTimeMs === null) return [];
+        $spans = [];
+        foreach ($this->footerCells as $cell) {
+            $spans[] = is_array($cell) ? (int) ($cell['colspan'] ?? 1) : 1;
+        }
+        // The cell renderTableFoot() pads the row with: the load time, or an empty one.
+        $rest = $colCount - array_sum($spans);
+        if ($rest > 0) $spans[] = $rest;
+
+        $at = [];
+        $pos = 1;
+        foreach ($spans as $i => $span) {
+            $span = max(1, $span);   // a browser reads colspan="0" as 1
+            if ($span === 1) $at[$pos] = $i + 1;
+            $pos += $span;
+        }
+        return $at;
+    }
+
+    /** The id of the column menu: the table id where it is a safe one, made safe (and kept unique) where not. */
+    private function columnMenuId(): string
+    {
+        $safe = preg_replace('/[^A-Za-z0-9_-]/', '-', $this->id) ?? '';
+        return 'gk-cols-' . $safe . ($safe === $this->id ? '' : '-' . substr(md5($this->id), 0, 6));
+    }
+
+    /**
+     * The button and its menu. The button names the menu twice: popovertarget opens it without a
+     * line of script, aria-controls says what it opens. aria-expanded is left to the script, which
+     * keeps it in step — written here once, it would say "false" while the menu stood open on a page
+     * without the script (the browser reports a popover's state for its button by itself).
+     *
+     * @param list<array{key:string,label:string,pos:int,head:int,foot:?int,toggle:bool,hidden:bool}> $menu
+     */
+    private function renderColumnToggle(array $menu, \Closure $e): string
+    {
+        $label = Lang::t('table.columns');
+        $id = $e($this->columnMenuId());
+        $html = '<div class="gk-col-toggle">'
+            . '<button type="button" class="gk-btn gk-btn-outlined gk-btn-neutral gk-btn-sm gk-btn-pill"'
+            . ' popovertarget="' . $id . '" aria-controls="' . $id . '">'
+            . '<span class="material-icons" style="font-size:16px" aria-hidden="true">view_column</span>'
+            . '<span>' . $e($label) . '</span></button>'
+            . '<div class="gk-col-toggle-menu" id="' . $id . '" popover role="group" aria-label="' . $e($label) . '">';
+        foreach ($menu as $box) {
+            $attrs = ' data-gk-col="' . $e($box['key']) . '"';
+            if ($box['toggle']) {
+                // The checkbox IS the state: the stylesheet hides the cells at data-gk-col-pos, the
+                // header at data-gk-col-head and the footer cell at data-gk-col-foot while it is unticked.
+                $attrs .= ' data-gk-col-pos="' . $box['pos'] . '" data-gk-col-head="' . $box['head'] . '"'
+                    . ($box['foot'] !== null ? ' data-gk-col-foot="' . $box['foot'] . '"' : '')
+                    . ($box['hidden'] ? '' : ' checked');
+            } else {
+                $attrs .= ' checked disabled';
+            }
+            $html .= '<label class="gk-dropdown-item"><input type="checkbox"' . $attrs . '>'
+                . '<span>' . $e($box['label']) . '</span></label>';
+        }
+        return $html . '</div></div>';
     }
 
     /**
@@ -829,6 +1008,9 @@ class Table
             ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_HEX_TAG) . '</script>';
         }
 
+        // Asked here, once per page: an AJAX reload keeps the toolbar it has (and the menu in it).
+        $columnMenu = $this->columnMenu();
+
         // Toolbar
         if ($this->showToolbar) {
         echo '<div class="gk-toolbar">';
@@ -864,6 +1046,9 @@ class Table
                    . $e($label) . '</option>';
             }
             echo '</select>';
+        }
+        if ($columnMenu !== null) {
+            echo $this->renderColumnToggle($columnMenu, $e);
         }
         if ($this->csvFile !== null) {
             echo Button::render($this->csvOpts['label'] ?? Lang::t('table.export_csv'), [

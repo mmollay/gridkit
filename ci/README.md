@@ -185,6 +185,27 @@ taken out in turn and the run turned red. About forty seconds.
 GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-sticky.js
 ```
 
+The column menu of `Table::columnToggle()` (1.108.0) hides columns through CSS keyed on its
+checkboxes and lets the script remember, place and narrow; `tests/column-toggle.test.php`
+holds the markup and the rules, `ci/browser-column-toggle.js` on
+`ci/browser-column-toggle-fixture.php` measures what they do. One invariant runs through it:
+every row spans as many columns as the header shows. The cases: a column hidden and shown
+(header, cells, a footer cell over one column, group headings, a footer cell over several and
+the empty state narrowed), `'hidden'` and `'toggle' => false`, the row-link column, a checkbox
+and left buttons before the first column, twenty-two columns, the memory across a reload, the
+redraw after a sort, a search and an AJAX reload (the stub answers with the server's own
+fragment), the keyboard (Enter, the arrows, Home, End, Escape claimed with the focus back,
+Tab out), a click elsewhere, the menu under its button and inside the window, the CSV of a
+static table and the export address of a server one, the last column that cannot be
+unticked, a table handed to `GK.initContent()` and a script added after the load, the
+compact card at 390px in light and dark (the next column takes a hidden title), storage that
+throws, the script of 1.107 and no script at all. Each rule and branch was taken out in turn
+and the run (or `tests/column-toggle`) turned red. About thirty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-column-toggle.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

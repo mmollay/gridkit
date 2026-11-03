@@ -47,6 +47,7 @@ return [
     'table.selected'        => '{n} ausgewählt',
     'table.export_csv'      => 'CSV exportieren',
     'table.confirm_action'  => 'Das auf die ausgewählten Zeilen anwenden?',
+    'table.columns'         => 'Spalten',
     'table.delete'          => 'Löschen',
     'table.cancel'          => 'Abbrechen',
     'table.empty_hint'      => 'Sobald Einträge angelegt sind, erscheinen sie hier.',
