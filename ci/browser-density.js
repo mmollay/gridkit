@@ -236,6 +236,14 @@ function controlContrast(id) {
       check(`${name}: the control starts at Compact, and the table is compact`,
         KEYS.every((k) => same(m[k].control.pressed, ["konsole"]) && m[k].density === "konsole") && m.md.td === "8px 12px" && m.md.radius === "4px",
         JSON.stringify([m.md.control.pressed, m.md.density, m.md.td, m.md.radius]));
+      if (themes) {
+        // 1.110.3: every table WITHOUT the control (the twins) takes the page's step, cell for
+        // cell as the same table set to Compact by its control on a page without a density.
+        const compact = desktop["themes.css"].konsole;
+        const off = KEYS.filter((k) => !same(m["n-" + k].cells, compact[k].cells));
+        check(`${name}: every size and variant without the control takes the page's step, as Compact does`, off.length === 0,
+          JSON.stringify(off.map((k) => [k, m["n-" + k].td, compact[k].td])));
+      }
       await choose(page, "normal");
       m = await page.evaluate(measure);
       // Normal here is every table as its twin on a page without a density, the page's 4px labels undone.
@@ -252,8 +260,14 @@ function controlContrast(id) {
       await choose(page, "konsole", ["md"]);
       check(`${name}: choosing the page's own step forgets the choice`, (await page.evaluate(() => localStorage.getItem("gk-density-md"))) === null);
       if (themes) {
-        check(`${name}: a twin keeps the page's density as before (labels 4px, padding of its size)`,
-          m["n-md"].radius === "4px" && m["n-md"].td === "12px 16px", `${m["n-md"].radius} ${m["n-md"].td}`);
+        // Since 1.110.3 the page's step reaches the padding of a table without the toggle, as it
+        // reached its labels: until then the size's pixels outweighed the tokens of themes.css.
+        check(`${name}: a twin takes the page's density, labels and padding (8px 12px)`,
+          m["n-md"].radius === "4px" && m["n-md"].td === "8px 12px", `${m["n-md"].radius} ${m["n-md"].td}`);
+      } else {
+        // Without themes.css the page's step has no tokens to give: the twin is the default.
+        check(`${name}: without themes.css a twin keeps the default rhythm (12px 16px)`,
+          m["n-md"].td === "12px 16px", m["n-md"].td);
       }
       await context.close();
     }

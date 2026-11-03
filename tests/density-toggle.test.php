@@ -237,7 +237,7 @@ return [
     foreach (['sm th', 'sm td', 'md th', 'md td', 'lg th', 'lg td', 'padded th', 'padded td', 'xs th', 'xs td',
               'compact th', 'compact td', 'very-compact th', 'very-compact td'] as $rule) {
         $old = gkCssDeclFor(".gk-table-$rule")['padding'] ?? null;
-        $new = gkDtDecl($block, ":where(.gk-table-wrap[data-gk-density]).gk-table-$rule")['padding'] ?? null;
+        $new = gkDtDecl($block, ":where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-$rule")['padding'] ?? null;
         T::ok($old !== null && $new !== null, ".gk-table-$rule: a padding is missing (old " . var_export($old, true) . ', new ' . var_export($new, true) . ')');
         if ($old !== null && $new !== null) T::eq(gkDtResolve($new, 12, 16), $old, ".gk-table-$rule at Normal");
     }
@@ -246,30 +246,30 @@ return [
     preg_match('/\n  \.gk-table-sm th,\n  \.gk-table-sm td \{\s*padding: ([^;]+);/', $before, $sm);
     T::ok(isset($all[1], $sm[1]), 'the phone paddings of the table are not where they were');
     $media = substr($block, (int) strpos($block, '@media (max-width: 768px)'));
-    T::eq(gkDtResolve(gkDtDecl($media, ':where(.gk-table-wrap[data-gk-density]:not(.gk-table-list)) .gk-table td')['padding'] ?? '', 12, 16), $all[1] ?? '?', 'the phone padding at Normal');
-    T::eq(gkDtResolve(gkDtDecl($media, ':where(.gk-table-wrap[data-gk-density]).gk-table-sm td')['padding'] ?? '', 12, 16), $sm[1] ?? '?', 'the phone padding of sm at Normal');
+    T::eq(gkDtResolve(gkDtDecl($media, ':where(.gk-table-wrap[data-gk-density]:not(.gk-table-list), [data-gk-density] .gk-table-wrap:not(.gk-table-list)) .gk-table td')['padding'] ?? '', 12, 16), $all[1] ?? '?', 'the phone padding at Normal');
+    T::eq(gkDtResolve(gkDtDecl($media, ':where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-sm td')['padding'] ?? '', 12, 16), $sm[1] ?? '?', 'the phone padding of sm at Normal');
     // The compact card (1.106.0).
     $cardSel = '.gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row)';
     $card = gkDtDecl($before, $cardSel);
     $field = gkDtDecl($before, $cardSel . ' > td');
     T::ok(($card['padding'] ?? '') !== '' && ($field['padding'] ?? '') !== '', 'the compact card is not where it was');
-    $myCard = gkDtDecl($media, ':where(.gk-table-wrap[data-gk-density])' . $cardSel);
-    $myField = gkDtDecl($media, ':where(.gk-table-wrap[data-gk-density])' . $cardSel . ' > td:where(:not(.gk-cb-col, .gk-actions))');
+    $myCard = gkDtDecl($media, ':where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap)' . $cardSel);
+    $myField = gkDtDecl($media, ':where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap)' . $cardSel . ' > td:where(:not(.gk-cb-col, .gk-actions))');
     T::eq(gkDtResolve(($myCard['padding-top'] ?? '?') . ' ' . ($myCard['padding-left'] ?? '?'), 12, 16), $card['padding'] ?? '', 'the card at Normal');
     T::eq(gkDtResolve($myCard['margin-bottom'] ?? '?', 12, 16), $card['margin-bottom'] ?? '', 'the space between cards at Normal');
     T::eq(gkDtResolve(($myField['padding-top'] ?? '?') . ' 0', 12, 16), $field['padding'] ?? '', 'a field of a card at Normal');
     // And the steps move every one of them: Compact is tighter than Normal is tighter than Roomy.
-    $md = gkDtDecl($block, ':where(.gk-table-wrap[data-gk-density]).gk-table-md td')['padding'] ?? '';
+    $md = gkDtDecl($block, ':where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-md td')['padding'] ?? '';
     T::eq([gkDtResolve($md, 8, 12), gkDtResolve($md, 16, 20)], ['8px 12px', '16px 20px'], 'md does not take the steps of themes.css');
-    T::eq(gkDtResolve(gkDtDecl($block, ':where(.gk-table-wrap[data-gk-density]).gk-table-xs td')['padding'] ?? '', 8, 12), '2px 4px', 'xs goes below its floor at Compact');
+    T::eq(gkDtResolve(gkDtDecl($block, ':where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-xs td')['padding'] ?? '', 8, 12), '2px 4px', 'xs goes below its floor at Compact');
 },
 
 'a list steps by its row, and the page-wide rules are not touched' => function (): void {
     $block = gkDtCssBlock();
     $row = '.gk-table-list .gk-table tbody tr:not(.gk-table-group, .gk-table-more) > td';
     T::eq(gkDtDecl(gkCssBare(), $row)['height'] ?? null, '64px', 'a list row is no longer 64px');
-    T::eq(gkDtDecl($block, ':where(.gk-table-wrap[data-gk-density="konsole"])' . $row)['height'] ?? null, '52px', 'a compact list row');
-    T::eq(gkDtDecl($block, ':where(.gk-table-wrap[data-gk-density="weit"])' . $row)['height'] ?? null, '76px', 'a roomy list row');
+    T::eq(gkDtDecl($block, ':where(.gk-table-wrap[data-gk-density="konsole"], [data-gk-density="konsole"] .gk-table-wrap:not([data-gk-density]))' . $row)['height'] ?? null, '52px', 'a compact list row');
+    T::eq(gkDtDecl($block, ':where(.gk-table-wrap[data-gk-density="weit"], [data-gk-density="weit"] .gk-table-wrap:not([data-gk-density]))' . $row)['height'] ?? null, '76px', 'a roomy list row');
     // Every rule of the block that moves a table names the attribute on the wrap: without it, nothing here applies.
     preg_match_all('/(?:^|\n)\s*([^{}@]+?)\s*\{/', $block, $m);
     foreach ($m[1] as $list) {

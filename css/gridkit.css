@@ -10629,6 +10629,11 @@ label.gk-setting-title {
   --gk-table-sticky-left-3: initial;
   --gk-table-sticky-w: initial;
   overflow: auto;
+  /* The containing block of what is positioned inside (1.110.3). A .gk-sr-only name in a header
+     cell that does not stick (the empty cell over the buttons, under stickyColumn() alone) is
+     absolute; with the box unpositioned it was placed against the wrap or the page, outside the
+     box's clipping, and pushed a 1024px page 86px sideways in the demo. */
+  position: relative;
   max-height: var(--gk-table-sticky-height);
   border-bottom-left-radius: inherit;
   border-bottom-right-radius: inherit;
@@ -11097,8 +11102,11 @@ label.gk-setting-title {
       which `weit` in themes.css never had to.
    2. The sizes and variants, written against the tokens. .gk-table-sm/-md/-lg td and the
       variants padded, compact, very-compact and xs set their padding in pixels, at the weight
-      of the token rule and after it, so the tokens never reached a table drawn by Table
-      (Theme::density() changes only the label radius of those). Here each keeps its distance
+      of the token rule and after it, so the tokens never reached a table drawn by Table.
+      Since 1.110.3 the rules of 2 and 3 and of the phone also hold under a page that carries
+      the step (Theme::density() on <html>, its tokens from themes.css): until then the page's
+      step moved the label radius of those tables and nothing else. The second selector of each
+      :where() is that page; it skips a wrap with a step of its own where the step is named. Here each keeps its distance
       from the default rhythm (sm 6px tighter, lg 4px roomier) and moves with the step; at
       Normal the sums are the old pixels, which the test works out. :where() holds each rule
       at the weight of the one it stands for and they come in the same order (sizes, variants,
@@ -11128,51 +11136,51 @@ label.gk-setting-title {
 }
 
 /* 2 — sizes (=== TABLE SIZES ===), then the variants that set a padding (=== TABLE VARIANTS ===). */
-:where(.gk-table-wrap[data-gk-density]).gk-table-sm th,
-:where(.gk-table-wrap[data-gk-density]).gk-table-sm td {
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-sm th,
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-sm td {
   padding: calc(var(--gk-table-pad-y) - 6px) calc(var(--gk-table-pad-x) - 6px);
 }
-:where(.gk-table-wrap[data-gk-density]).gk-table-md th {
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-md th {
   padding: calc(var(--gk-table-pad-y) - 2px) var(--gk-table-pad-x);
 }
-:where(.gk-table-wrap[data-gk-density]).gk-table-md td {
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-md td {
   padding: var(--gk-table-pad-y) var(--gk-table-pad-x);
 }
-:where(.gk-table-wrap[data-gk-density]).gk-table-lg th {
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-lg th {
   padding: calc(var(--gk-table-pad-y) + 2px) calc(var(--gk-table-pad-x) + 4px);
 }
-:where(.gk-table-wrap[data-gk-density]).gk-table-lg td {
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-lg td {
   padding: calc(var(--gk-table-pad-y) + 4px) calc(var(--gk-table-pad-x) + 4px);
 }
-:where(.gk-table-wrap[data-gk-density]).gk-table-padded th {
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-padded th {
   padding: calc(var(--gk-table-pad-y) + 2px) calc(var(--gk-table-pad-x) + 4px);
 }
-:where(.gk-table-wrap[data-gk-density]).gk-table-padded td {
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-padded td {
   padding: calc(var(--gk-table-pad-y) + 4px) calc(var(--gk-table-pad-x) + 4px);
 }
 /* xs and very-compact are 4px at Normal: a step down would leave the text on the rule, so
    2px is the floor of both. */
-:where(.gk-table-wrap[data-gk-density]).gk-table-xs th,
-:where(.gk-table-wrap[data-gk-density]).gk-table-xs td {
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-xs th,
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-xs td {
   padding: max(2px, calc(var(--gk-table-pad-y) - 8px)) calc(var(--gk-table-pad-x) - 8px);
 }
-:where(.gk-table-wrap[data-gk-density]).gk-table-compact th,
-:where(.gk-table-wrap[data-gk-density]).gk-table-compact td {
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-compact th,
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-compact td {
   padding: calc(var(--gk-table-pad-y) - 4px) calc(var(--gk-table-pad-x) - 4px);
 }
-:where(.gk-table-wrap[data-gk-density]).gk-table-very-compact th,
-:where(.gk-table-wrap[data-gk-density]).gk-table-very-compact td {
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-very-compact th,
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-very-compact td {
   padding: max(2px, calc(var(--gk-table-pad-y) - 8px)) calc(var(--gk-table-pad-x) - 8px);
 }
 
 /* 3 — a list (size('list'), 1.92.0) is set by its row, 64px with 10px above and below. A step
    moves both, by three steps of 4px and one, and leaves the columns alone. */
-:where(.gk-table-wrap[data-gk-density="konsole"]).gk-table-list .gk-table tbody tr:not(.gk-table-group, .gk-table-more) > td {
+:where(.gk-table-wrap[data-gk-density="konsole"], [data-gk-density="konsole"] .gk-table-wrap:not([data-gk-density])).gk-table-list .gk-table tbody tr:not(.gk-table-group, .gk-table-more) > td {
   height: 52px;
   padding-top: 6px;
   padding-bottom: 6px;
 }
-:where(.gk-table-wrap[data-gk-density="weit"]).gk-table-list .gk-table tbody tr:not(.gk-table-group, .gk-table-more) > td {
+:where(.gk-table-wrap[data-gk-density="weit"], [data-gk-density="weit"] .gk-table-wrap:not([data-gk-density])).gk-table-list .gk-table tbody tr:not(.gk-table-group, .gk-table-more) > td {
   height: 76px;
   padding-top: 14px;
   padding-bottom: 14px;
@@ -11181,28 +11189,28 @@ label.gk-setting-title {
 @media (max-width: 768px) {
   /* The phone outside card mode (=== TABLET / MOBILE ===): 10px 12px for every size, 8px 10px
      for sm. Not a list: its tokens are its own and the rule above is its step. */
-  :where(.gk-table-wrap[data-gk-density]:not(.gk-table-list)) .gk-table th,
-  :where(.gk-table-wrap[data-gk-density]:not(.gk-table-list)) .gk-table td {
+  :where(.gk-table-wrap[data-gk-density]:not(.gk-table-list), [data-gk-density] .gk-table-wrap:not(.gk-table-list)) .gk-table th,
+  :where(.gk-table-wrap[data-gk-density]:not(.gk-table-list), [data-gk-density] .gk-table-wrap:not(.gk-table-list)) .gk-table td {
     padding: calc(var(--gk-table-pad-y) - 2px) calc(var(--gk-table-pad-x) - 4px);
   }
-  :where(.gk-table-wrap[data-gk-density]).gk-table-sm th,
-  :where(.gk-table-wrap[data-gk-density]).gk-table-sm td {
+  :where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-sm th,
+  :where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-sm td {
     padding: calc(var(--gk-table-pad-y) - 4px) calc(var(--gk-table-pad-x) - 6px);
   }
   /* The compact card (1.106.0): 12px 16px round a card is the default rhythm itself, 8px between
      two cards and 3px above and below a field follow it. A card with a link keeps its 40px on
      the right for the chevron; the head keeps its own spacing, and so do the checkbox and the
      buttons in it (left out with :where(), at no weight). */
-  :where(.gk-table-wrap[data-gk-density]).gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) {
+  :where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) {
     padding-top: var(--gk-table-pad-y);
     padding-bottom: var(--gk-table-pad-y);
     padding-left: var(--gk-table-pad-x);
     margin-bottom: calc(var(--gk-table-pad-y) - 4px);
   }
-  :where(.gk-table-wrap[data-gk-density]).gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) {
+  :where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) {
     padding-right: var(--gk-table-pad-x);
   }
-  :where(.gk-table-wrap[data-gk-density]).gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > td:where(:not(.gk-cb-col, .gk-actions)) {
+  :where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > td:where(:not(.gk-cb-col, .gk-actions)) {
     padding-top: calc((var(--gk-table-pad-y) - 6px) / 2);
     padding-bottom: calc((var(--gk-table-pad-y) - 6px) / 2);
   }

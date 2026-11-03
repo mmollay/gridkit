@@ -258,6 +258,17 @@ const HELPERS = `window.GKT = {
     for (const mode of ["light", "dark"]) {
       const page = await open(fixture, 1000, 700, mode);
 
+      // 1.110.3: the box is the containing block of what is positioned in it. The name of the
+      // empty header cell over the right buttons (.gk-sr-only, absolute) does not stick under
+      // stickyColumn() alone; with the box unpositioned it stood outside the box's clipping and
+      // made the whole page scroll sideways.
+      // (This page holds wide twins without a box on purpose, so the page itself scrolls; what is
+      // checked is where each positioned thing in a box is placed against.)
+      const escaped = await page.evaluate(() => [...document.querySelectorAll(".gk-table-sticky-box")].flatMap((box) =>
+        [...box.querySelectorAll("*")].filter((el) => getComputedStyle(el).position === "absolute" && !(el.offsetParent && box.contains(el.offsetParent)))
+          .map((el) => box.closest("[data-gk-table]").dataset.gkTable + " " + el.className)));
+      check(`${mode}: what is positioned in a box is placed against the box, and clipped by it`, escaped.length === 0, escaped.slice(0, 4));
+
       // ── The head on the page ───────────────────────────────────────────
       await section(`${mode} The head on the page`, async () => {
         const pageHead = async (label, want) => {

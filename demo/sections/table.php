@@ -51,6 +51,9 @@ use GridKit\Lang;
                         ->button('delete', ['icon' => 'delete', 'class' => 'danger', 'position' => 'right', 'params' => ['id' => 'article_id']])
                         ->newButton('New Article', ['icon' => 'add'])
                         ->nowrap(true)
+                        // A box of its own where the content is narrower than the table
+                        // (a 900px window beside the sidebar); the page no longer scrolls sideways.
+                        ->stickyColumn()
                         ->paginate(5)
                         ->render();
         });
@@ -87,6 +90,11 @@ use GridKit\Lang;
             ->button('delete', ['icon' => 'delete', 'class' => 'danger'])
             ->newButton('New Invoice', ['icon' => 'add'])
             ->nowrap(true)
+            // Seven columns that do not wrap and buttons on both sides are wider than the
+            // content beside an open sidebar on a 1280px screen: without a box of its own the
+            // table pushed the whole page sideways. stickyColumn() (1.107.0) gives it one, with
+            // the number and the view button in front.
+            ->stickyColumn()
             ->paginate(5)
             ->render();
         ?>
@@ -182,7 +190,9 @@ use GridKit\Lang;
         ?>
 
     <h3 style="margin: 32px 0 16px;">Sizes</h3>
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px;">
+    <?php /* 300px, not 240: size('lg') needs about 290px for its three columns, and at 240 a
+             1100px window put it in a narrower track and pushed the page sideways. */ ?>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr)); gap:20px;">
         <?php
         $sizeData = [
             ['name' => 'Widget A', 'value' => '1.200 €', 'status' => 'active'],
@@ -461,6 +471,7 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
                 ->bulkAction('archive', ['icon' => 'archive', 'label' => 'Archive'])
                 ->bulkAction('void', ['icon' => 'block', 'confirm' => 'Void the selected articles?', 'color' => 'danger'])
                 ->exportCsv('articles.csv')
+                ->stickyColumn()   // a box of its own just above the phone width, where it was 8px too wide
                 ->render();
         });
         ?>

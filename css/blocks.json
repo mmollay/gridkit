@@ -3,7 +3,7 @@
     "blocks": {
         "table": {
             "name": "Table",
-            "changed": "1.110.1",
+            "changed": "1.110.3",
             "classes": {
                 "gk-actions": "0.9.0",
                 "gk-actions-col": "0.9.0",

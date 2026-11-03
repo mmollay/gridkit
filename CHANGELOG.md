@@ -7,6 +7,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.110.3] - 2026-11-03
+
+`Theme::density()` now sets the padding of every table, not only the corners of its labels, and the demo page no longer scrolls sideways at any width. A table in the box of `stickyColumn()` keeps everything it holds inside that box.
+
+### Fixed
+- **`Theme::density('konsole' | 'weit')` reaches the padding of a table.** Its steps are tokens in `css/themes.css` (`--gk-table-pad-y`, `--gk-table-pad-x`, `--gk-label-radius`), but the sizes (`.gk-table-sm`, `-md`, `-lg`) and the padding variants (`padded`, `compact`, `very-compact`, `xs`) set their padding in pixels, at the weight of the token rule and after it: on a page set to `konsole` a table drawn by `Table` got its 4px labels and kept every pixel of its padding. The rules of 1.109.0 that write those paddings against the tokens for a table with `densityToggle()` now hold under a page with a step as well (a second selector in each `:where()`, so their weight is unchanged), and so do the list's row and the phone's paddings and card. A table's own step (`densityToggle()`) still wins over the page's; a page without a step, or without `themes.css`, is unchanged.
+- **`stickyColumn()` without `stickyHead()` pushed the page sideways.** The box a table scrolls in was not positioned, so an absolutely positioned descendant whose cell does not stick — the screen-reader name of the empty header cell over the right buttons — was placed against the wrap or the page, outside the box's clipping. On the demo page that made a 1024px window scroll 86px sideways. The box is `position: relative` now.
+
+### Demo
+- **No sideways scroll from 320px to 1600px**, measured every 10px. Before, a 1280px window beside the sidebar scrolled 18px (57px before 1.110.1), a 900px window 110px, 1100px 11px, 769px 8px and 320px 4px. The article list, the invoice list and the selection example are wider than the content beside the sidebar at some of those widths and now use `stickyColumn()`: they scroll in a box of their own with the first column in front, and do not touch the page. The grid of the three sizes asks for at least `min(300px, 100%)` per table instead of 240px, which `size('lg')` did not fit in.
+- The demo was checked in a browser at 1280px and 390px, light and dark: no script error, the four sections of 1.107.0 to 1.110.0 (sticky head and column, columns to show and hide, row spacing, editing in the cell) render, and "What is new" lists the newest releases.
+
+### Tests
+- `ci/browser-density.js` (254 cases, 2 new): on a `konsole` page with `themes.css` every size and variant without the control measures, cell for cell, as the same table set to Compact by its control; a table without the control takes 8px 12px there (it kept 12px 16px, which the case of 1.109.0 had written down as intended), and without `themes.css` it keeps the default. Without the change both new cases turn red.
+- `tests/density-toggle.test.php`: the selectors of the rules that write the paddings against the tokens carry the page's step as well.
+- `ci/browser-sticky.js` (419 cases, 2 new): whatever is positioned in a box is placed against the box (red without `position: relative`). `tests/sticky.test.php` holds the rule.
+- Whole suite: 9,683 assertions; every browser check of the table green.
+
+---
 ## [1.110.2] - 2026-11-03
 
 Housekeeping: `Table::render()` and `Table::renderButtons()`, the two longest methods left in the table, are cut into parts. Nothing a page can see changes — no class, no option, no markup, byte for byte — and a recording of 30,819 renderings holds that to account. One fault found on the way is fixed: a row button with a number for a name no longer stops the table.

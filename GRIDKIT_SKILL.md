@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.110.2 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.110.3 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -93,8 +93,11 @@ Everything else in that table is called on an object you constructed with `new`.
 `Theme::density('konsole')` sets how tightly tables are set — `konsole` fits
 about a third more rows on a screen, `weit` gives them room, and the default
 leaves the rhythm alone. It names no colour, so it composes with every theme
-and both modes; an unknown value is ignored. To let the person at the screen
-choose for one table, see `Table::densityToggle()`.
+and both modes; an unknown value is ignored. Its steps are tokens in
+`css/themes.css`, which the page must load; since 1.110.3 they reach the padding
+of every table `Table` draws, in each size and variant, a list's row and a
+phone card (before, only the label radius moved). To let the person at the
+screen choose for one table, see `Table::densityToggle()`.
 | `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
 | `Lang::jsConfig()` | `Pagination::build()` | `Layout::skipLink()` |
 
@@ -605,9 +608,8 @@ step, and so does the spacing of a phone card; a row link stays at least 44px an
 keep their size. **Normal is GridKit's default rhythm, not the page's:** the control starts at the
 page's own step, so on a page with `Theme::density('konsole')` it starts at Compact and Normal is
 roomier than the rest of the page. Choosing the page's own step forgets the stored choice, and the
-table follows the page again. The page-wide `Theme::density()` itself is unchanged — on a table drawn
-by `Table` it moves the label radius only, because the sizes set their padding in pixels; the toggle's
-steps do reach the padding. Works with `css/gridkit.css` alone (`themes.css` is optional). The control
+table follows the page again. The page-wide `Theme::density()` reaches the same padding since 1.110.3
+(with `themes.css`, which holds its tokens); the toggle's steps work with `css/gridkit.css` alone. The control
 is rendered hidden and `js/gridkit.js` 1.109.0 shows it: without the script, or with an older copy,
 the table is the table without the option. With `toolbar(false)` there is no control.
 

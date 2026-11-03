@@ -199,6 +199,7 @@ return [
     $next = strpos($css, "\n/* === ", (int) $at + 1);
     $block = $next === false ? substr($css, (int) $at) : substr($css, (int) $at, $next - (int) $at);
     T::contains($block, "  border-collapse: separate;\n  border-spacing: 0;", 'collapsed borders stay where a sticky cell was — the slit shows what scrolls under it');
+    T::ok((bool) preg_match('/\n\.gk-table-sticky-box \{[^}]*\n  position: relative;/', $block), 'the box is not the containing block of what is positioned in it — a name in a header cell that does not stick escapes its clipping (1.110.3)');
     T::contains($block, 'top: var(--gk-table-sticky-top, var(--gk-sheet-top, 0px));', 'the head does not stop under a fixed GridKit header');
     T::contains($block, '[data-gk-mode="dark"] :is(.gk-table-sticky-head, .gk-table-sticky-col),' . "\n" . '.gk-dark :is(.gk-table-sticky-head, .gk-table-sticky-col) {', 'the dark surfaces miss a spelling');
     T::contains($block, '.gk-dark .gk-table-sticky-col .gk-table tbody tr:nth-child(even)', 'the dark even rows miss a spelling');
