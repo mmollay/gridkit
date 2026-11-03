@@ -7,6 +7,35 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.111.0] - 2026-11-03
+
+Tabs on a new level: `GridKit\Tabs` writes every style, alignment and option of a tab row from PHP, and tabs gain deep links, remembered tabs, lazy panels, a cancelable `gk:tabchange` and a JS API (`GK.tabs.*`). A line, pill or text row wider than its box shows an arrow where more tabs are.
+
+### Added
+- **`GridKit\Tabs`, the eighteenth component.** `->tab($key, $label, $opts)` (`icon`, `badge`, `badgeError`, `count`, `disabled`, `title`, `content`, `url`, `reload`, `href`), `->style()`, `->align()`, `->size()`, `->fluid()`, `->iconTop()`, `->iconOnly()`, `->secondary()`, `->neutral()`, `->fill()`, `->oneRow()`, `->flat()`, `->surface()`, `->active()`, `->label()`, `->hash()`, `->param()`, `->remember()`; `->render()` prints, `->html()` returns. It writes exactly the authored markup the skill documents (plus the row's `id`); with `href` on every tab, a `<nav>` of links with `aria-current="page"`. A wrong value warns (`E_USER_WARNING`) and falls back, never throws; all but `content` is escaped; `javascript:`/`data:` addresses are refused. Active on the server: `active()`, else the parameter, else the first tab that is not disabled.
+- **Deep links and memory** (opt-in): `hash()` keeps `#<id>=<key>` beside other parts of the fragment (replaceState — Back leaves the page; hashchange and Back/Forward between links switch; a nested row opens its outer panel; a key no tab can take is corrected); `param('tab')` opens a tab without script and is rewritten in place; `remember()` uses `localStorage` (`gk-tab-<id>`, `GK.theme` scope). On load: `active()`, fragment, parameter, memory, first tab.
+- **Lazy panels**: `'url'` fetches on first view (same origin, `X-Requested-With`), skeleton `gk-tab-loading` with `aria-busy`, kept, `GK.initContent()` on the answer; `'reload' => true` fetches every view, old content dimmed meanwhile; failures show the table's failure state with "Try again", never the server's answer; until opened the panel holds a link (`gk-tab-fallback`), which is what an older gridkit.js shows.
+- **Events**: `gk:tabchange` (cancelable; `{ tabsId, from, to, panel, source }`), `gk:tabshown`, `gk:tabload` — for click, keys, `GK.tabs.select()` and the address; a refused key switch hands the focus back.
+- **JS API**: `GK.tabs.select()`, `current()`, `badge()`, `count()`, `reload()` — on `Tabs` output and hand-written markup.
+- **A row wider than its box** (line, pill, text) shows round arrows at the sides that have more (`gk-tab-arrow`, `gk-tab-arrow-start`, `gk-tab-arrow-end`); `GK.tabsOverflow` measures the row and sets `gk-tab-nav-overflow`. The chosen tab is scrolled into view; the card style keeps its grid.
+- Strings `tabs.open`, `js.tab_loading`, `js.tab_load_error` (en, de).
+
+### Changed
+- The skill's authored tab markup writes `type="button"`. README and landing page count eighteen components.
+
+### Fixed
+- Demo: the sortable list keeps its distance from the sortable grid again (`.demo-sort-grid ~ .demo-sort-list`; the live region `js/sortierbar.js` adds after each container broke the `+` selector).
+
+### Notes
+- `js/gridkit.js` and `css/gridkit.css`: one block each at the end, no existing function or rule changed. A copy without the block (PawBot) shows `Tabs` output as hand-written tabs; a lazy panel shows its link.
+
+### Demo
+- Tabs from PHP (each beside its code), deep links and memory, lazy panels (`demo/api/tab-panel.php`), a refused switch, the JS API, a row wider than its box; the builder shows the `Tabs` call. The demo reads its section from the part of the fragment without `=`, so `#tabs-seite`-style anchors no longer empty the page.
+
+### Tests
+- `tests/tabs-api.test.php` (212 assertions); `ci/browser-tabs.js` + fixture (153 cases, light and both dark spellings, 390px, the script before 1.111.0); 61 counter-checks, 60 red, 1 equivalent.
+
+---
 ## [1.110.5] - 2026-11-03
 
 A group of outlined buttons is closed on the right again, and a page title no longer sits on the pills of the line "you are here" beneath it.

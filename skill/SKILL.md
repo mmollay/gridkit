@@ -8,7 +8,7 @@ description: >-
   GridKit in composer.json.
 ---
 
-# GridKit 1.110.5
+# GridKit 1.111.0
 
 PHP components for admin dashboards. Zero dependencies, no build step,
 PHP 8.2+. A checkout is a working install.
@@ -35,7 +35,7 @@ error and no warning — the page renders, the piece is simply missing. Five
 agents were given this file and a page to build; not one got a first draft
 without tripping over this.
 
-**These twelve PRINT. Call them as a statement — `<?php $x->render(); ?>`:**
+**These thirteen PRINT. Call them as a statement — `<?php $x->render(); ?>`:**
 
 | | | |
 |---|---|---|
@@ -43,6 +43,7 @@ without tripping over this.
 | `StatCards::render()` | `FilterChips::render()` | `TableHeader::render()` |
 | `YearFilter::render()` | `Pagination::render()` | `PageSize::make()->…->render()` |
 | `ActionGroup::render()` | `Modal::container()` | `BelegModal::container()` |
+| `Tabs::render()` (1.111.0) | | |
 
 `PageSize::render()` above is an INSTANCE method — build it with the static
 `PageSize::make('per_page')` first, then chain. Same for `TableHeader::make()`.
@@ -54,6 +55,9 @@ Everything else in that table is called on an object you constructed with `new`.
 |---|---|---|
 | `Header::render()` | `Button::render()` | `Button::icon()` |
 | `Theme::switcher()` | `Theme::attributes()` | `Layout::bodyTag()` |
+| `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
+| `Lang::jsConfig()` | `Pagination::build()` | `Layout::skipLink()` |
+| `Tabs::html()` — the string twin of `Tabs::render()` (1.111.0) | | |
 
 `Theme::density('konsole')` sets how tightly tables are set — `konsole` fits
 about a third more rows on a screen, `weit` gives them room, and the default
@@ -63,8 +67,6 @@ and both modes; an unknown value is ignored. Its steps are tokens in
 of every table `Table` draws, in each size and variant, a list's row and a
 phone card (before, only the label radius moved). To let the person at the
 screen choose for one table, see `Table::densityToggle()`.
-| `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
-| `Lang::jsConfig()` | `Pagination::build()` | `Layout::skipLink()` |
 
 `Header::render()` is the exception that catches people: every other component
 you construct with `new` prints, and this one does not. `<?php (new Header())

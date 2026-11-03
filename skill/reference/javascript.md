@@ -1,4 +1,4 @@
-# GridKit 1.110.5 — JavaScript
+# GridKit 1.111.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -63,6 +63,16 @@ document.addEventListener('gk:sheetclose', e => { /* e.detail.opener */ });
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
+
+// Tabs (since 1.111.0) — see "Tabs". A row by its .gk-tabs element or id; hand-written rows too.
+GK.tabs.select('settings', 'bank');            // as a click (gk:tabchange can refuse it); { focus, force }
+GK.tabs.current('settings');                   // the key of the current tab
+GK.tabs.badge('settings', 'logo', 'Error', { tone: 'error' });   // null takes it away
+GK.tabs.count('settings', 'log', 12);          // null takes it away
+GK.tabs.reload('settings', 'log');             // a lazy panel, fetched again; a Promise of true/false
+document.addEventListener('gk:tabchange', e => { /* cancelable; e.detail: { tabsId, from, to, panel, source } */ });
+document.addEventListener('gk:tabshown', e => { /* after the switch */ });
+document.addEventListener('gk:tabload', e => { /* a lazy panel: { tabsId, key, panel, ok, status } */ });
 ```
 
 An AJAX form (`Form::ajax()`) reports its own outcome: `{ok: true, message: '…'}` closes the modal, refreshes
