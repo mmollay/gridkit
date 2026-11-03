@@ -273,6 +273,37 @@ $table->variant('celled')->variant('padded');   // celled is dropped — padded 
 // Variant and size are separate slots, so those two do stack:
 $table->variant('striped')->size('sm');</pre></div>
 
+    <h3 class="demo-h3" id="table-sticky">Sticky head and column <?= since('table') ?></h3>
+    <p class="demo-intro"><code>stickyHead()</code> keeps the header row in view while the rows scroll under it — on the page, or in a box as high as you say (<code>'320px'</code> here). <code>stickyColumn()</code> keeps the first column in view while the table scrolls sideways, with the checkbox in front of it. Scroll the box both ways. On a phone a table in card mode stays as it is.</p>
+        <?php
+        $stickyArticles = array_map(static fn (array $a): array => $a + [
+            'gross'    => round($a['net_price'] * 1.2, 2),
+            'supplier' => 'Supplier ' . chr(64 + $a['article_id']),
+            'stock'    => $a['article_id'] * 7,
+        ], $articles);
+        showcase(function () use ($stickyArticles) {
+            (new Table('demo-sticky'))
+                ->setData($stickyArticles)
+                ->caption('Articles with a sticky head and column')
+                ->selectable('article_id')
+                ->column('name', 'Description', ['sortable' => true, 'minWidth' => '200px'])
+                ->column('article_number', 'Article No.', ['muted' => true])
+                ->column('unit', 'Unit')
+                ->column('net_price', 'Net', ['format' => 'currency', 'sortable' => true])
+                ->column('tax_rate', 'VAT', ['format' => 'percent'])
+                ->column('gross', 'Gross', ['format' => 'currency'])
+                ->column('stock', 'Stock', ['align' => 'right'])
+                ->column('supplier', 'Supplier', ['minWidth' => '360px'])
+                ->column('is_active', 'Status', ['format' => 'label'])
+                ->button('edit', ['icon' => 'edit', 'params' => ['id' => 'article_id']])
+                ->nowrap()
+                ->toolbar(false)
+                ->stickyHead('320px')
+                ->stickyColumn()
+                ->render();
+        });
+        ?>
+
     <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
     <p class="demo-intro">Resize the browser window to &lt;768px to see the mobile layout. In card mode the first line of a card is its head: the checkbox, the left buttons, the title and the right buttons side by side, then the other fields without rules (since 1.106.0). The title is the first column that is not <code>'muted'</code> — here the description, because the article number is muted; on a row with <code>rowLink()</code> it is the cell with the link.</p>
 

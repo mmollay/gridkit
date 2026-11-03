@@ -56,6 +56,7 @@ return [
     'table.loading'         => 'Wird geladen…',
     'table.load_error'      => 'Die Tabelle konnte nicht geladen werden.',
     'table.retry'           => 'Erneut versuchen',
+    'table.scroll_region'   => 'Scrollbare Tabelle',
 
     // Form
     'form.select'           => 'Auswählen…',

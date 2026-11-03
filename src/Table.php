@@ -54,6 +54,11 @@ class Table
     private array $groupLabels = [];
     /** What a row opens: ['href' => …] or ['sheet' => …, 'url' => …], plus 'column' and 'params'. */
     private array $rowLink = [];
+    /** stickyHead() (1.107.0): the header row stays in view; $stickyHeight is its box, '' for the page. */
+    private bool $stickyHead = false;
+    private string $stickyHeight = '';
+    /** stickyColumn() (1.107.0): the first data column, and the cells before it, stay in view sideways. */
+    private bool $stickyColumn = false;
 
     public function __construct(string $id)
     {
@@ -234,6 +239,57 @@ class Table
     {
         $this->mobileMode = $mode;
         return $this;
+    }
+
+    /**
+     * The header row stays in view while the rows scroll under it (1.107.0).
+     *
+     * Without an argument it sticks to the page, or to whatever scrolls around the table: a
+     * table writes no scroll box of its own and .gk-table-wrap keeps overflow visible, so the
+     * page is the nearest scroller. Under a fixed or sticky GridKit header it stops at
+     * --gk-sheet-top (56px), not under the header. With a CSS length ('70vh', '480px') the table
+     * scrolls in a box of that height and the header sticks to the top of the box.
+     *
+     * The length goes into a style attribute, so anything that is not a plain number and unit
+     * is refused with a warning — the head then sticks to the page as without an argument.
+     */
+    public function stickyHead(string $maxHeight = ''): static
+    {
+        $this->stickyHead = true;
+        $maxHeight = trim($maxHeight);
+        if ($maxHeight !== '' && !self::isBoxHeight($maxHeight)) {
+            // JSON with every special character hex-escaped: the refused value is quoted in the
+            // log and on a page with display_errors, and neither may get markup from it.
+            $shown = json_encode($maxHeight, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+                | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+            trigger_error("GridKit: stickyHead() takes a CSS length such as '70vh' or '480px' — $shown was left out,"
+                . ' the head sticks to the page.', E_USER_WARNING);
+            $maxHeight = '';
+        }
+        $this->stickyHeight = $maxHeight;
+        return $this;
+    }
+
+    /**
+     * The first data column stays in view while the table scrolls sideways (1.107.0), and so
+     * do the cells in front of it: the checkbox of selectable() and the buttons on the left.
+     *
+     * Scrolling sideways needs a box that scrolls, so the table gets one (overflow-x: auto).
+     * A box that scrolls sideways is a scroller for the head as well — with stickyHead() the
+     * head can no longer stick to the page, so the box gets a height: the one stickyHead()
+     * was given, or 70vh.
+     */
+    public function stickyColumn(): static
+    {
+        $this->stickyColumn = true;
+        return $this;
+    }
+
+    /** A length a box may be given as its height: a positive number and a unit, nothing else. */
+    private static function isBoxHeight(string $value): bool
+    {
+        return preg_match('/^(\d+(?:\.\d+)?|\.\d+)(px|vh|dvh|svh|lvh|rem|em|%)$/', $value, $m) === 1
+            && (float) $m[1] > 0;
     }
 
     public function selectable(string $key = 'id'): static
@@ -706,6 +762,10 @@ class Table
         }
         if ($mobile === 'card') $wrapClasses .= ' gk-table-mobile-card';
         elseif ($mobile === 'scroll') $wrapClasses .= ' gk-table-mobile-scroll';
+        // On the wrap, which an AJAX reload keeps: the classes say what sticks, the box in
+        // renderInner() is what scrolls.
+        if ($this->stickyHead) $wrapClasses .= ' gk-table-sticky-head';
+        if ($this->stickyColumn) $wrapClasses .= ' gk-table-sticky-col';
         echo '<div class="' . $wrapClasses . '" data-gk-table="' . $e($this->id) . '"' . $staticAttr . $selectAttr . '>';
 
         // Embed JSON data + column config for client-side operations
@@ -880,6 +940,9 @@ class Table
         echo '<div class="gk-sr-only" role="status" aria-live="polite"'
            . ' data-gk-table-status="' . $e($this->id) . '"></div>';
 
+        $box = $this->stickyBox($leftButtons, $e);
+        echo $box;
+
         echo '<table class="' . $tableClass . '">'
            . ($this->caption !== '' ? '<caption class="gk-sr-only">' . $e($this->caption) . '</caption>' : '')
            . '<thead><tr>';
@@ -888,9 +951,38 @@ class Table
         $this->renderTableFoot($colCount, $e);
 
         echo '</table>';
+        if ($box !== '') echo '</div>';
 
         // Pagination
         $this->renderPager($e);
+    }
+
+    /**
+     * The opening tag of the box a sticky table scrolls in, or '' when it needs none (1.107.0).
+     *
+     * Here and not in render(): an AJAX reload replaces everything renderInner() wrote, so the
+     * box has to come back with the table, around the table only — the pager stays below it,
+     * in view, however far the rows are scrolled.
+     *
+     * data-gk-sticky-col says how many cells of a row stick: the checkbox, the cell of the
+     * left buttons and the first column. Counted here, because the header row writes the
+     * cell over the left buttons at its end, so the stylesheet cannot count the classes of
+     * the header; it takes the first n cells of every row, header and body alike.
+     *
+     * The box is a region with a name and a tab stop: content that scrolls has to be
+     * scrollable by keyboard, and a table without a single control in it offers nothing
+     * else to put the focus on.
+     */
+    private function stickyBox(array $leftButtons, \Closure $e): string
+    {
+        if (!$this->stickyColumn && $this->stickyHeight === '') return '';
+        $height = $this->stickyHeight !== '' ? $this->stickyHeight : ($this->stickyHead ? '70vh' : '');
+        $stuck = ($this->selectable ? 1 : 0) + ($leftButtons ? 1 : 0) + ($this->columns ? 1 : 0);
+        $name = $this->caption !== '' ? $this->caption : Lang::t('table.scroll_region');
+        return '<div class="gk-table-sticky-box" role="region" tabindex="0" aria-label="' . $e($name) . '"'
+            . ($this->stickyColumn && $stuck > 0 ? ' data-gk-sticky-col="' . $stuck . '"' : '')
+            . ($height !== '' ? ' style="--gk-table-sticky-height:' . $e($height) . '"' : '')
+            . '>';
     }
 
     /** The header row up to its end: the select-all cell, one cell per column, the empty cells over the buttons. */

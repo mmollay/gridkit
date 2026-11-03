@@ -766,7 +766,9 @@ return [
     // Hooks a page may set and GridKit never does; each is read with a fallback.
     // --gk-main-max (1.92.0): the cap of .gk-main. Declared on .gk-root it would
     // reset a value the page sets on <html>, so it is not declared at all.
-    $hooks = ['--gk-inverse-surface', '--gk-on-inverse-surface', '--gk-primary-rgb', '--gk-main-max'];
+    // --gk-table-sticky-top (1.107.0): where a sticky table head stops on the page, set on the
+    // wrap or anywhere above it; declared by GridKit it would reset a page's value the same way.
+    $hooks = ['--gk-inverse-surface', '--gk-on-inverse-surface', '--gk-primary-rgb', '--gk-main-max', '--gk-table-sticky-top'];
     $missing = array_values(array_diff(array_unique($use[1]), array_unique($def[1]), $hooks));
     T::eq($missing, [], 'tokens read but never defined');
 

@@ -581,6 +581,8 @@ second case, so only describe the first.
                      // ->footer() it shares that one row — the time only
                      // fills the columns the footer cells leave over.
 ->mobile('card')     // card | scroll — how it collapses on a phone
+->stickyHead()       // the header row stays in view; stickyHead('70vh'): in a box that high
+->stickyColumn()     // the first column stays in view when the table scrolls sideways
 ```
 
 **Card mode (the default below 768px, except for a list).** Each row becomes a
@@ -592,6 +594,53 @@ every column is muted, the first one. Order the columns, or mark a number column
 `'muted'`, to choose it. A long title wraps. A card with nothing but its head has
 no rule under it. Group headings, the summary row, the empty state and the footer
 are not cards of fields and keep their layout. CSS only: no class, no markup.
+
+**`->stickyHead($maxHeight)` and `->stickyColumn()` (since 1.107.0).** A long list keeps its
+header row in view, a wide one its first column:
+
+```php
+(new Table('invoices'))->setData($rows)
+    ->selectable('id')
+    ->column('customer', 'Customer')        // the first column: it sticks
+    ->column('number', 'No.')
+    // … many more columns
+    ->stickyHead()                          // the header row sticks to the page
+    ->stickyColumn()                        // the checkbox and the first column stick sideways
+    ->render();
+```
+
+- `stickyHead()` without an argument sticks the header row to the top of the page — or of
+  whatever scrolls around the table. Under a fixed or sticky GridKit header it stops at 56px
+  (`--gk-sheet-top`); set `--gk-table-sticky-top` on the wrap or higher up for another offset.
+  It needs an uninterrupted way up: an ancestor with `overflow: hidden` or `auto` (a
+  `.gk-table-card`, a container of your own) is the scroller then, and the head sticks to
+  that. On a phone a scrolling table (`mobile('scroll')`) scrolls in its wrap, so its head
+  only sticks in a box.
+- `stickyHead('70vh')` — a CSS length, a number with `px`, `vh`, `dvh`, `svh`, `lvh`, `rem`,
+  `em` or `%` — puts the table in a box of at most that height, and the head sticks to the top
+  of the box. Anything else raises a warning and is left out (the head sticks to the page).
+  The pager stays below the box.
+- `stickyColumn()` keeps the first column in view while the table scrolls sideways, and the
+  cells in front of it too: the checkbox of `selectable()` and the buttons with
+  `'position' => 'left'`. Scrolling sideways needs a box, so the table gets one
+  (`overflow-x: auto`). A box is a scroller in both directions, so **with `stickyHead()` the
+  head cannot stick to the page any more: the box gets a height, the one you gave
+  `stickyHead()` or `70vh`.** While the box is scrolled sideways a hairline marks the edge of
+  the column. The footer's cells stick under their columns as long as every cell before them
+  is one column wide; group headings and the empty state span the row and do not stick (the
+  empty state is kept in the middle of the box).
+- The box is `.gk-table-sticky-box` inside `.gk-table-wrap`, written around the `<table>` only;
+  the wrap carries `.gk-table-sticky-head` / `.gk-table-sticky-col`. It is a region named by
+  `caption()` (else "Scrollable table") with a tab stop, so the keyboard scrolls it too. A
+  sort, search, page change or AJAX reload keeps it where it was scrolled.
+- Sticky cells get the surface of the table and the colour of their row (selected, striped,
+  hovered, dark), so nothing shows through them. A sticky table draws its borders separate,
+  not collapsed (`border-spacing: 0`) — at rest it looks the same.
+- Card mode (a phone) is untouched: no box, nothing sticks. `size('list')` keeps its columns
+  giving way; a list does not scroll sideways, so there only the head matters.
+- The offsets of the cells after the first are measured by `js/gridkit.js` 1.107.0 (on load,
+  after every rebuild, on resize). An older copy still renders the table: the head and the
+  first cell stick, the cell after a checkbox at 36px, a column after left buttons stays put.
 
 **A list: `->size('list')` and `'priority'` (since 1.92.0).** The row the six
 rules describe, without CSS of your own: 64px rows, the name at 15px over the
@@ -2366,6 +2415,7 @@ Features:
 | `gk-table-more` `gk-table-more-toggle` `gk-table-more-name` | One row standing for many: the row, the full-width toggle (`aria-controls` names the rows, usually a `<tbody hidden>`), its label |
 | `gk-main` | The content area (since 1.92.0 a rule, before only a name): padding 24px 28px 48px, 16px on a phone, capped at `--gk-main-max` (1680px) |
 | `gk-header-meta` | A quiet line beside the header title, on its baseline; shortened first, gone at 768px and below |
+| `gk-table-sticky-head` `gk-table-sticky-col` `gk-table-sticky-box` | `Table->stickyHead()` / `->stickyColumn()` (since 1.107.0): on `.gk-table-wrap`, what sticks; the box around the `<table>` it scrolls in (`data-gk-sticky-col` = how many cells of a row stick, `--gk-table-sticky-height` its height) |
 | `gk-table-list` | On `.gk-table-wrap` (`Table->size('list')`): the list row of the six rules — 64px, name 15px over 13px, quiet groups; a size container, never cards, never sideways scroll |
 | `gk-col-p2` `gk-col-p3` `gk-col-p4` `gk-col-p5` | On th and td of a list column (`'priority' => n`): gone below 560 / 720 / 900 / 1040px of LIST width |
 | `gk-cell-who` `gk-cell-who-text` `gk-cell-sub-wrap` | The who cell: avatar, name, a label that moves under the name, the address underneath; a second line that breaks instead of being shortened |

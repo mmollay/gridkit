@@ -162,6 +162,29 @@ Each rule of the block was taken out in turn and the run turned red. About twent
 GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-karten.js
 ```
 
+`Table::stickyHead()` and `Table::stickyColumn()` (1.107.0) are measured by
+`ci/browser-sticky.js` on `ci/browser-sticky-fixture.php`, light and dark: the header cells
+at the top of the window, under a fixed GridKit header, at `--gk-table-sticky-top` and at the
+top of their box; the first n cells of every row (checkbox, left buttons, first column) at
+their measured offsets after scrolling sideways, the line at the edge only while scrolled, the
+corner above head and column, the footer cells under their columns. Opacity is a picture:
+every cell that does not stick is painted magenta, everything in it too (a row button is
+`position: relative`), the box is scrolled — 300px and as far as it goes — and the sticky part
+of a screenshot may not hold one magenta pixel: plain, selected, hovered, focused, striped,
+inverted, minimal, bordered, the dark rows, the row of an open side sheet. A `setData()` table
+sorted, searched and paged, and a server table reloaded through a stubbed `fetch` with the
+fragment PHP writes, keep their box, offsets and scroll position; a cell that grows moves the
+offsets (ResizeObserver), a table added later is bound by `GK.initContent()`, a `gridkit.js`
+added after the page was ready binds them too; Tab reaches the box and the arrow keys scroll
+it; at rest a sticky table is its twin without the options, pixel for pixel in light mode; at
+390px card mode is its twin cell for cell, `mobile('scroll')` and a list keep sticking; a
+`gridkit.js` without the 1.107.0 block renders without an error. Each rule and branch was
+taken out in turn and the run turned red. About forty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-sticky.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

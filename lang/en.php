@@ -56,6 +56,7 @@ return [
     'table.loading'         => 'Loading…',
     'table.load_error'      => 'The table could not be loaded.',
     'table.retry'           => 'Try again',
+    'table.scroll_region'   => 'Scrollable table',
 
     // Form
     'form.select'           => 'Select…',

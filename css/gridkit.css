@@ -10561,3 +10561,262 @@ label.gk-setting-title {
 :where(.gk-message) .gk-btn-xs .material-icons { font-size: 14px; }
 :where(.gk-message) .gk-btn-sm .material-icons { font-size: 16px; }
 :where(.gk-message) .gk-btn-lg .material-icons { font-size: 22px; }
+
+/* === 1.107.0 — sticky head and column === */
+/* Table::stickyHead() and Table::stickyColumn(). The wrap carries .gk-table-sticky-head and
+   .gk-table-sticky-col; the box a table scrolls in, when it needs one, is .gk-table-sticky-box,
+   written around the <table> only, so the pager stays below it and in view. Without a box the
+   head sticks to the page: .gk-table-wrap keeps overflow visible on purpose, so the page (or
+   whatever scrolls around the table) is the nearest scroller.
+
+   A cell that sticks lies over the cells that scroll under it, so it needs a surface of its own:
+   th and td have none — the wrap shows through them, and a row's colour is painted by the row.
+   These are the surfaces behind a table, by mode; a row that paints itself hands its colour on
+   to its sticky cells further down. */
+.gk-table-sticky-head,
+.gk-table-sticky-col {
+  --gk-table-sticky-bg: var(--gk-surface);
+  --gk-table-sticky-head-bg: var(--gk-surface);
+  --gk-table-sticky-line: var(--gk-outline-variant);
+}
+.gk-table-inverted:is(.gk-table-sticky-head, .gk-table-sticky-col) {
+  --gk-table-sticky-bg: #1e293b;
+  --gk-table-sticky-head-bg: #0f172a;
+  --gk-table-sticky-line: rgba(255, 255, 255, 0.1);
+}
+[data-gk-mode="dark"] :is(.gk-table-sticky-head, .gk-table-sticky-col),
+.gk-dark :is(.gk-table-sticky-head, .gk-table-sticky-col) {
+  --gk-table-sticky-bg: #161b22;
+  --gk-table-sticky-head-bg: #161b22;
+  --gk-table-sticky-line: rgba(255, 255, 255, 0.1);
+}
+
+/* Separate borders, not collapsed ones. A collapsed border belongs to the grid, not to the cell:
+   it stays where the cell was, and a cell that sticks leaves a slit along it — measured in
+   Chromium, the bottom 5px of the first row showed above a bordered head, and in dark mode
+   (translucent lines) every row line under a sticky cell showed what scrolled beneath it.
+   Separate borders travel with their cell. Spacing 0, and a line two cells share drawn by one
+   of them — at rest the table looks as it does collapsed. */
+.gk-table-sticky-head > .gk-table,
+.gk-table-sticky-box > .gk-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+:is(.gk-table-sticky-head > .gk-table, .gk-table-sticky-box > .gk-table) > tfoot > tr > td {
+  border-top-width: 0;
+}
+:is(.gk-table-bordered, .gk-table-celled) :is(.gk-table-sticky-head > .gk-table, .gk-table-sticky-box > .gk-table) > * > tr > :is(th, td) {
+  border-top-width: 0;
+  border-left-width: 0;
+}
+:is(.gk-table-bordered, .gk-table-celled) :is(.gk-table-sticky-head > .gk-table, .gk-table-sticky-box > .gk-table) > * > tr > :first-child {
+  border-left-width: 1px;
+}
+:is(.gk-table-bordered, .gk-table-celled) :is(.gk-table-sticky-head > .gk-table, .gk-table-sticky-box > .gk-table) > thead > tr:first-child > th {
+  border-top-width: 1px;
+}
+
+/* The box: it scrolls both ways, as high as stickyHead() said (the inline
+   --gk-table-sticky-height), clipped to the round corners of the wrap below and — when no
+   toolbar stands above it — at the top. It is a region with a tab stop (Table writes both), so
+   the keyboard scrolls it too. */
+.gk-table-sticky-box {
+  /* Table writes the height inline, the script the measured offsets and the box's width; they
+     are declared here so that each has a name. `initial` is no value at all: until the script
+     has measured, a var() of it takes its fallback or leaves the property at its default. */
+  --gk-table-sticky-height: none;
+  --gk-table-sticky-left-2: initial;
+  --gk-table-sticky-left-3: initial;
+  --gk-table-sticky-w: initial;
+  overflow: auto;
+  max-height: var(--gk-table-sticky-height);
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+.gk-table-wrap:not(:has(> .gk-toolbar)) > .gk-table-sticky-box {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.gk-table-sticky-box:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+
+/* The head. On the page it stops under a fixed or sticky GridKit header (--gk-sheet-top, 56px)
+   — or at --gk-table-sticky-top, set on the wrap or above it; in its box at the top of the box.
+   Its line goes with it (separate borders, above). */
+.gk-table-sticky-head > .gk-table > thead > tr > th,
+.gk-table-sticky-head > .gk-table-sticky-box > .gk-table > thead > tr > th {
+  position: sticky;
+  top: var(--gk-table-sticky-top, var(--gk-sheet-top, 0px));
+  z-index: 2;
+  background-color: var(--gk-table-sticky-head-bg);
+}
+.gk-table-sticky-head > .gk-table-sticky-box > .gk-table > thead > tr > th {
+  top: 0;
+}
+/* The outer header cells are rounded to the corners of the wrap. Stuck to the top of the window
+   the corners would show what scrolls under them; under a toolbar the head is not at the corner
+   of the wrap anyway, so there it is square. (With toolbar(false) it stays rounded: at rest the
+   corner is the wrap's.) */
+.gk-table-wrap.gk-table-sticky-head:has(> .gk-toolbar) > .gk-table > thead > tr > th {
+  border-radius: 0;
+}
+
+/* The column: the first n cells of every row, where n (data-gk-sticky-col, written by Table) is
+   the checkbox, the cell of the left buttons and the first column. Counted, not picked by class:
+   the header row writes the cell over the left buttons at its end, and a header cell has to
+   stick where its column sticks. Group headings, the summary row and the empty state span the
+   whole row and stay where they are. */
+.gk-table-sticky-box[data-gk-sticky-col="1"] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(1),
+.gk-table-sticky-box[data-gk-sticky-col="2"] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(-n+2),
+.gk-table-sticky-box[data-gk-sticky-col="3"] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(-n+3) {
+  position: sticky;
+  z-index: 1;
+}
+/* Where the head and the column meet: above both, and opaque without stickyHead() too. */
+.gk-table-sticky-box[data-gk-sticky-col="1"] > .gk-table > thead > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(1),
+.gk-table-sticky-box[data-gk-sticky-col="2"] > .gk-table > thead > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(-n+2),
+.gk-table-sticky-box[data-gk-sticky-col="3"] > .gk-table > thead > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(-n+3) {
+  z-index: 3;
+  background-color: var(--gk-table-sticky-head-bg);
+}
+/* The left edge of each: CSS can only say 0 for the first. The script measures the cells in
+   front of the second and the third and writes the sums on the box; without it the cell after
+   a checkbox sticks at the checkbox's 36px, and one after the left buttons does not stick
+   sideways at all (a var() with no value leaves `left` at auto) — rather than over them. */
+.gk-table-sticky-box[data-gk-sticky-col] > .gk-table > :is(thead, tbody) > tr > :nth-child(1) {
+  left: 0;
+}
+.gk-table-sticky-box:is([data-gk-sticky-col="2"], [data-gk-sticky-col="3"]) > .gk-table > :is(thead, tbody) > tr > :nth-child(2) {
+  left: var(--gk-table-sticky-left-2);
+}
+.gk-table-sticky-box:is([data-gk-sticky-col="2"], [data-gk-sticky-col="3"]) > .gk-table > :is(thead, tbody) > tr > .gk-cb-col + :nth-child(2) {
+  left: var(--gk-table-sticky-left-2, 36px);
+}
+.gk-table-sticky-box[data-gk-sticky-col="3"] > .gk-table > :is(thead, tbody) > tr > :nth-child(3) {
+  left: var(--gk-table-sticky-left-3);
+}
+/* The footer: its cells span columns, so a cell sticks only where every cell before it is one
+   column wide — then it stands where the column above it stands. The first one always does. */
+.gk-table-sticky-box[data-gk-sticky-col] > .gk-table > tfoot > tr > td:first-child,
+.gk-table-sticky-box:is([data-gk-sticky-col="2"], [data-gk-sticky-col="3"]) > .gk-table > tfoot > tr > td[colspan="1"]:first-child + td,
+.gk-table-sticky-box[data-gk-sticky-col="3"] > .gk-table > tfoot > tr > td[colspan="1"]:first-child + td[colspan="1"] + td {
+  position: sticky;
+  z-index: 1;
+  left: 0;
+}
+/* The last row of the body and of the footer round their first cell to the corner of the
+   wrap. Stuck, that corner would show what scrolls under it; the box clips to the corner of
+   the wrap itself, so the cell can be square — except in card mode, where it is no column. */
+@media (min-width: 769px) {
+  .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > :is(tbody, tfoot) > tr:last-child > td:first-child {
+    border-radius: 0;
+  }
+}
+@media (max-width: 768px) {
+  :not(.gk-table-mobile-card) > .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > :is(tbody, tfoot) > tr:last-child > td:first-child {
+    border-radius: 0;
+  }
+}
+.gk-table-sticky-box:is([data-gk-sticky-col="2"], [data-gk-sticky-col="3"]) > .gk-table > tfoot > tr > td[colspan="1"]:first-child + td {
+  left: var(--gk-table-sticky-left-2);
+}
+.gk-table-sticky-box[data-gk-sticky-col="3"] > .gk-table > tfoot > tr > td[colspan="1"]:first-child + td[colspan="1"] + td {
+  left: var(--gk-table-sticky-left-3);
+}
+
+/* The surface of a sticky body cell, at no specificity at all: every rule that paints a cell
+   itself — the hover and focus fill, the open row of a side sheet, a group heading, the
+   footer — still wins, as it does on a cell that does not stick. What a row paints on itself
+   (the tr) cannot reach a cell that has a surface, so it comes in as --gk-table-sticky-row:
+   the same rules as the row's own, one class more, so they win and lose among each other as
+   the originals do. A translucent row tint is mixed with the surface. Only the cells that
+   stick: a colour a page gives a row of its own stays visible in the others. */
+:where(.gk-table-sticky-box[data-gk-sticky-col="1"] > .gk-table > tbody > tr > td:nth-child(1),
+  .gk-table-sticky-box[data-gk-sticky-col="2"] > .gk-table > tbody > tr > td:nth-child(-n+2),
+  .gk-table-sticky-box[data-gk-sticky-col="3"] > .gk-table > tbody > tr > td:nth-child(-n+3),
+  .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > tfoot > tr > td) {
+  background-color: var(--gk-table-sticky-row, var(--gk-table-sticky-bg));
+}
+.gk-table-sticky-col .gk-table tr.gk-row-selected {
+  --gk-table-sticky-row: color-mix(in srgb, var(--gk-primary) 6%, var(--gk-table-sticky-bg));
+}
+.gk-table-sticky-col.gk-table-striped tbody tr:nth-child(even) {
+  --gk-table-sticky-row: var(--gk-surface-container-low);
+}
+.gk-table-sticky-col.gk-table-inverted tbody tr:nth-child(even) {
+  --gk-table-sticky-row: color-mix(in srgb, #fff 3%, var(--gk-table-sticky-bg));
+}
+[data-gk-mode="dark"] .gk-table-sticky-col .gk-table tbody tr:nth-child(even),
+.gk-dark .gk-table-sticky-col .gk-table tbody tr:nth-child(even) {
+  --gk-table-sticky-row: #1c2128;
+}
+/* The row of the open side sheet tints its cells, not the row — translucently. Over the surface. */
+.gk-table-sticky-box[data-gk-sticky-col] > .gk-table > tbody > tr.gk-row-link[aria-current="true"] > td {
+  background: linear-gradient(var(--gk-state-primary), var(--gk-state-primary)),
+    var(--gk-table-sticky-row, var(--gk-table-sticky-bg));
+}
+
+/* The edge of the column, while the box is scrolled sideways (the script marks it): a hairline,
+   as the rows have. On a pseudo element, because a cell's box-shadow is taken — the hover edge,
+   the focus ring of a row link. A bordered or celled table has its own line there. */
+:not(.gk-table-bordered, .gk-table-celled) > .gk-table-sticky-box[data-gk-sticky-col="1"][data-gk-scrolled-x] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(1):not(:last-child)::after,
+:not(.gk-table-bordered, .gk-table-celled) > .gk-table-sticky-box[data-gk-sticky-col="2"][data-gk-scrolled-x] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(2):not(:last-child)::after,
+:not(.gk-table-bordered, .gk-table-celled) > .gk-table-sticky-box[data-gk-sticky-col="3"][data-gk-scrolled-x] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(3):not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--gk-table-sticky-line);
+  pointer-events: none;
+}
+
+/* The empty state of a table wider than its box stood in the middle of the table — off to the
+   right, out of sight, after a search that found nothing. In a box it is as wide as the box
+   (--gk-table-sticky-w, measured by the script) and sticks at its left edge, inside the cell's
+   24px; the text keeps its 380px in the middle. Without the script: 380px at the left. */
+.gk-table-sticky-box > .gk-table > tbody > tr.gk-empty-row > td > .gk-empty-inner {
+  position: sticky;
+  left: 24px;
+  box-sizing: border-box;
+  width: calc(var(--gk-table-sticky-w, 428px) - 48px);
+  max-width: none;
+  margin: 0;
+  padding-inline: max(0px, (var(--gk-table-sticky-w, 428px) - 428px) / 2);
+}
+
+/* Card mode (a phone, the default up to 768px) is not a table any more: no box, nothing sticks,
+   no surface — a card looks exactly as it does without stickyHead() and stickyColumn(). Its
+   head is hidden anyway. mobile('scroll') and a list keep everything. */
+@media (max-width: 768px) {
+  .gk-table-mobile-card > .gk-table-sticky-box {
+    overflow: visible;
+    max-height: none;
+  }
+  /* .gk-table-sticky-col and :nth-child(n) (every cell) are there for the weight of the rules
+     this undoes — the third cell of the footer is the heaviest. */
+  .gk-table-mobile-card.gk-table-sticky-col > .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > :is(thead, tbody, tfoot) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :is(th, td):nth-child(n) {
+    position: static;
+    z-index: auto;
+  }
+  :where(.gk-table-mobile-card > .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > :is(tbody, tfoot) > tr > td) {
+    background-color: transparent;
+  }
+  .gk-table-mobile-card > .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > tbody > tr.gk-row-link[aria-current="true"] > td {
+    background: var(--gk-state-primary);
+  }
+  .gk-table-mobile-card > .gk-table-sticky-box[data-gk-sticky-col][data-gk-scrolled-x] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(n):not(:last-child)::after {
+    content: none;
+  }
+  /* The empty state as .gk-empty-inner has it (STATES). */
+  .gk-table-mobile-card > .gk-table-sticky-box > .gk-table > tbody > tr.gk-empty-row > td > .gk-empty-inner {
+    position: static;
+    width: auto;
+    max-width: 380px;
+    margin: 0 auto;
+    padding-inline: 0;
+  }
+}

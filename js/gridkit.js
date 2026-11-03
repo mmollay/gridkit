@@ -6421,3 +6421,135 @@ function _gkShowIfInit(root) {
   _gkReady(function () { _gkShowIfInit(document); });
 })();
 
+// === 1.107.0 — sticky head and column (Table::stickyHead / stickyColumn) ===
+/*
+ * The stylesheet does the sticking. What it cannot know is how wide the cells in front of the
+ * sticky column are: the checkbox and the left buttons stick as well, each at the right edge of
+ * the one before, and only a measurement says where that is. This block measures the header
+ * row and writes the sums on the box as --gk-table-sticky-left-2 and -3: when the page is
+ * ready, after every rebuild or reload, and whenever one of those cells changes its width
+ * (ResizeObserver — a window resize, a font that arrives late, a column the sort widened).
+ *
+ * Beside that it marks a box scrolled sideways (data-gk-scrolled-x, which draws the line at the
+ * edge of the column), keeps a box's scroll position across a rebuild or an AJAX reload, and
+ * puts a setData() table back into its box: GK.table.renderStatic() removes the old table and
+ * writes the new one after the toolbar, which left the box empty and the table outside it.
+ *
+ * Opt-in markup (.gk-table-sticky-head, .gk-table-sticky-col) — a page without it never meets
+ * this code. A copy of the file without the block (the PawBot dashboard keeps its own) still
+ * renders a sticky table: the head and the first cell stick, the cell after a checkbox at 36px,
+ * a cell after the left buttons stays put; a sorted setData() table then scrolls with the page.
+ */
+(function () {
+  if (!window.GK || !GK.table) return;
+
+  var STICKY = ".gk-table-sticky-head, .gk-table-sticky-col";
+
+  function boxOf(wrap) {
+    return wrap.querySelector(":scope > .gk-table-sticky-box");
+  }
+
+  /** The left edge of each sticky cell after the first, from the widths of the header cells
+   *  before it, and the width of the box (the empty state spans it). Returns what the
+   *  ResizeObserver watches: the box and the cells whose width counts. */
+  function place(box) {
+    box.style.setProperty("--gk-table-sticky-w", box.clientWidth + "px");
+    var n = parseInt(box.getAttribute("data-gk-sticky-col"), 10) || 0;
+    var row = box.querySelector(":scope > .gk-table > thead > tr") ||
+      box.querySelector(":scope > .gk-table > tbody > tr:not(.gk-table-group):not(.gk-table-more):not(.gk-empty-row)");
+    var cells = row && n > 1 ? Array.prototype.slice.call(row.children, 0, n - 1) : [];
+    var left = 0;
+    cells.forEach(function (cell, i) {
+      // The rendered width, fractions included: offsetWidth rounds, and half a pixel per
+      // cell adds up to a gap the scrolled content shows through.
+      left += cell.getBoundingClientRect().width;
+      box.style.setProperty("--gk-table-sticky-left-" + (i + 2), left + "px");
+    });
+    return [box].concat(cells);
+  }
+
+  /** The line at the edge of the column belongs to a box that is scrolled sideways. */
+  function mark(box) {
+    if (box.scrollLeft !== 0) box.setAttribute("data-gk-scrolled-x", "");
+    else box.removeAttribute("data-gk-scrolled-x");
+  }
+
+  /** (Re)bind one wrap: idempotent, run again whenever its children change. */
+  function bind(wrap) {
+    var st = wrap._gkSticky || (wrap._gkSticky = { x: 0, y: 0, box: null });
+    var box = boxOf(wrap);
+    if (box !== st.box) {
+      // A box this wrap has not had before: the first run, or the one an AJAX reload wrote.
+      // It takes over the scroll position of the one it replaces.
+      st.box = box;
+      if (box) {
+        box.addEventListener("scroll", function () {
+          if (st.box !== box) return;
+          st.x = box.scrollLeft;
+          st.y = box.scrollTop;
+          mark(box);
+        }, { passive: true });
+        box.scrollLeft = st.x;
+        box.scrollTop = st.y;
+      }
+      if (!st.mo && window.MutationObserver) {
+        // The wrap's children change on a reload (a new box) and on a rebuild of a setData()
+        // table (a new table, the box moved to it) — then the cells to measure are new.
+        st.mo = new MutationObserver(function () { bind(wrap); });
+        st.mo.observe(wrap, { childList: true });
+      }
+    }
+    if (st.ro) st.ro.disconnect();
+    st.ro = null;
+    if (!box) return;
+    mark(box);
+    var watched = place(box);
+    if (window.ResizeObserver) {
+      st.ro = new ResizeObserver(function () { place(box); });
+      watched.forEach(function (el) { st.ro.observe(el); });
+    }
+  }
+
+  /** Every sticky table with a box under root. A head that sticks to the page needs no script. */
+  function init(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    var wraps = Array.prototype.slice.call(scope.querySelectorAll(STICKY));
+    if (scope.matches && scope.matches(STICKY)) wraps.unshift(scope);
+    wraps.forEach(function (wrap) {
+      if (boxOf(wrap)) bind(wrap);
+    });
+  }
+
+  // A setData() table rebuilt in the browser: back into its box, the box where the table now
+  // stands, the scroll position as it was. Wrapped, not changed — every rebuild goes through
+  // this.renderStatic(), so it goes through here. The wrap's observer measures the new head.
+  var render = GK.table.renderStatic;
+  if (typeof render === "function") {
+    GK.table.renderStatic = function (wrap) {
+      var box = wrap && wrap.querySelector ? boxOf(wrap) : null;
+      var x = box ? box.scrollLeft : 0;
+      var y = box ? box.scrollTop : 0;
+      var result = render.apply(this, arguments);
+      var table = box ? wrap.querySelector(":scope > .gk-table") : null;
+      if (table) {
+        table.parentNode.insertBefore(box, table);
+        box.appendChild(table);
+        box.scrollLeft = x;
+        box.scrollTop = y;
+      }
+      return result;
+    };
+  }
+
+  // Tables that arrive later (a modal, a live reload) go through GK.initContent.
+  var original = GK.initContent;
+  if (typeof original === "function") {
+    GK.initContent = function (root) {
+      var result = original.apply(GK, arguments);
+      init(root || document);
+      return result;
+    };
+  }
+  _gkReady(function () { init(document); });
+})();
+
