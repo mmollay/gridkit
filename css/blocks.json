@@ -620,6 +620,7 @@
         },
         "ortszeile": {
             "name": "Ortszeile",
+            "changed": "1.110.5",
             "classes": {
                 "gk-ortszeile": "1.100.0",
                 "gk-ortszeile-current": "1.100.0",
@@ -773,7 +774,7 @@
         },
         "button": {
             "name": "Button",
-            "changed": "1.92.0",
+            "changed": "1.110.5",
             "classes": {
                 "gk-btn": "0.9.0",
                 "gk-btn-badge": "0.9.0",

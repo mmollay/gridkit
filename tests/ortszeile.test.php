@@ -474,6 +474,14 @@ return [
     }
 },
 
+
+'the title stands 6px above the line, not on its pills (1.110.5)' => function (): void {
+    require_once __DIR__ . '/css-helpers.php';
+    // The header title is a column: the h1, then the line. Without a gap the title's descenders
+    // stood on the outline of the pills. On a phone the column steps aside (display: contents)
+    // and the header's row gap applies — that rule is held in the phone block above.
+    T::eq(gkCssDeclFor('.gk-header-title:has(> .gk-ortszeile)')['gap'] ?? null, '6px', 'the title and the line stand without a gap');
+},
 ];
 
 })();

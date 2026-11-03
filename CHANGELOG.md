@@ -7,6 +7,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.110.5] - 2026-11-03
+
+A group of outlined buttons is closed on the right again, and a page title no longer sits on the pills of the line "you are here" beneath it.
+
+### Fixed
+- **`Button::group()` of outlined buttons stood open on the right.** In `.gk-btn-group` every button gives up its right edge so that two edges never stand side by side; the last one has no neighbour, and without its edge the group's rounded corners ran out into nothing (the demo's "Button Group": "Left · Center · Right", "Undo · Redo"). The last outlined button keeps its right edge, as wide as its other edges. Filled, tonal and text buttons, which draw no edge, and a bordered group (`.gk-btn-group-bordered`), which draws its own frame, are unchanged.
+- **The header title stood on the line "you are here"** (`Header::title()` with `ortszeile()`, 1.100.0): the title and the line are one column, and the column had no gap, so the title's descenders touched the outline of the pills. 6px between them now. On a phone, where the title column steps aside and the line takes a row of its own, nothing changes.
+
+### Tests
+- `tests/button-group.test.php`: the last outlined button of a group keeps an edge as wide as a button's; the rule comes after the one that takes the right edge, and a filled button at the end still carries none.
+- `tests/ortszeile.test.php`: the gap between the title and the line.
+- Both measured in a browser before and after, light and dark, 1280px and 390px (the right edge 0px → the width of the others; the gap 0 → 6px at 1280px, unchanged at 390px). Taking either rule out turns its test red.
+- `tests/blocks.test.php`: a block outside the window of the marks is checked by computation, every block, instead of by name — naming the line "you are here" as out for good failed as soon as this release touched it. Whole suite: 9,865 assertions.
+
+---
 ## [1.110.4] - 2026-11-03
 
 The demo now says where something is new: beside each section in the sidebar ("New" or "Update", with which components and since when), and in a list by component at the head of the changelog. This release also carries the code of 1.110.3 to Composer under a version Packagist can publish — use 1.110.4, not 1.110.3.
