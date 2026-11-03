@@ -146,6 +146,22 @@ GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-sor
 GK_SHOTS=/some/dir GK_ICONFONT=/some/MaterialIcons.woff2 node ci/browser-sortierbar.js
 ```
 
+The compact card of a table on a phone (1.106.0) is CSS only, so its rules are held in
+`tests/mobile.test.php` and what they do is measured by `ci/browser-karten.js` on
+`ci/browser-karten-fixture.php`: eleven tables in card mode at 390px, light and dark — a
+link on the row and on another column, buttons on both sides, a checkbox, a muted or
+hidden first column, every column muted, one column, groups with a footer, the empty
+state, the invoice list of the demo. Per table: every card a grid, nothing out of the card
+sideways, the expected title without a label, every field labelled and below the head, the
+cells of the head side by side without overlapping and ending in one line, the head and
+the fields on one left edge, a field one line tall; the order of the head; the invoice
+card at most 210px (386 before); 40px for the chevron; at 1200px a table row again.
+Each rule of the block was taken out in turn and the run turned red. About twenty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-karten.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

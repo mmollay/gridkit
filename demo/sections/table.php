@@ -274,7 +274,7 @@ $table->variant('celled')->variant('padded');   // celled is dropped — padded 
 $table->variant('striped')->size('sm');</pre></div>
 
     <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
-    <p class="demo-intro">Resize the browser window to &lt;768px to see the mobile layout.</p>
+    <p class="demo-intro">Resize the browser window to &lt;768px to see the mobile layout. In card mode the first line of a card is its head: the checkbox, the left buttons, the title and the right buttons side by side, then the other fields without rules (since 1.106.0). The title is the first column that is not <code>'muted'</code> — here the description, because the article number is muted; on a row with <code>rowLink()</code> it is the cell with the link.</p>
 
     <div style="overflow:hidden">
         <div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">mobile('card') – Standard</div>
@@ -286,10 +286,11 @@ $table->variant('striped')->size('sm');</pre></div>
         ];
         $t = new Table('mobile-card');
         $t->setData($mobileData)
-            ->column('nr', 'Article No.')
+            ->column('nr', 'Article No.', ['muted' => true])
             ->column('name', 'Description')
             ->column('price', 'Price')
             ->column('status', 'Status', ['format' => 'label'])
+            ->button('edit', ['icon' => 'edit', 'position' => 'right'])
             ->mobile('card')->toolbar(false)->paginate(false)->render();
         ?>
     </div>
@@ -334,7 +335,8 @@ $table->setData($articles)
     ->render();
 
 // Mobile-Responsive
-$table->mobile('card');      // Cards on mobile (default)
+$table->mobile('card');      // Cards on mobile (default): the first column that is
+                             // not 'muted' is the card's title, beside the buttons
 $table->mobile('scroll');    // Horizontal Scroll
 $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
 

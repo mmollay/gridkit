@@ -3,7 +3,7 @@
     "blocks": {
         "table": {
             "name": "Table",
-            "changed": "1.92.0",
+            "changed": "1.106.0",
             "classes": {
                 "gk-actions": "0.9.0",
                 "gk-actions-col": "0.9.0",
@@ -81,6 +81,7 @@
         },
         "row-link": {
             "name": "Row link",
+            "changed": "1.106.0",
             "classes": {
                 "gk-row-link": "1.91.0",
                 "gk-row-target": "1.91.0"

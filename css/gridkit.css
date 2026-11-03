@@ -5130,6 +5130,137 @@ a.gk-stat-card:hover {
   .gk-table-mobile-card td.gk-actions::before {
     display: none;
   }
+
+  /* Compact card (1.106.0). A card had a ruled line per field and its buttons
+     on a line of their own at the bottom: 386px for an invoice of six fields,
+     one and a half cards on a phone. Now the first line is the card's head —
+     checkbox, left buttons, title, right buttons — and the fields follow
+     without rules: 196px. A grid of four tracks; a track without a cell is
+     0px wide. CSS only: the markup and the client rebuild are unchanged.
+     Group headings, summary rows and the empty state are not cards of fields
+     and keep their own layout. */
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+  }
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link {
+    padding-right: 40px; /* room for the chevron, as before */
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > td {
+    grid-column: 1 / -1;
+    padding: 3px 0;
+    border-bottom: none;
+  }
+  /* The title: the first field that is not muted (an article number steps back
+     for the name) and not hidden on a phone — in a row with a link, the cell
+     that carries it (the rule below). No label; it wraps rather than run
+     under the buttons. */
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile)) {
+    grid-column: 3;
+    grid-row: 1;
+    flex-direction: column;
+    flex-wrap: nowrap; /* a wrapping column puts the second line beside the first */
+    justify-content: center;
+    align-items: flex-start;
+    gap: 2px;
+    align-self: stretch;
+    padding: 0 0 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gk-outline-variant);
+    font-weight: 600;
+    color: var(--gk-on-surface);
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile))::before {
+    display: none;
+  }
+  /* flex-basis: the 100% that puts a second line on a row of its own in a
+     field would be a height in the title's column. */
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile)) .gk-cell-sub {
+    flex-basis: auto;
+    text-align: left;
+    font-weight: normal;
+  }
+  /* Its own rule: a selector list with a :has() a browser does not know is
+     dropped as a whole. */
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link > td:has(.gk-row-target) {
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 2px;
+    align-self: stretch;
+    padding: 0 0 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gk-outline-variant);
+  }
+  /* !important: .gk-cb-col sets its padding with it. */
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-cb-col {
+    grid-column: 1;
+    grid-row: 1;
+    align-items: center;
+    padding: 0 10px 8px 0 !important;
+  }
+  /* The checkbox has no column label; the empty one took 12px of gap. */
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-cb-col::before {
+    display: none;
+  }
+  /* The browser's 4px on the left would set it off the edge the labels start at. */
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-cb-col input[type="checkbox"] {
+    margin: 0;
+  }
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-actions-left {
+    grid-column: 2;
+    grid-row: 1;
+    align-items: center;
+    padding: 0 8px 8px 0;
+  }
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-actions-right {
+    grid-column: 4;
+    grid-row: 1;
+    align-items: center;
+    padding: 0 0 8px 8px;
+  }
+  /* The head of the card ends in one rule: every cell of the first line carries
+     it, stretched to the same height so the lines meet (the title in its own
+     rule above: a list with an :nth-child(of) a browser does not know is
+     dropped as a whole). */
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-cb-col,
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-actions {
+    align-self: stretch;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gk-outline-variant);
+  }
+  /* Every field muted: the first one is the title after all, rather than a
+     head of buttons beside an empty space. */
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link):not(:has(> td:not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile))) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile)) {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: stretch;
+    align-items: center;
+    padding: 0 0 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gk-outline-variant);
+    font-weight: 600;
+    color: var(--gk-on-surface);
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link):not(:has(> td:not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile))) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile))::before {
+    display: none;
+  }
+  /* A card that is nothing but its head (one field, or one field and buttons)
+     has no rule under it: nothing follows. */
+  .gk-table-mobile-card .gk-table tbody tr:has(> td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile)):nth-last-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile))) > td {
+    padding-bottom: 0 !important;
+    margin-bottom: 0;
+    border-bottom: none;
+  }
 }
 
 /* === TABLE MOBILE: Scroll === */

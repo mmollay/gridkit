@@ -1,4 +1,4 @@
-# GridKit 1.105.1 — components
+# GridKit 1.106.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -275,6 +275,16 @@ second case, so only describe the first.
                      // fills the columns the footer cells leave over.
 ->mobile('card')     // card | scroll — how it collapses on a phone
 ```
+
+**Card mode (the default below 768px, except for a list).** Each row becomes a
+card. Since 1.106.0 its first line is a head — checkbox, left buttons, title,
+right buttons, side by side — and the other fields follow as label and value
+without rules. The **title is the first column that is not `'muted'`** and not
+`'hideOnMobile'`; on a row with `rowLink()` it is the cell with the link; when
+every column is muted, the first one. Order the columns, or mark a number column
+`'muted'`, to choose it. A long title wraps. A card with nothing but its head has
+no rule under it. Group headings, the summary row, the empty state and the footer
+are not cards of fields and keep their layout. CSS only: no class, no markup.
 
 **A list: `->size('list')` and `'priority'` (since 1.92.0).** The row the six
 rules describe, without CSS of your own: 64px rows, the name at 15px over the

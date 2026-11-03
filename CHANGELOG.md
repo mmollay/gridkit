@@ -7,6 +7,27 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.106.0] - 2026-11-03
+
+On a phone a table card is half as tall: its first line is a head with the title beside the row's buttons, and the other fields follow without rules. An invoice of six fields with buttons on both sides was 386px tall, one and a half cards on a screen; it is 196px now. CSS only: no class, no option and no markup changes, and the client rebuild of a table is untouched.
+
+### Changed
+- **Card mode (`mobile('card')`, the default below 768px) is compact.** The row is a grid of four tracks: checkbox, left buttons, title, right buttons; a track without a cell is 0px wide. Every other field spans the card below the head, label and value on one line, without the rule that stood under each of them. The head ends in one rule; a card that is nothing but its head has none.
+- **The title** is the first column that is neither `'muted'` nor `'hideOnMobile'` — an article number steps back for the name — and is shown without its column label. On a row with `rowLink()` it is the cell that carries the link (as before, without a label). When every column is muted, the first one is the title. A long title wraps instead of running under the buttons; a second line (`'sub'`) stands under it, left-aligned.
+- **The buttons** moved from a line of their own at the bottom of the card into the head; the checkbox of `selectable()` from the right to the left. Group headings, the summary row, the empty state and the footer are not cards of fields and keep their layout. A card with a link keeps 40px on the right for its chevron.
+
+### Fixed
+- In card mode the checkbox cell carried an empty column label with 12px of gap before the box, and the browser's 4px margin on the box: the checkbox sat 16px off the edge the labels start at. Neither is there now.
+
+### Demo
+- The card example marks its article number `'muted'` and has a button, so it shows the title and the head; the intro of the section says how the title is chosen.
+
+### Tests
+- `ci/browser-karten.js` with `ci/browser-karten-fixture.php` (271 cases): eleven tables in card mode at 390px, light and dark, measured box by box — see `ci/README.md`. Each rule of the block was taken out in turn (the grid, the track of the left buttons, the title of a row with a link, the column of the title that must not wrap, the fallback when every column is muted, the head without a rule, the padding of the checkbox) and the run turned red.
+- `tests/mobile.test.php`: the rules of the compact card are in the 768px block (10 assertions).
+- `tests/blocks.test.php`: the window of the demo's marks is 1.106 and 1.105 now. `css/blocks.json` marks the table and the row link as changed in 1.106.0, so their headings say "Changed in 1.106"; the tabs and the line "you are here" (1.104) fell out. The case "a block that got a new class in the newest minor is marked as changed" no longer depends on a block of the window having one: it builds a blocks file of its own.
+
+---
 ## [1.105.1] - 2026-11-03
 
 In dark mode the table search has its magnifier again, and every filter, page-size select and form select has its arrow. Only the background colour of these fields was meant to change in dark mode, and the rule took their icon with it.
