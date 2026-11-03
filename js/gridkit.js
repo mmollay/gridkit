@@ -6888,3 +6888,101 @@ function _gkShowIfInit(root) {
   }
   init(document);
 })();
+// === 1.109.0 — density toggle (Table::densityToggle) ===
+/*
+ * The control Table::densityToggle() writes into the toolbar: [data-gk-density-toggle], a group of
+ * [data-gk-set-density] buttons for the steps konsole, normal and weit. The step goes on the
+ * table's wrap as data-gk-density, which css/gridkit.css reads (block "1.109.0 — density toggle").
+ * The wrap outlives every redraw: renderStatic() after a sort, a search or a page, and the AJAX
+ * reload of a server table, replace what stands below the toolbar and leave the wrap and the
+ * toolbar alone, so nothing here has to run again after them.
+ *
+ * The step a table starts at: the one stored for its id, else the page's own (Theme::density()
+ * on <html> or <body>), else normal. A stored step is a difference from the page: choosing the
+ * page's own step removes it, so the table follows the page again when the page changes. On a
+ * page without a density of its own, Normal leaves the wrap without the attribute, and the table
+ * is exactly the table without the toggle.
+ *
+ * The control is rendered hidden and shown here: a copy of this file without the block (the
+ * PawBot dashboard keeps its own) leaves it hidden and the table as it was. localStorage can be
+ * missing or throw (a private window, blocked site data), so every access is wrapped and the step
+ * then holds for this page view only. The key is "gk-density-<table id>" in the namespace of
+ * GK.theme (window.GK_THEME_SCOPE, GK.theme.init({ scope })): the next person at a shared
+ * computer does not inherit it.
+ */
+(function () {
+  var STEPS = ["konsole", "normal", "weit"];
+
+  function storageKey(id) {
+    var name = "gk-density-" + id;
+    return GK.theme && typeof GK.theme._key === "function" ? GK.theme._key(name) : name;
+  }
+
+  function storedStep(id) {
+    try {
+      var step = window.localStorage.getItem(storageKey(id));
+      return STEPS.indexOf(step) > -1 ? step : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function storeStep(id, step) {
+    try {
+      if (step === null) window.localStorage.removeItem(storageKey(id));
+      else window.localStorage.setItem(storageKey(id), step);
+    } catch (e) {}
+  }
+
+  /** The page's step: the nearest data-gk-density above the wrap, where Theme::density() puts it. */
+  function pageStep(wrap) {
+    var host = wrap.parentElement ? wrap.parentElement.closest("[data-gk-density]") : null;
+    var step = host ? host.getAttribute("data-gk-density") : "";
+    return step === "konsole" || step === "weit" ? step : "normal";
+  }
+
+  function applyStep(wrap, step) {
+    if (step === "normal" && pageStep(wrap) === "normal") wrap.removeAttribute("data-gk-density");
+    else wrap.setAttribute("data-gk-density", step);
+    wrap.querySelectorAll("[data-gk-density-toggle] [data-gk-set-density]").forEach(function (btn) {
+      btn.setAttribute("aria-pressed", btn.getAttribute("data-gk-set-density") === step ? "true" : "false");
+    });
+  }
+
+  function initDensity(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll("[data-gk-density-toggle]").forEach(function (group) {
+      var wrap = group.closest("[data-gk-table]");
+      if (!wrap || group._gkDensityBound) return;
+      group._gkDensityBound = true;
+      applyStep(wrap, storedStep(wrap.getAttribute("data-gk-table")) || pageStep(wrap));
+      group.hidden = false;
+    });
+  }
+
+  document.addEventListener("click", function (ev) {
+    var btn = ev.target.closest ? ev.target.closest("[data-gk-set-density]") : null;
+    var group = btn ? btn.closest("[data-gk-density-toggle]") : null;
+    var wrap = group ? group.closest("[data-gk-table]") : null;
+    if (!wrap) return;
+    var step = btn.getAttribute("data-gk-set-density");
+    if (STEPS.indexOf(step) < 0) return;
+    storeStep(wrap.getAttribute("data-gk-table"), step === pageStep(wrap) ? null : step);
+    applyStep(wrap, step);
+  });
+
+  // Tables that arrive later — GK.initContent (AJAX navigation, a modal, a live table) and the
+  // pager of [data-gk-ajax-table] — all go through GK.table.init, so this rides along with it.
+  // The first pass is _gkReady: GK.init() has already run when the document was ready before
+  // this file was.
+  if (GK.table && typeof GK.table.init === "function") {
+    var tableInit = GK.table.init;
+    GK.table.init = function (root) {
+      var result = tableInit.apply(this, arguments);
+      initDensity(root);
+      return result;
+    };
+  }
+  _gkReady(function () { initDensity(document); });
+})();
+

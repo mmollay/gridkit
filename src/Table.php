@@ -49,6 +49,8 @@ class Table
     private ?string $csvFile = null;
     /** @var array<string,mixed> */
     private array $csvOpts = [];
+    /** densityToggle() (1.109.0): Compact / Normal / Roomy in the toolbar. */
+    private bool $densityToggle = false;
     private string $groupCol = '';
     private string $caption = '';
     private array $groupLabels = [];
@@ -436,6 +438,27 @@ class Table
             $s = '"' . str_replace('"', '""', $s) . '"';
         }
         return $s;
+    }
+
+    /**
+     * A control in the toolbar that sets this table Compact, Normal or Roomy (1.109.0).
+     *
+     * The three steps are the rhythms of Theme::density(): `konsole`, the default and `weit`. The
+     * script writes the choice as `data-gk-density` on the table's wrap, so it reaches this table
+     * and no other, and remembers it per table id in this browser (localStorage, in the namespace
+     * of GK.theme). It needs css/gridkit.css only; themes.css, which holds the page-wide rules,
+     * is optional.
+     *
+     * Normal is GridKit's default rhythm, not "whatever the page is": on a page set to
+     * Theme::density('konsole') the control starts at Compact and Normal is roomier than the
+     * rest of the page. Choosing the page's own step forgets the stored choice, so the table
+     * follows the page again. The control is rendered hidden and shown by the script: without
+     * it the table is the table without this option. With toolbar(false) there is no control.
+     */
+    public function densityToggle(): static
+    {
+        $this->densityToggle = true;
+        return $this;
     }
 
     public function setData(array $rows): static
@@ -1059,6 +1082,9 @@ class Table
                 'icon' => 'download',
                 'data' => ['gk-export-csv' => $this->csvFile, 'gk-export-delimiter' => $this->csvOpts['delimiter'] ?? ','],
             ]);
+        }
+        if ($this->densityToggle) {
+            echo $this->renderDensityToggle($e);
         }
         if ($this->newBtnLabel) {
             echo '<div class="gk-toolbar-spacer"></div>';
@@ -1851,6 +1877,25 @@ class Table
             $html .= '<button type="button" data-gk-bulk-action="' . $e($name) . '"' . $confirm . '>' . $icon . $e($label) . '</button>';
         }
         return $html;
+    }
+
+    /**
+     * The control of densityToggle(): the segmented button (.gk-segmented, 1.99.0) with three
+     * aria-pressed buttons, the pattern of the theme switcher. It is written `hidden` and with no
+     * step pressed. Which step is on depends on the stored choice and on the page's density, and
+     * only the script knows both: shown by the server, the control would claim a state it may not
+     * have and offer three buttons that do nothing without the script. The script marks the step
+     * and shows the group; with no script, or with an older js/gridkit.js, the control stays
+     * hidden and the table looks as it does without the option.
+     */
+    private function renderDensityToggle(\Closure $e): string
+    {
+        $html = '<div class="gk-segmented" role="group" aria-label="' . $e(Lang::t('table.density')) . '" data-gk-density-toggle hidden>';
+        foreach (['konsole' => 'table.density_compact', 'normal' => 'table.density_normal', 'weit' => 'table.density_roomy'] as $step => $key) {
+            $html .= '<button type="button" class="gk-segmented-item" data-gk-set-density="' . $step . '" aria-pressed="false">'
+                   . $e(Lang::t($key)) . '</button>';
+        }
+        return $html . '</div>';
     }
 
     private function renderEmpty(int $colspan): string

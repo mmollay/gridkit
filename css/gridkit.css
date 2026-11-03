@@ -11020,3 +11020,149 @@ label.gk-setting-title {
     border-bottom: none;
   }
 }
+
+/* === 1.109.0 — density toggle ===
+   Table::densityToggle() lets the person at the screen set one table Compact, Normal or Roomy.
+   The script writes the step on the table's wrap as data-gk-density — konsole, normal or weit,
+   the words Theme::density() writes on the page. On a page without a density of its own the
+   wrap at Normal carries no attribute at all, so that table IS the table without the toggle.
+
+   Nothing here matches without the attribute on a .gk-table-wrap: the page-wide
+   Theme::density() and themes.css behave as before. Three parts, and why they live here:
+
+   1. The steps, as the three table tokens on the wrap. themes.css holds the same numbers for
+      the page, but it is optional, and a control that does nothing without it would be broken.
+      tests/density-toggle.test.php holds the numbers to themes.css. Each step names all three
+      tokens: on a page set to konsole, Normal and Roomy have to undo its 4px label radius,
+      which `weit` in themes.css never had to.
+   2. The sizes and variants, written against the tokens. .gk-table-sm/-md/-lg td and the
+      variants padded, compact, very-compact and xs set their padding in pixels, at the weight
+      of the token rule and after it, so the tokens never reached a table drawn by Table
+      (Theme::density() changes only the label radius of those). Here each keeps its distance
+      from the default rhythm (sm 6px tighter, lg 4px roomier) and moves with the step; at
+      Normal the sums are the old pixels, which the test works out. :where() holds each rule
+      at the weight of the one it stands for and they come in the same order (sizes, variants,
+      the phone), so whatever outweighed a size still does: the action and checkbox cells, a
+      row link's chevron, a list's first and last column, the card.
+   3. The list and the phone card, which have rhythms of their own (below).
+
+   No colour of its own: the control is the segmented button of 1.99.0, whose roles change
+   with the mode in both spellings ([data-gk-mode="dark"] and .gk-dark). */
+
+/* 1 — the steps. (0,1,0), the weight of themes.css: a list's own tokens
+   (.gk-table-wrap.gk-table-list, 10px / 8px) outweigh them, and its step is its row (3). */
+:where(.gk-table-wrap)[data-gk-density="konsole"] {
+  --gk-table-pad-y: 8px;
+  --gk-table-pad-x: 12px;
+  --gk-label-radius: 4px;
+}
+:where(.gk-table-wrap)[data-gk-density="normal"] {
+  --gk-table-pad-y: 12px;
+  --gk-table-pad-x: 16px;
+  --gk-label-radius: 9999px;
+}
+:where(.gk-table-wrap)[data-gk-density="weit"] {
+  --gk-table-pad-y: 16px;
+  --gk-table-pad-x: 20px;
+  --gk-label-radius: 9999px;
+}
+
+/* 2 — sizes (=== TABLE SIZES ===), then the variants that set a padding (=== TABLE VARIANTS ===). */
+:where(.gk-table-wrap[data-gk-density]).gk-table-sm th,
+:where(.gk-table-wrap[data-gk-density]).gk-table-sm td {
+  padding: calc(var(--gk-table-pad-y) - 6px) calc(var(--gk-table-pad-x) - 6px);
+}
+:where(.gk-table-wrap[data-gk-density]).gk-table-md th {
+  padding: calc(var(--gk-table-pad-y) - 2px) var(--gk-table-pad-x);
+}
+:where(.gk-table-wrap[data-gk-density]).gk-table-md td {
+  padding: var(--gk-table-pad-y) var(--gk-table-pad-x);
+}
+:where(.gk-table-wrap[data-gk-density]).gk-table-lg th {
+  padding: calc(var(--gk-table-pad-y) + 2px) calc(var(--gk-table-pad-x) + 4px);
+}
+:where(.gk-table-wrap[data-gk-density]).gk-table-lg td {
+  padding: calc(var(--gk-table-pad-y) + 4px) calc(var(--gk-table-pad-x) + 4px);
+}
+:where(.gk-table-wrap[data-gk-density]).gk-table-padded th {
+  padding: calc(var(--gk-table-pad-y) + 2px) calc(var(--gk-table-pad-x) + 4px);
+}
+:where(.gk-table-wrap[data-gk-density]).gk-table-padded td {
+  padding: calc(var(--gk-table-pad-y) + 4px) calc(var(--gk-table-pad-x) + 4px);
+}
+/* xs and very-compact are 4px at Normal: a step down would leave the text on the rule, so
+   2px is the floor of both. */
+:where(.gk-table-wrap[data-gk-density]).gk-table-xs th,
+:where(.gk-table-wrap[data-gk-density]).gk-table-xs td {
+  padding: max(2px, calc(var(--gk-table-pad-y) - 8px)) calc(var(--gk-table-pad-x) - 8px);
+}
+:where(.gk-table-wrap[data-gk-density]).gk-table-compact th,
+:where(.gk-table-wrap[data-gk-density]).gk-table-compact td {
+  padding: calc(var(--gk-table-pad-y) - 4px) calc(var(--gk-table-pad-x) - 4px);
+}
+:where(.gk-table-wrap[data-gk-density]).gk-table-very-compact th,
+:where(.gk-table-wrap[data-gk-density]).gk-table-very-compact td {
+  padding: max(2px, calc(var(--gk-table-pad-y) - 8px)) calc(var(--gk-table-pad-x) - 8px);
+}
+
+/* 3 — a list (size('list'), 1.92.0) is set by its row, 64px with 10px above and below. A step
+   moves both, by three steps of 4px and one, and leaves the columns alone. */
+:where(.gk-table-wrap[data-gk-density="konsole"]).gk-table-list .gk-table tbody tr:not(.gk-table-group, .gk-table-more) > td {
+  height: 52px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+:where(.gk-table-wrap[data-gk-density="weit"]).gk-table-list .gk-table tbody tr:not(.gk-table-group, .gk-table-more) > td {
+  height: 76px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+@media (max-width: 768px) {
+  /* The phone outside card mode (=== TABLET / MOBILE ===): 10px 12px for every size, 8px 10px
+     for sm. Not a list: its tokens are its own and the rule above is its step. */
+  :where(.gk-table-wrap[data-gk-density]:not(.gk-table-list)) .gk-table th,
+  :where(.gk-table-wrap[data-gk-density]:not(.gk-table-list)) .gk-table td {
+    padding: calc(var(--gk-table-pad-y) - 2px) calc(var(--gk-table-pad-x) - 4px);
+  }
+  :where(.gk-table-wrap[data-gk-density]).gk-table-sm th,
+  :where(.gk-table-wrap[data-gk-density]).gk-table-sm td {
+    padding: calc(var(--gk-table-pad-y) - 4px) calc(var(--gk-table-pad-x) - 6px);
+  }
+  /* The compact card (1.106.0): 12px 16px round a card is the default rhythm itself, 8px between
+     two cards and 3px above and below a field follow it. A card with a link keeps its 40px on
+     the right for the chevron; the head keeps its own spacing, and so do the checkbox and the
+     buttons in it (left out with :where(), at no weight). */
+  :where(.gk-table-wrap[data-gk-density]).gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) {
+    padding-top: var(--gk-table-pad-y);
+    padding-bottom: var(--gk-table-pad-y);
+    padding-left: var(--gk-table-pad-x);
+    margin-bottom: calc(var(--gk-table-pad-y) - 4px);
+  }
+  :where(.gk-table-wrap[data-gk-density]).gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) {
+    padding-right: var(--gk-table-pad-x);
+  }
+  :where(.gk-table-wrap[data-gk-density]).gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > td:where(:not(.gk-cb-col, .gk-actions)) {
+    padding-top: calc((var(--gk-table-pad-y) - 6px) / 2);
+    padding-bottom: calc((var(--gk-table-pad-y) - 6px) / 2);
+  }
+}
+
+/* The control: the segmented button at the height of the search field beside it, 34px with its
+   border. On a touch screen it gets its 44px back (the segmented button's own rule, which this
+   one outweighs). The phone's toolbar is a column that stretches what it holds; the control
+   keeps its own width. */
+.gk-toolbar [data-gk-density-toggle] .gk-segmented-item {
+  min-height: 32px;
+  padding: 0 12px;
+}
+@media (pointer: coarse), (max-width: 600px) {
+  .gk-toolbar [data-gk-density-toggle] .gk-segmented-item {
+    min-height: var(--gk-target-min);
+  }
+}
+@media (max-width: 768px) {
+  .gk-toolbar [data-gk-density-toggle] {
+    align-self: flex-start;
+  }
+}

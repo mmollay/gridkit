@@ -93,7 +93,8 @@ Everything else in that table is called on an object you constructed with `new`.
 `Theme::density('konsole')` sets how tightly tables are set — `konsole` fits
 about a third more rows on a screen, `weit` gives them room, and the default
 leaves the rhythm alone. It names no colour, so it composes with every theme
-and both modes; an unknown value is ignored.
+and both modes; an unknown value is ignored. To let the person at the screen
+choose for one table, see `Table::densityToggle()`.
 | `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
 | `Lang::jsConfig()` | `Pagination::build()` | `Layout::skipLink()` |
 
@@ -589,6 +590,25 @@ card's title the next column that is not muted takes the title. `'hidden'` and `
 or `false`; anything else, `'hidden'` without `columnToggle()`, on a `'toggle' => false` column or on
 the `rowLink()` column, and `columnToggle()` with `toolbar(false)` raise a warning, and the column shows.
 
+**`->densityToggle()` (since 1.109.0):** a segmented control in the toolbar, Compact · Normal ·
+Roomy (German: Kompakt · Normal · Weit), with which the person at the screen sets how tightly this
+one table is set. The steps are those of `Theme::density()`: Compact is `konsole` (8px / 12px, label
+radius 4px), Roomy is `weit` (16px / 20px), Normal the default (12px / 16px). The script writes the
+step on the table's wrap as `data-gk-density`, so it reaches this table only, and remembers it per
+table id in this browser (localStorage `gk-density-<id>`, in the namespace of `GK.theme`; where
+storage is blocked it holds for the page view). It survives every sort, search, page and AJAX reload.
+Every size keeps its distance from `md` (`sm` 6px tighter, `lg` 4px roomier), a `size('list')` row
+goes from 64px to 52px or 76px, the variants `compact`, `padded` and `very-compact` move by the same
+step, and so does the spacing of a phone card; a row link stays at least 44px and the row buttons
+keep their size. **Normal is GridKit's default rhythm, not the page's:** the control starts at the
+page's own step, so on a page with `Theme::density('konsole')` it starts at Compact and Normal is
+roomier than the rest of the page. Choosing the page's own step forgets the stored choice, and the
+table follows the page again. The page-wide `Theme::density()` itself is unchanged — on a table drawn
+by `Table` it moves the label radius only, because the sizes set their padding in pixels; the toggle's
+steps do reach the padding. Works with `css/gridkit.css` alone (`themes.css` is optional). The control
+is rendered hidden and `js/gridkit.js` 1.109.0 shows it: without the script, or with an older copy,
+the table is the table without the option. With `toolbar(false)` there is no control.
+
 **`->emptyState($title, $opts)`** sets the wording for a table with no rows —
 `['hint' => …, 'icon' => …, 'action' => …]`. GridKit works out by itself whether
 the table is genuinely empty or only filtered, and offers the way back in the
@@ -618,6 +638,8 @@ second case, so only describe the first.
 ->mobile('card')     // card | scroll — how it collapses on a phone
 ->stickyHead()       // the header row stays in view; stickyHead('70vh'): in a box that high
 ->stickyColumn()     // the first column stays in view when the table scrolls sideways
+->densityToggle()    // Compact · Normal · Roomy in the toolbar, kept per
+                     // table id in the browser (see above)
 ```
 
 **Card mode (the default below 768px, except for a list).** Each row becomes a

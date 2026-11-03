@@ -324,6 +324,23 @@ $table->variant('striped')->size('sm');</pre></div>
         });
         ?>
 
+    <h3 class="demo-h3" id="table-density">Row spacing, chosen at the screen <?= since('table') ?></h3>
+    <p class="demo-intro"><code>densityToggle()</code> puts Compact · Normal · Roomy into the toolbar. The steps are those of <code>Theme::density()</code> (<code>konsole</code>, the default, <code>weit</code>), applied to this table only and remembered for its id in this browser — choose one, sort or search, reload the page. Normal is GridKit's default rhythm; on a page set to <code>konsole</code> the control starts at Compact. Without the script the control is not shown.</p>
+        <?php
+        showcase(function () use ($articles) {
+            (new Table('demo-density'))
+                ->setData(array_slice($articles, 0, 6))
+                ->search(['name'])
+                ->column('article_number', 'No.', ['muted' => true, 'width' => '110px'])
+                ->column('name', 'Description', ['sortable' => true])
+                ->column('net_price', 'Net', ['format' => 'currency', 'align' => 'right'])
+                ->column('is_active', 'Status', ['format' => 'label'])
+                ->button('edit', ['icon' => 'edit', 'position' => 'right', 'params' => ['id' => 'article_id']])
+                ->densityToggle()
+                ->render();
+        });
+        ?>
+
     <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
     <p class="demo-intro">Resize the browser window to &lt;768px to see the mobile layout. In card mode the first line of a card is its head: the checkbox, the left buttons, the title and the right buttons side by side, then the other fields without rules (since 1.106.0). The title is the first column that is not <code>'muted'</code> — here the description, because the article number is muted; on a row with <code>rowLink()</code> it is the cell with the link.</p>
 

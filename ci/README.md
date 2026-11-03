@@ -206,6 +206,27 @@ and the run (or `tests/column-toggle`) turned red. About thirty seconds.
 GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-column-toggle.js
 ```
 
+`Table::densityToggle()` (1.109.0) is measured by `ci/browser-density.js` on
+`ci/browser-density-fixture.php`: thirteen tables (md with a selection and a footer, sm,
+lg, xs, a list, a row link, the variants compact, padded and very-compact, groups, scroll
+mode, a server table), each with the control and again without it. At Normal a table
+measures as its twin cell by cell; each step gives the expected padding per size and
+variant, a list row of 52, 64 or 76px, a row link of at least 44px, row buttons of the same
+size inside their cells, and the same numbers without `css/themes.css`. Then: a page that
+is `konsole` itself (the control starts at Compact, Normal is the default rhythm), a
+reload, the key in the namespace of `GK.theme`, a value under the key that is not a step,
+a sort, a search and an AJAX reload (a stubbed `fetch`), a table handed to
+`GK.initContent()` later, the keyboard, the contrast of the control in light and in both
+dark spellings, `localStorage` that throws, 390px (cards, scroll mode, a list, the
+control's 44px), no JavaScript, the copy of `js/gridkit.js` without the 1.109.0 block
+(`--old-js`) and a script added after the document was ready (`--late`). `GK_CSS` and
+`GK_JS` hand the fixture other files: each rule and branch of the block was taken out in
+turn that way and the run turned red. About fifteen seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-density.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in
