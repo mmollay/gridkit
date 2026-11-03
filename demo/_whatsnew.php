@@ -488,3 +488,119 @@ function whatsNew(int $open = 3, int $older = 12): string
     }
     return $html . '<p class="demo-news-all"><a href="#changelog">' . $w['all'] . '</a></p></details>';
 }
+
+/*
+ * ── News by component (1.110.4) ─────────────────────────────────────────────────────────────
+ * The marks above sit on the headings, so a reader had to scroll a section to learn that it had
+ * news. The same facts are shown where the eye starts: in the sidebar beside each section, and
+ * as one list by component at the head of the changelog. Computed from css/blocks.json and
+ * CHANGELOG.md like the marks — nothing here is written by hand.
+ */
+
+/** The words of the news by component, in the language the page speaks. */
+function gkComponentWords(): array
+{
+    $de = str_starts_with(\GridKit\Lang::locale(), 'de');
+    return $de ? [
+        'new' => 'Neu', 'changed' => 'Update', 'title' => 'Neu & geändert nach Komponente',
+        'intro' => 'Jede Komponente, die in den letzten Versionen dazukam oder sich geändert hat — die neueste zuerst.',
+        'component' => 'Komponente', 'what' => 'Was', 'version' => 'Version', 'demo' => 'In der Demo',
+        'newIn' => 'Neu in', 'changedIn' => 'Geändert in', 'none' => 'Keine Änderungen in diesem Zeitraum.',
+    ] : [
+        'new' => 'New', 'changed' => 'Update', 'title' => 'New & changed by component',
+        'intro' => 'Every component added or changed in the last releases — the newest first.',
+        'component' => 'Component', 'what' => 'What', 'version' => 'Version', 'demo' => 'In the demo',
+        'newIn' => 'New in', 'changedIn' => 'Changed in', 'none' => 'No changes in this span.',
+    ];
+}
+
+/**
+ * What the window of the marks (the last two minors) holds, by demo section: section id → the
+ * blocks new or changed there, newest first. A block shown in no section is left out.
+ *
+ * @return array<string, list<array{key: string, name: string, kind: string, minor: string}>>
+ */
+function gkSectionNews(): array
+{
+    $window = gkRecentMinors(gkChangelog());
+    $where = gkBlockSections();
+    $out = [];
+    foreach (gkBlocks() as $key => $b) {
+        $state = gkBlockState($b, $window);
+        $kind = $state['new'] !== null ? 'new' : ($state['changed'] !== null ? 'changed' : null);
+        if ($kind === null || !isset($where[$key])) continue;
+        $out[$where[$key]][] = ['key' => (string) $key, 'name' => $b['name'], 'kind' => $kind, 'minor' => (string) $state[$kind]];
+    }
+    foreach ($out as &$list) {
+        usort($list, static fn(array $a, array $b): int => version_compare($b['minor'], $a['minor']) ?: strcmp($a['name'], $b['name']));
+    }
+    unset($list);
+    return $out;
+}
+
+/**
+ * The sidebar of the demo with its news: after the label of each item that leads to a section
+ * with news, "New" (green) or "Update" (blue) — new wins when a section has both — and, for a
+ * screen reader and in the popup, which components and since when. Collapsed, the sidebar shows a
+ * dot on the symbol instead (demo/index.php). Sidebar.php is not touched: the dashboard keeps its
+ * own copy of it, and this is the demo's business.
+ */
+function gkNavNews(string $sidebarHtml): string
+{
+    $w = gkComponentWords();
+    foreach (gkSectionNews() as $section => $list) {
+        $kind = in_array('new', array_column($list, 'kind'), true) ? 'new' : 'changed';
+        $minor = $list[0]['minor'];
+        $names = implode(', ', array_column($list, 'name'));
+        $say = ($kind === 'new' ? $w['newIn'] : $w['changedIn']) . ' ' . $minor . ': ' . $names;
+        $badge = '<span class="demo-nav-news demo-nav-news-' . $kind . '" title="' . htmlspecialchars($say, ENT_QUOTES, 'UTF-8') . '">'
+            . '<span aria-hidden="true">' . htmlspecialchars($w[$kind], ENT_QUOTES, 'UTF-8') . '</span>'
+            . '<span class="gk-sr-only">' . htmlspecialchars($say, ENT_QUOTES, 'UTF-8') . '</span></span>';
+        $pattern = '#(<a href="\#' . preg_quote($section, '#') . '" class="gk-sidebar-item[^"]*"[^>]*>.*?<span class="gk-sidebar-label">.*?</span>)#s';
+        $sidebarHtml = (string) preg_replace_callback($pattern, static fn(array $m): string => $m[1] . $badge, $sidebarHtml, 1);
+    }
+    return $sidebarHtml;
+}
+
+/**
+ * Every block new or changed in the last $minors minors, newest first: its name, new or changed,
+ * the exact version, and the section of the demo that shows it.
+ *
+ * @return list<array{key: string, name: string, kind: string, version: string, section: ?string}>
+ */
+function gkComponentNews(int $minors = 6): array
+{
+    $span = gkRecentMinors(gkChangelog(), $minors);
+    $where = gkBlockSections();
+    $rows = [];
+    foreach (gkBlocks() as $key => $b) {
+        if (in_array(gkMinor($b['since']), $span, true)) {
+            $rows[] = ['key' => (string) $key, 'name' => $b['name'], 'kind' => 'new', 'version' => $b['since'], 'section' => $where[$key] ?? null];
+        } elseif ($b['changed'] !== null && in_array(gkMinor($b['changed']), $span, true)) {
+            $rows[] = ['key' => (string) $key, 'name' => $b['name'], 'kind' => 'changed', 'version' => $b['changed'], 'section' => $where[$key] ?? null];
+        }
+    }
+    usort($rows, static fn(array $a, array $b): int => version_compare($b['version'], $a['version']) ?: strcmp($a['name'], $b['name']));
+    return $rows;
+}
+
+/** The list by component at the head of the changelog section. */
+function componentNews(int $minors = 6): string
+{
+    $w = gkComponentWords();
+    $e = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+    $rows = gkComponentNews($minors);
+    $html = '<section class="demo-component-news" aria-labelledby="demo-component-news-title">'
+        . '<h3 class="demo-h3" id="demo-component-news-title">' . $e($w['title']) . '</h3>'
+        . '<p class="demo-intro">' . $e($w['intro']) . '</p>';
+    if (!$rows) return $html . '<p>' . $e($w['none']) . '</p></section>';
+    $html .= '<div class="gk-table-wrap gk-table-sm"><table class="gk-table"><thead><tr>'
+        . '<th scope="col">' . $e($w['component']) . '</th><th scope="col">' . $e($w['what']) . '</th>'
+        . '<th scope="col">' . $e($w['version']) . '</th><th scope="col">' . $e($w['demo']) . '</th></tr></thead><tbody>';
+    foreach ($rows as $r) {
+        $label = '<span class="gk-label ' . ($r['kind'] === 'new' ? 'gk-label-green' : 'gk-label-blue') . '">' . $e($w[$r['kind']]) . '</span>';
+        $demo = $r['section'] !== null ? '<a href="#' . $e($r['section']) . '">' . $e(ucfirst($r['section'])) . '</a>' : '—';
+        $html .= '<tr><td>' . $e($r['name']) . '</td><td>' . $label . '</td><td><code>' . $e($r['version']) . '</code></td><td>' . $demo . '</td></tr>';
+    }
+    return $html . '</tbody></table></div></section>';
+}

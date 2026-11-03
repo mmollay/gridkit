@@ -330,6 +330,17 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
            line on a phone. */
         .demo-since { display:inline-flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:var(--gk-text-label, 13px); font-weight:400; vertical-align:middle; }
         .demo-news-wrap { max-width:1100px; margin:24px auto 0; padding:0 24px; }
+        /* News by component in the sidebar (1.110.4): GridKit's own label colours, green new and
+           blue changed; collapsed, a dot on the symbol. */
+        .demo-nav-news { margin-left:auto; font-size:10px; font-weight:600; line-height:1; padding:3px 7px; border-radius:9999px; white-space:nowrap; letter-spacing:.02em; }
+        .demo-nav-news-new { background:var(--gk-success-container, #dcfce7); color:var(--gk-on-success-container, #14532d); }
+        .demo-nav-news-changed { background:var(--gk-info-container, #dbeafe); color:var(--gk-on-info-container, #1e3a8a); }
+        .gk-sidebar-item { position:relative; }
+        .gk-sidebar.collapsed .demo-nav-news { position:absolute; top:6px; left:34px; width:8px; height:8px; padding:0; margin:0; }
+        .gk-sidebar.collapsed .demo-nav-news > [aria-hidden] { display:none; }
+        .gk-sidebar.collapsed .demo-nav-news-new { background:var(--gk-success, #16a34a); }
+        .gk-sidebar.collapsed .demo-nav-news-changed { background:var(--gk-info, #2563eb); }
+        .demo-component-news { margin-bottom:32px; }
         .demo-news { margin:0; }
         .demo-news-summary { cursor:pointer; font-size:17px; font-weight:600; }
         .demo-news-summary:focus-visible { outline:2px solid var(--gk-primary); outline-offset:2px; }
@@ -407,7 +418,11 @@ $sidebar->brand('', 'widgets')
     ->item('Examples', '#examples', 'rocket_launch')
     ->group('Info')
     ->item('Changelog', '#changelog', 'history');
+// News by component (1.110.4): each section with something new or changed in the last two
+// minors says so beside its name — "New" or "Update" — before anyone scrolls to it.
+ob_start();
 $sidebar->render();
+echo gkNavNews((string) ob_get_clean());
 ?>
 
 <div class="gk-with-sidebar">

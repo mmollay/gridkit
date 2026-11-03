@@ -940,6 +940,7 @@
         },
         "theme": {
             "name": "Themes and dark mode",
+            "changed": "1.110.3",
             "classes": {
                 "gk-dark": "0.9.0",
                 "gk-mode-dark": "0.9.0",
