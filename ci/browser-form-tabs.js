@@ -67,7 +67,11 @@ const HELPERS = () => {
       window._submitted[f.id] = (window._submitted[f.id] || 0) + 1;
     });
   });
-  document.addEventListener("click", (e) => { if (e.target.closest(".gk-tab-btn")) window._tabClicks++; }, true);
+  // Tab switches: with GK.tabs (1.111.0) every switch fires gk:tabshown, and the form opens a tab through
+  // GK.tabs.select(), without a click; an older script switches by a click on the tab.
+  const api = () => !!(window.GK && GK.tabs && typeof GK.tabs.select === "function");
+  document.addEventListener("click", (e) => { if (!api() && e.target.closest(".gk-tab-btn")) window._tabClicks++; }, true);
+  document.addEventListener("gk:tabshown", () => { window._tabClicks++; }, true);
   const opener = document.getElementById("open-modal");
   if (opener) opener.addEventListener("click", () => GK.modal.show("#modal"));
 };

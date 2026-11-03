@@ -1,4 +1,4 @@
-# GridKit 1.112.0 — CSS
+# GridKit 1.113.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -217,6 +217,8 @@ Links between pages take the same classes (`<nav class="gk-tab-nav gk-tab-nav-ka
 - **Nesting:** a `.gk-tabs` inside a panel of another is fine since 1.101.0 — a click on an outer tab
   touches only its own row and panels; the inner choice stays. The inner row takes the second-row
   shape. `data-tab` keys may repeat between levels.
+- **Tabs inside a form** (since 1.113.0): use `Form::tab()` (see **Form**), not this markup by hand — it
+  opens the tab of a field the browser or the server rejects and puts the error badge on every such tab.
 - **Steps on a phone:** `.gk-steps` draws a shorter line before each step up to 480px; three steps
   of the length "Changes · Approval · Publish" fit in 340px, and when a band wraps after all, no line
   hangs at the end or the start of a row.
