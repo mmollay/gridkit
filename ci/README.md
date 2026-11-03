@@ -295,6 +295,24 @@ taken out in turn and a check turned red. About twenty seconds.
 GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-permission-matrix.js
 ```
 
+The tree view (`GridKit\Tree` and `js/tree.js`, 1.116.0) is checked by `ci/browser-tree.js` on
+`ci/browser-tree-fixture.php`: a CMS page tree (single selection, links, moving, lazy branches,
+a filter), categories with checkboxes inside a form, folders that move without a URL, and a chain
+eleven levels deep. The lazy branches (`GET http://gk.test/children?parent=…`, answered with what
+`Tree::renderBranch()` wrote into the fixture) and the moves (`POST http://gk.test/move`) are
+answered by `page.route()` — ok, 500, `{"ok":false}`, no network, or held until released. It
+checks the ARIA tree the script builds, every key of the WAI pattern and type-ahead, what is
+remembered across a reload, a branch that loads, fails, is tried again and is empty, single and
+multiple selection with tri-state parents and what the form posts, the filter with the ancestors
+of a match, drag and drop (before, after, into, first child, refused into its own branch and into
+a disabled node), moving by keyboard, the way back after a failed save (and of the moves queued
+behind it), the event veto, the API, 390px, contrast in 21 looks and the page without script.
+`GK_VERBOSE=1` prints each case as it runs. About a minute.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-tree.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

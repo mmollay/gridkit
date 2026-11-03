@@ -12441,3 +12441,501 @@ tbody[data-gk-perm-folded] .gk-perm-chevron {
     transition: none;
   }
 }
+
+/* === 1.116.0 — tree === */
+/* GridKit\Tree writes a nested list; js/tree.js makes it a tree view. The list works without the
+   script — every node in view, links and boxes that post — so nothing here hides a node unless the
+   script is there to show it again: (scripting: enabled) keeps a closed branch closed from the first
+   paint, and the script sets `hidden` on it as well, for a browser that does not know the query.
+
+   Roles only, so light, [data-gk-mode="dark"], .gk-dark and the six themes follow from the tokens.
+   A row is full width and indented by its level (data-gk-tree-level, written by the server, kept by
+   the script): the hover and the selection span the row, and the indent stops growing after eight
+   levels (five on a phone), where a small level number takes over — a deep tree never pushes the
+   page sideways. */
+.gk-tree {
+  --gk-tree-indent: 20px;
+  --gk-tree-row: 36px;
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  font-size: var(--gk-text-body);
+  color: var(--gk-on-surface);
+}
+.gk-tree-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 0 8px;
+}
+.gk-tree-toolbar .gk-tree-search {
+  flex: 1 1 200px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  background-color: var(--gk-surface-container-low);
+  border-width: 1px;
+}
+.gk-tree-toolbar .gk-tree-search:focus-visible {
+  background-color: var(--gk-surface);
+}
+.gk-tree-list,
+.gk-tree-group {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gk-tree-node {
+  margin: 0;
+  padding: 0;
+}
+/* The treeitem is the <li> and holds its branch: the ring goes round its row, not round the branch. */
+.gk-tree-node:focus {
+  outline: none;
+}
+.gk-tree-node:focus-visible > .gk-tree-row {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+
+.gk-tree-row {
+  --gk-tree-depth: 7;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: var(--gk-tree-row);
+  padding-block: 2px;
+  padding-inline: calc(var(--gk-tree-depth) * var(--gk-tree-indent) + 4px) 4px;
+  border-radius: var(--gk-radius-sm);
+}
+.gk-tree-row[data-gk-tree-level="1"] { --gk-tree-depth: 0; }
+.gk-tree-row[data-gk-tree-level="2"] { --gk-tree-depth: 1; }
+.gk-tree-row[data-gk-tree-level="3"] { --gk-tree-depth: 2; }
+.gk-tree-row[data-gk-tree-level="4"] { --gk-tree-depth: 3; }
+.gk-tree-row[data-gk-tree-level="5"] { --gk-tree-depth: 4; }
+.gk-tree-row[data-gk-tree-level="6"] { --gk-tree-depth: 5; }
+.gk-tree-row[data-gk-tree-level="7"] { --gk-tree-depth: 6; }
+.gk-tree-row[data-gk-tree-level="8"] { --gk-tree-depth: 7; }
+/* Deeper than the indent goes: the level, as a number in a ring, in the last step of the indent —
+   the toggles of the deep rows stay in line. It is decoration: the level is read from aria-level, and
+   the name of the node is its label alone. The look is shared; `content` decides where it shows. */
+.gk-tree-row::before {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: calc(var(--gk-tree-depth) * var(--gk-tree-indent) - 20px);
+  box-sizing: border-box;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--gk-outline);
+  border-radius: 999px;
+  color: var(--gk-on-surface-variant);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  transform: translateY(-50%);
+}
+.gk-tree-row:not([data-gk-tree-level="1"], [data-gk-tree-level="2"], [data-gk-tree-level="3"], [data-gk-tree-level="4"],
+  [data-gk-tree-level="5"], [data-gk-tree-level="6"], [data-gk-tree-level="7"], [data-gk-tree-level="8"])::before {
+  content: attr(data-gk-tree-level);
+}
+.gk-tree-row:hover {
+  background: var(--gk-state-hover);
+}
+/* The selected node (select('single')): its colours, a bar on its start edge and a heavier name —
+   not the colour alone. */
+.gk-tree-node[aria-selected="true"] > .gk-tree-row {
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+  box-shadow: inset 3px 0 0 var(--gk-primary);
+}
+.gk-tree-node[aria-selected="true"] > .gk-tree-row .gk-tree-label {
+  font-weight: 600;
+  color: inherit;
+}
+
+/* The toggle: a chevron drawn with two borders, as the row link's is — no icon font to wait for.
+   It shows only on a node the script knows to be a parent (aria-expanded). */
+.gk-tree-toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--gk-on-surface-variant);
+}
+.gk-tree-node[aria-expanded] > .gk-tree-row > .gk-tree-toggle {
+  cursor: pointer;
+}
+.gk-tree-node[aria-expanded] > .gk-tree-row > .gk-tree-toggle:hover {
+  background: var(--gk-state-pressed);
+  color: var(--gk-on-surface);
+}
+.gk-tree-node[aria-expanded] > .gk-tree-row > .gk-tree-toggle::before {
+  content: "";
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  margin-inline-start: -3px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+  transform: rotate(45deg);
+}
+.gk-tree-node[aria-expanded="true"] > .gk-tree-row > .gk-tree-toggle::before {
+  margin: -4px 0 0;
+  transform: rotate(135deg);
+}
+.gk-tree-node[aria-expanded="false"]:dir(rtl) > .gk-tree-row > .gk-tree-toggle::before {
+  margin-inline-start: 0;
+  margin-inline-end: -3px;
+  transform: rotate(-135deg);
+}
+/* Children on their way (lazyUrl): the chevron turns into a ring. */
+.gk-tree-node[aria-busy="true"] > .gk-tree-row > .gk-tree-toggle::before {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  border: 2px solid var(--gk-outline-variant);
+  border-top-color: var(--gk-primary);
+  border-radius: 50%;
+  transform: none;
+  animation: gk-spin 0.7s linear infinite;
+}
+
+.gk-tree-check {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--gk-primary);
+  cursor: pointer;
+}
+.gk-tree-check:disabled {
+  cursor: not-allowed;
+}
+/* Single selection is a radio button only without the script; with it the row is the control. */
+.gk-tree-radio {
+  flex: none;
+  margin: 0;
+  accent-color: var(--gk-primary);
+}
+.gk-tree[data-gk-tree-ready] .gk-tree-radio {
+  display: none;
+}
+/* A missing icon font must not push the row: the box is the icon's size, a ligature word is cut. */
+.gk-tree-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  overflow: hidden;
+  font-size: 20px;
+  line-height: 20px;
+  color: var(--gk-on-surface-variant);
+}
+.gk-tree-node[aria-selected="true"] > .gk-tree-row .gk-tree-icon {
+  color: inherit;
+}
+/* The name takes what the row has left and is cut with an ellipsis; the script sets a title while it
+   is cut, and the focused node shows its name in full. */
+.gk-tree-label {
+  flex: 1 1 auto;
+  min-width: 2em;
+  padding-block: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+a.gk-tree-label:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.gk-tree-node:focus-visible > .gk-tree-row .gk-tree-label {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+/* Muted (an unpublished page): italic and the quieter text role — a shape and a colour; the word
+   ("inactive", or the node's own) is read with the name. */
+.gk-tree-muted > .gk-tree-row .gk-tree-label {
+  font-style: italic;
+  color: var(--gk-on-surface-variant);
+}
+.gk-tree-disabled > .gk-tree-row .gk-tree-label {
+  color: var(--gk-on-surface-variant);
+  cursor: default;
+}
+.gk-tree-badge {
+  flex: none;
+}
+.gk-tree-count {
+  flex: none;
+  box-sizing: border-box;
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.gk-tree-actions {
+  flex: none;
+}
+.gk-tree-hit {
+  padding: 0 1px;
+  border-radius: 3px;
+  background: #fef08a;
+  color: inherit;
+}
+
+/* The handle (movable trees): six dots drawn by a mask in the text colour, so the theme and the mode
+   reach it. Only the handle takes the finger — the rest of the row still scrolls the page. */
+.gk-tree-handle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gk-on-surface-variant);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.gk-tree-handle::before {
+  content: "";
+  width: 10px;
+  height: 16px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16'%3E%3Cg fill='%23000'%3E%3Ccircle cx='2' cy='2' r='1.6'/%3E%3Ccircle cx='8' cy='2' r='1.6'/%3E%3Ccircle cx='2' cy='8' r='1.6'/%3E%3Ccircle cx='8' cy='8' r='1.6'/%3E%3Ccircle cx='2' cy='14' r='1.6'/%3E%3Ccircle cx='8' cy='14' r='1.6'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16'%3E%3Cg fill='%23000'%3E%3Ccircle cx='2' cy='2' r='1.6'/%3E%3Ccircle cx='8' cy='2' r='1.6'/%3E%3Ccircle cx='2' cy='8' r='1.6'/%3E%3Ccircle cx='8' cy='8' r='1.6'/%3E%3Ccircle cx='2' cy='14' r='1.6'/%3E%3Ccircle cx='8' cy='14' r='1.6'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+}
+.gk-tree-handle:hover {
+  background: var(--gk-state-pressed);
+  color: var(--gk-on-surface);
+}
+.gk-tree-handle:active {
+  cursor: grabbing;
+}
+.gk-tree-handle:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+/* Lifted with the keyboard: the handle says so by its colours and a frame, the row by a dashed one,
+   the live region in words. */
+.gk-tree-handle[aria-pressed="true"] {
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+  box-shadow: inset 0 0 0 1px var(--gk-primary);
+}
+.gk-tree-lifted > .gk-tree-row {
+  background: var(--gk-state-primary);
+  outline: 2px dashed var(--gk-primary);
+  outline-offset: -2px;
+}
+/* Dragged with the pointer: the row it left stays, framed, and a label follows the pointer. */
+.gk-tree-dragging > .gk-tree-row {
+  outline: 2px dashed var(--gk-outline);
+  outline-offset: -2px;
+}
+.gk-tree-ghost {
+  position: fixed;
+  z-index: 1100;
+  box-sizing: border-box;
+  max-width: 260px;
+  padding: 4px 10px;
+  overflow: hidden;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface);
+  color: var(--gk-on-surface);
+  box-shadow: var(--gk-shadow-lg);
+  font-size: var(--gk-text-label);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+/* Over a place it cannot go (its own branch, a disabled node): struck through and framed in the
+   error role. */
+.gk-tree-ghost-no {
+  border-color: var(--gk-error);
+  text-decoration: line-through;
+}
+.gk-tree-drop-line {
+  position: absolute;
+  z-index: 2;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--gk-primary);
+  pointer-events: none;
+}
+.gk-tree-drop-line::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -5px;
+  width: 6px;
+  height: 6px;
+  border: 2px solid var(--gk-primary);
+  border-radius: 50%;
+  background: var(--gk-surface);
+}
+.gk-tree-row.gk-tree-drop-inside {
+  background: var(--gk-state-primary);
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+
+/* A branch that could not be loaded: a sign, the words and a button, in the row of its node. */
+.gk-tree-loaderror {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gk-on-error-container);
+  font-size: var(--gk-text-caption);
+}
+.gk-tree-loaderror::before,
+.gk-tree-error::before {
+  content: "!";
+  flex: none;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 12px;
+  text-align: center;
+}
+.gk-tree-retry {
+  min-height: 24px;
+  padding: 0 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gk-tree-retry:hover {
+  background: color-mix(in oklab, var(--gk-error) 10%, transparent);
+}
+.gk-tree-retry:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+/* A failed save where no toast is (gridkit.js not loaded): the line above the list. */
+.gk-tree-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in oklab, var(--gk-error) 25%, transparent);
+  border-radius: var(--gk-radius-sm);
+  background: color-mix(in oklab, var(--gk-error) 8%, transparent);
+  color: var(--gk-on-error-container);
+  font-size: var(--gk-text-label);
+}
+.gk-tree-error[hidden],
+.gk-tree-empty[hidden] {
+  display: none;
+}
+.gk-tree-empty {
+  margin: 4px 0;
+  padding: 8px 4px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+}
+
+/* With the script, a closed branch is closed from the first paint. Without it the toolbar and the
+   chevrons would do nothing: they are not drawn, and a long name wraps instead of being cut. */
+@media (scripting: enabled) {
+  .gk-tree-node:not(.gk-tree-open) > .gk-tree-group {
+    display: none;
+  }
+}
+@media (scripting: none) {
+  .gk-tree-toolbar,
+  .gk-tree-toggle {
+    display: none;
+  }
+  .gk-tree-label {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+/* A finger: rows and the handle at 44px. */
+@media (pointer: coarse) {
+  .gk-tree {
+    --gk-tree-row: var(--gk-target-min);
+  }
+  .gk-tree-handle {
+    width: var(--gk-target-min);
+    height: var(--gk-target-min);
+  }
+}
+/* A phone: a smaller step, and the indent stops after five levels. */
+@media (max-width: 600px) {
+  .gk-tree {
+    --gk-tree-indent: 12px;
+  }
+  .gk-tree-row:not([data-gk-tree-level="1"], [data-gk-tree-level="2"], [data-gk-tree-level="3"],
+    [data-gk-tree-level="4"], [data-gk-tree-level="5"]) {
+    --gk-tree-depth: 4;
+  }
+  .gk-tree-row:is([data-gk-tree-level="6"], [data-gk-tree-level="7"], [data-gk-tree-level="8"])::before {
+    content: attr(data-gk-tree-level);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gk-tree-toggle::before {
+    transition: transform var(--gk-dur-2) var(--gk-ease-out);
+  }
+}
+@media (forced-colors: active) {
+  .gk-tree-handle::before {
+    background-color: ButtonText;
+  }
+  .gk-tree-hit {
+    background: Mark;
+    color: MarkText;
+  }
+}
+@media print {
+  .gk-tree-toolbar,
+  .gk-tree-handle,
+  .gk-tree-actions {
+    display: none;
+  }
+}
+/* The marked part of a match on a dark ground: the search hit's own pair (1.80.1). */
+[data-gk-mode="dark"] .gk-tree-hit,
+.gk-dark .gk-tree-hit {
+  background: #854d0e;
+  color: #fef9c3;
+}

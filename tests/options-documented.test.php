@@ -32,7 +32,7 @@ return [
 
     $classes = ['Table', 'Form', 'Button', 'Header', 'Sidebar', 'Select', 'TableHeader', 'Pagination',
                 'ImagePicker', 'ActionGroup', 'Auth', 'StatCards', 'FilterChips', 'PageSize', 'YearFilter', 'Layout', 'Tabs',
-                'Tooltip'];
+                'Tooltip', 'Tree'];
     foreach ($classes as $class) {
         $src = (string) file_get_contents(__DIR__ . "/../src/$class.php");
         preg_match_all('/\$(?:' . $vars . ')\[[\'"]([A-Za-z_]+)[\'"]\]/', $src, $m);

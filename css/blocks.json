@@ -611,6 +611,41 @@
                 "gk-sort-zieht": "1.97.0"
             }
         },
+        "tree": {
+            "name": "Tree",
+            "classes": {
+                "gk-tree": "1.116.0",
+                "gk-tree-actions": "1.116.0",
+                "gk-tree-badge": "1.116.0",
+                "gk-tree-check": "1.116.0",
+                "gk-tree-count": "1.116.0",
+                "gk-tree-disabled": "1.116.0",
+                "gk-tree-dragging": "1.116.0",
+                "gk-tree-drop-inside": "1.116.0",
+                "gk-tree-drop-line": "1.116.0",
+                "gk-tree-empty": "1.116.0",
+                "gk-tree-error": "1.116.0",
+                "gk-tree-ghost": "1.116.0",
+                "gk-tree-ghost-no": "1.116.0",
+                "gk-tree-group": "1.116.0",
+                "gk-tree-handle": "1.116.0",
+                "gk-tree-hit": "1.116.0",
+                "gk-tree-icon": "1.116.0",
+                "gk-tree-label": "1.116.0",
+                "gk-tree-lifted": "1.116.0",
+                "gk-tree-list": "1.116.0",
+                "gk-tree-loaderror": "1.116.0",
+                "gk-tree-muted": "1.116.0",
+                "gk-tree-node": "1.116.0",
+                "gk-tree-open": "1.116.0",
+                "gk-tree-radio": "1.116.0",
+                "gk-tree-retry": "1.116.0",
+                "gk-tree-row": "1.116.0",
+                "gk-tree-search": "1.116.0",
+                "gk-tree-toggle": "1.116.0",
+                "gk-tree-toolbar": "1.116.0"
+            }
+        },
         "breadcrumb": {
             "name": "Breadcrumb",
             "classes": {

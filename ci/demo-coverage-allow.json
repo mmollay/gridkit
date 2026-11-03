@@ -338,6 +338,20 @@
       "gk-tooltip"
     ]
   },
+  "tree": {
+    "reason": "Drawn by js/tree.js only while someone filters (the marked match), lifts or drags a node (the frame, the label that follows the pointer, the drop line) or a branch fails to load (the line with its retry); a still page cannot show them. ci/browser-tree.js exercises every one.",
+    "classes": [
+      "gk-tree-dragging",
+      "gk-tree-drop-inside",
+      "gk-tree-drop-line",
+      "gk-tree-ghost",
+      "gk-tree-ghost-no",
+      "gk-tree-hit",
+      "gk-tree-lifted",
+      "gk-tree-loaderror",
+      "gk-tree-retry"
+    ]
+  },
   "upload": {
     "reason": "The upload queue is drawn while files are dropped or chosen.",
     "classes": [
