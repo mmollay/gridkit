@@ -59,7 +59,7 @@ function server(state) {
     if (p.startsWith("/panel/") || p.startsWith("/modal/")) {
       state.requests.push({ path: p, xrw: req.headers()["x-requested-with"] || "", method: req.method() });
       if (state.delay) await new Promise((r) => setTimeout(r, state.delay));
-      if (p === "/panel/ok") return html(PARTS.ok);
+      if (p === "/panel/ok" || p === "/panel/first" || p === "/panel/inner") return html(PARTS.ok);
       if (p === "/panel/error") return html(PARTS.error, 500);
       if (p === "/panel/net") return state.netOk ? html(PARTS.ok) : route.abort("failed");
       if (p === "/panel/time") return html(`<p class="probe-time">${++state.time}</p>`);
@@ -125,6 +125,7 @@ function rowState(id) {
       r = await row(page, "t-api");
       check("keys: ArrowLeft from Delta steps over disabled Gamma to Beta, and the address follows", r.active.join() === "b" && (await hash(page)) === "#t-api=b", { r, h: await hash(page) });
 
+      await page.evaluate(() => localStorage.clear());   // t-api remembers: without this the memory, not the deep link, would open Beta
       await page.goto(fx("#t-inner=i2"));
       r = await row(page, "t-inner");
       const outer = await row(page, "t-api");
@@ -191,7 +192,7 @@ function rowState(id) {
       check("memory: after a reload Three and Delta are open again", (await row(page, "t-mem")).active.join() === "three" && (await row(page, "t-api")).active.join() === "d", [await row(page, "t-mem"), await row(page, "t-api")]);
       await page.goto(fx("#t-api=b"));
       check("the address wins over the memory", (await row(page, "t-api")).active.join() === "b", await row(page, "t-api"));
-      check("the memory is never consulted for a tab that is opened at load (no event fired)", (await page.evaluate(() => probeLog.length)) === 0, await page.evaluate(() => probeLog));
+      check("the tab a page opens with — from the address or the memory — fires no gk:tabchange or gk:tabshown", (await page.evaluate(() => probeLog.filter((l) => l[0] !== "load").length)) === 0, await page.evaluate(() => probeLog));
 
       // the parameter: the server rendered ?ptab=two; the memory says three — the address wins
       await page.evaluate(() => localStorage.setItem("gk-tab-t-param", "three"));
@@ -200,8 +201,8 @@ function rowState(id) {
       await page.click('#t-param .gk-tab-btn[data-tab="one"]');
       check("parameter: a switch rewrites ?ptab= in place (no new parameter elsewhere)", (await page.evaluate(() => location.search)) === "?ptab=one", await page.evaluate(() => location.search));
       await page.goto(BASE + "/fixture.html?other=1");
-      await page.click('#t-mem .gk-tab-btn[data-tab="two"]');
-      check("parameter: an address without it gets none added", (await page.evaluate(() => location.search)) === "?other=1", await page.evaluate(() => location.search));
+      await page.click('#t-param .gk-tab-btn[data-tab="three"]');   // the row that has param()
+      check("parameter: an address without it gets none added on a switch of the row that reads it", (await page.evaluate(() => location.search)) === "?other=1", await page.evaluate(() => location.search));
 
       // the page's decision (active('b')) beats the address and the memory, and corrects the address
       await page.evaluate(() => localStorage.setItem("gk-tab-t-page", "a"));
@@ -229,22 +230,29 @@ function rowState(id) {
       const st = page.state;
       const panel = (key) => page.evaluate((k) => {
         const p = document.querySelector(`#t-lazy > .gk-tab-panel[data-tab="${k}"]`);
-        return { html: p.innerHTML, busy: p.getAttribute("aria-busy"), text: p.textContent.trim(), error: !!p.querySelector(".gk-empty[role=alert]"), retry: !!p.querySelector(".gk-empty button"), focus: document.activeElement === p || p.contains(document.activeElement) };
+        return { html: p.innerHTML, busy: p.getAttribute("aria-busy"), text: p.textContent.trim(), error: !!p.querySelector(".gk-empty[role=alert]"), retry: !!p.querySelector(".gk-empty button"), focus: document.activeElement === p || p.contains(document.activeElement), dim: p.firstElementChild ? +getComputedStyle(p.firstElementChild).opacity : 1 };
       }, key);
       const tab = (key) => page.click(`#t-lazy .gk-tab-btn[data-tab="${key}"]`);
       if (mode === "light") {
-        check("lazy: nothing is fetched before a lazy tab is opened", st.requests.length === 0, st.requests);
+        await settle(page, 150);
+        const paths = st.requests.map((r) => r.path);
+        check("lazy: at load only the tab a row opens with is fetched — no other lazy panel, none in a panel that is not shown", paths.join() === "/panel/first", paths);
+        const first = await page.evaluate(() => document.querySelector('#t-lazy-first > .gk-tab-panel[data-tab="first"]').innerHTML);
+        check("lazy: a row that opens on a lazy tab has it loaded", first.includes("probe-ok"), first);
         const fb = await page.evaluate(() => { const a = document.querySelector('#t-lazy > .gk-tab-panel[data-tab="ok"] .gk-tab-fallback a'); return a ? [a.getAttribute("href"), a.textContent] : null; });
         check("lazy: until then the panel holds the link of a page without the script", fb && fb[0] === "/panel/ok" && fb[1] === "Open “Loads”", fb);
+        await page.click('#t-lazy-first .gk-tab-btn[data-tab="second"]');
+        await settle(page, 150);
+        const inner = await page.evaluate(() => document.querySelector('#t-lazy-inner > .gk-tab-panel[data-tab="x"]').innerHTML);
+        check("lazy: opening the outer panel loads the lazy tab a row inside it opens with", st.requests.some((r) => r.path === "/panel/inner") && inner.includes("probe-ok"), { inner, paths: st.requests.map((r) => r.path) });
+        st.requests.length = 0;
       }
       st.delay = 250;
       await tab("ok");
       const during = await panel("ok");
       check(`lazy (${mode}): while it loads the panel is aria-busy and shows the skeleton with a word for a screen reader`, during.busy === "true" && during.html.includes("gk-tab-loading") && during.html.includes("gk-skeleton") && during.text === "Loading…", during);
-      if (mode !== "light") {
-        const sk = await page.evaluate(() => { const s = document.querySelector("#t-lazy .gk-tab-loading .gk-skeleton"); const p = s.closest(".gk-tab-panel"); return [getComputedStyle(s).backgroundImage !== "none", s.getBoundingClientRect().height > 8, getComputedStyle(p).backgroundColor]; });
-        check(`lazy (${mode}): the skeleton is drawn`, sk[0] && sk[1], sk);
-      }
+      const sk = await page.evaluate(() => { const s = document.querySelector("#t-lazy .gk-tab-loading .gk-skeleton"); const p = s.closest(".gk-tab-panel"); const r = s.getBoundingClientRect(); return [getComputedStyle(s).backgroundImage !== "none", r.height > 8, r.width > p.clientWidth * 0.5, Math.round(r.width), p.clientWidth]; });
+      check(`lazy (${mode}): the skeleton is drawn as lines across the panel`, sk[0] && sk[1] && sk[2], sk);
       await page.waitForTimeout(400);
       st.delay = 0;
       let p = await panel("ok");
@@ -276,7 +284,7 @@ function rowState(id) {
       check(`lazy (${mode}): the failure reads (title ${contrast.title.toFixed(2)}:1, retry ${contrast.retry.toFixed(2)}:1, fallback link ${contrast.fallback.toFixed(2)}:1, each ≥ 4.5:1)`, contrast.title >= 4.5 && contrast.retry >= 4.5 && contrast.fallback >= 4.5, contrast);
 
       if (mode !== "light") { await page.ctx.close(); continue; }
-      const log = await page.evaluate(() => probeLog.filter((l) => l[0] === "load"));
+      const log = await page.evaluate(() => probeLog.filter((l) => l[0] === "load" && l[1] === "t-lazy"));
       check("lazy: gk:tabload says ok and status (true 200, then false 500)", JSON.stringify(log) === JSON.stringify([["load", "t-lazy", "ok", true, 200], ["load", "t-lazy", "fail", false, 500]]), log);
 
       await tab("net");
@@ -296,7 +304,7 @@ function rowState(id) {
       st.delay = 250;
       await tab("again");
       const keep = await panel("again");
-      check("reload: the next view fetches again and keeps the old content, dimmed, while it does", keep.text === "1" && keep.busy === "true", keep);
+      check("reload: the next view fetches again and keeps the old content, dimmed, while it does", keep.text === "1" && keep.busy === "true" && keep.dim < 1, keep);
       await page.waitForTimeout(400);
       st.delay = 0;
       check("reload: … then shows the new answer (2)", (await panel("again")).text === "2", await panel("again"));
@@ -332,13 +340,13 @@ function rowState(id) {
       const page = await fresh({ label: "events" });
       await page.goto(fx());
       await page.click('#t-api .gk-tab-btn[data-tab="b"]');
-      let log = await page.evaluate(() => probeLog);
+      let log = await page.evaluate(() => probeLog.filter((l) => l[0] !== "load"));
       check("events: gk:tabchange (cancelable, detail tabsId/from/to/panel) then gk:tabshown, on the .gk-tabs",
         JSON.stringify(log) === JSON.stringify([["change", "t-api", "t-api", "a", "b", "user", true, true], ["shown", "t-api", "a", "b", "user"]]), log);
       await page.evaluate(() => { probeLog.length = 0; });
       await page.focus('#t-inner .gk-tab-btn[data-tab="i1"]');
       await page.keyboard.press("ArrowRight");
-      log = await page.evaluate(() => probeLog);
+      log = await page.evaluate(() => probeLog.filter((l) => l[0] !== "load"));
       check("events: a key fires them as a click does, on the inner row (they bubble)", log.length === 2 && log[0][1] === "t-inner" && log[0][4] === "i2" && log[1][0] === "shown", log);
       await page.evaluate(() => { probeLog.length = 0; });
       await page.click('#t-api .gk-tab-btn[data-tab="b"]');
@@ -358,8 +366,8 @@ function rowState(id) {
       check("refused for GK.tabs.select(): it returns false", sel === false && (await row(page, "t-cancel")).active.join() === "edit");
       await page.evaluate(() => { probeLog.length = 0; });
       const forced = await page.evaluate(() => GK.tabs.select("t-cancel", "more", { force: true }));
-      log = await page.evaluate(() => probeLog);
-      check("{ force: true }: the event is not cancelable and the switch happens", forced === true && (await row(page, "t-cancel")).active.join() === "more" && log[0][7] === false, { forced, log });
+      log = await page.evaluate(() => probeLog.filter((l) => l[0] !== "load"));
+      check("{ force: true }: the event is not cancelable and the switch happens", forced === true && (await row(page, "t-cancel")).active.join() === "more" && !!log[0] && log[0][7] === false, { forced, log });
       await page.evaluate(() => GK.tabs.select("t-cancel", "edit"));
       await page.fill("#probe-dirty", "");
       await page.click('#t-cancel .gk-tab-btn[data-tab="preview"]');
@@ -370,6 +378,17 @@ function rowState(id) {
       await page.click('#t-api .gk-tab-btn[data-tab="d"]');
       await page.click('#t-api .gk-tab-btn[data-tab="b"]');
       check("nested: an outer switch leaves the inner choice alone", (await row(page, "t-inner")).active.join() === "i2", await row(page, "t-inner"));
+
+      // a gk:tabchange listener that chooses another tab itself: its choice stands (click and API)
+      await page.evaluate(() => { window.probeRedirect = true; });
+      await page.click('#t-mem .gk-tab-btn[data-tab="three"]');
+      let m = await row(page, "t-mem");
+      check("a listener that chooses another tab itself: its choice stands after a click (Two, not Three)", m.active.join() === "two" && m.selected.join() === "two" && m.shown.join() === "two", m);
+      await page.evaluate(() => GK.tabs.select("t-mem", "one"));
+      const api = await page.evaluate(() => GK.tabs.select("t-mem", "three"));
+      m = await row(page, "t-mem");
+      check("… and after GK.tabs.select(), which then returns false", api === false && m.active.join() === "two" && m.shown.join() === "two", { api, m });
+      await page.evaluate(() => { window.probeRedirect = false; });
       await page.ctx.close();
     }
 
@@ -443,13 +462,24 @@ function rowState(id) {
           scroll: nav.scrollLeft, max: nav.scrollWidth - nav.clientWidth,
           firstLeft: btns[0].getBoundingClientRect().left - n.left - parseFloat(getComputedStyle(nav).paddingLeft) + nav.scrollLeft,
           curIn: c ? c.left >= n.left - 0.5 && c.right <= n.right + 0.5 : null,
+          // the chosen tab is not under an arrow that shows
+          curClear: c ? arrows.filter(vis).every((a) => { const r = a.getBoundingClientRect(); return r.right <= c.left + 0.5 || r.left >= c.right - 0.5; }) : null,
+          // a visible arrow stands inside the row's box, at its edge (it sticks; it does not scroll away)
+          arrowsAtEdges: arrows.every((a, i) => {
+            if (!vis(a)) return true;
+            const r = a.getBoundingClientRect();
+            return r.left >= n.left - 0.5 && r.right <= n.right + 0.5 && (i === 0 ? r.left - n.left < 8 : n.right - r.right < 8);
+          }),
+          width: nav.scrollWidth,
+          // the row ends where its last tab ends (plus its own padding): no arrow adds to what scrolls
+          endGap: Math.round(nav.scrollWidth - (btns[btns.length - 1].getBoundingClientRect().right - n.left + nav.scrollLeft + parseFloat(getComputedStyle(nav).paddingRight))),
           page: document.documentElement.scrollWidth - innerWidth,
         };
       }, id);
       for (const style of ["linie", "kapsel", "text"]) {
         const o = await ov("t-over-" + style);
-        check(`overflow ${tag}, ${style}: the row is marked, the arrow at the end shows, the one at the start does not; the arrows are aria-hidden, no tab stop`, o.over && !o.start && o.end && o.arrows === 2 && o.hidden, o);
-        check(`overflow ${tag}, ${style}: the tabs stand where they stood (the arrows take no width), the page does not scroll sideways`, Math.abs(o.firstLeft) <= 1 && o.page <= 1, o);
+        check(`overflow ${tag}, ${style}: the row is marked, the arrow at the end shows at the row's edge, the one at the start does not; the arrows are aria-hidden, no tab stop`, o.over && !o.start && o.end && o.arrowsAtEdges && o.arrows === 2 && o.hidden, o);
+        check(`overflow ${tag}, ${style}: the tabs stand where they stood and the row ends at its last tab (the arrows take no width), the page does not scroll sideways`, Math.abs(o.firstLeft) <= 1 && Math.abs(o.endGap) <= 1 && o.page <= 1, o);
       }
       const card = await ov("t-over-karte");
       check(`overflow ${tag}: the card row keeps its grid (${width > 600 ? "gk-tab-nav-raster" : "the phone grid"}) and gets no arrows`, card.grid && (width <= 600 || card.raster) && !card.over && card.arrows === 0, card);
@@ -459,10 +489,12 @@ function rowState(id) {
       check(`overflow ${tag}: a row of links is covered too, and its current page (the 9th) is scrolled into view`, links.over && links.curIn && links.start, links);
 
       // the arrows page the row; the keys reach the last tab and bring it into view
+      const before = await ov("t-over-linie");
       await page.click("#t-over-linie .gk-tab-arrow-end");
       await settle(page, glide);
       let o = await ov("t-over-linie");
-      check(`overflow ${tag}: the end arrow pages the row on (${motion === "reduce" ? "at once" : "smoothly"}), then the start arrow shows`, o.scroll > 100 && o.start, o);
+      check(`overflow ${tag}: the end arrow pages the row on (${motion === "reduce" ? "at once" : "smoothly"}), then the start arrow shows at the row's edge`, o.scroll > 100 && o.start && o.arrowsAtEdges, o);
+      check(`overflow ${tag}: with both arrows showing the row is exactly as wide as before (the arrows take no room)`, o.width === before.width, { before: before.width, after: o.width });
       await page.click("#t-over-linie .gk-tab-arrow-start");
       await settle(page, glide);
       o = await ov("t-over-linie");
@@ -482,7 +514,7 @@ function rowState(id) {
       check(`overflow ${tag}: Home goes back, the first tab is in view, the start arrow hides`, o.curIn && !o.start, o);
       await page.evaluate(() => GK.tabs.select("t-over-kapsel", "k7"));
       o = await ov("t-over-kapsel");
-      check(`overflow ${tag}: GK.tabs.select() brings the chosen tab into view`, o.curIn, o);
+      check(`overflow ${tag}: GK.tabs.select() brings the chosen tab into view, clear of the arrows`, o.curIn && o.curClear, o);
       if (mode !== "light") {
         const k = await page.evaluate(() => {
           const c = document.createElement("canvas"); c.width = c.height = 1; const x = c.getContext("2d", { willReadFrequently: true });
@@ -553,14 +585,21 @@ function rowState(id) {
     await browser.close();
   }
 
+  process.exit(report() ? 1 : 0);
+})().catch((e) => {
+  // What held and what failed before the abort is still worth reading.
+  report();
+  console.error("Aborted:", e && e.stack ? e.stack.split("\n").slice(0, 3).join(" | ") : e);
+  process.exit(2);
+});
+
+/** Prints every case; returns the number that failed. */
+function report() {
   let failed = 0;
   for (const r of results) {
     if (!r.ok) failed++;
     console.log(`${r.ok ? "ok  " : "FAIL"}  ${r.name}${r.ok ? "" : "  " + r.detail}`);
   }
   console.log(`\n${results.length - failed} of ${results.length} held`);
-  process.exit(failed ? 1 : 0);
-})().catch((e) => {
-  console.error("Aborted:", e && e.stack ? e.stack.split("\n").slice(0, 3).join(" | ") : e);
-  process.exit(2);
-});
+  return failed;
+}

@@ -11385,7 +11385,7 @@ label.gk-setting-title {
   cursor: pointer;
 }
 .gk-tab-nav-overflow > .gk-tab-arrow:hover { background: var(--gk-surface-container-high); }
-.gk-tab-nav-overflow > .gk-tab-arrow[hidden] { display: none; }
+/* An arrow without more on its side carries `hidden`: the rule for every gk- class at the top of this sheet hides it. */
 .gk-tab-nav-overflow > .gk-tab-arrow-start {
   order: -1;
   inset-inline-start: 0;
@@ -11415,16 +11415,13 @@ label.gk-setting-title {
    A failure is the empty state of a table that could not load (.gk-empty with its retry button), with less
    room around it. .gk-tab-fallback: the link Tabs writes into the panel, for a page whose script is older
    than 1.111.0 — the script replaces it on the first view. */
+/* A grid: each .gk-skeleton (an inline-block of 2em) becomes a line across the panel. */
 .gk-tab-loading {
   display: grid;
   gap: 12px;
   padding: 8px 0 16px;
 }
-.gk-tab-loading > .gk-skeleton {
-  display: block;
-  width: 100%;
-  height: 0.9em;
-}
+.gk-tab-loading > .gk-skeleton { height: 0.9em; }
 .gk-tab-loading > .gk-skeleton:nth-child(3) { width: 82%; }
 .gk-tab-loading > .gk-skeleton:nth-child(4) { width: 58%; }
 .gk-tab-panel[aria-busy="true"] > :not(.gk-tab-loading) {

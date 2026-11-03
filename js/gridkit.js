@@ -7834,14 +7834,13 @@ function _gkShowIfInit(root) {
         return arrow;
       });
     },
-    /** An arrow only on a side that has more. */
+    /** An arrow only on a side that has more — measured, so a row that fits again hides both. */
     edges: function (nav) {
       var a = nav._gkTabArrows;
       if (!a) return;
-      var over = nav.classList.contains(this.cls);
       var pos = Math.abs(nav.scrollLeft), max = nav.scrollWidth - nav.clientWidth;
-      a[0].hidden = !over || pos <= 1;
-      a[1].hidden = !over || pos >= max - 1;
+      a[0].hidden = pos <= 1;
+      a[1].hidden = pos >= max - 1;
     },
     /** The chosen tab whole in view and clear of the arrows (the row's scroll-padding says how far). */
     reveal: function (nav, btn) {

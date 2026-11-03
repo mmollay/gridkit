@@ -323,7 +323,8 @@ return [
         else T::contains($html, $fallback, "$name: the fallback");
     }
     [$mixed] = tabsRun(static fn() => (new Tabs('w'))->tab('a', 'Panel', ['content' => 'x'])->tab('b', 'Link', ['href' => '/b'])->render());
-    T::notContains($mixed, 'href=', 'mixed: the tabs with an href were left out — a link inside a tablist would be taken for a tab');
+    T::notContains($mixed, '>Link<', 'mixed: the tabs with an href were left out — a link inside a tablist would be taken for a tab');
+    T::eq(substr_count($mixed, 'class="gk-tab-btn'), 1, 'mixed: only the panel tab is left');
 },
 
 'Tabs warns through trigger_error only, and every public method is documented in the skill section' => function (): void {

@@ -90,6 +90,16 @@ $out[] = '<h3>Lazy panels</h3>' . $h((new Tabs('t-lazy'))->style('karte')->label
     ->tab('page', 'A whole page', ['url' => '/panel/page'])
     ->tab('cross', 'Elsewhere', ['url' => 'http://elsewhere.test/panel/ok']));
 
+// 5b. A row that opens on a lazy tab (fetched at load), with a lazy row inside a panel that is not shown
+//     (fetched only when that panel is opened).
+$hiddenInner = (new Tabs('t-lazy-inner'))->style('linie')->label('Lazy inside a hidden panel')
+    ->tab('x', 'Inner lazy', ['url' => '/panel/inner'])
+    ->tab('y', 'Inner plain', ['content' => '<p>inner plain</p>'])
+    ->html();
+$out[] = '<h3>Opens on a lazy tab</h3>' . $h((new Tabs('t-lazy-first'))->style('linie')->label('Opens on a lazy tab')
+    ->tab('first', 'First (lazy)', ['url' => '/panel/first'])
+    ->tab('second', 'Second', ['content' => '<p>second</p>' . $hiddenInner]));
+
 // 6. A switch that is refused: unsaved changes.
 $out[] = '<h3>Unsaved changes</h3>' . $h((new Tabs('t-cancel'))->style('linie')->label('Unsaved changes')->hash()
     ->tab('edit', 'Edit', ['content' => '<label>Name <input id="probe-dirty" class="gk-input"></label>'])
@@ -162,6 +172,10 @@ echo '<!doctype html><html lang="en"><head><meta charset="utf-8">'
 document.addEventListener("gk:tabchange", function (e) { probeLog.push(["change", e.target.id, e.detail.tabsId, e.detail.from, e.detail.to, e.detail.source, !!e.detail.panel, e.cancelable]); });
 document.addEventListener("gk:tabshown", function (e) { probeLog.push(["shown", e.target.id, e.detail.from, e.detail.to, e.detail.source]); });
 document.addEventListener("gk:tabload", function (e) { probeLog.push(["load", e.target.id, e.detail.key, e.detail.ok, e.detail.status]); });
+// A listener that chooses another tab itself (window.probeRedirect: Three goes to Two instead).
+document.getElementById("t-mem").addEventListener("gk:tabchange", function (e) {
+  if (window.probeRedirect && e.detail.to === "three") GK.tabs.select("t-mem", "two");
+});
 document.getElementById("t-cancel").addEventListener("gk:tabchange", function (e) {
   if (e.target !== this) return;
   if (document.getElementById("probe-dirty").value !== "" && e.detail.from === "edit") e.preventDefault();
