@@ -16,6 +16,7 @@ use GridKit\Lang;
 <!-- ===== CHANGELOG ===== -->
 <div class="demo-section" data-section="changelog">
     <h2>Changelog</h2>
+    <?= componentNews() ?>
     <?php
     $changelog = file_get_contents(__DIR__ . '/../../CHANGELOG.md');
     $versions = preg_split('/^## /m', $changelog);

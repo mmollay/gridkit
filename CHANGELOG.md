@@ -7,6 +7,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.110.4] - 2026-11-03
+
+The demo now says where something is new: beside each section in the sidebar ("New" or "Update", with which components and since when), and in a list by component at the head of the changelog. This release also carries the code of 1.110.3 to Composer under a version Packagist can publish — use 1.110.4, not 1.110.3.
+
+### Changed
+- **The sidebar of the demo marks the sections with news.** A section that shows a block new or changed in the last two minors (the window of the marks on its headings) carries "New" (green) or "Update" (blue) after its name; the popup and a screen reader name the components and the minor ("Changed in 1.110: Table"). Collapsed, the sidebar shows a dot on the symbol. Computed from `css/blocks.json` and `CHANGELOG.md` like the marks (`gkSectionNews()`, `gkNavNews()` in `demo/_whatsnew.php`); `src/Sidebar.php` is not touched (the dashboard keeps its own copy).
+- **"New & changed by component"** opens the changelog section: every block new or changed in the last six minors, newest first, with "New" or "Update", the exact version and a link to the section of the demo that shows it (`gkComponentNews()`, `componentNews()`). German on `?lang=de`.
+- `css/blocks.json`: "Themes and dark mode" is marked as changed in 1.110.3, where `Theme::density()` came to reach the padding of a table.
+
+### Notes
+- **Packagist and 1.110.3.** The tag `v1.110.3` was first pushed on the commit of 1.105.0 (`d2bb6a6`) and moved to the release (`86d339a`) minutes later. Packagist had already published the first one, and a published version never changes there: **`mmollay/gridkit` 1.110.3 from Composer is the code of 1.105.0.** 1.110.4 is the code of 1.110.3 and the demo change above. A project that installed 1.110.3 by Composer should `composer require mmollay/gridkit:^1.110.4`. The git tag `v1.110.3` may be set back to `d2bb6a6`, as Packagist asks, so that git and Packagist say the same.
+
+### Tests
+- `tests/demo-news.test.php` (95 assertions): every section the sidebar marks carries the same mark on a heading, each exactly once, and no section without news is marked; the mark's word, kind, popup and the text for a screen reader, English and German; the list holds exactly the blocks new or changed in its span, newest first, each with its version and its link; the demo uses both.
+- Whole suite: 9,785 assertions.
+
+---
 ## [1.110.3] - 2026-11-03
 
 `Theme::density()` now sets the padding of every table, not only the corners of its labels, and the demo page no longer scrolls sideways at any width. A table in the box of `stickyColumn()` keeps everything it holds inside that box.
