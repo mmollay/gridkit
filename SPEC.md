@@ -224,7 +224,12 @@ Diese Features können in v1.1+ dazu, aber v1.0 muss FUNKTIONIEREN, schlank und 
 
 ## Tooltip
 
-CSS-only tooltips and rich HTML tooltips.
+CSS-only tooltips and rich HTML tooltips. Since 1.112.0 one script engine draws all of them
+(and `title` attributes, and toggletips): it flips and shifts the bubble to stay in view, opens on
+keyboard focus and on a tap, and joins the text to the trigger with `aria-describedby`. Without the
+script the CSS-only form below works as it always did. Options (`tone`, `kbd`, `max`, `delay`,
+`pos="auto"`), toggletips, the `.gk-help` icon and the PHP API (`GridKit\Tooltip`) are documented in
+`GRIDKIT_SKILL.md`, section *Tooltips*.
 
 ### CSS-only Tooltip
 

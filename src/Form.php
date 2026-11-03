@@ -37,6 +37,25 @@ class Form
     /** @var array<string,true> the names of the fields of this form, for showIf */
     private array $names = [];
 
+    /**
+     * The hidden field that carries the chosen tab of a form with tabs (1.113.0). It is posted with
+     * the form, so `->values($_POST)` hands it back and the form opens on the same tab again.
+     */
+    public const TAB_FIELD = '_gk_tab';
+    /** Tab styles a form takes, by the class they put on the row (see `### Tabs` in the skill). */
+    private const TAB_STYLES = ['karte', 'linie', 'kapsel', 'text'];
+    /** @var array<string,true> the keys of the tabs added so far, to catch a duplicate */
+    private array $tabKeys = [];
+    /** 'none' before the first tab(), 'open' while fields go into a tab, 'closed' after endTabs() */
+    private string $tabPhase = 'none';
+    private string $tabStyle = 'karte';
+    private bool $tabSecondary = false;
+    private bool $tabRemember = false;
+    private ?string $startTab = null;
+    /** While render() runs: whether a panel is open and the plan of the tabs (null without tabs). */
+    private bool $panelOpen = false;
+    private ?array $tabPlan = null;
+
     public function __construct(string $id)
     {
         $this->id = $id;
@@ -120,6 +139,8 @@ class Form
         $this->names = [];
         foreach ($fields as $f) if (isset($f['name']) && is_string($f['name'])) $this->names[$f['name']] = true;
         if ($unmatched) echo $this->renderFormErrors($unmatched, $e);
+        $this->tabPlan = $this->planTabs($fields);
+        $this->panelOpen = false;
 
         foreach ($fields as $f) {
             match ($f['type']) {
@@ -129,9 +150,12 @@ class Form
                     $e($f['name']), $e($f['value'] ?? '')),
                 '_row_start' => $this->renderRowStart($f),
                 '_row_end' => print('</div>'),
+                '_tab' => $this->renderTabPanel($f, $e),
+                '_tabs_end' => $this->renderTabsEnd(),
                 default => $this->renderField($f),
             };
         }
+        $this->renderTabsEnd();
 
         if ($this->submitLabel || $this->cancelLabel) {
             echo '<div class="gk-form-actions">';
@@ -328,7 +352,16 @@ class Form
                   || ($type === 'select' && empty($f['native']));
         $labelId   = $e($name) . '-label';
 
+        // 'help' (1.112.0): a help icon that opens its text on a click (Tooltip::help()). It
+        // stands BESIDE the label, never inside it — inside, its name would become part of the
+        // field's name ("Email More about Email"). Without a visible label it follows the
+        // control. A field without 'help' renders exactly as before.
+        $help = isset($f['help']) && $f['help'] !== '' && $f['help'] !== []
+            ? Tooltip::help($f['help'], ['label' => (string) $label])
+            : '';
+
         if ($showLabel) {
+            if ($help !== '') echo '<div class="gk-label-row">';
             echo '<label class="gk-label-text" id="' . $labelId . '"'
                . ($composite ? '' : ' for="' . $e($name) . '"') . '>' . $e($label);
             // aria-hidden: the input already carries `required`, which is what
@@ -336,6 +369,7 @@ class Form
             // star", and the asterisk is decoration doing the same job twice.
             if ($isRequired) echo ' <span class="gk-required" aria-hidden="true">*</span>';
             echo '</label>';
+            if ($help !== '') echo $help . '</div>';
         }
 
         // What names a composite widget: its visible label when there is one.
@@ -369,6 +403,7 @@ class Form
             case 'richtext':    $this->renderRichtext($f, $e, $x); break;
             default:            $this->renderInput($f, $e, $x); // text, number, email, tel, url, password, date, time, datetime
         }
+        if (!$showLabel && $help !== '') echo $help;
 
         // role=alert so an error the client writes after submit is announced;
         // without it the message appears silently for anyone not looking.
@@ -1009,5 +1044,258 @@ class Form
             $i++;
         }
         echo '</div>';
+    }
+
+    /* ── Tabs in a form (1.113.0) ────────────────────────────────────────────────────────────
+     *
+     * A long form (customer, invoice, rights) was split into tabs by hand, and then a required
+     * field in a hidden tab blocked the submit with a browser message nobody could see, and a
+     * message from errors() marked a field nobody could find. Here the form knows its tabs: the
+     * fields after tab() go into its panel, the server's errors pick the tab that opens and put a
+     * badge on every tab they are in, and js/gridkit.js (1.113.0 block) opens the tab of the first
+     * field the browser rejects.
+     *
+     * The markup is the authored shape of `### Tabs` — `.gk-tabs > .gk-tab-nav > .gk-tab-btn[data-tab]`
+     * and `.gk-tab-panel[data-tab]` — so the existing tab script switches it, and a later Tabs
+     * component can render the same bytes. Two things differ from a tab row outside a form, and both
+     * are required: each button is `type="button"` (a <button> in a <form> submits it), and a hidden
+     * input before the row carries the chosen tab and what the script needs to know about the form.
+     * Every panel stays in the DOM and is posted; a hidden panel is display:none, never disabled.
+     */
+
+    /**
+     * Start a tab: every field added after this, up to the next tab() or endTabs(), goes into its
+     * panel. Fields before the first tab() stand above the tabs. Options: `icon`, `badge`, `count`,
+     * `disabled`. One set of tabs per form.
+     *
+     * @param array<string,mixed> $opts
+     */
+    public function tab(string $key, string $label, array $opts = []): static
+    {
+        if ($this->tabPhase === 'closed') {
+            trigger_error("GridKit: form '{$this->id}' has one set of tabs; tab('$key') after endTabs() is ignored and its fields stand below the tabs.", E_USER_WARNING);
+            return $this;
+        }
+        if ($this->inRow) {
+            trigger_error("GridKit: form '{$this->id}': tab('$key') inside a row() — the row is closed first.", E_USER_WARNING);
+            $this->endRow();
+        }
+        if (trim($key) === '') {
+            $key = 'tab-' . (count($this->tabKeys) + 1);
+            trigger_error("GridKit: form '{$this->id}': a tab without a key is given the key '$key'.", E_USER_WARNING);
+        }
+        if (isset($this->tabKeys[$key])) {
+            // Two panels under one key would be one tab: the second could never be opened.
+            $n = 2;
+            while (isset($this->tabKeys["$key-$n"])) $n++;
+            trigger_error("GridKit: form '{$this->id}' has two tabs with the key '$key'; the second is renamed '$key-$n'.", E_USER_WARNING);
+            $key = "$key-$n";
+        }
+        $this->tabKeys[$key] = true;
+        $this->tabPhase = 'open';
+        $this->fields[] = ['type' => '_tab', 'key' => $key, 'label' => $label] + $this->tabOptions($key, $opts);
+        return $this;
+    }
+
+    /** End the tabs: the fields added after this stand below them. Without it the tabs run to the end. */
+    public function endTabs(): static
+    {
+        if ($this->tabPhase !== 'open') {
+            trigger_error("GridKit: form '{$this->id}': endTabs() without an open tab() is ignored.", E_USER_WARNING);
+            return $this;
+        }
+        if ($this->inRow) {
+            trigger_error("GridKit: form '{$this->id}': endTabs() inside a row() — the row is closed first.", E_USER_WARNING);
+            $this->endRow();
+        }
+        $this->fields[] = ['type' => '_tabs_end'];
+        $this->tabPhase = 'closed';
+        return $this;
+    }
+
+    /** The style of the tab row: 'karte' (the default, page tabs on their surface), 'linie', 'kapsel' or 'text'. */
+    public function tabsStyle(string $style): static
+    {
+        if (!in_array($style, self::TAB_STYLES, true)) {
+            trigger_error("GridKit: form '{$this->id}': unknown tabsStyle('$style'); one of " . implode(', ', self::TAB_STYLES) . ". 'karte' is used.", E_USER_WARNING);
+            $style = 'karte';
+        }
+        $this->tabStyle = $style;
+        return $this;
+    }
+
+    /**
+     * The second-row shape (`gk-tab-nav-karte gk-tab-nav-secondary`, panels without a surface of their
+     * own): for a form in a modal, a side sheet or a panel of the page's own tabs, where the window or
+     * the outer panel already is the surface. The form cannot see where it is rendered, so the page says.
+     */
+    public function tabsSecondary(bool $on = true): static
+    {
+        $this->tabSecondary = $on;
+        return $this;
+    }
+
+    /** Remember the last tab per form id in the browser (localStorage) and open it next time, unless the page chose one. */
+    public function tabsRemember(bool $on = true): static
+    {
+        $this->tabRemember = $on;
+        return $this;
+    }
+
+    /**
+     * The tab the form starts on, instead of the first: `->activeTab($_GET['tab'] ?? '')`. A tab with an
+     * error wins over it, and so does the tab posted back in TAB_FIELD; an empty key is no choice.
+     */
+    public function activeTab(string $key): static
+    {
+        $this->startTab = $key === '' ? null : $key;
+        return $this;
+    }
+
+    /**
+     * The options of one tab, checked: what is unusable is reported and left out, never guessed at.
+     *
+     * @param array<string,mixed> $o
+     * @return array{icon: string, badge: string, count: ?string, disabled: bool}
+     */
+    private function tabOptions(string $key, array $o): array
+    {
+        $out = ['icon' => '', 'badge' => '', 'count' => null, 'disabled' => !empty($o['disabled'])];
+        $unknown = array_diff(array_keys($o), ['icon', 'badge', 'count', 'disabled']);
+        if ($unknown) {
+            trigger_error("GridKit: tab '$key' has unknown options " . implode(', ', $unknown) . '; they are ignored.', E_USER_WARNING);
+        }
+        foreach (['icon', 'badge'] as $k) {
+            if (!isset($o[$k])) continue;
+            if (is_string($o[$k]) || is_int($o[$k])) $out[$k] = trim((string) $o[$k]);
+            else trigger_error("GridKit: tab '$key' has a '$k' that is not text; it is ignored.", E_USER_WARNING);
+        }
+        if (isset($o['count'])) {
+            // A count is a number of things behind the tab (the skill), not a status word.
+            if ((is_int($o['count']) && $o['count'] >= 0) || (is_string($o['count']) && ctype_digit($o['count']))) $out['count'] = (string) $o['count'];
+            else trigger_error("GridKit: tab '$key' has a 'count' that is not a whole number; it is ignored.", E_USER_WARNING);
+        }
+        return $out;
+    }
+
+    /**
+     * Which tab opens, and what each tab carries — worked out before the first byte of the row,
+     * because the row stands above the panels whose fields decide it.
+     *
+     * The first tab with an error opens (a message in a closed tab is the problem this solves), even a
+     * disabled one; else the tab posted back in TAB_FIELD (the user's place after a failed save);
+     * else activeTab(); else the first tab that is not disabled. Only the first is the form's own
+     * guess — the others are marked as chosen, so a remembered tab (tabsRemember) does not override them.
+     *
+     * @param list<array<string,mixed>> $fields
+     * @return array{tabs: array<string, array<string,mixed>>, active: string, chosen: bool}|null
+     */
+    private function planTabs(array $fields): ?array
+    {
+        $tabs = [];
+        $current = null;
+        foreach ($fields as $f) {
+            if ($f['type'] === '_tab') {
+                $current = (string) $f['key'];
+                $tabs[$current] = $f + ['errors' => 0];
+                continue;
+            }
+            if ($f['type'] === '_tabs_end') { $current = null; continue; }
+            // A field that renders an error slot and has a message in it. A hidden input shows none.
+            if ($current !== null && isset($f['name']) && !in_array($f['type'], ['hidden', '_row_start', '_row_end'], true)
+                && trim((string) ($f['error'] ?? '')) !== '') {
+                $tabs[$current]['errors']++;
+            }
+        }
+        if ($tabs === []) {
+            if ($this->startTab !== null) {
+                trigger_error("GridKit: form '{$this->id}': activeTab('{$this->startTab}') but the form has no tab().", E_USER_WARNING);
+            }
+            return null;
+        }
+        $open = static fn(string $k): bool => isset($tabs[$k]) && empty($tabs[$k]['disabled']);
+        $active = null;
+        foreach ($tabs as $k => $t) {
+            if ($t['errors'] > 0) { $active = (string) $k; break; }
+        }
+        $posted = $this->values[self::TAB_FIELD] ?? null;
+        // What was posted is the browser's word, not the page's: anything that names no open tab is
+        // ignored without a warning, or every hand-edited request would write one into the log.
+        if ($active === null && is_string($posted) && $open($posted)) $active = $posted;
+        if ($active === null && $this->startTab !== null) {
+            if ($open($this->startTab)) $active = $this->startTab;
+            else trigger_error("GridKit: form '{$this->id}': activeTab('{$this->startTab}') names no tab that can be opened; the first is.", E_USER_WARNING);
+        }
+        $chosen = $active !== null;
+        if ($active === null) {
+            foreach ($tabs as $k => $t) {
+                if ($open((string) $k)) { $active = (string) $k; break; }
+            }
+            $active ??= (string) array_key_first($tabs);
+        }
+        return ['tabs' => $tabs, 'active' => $active, 'chosen' => $chosen];
+    }
+
+    /** The classes of the row: a style, and for the card style the second-row shape when asked for. */
+    private function tabNavClass(): string
+    {
+        if ($this->tabSecondary && $this->tabStyle !== 'karte') {
+            trigger_error("GridKit: form '{$this->id}': tabsSecondary() is the second row of the 'karte' style; with '{$this->tabStyle}' it is ignored.", E_USER_WARNING);
+        }
+        return 'gk-tab-nav gk-tab-nav-' . $this->tabStyle
+             . ($this->tabSecondary && $this->tabStyle === 'karte' ? ' gk-tab-nav-secondary' : '');
+    }
+
+    /** "1 error", "3 errors" — the word stays, colour alone never says it. */
+    private static function tabErrorText(int $n): string
+    {
+        return Lang::t($n === 1 ? 'form.tab_errors_one' : 'form.tab_errors', ['n' => $n]);
+    }
+
+    /**
+     * The hidden input and the row, before the first panel. The input carries the chosen tab (posted
+     * as TAB_FIELD) and, for the script, the wording of the error badge in the page's language and
+     * whether to remember the tab — the row itself stays the plain authored shape.
+     */
+    private function renderTabsStart(\Closure $e): void
+    {
+        $plan = $this->tabPlan;
+        echo '<input type="hidden" name="' . self::TAB_FIELD . '" value="' . $e($plan['active']) . '" data-gk-form-tab'
+           . ' data-gk-tab-error="' . $e(Lang::t('form.tab_errors_one', ['n' => '{n}'])) . '"'
+           . ' data-gk-tab-errors="' . $e(Lang::t('form.tab_errors', ['n' => '{n}'])) . '"'
+           . ($this->tabRemember ? ' data-gk-tab-remember' : '')
+           . ($plan['chosen'] ? ' data-gk-tab-chosen' : '') . '>';
+        echo '<div class="gk-tabs"><div class="' . $this->tabNavClass() . '">';
+        foreach ($plan['tabs'] as $key => $t) {
+            echo '<button type="button" class="gk-tab-btn' . ((string) $key === $plan['active'] ? ' gk-active' : '') . '"'
+               . ' data-tab="' . $e($key) . '"' . ($t['disabled'] ? ' disabled' : '') . '>'
+               . ($t['icon'] !== '' ? '<span class="material-icons gk-tab-icon" aria-hidden="true">' . $e($t['icon']) . '</span>' : '')
+               . '<span>' . $e($t['label']) . '</span>'
+               . ($t['badge'] !== '' ? '<span class="gk-tab-badge">' . $e($t['badge']) . '</span>' : '')
+               . ($t['count'] !== null ? '<span class="gk-tab-count">' . $e($t['count']) . '</span>' : '')
+               . ($t['errors'] > 0 ? '<span class="gk-tab-badge gk-tab-badge-error">' . $e(self::tabErrorText($t['errors'])) . '</span>' : '')
+               . '</button>';
+        }
+        echo '</div>';
+    }
+
+    /** A tab's panel: the row first when it is the first, else the end of the panel before. */
+    private function renderTabPanel(array $f, \Closure $e): void
+    {
+        if ($this->tabPlan === null) return;
+        if ($this->panelOpen) echo '</div>';
+        else $this->renderTabsStart($e);
+        $key = (string) $f['key'];
+        $surface = $this->tabStyle === 'karte' && !$this->tabSecondary ? ' gk-tab-flaeche' : '';
+        echo '<div class="gk-tab-panel' . $surface . ($key === $this->tabPlan['active'] ? ' gk-active' : '') . '" data-tab="' . $e($key) . '">';
+        $this->panelOpen = true;
+    }
+
+    /** The end of the last panel and of the tabs; nothing when none is open. */
+    private function renderTabsEnd(): void
+    {
+        if (!$this->panelOpen) return;
+        echo '</div></div>';
+        $this->panelOpen = false;
     }
 }

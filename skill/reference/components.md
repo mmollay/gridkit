@@ -1,4 +1,4 @@
-# GridKit 1.111.0 — components
+# GridKit 1.113.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -99,6 +99,14 @@ Both keep the raw value, so sorting and searching go on working — which is wha
 tab, and middle click does the rest.
 
 **`->groupBy($column, $labels)`:** inserts a group row whenever the value changes. Sort the rows by that column first.
+
+**`'tooltip'` on a column and on a row button (since 1.112.0):** on a column,
+`->column('net', 'Net', ['tooltip' => 'Before VAT'])` puts a help icon (`.gk-help`) beside
+the header label — a button of its own next to the sort button, opening its text on a click.
+On a row button, `->button('edit', ['icon' => 'edit', 'tooltip' => 'Edit this customer'])`
+writes GridKit's tooltip instead of the browser `title`; `'title'` or `'aria'` still name the
+button. Both take a string or `['text' => …, 'pos' => …, 'tone' => …]` and survive a sort of a
+`setData()` table. See *Tooltips*.
 
 **`->rowLink($target)` (since 1.91.0):** the whole row opens something — a page, or
 a side sheet on this page. Use it instead of putting selects, switches or a delete
@@ -633,7 +641,11 @@ echo Button::render('Label', [
     'shape'   => 'pill',      // rounded (default) | pill | circle | square
     'href'    => '/path',     // renders as <a>
     'onclick' => 'jsCode()',
-    'title'   => 'Add a row', // tooltip
+    'title'   => 'Add a row', // the browser's tooltip (GK.tip restyles it)
+    'tooltip' => 'Adds a row at the end',  // GridKit's tooltip instead: a string, or
+                              // ['text' => …, 'pos' => …, 'tone' => …, 'kbd' => …] — a
+                              // description, not the name; no title is written with it.
+                              // See "Tooltips" (since 1.112.0)
     'aria'    => 'Add a row', // accessible name; see below
     'disabled' => false,
     'type'    => 'submit',    // button (default) | submit | reset
@@ -1234,6 +1246,81 @@ $errors   = ['customer' => 'Required', '_form' => 'Could not save'];
     ->render();
 ```
 
+**Tabs in a form (since 1.113.0).** `->tab($key, $label, $opts)` starts a tab: every field added after it,
+up to the next `tab()` or `->endTabs()`, goes into that tab's panel. Fields before the first `tab()` stand
+above the tabs (the fields that belong to every tab: a number, a name); fields after `->endTabs()` stand
+below them, and the buttons below everything. Without `endTabs()` the tabs run to the end. One set of tabs
+per form. Never write tab markup into a form by hand — a required field in a hidden tab then blocks the
+submit with a browser message nobody can see, and a message from `errors()` marks a field nobody can find.
+
+```php
+// A customer form shown again after a failed save ($_POST carries the tab the user was on):
+$roles    = ['admin' => 'Admin', 'sales' => 'Sales'];
+$canGrant = true;
+$customer = ['number' => 'C-7', 'name' => 'Ada Lovelace', 'city' => ''];
+$errors   = ['city' => 'Required'];
+
+(new Form('customer'))
+    ->action('save.php')
+    ->field('number', 'Customer no.', 'text', ['width' => 8])        // above the tabs
+    ->tab('general', 'General', ['icon' => 'person'])
+        ->field('name',  'Name',  'text',  ['required' => true])
+        ->field('email', 'Email', 'email')
+    ->tab('address', 'Address', ['icon' => 'home'])
+        ->field('city', 'City', 'text', ['required' => true])
+    ->tab('rights', 'Rights', ['count' => count($roles), 'disabled' => !$canGrant])
+        ->field('roles', 'Roles', 'multiselect', ['options' => $roles])
+    ->endTabs()
+    ->field('note', 'Internal note', 'textarea')                     // below the tabs
+    ->tabsRemember()                     // optional: reopen the last tab next time (per form id)
+    ->values($_POST ?: $customer)        // also hands back the posted tab (Form::TAB_FIELD)
+    ->errors($errors)                    // the first tab with an error opens, each such tab gets a badge
+    ->submit('Save')
+    ->render();
+```
+
+| `tab()` option | Effect |
+|---|---|
+| `icon` | a Material icon before the word (`gk-tab-icon`) |
+| `badge` | a short word after it (`gk-tab-badge`) — only for a deviation ("Customised"), never "Default" |
+| `count` | a whole number of things behind the tab (`gk-tab-count`) |
+| `disabled` | the tab cannot be chosen; its fields are still posted as they are |
+
+| Form method | Effect |
+|---|---|
+| `->tabsStyle($style)` | the row's style: `'karte'` (the default: page tabs on their surface, `gk-tab-flaeche`), `'linie'`, `'kapsel'` or `'text'` |
+| `->tabsSecondary()` | the second-row shape (`gk-tab-nav-karte gk-tab-nav-secondary`, no surface) — call it for a form in a **modal, a side sheet or a panel of the page's own tabs**: the window is the surface. The form cannot see where it is rendered, so the page says. Only with `'karte'` |
+| `->activeTab($key)` | the tab to start on instead of the first, e.g. `->activeTab($_GET['tab'] ?? '')` |
+| `->tabsRemember()` | the browser notes the chosen tab per form id (`localStorage`, key `gk-form-tab-<id>`) and opens it next time — only when the page chose none (no error, no posted tab, no `activeTab()`); blocked storage just means no memory. Give such a form an id that names its purpose |
+
+Unknown options, a style that does not exist, a duplicate key (renamed `key-2`), `tab()` inside a `row()` (the
+row is closed first), a second set of tabs (its fields stand below the first) and an `activeTab()` that names
+no tab that can be opened raise `E_USER_WARNING` and fall back. A form without `tab()` renders exactly as before.
+
+- **Which tab opens:** the first tab with an error (from `errors()` or a field's own `'error'`; an error above
+  the tabs chooses none) — even a disabled one, since a message nobody can reach is the problem; else the tab
+  posted back in the hidden field `_gk_tab` (`Form::TAB_FIELD`), handed in through `->values($_POST)`; else
+  `activeTab()`; else the first tab that is not disabled. All of it in PHP, so it holds with no script.
+- **The posted tab:** the form posts `_gk_tab` (the tab on screen), so a failed save opens where the user was.
+  Leave it out when you store `$_POST` as a whole. A value that names no open tab is ignored without a warning.
+- **Error badges:** every tab with errors carries `<span class="gk-tab-badge gk-tab-badge-error">2 errors</span>`
+  — the count in words (`form.tab_errors_one` / `form.tab_errors`), never colour alone. A server message counts
+  until the form is sent again.
+- **Every panel is in the page and is posted:** a hidden panel is `display:none`, never `disabled`. `showIf`
+  works across tabs (a field in one tab may depend on a field in another).
+- **With `js/gridkit.js` 1.113.0:** a submit the browser blocks for a field in a hidden tab opens that tab, and
+  the browser focuses the field and shows its own message — the first rejected field in page order, one switch
+  per submit, for a submit button, Enter, `requestSubmit()` and `reportValidity()` (not for a script's
+  `checkValidity()`). After that first try each tab with rejected fields carries the badge too, counted again on
+  every input and change and gone when the tab is clean. Errors an AJAX form gets back open the tab of the first
+  one when it is hidden, and so does an empty required `richtext`. The chosen tab is kept in `_gk_tab`.
+  `GK.formTabs.refresh(form)` counts again after a script changed what is valid (`setCustomValidity()`).
+- **With an older `js/gridkit.js`** (or none): the tabs switch as any tab row does, and the server's tab and
+  badges are there; the jump to a rejected field, the live badges, remembering and following the user's clicks
+  into `_gk_tab` are missing — the form then posts the tab it was rendered with.
+- The markup is the authored shape of **Tabs** (each button `type="button"`, so a click on a tab never submits),
+  so a card row turns into the phone grid up to 600px and nests inside a page's own tabs with the same keys.
+
 **Field types.** Twelve have rendering of their own:
 
 `textarea` · `select` (searchable) · `multiselect` · `ajaxselect` · `checkbox` ·
@@ -1274,6 +1361,7 @@ searchable select is plain `'select'`.
 | `->cancel($label, $href)` | — | a link beside the submit button — a method, not a field |
 | `->hidden($name, $value)` | — | a hidden input — a method, not a field |
 | `error` | every field | a validation message, rendered red under the field. This is how a classic POST-redisplay shows errors: `['value' => $_POST['email'] ?? '', 'error' => $errors['email'] ?? '']`. The AJAX handler writes into the same slot, so both paths look identical |
+| `help` | every field | a help icon (`.gk-help`) beside the label that opens this text on a click — a toggletip, see *Tooltips* (since 1.112.0). A string, `'#id'` of an element holding HTML, or `['text' => …, 'pos' => …, 'tone' => …]`. The label and the icon stand in a `.gk-label-row`; the field keeps its label as its name. Without a visible label the icon follows the control |
 | `hint` | `toggle` | one sentence on what the switch does — the field becomes a settings row (`.gk-setting`): title and sentence on the left, the switch on the right, no label above it, and the input a `role="switch"` described by the sentence (since 1.92.0) |
 | `danger` | `toggle` with `hint` | marks a switch that locks someone out: the title in the error colour, the switch red when on |
 | `options` | `choice` | `value => label`, or `value => ['title' => …, 'hint' => …, 'mark' => …]`; the mark is A, B, C … by position unless given |
@@ -2098,7 +2186,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
 | Tabs | `GridKit\Tabs` / `.gk-tabs` / `[data-gk-tabs]` | Tab navigation, two shapes — full tablist semantics and arrow keys since 1.69.0; the Karteireiter shape `.gk-tab-nav-karte` + `.gk-tab-flaeche`, nesting and a phone grid since 1.101.0; a row that does not fit its box becomes the grid by itself (`GK.tabsFit`) and `gk-tab-badge-error` since 1.102.0; line tabs for the second row, `--gk-tab-radius` and link tabs that keep their place (`GK.tabsScroll`) since 1.102.0; three more styles (line, pill, text), four alignments (left, right, bottom, fixed bar) and options (size, full width, symbol above or only, neutral, disabled) as classes on the row since 1.103.0; the PHP class `Tabs` for every option, deep links (`->hash()`, `->param()`), remembered tabs, lazy panels, `gk:tabchange`/`gk:tabshown` and `GK.tabs.select/current/badge/count/reload`, arrows on a row wider than its box (`GK.tabsOverflow`) since 1.111.0 |
 | Accordion (JS) | `.gk-accordion` | Collapsible sections, optional single-open (`data-gk-single`) |
-| Tooltips (JS/CSS) | `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` | Hint popups — plain, CSS-only, or with HTML in them |
+| Tooltips (JS/CSS) | `GridKit\Tooltip` / `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` / `data-gk-toggletip` / `.gk-help` | Hint popups — plain, title, with HTML in them, or a toggletip that opens on a click; one engine places, flips and announces them all; `'tooltip'` on Button and Table, `'help'` on Form (since 1.112.0) |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
 | Image picker | `GridKit\ImagePicker` / `GK.picker` | Choose one image out of many: a compact grid of 16:9 tiles that works like a radio group, folds after two rows, and an enlarged view that can pick (since 1.94.0) |
 | Announcement (JS/CSS) | `.gk-announce` / `GK.announce` | The line that says "Saved." where the person works, read by a screen reader; empty it draws no box (since 1.93.0) |

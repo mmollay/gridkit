@@ -293,9 +293,11 @@ return [
     // Without this the whole test passes by finding nothing: change how the
     // library queries its hooks and the loop above quietly checks zero of them
     // while still reporting green.
-    T::ok($handWritten >= 3,
-        "the scan found $handWritten hand-written hooks; it found 3 when this "
-        . 'was written, so 0 means the pattern stopped matching, not that the '
+    // 1.112.0: Tooltip::rich() writes data-gk-tooltip-rich, so it no longer counts; data-gk-tabpanel and
+    // data-gk-nav-asset still do.
+    T::ok($handWritten >= 2,
+        "the scan found $handWritten hand-written hooks; it found 2 after 1.112.0 (3 when this "
+        . 'was written), so 0 means the pattern stopped matching, not that the '
         . 'library stopped having them');
 },
 

@@ -185,7 +185,7 @@
         },
         "form": {
             "name": "Form",
-            "changed": "1.92.0",
+            "changed": "1.113.0",
             "classes": {
                 "gk-field": "0.9.0",
                 "gk-field-error": "0.9.0",
@@ -834,7 +834,11 @@
         "tooltip": {
             "name": "Tooltip",
             "classes": {
+                "gk-help": "1.112.0",
+                "gk-label-row": "1.112.0",
                 "gk-tip": "1.23.0",
+                "gk-tip-arrow": "1.112.0",
+                "gk-toggletip": "1.112.0",
                 "gk-tooltip": "0.9.0",
                 "gk-tooltip-content": "1.3.0"
             }

@@ -11436,3 +11436,318 @@ label.gk-setting-title {
 @media (prefers-reduced-motion: reduce) {
   .gk-tab-panel[aria-busy="true"] > :not(.gk-tab-loading) { transition: none; }
 }
+
+/* === 1.112.0 — tooltip engine === */
+/*
+ * The look of the bubbles js/gridkit.js places (block "1.112.0 — tooltip engine"): the shared
+ * .gk-tip of plain and title tooltips, the rich .gk-tooltip-content, the toggletip
+ * .gk-toggletip; their arrow (.gk-tip-arrow), the tones, the keyboard hint; the help icon
+ * (.gk-help) and the row that puts it beside a form label (.gk-label-row).
+ *
+ * The script marks <html data-gk-tt>. Everything that would show a second popup next to the
+ * engine's — the CSS-only ::after, the rich tooltip's .visible — is switched off under that mark
+ * only, so a page without the script (or with an older copy of it) keeps the CSS-only tooltip
+ * exactly as it was. A bubble is placed while it carries data-gk-side (top, bottom, left, right:
+ * the side it ended up on, after a flip).
+ */
+html[data-gk-tt] [data-gk-tooltip]::after {
+  content: none;
+  display: none;
+}
+/* The rich tooltip is shown by the engine only (data-gk-side), whatever .visible says. */
+html[data-gk-tt] .gk-tooltip-content {
+  display: none;
+}
+html[data-gk-tt] .gk-tooltip-content[data-gk-side] {
+  display: block;
+  position: fixed;
+  z-index: 100050;
+  box-sizing: border-box;
+  animation: gk-tip-in 0.12s ease;
+}
+/* Its own border, for the arrow's edge; weightless, so a tone below replaces it. */
+:where(.gk-tooltip-content) {
+  --gk-tip-line: var(--gk-outline-variant, rgba(0, 0, 0, 0.1));
+}
+/* A button with a CSS-only tooltip lost its pointer cursor to [data-gk-tooltip] (same weight,
+   later in the file). A control stays one. */
+.gk-btn[data-gk-tooltip]:not(:disabled),
+a[href][data-gk-tooltip],
+button[data-gk-tooltip]:not(:disabled) {
+  cursor: pointer;
+}
+
+/* --- The bubbles ---------------------------------------------------------------------------- */
+/* The colours come in three variables, so a tone and dark mode change them and the arrow, which
+   inherits the background and draws its edge in --gk-tip-line, follows without rules of its own. */
+.gk-tip[data-gk-side] {
+  --gk-tip-bg: #1e293b;
+  --gk-tip-fg: #ffffff;
+  --gk-tip-line: transparent;
+  box-sizing: border-box;
+  max-width: min(360px, calc(100vw - 16px));
+  background: var(--gk-tip-bg);
+  color: var(--gk-tip-fg);
+  border: 1px solid var(--gk-tip-line);
+  font-family: var(--gk-font, system-ui, sans-serif);
+  text-align: left;
+  overflow-wrap: anywhere;
+  /* WCAG 1.4.13: the pointer may move onto the bubble and rest there. The engine keeps it open
+     while it does; the 1.23 popup let the pointer through and closed under it. */
+  pointer-events: auto;
+}
+/* Closed: still in the accessibility tree (role=status — a live region must exist before it
+   speaks), but no box. */
+.gk-toggletip {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* Open: a card. A help text may carry a link or a button, so it is the surface colours, not the
+   dark slate of a hover tooltip; a tone replaces them. Inherited table-header and label styles
+   (capitals, letter spacing, muted colour) are put back. */
+.gk-toggletip[data-gk-side] {
+  --gk-tip-bg: var(--gk-surface-container-lowest, #ffffff);
+  --gk-tip-fg: var(--gk-on-surface, #0f172a);
+  --gk-tip-line: var(--gk-outline, #94a3b8);
+  position: fixed;
+  z-index: 100040;
+  box-sizing: border-box;
+  width: auto;
+  height: auto;
+  max-width: min(320px, calc(100vw - 16px));
+  margin: 0;
+  padding: 10px 14px;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
+  background: var(--gk-tip-bg);
+  color: var(--gk-tip-fg);
+  border: 1px solid var(--gk-tip-line);
+  border-radius: 10px;
+  box-shadow: var(--gk-elev-3, 0 8px 24px rgba(0, 0, 0, 0.16));
+  font-family: var(--gk-font, system-ui, sans-serif);
+  font-size: var(--gk-text-label, 13px);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+  overflow-wrap: anywhere;
+  animation: gk-tip-in 0.12s ease;
+}
+.gk-toggletip a {
+  color: var(--gk-primary-text, var(--gk-primary));
+  text-decoration: underline;
+}
+.gk-toggletip > :first-child { margin-top: 0; }
+.gk-toggletip > :nth-last-child(2) { margin-bottom: 0; }
+/* On a dark page the card is a raised surface: a step lighter than the page, not darker. */
+[data-gk-mode="dark"] .gk-toggletip[data-gk-side]:not([data-gk-tone]),
+.gk-dark .gk-toggletip[data-gk-side]:not([data-gk-tone]) {
+  --gk-tip-bg: var(--gk-surface-container-high, #21262d);
+  --gk-tip-line: var(--gk-outline, #484f58);
+}
+/* The slate bubble keeps its colours on a dark page; a light edge lifts it off the ground. */
+[data-gk-mode="dark"] .gk-tip[data-gk-side]:not([data-gk-tone]),
+.gk-dark .gk-tip[data-gk-side]:not([data-gk-tone]),
+[data-gk-mode="dark"] :is(.gk-tip, .gk-toggletip, .gk-tooltip-content)[data-gk-tone="neutral"],
+.gk-dark :is(.gk-tip, .gk-toggletip, .gk-tooltip-content)[data-gk-tone="neutral"] {
+  --gk-tip-line: rgba(255, 255, 255, 0.18);
+}
+
+/* --- Tones: text on its ground at 4.5:1 or more, light and dark (ci/browser-tooltip.js) ---- */
+/* The container roles every message and label already uses; they turn with the mode. */
+:is(.gk-tip, .gk-toggletip, .gk-tooltip-content)[data-gk-tone="neutral"] {
+  --gk-tip-bg: #1e293b;
+  --gk-tip-fg: #ffffff;
+  --gk-tip-line: transparent;
+}
+:is(.gk-tip, .gk-toggletip, .gk-tooltip-content)[data-gk-tone="info"] {
+  --gk-tip-bg: var(--gk-info-container, #dbeafe);
+  --gk-tip-fg: var(--gk-on-info-container, #1e40af);
+  --gk-tip-line: color-mix(in oklab, var(--gk-tip-fg) 30%, transparent);
+}
+:is(.gk-tip, .gk-toggletip, .gk-tooltip-content)[data-gk-tone="success"] {
+  --gk-tip-bg: var(--gk-success-container, #d1fae5);
+  --gk-tip-fg: var(--gk-on-success-container, #064e3b);
+  --gk-tip-line: color-mix(in oklab, var(--gk-tip-fg) 30%, transparent);
+}
+:is(.gk-tip, .gk-toggletip, .gk-tooltip-content)[data-gk-tone="warning"] {
+  --gk-tip-bg: var(--gk-warning-container, #fef3c7);
+  --gk-tip-fg: var(--gk-on-warning-container, #92400e);
+  --gk-tip-line: color-mix(in oklab, var(--gk-tip-fg) 30%, transparent);
+}
+:is(.gk-tip, .gk-toggletip, .gk-tooltip-content)[data-gk-tone="danger"] {
+  --gk-tip-bg: var(--gk-error-container, #ffe4e6);
+  --gk-tip-fg: var(--gk-on-error-container, #881337);
+  --gk-tip-line: color-mix(in oklab, var(--gk-tip-fg) 30%, transparent);
+}
+/* Light stays light in dark mode too — that is what the name promises. */
+:is(.gk-tip, .gk-toggletip, .gk-tooltip-content)[data-gk-tone="light"] {
+  --gk-tip-bg: #ffffff;
+  --gk-tip-fg: #0f172a;
+  --gk-tip-line: #cbd5e1;
+}
+html[data-gk-tt] .gk-tooltip-content[data-gk-tone] {
+  background: var(--gk-tip-bg);
+  color: var(--gk-tip-fg);
+  border-color: var(--gk-tip-line);
+}
+/* A link on a toned or slate bubble takes the text colour: the primary would sit on a ground it
+   was never measured against. */
+:is(.gk-tip, .gk-toggletip[data-gk-tone], .gk-tooltip-content[data-gk-tone]) a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* --- The arrow ------------------------------------------------------------------------------ */
+/* A square turned 45°, half of it outside the bubble, in the bubble's own ground. The script sets
+   its left (or top) so that it points at the middle of the trigger after any shift. */
+.gk-tip-arrow {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  background: inherit;
+  border: 1px solid transparent;
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+:not([data-gk-side]) > .gk-tip-arrow {
+  display: none;
+}
+[data-gk-side="top"] > .gk-tip-arrow {
+  bottom: -6px;
+  border-right-color: var(--gk-tip-line, transparent);
+  border-bottom-color: var(--gk-tip-line, transparent);
+}
+[data-gk-side="bottom"] > .gk-tip-arrow {
+  top: -6px;
+  border-left-color: var(--gk-tip-line, transparent);
+  border-top-color: var(--gk-tip-line, transparent);
+}
+[data-gk-side="left"] > .gk-tip-arrow {
+  right: -6px;
+  border-top-color: var(--gk-tip-line, transparent);
+  border-right-color: var(--gk-tip-line, transparent);
+}
+[data-gk-side="right"] > .gk-tip-arrow {
+  left: -6px;
+  border-bottom-color: var(--gk-tip-line, transparent);
+  border-left-color: var(--gk-tip-line, transparent);
+}
+
+/* --- The keyboard hint: data-gk-tooltip-kbd="Ctrl+S" ------------------------------------------ */
+:is(.gk-tip, .gk-toggletip) kbd {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 5px;
+  border: 1px solid color-mix(in oklab, currentColor 45%, transparent);
+  border-radius: 4px;
+  background: color-mix(in oklab, currentColor 10%, transparent);
+  color: inherit;
+  font: 600 11px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: nowrap;
+}
+
+/* --- The help icon: Tooltip::help(), a Table column's and a Form field's 'help' ---------------- */
+/* 24px to look at (and the WCAG 2.5.8 minimum to hit); 44px to a finger, through a ::before that
+   reaches out beyond it — the layout does not move. ::after stays free for the CSS-only tooltip
+   it falls back to without the script. */
+.gk-help {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--gk-on-surface-variant, #475569);
+  font: inherit;
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+}
+.gk-help svg {
+  display: block;
+  pointer-events: none;
+}
+.gk-help:hover,
+.gk-help[aria-expanded="true"] {
+  color: var(--gk-primary-text, var(--gk-primary));
+  background: var(--gk-state-hover, rgba(15, 23, 42, 0.06));
+}
+.gk-help:focus-visible {
+  outline: 2px solid var(--gk-primary, #6366f1);
+  outline-offset: 1px;
+}
+@media (pointer: coarse) {
+  .gk-help::before {
+    content: "";
+    position: absolute;
+    inset: -10px;
+  }
+}
+/* Beside a form label: the row is as tall as the label, the icon overhangs it (negative margin)
+   so a field with help sits at the same height as one without. */
+.gk-label-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  margin-bottom: 6px;
+}
+.gk-label-row > .gk-label-text {
+  margin-bottom: 0;
+}
+.gk-label-row > .gk-help {
+  margin: -4px 0;
+}
+.gk-field-inline > .gk-label-row {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+/* In a table header: beside the label or the sort button, never inside it. The sort button gives
+   up its full width so the two stand on one line; without :has() the icon simply wraps below. */
+.gk-table th > .gk-help {
+  margin: -4px 0 -4px 2px;
+}
+.gk-table th > .gk-sort-btn:has(+ .gk-help) {
+  width: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gk-tip,
+  .gk-toggletip[data-gk-side],
+  html[data-gk-tt] .gk-tooltip-content[data-gk-side] {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* === 1.113.0 — tabs in a form === */
+/* Form::tab() writes the authored tab markup, so the tab rules above draw it; no class is new. One thing
+   is: the fields after Form::endTabs() keep a field's distance from what stands above them. The last field
+   of a panel gives its margin up (.gk-field:last-child), so a footer field touched the surface of the tabs.
+   Vertical margins collapse, so a field with a margin of its own gains nothing twice. Scoped by the hidden
+   tab field Form writes before the tabs, so a .gk-tabs written by hand into a form is left as it was. No
+   colour here: the same in light and in both dark spellings. */
+.gk-form > [data-gk-form-tab] + .gk-tabs ~ .gk-field,
+.gk-form > [data-gk-form-tab] + .gk-tabs ~ .gk-form-row {
+  margin-top: 16px;
+}

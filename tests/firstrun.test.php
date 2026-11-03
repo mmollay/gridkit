@@ -201,7 +201,8 @@ return [
 },
 
 'the README accounts for every class, and no others' => function (): void {
-    // "Eighteen components" (Tabs is the eighteenth, 1.111.0) plus five named as infrastructure. Both numbers are
+    // "Eighteen components" (Tabs is the eighteenth, 1.111.0) plus six named as infrastructure (Tooltip since
+    // 1.112.0). Both numbers are
     // on the landing page and in the meta description too, and a count like
     // this drifts the moment a class is added — the repository description
     // still said "17+" long after the README said sixteen.

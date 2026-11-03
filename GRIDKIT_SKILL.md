@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.111.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.113.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -53,7 +53,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
 | Tabs | `GridKit\Tabs` / `.gk-tabs` / `[data-gk-tabs]` | Tab navigation, two shapes — full tablist semantics and arrow keys since 1.69.0; the Karteireiter shape `.gk-tab-nav-karte` + `.gk-tab-flaeche`, nesting and a phone grid since 1.101.0; a row that does not fit its box becomes the grid by itself (`GK.tabsFit`) and `gk-tab-badge-error` since 1.102.0; line tabs for the second row, `--gk-tab-radius` and link tabs that keep their place (`GK.tabsScroll`) since 1.102.0; three more styles (line, pill, text), four alignments (left, right, bottom, fixed bar) and options (size, full width, symbol above or only, neutral, disabled) as classes on the row since 1.103.0; the PHP class `Tabs` for every option, deep links (`->hash()`, `->param()`), remembered tabs, lazy panels, `gk:tabchange`/`gk:tabshown` and `GK.tabs.select/current/badge/count/reload`, arrows on a row wider than its box (`GK.tabsOverflow`) since 1.111.0 |
 | Accordion (JS) | `.gk-accordion` | Collapsible sections, optional single-open (`data-gk-single`) |
-| Tooltips (JS/CSS) | `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` | Hint popups — plain, CSS-only, or with HTML in them |
+| Tooltips (JS/CSS) | `GridKit\Tooltip` / `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` / `data-gk-toggletip` / `.gk-help` | Hint popups — plain, title, with HTML in them, or a toggletip that opens on a click; one engine places, flips and announces them all; `'tooltip'` on Button and Table, `'help'` on Form (since 1.112.0) |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
 | Image picker | `GridKit\ImagePicker` / `GK.picker` | Choose one image out of many: a compact grid of 16:9 tiles that works like a radio group, folds after two rows, and an enlarged view that can pick (since 1.94.0) |
 | Announcement (JS/CSS) | `.gk-announce` / `GK.announce` | The line that says "Saved." where the person works, read by a screen reader; empty it draws no box (since 1.93.0) |
@@ -412,6 +412,14 @@ Both keep the raw value, so sorting and searching go on working — which is wha
 tab, and middle click does the rest.
 
 **`->groupBy($column, $labels)`:** inserts a group row whenever the value changes. Sort the rows by that column first.
+
+**`'tooltip'` on a column and on a row button (since 1.112.0):** on a column,
+`->column('net', 'Net', ['tooltip' => 'Before VAT'])` puts a help icon (`.gk-help`) beside
+the header label — a button of its own next to the sort button, opening its text on a click.
+On a row button, `->button('edit', ['icon' => 'edit', 'tooltip' => 'Edit this customer'])`
+writes GridKit's tooltip instead of the browser `title`; `'title'` or `'aria'` still name the
+button. Both take a string or `['text' => …, 'pos' => …, 'tone' => …]` and survive a sort of a
+`setData()` table. See *Tooltips*.
 
 **`->rowLink($target)` (since 1.91.0):** the whole row opens something — a page, or
 a side sheet on this page. Use it instead of putting selects, switches or a delete
@@ -946,7 +954,11 @@ echo Button::render('Label', [
     'shape'   => 'pill',      // rounded (default) | pill | circle | square
     'href'    => '/path',     // renders as <a>
     'onclick' => 'jsCode()',
-    'title'   => 'Add a row', // tooltip
+    'title'   => 'Add a row', // the browser's tooltip (GK.tip restyles it)
+    'tooltip' => 'Adds a row at the end',  // GridKit's tooltip instead: a string, or
+                              // ['text' => …, 'pos' => …, 'tone' => …, 'kbd' => …] — a
+                              // description, not the name; no title is written with it.
+                              // See "Tooltips" (since 1.112.0)
     'aria'    => 'Add a row', // accessible name; see below
     'disabled' => false,
     'type'    => 'submit',    // button (default) | submit | reset
@@ -1547,6 +1559,81 @@ $errors   = ['customer' => 'Required', '_form' => 'Could not save'];
     ->render();
 ```
 
+**Tabs in a form (since 1.113.0).** `->tab($key, $label, $opts)` starts a tab: every field added after it,
+up to the next `tab()` or `->endTabs()`, goes into that tab's panel. Fields before the first `tab()` stand
+above the tabs (the fields that belong to every tab: a number, a name); fields after `->endTabs()` stand
+below them, and the buttons below everything. Without `endTabs()` the tabs run to the end. One set of tabs
+per form. Never write tab markup into a form by hand — a required field in a hidden tab then blocks the
+submit with a browser message nobody can see, and a message from `errors()` marks a field nobody can find.
+
+```php
+// A customer form shown again after a failed save ($_POST carries the tab the user was on):
+$roles    = ['admin' => 'Admin', 'sales' => 'Sales'];
+$canGrant = true;
+$customer = ['number' => 'C-7', 'name' => 'Ada Lovelace', 'city' => ''];
+$errors   = ['city' => 'Required'];
+
+(new Form('customer'))
+    ->action('save.php')
+    ->field('number', 'Customer no.', 'text', ['width' => 8])        // above the tabs
+    ->tab('general', 'General', ['icon' => 'person'])
+        ->field('name',  'Name',  'text',  ['required' => true])
+        ->field('email', 'Email', 'email')
+    ->tab('address', 'Address', ['icon' => 'home'])
+        ->field('city', 'City', 'text', ['required' => true])
+    ->tab('rights', 'Rights', ['count' => count($roles), 'disabled' => !$canGrant])
+        ->field('roles', 'Roles', 'multiselect', ['options' => $roles])
+    ->endTabs()
+    ->field('note', 'Internal note', 'textarea')                     // below the tabs
+    ->tabsRemember()                     // optional: reopen the last tab next time (per form id)
+    ->values($_POST ?: $customer)        // also hands back the posted tab (Form::TAB_FIELD)
+    ->errors($errors)                    // the first tab with an error opens, each such tab gets a badge
+    ->submit('Save')
+    ->render();
+```
+
+| `tab()` option | Effect |
+|---|---|
+| `icon` | a Material icon before the word (`gk-tab-icon`) |
+| `badge` | a short word after it (`gk-tab-badge`) — only for a deviation ("Customised"), never "Default" |
+| `count` | a whole number of things behind the tab (`gk-tab-count`) |
+| `disabled` | the tab cannot be chosen; its fields are still posted as they are |
+
+| Form method | Effect |
+|---|---|
+| `->tabsStyle($style)` | the row's style: `'karte'` (the default: page tabs on their surface, `gk-tab-flaeche`), `'linie'`, `'kapsel'` or `'text'` |
+| `->tabsSecondary()` | the second-row shape (`gk-tab-nav-karte gk-tab-nav-secondary`, no surface) — call it for a form in a **modal, a side sheet or a panel of the page's own tabs**: the window is the surface. The form cannot see where it is rendered, so the page says. Only with `'karte'` |
+| `->activeTab($key)` | the tab to start on instead of the first, e.g. `->activeTab($_GET['tab'] ?? '')` |
+| `->tabsRemember()` | the browser notes the chosen tab per form id (`localStorage`, key `gk-form-tab-<id>`) and opens it next time — only when the page chose none (no error, no posted tab, no `activeTab()`); blocked storage just means no memory. Give such a form an id that names its purpose |
+
+Unknown options, a style that does not exist, a duplicate key (renamed `key-2`), `tab()` inside a `row()` (the
+row is closed first), a second set of tabs (its fields stand below the first) and an `activeTab()` that names
+no tab that can be opened raise `E_USER_WARNING` and fall back. A form without `tab()` renders exactly as before.
+
+- **Which tab opens:** the first tab with an error (from `errors()` or a field's own `'error'`; an error above
+  the tabs chooses none) — even a disabled one, since a message nobody can reach is the problem; else the tab
+  posted back in the hidden field `_gk_tab` (`Form::TAB_FIELD`), handed in through `->values($_POST)`; else
+  `activeTab()`; else the first tab that is not disabled. All of it in PHP, so it holds with no script.
+- **The posted tab:** the form posts `_gk_tab` (the tab on screen), so a failed save opens where the user was.
+  Leave it out when you store `$_POST` as a whole. A value that names no open tab is ignored without a warning.
+- **Error badges:** every tab with errors carries `<span class="gk-tab-badge gk-tab-badge-error">2 errors</span>`
+  — the count in words (`form.tab_errors_one` / `form.tab_errors`), never colour alone. A server message counts
+  until the form is sent again.
+- **Every panel is in the page and is posted:** a hidden panel is `display:none`, never `disabled`. `showIf`
+  works across tabs (a field in one tab may depend on a field in another).
+- **With `js/gridkit.js` 1.113.0:** a submit the browser blocks for a field in a hidden tab opens that tab, and
+  the browser focuses the field and shows its own message — the first rejected field in page order, one switch
+  per submit, for a submit button, Enter, `requestSubmit()` and `reportValidity()` (not for a script's
+  `checkValidity()`). After that first try each tab with rejected fields carries the badge too, counted again on
+  every input and change and gone when the tab is clean. Errors an AJAX form gets back open the tab of the first
+  one when it is hidden, and so does an empty required `richtext`. The chosen tab is kept in `_gk_tab`.
+  `GK.formTabs.refresh(form)` counts again after a script changed what is valid (`setCustomValidity()`).
+- **With an older `js/gridkit.js`** (or none): the tabs switch as any tab row does, and the server's tab and
+  badges are there; the jump to a rejected field, the live badges, remembering and following the user's clicks
+  into `_gk_tab` are missing — the form then posts the tab it was rendered with.
+- The markup is the authored shape of **Tabs** (each button `type="button"`, so a click on a tab never submits),
+  so a card row turns into the phone grid up to 600px and nests inside a page's own tabs with the same keys.
+
 **Field types.** Twelve have rendering of their own:
 
 `textarea` · `select` (searchable) · `multiselect` · `ajaxselect` · `checkbox` ·
@@ -1587,6 +1674,7 @@ searchable select is plain `'select'`.
 | `->cancel($label, $href)` | — | a link beside the submit button — a method, not a field |
 | `->hidden($name, $value)` | — | a hidden input — a method, not a field |
 | `error` | every field | a validation message, rendered red under the field. This is how a classic POST-redisplay shows errors: `['value' => $_POST['email'] ?? '', 'error' => $errors['email'] ?? '']`. The AJAX handler writes into the same slot, so both paths look identical |
+| `help` | every field | a help icon (`.gk-help`) beside the label that opens this text on a click — a toggletip, see *Tooltips* (since 1.112.0). A string, `'#id'` of an element holding HTML, or `['text' => …, 'pos' => …, 'tone' => …]`. The label and the icon stand in a `.gk-label-row`; the field keeps its label as its name. Without a visible label the icon follows the control |
 | `hint` | `toggle` | one sentence on what the switch does — the field becomes a settings row (`.gk-setting`): title and sentence on the left, the switch on the right, no label above it, and the input a `role="switch"` described by the sentence (since 1.92.0) |
 | `danger` | `toggle` with `hint` | marks a switch that locks someone out: the title in the error colour, the switch red when on |
 | `options` | `choice` | `value => label`, or `value => ['title' => …, 'hint' => …, 'mark' => …]`; the mark is A, B, C … by position unless given |
@@ -2257,6 +2345,14 @@ GK.tabs.reload('settings', 'log');             // a lazy panel, fetched again; a
 document.addEventListener('gk:tabchange', e => { /* cancelable; e.detail: { tabsId, from, to, panel, source } */ });
 document.addEventListener('gk:tabshown', e => { /* after the switch */ });
 document.addEventListener('gk:tabload', e => { /* a lazy panel: { tabsId, key, panel, ok, status } */ });
+
+// Tooltips (since 1.112.0) — see "Tooltips". Delegated: new content needs no call.
+GK.tooltip.show(el);  GK.tooltip.hide();  GK.tooltip.update();
+
+// Tabs in a form (since 1.113.0) — Form::tab(), see "Form". Nothing to call for the usual case; after a
+// script changed what is valid (setCustomValidity), count the error badges of the tabs again:
+GK.formTabs.refresh(document.getElementById('customer'));
+GK.formTabs.init(container);     // inserted markup: GK.initContent(container) does this too
 ```
 
 An AJAX form (`Form::ajax()`) reports its own outcome: `{ok: true, message: '…'}` closes the modal, refreshes
@@ -2793,6 +2889,8 @@ Links between pages take the same classes (`<nav class="gk-tab-nav gk-tab-nav-ka
 - **Nesting:** a `.gk-tabs` inside a panel of another is fine since 1.101.0 — a click on an outer tab
   touches only its own row and panels; the inner choice stays. The inner row takes the second-row
   shape. `data-tab` keys may repeat between levels.
+- **Tabs inside a form** (since 1.113.0): use `Form::tab()` (see **Form**), not this markup by hand — it
+  opens the tab of a field the browser or the server rejects and puts the error badge on every such tab.
 - **Steps on a phone:** `.gk-steps` draws a shorter line before each step up to 480px; three steps
   of the length "Changes · Approval · Publish" fit in 340px, and when a band wraps after all, no line
   hangs at the end or the start of a row.
@@ -3159,29 +3257,136 @@ the ring's transition and the viewer's entrance.
 
 ### Tooltips
 
-Three forms, from least to most work:
+One engine (since 1.112.0) draws every tooltip GridKit has. It places the bubble on the
+preferred side, flips it to the opposite side when it does not fit (then tries the other
+two), shifts it along the edge to stay inside the window — and inside the visible part of a
+box that scrolls — and keeps the arrow pointing at the trigger after the shift. It opens on
+hover after a delay and at once on keyboard focus (`:focus-visible`: a mouse click on a button
+is not a request), on a tap on touch, and closes on Escape, blur, the pointer leaving (with
+100 ms of grace, so the pointer can move onto the bubble and rest there), the trigger
+scrolling out of sight and a tap elsewhere. One tooltip at a time.
+
+Five forms, from least to most:
 
 ```html
-<!-- 1. Any title attribute. GK.tip restyles it on first hover and moves the
-        text to data-gk-tip so the browser's own popup stops competing.
-        Opt out with data-gk-tip-off on the element or any ancestor. -->
+<!-- 1. Any title attribute. GK.tip moves it to data-gk-tip on the first hover or focus
+        (the browser's own popup stops competing) and shows it in the engine's bubble;
+        \n breaks the line. Opt out with data-gk-tip-off on the element or an ancestor. -->
 <button title="Save the current draft">Save</button>
 
-<!-- 2. CSS-only, no JavaScript involved. -->
-<span data-gk-tooltip="Short explanation" data-gk-tooltip-pos="top">Hover me</span>
+<!-- 2. Plain. Without the script this is the CSS-only tooltip it always was. -->
+<span data-gk-tooltip="Net, before VAT" data-gk-tooltip-pos="bottom">Net</span>
 
-<!-- 3. Rich: real HTML in the popup. -->
+<!-- 3. Rich: real HTML in the bubble. Give the element an id: it describes the trigger. -->
 <span data-gk-tooltip-rich="#vat-help">VAT</span>
 <div id="vat-help">Reduced rate — <strong>10&nbsp;%</strong> for food and books.</div>
+
+<!-- 4. Toggletip: opens on a click, Enter or Space — not on hover — and stays open. -->
+<button type="button" data-gk-toggletip="Counted from the invoice date.">Due</button>
+<button type="button" data-gk-toggletip="#vat-rules">VAT rules</button>
+<div id="vat-rules" hidden>See <a href="/vat">the rules</a> or <button type="button">ask</button>.</div>
+
+<!-- 5. The help icon: a toggletip on a ready-made "?" button (Tooltip::help() writes it). -->
+<button type="button" class="gk-help" data-gk-toggletip="On your bank card." aria-label="More about IBAN">…</button>
 ```
 
-`data-gk-tooltip-pos` takes `top` (default), `bottom`, `left` or `right`.
+**Options** — attributes on the trigger, the same for every form (each one optional):
 
-For the rich form the target is a CSS selector, so `#id` is the usual choice —
-and **give it an id**: since 1.73.0 the trigger is joined to it with
-`aria-describedby`, which needs one. The trigger also becomes focusable if it
-is not already, opens on **focus** as well as hover, and **Escape** dismisses
-it — until then the rich tooltip existed for pointers and for nobody else.
+| Attribute | PHP option | Values | Default |
+|---|---|---|---|
+| `data-gk-tooltip-pos` | `pos` | `top`, `bottom`, `left`, `right`, `auto` (above or below, whichever has more room, then the sides) | `top` |
+| `data-gk-tooltip-tone` | `tone` | `neutral` (slate), `info`, `success`, `warning`, `danger`, `light` — text at 4.5:1 or more on its ground in light and dark mode, under every theme | slate; a toggletip is a surface card |
+| `data-gk-tooltip-max` | `max` | the widest it gets: pixels (`240`) or a length (`20rem`) | 360px (toggletip 320px) |
+| `data-gk-tooltip-kbd` | `kbd` | a keyboard hint shown as `<kbd>` after the text (`Ctrl+S`); a screen reader hears "Save (Ctrl+S)" | — |
+| `data-gk-tooltip-delay` | `delay` | ms before it opens on hover, 0–10000; moving on from a tooltip just shown opens the next at once | 300 |
+| `data-gk-tooltip-wrap` | `wrap` | several lines, at most 280px | one line in the CSS-only form |
+
+**PHP — `GridKit\Tooltip`.** Every helper returns a string — echo it. `Tooltip::attrs()`,
+`Tooltip::rich()` and `Tooltip::toggletip()` return attributes with a leading space;
+`Tooltip::help()` returns the icon button. The text is escaped. The first argument of
+`attrs()`, `toggletip()` and `help()` is the text, or an array that carries it under
+`'text'` with its options beside it — the shape the component options take. A bad option
+(`'pos' => 'middle'`, an unknown key) is an `E_USER_WARNING` and is left out; the tooltip
+still shows. An empty text writes nothing.
+
+```php
+echo '<span' . Tooltip::attrs('Net, before VAT', ['pos' => 'bottom', 'tone' => 'info']) . '>Net</span>';
+echo '<button type="button"' . Tooltip::attrs('Save', ['kbd' => 'Ctrl+S', 'delay' => 0]) . '>Save</button>';
+echo '<span' . Tooltip::rich('#vat-help', ['max' => 320]) . '>VAT</span>';
+echo '<button type="button"' . Tooltip::toggletip('Counted from the invoice date.') . '>Due</button>';
+echo 'IBAN ' . Tooltip::help('On your bank card.', ['label' => 'IBAN']);   // "?" named "More about IBAN"
+echo Tooltip::help('#vat-rules', ['icon' => 'info']);                        // an "i"; the content is #vat-rules
+
+// The component options — a description, never the name, and never with a title beside it.
+echo Button::icon('delete', ['tooltip' => ['text' => 'Deletes the invoice for good', 'tone' => 'danger']]);
+(new Table('invoices'))->setData($rows)
+    ->column('name', 'Customer', ['tooltip' => 'As on the contract'])   // a help icon in the header
+    ->button('edit', ['icon' => 'edit', 'tooltip' => 'Edit this customer'])
+    ->render();
+(new Form('bank'))->field('iban', 'IBAN', 'text', ['help' => 'On your bank card.'])->render();
+```
+
+`help()` takes `label` (what it explains; its name is "More about {label}" from the language
+file, "More information" without) and `icon` (`help`, a question mark, or `info`, an i)
+besides `pos`, `tone`, `max` and `kbd`. `rich()` takes the id of the element and `pos`,
+`tone`, `max`, `delay`.
+
+**On the components** (additions — nothing changes for code that does not use them):
+
+- `Button::render($label, ['tooltip' => 'Text' | ['text' => …, 'pos' => …, 'tone' => …, 'kbd' => …]])`
+  — the GridKit tooltip instead of a `title`. An icon-only button is still named by `aria`,
+  `title` or its icon; the tooltip is its description. With `tooltip` no `title` is written,
+  even when one is given (it still names the button): two popups would compete.
+- Table column `'tooltip'` — a `.gk-help` icon beside the header label, a button of its own
+  next to the sort button (inside it, a click would sort). Table row button `'tooltip'` —
+  its attributes instead of the browser `title`. Both come back after a sort of a
+  `setData()` table, exactly as the server wrote them.
+- Form field `'help'` — a `.gk-help` icon beside the label that opens the text on a click.
+  The label and the icon stand in a `.gk-label-row`; the icon is never inside the `<label>`,
+  so the field's name stays its label. Without a visible label (a checkbox) it follows the
+  control. `'hint'` keeps what it does: the sentence of a settings row and of an upload zone.
+
+**JavaScript.** Everything is delegated: content that arrives later works without a call.
+`GK.initContent(root)` (and so a modal, a live table, AJAX navigation) also joins new
+triggers to their text for a screen reader before their first focus.
+
+```javascript
+GK.tooltip.show(el);    // open the tooltip (or toggletip) of el now, without a delay
+GK.tooltip.hide();      // close what is open
+GK.tooltip.update();    // place it again — after its text or the layout around it changed
+GK.tooltip.init(root);  // bind the triggers in root (GK.initContent calls it)
+GK.tip.show(el);        // the same for an element with a title; GK.tip.hide() closes it
+```
+
+**What a screen reader gets.** A plain or title tooltip describes its trigger through
+`aria-describedby` (a hidden copy of the text — an `::after` is not in the accessibility
+tree). A trigger that cannot take the focus gets `tabindex="0"`; one that wraps a control
+describes that control. A title on a control that has no name of its own (an icon button)
+becomes its `aria-label`, as before; on one that has a name it becomes its description —
+it used to replace the visible name.
+
+**The toggletip** is a live region (`role="status"`) right after its trigger. Opening it
+reads its text out and the focus **stays on the trigger** (`aria-expanded` says it is
+open): a help text is read, not operated, and moving the focus into a popup would take a
+person out of the form they were filling in. Tab walks from the trigger into its links and
+buttons, because they come next in the document. It closes on Escape (the focus comes
+back), a click outside, a second click, or the focus moving on past it. `'#id'` content
+moves into the bubble and back, hidden, when it closes; a `<template>` is copied.
+
+**Escape** closes a toggletip, or a tooltip the keyboard is on, and claims the key: a modal
+or sheet around it stays open, and the next Escape closes that. A tooltip the mouse merely
+rests on closes without taking the key.
+
+**Touch.** A tap on a trigger that is only a trigger (a word, an icon that is not a control)
+shows its tooltip; a second tap, or a tap elsewhere, hides it. A tap on a button or link
+with a tooltip is its click, untouched. The `.gk-help` icon is 24px to look at and 44px to
+a finger.
+
+**Without the script** — or with an older copy of `js/gridkit.js`, as the PawBot dashboard
+keeps one — the CSS-only tooltip and the old `GK.tip` work exactly as before, and a text
+toggletip or help icon shows its text as the CSS-only tooltip on hover. The engine marks
+`<html data-gk-tt>`; only then does the stylesheet drop the `::after`, so nothing shows twice.
+`prefers-reduced-motion` turns the fade off.
 
 ⚠️ A tooltip is a hint, never the only place something is said. Anything a
 person must have to complete the task belongs in the label or beneath the

@@ -20,7 +20,11 @@ class Button
      *   - type: 'button'|'submit'|'reset' (default: 'button')
      *   - id: string
      *   - class: string (additional classes)
-     *   - title: string (tooltip)
+     *   - title: string (the browser's tooltip; GK.tip restyles it)
+     *   - tooltip: string|array — a GridKit tooltip instead of the title: 'Text', or
+     *     ['text' => …, 'pos' => …, 'tone' => …, 'kbd' => …, 'max' => …, 'delay' => …]
+     *     (see Tooltip::attrs()). A description, not the name: an icon-only button is
+     *     still named by 'aria', 'title' or its icon, and no title attribute is written.
      *   - onclick: string
      *   - form: string (form id for submit buttons located outside the form)
      *   - data: array of data-attributes ['action' => 'save']
@@ -150,7 +154,14 @@ class Button
             $extras .= ' aria-label="' . $e((string) $opts['aria']) . '"';
         }
 
-        if (!empty($opts['title'])) $extras .= ' title="' . $e($opts['title']) . '"';
+        // 'tooltip' (1.112.0): the GridKit tooltip, and then no title — a title beside it would
+        // be a second popup, the browser's, over the first. 'title' still names an icon-only
+        // button above; the tooltip only describes it.
+        $tooltip = isset($opts['tooltip']) && $opts['tooltip'] !== '' && $opts['tooltip'] !== []
+            ? Tooltip::attrs($opts['tooltip'])
+            : '';
+        if (!empty($opts['title']) && $tooltip === '') $extras .= ' title="' . $e($opts['title']) . '"';
+        $extras .= $tooltip;
         if (!empty($opts['onclick'])) $extras .= ' onclick="' . $e($opts['onclick']) . '"';
         if (!empty($opts['target'])) $extras .= ' target="' . $e($opts['target']) . '"';
         // form: binds a submit button to a form that it is NOT nested inside

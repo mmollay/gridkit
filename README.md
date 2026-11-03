@@ -225,7 +225,8 @@ Eighteen, each a PHP class with a chainable API:
 | `ActionGroup` — grouped row actions | `SortLink` — sortable headers | `YearFilter` — year navigation |
 | `BelegModal` — document preview | `ImagePicker` — choose one image from many: a compact grid, an enlarged view that can pick | `Tabs` — every tab style and option, deep links, remembered tabs, lazy panels |
 
-Plus `Theme`, `Layout`, `Lang`, `Auth` and `Icon` as infrastructure — and the
+Plus `Theme`, `Layout`, `Lang`, `Auth`, `Icon` and `Tooltip` (the attributes and the
+help icon of the tooltips, since 1.112.0) as infrastructure — and the
 side sheet (`.gk-sheet`, `GK.sheet`), markup and script rather than a class: the
 panel a row opens, docked beside the list, full screen on a phone. How a list
 should look before its first row is written is in the skill's *Six rules for

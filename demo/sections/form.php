@@ -405,5 +405,58 @@ $form->row()
                 ->render();
         });
         ?>
+
+    <h3 class="demo-h3" id="form-tabs">Tabs in a form <?= since('form') ?></h3>
+    <p class="demo-intro"><code>tab()</code> puts the fields that follow it into a tab: fields before the first tab stand above the tabs, fields after <code>endTabs()</code> below them. Press <strong>Save</strong> while the city is empty: the form opens the tab <em>Address</em>, the browser points at the field, and the tab carries a badge that counts what is wrong until it is put right. Sent, the form comes back on the tab you were on — it posts that tab as <code>_gk_tab</code>, and <code>values($_POST)</code> hands it back (this demo stores nothing). In a modal or a side sheet add <code>tabsSecondary()</code>.</p>
+        <?php
+        showcase(function () {
+            $customer = ['ct_number' => 'C-1042', 'ct_name' => 'Ada Lovelace', 'ct_email' => 'ada@example.org'];
+            (new Form('demo-tabs'))
+                ->action('#form')
+                ->field('ct_number', 'Customer no.', 'text', ['width' => 8])
+                ->tab('general', 'General', ['icon' => 'person'])
+                    ->field('ct_name', 'Name', 'text', ['required' => true])
+                    ->field('ct_email', 'Email', 'email')
+                ->tab('address', 'Address', ['icon' => 'home'])
+                    ->row()
+                        ->field('ct_street', 'Street', 'text', ['width' => 10])
+                        ->field('ct_zip', 'Postcode', 'text', ['width' => 6])
+                    ->endRow()
+                    ->field('ct_city', 'City', 'text', ['required' => true])
+                ->tab('notes', 'Notes', ['icon' => 'sticky_note_2', 'count' => 2])
+                    ->field('ct_note', 'Internal note', 'textarea')
+                ->endTabs()
+                ->field('ct_tags', 'Tags', 'text')
+                ->values(array_filter($_POST, 'is_string'))   // what was sent, the tab included …
+                ->values($customer)              // … else the record
+                ->submit('Save')
+                ->render();
+        });
+        ?>
+
+    <p class="demo-intro">The same form shown again after a failed save. <code>errors()</code> opens the first tab with an error — over the tab that was posted (here <em>Notes</em>) — and every tab with errors carries the count, in PHP, so it holds without a script.</p>
+        <?php
+        showcase(function () {
+            (new Form('demo-tabs-errors'))
+                ->action('#form')
+                ->field('ce_number', 'Customer no.', 'text', ['width' => 8])
+                ->tab('general', 'General', ['icon' => 'person'])
+                    ->field('ce_name', 'Name', 'text', ['required' => true])
+                    ->field('ce_email', 'Email', 'email')
+                ->tab('address', 'Address', ['icon' => 'home'])
+                    ->row()
+                        ->field('ce_street', 'Street', 'text', ['width' => 10])
+                        ->field('ce_zip', 'Postcode', 'text', ['width' => 6])
+                    ->endRow()
+                    ->field('ce_city', 'City', 'text', ['required' => true])
+                ->tab('notes', 'Notes', ['icon' => 'sticky_note_2', 'count' => 2])
+                    ->field('ce_note', 'Internal note', 'textarea')
+                ->endTabs()
+                ->values(['ce_number' => 'C-1042', 'ce_name' => 'Ada Lovelace', 'ce_zip' => '10A', '_gk_tab' => 'notes'])
+                ->errors(['ce_city' => 'Required', 'ce_zip' => 'Not a postcode', '_form' => 'The customer was not saved.'])
+                ->submit('Save')
+                ->render();
+        });
+        ?>
 </div>
 

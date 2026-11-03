@@ -7,6 +7,57 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.113.0] - 2026-11-03
+
+A form splits into tabs with `Form::tab()`, and nothing in a hidden tab gets lost: a field the browser rejects opens its tab, the server's errors open theirs, and every tab with something wrong carries an error badge with the count. The user's tab survives a failed save and, with `tabsRemember()`, the next visit.
+
+### Added
+- **`Form::tab($key, $label, $opts)` and `endTabs()`.** Fields after `tab()` go into its panel; fields before the first tab stand above the tabs, fields after `endTabs()` below them. Options `icon`, `badge`, `count`, `disabled`. The markup is the authored tab shape (each button `type="button"`); every panel is in the page and posted. `tabsStyle('karte'|'linie'|'kapsel'|'text')`, `tabsSecondary()` for a form in a modal, a side sheet or a page tab, `activeTab()`.
+- **Server errors pick the tab** (no script needed): the first tab with an error opens and every tab with errors carries `gk-tab-badge gk-tab-badge-error` ("2 errors", `form.tab_errors_one` / `form.tab_errors`, en and de).
+- **The hidden field `_gk_tab` (`Form::TAB_FIELD`)** posts the tab on screen; `values($_POST)` hands it back, so a failed save reopens where the user was. `tabsRemember()` keeps it per form id in localStorage when the page chose no tab.
+- **`js/gridkit.js` (one block at the end):** a submit the browser blocks for a field in a hidden tab opens that tab first, so the browser focuses the field and shows its own message (first rejected field, one switch per submit; for a submit button, Enter, `requestSubmit()` and `reportValidity()`, never for a script's `checkValidity()`); live error badges; AJAX errors and an empty required rich-text field in a hidden tab open it; `GK.formTabs.refresh(form)`, `GK.formTabs.init(container)`.
+
+### Fixed
+- **The required rich-text check** called `_t` outside the closure that defines it and threw before its toast; the toast ("Body is required.") shows again.
+
+### Notes
+- `js/gridkit.js`: the 1.113.0 block is new, and the rich-text check changed by one line. A copy without the block (the PawBot dashboard's) still switches the tabs and shows the server's tab and badges; the jump, the live badges, remembering and following the user's clicks into `_gk_tab` are missing.
+- `css/gridkit.css`: one rule, 16px between the tabs and the fields after `endTabs()`; no new class.
+
+### Demo
+- Form → "Tabs in a form": a customer form with three tabs and a required field in the second, and the same form shown again with server errors.
+
+### Tests
+- `tests/form-tabs.test.php` (115 assertions) and `ci/browser-form-tabs.js` (88 cases, light and both dark spellings, 390px, modal, nested page tabs, AJAX, no script, older script). Each of 43 rules taken out turns a case red. `tests/golden-form` unchanged.
+
+---
+## [1.112.0] - 2026-11-03
+
+One tooltip engine now draws every GridKit tooltip — title, plain, rich and the new toggletip — placing, flipping and announcing them, with a PHP API and tooltip options on Button, Table and Form.
+
+### Added
+- **One engine** (js block "1.112.0"): preferred side, flip to the opposite side, shift inside the window and inside a scrolling box, an arrow that keeps pointing at the trigger; hover delay (300 ms, `data-gk-tooltip-delay`), keyboard focus (`:focus-visible`), a tap on touch; closes on Escape, blur, scrolling away, the pointer leaving (100 ms grace, the bubble is hoverable); one at a time; `aria-describedby` for plain and title tooltips; `prefers-reduced-motion`.
+- **Options**: `data-gk-tooltip-pos="auto"`, `-tone` (neutral, info, success, warning, danger, light — 4.5:1 in light and both dark spellings, every theme), `-max`, `-kbd`, `-wrap`.
+- **Toggletip** `data-gk-toggletip="text|#id"` and the help icon `.gk-help` (24px, 44px to a finger): opens on click/Enter/Space, a live region after its trigger, the focus stays on the trigger.
+- **`GridKit\Tooltip`**: `attrs()`, `rich()`, `toggletip()`, `help()`; bad options are warnings, never a `TypeError`.
+- **Component options**: `Button` `'tooltip'`; `Table` column `'tooltip'` (help icon in the header) and row button `'tooltip'` (instead of `title`), both kept after a sort; `Form` field `'help'` (help icon beside the label, `.gk-label-row`). Classes `gk-help`, `gk-label-row`, `gk-tip-arrow`, `gk-toggletip`. Strings `tooltip.help`, `tooltip.help_about` (en, de).
+- **JS API**: `GK.tooltip.show(el)`, `hide()`, `update()`, `init(root)`; `GK.tip` runs on the same engine.
+
+### Changed
+- `GK.tip`: a title on a control with a name of its own becomes its description, no longer its name. Title tooltips also open on keyboard focus and a tap, and close on Escape rather than on every key.
+- README: Tooltip is named among the infrastructure classes (24 classes in `src/`). `tests/js`: `Tooltip::rich()` writes `data-gk-tooltip-rich`, so two hooks are left that only a page author writes.
+
+### Notes
+- Without the 1.112.0 script (PawBot's copy) the CSS-only tooltip and `GK.tip` work as before; the script marks `<html data-gk-tt>` and only then the CSS drops its `::after`. No line outside the two new blocks changed in `js/gridkit.js` and `css/gridkit.css`.
+- A disabled button cannot show a tooltip; wrap it in a span.
+
+### Demo
+- The Tooltip section rewritten: positions, tones, keyboard hint, rich tooltips, toggletips, help icons, the PHP API beside each example; the table shows a column tooltip (VAT) and a row button tooltip.
+
+### Tests
+- `tests/tooltip.test.php` (160 assertions); `ci/browser-tooltip.js` + fixture (333 checks: edges, scroll boxes, delays, keyboard, accessibility tree, touch, reduced motion, contrast of every tone, the script before 1.112.0); 42 counter-checks, all red.
+
+---
 ## [1.111.0] - 2026-11-03
 
 Tabs on a new level: `GridKit\Tabs` writes every style, alignment and option of a tab row from PHP, and tabs gain deep links, remembered tabs, lazy panels, a cancelable `gk:tabchange` and a JS API (`GK.tabs.*`). A line, pill or text row wider than its box shows an arrow where more tabs are.

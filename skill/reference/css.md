@@ -1,4 +1,4 @@
-# GridKit 1.111.0 — CSS
+# GridKit 1.113.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -217,6 +217,8 @@ Links between pages take the same classes (`<nav class="gk-tab-nav gk-tab-nav-ka
 - **Nesting:** a `.gk-tabs` inside a panel of another is fine since 1.101.0 — a click on an outer tab
   touches only its own row and panels; the inner choice stays. The inner row takes the second-row
   shape. `data-tab` keys may repeat between levels.
+- **Tabs inside a form** (since 1.113.0): use `Form::tab()` (see **Form**), not this markup by hand — it
+  opens the tab of a field the browser or the server rejects and puts the error badge on every such tab.
 - **Steps on a phone:** `.gk-steps` draws a shorter line before each step up to 480px; three steps
   of the length "Changes · Approval · Publish" fit in 340px, and when a band wraps after all, no line
   hangs at the end or the start of a row.
@@ -583,29 +585,136 @@ the ring's transition and the viewer's entrance.
 
 ### Tooltips
 
-Three forms, from least to most work:
+One engine (since 1.112.0) draws every tooltip GridKit has. It places the bubble on the
+preferred side, flips it to the opposite side when it does not fit (then tries the other
+two), shifts it along the edge to stay inside the window — and inside the visible part of a
+box that scrolls — and keeps the arrow pointing at the trigger after the shift. It opens on
+hover after a delay and at once on keyboard focus (`:focus-visible`: a mouse click on a button
+is not a request), on a tap on touch, and closes on Escape, blur, the pointer leaving (with
+100 ms of grace, so the pointer can move onto the bubble and rest there), the trigger
+scrolling out of sight and a tap elsewhere. One tooltip at a time.
+
+Five forms, from least to most:
 
 ```html
-<!-- 1. Any title attribute. GK.tip restyles it on first hover and moves the
-        text to data-gk-tip so the browser's own popup stops competing.
-        Opt out with data-gk-tip-off on the element or any ancestor. -->
+<!-- 1. Any title attribute. GK.tip moves it to data-gk-tip on the first hover or focus
+        (the browser's own popup stops competing) and shows it in the engine's bubble;
+        \n breaks the line. Opt out with data-gk-tip-off on the element or an ancestor. -->
 <button title="Save the current draft">Save</button>
 
-<!-- 2. CSS-only, no JavaScript involved. -->
-<span data-gk-tooltip="Short explanation" data-gk-tooltip-pos="top">Hover me</span>
+<!-- 2. Plain. Without the script this is the CSS-only tooltip it always was. -->
+<span data-gk-tooltip="Net, before VAT" data-gk-tooltip-pos="bottom">Net</span>
 
-<!-- 3. Rich: real HTML in the popup. -->
+<!-- 3. Rich: real HTML in the bubble. Give the element an id: it describes the trigger. -->
 <span data-gk-tooltip-rich="#vat-help">VAT</span>
 <div id="vat-help">Reduced rate — <strong>10&nbsp;%</strong> for food and books.</div>
+
+<!-- 4. Toggletip: opens on a click, Enter or Space — not on hover — and stays open. -->
+<button type="button" data-gk-toggletip="Counted from the invoice date.">Due</button>
+<button type="button" data-gk-toggletip="#vat-rules">VAT rules</button>
+<div id="vat-rules" hidden>See <a href="/vat">the rules</a> or <button type="button">ask</button>.</div>
+
+<!-- 5. The help icon: a toggletip on a ready-made "?" button (Tooltip::help() writes it). -->
+<button type="button" class="gk-help" data-gk-toggletip="On your bank card." aria-label="More about IBAN">…</button>
 ```
 
-`data-gk-tooltip-pos` takes `top` (default), `bottom`, `left` or `right`.
+**Options** — attributes on the trigger, the same for every form (each one optional):
 
-For the rich form the target is a CSS selector, so `#id` is the usual choice —
-and **give it an id**: since 1.73.0 the trigger is joined to it with
-`aria-describedby`, which needs one. The trigger also becomes focusable if it
-is not already, opens on **focus** as well as hover, and **Escape** dismisses
-it — until then the rich tooltip existed for pointers and for nobody else.
+| Attribute | PHP option | Values | Default |
+|---|---|---|---|
+| `data-gk-tooltip-pos` | `pos` | `top`, `bottom`, `left`, `right`, `auto` (above or below, whichever has more room, then the sides) | `top` |
+| `data-gk-tooltip-tone` | `tone` | `neutral` (slate), `info`, `success`, `warning`, `danger`, `light` — text at 4.5:1 or more on its ground in light and dark mode, under every theme | slate; a toggletip is a surface card |
+| `data-gk-tooltip-max` | `max` | the widest it gets: pixels (`240`) or a length (`20rem`) | 360px (toggletip 320px) |
+| `data-gk-tooltip-kbd` | `kbd` | a keyboard hint shown as `<kbd>` after the text (`Ctrl+S`); a screen reader hears "Save (Ctrl+S)" | — |
+| `data-gk-tooltip-delay` | `delay` | ms before it opens on hover, 0–10000; moving on from a tooltip just shown opens the next at once | 300 |
+| `data-gk-tooltip-wrap` | `wrap` | several lines, at most 280px | one line in the CSS-only form |
+
+**PHP — `GridKit\Tooltip`.** Every helper returns a string — echo it. `Tooltip::attrs()`,
+`Tooltip::rich()` and `Tooltip::toggletip()` return attributes with a leading space;
+`Tooltip::help()` returns the icon button. The text is escaped. The first argument of
+`attrs()`, `toggletip()` and `help()` is the text, or an array that carries it under
+`'text'` with its options beside it — the shape the component options take. A bad option
+(`'pos' => 'middle'`, an unknown key) is an `E_USER_WARNING` and is left out; the tooltip
+still shows. An empty text writes nothing.
+
+```php
+echo '<span' . Tooltip::attrs('Net, before VAT', ['pos' => 'bottom', 'tone' => 'info']) . '>Net</span>';
+echo '<button type="button"' . Tooltip::attrs('Save', ['kbd' => 'Ctrl+S', 'delay' => 0]) . '>Save</button>';
+echo '<span' . Tooltip::rich('#vat-help', ['max' => 320]) . '>VAT</span>';
+echo '<button type="button"' . Tooltip::toggletip('Counted from the invoice date.') . '>Due</button>';
+echo 'IBAN ' . Tooltip::help('On your bank card.', ['label' => 'IBAN']);   // "?" named "More about IBAN"
+echo Tooltip::help('#vat-rules', ['icon' => 'info']);                        // an "i"; the content is #vat-rules
+
+// The component options — a description, never the name, and never with a title beside it.
+echo Button::icon('delete', ['tooltip' => ['text' => 'Deletes the invoice for good', 'tone' => 'danger']]);
+(new Table('invoices'))->setData($rows)
+    ->column('name', 'Customer', ['tooltip' => 'As on the contract'])   // a help icon in the header
+    ->button('edit', ['icon' => 'edit', 'tooltip' => 'Edit this customer'])
+    ->render();
+(new Form('bank'))->field('iban', 'IBAN', 'text', ['help' => 'On your bank card.'])->render();
+```
+
+`help()` takes `label` (what it explains; its name is "More about {label}" from the language
+file, "More information" without) and `icon` (`help`, a question mark, or `info`, an i)
+besides `pos`, `tone`, `max` and `kbd`. `rich()` takes the id of the element and `pos`,
+`tone`, `max`, `delay`.
+
+**On the components** (additions — nothing changes for code that does not use them):
+
+- `Button::render($label, ['tooltip' => 'Text' | ['text' => …, 'pos' => …, 'tone' => …, 'kbd' => …]])`
+  — the GridKit tooltip instead of a `title`. An icon-only button is still named by `aria`,
+  `title` or its icon; the tooltip is its description. With `tooltip` no `title` is written,
+  even when one is given (it still names the button): two popups would compete.
+- Table column `'tooltip'` — a `.gk-help` icon beside the header label, a button of its own
+  next to the sort button (inside it, a click would sort). Table row button `'tooltip'` —
+  its attributes instead of the browser `title`. Both come back after a sort of a
+  `setData()` table, exactly as the server wrote them.
+- Form field `'help'` — a `.gk-help` icon beside the label that opens the text on a click.
+  The label and the icon stand in a `.gk-label-row`; the icon is never inside the `<label>`,
+  so the field's name stays its label. Without a visible label (a checkbox) it follows the
+  control. `'hint'` keeps what it does: the sentence of a settings row and of an upload zone.
+
+**JavaScript.** Everything is delegated: content that arrives later works without a call.
+`GK.initContent(root)` (and so a modal, a live table, AJAX navigation) also joins new
+triggers to their text for a screen reader before their first focus.
+
+```javascript
+GK.tooltip.show(el);    // open the tooltip (or toggletip) of el now, without a delay
+GK.tooltip.hide();      // close what is open
+GK.tooltip.update();    // place it again — after its text or the layout around it changed
+GK.tooltip.init(root);  // bind the triggers in root (GK.initContent calls it)
+GK.tip.show(el);        // the same for an element with a title; GK.tip.hide() closes it
+```
+
+**What a screen reader gets.** A plain or title tooltip describes its trigger through
+`aria-describedby` (a hidden copy of the text — an `::after` is not in the accessibility
+tree). A trigger that cannot take the focus gets `tabindex="0"`; one that wraps a control
+describes that control. A title on a control that has no name of its own (an icon button)
+becomes its `aria-label`, as before; on one that has a name it becomes its description —
+it used to replace the visible name.
+
+**The toggletip** is a live region (`role="status"`) right after its trigger. Opening it
+reads its text out and the focus **stays on the trigger** (`aria-expanded` says it is
+open): a help text is read, not operated, and moving the focus into a popup would take a
+person out of the form they were filling in. Tab walks from the trigger into its links and
+buttons, because they come next in the document. It closes on Escape (the focus comes
+back), a click outside, a second click, or the focus moving on past it. `'#id'` content
+moves into the bubble and back, hidden, when it closes; a `<template>` is copied.
+
+**Escape** closes a toggletip, or a tooltip the keyboard is on, and claims the key: a modal
+or sheet around it stays open, and the next Escape closes that. A tooltip the mouse merely
+rests on closes without taking the key.
+
+**Touch.** A tap on a trigger that is only a trigger (a word, an icon that is not a control)
+shows its tooltip; a second tap, or a tap elsewhere, hides it. A tap on a button or link
+with a tooltip is its click, untouched. The `.gk-help` icon is 24px to look at and 44px to
+a finger.
+
+**Without the script** — or with an older copy of `js/gridkit.js`, as the PawBot dashboard
+keeps one — the CSS-only tooltip and the old `GK.tip` work exactly as before, and a text
+toggletip or help icon shows its text as the CSS-only tooltip on hover. The engine marks
+`<html data-gk-tt>`; only then does the stylesheet drop the `::after`, so nothing shows twice.
+`prefers-reduced-motion` turns the fade off.
 
 ⚠️ A tooltip is a hint, never the only place something is said. Anything a
 person must have to complete the task belongs in the label or beneath the

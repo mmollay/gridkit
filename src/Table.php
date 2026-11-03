@@ -78,6 +78,13 @@ class Table
      * @var array<string,array<string,mixed>>
      */
     private array $editSpecs = [];
+    /**
+     * The tooltip markup of a column ('c:key', its help icon) or a row button ('b:name', its
+     * attributes), worked out once: a row button renders in every row, and a bad option would
+     * otherwise warn once per row and again for the data block (1.112.0).
+     * @var array<string,string>
+     */
+    private array $tooltipMarkup = [];
 
     public function __construct(string $id)
     {
@@ -1220,7 +1227,10 @@ class Table
             // at once and its pager fired a server reload the page often
             // could not answer.
             'perPage' => $this->perPage,
-            'columns' => $this->columns,
+            // A column's help icon and a row button's tooltip, as the server writes them: the
+            // rebuild adds them back after a sort (1.112.0 block of gridkit.js). A table without
+            // 'tooltip' gets exactly what it got before.
+            'columns' => $this->withTooltipMarkup($this->columns, 'c', 'tooltipHtml'),
             // The label colour table, but only for a table that shows labels:
             // the client used to carry a shorter copy of it and a sorted
             // table changed its colours.
@@ -1243,7 +1253,7 @@ class Table
             // the client's own (rows after search, before the page slice).
             'loadTimeMs' => $this->loadTimeMs,
             'footer'  => array_map(static fn ($c): array => is_string($c) ? ['text' => $c] : (array) $c, $this->footerCells),
-            'buttons' => $this->buttons,
+            'buttons' => $this->withTooltipMarkup($this->buttons, 'b', 'tooltipAttrs'),
             // Rewritten by the client on every rebuild, like everything else here.
             'caption' => $this->caption,
             'groupBy' => $this->groupCol === '' ? null : [
@@ -1524,6 +1534,9 @@ class Table
                    . ' data-gk-sort="' . $sortBtn[0] . '"'
                    . ' data-gk-dir="' . $sortBtn[1] . '">' . $inner . '</button>';
         }
+        // 'tooltip' (1.112.0): a help icon beside the label, a button of its own. Inside the sort
+        // button it would be a button in a button, and a click on it would sort.
+        $inner .= $this->tooltipFor('c', $key, $col);
         // scope="col": without it a screen reader has to guess which
         // header a cell belongs to, and on a table with an action column or
         // a checkbox column it guesses wrong. This is the one attribute a
@@ -1801,6 +1814,10 @@ class Table
         // aria-label is the name, title stays for the tooltip — see buttonName().
         $ariaAttr  = ' aria-label="' . $e(self::buttonName($bname, $bopts)) . '"';
         $titleAttr = !empty($bopts['title']) ? ' title="' . $e($bopts['title']) . '"' : '';
+        // 'tooltip' (1.112.0) takes the title's place: one popup, GridKit's, not the browser's
+        // on top of it. 'title' still names an icon-only button through buttonName().
+        $tooltipAttrs = $this->tooltipFor('b', $bname, $bopts);
+        if ($tooltipAttrs !== '') $titleAttr = $tooltipAttrs;
 
         $href = self::buttonHref($bopts, $row);
         // A link carries no data-gk-action: the delegated handler would fire
@@ -1907,6 +1924,38 @@ class Table
         return $translated !== $key
             ? $translated
             : ucfirst(str_replace(['_', '-'], ' ', (string) $bname));
+    }
+
+    /**
+     * The 'tooltip' of a column (kind 'c': the help icon of its header, named after its label)
+     * or of a row button (kind 'b': the attributes that replace its title), '' without one.
+     * Worked out once per table — see $tooltipMarkup.
+     */
+    private function tooltipFor(string $kind, int|string $key, array $opts): string
+    {
+        $memo = $kind . ':' . $key;
+        if (!isset($this->tooltipMarkup[$memo])) {
+            $tip = $opts['tooltip'] ?? null;
+            $this->tooltipMarkup[$memo] = match (true) {
+                $tip === null || $tip === '' || $tip === [] => '',
+                $kind === 'c' => Tooltip::help($tip, ['label' => (string) ($opts['label'] ?? '')]),
+                default => Tooltip::attrs($tip),
+            };
+        }
+        return $this->tooltipMarkup[$memo];
+    }
+
+    /**
+     * Columns or buttons for the data block, each with a tooltip carrying its markup under
+     * $field, so the client rebuild writes what the server wrote. Untouched without one.
+     */
+    private function withTooltipMarkup(array $items, string $kind, string $field): array
+    {
+        foreach ($items as $key => $item) {
+            $markup = $this->tooltipFor($kind, $key, $item);
+            if ($markup !== '') $items[$key][$field] = $markup;
+        }
+        return $items;
     }
 
     /**
