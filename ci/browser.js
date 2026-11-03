@@ -319,6 +319,19 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
     check("hide() on a dynamic modal removes it like close() does",
       (await page.evaluate(() => GK.modal.stack.length === 0 && !document.querySelector(".gk-modal-overlay:not([id])"))));
 
+    // ── Buttons on the left: every heading over its own cells, before and after a rebuild (1.110.1) ──
+    const lefty = () => page.evaluate(() => {
+      const t = document.querySelector('[data-gk-table="lefty"] .gk-table');
+      const head = [...t.tHead.rows[0].cells].map((c) => c.classList.contains("gk-cb-col") ? "cb" : c.classList.contains("gk-actions-col") ? "actions" : c.textContent.replace(/[^A-Za-z]/g, "").replace(/(unfoldmore|arrowupward|arrowdownward)$/, ""));
+      const row = [...t.tBodies[0].rows[0].cells].map((c) => c.classList.contains("gk-cb-col") ? "cb" : c.classList.contains("gk-actions") ? "actions" : c.getAttribute("data-label"));
+      return { head: head.join("|"), row: row.join("|"), first: t.tBodies[0].rows[0].querySelector('td[data-label="Name"]').textContent.trim() };
+    });
+    const leftyBefore = await lefty();
+    check("left buttons: every heading stands over its own cells, as the server writes it", leftyBefore.head === leftyBefore.row && leftyBefore.head === "cb|actions|Name|City|actions");
+    await page.click('[data-gk-table="lefty"] .gk-sort-btn');
+    const leftyAfter = await lefty();
+    check("left buttons: … and after a sort rebuilds the table in the browser", leftyAfter.first === "Alpha" && leftyAfter.head === leftyAfter.row);
+
     // ── A header stands where its column stands — before and after a rebuild ──
     const heads = () => page.evaluate(() => {
       const out = {};

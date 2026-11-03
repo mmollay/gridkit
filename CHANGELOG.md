@@ -7,6 +7,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.110.1] - 2026-11-03
+
+A table with buttons on the left had every heading one column before its cells; each heading now stands over its own column, as the server writes it and after a sort. And `columnToggle()` hides its columns in the box of `stickyHead()` and `stickyColumn()` too.
+
+### Fixed
+- **The header of a table with `'position' => 'left'` buttons.** `Table::renderTableHead()` wrote the empty cell over the left buttons at the end of the header row, beside the one over the right buttons, while every row writes its left buttons before the first column; `renderStatic()`, which redraws a `setData()` table after a sort, a search or a page, did the same. So "Name" stood over the buttons, "City" over the names, and so on — in the demo's invoice list, for one. The cell now stands after the checkbox and before the first column, in PHP and in the browser. `tests/golden/table.json` is re-recorded for the three cases with left buttons (`table/buttons`, `table/buttons-selectable`, `table/group-labels`); the diff is that one cell moving, nothing else.
+- **`columnToggle()` in the sticky box (1.108.0 beside 1.107.0).** The hiding rules and the script looked for the table as a child of the wrap; `stickyColumn()` and `stickyHead('…')` put it in `.gk-table-sticky-box`, and a hidden column showed. The 60 rules exist once more for a table in the box, and the script finds the table there. `columnToggle()` read the header's places apart from the rows' because of the fault above (`data-gk-col-head`); the attribute stays, with the same number as `data-gk-col-pos`.
+
+### Notes
+- **`js/gridkit.js`: two lines in `renderStatic()`**, the cell over the left buttons written before the columns instead of after them. A copy of the file without them, such as the PawBot dashboard's, now draws the header correctly on the server and wrongly after the first sort: port the two lines (search for "1.110.1" in `renderStatic`) to keep the two in step.
+
+### Tests
+- `ci/browser.js` (140 cases, 2 new): a `setData()` table with a checkbox and buttons on both sides; every heading over its own cells as the server writes it, and after a sort. Each half of the fix taken out alone turns its case red.
+- `ci/browser-column-toggle.js` (65 cases, 4 new): a table in the sticky box with a hidden column — hidden in the header and the rows, every row as wide as the header, a column unticked, and hidden on the first paint without a script. Without the new rules the last case turns red, without the script's change the two before it.
+- `tests/column-toggle.test.php`: the header's place is the rows' place; the 60 rules for the sticky box are there.
+- A table with all four features of 1.107.0 to 1.110.0 at once (a checkbox, buttons on both sides, a sticky head and column in a box, the column menu with a hidden column, the density toggle, inline editing) was driven in a browser: the hidden column hidden, editing after a sort saved, the density set, no script error.
+
+---
 ## [1.110.0] - 2026-11-03
 
 A table cell can be changed where it stands: `Table::editable()` and a column's `'edit'` turn it into a field on a click or on Enter, save it on Enter or when the field is left, fire `gk:celledit`, and post the change when the table names a URL. A table without an editable column renders exactly as before.

@@ -122,7 +122,7 @@ return [
     T::contains($menu, '<input type="checkbox" data-gk-col="city" data-gk-col-pos="4" data-gk-col-head="4" checked>', "'hidden' => false does not start ticked");
 },
 
-'the places count the checkbox and the left buttons; the header writes its button cells at its end' => function (): void {
+'the places count the checkbox and the left buttons, in the header as in a row (1.110.1)' => function (): void {
     Lang::set('en');
     $html = T::capture(fn() => (new Table('t'))->setData(ctRows())->selectable()
         ->column('no', 'No.')->column('name', 'Name')->column('email', 'E-mail')
@@ -130,13 +130,13 @@ return [
         ->button('edit', ['icon' => 'edit'])
         ->columnToggle()->render());
     $menu = ctMenu($html);
-    // Cells: 1 checkbox, 2 left buttons, 3 no, 4 name, 5 email, 6 right buttons.
-    // Header: 1 checkbox, 2 no, 3 name, 4 email, 5 and 6 the two button headers.
-    T::contains($menu, 'data-gk-col="no" data-gk-col-pos="3" data-gk-col-head="2"', 'the first column is not counted past the checkbox and the left buttons');
-    T::contains($menu, 'data-gk-col="email" data-gk-col-pos="5" data-gk-col-head="4"', 'the last column is not where its cells are');
+    // Cells and header alike: 1 checkbox, 2 left buttons, 3 no, 4 name, 5 email, 6 right buttons.
+    // Until 1.110.1 the header wrote the cell over the left buttons at its end (head = pos - 1).
+    T::contains($menu, 'data-gk-col="no" data-gk-col-pos="3" data-gk-col-head="3"', 'the first column is not counted past the checkbox and the left buttons');
+    T::contains($menu, 'data-gk-col="email" data-gk-col-pos="5" data-gk-col-head="5"', 'the last column is not where its cells are');
     // What the places stand on: the order renderTableHead() and renderRow() write.
-    T::ok((bool) preg_match('~<thead><tr><th scope="col" class="gk-cb-col">.*?</th><th scope="col">No\.</th><th scope="col">Name</th><th scope="col">E-mail</th><th scope="col" class="gk-actions-col">~', $html),
-        'the header no longer writes its button cells at its end — data-gk-col-head must follow');
+    T::ok((bool) preg_match('~<thead><tr><th scope="col" class="gk-cb-col">.*?</th><th scope="col" class="gk-actions-col">.*?</th><th scope="col">No\.</th><th scope="col">Name</th><th scope="col">E-mail</th><th scope="col" class="gk-actions-col">~', $html),
+        'the header does not write the cell over the left buttons before the first column — data-gk-col-head must follow');
     T::ok((bool) preg_match('~<tr data-gk-row-id="1"><td class="gk-cb-col">.*?</td><td class="gk-actions gk-actions-left">.*?</td><td data-label="No\.">~', $html),
         'a row no longer writes its left buttons before the first column — data-gk-col-pos must follow');
 },
@@ -289,6 +289,11 @@ return [
         T::contains($block, '.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="' . $p . '"]:not(:checked)) > .gk-table > thead > tr > :nth-child(' . $p . '),', "header place $p");
         T::contains($block, '.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="' . $p . '"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(' . $p . '),', "row place $p");
         T::contains($block, '.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="' . $p . '"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(' . $p . ')', "footer place $p");
+        // The same three in the box of stickyHead()/stickyColumn() (1.110.1): without them a 'hidden'
+        // column of a table in the box shows until the script has run, and always without it.
+        foreach (['head' => 'thead > tr', 'pos' => 'tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row)', 'foot' => 'tfoot > tr'] as $attr => $rows) {
+            T::contains($block, '.gk-table-wrap:has(> .gk-toolbar [data-gk-col-' . $attr . '="' . $p . '"]:not(:checked)) > .gk-table-sticky-box > .gk-table > ' . $rows . ' > :nth-child(' . $p . ')', "$attr place $p in the sticky box");
+        }
     }
     T::ok((bool) preg_match('~:nth-child\(20\) \{\s*display: none !important;\s*\}~', $block), 'the places are not one list that hides');
     T::ok((bool) preg_match('~\n\.gk-table \.gk-col-hidden \{\s*display: none !important;\s*\}~', $block), 'the mark of the script is not a rule of its own');

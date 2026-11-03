@@ -95,6 +95,21 @@ $add('Checkbox, buttons on both sides, groups, a footer, a fixed column, a hidde
     ->exportCsv('cols.csv')
     ->columnToggle());
 
+// The same table in the box of stickyHead()/stickyColumn() (1.107.0): the table is no longer a child
+// of the wrap, and until 1.110.1 nothing was hidden there.
+$add('In the sticky box', (new Table('colbox'))
+    ->setData($rows)->selectable('id')
+    ->groupBy('team', ['a' => 'Team A', 'b' => 'Team B'])
+    ->column('no', 'No.', ['muted' => true, 'toggle' => false])
+    ->column('name', 'Name', ['sortable' => true])
+    ->column('email', 'E-mail', ['hidden' => true])
+    ->column('city', 'City', ['sortable' => true])
+    ->column('amount', 'Amount', ['format' => 'currency', 'sortable' => true])
+    ->button('view', ['icon' => 'visibility', 'position' => 'left', 'params' => ['id' => 'id']])
+    ->button('edit', ['icon' => 'edit', 'position' => 'right', 'params' => ['id' => 'id']])
+    ->stickyHead('300px')->stickyColumn()
+    ->columnToggle());
+
 $add('The empty state', (new Table('none'))->setData([])
     ->column('name', 'Name')->column('city', 'City', ['hidden' => true])->column('email', 'E-mail')
     ->columnToggle());

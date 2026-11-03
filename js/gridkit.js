@@ -1332,6 +1332,10 @@
             // search rebuilds the table, and until 1.80.3 it took them away.
             '<th scope="col" class="gk-cb-col"><input type="checkbox" data-gk-select-all aria-label="' +
             e(_lang["select_all"] || "Select all") + '" title="' + e(_lang["select_all"] || "Select all") + '"></th>';
+        // The cell over the left buttons stands where a row has them: before the first column,
+        // as Table.php writes it since 1.110.1 (it stood at the end, every heading one place early).
+        if (Object.values(data.buttons || {}).some((b) => (b.position || "right") === "left"))
+          html += '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">' + _gkEsc(_t("actions")) + "</span></th>";
         for (const [key, col] of Object.entries(columns)) {
           // width, min-width, max-width and nowrap, as Table.php writes them on a header cell.
           const thStyles = [];
@@ -1434,7 +1438,6 @@
           '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">' +
           _gkEsc(_t("actions")) +
           "</span></th>";
-        if (hasLeft) html += actionsHead;
         if (hasRight) html += actionsHead;
         html += "</tr></thead><tbody>";
 
@@ -6666,11 +6669,13 @@ function _gkShowIfInit(root) {
    * Row by row, by the places each cell takes (a colspan takes several): a cell whose every place
    * is hidden gets .gk-col-hidden; a cell spanning hidden places loses them from its colspan, which
    * it keeps in data-gk-span for when they come back. Rows written by renderStatic() or by the
-   * server carry the full colspan again, and are narrowed again. The header row counts its own
-   * places (data-gk-col-head): it writes the cell over the left buttons at its end.
+   * server carry the full colspan again, and are narrowed again. The header row reads its places
+   * from data-gk-col-head: until 1.110.1 it wrote the cell over the left buttons at its end, so
+   * its places differed from a row's; since then the two numbers are the same.
    */
   function apply(wrap) {
-    var table = wrap.querySelector(":scope > .gk-table");
+    // In the box of stickyColumn() / stickyHead('…') (1.107.0) when the table has one.
+    var table = wrap.querySelector(":scope > .gk-table, :scope > .gk-table-sticky-box > .gk-table");
     if (!table) return;
     var hiddenCells = {};
     var hiddenHeads = {};

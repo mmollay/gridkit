@@ -588,10 +588,10 @@ class Table
      * header, and the footer cell that stands alone over it, if one does. null when the table has
      * no menu — and then a column marked 'hidden' is said to show, since nobody could show it again.
      *
-     * The header has a place of its own because renderTableHead() — and renderStatic() after it —
-     * writes the header cell of the left buttons at the END of the header row, beside the one of
-     * the right buttons, while a row writes its left buttons before the first column. With left
-     * buttons a column's header therefore stands one place earlier than its cells.
+     * The header's place is the place of its cells. Until 1.110.1 renderTableHead() — and
+     * renderStatic() after it — wrote the header cell of the left buttons at the END of the header
+     * row, so with left buttons a heading stood one place before its cells and had a place of its
+     * own (data-gk-col-head). The attribute stays, now with the same number.
      *
      * 'hidden' is read only where 'toggle' is true: a column that cannot be hidden is ticked anyway.
      *
@@ -621,10 +621,8 @@ class Table
 
         $menu = [];
         $pos = $lead;
-        $head = $this->selectable ? 1 : 0;
         foreach ($this->columns as $key => $col) {
             $pos++;
-            $head++;
             $key = (string) $key;
             $toggle = ($col['toggle'] ?? true) !== false && $key !== $linkKey;
             $hidden = ($col['hidden'] ?? false) === true;
@@ -639,7 +637,9 @@ class Table
                 // A checkbox needs a name; a column with an empty heading gets its key.
                 'label' => trim($label) !== '' ? $label : $key,
                 'pos' => $pos,
-                'head' => $head,
+                // Since 1.110.1 the header writes the cell over the left buttons where a row
+                // writes the buttons, so a heading takes the place of its cells.
+                'head' => $pos,
                 'foot' => $foot[$pos] ?? null,
                 'toggle' => $toggle,
                 'hidden' => $hidden,
@@ -1413,13 +1413,16 @@ class Table
                . ' aria-label="' . $e(Lang::t('table.select_all')) . '"'
                . ' title="' . $e(Lang::t('table.select_all')) . '"></th>';
         }
+        // Empty header cells still need the scope, or the cells beneath them
+        // inherit the association of the last real header to their left.
+        // The cell over the left buttons stands where the buttons stand in a row: before the
+        // first column (1.110.1). It stood at the end of the header row, beside the one over the
+        // right buttons, so with left buttons every heading stood one column before its cells.
+        if ($leftButtons) echo '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">'
+            . $e(Lang::t('table.actions')) . '</span></th>';
         foreach ($this->columns as $key => $col) {
             $this->renderHeadCell($key, $col, $e);
         }
-        // Empty header cells still need the scope, or the cells beneath them
-        // inherit the association of the last real header to their left.
-        if ($leftButtons) echo '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">'
-            . $e(Lang::t('table.actions')) . '</span></th>';
         if ($rightButtons) echo '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">'
             . $e(Lang::t('table.actions')) . '</span></th>';
         echo '</tr></thead>';

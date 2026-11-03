@@ -58,7 +58,7 @@ const ROWS = [
 /** A table as it stands: what the header shows, and how wide every row is in columns. */
 function measure(id) {
   const wrap = document.querySelector(`[data-gk-table="${id}"]`);
-  const table = wrap.querySelector(":scope > .gk-table");
+  const table = wrap.querySelector(":scope > .gk-table, :scope > .gk-table-sticky-box > .gk-table");
   const shown = (el) => getComputedStyle(el).display !== "none";
   const label = (cell) => cell.getAttribute("data-label") || cell.textContent.trim();
   const heads = [...table.tHead.rows[0].cells].filter(shown);
@@ -119,12 +119,22 @@ const button = (id) => `[data-gk-table="${id}"] .gk-col-toggle [popovertarget]`;
     const m = (id) => page.evaluate(measure, id);
     const open = (id) => page.evaluate((s) => document.querySelector(s).click(), button(id));
 
+    // In the box of stickyHead()/stickyColumn(): hidden as anywhere else (1.110.1).
+    let inBox = await m("colbox");
+    check("sticky box: 'hidden' => true hides the column, header and cells", inBox.heads.join("|") === "|Actions|No.|Name|City|Amount|Actions" && inBox.rows.every((r) => !r.cells.includes("E-mail")), show(inBox));
+    check("sticky box: every row spans the columns the header shows", aligned(inBox), show(inBox));
+    await open("colbox");
+    await page.click(tick("colbox", "city"));
+    inBox = await m("colbox");
+    check("sticky box: unticking City hides it", !inBox.heads.includes("City") && inBox.rows.every((r) => !r.cells.includes("City")) && aligned(inBox), show(inBox));
+    await page.keyboard.press("Escape");
+
     let cols = await m("cols");
     check("'hidden' => true: the E-mail column is not there, header nor cells", !cols.heads.includes("E-mail") && cols.rows.every((r) => !r.cells.includes("E-mail")), show(cols));
-    // The header writes the cells over both button columns at its end (Table::renderTableHead()),
-    // so with left buttons a header stands one place before its cells: the menu knows both places.
-    check("the header keeps its order and loses only E-mail (its button cells at its end, as Table writes it)",
-      cols.heads.join("|") === "|No.|Name|City|Amount|Actions|Actions", cols.heads.join("|"));
+    // Since 1.110.1 the header writes the cell over the left buttons where a row writes the
+    // buttons, before the first column (it stood at the end, every heading one place early).
+    check("the header keeps its order and loses only E-mail (the cell over the left buttons before the first column)",
+      cols.heads.join("|") === "|Actions|No.|Name|City|Amount|Actions", cols.heads.join("|"));
     check("every row spans the columns the header shows: group headings narrowed, the footer cell over E-mail gone", aligned(cols), show(cols));
     check("…the footer keeps its cell over two columns and loses the one over E-mail",
       JSON.stringify(cols.rows.find((r) => r.kind === "foot").cells) === JSON.stringify(["", "Total", "cities", "1,555.40", ""]), JSON.stringify(cols.rows.find((r) => r.kind === "foot")));
@@ -425,10 +435,13 @@ const button = (id) => `[data-gk-table="${id}"] .gk-col-toggle [popovertarget]`;
     const firstPaint = await np.evaluate(() => [...document.querySelectorAll('[data-gk-table="cols"] thead th, [data-gk-table="cols"] tbody td[data-label="E-mail"]')]
       .filter((c) => c.textContent.trim() === "E-mail" || c.dataset.label === "E-mail").map((c) => getComputedStyle(c).display).join());
     check("no script: the 'hidden' column (header and cells) is hidden by the server's markup — no flash before a script runs", firstPaint === "none,none,none,none,none", firstPaint);
+    const firstPaintBox = await np.evaluate(() => [...document.querySelectorAll('[data-gk-table="colbox"] thead th, [data-gk-table="colbox"] tbody td[data-label="E-mail"]')]
+      .filter((c) => c.textContent.trim() === "E-mail" || c.dataset.label === "E-mail").map((c) => getComputedStyle(c).display).join());
+    check("no script: … and so it is in the sticky box", /^none(,none)+$/.test(firstPaintBox), firstPaintBox);
     await np.click(button("cols"));
     await np.click(tick("cols", "city"));
     const noJs = await np.evaluate(() => [...document.querySelectorAll('[data-gk-table="cols"] thead th')].filter((th) => getComputedStyle(th).display !== "none").map((th) => th.textContent.trim()).join("|"));
-    check("no script: the button opens the menu and a checkbox hides its column", noJs === "|No.|Name|Amount|Actions|Actions", noJs);
+    check("no script: the button opens the menu and a checkbox hides its column", noJs === "|Actions|No.|Name|Amount|Actions", noJs);
     await nc.close();
   }
 })();
