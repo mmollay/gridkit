@@ -8,7 +8,7 @@ description: >-
   GridKit in composer.json.
 ---
 
-# GridKit 1.105.0
+# GridKit 1.110.3
 
 PHP components for admin dashboards. Zero dependencies, no build step,
 PHP 8.2+. A checkout is a working install.
@@ -58,7 +58,11 @@ Everything else in that table is called on an object you constructed with `new`.
 `Theme::density('konsole')` sets how tightly tables are set — `konsole` fits
 about a third more rows on a screen, `weit` gives them room, and the default
 leaves the rhythm alone. It names no colour, so it composes with every theme
-and both modes; an unknown value is ignored.
+and both modes; an unknown value is ignored. Its steps are tokens in
+`css/themes.css`, which the page must load; since 1.110.3 they reach the padding
+of every table `Table` draws, in each size and variant, a list's row and a
+phone card (before, only the label radius moved). To let the person at the
+screen choose for one table, see `Table::densityToggle()`.
 | `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
 | `Lang::jsConfig()` | `Pagination::build()` | `Layout::skipLink()` |
 

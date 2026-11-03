@@ -109,6 +109,32 @@ return [
         'and are at least 40px tall');
 },
 
+'a card is compact: a grid whose first line is the head, the fields below without rules (1.106.0)' => function (): void {
+    $css = (string) preg_replace('#/\*.*?\*/#s', '', telefonCss());
+    $row = '.gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row)';
+    $title = 'td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile))';
+
+    // Measured in ci/browser-karten.js; here: the rules are in the 768px block, and say what they said.
+    T::ok((bool) preg_match('/' . preg_quote($row, '/') . ' \{[^}]*display: grid;[^}]*grid-template-columns: auto auto minmax\(0, 1fr\) auto;/', $css),
+        'the card is a grid of four tracks: checkbox, left buttons, title, right buttons');
+    T::ok((bool) preg_match('/' . preg_quote($row, '/') . ' > td \{[^}]*grid-column: 1 \/ -1;[^}]*border-bottom: none;/', $css),
+        'a field spans the card and has no rule');
+    T::ok((bool) preg_match('/tr:not\(\.gk-table-group, \.gk-table-more, \.gk-empty-row, \.gk-row-link\) > ' . preg_quote($title, '/') . ' \{[^}]*grid-column: 3;[^}]*grid-row: 1;[^}]*flex-wrap: nowrap;/', $css),
+        'the title — the first column not muted and not hidden — is the third track of the first line, and does not wrap into a second column');
+    T::ok((bool) preg_match('/tr\.gk-row-link > td:has\(\.gk-row-target\) \{\s*grid-column: 3;\s*grid-row: 1;/', $css),
+        'on a row with a link, the cell with the link is the title');
+    foreach (['td.gk-cb-col' => 1, 'td.gk-actions-left' => 2, 'td.gk-actions-right' => 4] as $cell => $track) {
+        T::ok((bool) preg_match('/tbody tr > ' . preg_quote($cell, '/') . ' \{\s*grid-column: ' . $track . ';\s*grid-row: 1;/', $css),
+            "$cell is track $track of the first line");
+    }
+    T::ok((bool) preg_match('/td\.gk-cb-col \{[^}]*padding: 0 10px 8px 0 !important;/', $css),
+        'the checkbox cell overrides the !important padding of .gk-cb-col');
+    T::ok((bool) preg_match('/tbody tr\.gk-row-link \{\s*padding-right: 40px;/', $css),
+        'a card with a link keeps the room for its chevron');
+    T::ok((bool) preg_match('/tr:has\(> td:nth-child\(1 of [^)]+\)\):nth-last-child\(1 of [^)]+\)\)\) > td \{[^}]*border-bottom: none;/', $css),
+        'a card that is nothing but its head has no rule under it');
+},
+
 'tapping a field does not zoom the page in' => function (): void {
     // Safari on iOS zooms the whole page into any input whose font is smaller
     // than 16px, the moment it is tapped — and it stays zoomed. Everything in

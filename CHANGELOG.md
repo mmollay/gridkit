@@ -7,6 +7,194 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.110.3] - 2026-11-03
+
+`Theme::density()` now sets the padding of every table, not only the corners of its labels, and the demo page no longer scrolls sideways at any width. A table in the box of `stickyColumn()` keeps everything it holds inside that box.
+
+### Fixed
+- **`Theme::density('konsole' | 'weit')` reaches the padding of a table.** Its steps are tokens in `css/themes.css` (`--gk-table-pad-y`, `--gk-table-pad-x`, `--gk-label-radius`), but the sizes (`.gk-table-sm`, `-md`, `-lg`) and the padding variants (`padded`, `compact`, `very-compact`, `xs`) set their padding in pixels, at the weight of the token rule and after it: on a page set to `konsole` a table drawn by `Table` got its 4px labels and kept every pixel of its padding. The rules of 1.109.0 that write those paddings against the tokens for a table with `densityToggle()` now hold under a page with a step as well (a second selector in each `:where()`, so their weight is unchanged), and so do the list's row and the phone's paddings and card. A table's own step (`densityToggle()`) still wins over the page's; a page without a step, or without `themes.css`, is unchanged.
+- **`stickyColumn()` without `stickyHead()` pushed the page sideways.** The box a table scrolls in was not positioned, so an absolutely positioned descendant whose cell does not stick — the screen-reader name of the empty header cell over the right buttons — was placed against the wrap or the page, outside the box's clipping. On the demo page that made a 1024px window scroll 86px sideways. The box is `position: relative` now.
+
+### Demo
+- **No sideways scroll from 320px to 1600px**, measured every 10px. Before, a 1280px window beside the sidebar scrolled 18px (57px before 1.110.1), a 900px window 110px, 1100px 11px, 769px 8px and 320px 4px. The article list, the invoice list and the selection example are wider than the content beside the sidebar at some of those widths and now use `stickyColumn()`: they scroll in a box of their own with the first column in front, and do not touch the page. The grid of the three sizes asks for at least `min(300px, 100%)` per table instead of 240px, which `size('lg')` did not fit in.
+- The demo was checked in a browser at 1280px and 390px, light and dark: no script error, the four sections of 1.107.0 to 1.110.0 (sticky head and column, columns to show and hide, row spacing, editing in the cell) render, and "What is new" lists the newest releases.
+
+### Tests
+- `ci/browser-density.js` (254 cases, 2 new): on a `konsole` page with `themes.css` every size and variant without the control measures, cell for cell, as the same table set to Compact by its control; a table without the control takes 8px 12px there (it kept 12px 16px, which the case of 1.109.0 had written down as intended), and without `themes.css` it keeps the default. Without the change both new cases turn red.
+- `tests/density-toggle.test.php`: the selectors of the rules that write the paddings against the tokens carry the page's step as well.
+- `ci/browser-sticky.js` (419 cases, 2 new): whatever is positioned in a box is placed against the box (red without `position: relative`). `tests/sticky.test.php` holds the rule.
+- Whole suite: 9,683 assertions; every browser check of the table green.
+
+---
+## [1.110.2] - 2026-11-03
+
+Housekeeping: `Table::render()` and `Table::renderButtons()`, the two longest methods left in the table, are cut into parts. Nothing a page can see changes — no class, no option, no markup, byte for byte — and a recording of 30,819 renderings holds that to account. One fault found on the way is fixed: a row button with a number for a name no longer stops the table.
+
+### Changed
+- **`Table::render()`** from 191 to 30 lines; it reads as the order of what it writes: `wrapOpenTag()` (with `wrapClasses()`), `renderDataBlock()`, `renderToolbar()` with `renderSearchField()`, `renderFilter()`, `renderCsvButton()` and `renderNewButton()`, `renderBulkBar()`, `renderInner()`, `renderModalTemplates()`. `columnMenu()` is still asked outside the toolbar: without one, it is what warns that a `'hidden'` column shows.
+- **`Table::renderButtons()`** from 146 to 6 lines: `buttonShows()` (`showIf`, `hideIf`), `renderButton()` for one button, and `buttonColor()`, `buttonConfirm()`, `buttonName()`, `buttonHref()` and `buttonOnclick()`. The `data-gk-params` attribute is built once instead of three times, and the four near-identical tag writes are one. The button name is passed as `int|string`: a button named `'1'` has the key 1. Every expression that can warn or throw runs in the order it did before. The longest method of the class is now `renderButton()`, 70 lines, about 30 of them comments.
+
+### Fixed
+- **A row button named with a number** (`->button('3', ['icon' => 'edit'])`, no `aria` and no `title`) threw a `TypeError` and the table did not render: its fallback name went through `str_replace()`, which under `strict_types` (1.104.3) refuses the int key PHP makes of `'3'`. The name is cast, as `renderBulkActions()` already did; the button is named "3".
+
+### Tests
+- `tests/golden-table` and `tests/golden-form` pass unrecorded. A recording of 30,819 renderings was made before the change and compared after every step: every option of `Table` alone and in pairs, `setData()`, `rows()`, empty, the AJAX fragment, sort, page, search, filter and hostile parameters, English and German, and hostile values in every button and toolbar option, alone and two at a time. It compares the markup, every warning in order with the byte offset at which it was raised, and every exception. The recording is identical. Two deliberate slips, evaluating a button's icon earlier and asking for the column menu only with a toolbar, each turned it red.
+- `tests/strict-types.test.php`: a numeric button name renders and is named after its number; without the cast it throws.
+- Whole suite: 9,682 assertions. The browser checks give the numbers they gave before (140, 29, 271, 417, 65, 252, 96, demo coverage ok). The demo page renders byte for byte as before in both languages, apart from the random ids.
+
+---
+## [1.110.1] - 2026-11-03
+
+A table with buttons on the left had every heading one column before its cells; each heading now stands over its own column, as the server writes it and after a sort. And `columnToggle()` hides its columns in the box of `stickyHead()` and `stickyColumn()` too.
+
+### Fixed
+- **The header of a table with `'position' => 'left'` buttons.** `Table::renderTableHead()` wrote the empty cell over the left buttons at the end of the header row, beside the one over the right buttons, while every row writes its left buttons before the first column; `renderStatic()`, which redraws a `setData()` table after a sort, a search or a page, did the same. So "Name" stood over the buttons, "City" over the names, and so on — in the demo's invoice list, for one. The cell now stands after the checkbox and before the first column, in PHP and in the browser. `tests/golden/table.json` is re-recorded for the three cases with left buttons (`table/buttons`, `table/buttons-selectable`, `table/group-labels`); the diff is that one cell moving, nothing else.
+- **`columnToggle()` in the sticky box (1.108.0 beside 1.107.0).** The hiding rules and the script looked for the table as a child of the wrap; `stickyColumn()` and `stickyHead('…')` put it in `.gk-table-sticky-box`, and a hidden column showed. The 60 rules exist once more for a table in the box, and the script finds the table there. `columnToggle()` read the header's places apart from the rows' because of the fault above (`data-gk-col-head`); the attribute stays, with the same number as `data-gk-col-pos`.
+
+### Notes
+- **`js/gridkit.js`: two lines in `renderStatic()`**, the cell over the left buttons written before the columns instead of after them. A copy of the file without them, such as the PawBot dashboard's, now draws the header correctly on the server and wrongly after the first sort: port the two lines (search for "1.110.1" in `renderStatic`) to keep the two in step.
+
+### Tests
+- `ci/browser.js` (140 cases, 2 new): a `setData()` table with a checkbox and buttons on both sides; every heading over its own cells as the server writes it, and after a sort. Each half of the fix taken out alone turns its case red.
+- `ci/browser-column-toggle.js` (65 cases, 4 new): a table in the sticky box with a hidden column — hidden in the header and the rows, every row as wide as the header, a column unticked, and hidden on the first paint without a script. Without the new rules the last case turns red, without the script's change the two before it.
+- `tests/column-toggle.test.php`: the header's place is the rows' place; the 60 rules for the sticky box are there.
+- A table with all four features of 1.107.0 to 1.110.0 at once (a checkbox, buttons on both sides, a sticky head and column in a box, the column menu with a hidden column, the density toggle, inline editing) was driven in a browser: the hidden column hidden, editing after a sort saved, the density set, no script error.
+
+---
+## [1.110.0] - 2026-11-03
+
+A table cell can be changed where it stands: `Table::editable()` and a column's `'edit'` turn it into a field on a click or on Enter, save it on Enter or when the field is left, fire `gk:celledit`, and post the change when the table names a URL. A table without an editable column renders exactly as before.
+
+### Added
+- **`Table::editable($key = 'id', $url = '', $opts = [])`**: inline editing. `$key` names the record (written as `data-gk-row-id`, posted as `id`; with `selectable()` under another key the selection's key is used and GridKit says so); `$url` is where a change is POSTed; option `headers` adds request headers (a CSRF token). Every editable cell is in the tab order and points at a hidden sentence that says it can be edited; Enter or F2 opens it, Enter and leaving the field save, Escape restores, Tab moves to the next editable cell. The field holds the raw value (`1200.5`, not `€1,200.50`): a `setData()` table has it in its data block, a `rows()`/`query()` table writes it as `data-gk-raw` on editable cells.
+- **Column options `'edit'`** (`'text'`, `'number'`, `'select'`; `false` is read-only) and **`'options'`** (value => text for a select; a `label` column offers the keys of its `labels` without it). Refused with a warning, the column staying read-only: `'format' => 'html'` and `'email'`, a column with `'href'`, the column of `rowLink()`, an unknown type, a select with nothing to choose from, `'edit'` without `editable()`.
+- **`gk:celledit`** on the table, cancelable, with `{ tableId, id, column, value, oldValue }`; `preventDefault()` restores the old value, `event.detail.respondWith(promise)` answers in place of the URL. The request is a JSON POST of `{ id, column, value }`; `{ ok: true, value?, display? }` saves, anything else (another status, `{ ok: false, error }`, no JSON, no network) restores the old value and shows the reason as text. While saving the cell is `aria-busy` and cannot be opened again. A saved value is formatted the way the column formats it (by the code that redraws a sorted table); a `setData()` table keeps it for the next sort, search, page and CSV export.
+- New strings: `table.edit_hint`, `js.edit_error`, `js.edit_number`, `js.edit_saved` (en, de).
+
+### Demo
+- "Editing in the cell" above "Mobile-Responsive": text, number and select columns; the page has no server, so the listener answers with `respondWith()` after a moment and refuses a negative price.
+
+### Tests
+- `tests/table-inline-edit.test.php` (131 assertions): the markup of editable cells and rows in a fixed order, raw values, escaping, the AJAX fragment, select options, every refusal, and that a table without an editable column is byte for byte the same.
+- `ci/browser-inline-edit.js` (96 cases) with `ci/browser-inline-edit-fixture.php`: pointer and keyboard, the event and its veto, `respondWith()`, the request and every kind of answer (answered by `page.route()`), the rebuild after a sort, a page and a search (the same ids and attributes as PHP writes), a server table, a selection, a row link, no column moving when a field opens, a card at 390px, both dark spellings, forced colours. Each of 79 rules of the script, the stylesheet and `Table` was taken out in turn and a check turned red.
+- Whole suite: 9,615 assertions; every browser check of 1.107.0 to 1.109.0 as before, with the four blocks side by side in `js/gridkit.js` (each wraps `GK.table.renderStatic` or `GK.table.init` in turn; the wrappers chain).
+
+### Notes
+- **`js/gridkit.js`: one block at the end, no line elsewhere.** It wraps `GK.table.renderStatic` and `GK.table.reload` and changes neither. A copy without it, such as the PawBot dashboard's, shows an editable table read-only.
+- **No new class:** an editable cell is `td[data-gk-edit]`, an open one `td[data-gk-editing]`, a saving one `td[aria-busy="true"]` — a dotted line under the value, solid on hover, a focus ring.
+- A date column redrawn in the browser after a save uses the browser's format, as a sorted table always has; a server can send `display` to keep its own.
+
+---
+## [1.109.0] - 2026-11-03
+
+A table can carry Compact · Normal · Roomy in its toolbar, and the person at the screen chooses how tightly it is set; the choice stays with the table in this browser. It uses the steps of `Theme::density()`, needs `gridkit.css` only, and a table without the option is unchanged.
+
+### Added
+- **`Table::densityToggle()`**: a segmented control (`.gk-segmented`, three `aria-pressed` buttons in a labelled group) in the toolbar, after the search, the filters and the CSV button. Compact is `konsole` (8px / 12px, labels with a 4px radius), Roomy is `weit` (16px / 20px), Normal the default (12px / 16px). The script writes the step on the table's wrap as `data-gk-density` and remembers it per table id in `localStorage` (`gk-density-<id>`, in the namespace of `GK.theme`); where storage is blocked it holds for the page view. It survives sorting, searching, paging and the AJAX reload; a table handed to `GK.initContent()` later gets it too. New strings: `table.density`, `table.density_compact`, `table.density_normal`, `table.density_roomy` (en, de).
+- **Every kind of table takes the step.** Each size keeps its distance from `md` (`sm` 6px tighter, `lg` 4px roomier, `xs` with a 2px floor), and so do the variants `compact`, `padded` and `very-compact`. A `size('list')` row goes from 64px to 52px or 76px and its columns stay. On a phone the scroll-mode cells and the compact card (its padding, the gap between cards, the space round a field) move by the same step; the head of a card keeps its spacing and a card with a link its 40px. A row link stays at least 44px and the row buttons keep their size.
+
+### Notes
+- **Normal is GridKit's default rhythm, not the page's.** The control starts at the page's own step: on a page with `Theme::density('konsole')` it starts at Compact, and Normal is roomier than the rest of the page. Choosing the page's own step forgets the stored choice, so the table follows the page again. On a page without a density, Normal leaves no attribute on the wrap: the table is then exactly the table without the toggle.
+- **`themes.css` is optional.** The steps are in `gridkit.css` as tokens on the wrap (block "1.109.0 — density toggle") with the numbers of `themes.css`, which `tests/density-toggle.test.php` holds them to. Nothing in the block matches without `data-gk-density` on a `.gk-table-wrap`, so `Theme::density()` and `themes.css` behave as before.
+- **Found on the way, left as it is:** `.gk-table-sm/-md/-lg td` set their padding in pixels at the weight of the token rule and after it, so the page-wide `Theme::density()` has never changed the padding of a table drawn by `Table`, only its label radius. The toggle's steps do reach the padding.
+- **Without JavaScript** the control is not shown (it is rendered `hidden`); a copy of `js/gridkit.js` without the 1.109.0 block, such as the PawBot dashboard's, leaves it hidden and the table as it was. `js/gridkit.js` gets one block at the end that wraps `GK.table.init`. No new class, and no change to the markup of a table without the option (golden tests unchanged).
+
+### Demo
+- "Row spacing, chosen at the screen" in the table section, above Mobile-Responsive.
+
+### Tests
+- `tests/density-toggle.test.php` (120 assertions): the markup, the labels and their escaping; with the option a table renders as without it plus the control (five kinds of table), and the AJAX fragment is unchanged; the steps against `themes.css` and `:root`; every padding written against the tokens adds up at Normal to the pixels of the rule it stands for (14 size and variant rules, the phone, the card); the list row; every rule of the block needs the attribute on the wrap; the script is one block after 1.105.0 and touches `localStorage` only inside `try`.
+- `ci/browser-density.js` with `ci/browser-density-fixture.php` (252 cases): thirteen tables, each with the control and without it. At Normal each measures as its twin, cell by cell; every step per size and variant, with and without `themes.css`; a `konsole` and a `weit` page, a reload, the namespace of `GK.theme`, a stored value that is not a step, sort, search, AJAX reload, `GK.initContent()`, the keyboard, contrast in light and both dark spellings, `localStorage` that throws, 390px, no JavaScript, the older script, a script added late. Each of 46 rules and branches was taken out in turn and the run turned red.
+- Whole suite: 9,451 assertions; every browser check of 1.107.0 and 1.108.0 as before, with the three blocks side by side in `js/gridkit.js` and `css/gridkit.css`.
+- `tests/column-toggle.test.php` and `tests/sticky.test.php` read their block of the stylesheet and the script up to the heading of the next block, not to the end of the file: with 1.109.0 after it, the column toggle counted the storage calls of the density toggle as its own.
+
+---
+## [1.108.0] - 2026-11-03
+
+A table can let each user choose its columns: `columnToggle()` puts a "Columns" button in the toolbar whose menu hides and shows them, and the browser remembers the choice per table. A hidden column stays hidden through a sort, a search, a page change and an AJAX reload, a column can start hidden or be kept on screen, and the CSV holds what the table shows. A table that does not call it is written byte for byte as before.
+
+### Added
+- **`Table::columnToggle()`**: a "Columns" button in the toolbar ("Spalten" in German) that opens a menu with one checkbox per column. Unticking one hides the column — its header, its cells and a footer cell that stands alone over it; group headings, the empty state and a footer cell over several columns get narrower. The choice is remembered in `localStorage` (`gk-cols-<id>`) as what differs from the page's defaults, so a column added or a default changed later still reaches a returning user; storage that is missing or throws remembers nothing and breaks nothing. The last column shown cannot be unticked.
+- **Column option `'hidden' => true`**: the column starts hidden (a stored choice wins). It is hidden in the server's markup, so nothing flashes before the script runs.
+- **Column option `'toggle' => false`**: the column cannot be hidden. It stays in the menu, ticked and disabled, so the list still reads as the table's columns. The column that carries `rowLink()`'s control is kept the same way: hidden, the row would lose the one control the keyboard reaches.
+- **The menu is a native popover** opened by `popovertarget`, in the top layer, so no card with `overflow: hidden` cuts it off; Escape and a click elsewhere close it. The script puts it under its button and inside the window, moves the focus into it and back to the button, keeps `aria-expanded` in step, claims Escape (a modal the table stands in stays open), closes the menu when the focus leaves it, and moves between the boxes with the arrows, Home and End.
+- **The CSV holds what the table shows.** A `setData()` table leaves hidden columns out of the file of `exportCsv()`, as it leaves out `'export' => false`. A server table's export button adds `?gk_hidden=email,role`, and `Table::sendCsv()` leaves those keys out of the `$columns` it is given (a key it does not have changes nothing; `Table::csv()` does not read the request). Search and sort do not change: the search looks at its keys whether their columns show or not.
+- New string `table.columns` (en "Columns", de "Spalten"); new classes `gk-col-toggle`, `gk-col-toggle-menu` and `gk-col-hidden` (block "Column toggle").
+
+### How it works
+- **The hiding is CSS, keyed on the checkboxes.** An unticked box hides the cells at its place in a row (`data-gk-col-pos`), its header (`data-gk-col-head`) and the footer cell over it (`data-gk-col-foot`), through `:has()` and `:nth-child()` rules for twenty places. The rows are written exactly as before, so `renderStatic()` and the AJAX reload redraw them and the column stays hidden without anything re-applied; the toolbar that holds the menu survives both. The header has a place of its own because `Table` writes the header cell of the left buttons at the end of the header row, while a row writes its left buttons before the first column.
+- **The script** — one block at the end of `js/gridkit.js`, no line in an existing function — restores and stores the choice and, after every redraw (a `MutationObserver` on the table, before the next paint), marks hidden cells `.gk-col-hidden` (which also hides a column past the twentieth place) and narrows what spans the row (`data-gk-span` keeps the original colspan). It wraps `GK.table.init` (tables that arrive through `GK.initContent()`) and `GK.tableCsv`, and takes the export click of a server table in the capture phase.
+- **On a phone** a hidden column is left out of the card. When it was the card's title, the next column that shows and is not muted takes the title, and a card whose visible fields are all muted takes the first of them: the title rules of 1.106.0 once more, passing over `.gk-col-hidden`.
+- **Without the 1.108.0 script** (the PawBot dashboard's copy, or no script at all) the menu still opens and its checkboxes still hide and show columns; nothing is remembered, group headings keep their full colspan (drawn without a gap), and a card whose title column is hidden has no title line.
+- Warnings (`E_USER_WARNING`, and the column shows): `'hidden'` or `'toggle'` that is not `true` or `false`; `'hidden'` without `columnToggle()`, on a `'toggle' => false` column or on the `rowLink()` column; `columnToggle()` with `toolbar(false)`.
+
+### Demo
+- "Columns to show and hide", above "Mobile-Responsive": the article list with the unit and the VAT hidden, the article number fixed, and CSV export.
+
+### Tests
+- `tests/column-toggle.test.php` (153 assertions): the markup of the button and the menu; the places past a checkbox and left buttons, the header's own place, footer cells over one column and over several, a colspan of 0; escaping of labels, keys and ids, a safe and distinct menu id; German; a table without the menu byte for byte as before (`columnToggle(false)` too), the rows of a table with the menu unchanged, its AJAX fragment identical with or without a hidden column; every warning; `sendCsv()` with `gk_hidden`; the rules, the card rules, both dark spellings; the script as one block at the end with its storage guarded.
+- `ci/browser-column-toggle.js` with `ci/browser-column-toggle-fixture.php` (61 cases), see `ci/README.md`. Each rule of the CSS block and each branch of the script and of the PHP was taken out in turn (61 mutations) and the run or the PHP test turned red. On the way they found a fault: a menu at the right edge was measured while squeezed by its own previous position, and stayed against the window's edge instead of moving left.
+- Whole suite: 9,315 assertions (9,132 at 1.107.0). `ci/browser.js` (138), `ci/browser-1105.js` (29), `ci/browser-karten.js` (271), `ci/farben.js` and `ci/demo-coverage.js` (609 of 783 classes shown) as before.
+
+### Notes
+- Found on the way and left as it is: with left buttons, the header of every column stands one place before its cells — `Table::renderTableHead()` and `renderStatic()` write the header cell of the left buttons at the end of the header row. `tests/golden/table.json` pins that markup; it wants a release of its own.
+
+---
+## [1.107.0] - 2026-11-03
+
+A long table keeps its header row in view while its rows scroll, and a wide one its first column while it scrolls sideways. Two methods, `Table::stickyHead()` and `Table::stickyColumn()`; a table without them renders exactly as before, and in card mode on a phone nothing changes.
+
+### Added
+- **`Table::stickyHead($maxHeight = '')`.** Without an argument the header row sticks to the top of the page (or of whatever scrolls around the table): `.gk-table-wrap` keeps `overflow: visible`, so the page is the scroller. Under a fixed or sticky GridKit header it stops at 56px (`--gk-sheet-top`); `--gk-table-sticky-top` on the wrap or above sets another offset. With a CSS length (`'70vh'`, `'480px'`; a number with `px`, `vh`, `dvh`, `svh`, `lvh`, `rem`, `em` or `%`) the table scrolls in a box of at most that height and the head sticks to the top of the box. Anything else is refused with a warning (`E_USER_WARNING`) and never reaches the page; the head then sticks to the page.
+- **`Table::stickyColumn()`.** The first column stays in view while the table scrolls sideways, and so do the cells in front of it: the checkbox of `selectable()` and the buttons with `'position' => 'left'`. The table gets a box that scrolls sideways; with `stickyHead()` as well the head can no longer stick to the page (the box is a scroller in both directions), so the box gets the height given to `stickyHead()`, or 70vh. A hairline marks the edge of the column while the box is scrolled. Footer cells stick under their columns while every cell before them is one column wide; group headings and the empty state span the row and do not stick, and the empty state stays in the middle of the box instead of the middle of a wide table.
+- **Markup:** the wrap carries `gk-table-sticky-head` and `gk-table-sticky-col`; the box, `gk-table-sticky-box`, stands around the `<table>` only (the pager stays below it, in view) and carries `data-gk-sticky-col` (how many cells of a row stick) and its height as `--gk-table-sticky-height`. It is a region named by `caption()`, or "Scrollable table" (`table.scroll_region`, English and German), with a tab stop, so the keyboard scrolls it.
+- **Script** (one block at the end of `js/gridkit.js`): it measures the cells in front of the sticky column and writes their offsets (`--gk-table-sticky-left-2`, `-3`) on load, after every rebuild or reload and when a cell changes its width (ResizeObserver); marks a box scrolled sideways; keeps a box's scroll position through a sort, a search, a page change and an AJAX reload; and puts a `setData()` table back into its box after `GK.table.renderStatic()` rebuilt it (wrapped, not changed). A copy of the file without the block still renders a sticky table: the head and the first cell stick, the cell after a checkbox at 36px, a column after left buttons stays put.
+
+### Changed
+- A sticky table draws its borders separate (`border-spacing: 0`), not collapsed. A collapsed border stays where its cell was: measured in Chromium, the bottom 5px of the first row showed above a bordered head, and in dark mode every row line under a sticky cell showed what scrolled beneath it. At rest the table looks as before: in light mode pixel for pixel, in dark mode every cell within 2px (collapsed translucent lines made the plain dark table 2px taller). Sticky cells take the surface of the table and the colour of their row — selected, striped, hovered, focused, the dark even rows, inverted, the row of an open side sheet — so nothing shows through them. In a box the last row's first cell is square instead of rounded to the corner of the wrap (the box clips to that corner itself), or its corner would show what scrolls under it.
+
+### Demo
+- "Sticky head and column" in the table section: fifteen articles with a checkbox, ten columns, a box of 320px.
+
+### Tests
+- `tests/sticky.test.php` (191 assertions): the markup of every combination, the cells counted, the box only around the table and in the AJAX fragment, every accepted length and the refused ones (warning, nothing on the page, the value not quoted raw), the caption as the region's name, and that a sticky table is the plain one plus its classes and its box, byte for byte; the rules and the script block.
+- `ci/browser-sticky.js` with `ci/browser-sticky-fixture.php` (417 cases, light and dark): where the head and the column cells stand after scrolling, on the page, under a fixed header, in a box; nothing shows through a sticky cell in any row state (everything that does not stick painted magenta, no magenta pixel in a screenshot of the sticky part, scrolled 300px and to the far end); a sorted, searched and paged `setData()` table and an AJAX reload keep the box, its offsets and its scroll position; a cell that grows, a table added later, a script added after the page was ready; Tab and the arrow keys; at rest a sticky table looks like its twin without the options; card mode at 390px identical to its twin; `mobile('scroll')` and a list; a `gridkit.js` without the block. Each rule and branch of the implementation was taken out in turn and the run turned red (79 counter-checks: 50 rules of the stylesheet, 13 branches of the script, 16 of Table.php).
+- `tests/contrast.test.php`: `--gk-table-sticky-top` is a hook a page sets, like `--gk-main-max`.
+- `tests/blocks.test.php` needed no edit for the new window (1.107 and 1.106): it finds the blocks the window marks since 1.106.0. The table is marked as changed in 1.107 by its three new classes.
+
+---
+## [1.106.0] - 2026-11-03
+
+On a phone a table card is half as tall: its first line is a head with the title beside the row's buttons, and the other fields follow without rules. An invoice of six fields with buttons on both sides was 386px tall, one and a half cards on a screen; it is 196px now. CSS only: no class, no option and no markup changes, and the client rebuild of a table is untouched.
+
+### Changed
+- **Card mode (`mobile('card')`, the default below 768px) is compact.** The row is a grid of four tracks: checkbox, left buttons, title, right buttons; a track without a cell is 0px wide. Every other field spans the card below the head, label and value on one line, without the rule that stood under each of them. The head ends in one rule; a card that is nothing but its head has none.
+- **The title** is the first column that is neither `'muted'` nor `'hideOnMobile'` — an article number steps back for the name — and is shown without its column label. On a row with `rowLink()` it is the cell that carries the link (as before, without a label). When every column is muted, the first one is the title. A long title wraps instead of running under the buttons; a second line (`'sub'`) stands under it, left-aligned.
+- **The buttons** moved from a line of their own at the bottom of the card into the head; the checkbox of `selectable()` from the right to the left. Group headings, the summary row, the empty state and the footer are not cards of fields and keep their layout. A card with a link keeps 40px on the right for its chevron.
+
+### Fixed
+- In card mode the checkbox cell carried an empty column label with 12px of gap before the box, and the browser's 4px margin on the box: the checkbox sat 16px off the edge the labels start at. Neither is there now.
+
+### Demo
+- The card example marks its article number `'muted'` and has a button, so it shows the title and the head; the intro of the section says how the title is chosen.
+
+### Tests
+- `ci/browser-karten.js` with `ci/browser-karten-fixture.php` (271 cases): eleven tables in card mode at 390px, light and dark, measured box by box — see `ci/README.md`. Each rule of the block was taken out in turn (the grid, the track of the left buttons, the title of a row with a link, the column of the title that must not wrap, the fallback when every column is muted, the head without a rule, the padding of the checkbox) and the run turned red.
+- `tests/mobile.test.php`: the rules of the compact card are in the 768px block (10 assertions).
+- `tests/blocks.test.php`: the window of the demo's marks is 1.106 and 1.105 now. `css/blocks.json` marks the table and the row link as changed in 1.106.0, so their headings say "Changed in 1.106"; the tabs and the line "you are here" (1.104) fell out. The case "a block that got a new class in the newest minor is marked as changed" no longer depends on a block of the window having one: it builds a blocks file of its own.
+
+---
+## [1.105.1] - 2026-11-03
+
+In dark mode the table search has its magnifier again, and every filter, page-size select and form select has its arrow. Only the background colour of these fields was meant to change in dark mode, and the rule took their icon with it.
+
+### Fixed
+- **Dark mode removed the icon of 24 fields in the demo.** The magnifier of `.gk-search` and the arrow of `.gk-filter` (select, date and number), `.gk-pagesize-select` and `select.gk-input` are background images. Two dark-mode rules, `[data-gk-mode="dark"] input, select, textarea` (and `.gk-dark …`) and `[data-gk-mode="dark"] .gk-input`, wrote `background: #0d1117`. The shorthand also sets `background-image` to `none`, and both selectors outweigh the single class that draws the icon. Both rules write `background-color: #0d1117` now; the colour of the fields does not change. Compared in a browser over all 6811 elements of the demo, light against dark: before, 24 fields had an image in light mode and none in dark; now none. The only remaining differences are the range slider and `gk-skeleton`, whose gradients use colour tokens that differ between the modes, as before.
+
+### Tests
+- `tests/dark-inputs.test.php` (18 assertions): the three classes still draw their icon; no dark rule that reaches a bare `input`, `select` or `textarea`, or `.gk-input`, `.gk-search`, `.gk-filter` or `.gk-pagesize-select`, writes the `background` shorthand without `background-image`; both rules keep `#0d1117`. Putting the shorthand back in either rule turns it red.
+
+---
 ## [1.105.0] - 2026-11-02
 
 Four things an admin page keeps writing by hand are methods now: fill a form from a record, show a failed save's messages, put your own actions in the bulk bar, download a table as CSV, and show a field only while another has a value. The demo shows what it did not show, the skill names every option the code reads, and the examples use the new calls. Nothing that was there changes: every call below is an addition.

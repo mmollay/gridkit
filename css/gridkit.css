@@ -5130,6 +5130,137 @@ a.gk-stat-card:hover {
   .gk-table-mobile-card td.gk-actions::before {
     display: none;
   }
+
+  /* Compact card (1.106.0). A card had a ruled line per field and its buttons
+     on a line of their own at the bottom: 386px for an invoice of six fields,
+     one and a half cards on a phone. Now the first line is the card's head —
+     checkbox, left buttons, title, right buttons — and the fields follow
+     without rules: 196px. A grid of four tracks; a track without a cell is
+     0px wide. CSS only: the markup and the client rebuild are unchanged.
+     Group headings, summary rows and the empty state are not cards of fields
+     and keep their own layout. */
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+  }
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link {
+    padding-right: 40px; /* room for the chevron, as before */
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > td {
+    grid-column: 1 / -1;
+    padding: 3px 0;
+    border-bottom: none;
+  }
+  /* The title: the first field that is not muted (an article number steps back
+     for the name) and not hidden on a phone — in a row with a link, the cell
+     that carries it (the rule below). No label; it wraps rather than run
+     under the buttons. */
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile)) {
+    grid-column: 3;
+    grid-row: 1;
+    flex-direction: column;
+    flex-wrap: nowrap; /* a wrapping column puts the second line beside the first */
+    justify-content: center;
+    align-items: flex-start;
+    gap: 2px;
+    align-self: stretch;
+    padding: 0 0 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gk-outline-variant);
+    font-weight: 600;
+    color: var(--gk-on-surface);
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile))::before {
+    display: none;
+  }
+  /* flex-basis: the 100% that puts a second line on a row of its own in a
+     field would be a height in the title's column. */
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile)) .gk-cell-sub {
+    flex-basis: auto;
+    text-align: left;
+    font-weight: normal;
+  }
+  /* Its own rule: a selector list with a :has() a browser does not know is
+     dropped as a whole. */
+  .gk-table-mobile-card .gk-table tbody tr.gk-row-link > td:has(.gk-row-target) {
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 2px;
+    align-self: stretch;
+    padding: 0 0 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gk-outline-variant);
+  }
+  /* !important: .gk-cb-col sets its padding with it. */
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-cb-col {
+    grid-column: 1;
+    grid-row: 1;
+    align-items: center;
+    padding: 0 10px 8px 0 !important;
+  }
+  /* The checkbox has no column label; the empty one took 12px of gap. */
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-cb-col::before {
+    display: none;
+  }
+  /* The browser's 4px on the left would set it off the edge the labels start at. */
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-cb-col input[type="checkbox"] {
+    margin: 0;
+  }
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-actions-left {
+    grid-column: 2;
+    grid-row: 1;
+    align-items: center;
+    padding: 0 8px 8px 0;
+  }
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-actions-right {
+    grid-column: 4;
+    grid-row: 1;
+    align-items: center;
+    padding: 0 0 8px 8px;
+  }
+  /* The head of the card ends in one rule: every cell of the first line carries
+     it, stretched to the same height so the lines meet (the title in its own
+     rule above: a list with an :nth-child(of) a browser does not know is
+     dropped as a whole). */
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-cb-col,
+  .gk-table-mobile-card .gk-table tbody tr > td.gk-actions {
+    align-self: stretch;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gk-outline-variant);
+  }
+  /* Every field muted: the first one is the title after all, rather than a
+     head of buttons beside an empty space. */
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link):not(:has(> td:not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile))) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile)) {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: stretch;
+    align-items: center;
+    padding: 0 0 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gk-outline-variant);
+    font-weight: 600;
+    color: var(--gk-on-surface);
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link):not(:has(> td:not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile))) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile))::before {
+    display: none;
+  }
+  /* A card that is nothing but its head (one field, or one field and buttons)
+     has no rule under it: nothing follows. */
+  .gk-table-mobile-card .gk-table tbody tr:has(> td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile)):nth-last-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile))) > td {
+    padding-bottom: 0 !important;
+    margin-bottom: 0;
+    border-bottom: none;
+  }
 }
 
 /* === TABLE MOBILE: Scroll === */
@@ -6352,7 +6483,9 @@ a.gk-stat-card:hover {
 .gk-dark input,
 .gk-dark select,
 .gk-dark textarea {
-  background: #0d1117;
+  /* background-color, not the shorthand: the shorthand also reset background-image, and with
+     it the magnifier of .gk-search and the arrow of .gk-filter and select.gk-input (1.105.1). */
+  background-color: #0d1117;
   color: var(--gk-on-surface);
   border-color: rgba(255, 255, 255, 0.15);
 }
@@ -7256,7 +7389,8 @@ a.gk-stat-card:hover {
 /* --- Inputs & Forms --- */
 [data-gk-mode="dark"] .gk-input,
 .gk-dark .gk-input {
-  background: #0d1117;
+  /* background-color: the shorthand took the arrow of select.gk-input with it (1.105.1). */
+  background-color: #0d1117;
   border-color: rgba(255, 255, 255, 0.15);
   color: var(--gk-on-surface);
 }
@@ -10427,3 +10561,778 @@ label.gk-setting-title {
 :where(.gk-message) .gk-btn-xs .material-icons { font-size: 14px; }
 :where(.gk-message) .gk-btn-sm .material-icons { font-size: 16px; }
 :where(.gk-message) .gk-btn-lg .material-icons { font-size: 22px; }
+
+/* === 1.107.0 — sticky head and column === */
+/* Table::stickyHead() and Table::stickyColumn(). The wrap carries .gk-table-sticky-head and
+   .gk-table-sticky-col; the box a table scrolls in, when it needs one, is .gk-table-sticky-box,
+   written around the <table> only, so the pager stays below it and in view. Without a box the
+   head sticks to the page: .gk-table-wrap keeps overflow visible on purpose, so the page (or
+   whatever scrolls around the table) is the nearest scroller.
+
+   A cell that sticks lies over the cells that scroll under it, so it needs a surface of its own:
+   th and td have none — the wrap shows through them, and a row's colour is painted by the row.
+   These are the surfaces behind a table, by mode; a row that paints itself hands its colour on
+   to its sticky cells further down. */
+.gk-table-sticky-head,
+.gk-table-sticky-col {
+  --gk-table-sticky-bg: var(--gk-surface);
+  --gk-table-sticky-head-bg: var(--gk-surface);
+  --gk-table-sticky-line: var(--gk-outline-variant);
+}
+.gk-table-inverted:is(.gk-table-sticky-head, .gk-table-sticky-col) {
+  --gk-table-sticky-bg: #1e293b;
+  --gk-table-sticky-head-bg: #0f172a;
+  --gk-table-sticky-line: rgba(255, 255, 255, 0.1);
+}
+[data-gk-mode="dark"] :is(.gk-table-sticky-head, .gk-table-sticky-col),
+.gk-dark :is(.gk-table-sticky-head, .gk-table-sticky-col) {
+  --gk-table-sticky-bg: #161b22;
+  --gk-table-sticky-head-bg: #161b22;
+  --gk-table-sticky-line: rgba(255, 255, 255, 0.1);
+}
+
+/* Separate borders, not collapsed ones. A collapsed border belongs to the grid, not to the cell:
+   it stays where the cell was, and a cell that sticks leaves a slit along it — measured in
+   Chromium, the bottom 5px of the first row showed above a bordered head, and in dark mode
+   (translucent lines) every row line under a sticky cell showed what scrolled beneath it.
+   Separate borders travel with their cell. Spacing 0, and a line two cells share drawn by one
+   of them — at rest the table looks as it does collapsed. */
+.gk-table-sticky-head > .gk-table,
+.gk-table-sticky-box > .gk-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+:is(.gk-table-sticky-head > .gk-table, .gk-table-sticky-box > .gk-table) > tfoot > tr > td {
+  border-top-width: 0;
+}
+:is(.gk-table-bordered, .gk-table-celled) :is(.gk-table-sticky-head > .gk-table, .gk-table-sticky-box > .gk-table) > * > tr > :is(th, td) {
+  border-top-width: 0;
+  border-left-width: 0;
+}
+:is(.gk-table-bordered, .gk-table-celled) :is(.gk-table-sticky-head > .gk-table, .gk-table-sticky-box > .gk-table) > * > tr > :first-child {
+  border-left-width: 1px;
+}
+:is(.gk-table-bordered, .gk-table-celled) :is(.gk-table-sticky-head > .gk-table, .gk-table-sticky-box > .gk-table) > thead > tr:first-child > th {
+  border-top-width: 1px;
+}
+
+/* The box: it scrolls both ways, as high as stickyHead() said (the inline
+   --gk-table-sticky-height), clipped to the round corners of the wrap below and — when no
+   toolbar stands above it — at the top. It is a region with a tab stop (Table writes both), so
+   the keyboard scrolls it too. */
+.gk-table-sticky-box {
+  /* Table writes the height inline, the script the measured offsets and the box's width; they
+     are declared here so that each has a name. `initial` is no value at all: until the script
+     has measured, a var() of it takes its fallback or leaves the property at its default. */
+  --gk-table-sticky-height: none;
+  --gk-table-sticky-left-2: initial;
+  --gk-table-sticky-left-3: initial;
+  --gk-table-sticky-w: initial;
+  overflow: auto;
+  /* The containing block of what is positioned inside (1.110.3). A .gk-sr-only name in a header
+     cell that does not stick (the empty cell over the buttons, under stickyColumn() alone) is
+     absolute; with the box unpositioned it was placed against the wrap or the page, outside the
+     box's clipping, and pushed a 1024px page 86px sideways in the demo. */
+  position: relative;
+  max-height: var(--gk-table-sticky-height);
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+.gk-table-wrap:not(:has(> .gk-toolbar)) > .gk-table-sticky-box {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.gk-table-sticky-box:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+
+/* The head. On the page it stops under a fixed or sticky GridKit header (--gk-sheet-top, 56px)
+   — or at --gk-table-sticky-top, set on the wrap or above it; in its box at the top of the box.
+   Its line goes with it (separate borders, above). */
+.gk-table-sticky-head > .gk-table > thead > tr > th,
+.gk-table-sticky-head > .gk-table-sticky-box > .gk-table > thead > tr > th {
+  position: sticky;
+  top: var(--gk-table-sticky-top, var(--gk-sheet-top, 0px));
+  z-index: 2;
+  background-color: var(--gk-table-sticky-head-bg);
+}
+.gk-table-sticky-head > .gk-table-sticky-box > .gk-table > thead > tr > th {
+  top: 0;
+}
+/* The outer header cells are rounded to the corners of the wrap. Stuck to the top of the window
+   the corners would show what scrolls under them; under a toolbar the head is not at the corner
+   of the wrap anyway, so there it is square. (With toolbar(false) it stays rounded: at rest the
+   corner is the wrap's.) */
+.gk-table-wrap.gk-table-sticky-head:has(> .gk-toolbar) > .gk-table > thead > tr > th {
+  border-radius: 0;
+}
+
+/* The column: the first n cells of every row, where n (data-gk-sticky-col, written by Table) is
+   the checkbox, the cell of the left buttons and the first column. Counted, not picked by class:
+   the header row writes the cell over the left buttons at its end, and a header cell has to
+   stick where its column sticks. Group headings, the summary row and the empty state span the
+   whole row and stay where they are. */
+.gk-table-sticky-box[data-gk-sticky-col="1"] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(1),
+.gk-table-sticky-box[data-gk-sticky-col="2"] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(-n+2),
+.gk-table-sticky-box[data-gk-sticky-col="3"] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(-n+3) {
+  position: sticky;
+  z-index: 1;
+}
+/* Where the head and the column meet: above both, and opaque without stickyHead() too. */
+.gk-table-sticky-box[data-gk-sticky-col="1"] > .gk-table > thead > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(1),
+.gk-table-sticky-box[data-gk-sticky-col="2"] > .gk-table > thead > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(-n+2),
+.gk-table-sticky-box[data-gk-sticky-col="3"] > .gk-table > thead > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(-n+3) {
+  z-index: 3;
+  background-color: var(--gk-table-sticky-head-bg);
+}
+/* The left edge of each: CSS can only say 0 for the first. The script measures the cells in
+   front of the second and the third and writes the sums on the box; without it the cell after
+   a checkbox sticks at the checkbox's 36px, and one after the left buttons does not stick
+   sideways at all (a var() with no value leaves `left` at auto) — rather than over them. */
+.gk-table-sticky-box[data-gk-sticky-col] > .gk-table > :is(thead, tbody) > tr > :nth-child(1) {
+  left: 0;
+}
+.gk-table-sticky-box:is([data-gk-sticky-col="2"], [data-gk-sticky-col="3"]) > .gk-table > :is(thead, tbody) > tr > :nth-child(2) {
+  left: var(--gk-table-sticky-left-2);
+}
+.gk-table-sticky-box:is([data-gk-sticky-col="2"], [data-gk-sticky-col="3"]) > .gk-table > :is(thead, tbody) > tr > .gk-cb-col + :nth-child(2) {
+  left: var(--gk-table-sticky-left-2, 36px);
+}
+.gk-table-sticky-box[data-gk-sticky-col="3"] > .gk-table > :is(thead, tbody) > tr > :nth-child(3) {
+  left: var(--gk-table-sticky-left-3);
+}
+/* The footer: its cells span columns, so a cell sticks only where every cell before it is one
+   column wide — then it stands where the column above it stands. The first one always does. */
+.gk-table-sticky-box[data-gk-sticky-col] > .gk-table > tfoot > tr > td:first-child,
+.gk-table-sticky-box:is([data-gk-sticky-col="2"], [data-gk-sticky-col="3"]) > .gk-table > tfoot > tr > td[colspan="1"]:first-child + td,
+.gk-table-sticky-box[data-gk-sticky-col="3"] > .gk-table > tfoot > tr > td[colspan="1"]:first-child + td[colspan="1"] + td {
+  position: sticky;
+  z-index: 1;
+  left: 0;
+}
+/* The last row of the body and of the footer round their first cell to the corner of the
+   wrap. Stuck, that corner would show what scrolls under it; the box clips to the corner of
+   the wrap itself, so the cell can be square — except in card mode, where it is no column. */
+@media (min-width: 769px) {
+  .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > :is(tbody, tfoot) > tr:last-child > td:first-child {
+    border-radius: 0;
+  }
+}
+@media (max-width: 768px) {
+  :not(.gk-table-mobile-card) > .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > :is(tbody, tfoot) > tr:last-child > td:first-child {
+    border-radius: 0;
+  }
+}
+.gk-table-sticky-box:is([data-gk-sticky-col="2"], [data-gk-sticky-col="3"]) > .gk-table > tfoot > tr > td[colspan="1"]:first-child + td {
+  left: var(--gk-table-sticky-left-2);
+}
+.gk-table-sticky-box[data-gk-sticky-col="3"] > .gk-table > tfoot > tr > td[colspan="1"]:first-child + td[colspan="1"] + td {
+  left: var(--gk-table-sticky-left-3);
+}
+
+/* The surface of a sticky body cell, at no specificity at all: every rule that paints a cell
+   itself — the hover and focus fill, the open row of a side sheet, a group heading, the
+   footer — still wins, as it does on a cell that does not stick. What a row paints on itself
+   (the tr) cannot reach a cell that has a surface, so it comes in as --gk-table-sticky-row:
+   the same rules as the row's own, one class more, so they win and lose among each other as
+   the originals do. A translucent row tint is mixed with the surface. Only the cells that
+   stick: a colour a page gives a row of its own stays visible in the others. */
+:where(.gk-table-sticky-box[data-gk-sticky-col="1"] > .gk-table > tbody > tr > td:nth-child(1),
+  .gk-table-sticky-box[data-gk-sticky-col="2"] > .gk-table > tbody > tr > td:nth-child(-n+2),
+  .gk-table-sticky-box[data-gk-sticky-col="3"] > .gk-table > tbody > tr > td:nth-child(-n+3),
+  .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > tfoot > tr > td) {
+  background-color: var(--gk-table-sticky-row, var(--gk-table-sticky-bg));
+}
+.gk-table-sticky-col .gk-table tr.gk-row-selected {
+  --gk-table-sticky-row: color-mix(in srgb, var(--gk-primary) 6%, var(--gk-table-sticky-bg));
+}
+.gk-table-sticky-col.gk-table-striped tbody tr:nth-child(even) {
+  --gk-table-sticky-row: var(--gk-surface-container-low);
+}
+.gk-table-sticky-col.gk-table-inverted tbody tr:nth-child(even) {
+  --gk-table-sticky-row: color-mix(in srgb, #fff 3%, var(--gk-table-sticky-bg));
+}
+[data-gk-mode="dark"] .gk-table-sticky-col .gk-table tbody tr:nth-child(even),
+.gk-dark .gk-table-sticky-col .gk-table tbody tr:nth-child(even) {
+  --gk-table-sticky-row: #1c2128;
+}
+/* The row of the open side sheet tints its cells, not the row — translucently. Over the surface. */
+.gk-table-sticky-box[data-gk-sticky-col] > .gk-table > tbody > tr.gk-row-link[aria-current="true"] > td {
+  background: linear-gradient(var(--gk-state-primary), var(--gk-state-primary)),
+    var(--gk-table-sticky-row, var(--gk-table-sticky-bg));
+}
+
+/* The edge of the column, while the box is scrolled sideways (the script marks it): a hairline,
+   as the rows have. On a pseudo element, because a cell's box-shadow is taken — the hover edge,
+   the focus ring of a row link. A bordered or celled table has its own line there. */
+:not(.gk-table-bordered, .gk-table-celled) > .gk-table-sticky-box[data-gk-sticky-col="1"][data-gk-scrolled-x] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(1):not(:last-child)::after,
+:not(.gk-table-bordered, .gk-table-celled) > .gk-table-sticky-box[data-gk-sticky-col="2"][data-gk-scrolled-x] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(2):not(:last-child)::after,
+:not(.gk-table-bordered, .gk-table-celled) > .gk-table-sticky-box[data-gk-sticky-col="3"][data-gk-scrolled-x] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(3):not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--gk-table-sticky-line);
+  pointer-events: none;
+}
+
+/* The empty state of a table wider than its box stood in the middle of the table — off to the
+   right, out of sight, after a search that found nothing. In a box it is as wide as the box
+   (--gk-table-sticky-w, measured by the script) and sticks at its left edge, inside the cell's
+   24px; the text keeps its 380px in the middle. Without the script: 380px at the left. */
+.gk-table-sticky-box > .gk-table > tbody > tr.gk-empty-row > td > .gk-empty-inner {
+  position: sticky;
+  left: 24px;
+  box-sizing: border-box;
+  width: calc(var(--gk-table-sticky-w, 428px) - 48px);
+  max-width: none;
+  margin: 0;
+  padding-inline: max(0px, (var(--gk-table-sticky-w, 428px) - 428px) / 2);
+}
+
+/* Card mode (a phone, the default up to 768px) is not a table any more: no box, nothing sticks,
+   no surface — a card looks exactly as it does without stickyHead() and stickyColumn(). Its
+   head is hidden anyway. mobile('scroll') and a list keep everything. */
+@media (max-width: 768px) {
+  .gk-table-mobile-card > .gk-table-sticky-box {
+    overflow: visible;
+    max-height: none;
+  }
+  /* .gk-table-sticky-col and :nth-child(n) (every cell) are there for the weight of the rules
+     this undoes — the third cell of the footer is the heaviest. */
+  .gk-table-mobile-card.gk-table-sticky-col > .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > :is(thead, tbody, tfoot) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :is(th, td):nth-child(n) {
+    position: static;
+    z-index: auto;
+  }
+  :where(.gk-table-mobile-card > .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > :is(tbody, tfoot) > tr > td) {
+    background-color: transparent;
+  }
+  .gk-table-mobile-card > .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > tbody > tr.gk-row-link[aria-current="true"] > td {
+    background: var(--gk-state-primary);
+  }
+  .gk-table-mobile-card > .gk-table-sticky-box[data-gk-sticky-col][data-gk-scrolled-x] > .gk-table > :is(thead, tbody) > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(n):not(:last-child)::after {
+    content: none;
+  }
+  /* The empty state as .gk-empty-inner has it (STATES). */
+  .gk-table-mobile-card > .gk-table-sticky-box > .gk-table > tbody > tr.gk-empty-row > td > .gk-empty-inner {
+    position: static;
+    width: auto;
+    max-width: 380px;
+    margin: 0 auto;
+    padding-inline: 0;
+  }
+}
+
+/* === 1.108.0 — column toggle === */
+/* Table::columnToggle(): a "Columns" button in the toolbar and a menu with one checkbox per column.
+   The checkbox IS the state. While one is unticked, the cells at its place in a row are gone
+   (data-gk-col-pos: the checkbox column and the left buttons stand before the first column), and
+   so are its header (data-gk-col-head: the header writes the cells over both button columns at
+   its end) and the footer cell that stands alone over the column (data-gk-col-foot). Group
+   headings, summary rows and the empty state span the row and are left alone here — the script
+   narrows them.
+
+   Why the stylesheet and not the script: the rows are written exactly as before, so a sort, a
+   search, a page (renderStatic) or an AJAX reload redraws them and the column stays hidden without
+   anybody re-applying anything; 'hidden' => true is hidden on the first paint, with no flash; and a
+   page without js/gridkit.js 1.108.0 (an older copy, or no script at all) can still show and hide
+   columns, since the menu is a native popover. Twenty places cover a checkbox, left buttons and
+   eighteen columns; beyond that the script's .gk-col-hidden does the hiding alone. One list, so a
+   browser without :has() drops all of it together and shows every column. */
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="1"]:not(:checked)) > .gk-table > thead > tr > :nth-child(1),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="1"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(1),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="1"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(1),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="2"]:not(:checked)) > .gk-table > thead > tr > :nth-child(2),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="2"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(2),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="2"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(2),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="3"]:not(:checked)) > .gk-table > thead > tr > :nth-child(3),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="3"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(3),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="3"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(3),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="4"]:not(:checked)) > .gk-table > thead > tr > :nth-child(4),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="4"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(4),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="4"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(4),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="5"]:not(:checked)) > .gk-table > thead > tr > :nth-child(5),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="5"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(5),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="5"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(5),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="6"]:not(:checked)) > .gk-table > thead > tr > :nth-child(6),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="6"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(6),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="6"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(6),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="7"]:not(:checked)) > .gk-table > thead > tr > :nth-child(7),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="7"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(7),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="7"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(7),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="8"]:not(:checked)) > .gk-table > thead > tr > :nth-child(8),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="8"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(8),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="8"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(8),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="9"]:not(:checked)) > .gk-table > thead > tr > :nth-child(9),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="9"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(9),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="9"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(9),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="10"]:not(:checked)) > .gk-table > thead > tr > :nth-child(10),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="10"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(10),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="10"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(10),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="11"]:not(:checked)) > .gk-table > thead > tr > :nth-child(11),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="11"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(11),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="11"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(11),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="12"]:not(:checked)) > .gk-table > thead > tr > :nth-child(12),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="12"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(12),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="12"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(12),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="13"]:not(:checked)) > .gk-table > thead > tr > :nth-child(13),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="13"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(13),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="13"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(13),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="14"]:not(:checked)) > .gk-table > thead > tr > :nth-child(14),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="14"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(14),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="14"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(14),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="15"]:not(:checked)) > .gk-table > thead > tr > :nth-child(15),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="15"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(15),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="15"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(15),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="16"]:not(:checked)) > .gk-table > thead > tr > :nth-child(16),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="16"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(16),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="16"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(16),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="17"]:not(:checked)) > .gk-table > thead > tr > :nth-child(17),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="17"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(17),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="17"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(17),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="18"]:not(:checked)) > .gk-table > thead > tr > :nth-child(18),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="18"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(18),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="18"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(18),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="19"]:not(:checked)) > .gk-table > thead > tr > :nth-child(19),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="19"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(19),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="19"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(19),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="20"]:not(:checked)) > .gk-table > thead > tr > :nth-child(20),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="20"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(20),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="20"]:not(:checked)) > .gk-table > tfoot > tr > :nth-child(20),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="1"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(1),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="1"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(1),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="1"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(1),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="2"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(2),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="2"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(2),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="2"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(2),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="3"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(3),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="3"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(3),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="3"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(3),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="4"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(4),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="4"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(4),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="4"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(4),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="5"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(5),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="5"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(5),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="5"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(5),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="6"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(6),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="6"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(6),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="6"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(6),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="7"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(7),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="7"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(7),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="7"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(7),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="8"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(8),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="8"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(8),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="8"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(8),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="9"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(9),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="9"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(9),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="9"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(9),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="10"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(10),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="10"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(10),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="10"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(10),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="11"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(11),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="11"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(11),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="11"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(11),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="12"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(12),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="12"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(12),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="12"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(12),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="13"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(13),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="13"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(13),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="13"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(13),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="14"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(14),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="14"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(14),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="14"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(14),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="15"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(15),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="15"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(15),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="15"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(15),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="16"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(16),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="16"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(16),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="16"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(16),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="17"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(17),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="17"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(17),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="17"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(17),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="18"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(18),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="18"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(18),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="18"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(18),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="19"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(19),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="19"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(19),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="19"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(19),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="20"]:not(:checked)) > .gk-table-sticky-box > .gk-table > thead > tr > :nth-child(20),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="20"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(20),
+.gk-table-wrap:has(> .gk-toolbar [data-gk-col-foot="20"]:not(:checked)) > .gk-table-sticky-box > .gk-table > tfoot > tr > :nth-child(20) {
+  display: none !important;
+}
+/* What the script marks: a hidden cell (also past the twentieth place), and a footer cell or a
+   spanning cell whose every column is hidden. Its own rule — a list with a :has() a browser does
+   not know is dropped as a whole. */
+.gk-table .gk-col-hidden {
+  display: none !important;
+}
+
+/* The button and its menu. The menu lies in the top layer (a popover): no card with
+   overflow: hidden cuts it off. Without the script it opens where a browser puts a popover, in
+   the middle of the window; the script puts it under its button. The look is the dropdown's
+   (.gk-dropdown-menu), and its rows are .gk-dropdown-item. */
+.gk-col-toggle {
+  display: inline-flex;
+}
+.gk-col-toggle > .gk-btn[aria-expanded="true"] {
+  background: var(--gk-surface-container-high);
+}
+.gk-col-toggle-menu {
+  min-width: 200px;
+  max-width: min(320px, calc(100vw - 16px));
+  max-height: min(70vh, 480px);
+  overflow: auto;
+  padding: 8px 0;
+  border: none;
+  border-radius: 12px;
+  background: var(--gk-surface);
+  color: var(--gk-text);
+  box-shadow: var(--gk-elev-2);
+}
+.gk-col-toggle-menu .gk-dropdown-item {
+  padding: 8px 16px;
+  cursor: pointer;
+}
+/* The row under the keyboard is as visible as the one under the pointer. */
+.gk-col-toggle-menu .gk-dropdown-item:focus-within {
+  background: var(--gk-surface-container-high);
+}
+.gk-col-toggle-menu input[type="checkbox"] {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--gk-primary);
+}
+/* 'toggle' => false (and the column of rowLink()): in the list, ticked, and plainly not a choice. */
+.gk-col-toggle-menu .gk-dropdown-item:has(input:disabled) {
+  cursor: default;
+  color: var(--gk-text-muted);
+}
+/* A browser that does not know popovers would show the menu as a block in the toolbar, always
+   open. It is hidden there; so are the checkboxes, and every column shows. */
+@supports not selector(:popover-open) {
+  .gk-col-toggle-menu {
+    display: none;
+  }
+}
+[data-gk-mode="dark"] .gk-col-toggle-menu,
+.gk-dark .gk-col-toggle-menu {
+  background: #2d333b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+[data-gk-mode="dark"] .gk-col-toggle-menu .gk-dropdown-item:focus-within,
+.gk-dark .gk-col-toggle-menu .gk-dropdown-item:focus-within,
+[data-gk-mode="dark"] .gk-col-toggle > .gk-btn[aria-expanded="true"],
+.gk-dark .gk-col-toggle > .gk-btn[aria-expanded="true"] {
+  background: #21262d;
+}
+
+/* A card whose title column is hidden. The title of a compact card (1.106.0) is the first cell
+   that is not muted and not hidden on a phone — chosen by class, so a cell the menu hid would stay
+   the title and leave the head of every card empty. These are the title rules of 1.106.0 once
+   more, with the script's .gk-col-hidden among the cells passed over: the next column takes the
+   title, and a card whose visible fields are all muted takes the first of them. (Without the
+   script the hidden cell is not marked, and the card has no title line.) Each rule on its own, as
+   there: a list with an :nth-child(of) or a :has() a browser does not know is dropped as a whole. */
+@media (max-width: 768px) {
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile, .gk-col-hidden)) {
+    grid-column: 3;
+    grid-row: 1;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 2px;
+    align-self: stretch;
+    padding: 0 0 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gk-outline-variant);
+    font-weight: 600;
+    color: var(--gk-on-surface);
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile, .gk-col-hidden))::before {
+    display: none;
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile, .gk-col-hidden)) .gk-cell-sub {
+    flex-basis: auto;
+    text-align: left;
+    font-weight: normal;
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link):not(:has(> td:not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile, .gk-col-hidden))) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile, .gk-col-hidden)) {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: stretch;
+    align-items: center;
+    padding: 0 0 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--gk-outline-variant);
+    font-weight: 600;
+    color: var(--gk-on-surface);
+  }
+  .gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link):not(:has(> td:not(.gk-cb-col, .gk-actions, .gk-td-muted, .gk-hide-mobile, .gk-col-hidden))) > td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile, .gk-col-hidden))::before {
+    display: none;
+  }
+  .gk-table-mobile-card .gk-table tbody tr:has(> td:nth-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile, .gk-col-hidden)):nth-last-child(1 of :not(.gk-cb-col, .gk-actions, .gk-hide-mobile, .gk-col-hidden))) > td {
+    padding-bottom: 0 !important;
+    margin-bottom: 0;
+    border-bottom: none;
+  }
+}
+
+/* === 1.109.0 — density toggle ===
+   Table::densityToggle() lets the person at the screen set one table Compact, Normal or Roomy.
+   The script writes the step on the table's wrap as data-gk-density — konsole, normal or weit,
+   the words Theme::density() writes on the page. On a page without a density of its own the
+   wrap at Normal carries no attribute at all, so that table IS the table without the toggle.
+
+   Nothing here matches without the attribute on a .gk-table-wrap: the page-wide
+   Theme::density() and themes.css behave as before. Three parts, and why they live here:
+
+   1. The steps, as the three table tokens on the wrap. themes.css holds the same numbers for
+      the page, but it is optional, and a control that does nothing without it would be broken.
+      tests/density-toggle.test.php holds the numbers to themes.css. Each step names all three
+      tokens: on a page set to konsole, Normal and Roomy have to undo its 4px label radius,
+      which `weit` in themes.css never had to.
+   2. The sizes and variants, written against the tokens. .gk-table-sm/-md/-lg td and the
+      variants padded, compact, very-compact and xs set their padding in pixels, at the weight
+      of the token rule and after it, so the tokens never reached a table drawn by Table.
+      Since 1.110.3 the rules of 2 and 3 and of the phone also hold under a page that carries
+      the step (Theme::density() on <html>, its tokens from themes.css): until then the page's
+      step moved the label radius of those tables and nothing else. The second selector of each
+      :where() is that page; it skips a wrap with a step of its own where the step is named. Here each keeps its distance
+      from the default rhythm (sm 6px tighter, lg 4px roomier) and moves with the step; at
+      Normal the sums are the old pixels, which the test works out. :where() holds each rule
+      at the weight of the one it stands for and they come in the same order (sizes, variants,
+      the phone), so whatever outweighed a size still does: the action and checkbox cells, a
+      row link's chevron, a list's first and last column, the card.
+   3. The list and the phone card, which have rhythms of their own (below).
+
+   No colour of its own: the control is the segmented button of 1.99.0, whose roles change
+   with the mode in both spellings ([data-gk-mode="dark"] and .gk-dark). */
+
+/* 1 — the steps. (0,1,0), the weight of themes.css: a list's own tokens
+   (.gk-table-wrap.gk-table-list, 10px / 8px) outweigh them, and its step is its row (3). */
+:where(.gk-table-wrap)[data-gk-density="konsole"] {
+  --gk-table-pad-y: 8px;
+  --gk-table-pad-x: 12px;
+  --gk-label-radius: 4px;
+}
+:where(.gk-table-wrap)[data-gk-density="normal"] {
+  --gk-table-pad-y: 12px;
+  --gk-table-pad-x: 16px;
+  --gk-label-radius: 9999px;
+}
+:where(.gk-table-wrap)[data-gk-density="weit"] {
+  --gk-table-pad-y: 16px;
+  --gk-table-pad-x: 20px;
+  --gk-label-radius: 9999px;
+}
+
+/* 2 — sizes (=== TABLE SIZES ===), then the variants that set a padding (=== TABLE VARIANTS ===). */
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-sm th,
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-sm td {
+  padding: calc(var(--gk-table-pad-y) - 6px) calc(var(--gk-table-pad-x) - 6px);
+}
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-md th {
+  padding: calc(var(--gk-table-pad-y) - 2px) var(--gk-table-pad-x);
+}
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-md td {
+  padding: var(--gk-table-pad-y) var(--gk-table-pad-x);
+}
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-lg th {
+  padding: calc(var(--gk-table-pad-y) + 2px) calc(var(--gk-table-pad-x) + 4px);
+}
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-lg td {
+  padding: calc(var(--gk-table-pad-y) + 4px) calc(var(--gk-table-pad-x) + 4px);
+}
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-padded th {
+  padding: calc(var(--gk-table-pad-y) + 2px) calc(var(--gk-table-pad-x) + 4px);
+}
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-padded td {
+  padding: calc(var(--gk-table-pad-y) + 4px) calc(var(--gk-table-pad-x) + 4px);
+}
+/* xs and very-compact are 4px at Normal: a step down would leave the text on the rule, so
+   2px is the floor of both. */
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-xs th,
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-xs td {
+  padding: max(2px, calc(var(--gk-table-pad-y) - 8px)) calc(var(--gk-table-pad-x) - 8px);
+}
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-compact th,
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-compact td {
+  padding: calc(var(--gk-table-pad-y) - 4px) calc(var(--gk-table-pad-x) - 4px);
+}
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-very-compact th,
+:where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-very-compact td {
+  padding: max(2px, calc(var(--gk-table-pad-y) - 8px)) calc(var(--gk-table-pad-x) - 8px);
+}
+
+/* 3 — a list (size('list'), 1.92.0) is set by its row, 64px with 10px above and below. A step
+   moves both, by three steps of 4px and one, and leaves the columns alone. */
+:where(.gk-table-wrap[data-gk-density="konsole"], [data-gk-density="konsole"] .gk-table-wrap:not([data-gk-density])).gk-table-list .gk-table tbody tr:not(.gk-table-group, .gk-table-more) > td {
+  height: 52px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+:where(.gk-table-wrap[data-gk-density="weit"], [data-gk-density="weit"] .gk-table-wrap:not([data-gk-density])).gk-table-list .gk-table tbody tr:not(.gk-table-group, .gk-table-more) > td {
+  height: 76px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+@media (max-width: 768px) {
+  /* The phone outside card mode (=== TABLET / MOBILE ===): 10px 12px for every size, 8px 10px
+     for sm. Not a list: its tokens are its own and the rule above is its step. */
+  :where(.gk-table-wrap[data-gk-density]:not(.gk-table-list), [data-gk-density] .gk-table-wrap:not(.gk-table-list)) .gk-table th,
+  :where(.gk-table-wrap[data-gk-density]:not(.gk-table-list), [data-gk-density] .gk-table-wrap:not(.gk-table-list)) .gk-table td {
+    padding: calc(var(--gk-table-pad-y) - 2px) calc(var(--gk-table-pad-x) - 4px);
+  }
+  :where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-sm th,
+  :where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-sm td {
+    padding: calc(var(--gk-table-pad-y) - 4px) calc(var(--gk-table-pad-x) - 6px);
+  }
+  /* The compact card (1.106.0): 12px 16px round a card is the default rhythm itself, 8px between
+     two cards and 3px above and below a field follow it. A card with a link keeps its 40px on
+     the right for the chevron; the head keeps its own spacing, and so do the checkbox and the
+     buttons in it (left out with :where(), at no weight). */
+  :where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) {
+    padding-top: var(--gk-table-pad-y);
+    padding-bottom: var(--gk-table-pad-y);
+    padding-left: var(--gk-table-pad-x);
+    margin-bottom: calc(var(--gk-table-pad-y) - 4px);
+  }
+  :where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row, .gk-row-link) {
+    padding-right: var(--gk-table-pad-x);
+  }
+  :where(.gk-table-wrap[data-gk-density], [data-gk-density] .gk-table-wrap).gk-table-mobile-card .gk-table tbody tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > td:where(:not(.gk-cb-col, .gk-actions)) {
+    padding-top: calc((var(--gk-table-pad-y) - 6px) / 2);
+    padding-bottom: calc((var(--gk-table-pad-y) - 6px) / 2);
+  }
+}
+
+/* The control: the segmented button at the height of the search field beside it, 34px with its
+   border. On a touch screen it gets its 44px back (the segmented button's own rule, which this
+   one outweighs). The phone's toolbar is a column that stretches what it holds; the control
+   keeps its own width. */
+.gk-toolbar [data-gk-density-toggle] .gk-segmented-item {
+  min-height: 32px;
+  padding: 0 12px;
+}
+@media (pointer: coarse), (max-width: 600px) {
+  .gk-toolbar [data-gk-density-toggle] .gk-segmented-item {
+    min-height: var(--gk-target-min);
+  }
+}
+@media (max-width: 768px) {
+  .gk-toolbar [data-gk-density-toggle] {
+    align-self: flex-start;
+  }
+}
+
+/* === 1.110.0 — inline editing === */
+/* A cell of a column with 'edit' (Table::editable()) says so before anyone hovers: a dotted line
+   under its content. A shape, not a colour, and in the muted text colour so it holds 3:1 for a
+   control (7.6:1 light, 6.2:1 dark) without shouting. A background, not a border or ::after: the
+   row keeps its own rule, and ::after is the chevron of a row link. The weight of the selector
+   (0,3,1) is on purpose — the hover and focus fill of a row (0,2,3) is written with the background
+   shorthand and would take the line away. No new class: the cell is found by data-gk-edit. */
+[data-gk-editable] .gk-table td[data-gk-edit] {
+  cursor: text;
+  background-image: repeating-linear-gradient(90deg, var(--gk-on-surface-variant) 0 1px, transparent 1px 3px);
+  background-origin: content-box;
+  background-size: 100% 1px;
+  background-position: left 0 bottom -4px;
+  background-repeat: no-repeat;
+}
+/* Under the pointer the line turns solid and primary: a second shape, not only a second colour. */
+[data-gk-editable] .gk-table td[data-gk-edit]:hover {
+  background-image: linear-gradient(var(--gk-primary), var(--gk-primary));
+}
+[data-gk-editable] .gk-table td[data-gk-edit]:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+/* The field lies over the cell, and the value stays under it, hidden: opening a field moves no
+   column and no row (a field in the flow widened its column by the width of an empty input).
+   text-align follows the cell, so a number stays on the right; so does a field wider than a narrow
+   column, which grows to the left there. */
+[data-gk-editable] .gk-table td[data-gk-edit][data-gk-editing] {
+  position: relative;
+  background-image: none; /* (0,4,1), after the hover rule: no line under the open field */
+}
+[data-gk-editable] .gk-table td[data-gk-editing] > [data-gk-edit-was] {
+  visibility: hidden;
+}
+[data-gk-editable] .gk-table td[data-gk-editing] > :is(input, select) {
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  transform: translateY(-50%);
+  box-sizing: border-box;
+  width: calc(100% - 8px);
+  min-width: 6em;
+  margin: 0;
+  padding: 3px 6px;
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  color: var(--gk-on-surface);
+  background-color: var(--gk-surface);
+  border: 1px solid var(--gk-primary);
+  border-radius: 6px;
+  box-shadow: var(--gk-focus-ring);
+  outline: none;
+  z-index: 1;
+}
+[data-gk-editable] .gk-table td.gk-td-num[data-gk-editing] > input {
+  left: auto;
+  right: 4px;
+}
+[data-gk-editable] .gk-table td[data-gk-editing] > input[aria-invalid="true"] {
+  border-color: var(--gk-error);
+  box-shadow: var(--gk-focus-ring-error);
+}
+/* Saving: aria-busy says it to a screen reader, the faded value and the cursor to the eye. */
+[data-gk-editable] .gk-table td[data-gk-edit][aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.55;
+  background-image: none;
+}
+/* In dark mode the surface is the table's own ground; the field steps up one container so that it
+   reads as a field and not as a hole in the row. */
+[data-gk-mode="dark"] [data-gk-editable] .gk-table td[data-gk-editing] > :is(input, select),
+.gk-dark [data-gk-editable] .gk-table td[data-gk-editing] > :is(input, select) {
+  background-color: var(--gk-surface-container);
+}
+/* A card on a phone: the cell is a line of label and value, 3px of padding below it. The line sits
+   in that padding, and the field takes the room of the value beside its label. */
+@media (max-width: 768px) {
+  .gk-table-mobile-card[data-gk-editable] .gk-table td[data-gk-edit] {
+    background-position: left 0 bottom -2px;
+  }
+  /* In a card the width is the card's, nothing can move: the field takes the place of the value. */
+  .gk-table-mobile-card[data-gk-editable] .gk-table td[data-gk-editing] > [data-gk-edit-was] {
+    display: none;
+  }
+  .gk-table-mobile-card[data-gk-editable] .gk-table td[data-gk-editing] > :is(input, select) {
+    position: static;
+    transform: none;
+    flex: 1 1 0;
+    align-self: stretch;
+    width: auto;
+    min-width: 0;
+    margin: -2px 0;
+  }
+}
+/* Forced colours drop the gradient; an underline survives them. */
+@media (forced-colors: active) {
+  [data-gk-editable] .gk-table td[data-gk-edit] {
+    text-decoration: underline dotted;
+  }
+}

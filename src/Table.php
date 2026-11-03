@@ -13,6 +13,9 @@ class Table
     /** The highest page a request may ask for. A page past the end shows the empty state anyway. */
     private const MAX_PAGE = 1000000;
 
+    /** What a column's 'edit' may ask for (1.110.0). */
+    private const EDIT_TYPES = ['text', 'number', 'select'];
+
     private string $id;
     private array $columns = [];
     private array $buttons = [];
@@ -49,11 +52,32 @@ class Table
     private ?string $csvFile = null;
     /** @var array<string,mixed> */
     private array $csvOpts = [];
+    /** densityToggle() (1.109.0): Compact / Normal / Roomy in the toolbar. */
+    private bool $densityToggle = false;
     private string $groupCol = '';
     private string $caption = '';
     private array $groupLabels = [];
     /** What a row opens: ['href' => …] or ['sheet' => …, 'url' => …], plus 'column' and 'params'. */
     private array $rowLink = [];
+    /** stickyHead() (1.107.0): the header row stays in view; $stickyHeight is its box, '' for the page. */
+    private bool $stickyHead = false;
+    private string $stickyHeight = '';
+    /** stickyColumn() (1.107.0): the first data column, and the cells before it, stay in view sideways. */
+    private bool $stickyColumn = false;
+
+    /** columnToggle() (1.108.0): a toolbar button whose menu shows and hides columns. */
+    private bool $columnToggle = false;
+    /** editable(): the row field that names a record; null while the table is not editable. */
+    private ?string $editKey = null;
+    private string $editUrl = '';
+    /** @var array{headers?:array<string,string>} */
+    private array $editOpts = [];
+    /**
+     * The columns that can be edited in the render under way, worked out once per render():
+     * key => ['type' => …, 'options' => [[value, text], …]]. Empty for every table without editable().
+     * @var array<string,array<string,mixed>>
+     */
+    private array $editSpecs = [];
 
     public function __construct(string $id)
     {
@@ -155,6 +179,17 @@ class Table
                     . " (5 gives way first) or 1 for never. The column always shows.", E_USER_WARNING);
             }
         }
+        // 'hidden' and 'toggle' (1.108.0, see columnToggle()) take true or false and nothing else:
+        // a 'hidden' => 'no' is true to PHP and would hide the column it meant to show. Anything
+        // else is dropped with a warning, and the column keeps the default (shown, can be hidden).
+        foreach (['hidden' => 'starts shown', 'toggle' => 'can be hidden'] as $flag => $fallback) {
+            if (array_key_exists($flag, $opts) && !is_bool($opts[$flag])) {
+                $raw = $opts[$flag];
+                $shown = is_scalar($raw) ? var_export($raw, true) : get_debug_type($raw);
+                trigger_error("GridKit: column '$key' has '$flag' => $shown — it takes true or false. The column $fallback.", E_USER_WARNING);
+                unset($opts[$flag]);
+            }
+        }
         $this->columns[$key] = ['label' => $label, ...$opts];
         return $this;
     }
@@ -236,10 +271,90 @@ class Table
         return $this;
     }
 
+    /**
+     * The header row stays in view while the rows scroll under it (1.107.0).
+     *
+     * Without an argument it sticks to the page, or to whatever scrolls around the table: a
+     * table writes no scroll box of its own and .gk-table-wrap keeps overflow visible, so the
+     * page is the nearest scroller. Under a fixed or sticky GridKit header it stops at
+     * --gk-sheet-top (56px), not under the header. With a CSS length ('70vh', '480px') the table
+     * scrolls in a box of that height and the header sticks to the top of the box.
+     *
+     * The length goes into a style attribute, so anything that is not a plain number and unit
+     * is refused with a warning — the head then sticks to the page as without an argument.
+     */
+    public function stickyHead(string $maxHeight = ''): static
+    {
+        $this->stickyHead = true;
+        $maxHeight = trim($maxHeight);
+        if ($maxHeight !== '' && !self::isBoxHeight($maxHeight)) {
+            // JSON with every special character hex-escaped: the refused value is quoted in the
+            // log and on a page with display_errors, and neither may get markup from it.
+            $shown = json_encode($maxHeight, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+                | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+            trigger_error("GridKit: stickyHead() takes a CSS length such as '70vh' or '480px' — $shown was left out,"
+                . ' the head sticks to the page.', E_USER_WARNING);
+            $maxHeight = '';
+        }
+        $this->stickyHeight = $maxHeight;
+        return $this;
+    }
+
+    /**
+     * The first data column stays in view while the table scrolls sideways (1.107.0), and so
+     * do the cells in front of it: the checkbox of selectable() and the buttons on the left.
+     *
+     * Scrolling sideways needs a box that scrolls, so the table gets one (overflow-x: auto).
+     * A box that scrolls sideways is a scroller for the head as well — with stickyHead() the
+     * head can no longer stick to the page, so the box gets a height: the one stickyHead()
+     * was given, or 70vh.
+     */
+    public function stickyColumn(): static
+    {
+        $this->stickyColumn = true;
+        return $this;
+    }
+
+    /** A length a box may be given as its height: a positive number and a unit, nothing else. */
+    private static function isBoxHeight(string $value): bool
+    {
+        return preg_match('/^(\d+(?:\.\d+)?|\.\d+)(px|vh|dvh|svh|lvh|rem|em|%)$/', $value, $m) === 1
+            && (float) $m[1] > 0;
+    }
+
     public function selectable(string $key = 'id'): static
     {
         $this->selectable = true;
         $this->selectKey  = $key;
+        return $this;
+    }
+
+    /**
+     * Inline editing (1.110.0): a cell of a column with `'edit'` turns into a field on a click, or on
+     * Enter or F2 while it has the focus — every such cell is reachable with Tab and tells a screen
+     * reader that it can be edited. Enter and leaving the field save, Escape restores the old value,
+     * Tab saves and moves to the next editable cell.
+     *
+     * Saving fires `gk:celledit` on the table with `{ tableId, id, column, value, oldValue }`. It is
+     * cancelable: preventDefault() puts the old value back and sends nothing. With `$url` GridKit then
+     * POSTs `{ id, column, value }` as JSON there and expects `{ ok: true }` back (optionally with the
+     * stored `value` and the cell's `display` markup); anything else puts the old value back and says
+     * why. Without `$url` nothing is sent — the application saves in its listener, and may answer
+     * through `event.detail.respondWith(promise)` in the shape the server would.
+     *
+     * `$key` is the row field that names a record, as in selectable(): it is written into every row as
+     * `data-gk-row-id` and posted as `id`. A row whose key is empty is not editable. Option `headers`
+     * adds request headers, typically `['X-CSRF-Token' => $token]`.
+     *
+     * A table without a column that can be edited renders exactly as it would without this call.
+     *
+     * @param array{headers?:array<string,string>} $opts
+     */
+    public function editable(string $key = 'id', string $url = '', array $opts = []): static
+    {
+        $this->editKey  = $key;
+        $this->editUrl  = $url;
+        $this->editOpts = $opts;
         return $this;
     }
 
@@ -323,12 +438,20 @@ class Table
      * Answer the export button of a server-driven table: the headers, then the file. Ends nothing —
      * `exit` after it, like after an AJAX fragment (see isAjaxReload()).
      *
+     * The button of a table with columnToggle() names the columns the user has hidden
+     * (`gk_hidden=email,phone`, 1.108.0); they are left out, so the file holds what the table
+     * showed — as a setData() table's file does. A name that is not in `$columns` changes nothing.
+     *
      * @param list<array<string,mixed>> $rows
      * @param array<string,string|array{label?:string,export?:bool}> $columns
      * @param array{delimiter?:string,bom?:bool} $opts
      */
     public static function sendCsv(array $rows, array $columns, string $filename = 'export.csv', array $opts = []): void
     {
+        $hidden = self::param('gk_hidden');
+        if ($hidden !== '') {
+            foreach (explode(',', $hidden) as $key) unset($columns[$key]);
+        }
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . self::csvFilename($filename) . '"');
         header('X-Content-Type-Options: nosniff');
@@ -358,6 +481,27 @@ class Table
             $s = '"' . str_replace('"', '""', $s) . '"';
         }
         return $s;
+    }
+
+    /**
+     * A control in the toolbar that sets this table Compact, Normal or Roomy (1.109.0).
+     *
+     * The three steps are the rhythms of Theme::density(): `konsole`, the default and `weit`. The
+     * script writes the choice as `data-gk-density` on the table's wrap, so it reaches this table
+     * and no other, and remembers it per table id in this browser (localStorage, in the namespace
+     * of GK.theme). It needs css/gridkit.css only; themes.css, which holds the page-wide rules,
+     * is optional.
+     *
+     * Normal is GridKit's default rhythm, not "whatever the page is": on a page set to
+     * Theme::density('konsole') the control starts at Compact and Normal is roomier than the
+     * rest of the page. Choosing the page's own step forgets the stored choice, so the table
+     * follows the page again. The control is rendered hidden and shown by the script: without
+     * it the table is the table without this option. With toolbar(false) there is no control.
+     */
+    public function densityToggle(): static
+    {
+        $this->densityToggle = true;
+        return $this;
     }
 
     public function setData(array $rows): static
@@ -415,6 +559,163 @@ class Table
     {
         $this->caption = trim($text);
         return $this;
+    }
+
+    /**
+     * A "Columns" button in the toolbar (1.108.0). Its menu has one checkbox per column; unticking
+     * one hides the column — header, cells, and a footer cell that stands alone over it — and the
+     * browser remembers the choice per table id.
+     *
+     * Column options: `'hidden' => true` starts the column hidden (a stored choice wins), and
+     * `'toggle' => false` keeps it on screen — it stays in the menu, ticked and disabled, so the
+     * list still reads as the table's columns. The column that carries rowLink()'s control is
+     * kept the same way: hidden, the row would lose the one control the keyboard reaches.
+     *
+     * Hiding is CSS, keyed on the checkbox: the rows are written as before, so a sort, a search or
+     * an AJAX reload redraws them and the hidden column stays hidden. The menu is a native popover,
+     * so it opens and works without js/gridkit.js 1.108.0; the script adds the memory, aria-expanded,
+     * the place under the button, and narrower group rows, empty state and footer.
+     */
+    public function columnToggle(bool $enabled = true): static
+    {
+        $this->columnToggle = $enabled;
+        return $this;
+    }
+
+    /**
+     * What the menu of columnToggle() lists: one entry per column, with the place its cells take in
+     * a row (the checkbox and the left buttons stand before the first column), the place of its
+     * header, and the footer cell that stands alone over it, if one does. null when the table has
+     * no menu — and then a column marked 'hidden' is said to show, since nobody could show it again.
+     *
+     * The header's place is the place of its cells. Until 1.110.1 renderTableHead() — and
+     * renderStatic() after it — wrote the header cell of the left buttons at the END of the header
+     * row, so with left buttons a heading stood one place before its cells and had a place of its
+     * own (data-gk-col-head). The attribute stays, now with the same number.
+     *
+     * 'hidden' is read only where 'toggle' is true: a column that cannot be hidden is ticked anyway.
+     *
+     * @return list<array{key:string,label:string,pos:int,head:int,foot:?int,toggle:bool,hidden:bool}>|null
+     */
+    private function columnMenu(): ?array
+    {
+        if (!$this->columnToggle || !$this->showToolbar) {
+            foreach ($this->columns as $key => $col) {
+                if (($col['hidden'] ?? false) === true) {
+                    trigger_error("GridKit: column '$key' is 'hidden', but the table has no "
+                        . ($this->columnToggle ? 'toolbar for its columnToggle() menu' : 'columnToggle()')
+                        . ' — nobody could show it again. The column shows.', E_USER_WARNING);
+                }
+            }
+            if ($this->columnToggle) {
+                trigger_error('GridKit: columnToggle() puts its button in the toolbar, and toolbar(false) leaves none. Every column shows.', E_USER_WARNING);
+            }
+            return null;
+        }
+
+        $hasLeft = (bool) array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'left');
+        $hasRight = (bool) array_filter($this->buttons, fn($b) => ($b['position'] ?? 'right') === 'right');
+        $lead = ($this->selectable ? 1 : 0) + ($hasLeft ? 1 : 0);
+        $foot = $this->footerCellAt($lead + count($this->columns) + ($hasRight ? 1 : 0));
+        $linkKey = $this->rowLinkColumn();
+
+        $menu = [];
+        $pos = $lead;
+        foreach ($this->columns as $key => $col) {
+            $pos++;
+            $key = (string) $key;
+            $toggle = ($col['toggle'] ?? true) !== false && $key !== $linkKey;
+            $hidden = ($col['hidden'] ?? false) === true;
+            if ($hidden && !$toggle) {
+                trigger_error("GridKit: column '$key' is 'hidden' and cannot be hidden ("
+                    . ($key === $linkKey ? "it carries the row's rowLink() control" : "'toggle' => false")
+                    . '). The column shows.', E_USER_WARNING);
+            }
+            $label = (string) $col['label'];
+            $menu[] = [
+                'key' => $key,
+                // A checkbox needs a name; a column with an empty heading gets its key.
+                'label' => trim($label) !== '' ? $label : $key,
+                'pos' => $pos,
+                // Since 1.110.1 the header writes the cell over the left buttons where a row
+                // writes the buttons, so a heading takes the place of its cells.
+                'head' => $pos,
+                'foot' => $foot[$pos] ?? null,
+                'toggle' => $toggle,
+                'hidden' => $hidden,
+            ];
+        }
+        return $menu;
+    }
+
+    /**
+     * Which footer cell stands alone over which column: place in the row => place in the footer
+     * row, for the cells renderTableFoot() writes with a colspan of 1. A cell spanning more than
+     * one column has no single column to go with; the script narrows it instead.
+     *
+     * @return array<int,int>
+     */
+    private function footerCellAt(int $colCount): array
+    {
+        if (!$this->footerCells && $this->loadTimeMs === null) return [];
+        $spans = [];
+        foreach ($this->footerCells as $cell) {
+            $spans[] = is_array($cell) ? (int) ($cell['colspan'] ?? 1) : 1;
+        }
+        // The cell renderTableFoot() pads the row with: the load time, or an empty one.
+        $rest = $colCount - array_sum($spans);
+        if ($rest > 0) $spans[] = $rest;
+
+        $at = [];
+        $pos = 1;
+        foreach ($spans as $i => $span) {
+            $span = max(1, $span);   // a browser reads colspan="0" as 1
+            if ($span === 1) $at[$pos] = $i + 1;
+            $pos += $span;
+        }
+        return $at;
+    }
+
+    /** The id of the column menu: the table id where it is a safe one, made safe (and kept unique) where not. */
+    private function columnMenuId(): string
+    {
+        $safe = preg_replace('/[^A-Za-z0-9_-]/', '-', $this->id) ?? '';
+        return 'gk-cols-' . $safe . ($safe === $this->id ? '' : '-' . substr(md5($this->id), 0, 6));
+    }
+
+    /**
+     * The button and its menu. The button names the menu twice: popovertarget opens it without a
+     * line of script, aria-controls says what it opens. aria-expanded is left to the script, which
+     * keeps it in step — written here once, it would say "false" while the menu stood open on a page
+     * without the script (the browser reports a popover's state for its button by itself).
+     *
+     * @param list<array{key:string,label:string,pos:int,head:int,foot:?int,toggle:bool,hidden:bool}> $menu
+     */
+    private function renderColumnToggle(array $menu, \Closure $e): string
+    {
+        $label = Lang::t('table.columns');
+        $id = $e($this->columnMenuId());
+        $html = '<div class="gk-col-toggle">'
+            . '<button type="button" class="gk-btn gk-btn-outlined gk-btn-neutral gk-btn-sm gk-btn-pill"'
+            . ' popovertarget="' . $id . '" aria-controls="' . $id . '">'
+            . '<span class="material-icons" style="font-size:16px" aria-hidden="true">view_column</span>'
+            . '<span>' . $e($label) . '</span></button>'
+            . '<div class="gk-col-toggle-menu" id="' . $id . '" popover role="group" aria-label="' . $e($label) . '">';
+        foreach ($menu as $box) {
+            $attrs = ' data-gk-col="' . $e($box['key']) . '"';
+            if ($box['toggle']) {
+                // The checkbox IS the state: the stylesheet hides the cells at data-gk-col-pos, the
+                // header at data-gk-col-head and the footer cell at data-gk-col-foot while it is unticked.
+                $attrs .= ' data-gk-col-pos="' . $box['pos'] . '" data-gk-col-head="' . $box['head'] . '"'
+                    . ($box['foot'] !== null ? ' data-gk-col-foot="' . $box['foot'] . '"' : '')
+                    . ($box['hidden'] ? '' : ' checked');
+            } else {
+                $attrs .= ' checked disabled';
+            }
+            $html .= '<label class="gk-dropdown-item"><input type="checkbox"' . $attrs . '>'
+                . '<span>' . $e($box['label']) . '</span></label>';
+        }
+        return $html . '</div></div>';
     }
 
     /**
@@ -544,6 +845,158 @@ class Table
             static fn (array $m): string => rawurlencode((string) ($row[$m[1]] ?? '')),
             $template
         ));
+    }
+
+    /**
+     * The columns a person may edit, worked out once per render (1.110.0).
+     *
+     * A column that asks for something GridKit will not do stays read-only and says why, out
+     * loud: 'html' and 'email' write markup of their own (a link inside the field's cell would
+     * take the click), a cell with 'href' is a link, and the cell of rowLink() carries the row's
+     * control — a click there must open the row, not a field. A select needs something to choose
+     * from. 'edit' => false (or null, or '') is simply "not editable", so a permission can switch
+     * a column off without a warning.
+     *
+     * @return array<string,array<string,mixed>>
+     */
+    private function resolveEditColumns(): array
+    {
+        $specs = [];
+        $linkKey = $this->rowLinkColumn();
+        foreach ($this->columns as $key => $col) {
+            $type = $col['edit'] ?? null;
+            if ($type === null || $type === false || $type === '') continue;
+            $k = (string) $key;
+            $refuse = static fn (string $why) => trigger_error("GridKit: column '$k' $why The column stays read-only.", E_USER_WARNING);
+            if ($this->editKey === null) {
+                $refuse("has 'edit', but the table is not editable() — there is no key to save a change under.");
+                continue;
+            }
+            if (!is_string($type) || !in_array($type, self::EDIT_TYPES, true)) {
+                $refuse("has 'edit' => " . (is_scalar($type) ? var_export($type, true) : get_debug_type($type))
+                    . " — it takes 'text', 'number' or 'select'.");
+                continue;
+            }
+            $format = $col['format'] ?? '';
+            if (is_string($format) && in_array($format, self::ROW_LINK_REFUSED, true)) {
+                $refuse("cannot be edited: 'format' => '$format' writes markup of its own, and a click on a link in it cannot also open a field.");
+                continue;
+            }
+            if (isset($col['href']) && (string) $col['href'] !== '') {
+                $refuse("cannot be edited: its 'href' makes the cell a link, and a click cannot both follow it and open a field.");
+                continue;
+            }
+            if ($k === $linkKey) {
+                $refuse("cannot be edited: it carries the control of rowLink(), and a click on it opens the row.");
+                continue;
+            }
+            $spec = ['type' => $type];
+            if ($type === 'select') {
+                $spec['options'] = self::editOptions($col);
+                if ($spec['options'] === []) {
+                    $refuse("has 'edit' => 'select' and nothing to choose from — give it 'options' (value => text), or make it a 'label' column with 'labels'.");
+                    continue;
+                }
+            }
+            $specs[$k] = $spec;
+        }
+        if ($specs && $this->selectable && $this->editKey !== $this->selectKey) {
+            trigger_error("GridKit: selectable('{$this->selectKey}') and editable('{$this->editKey}') name different keys; a row has one id,"
+                . " so both use '{$this->selectKey}'.", E_USER_WARNING);
+        }
+        return $specs;
+    }
+
+    /**
+     * What a select offers: the column's 'options' (value => text, like a filter's), else the
+     * 'labels' of a label column (each key a value, its 'text' or the key itself as the text).
+     * Pairs, not an object: JavaScript reorders the numeric-looking keys of an object.
+     *
+     * @return list<array{0:string,1:string}>
+     */
+    private static function editOptions(array $col): array
+    {
+        $out = [];
+        if (isset($col['options']) && is_array($col['options'])) {
+            foreach ($col['options'] as $value => $text) {
+                $out[] = [(string) $value, is_scalar($text) ? (string) $text : (string) $value];
+            }
+            return $out;
+        }
+        if (($col['format'] ?? '') === 'label' && isset($col['labels']) && is_array($col['labels'])) {
+            foreach ($col['labels'] as $value => $entry) {
+                $text = is_array($entry) && isset($entry['text']) && is_scalar($entry['text']) ? (string) $entry['text'] : (string) $value;
+                $out[] = [(string) $value, $text];
+            }
+        }
+        return $out;
+    }
+
+    /** The row field `data-gk-row-id` is written from: the selection's key, else editable()'s, else none. */
+    private function rowIdKey(): ?string
+    {
+        if ($this->selectable) return $this->selectKey;
+        return $this->editSpecs !== [] ? $this->editKey : null;
+    }
+
+    /** The id of the hidden sentence every editable cell points at with aria-describedby. */
+    private function editHintId(): string
+    {
+        return 'gk-edit-hint-' . $this->id;
+    }
+
+    /**
+     * A value as the text PHP makes of it, the way the client's twin does (asText() in the 1.110.0
+     * block): true is "1", false and null are "", and what has no text of its own (an array) is "" too.
+     */
+    private static function rawText(mixed $value): string
+    {
+        return is_scalar($value) ? (string) $value : '';
+    }
+
+    /**
+     * What the browser needs to edit this table, on the wrap as data-gk-editable. A server table
+     * (rows(), query()) has no column config in the browser, so its editable columns travel here
+     * too — a saved value is then shown the way the column formats it, by the same code that
+     * redraws a sorted setData() table — and the label colours when one of them is a label column.
+     *
+     * @return array<string,mixed>
+     */
+    private function editConfig(): array
+    {
+        $config = [
+            'url'     => $this->editUrl,
+            'key'     => $this->rowIdKey(),
+            'hint'    => $this->editHintId(),
+            'columns' => $this->editSpecs,
+        ];
+        $headers = $this->editOpts['headers'] ?? [];
+        if (is_array($headers) && $headers !== []) {
+            $config['headers'] = array_map(static fn ($v): string => is_scalar($v) ? (string) $v : '', $headers);
+        }
+        if (!$this->isStatic) {
+            foreach (array_keys($this->editSpecs) as $k) {
+                $config['columns'][$k]['column'] = $this->columns[$k];
+                if (($this->columns[$k]['format'] ?? '') === 'label') $config['labelColors'] = self::labelColors();
+            }
+        }
+        return $config;
+    }
+
+    /**
+     * The attributes that make a cell editable — '' for every cell of a table without editable(),
+     * so such a table renders byte for byte as before. js/gridkit.js writes the same three, in the
+     * same order, when it redraws a setData() table (the 1.110.0 block); keep them in step. Only a
+     * server table carries the raw value: a setData() table has it in its data block already.
+     */
+    private function editAttrs(int|string $key, array $row, mixed $val, \Closure $e): string
+    {
+        $k = (string) $key;
+        if (!isset($this->editSpecs[$k])) return '';
+        $idKey = $this->rowIdKey();
+        if ($idKey === null || self::rawText($row[$idKey] ?? '') === '') return '';
+        return ' data-gk-edit="' . $e($k) . '" tabindex="0" aria-describedby="' . $e($this->editHintId()) . '"'
+            . ($this->isStatic ? '' : ' data-gk-raw="' . $e(self::rawText($val)) . '"');
     }
 
     /**
@@ -681,6 +1134,8 @@ class Table
     public function render(): void
     {
         if ($this->db) $this->loadData();
+        // Before the AJAX branch: the fragment of a reload carries the editable cells too.
+        $this->editSpecs = $this->resolveEditColumns();
 
         // AJAX reload of this table: emit the fragment only. Stopping the
         // page around it is the caller's job — see isAjaxReload().
@@ -690,8 +1145,40 @@ class Table
         }
 
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        echo $this->wrapOpenTag($e);
+
+        // Embed JSON data + column config for client-side operations
+        if ($this->isStatic) $this->renderDataBlock();
+
+        // Asked here, once per page: an AJAX reload keeps the toolbar it has (and the menu in it).
+        // Asked without a toolbar too: then it is what says that a 'hidden' column shows.
+        $columnMenu = $this->columnMenu();
+        if ($this->showToolbar) $this->renderToolbar($columnMenu, $e);
+        if ($this->selectable) $this->renderBulkBar($e);
+
+        $this->renderInner();
+
+        $this->renderModalTemplates($e);
+        echo '</div>';
+    }
+
+    /**
+     * The opening tag of the wrap: its classes, the table id, and what the script reads off it —
+     * a static table, a selectable one, the config of an editable one.
+     */
+    private function wrapOpenTag(\Closure $e): string
+    {
         $staticAttr    = $this->isStatic   ? ' data-gk-static'    : '';
         $selectAttr    = $this->selectable ? ' data-gk-selectable' : '';
+        $editAttr      = $this->editSpecs !== []
+            ? ' data-gk-editable="' . $e(json_encode($this->editConfig(), JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) . '"'
+            : '';
+        return '<div class="' . $this->wrapClasses() . '" data-gk-table="' . $e($this->id) . '"' . $staticAttr . $selectAttr . $editAttr . '>';
+    }
+
+    /** The classes of the wrap: size and variant, what a phone makes of the table, what sticks. */
+    private function wrapClasses(): string
+    {
         $wrapClasses   = 'gk-table-wrap';
         $wrapClasses  .= ' gk-table-' . $this->size;
         if ($this->variant !== 'default') $wrapClasses .= ' gk-table-' . $this->variant;
@@ -706,150 +1193,178 @@ class Table
         }
         if ($mobile === 'card') $wrapClasses .= ' gk-table-mobile-card';
         elseif ($mobile === 'scroll') $wrapClasses .= ' gk-table-mobile-scroll';
-        echo '<div class="' . $wrapClasses . '" data-gk-table="' . $e($this->id) . '"' . $staticAttr . $selectAttr . '>';
+        // On the wrap, which an AJAX reload keeps: the classes say what sticks, the box in
+        // renderInner() is what scrolls.
+        if ($this->stickyHead) $wrapClasses .= ' gk-table-sticky-head';
+        if ($this->stickyColumn) $wrapClasses .= ' gk-table-sticky-col';
+        return $wrapClasses;
+    }
 
-        // Embed JSON data + column config for client-side operations
-        if ($this->isStatic) {
-            $colConfig = [];
-            foreach ($this->columns as $key => $col) {
-                $colConfig[$key] = $col;
-            }
-            echo '<script type="application/json" data-gk-data>' . json_encode([
-                'rows' => $this->rows,
-                // The key selectable() was told to use. Without it the client
-                // re-render fell back to "id", so on a table keyed by anything
-                // else every row's id became empty on the first sort or search
-                // — the whole selection collapsed to one blank entry.
-                'rowId' => $this->selectKey,
-                // The page size, so the client can page a static table itself.
-                // Without it the browser had every row and no way to slice
-                // them, so paginate() on a setData() table showed everything
-                // at once and its pager fired a server reload the page often
-                // could not answer.
-                'perPage' => $this->perPage,
-                'columns' => $colConfig,
-                // The label colour table, but only for a table that shows labels:
-                // the client used to carry a shorter copy of it and a sorted
-                // table changed its colours.
-                'labelColors' => array_reduce(
-                    $this->columns,
-                    static fn (?array $c, array $col): ?array =>
-                        $c ?? (($col['format'] ?? '') === 'label' ? self::labelColors() : null),
-                    null
-                ),
-                // The keys search() was told to use. Without them the client
-                // fell back to every rendered column, so a declared search key
-                // that is not itself a column was silently never searched —
-                // and the markup of an HTML column matched instead.
-                'search'  => array_values($this->withSubColumns($this->searchCols)),
-                // nowrap() and footer(), so the client-side rebuild keeps both — it
-                // used to write a bare <table class="gk-table"> without a <tfoot>.
-                'nowrap'  => $this->globalNowrap,
-                // loadTime(): the rebuild writes its meta cell too now — a loadTime()
-                // row on its own vanished on the first sort. The count beside it is
-                // the client's own (rows after search, before the page slice).
-                'loadTimeMs' => $this->loadTimeMs,
-                'footer'  => array_map(static fn ($c): array => is_string($c) ? ['text' => $c] : (array) $c, $this->footerCells),
-                'buttons' => $this->buttons,
-                // Rewritten by the client on every rebuild, like everything else here.
-                'caption' => $this->caption,
-                'groupBy' => $this->groupCol === '' ? null : [
-                    'column' => $this->groupCol,
-                    'labels' => $this->groupLabels,
-                ],
-                // rowLink(), with the column already resolved: the client must not
-                // guess "the first column" from an object whose numeric-looking
-                // keys JavaScript reorders.
-                'rowLink' => $this->rowLinkColumn() === null ? null
-                    : ['column' => $this->rowLinkColumn()] + $this->rowLink,
-            // SUBSTITUTE: one malformed byte made json_encode() answer false, the
-            // block came out empty and sort, search and paging died silently.
-            // HEX_TAG: "<!--<script" inside a cell puts the HTML parser into
-            // its double-escaped state and the block swallows the rest of the page.
-            ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_HEX_TAG) . '</script>';
-        }
+    /**
+     * The data block of a setData() table: its rows and what the browser needs to sort, search
+     * and page them itself and to draw the table again as the server drew it.
+     */
+    private function renderDataBlock(): void
+    {
+        $linkKey = $this->rowLinkColumn();
+        echo '<script type="application/json" data-gk-data>' . json_encode([
+            'rows' => $this->rows,
+            // The key selectable() was told to use. Without it the client
+            // re-render fell back to "id", so on a table keyed by anything
+            // else every row's id became empty on the first sort or search
+            // — the whole selection collapsed to one blank entry.
+            'rowId' => $this->selectKey,
+            // The page size, so the client can page a static table itself.
+            // Without it the browser had every row and no way to slice
+            // them, so paginate() on a setData() table showed everything
+            // at once and its pager fired a server reload the page often
+            // could not answer.
+            'perPage' => $this->perPage,
+            'columns' => $this->columns,
+            // The label colour table, but only for a table that shows labels:
+            // the client used to carry a shorter copy of it and a sorted
+            // table changed its colours.
+            'labelColors' => array_reduce(
+                $this->columns,
+                static fn (?array $c, array $col): ?array =>
+                    $c ?? (($col['format'] ?? '') === 'label' ? self::labelColors() : null),
+                null
+            ),
+            // The keys search() was told to use. Without them the client
+            // fell back to every rendered column, so a declared search key
+            // that is not itself a column was silently never searched —
+            // and the markup of an HTML column matched instead.
+            'search'  => array_values($this->withSubColumns($this->searchCols)),
+            // nowrap() and footer(), so the client-side rebuild keeps both — it
+            // used to write a bare <table class="gk-table"> without a <tfoot>.
+            'nowrap'  => $this->globalNowrap,
+            // loadTime(): the rebuild writes its meta cell too now — a loadTime()
+            // row on its own vanished on the first sort. The count beside it is
+            // the client's own (rows after search, before the page slice).
+            'loadTimeMs' => $this->loadTimeMs,
+            'footer'  => array_map(static fn ($c): array => is_string($c) ? ['text' => $c] : (array) $c, $this->footerCells),
+            'buttons' => $this->buttons,
+            // Rewritten by the client on every rebuild, like everything else here.
+            'caption' => $this->caption,
+            'groupBy' => $this->groupCol === '' ? null : [
+                'column' => $this->groupCol,
+                'labels' => $this->groupLabels,
+            ],
+            // rowLink(), with the column already resolved: the client must not
+            // guess "the first column" from an object whose numeric-looking
+            // keys JavaScript reorders.
+            'rowLink' => $linkKey === null ? null : ['column' => $linkKey] + $this->rowLink,
+        // SUBSTITUTE: one malformed byte made json_encode() answer false, the
+        // block came out empty and sort, search and paging died silently.
+        // HEX_TAG: "<!--<script" inside a cell puts the HTML parser into
+        // its double-escaped state and the block swallows the rest of the page.
+        ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_HEX_TAG) . '</script>';
+    }
 
-        // Toolbar
-        if ($this->showToolbar) {
+    /**
+     * The toolbar, left to right: the search, the caller's own HTML, the filters, the column menu,
+     * the CSV button, the density control, and the new button at the far end.
+     */
+    private function renderToolbar(?array $columnMenu, \Closure $e): void
+    {
         echo '<div class="gk-toolbar">';
-        if ($this->searchCols) {
-            // A placeholder is not an accessible name: it is not always
-            // announced, and it disappears as soon as anything is typed.
-            $searchLabel = $e(Lang::t('table.search'));
-            echo '<input type="text" class="gk-search" data-gk-search'
-               . ' placeholder="' . $searchLabel . '" aria-label="' . $searchLabel . '"'
-               . ' value="' . $e($this->searchQuery) . '">';
-        }
-        if ($this->toolbarHtml !== '') {
-            echo $this->toolbarHtml;
-        }
-        foreach ($this->filters as $col => $f) {
-            // The active value comes back from the URL. Without this the
-            // dropdown snaps to "All" on every full page load while the table
-            // below it still shows filtered rows — which is what a shared link
-            // or a plain reload does.
-            $active = self::param('gk_filter_' . $col);
-            $sel = static fn(string $value): string => $value === $active ? ' selected' : '';
-
-            $filterLabel = $f['label']
-                ?? $this->columns[$col]['label']
-                ?? $f['placeholder']
-                ?? Lang::t('table.filter_all');
-            echo '<select class="gk-filter" data-gk-filter="' . $e($col) . '"'
-               . ' aria-label="' . $e($filterLabel) . '">';
-            echo '<option value=""' . $sel('') . '>'
-               . $e($f['placeholder'] ?? Lang::t('table.filter_all')) . '</option>';
-            foreach ($f['options'] ?? [] as $val => $label) {
-                echo '<option value="' . $e($val) . '"' . $sel((string) $val) . '>'
-                   . $e($label) . '</option>';
-            }
-            echo '</select>';
-        }
-        if ($this->csvFile !== null) {
-            echo Button::render($this->csvOpts['label'] ?? Lang::t('table.export_csv'), [
-                'variant' => 'outlined',
-                'color' => 'neutral',
-                'size' => 'sm',
-                'shape' => 'pill',
-                'icon' => 'download',
-                'data' => ['gk-export-csv' => $this->csvFile, 'gk-export-delimiter' => $this->csvOpts['delimiter'] ?? ','],
-            ]);
-        }
-        if ($this->newBtnLabel) {
-            echo '<div class="gk-toolbar-spacer"></div>';
-            $modal = $this->newBtnOpts['modal'] ?? '';
-            echo Button::render($this->newBtnLabel, [
-                'variant' => 'filled',
-                'color' => 'primary',
-                'icon' => $this->newBtnOpts['icon'] ?? 'add',
-                'shape' => 'pill',
-                'data' => $modal ? ['gk-modal' => $modal] : [],
-            ]);
-        }
+        if ($this->searchCols) $this->renderSearchField($e);
+        if ($this->toolbarHtml !== '') echo $this->toolbarHtml;
+        foreach ($this->filters as $col => $f) $this->renderFilter($col, $f, $e);
+        if ($columnMenu !== null) echo $this->renderColumnToggle($columnMenu, $e);
+        if ($this->csvFile !== null) $this->renderCsvButton();
+        if ($this->densityToggle) echo $this->renderDensityToggle($e);
+        if ($this->newBtnLabel) $this->renderNewButton();
         echo '</div>';
-        } // end toolbar
+    }
 
-        if ($this->selectable) {
-            echo '<div class="gk-bulk-bar" style="display:none;">'
-               . '<span class="material-icons" style="font-size:18px;" aria-hidden="true">check_box</span>'
-               . '<span class="gk-bulk-count">0 ' . $e(Lang::t('table.selected', ['n' => ''])) . '</span>'
-               . '<div class="gk-toolbar-spacer"></div>'
-               . $this->renderBulkActions($e)
-               . '<button type="button" data-gk-bulk-delete>'
-               .   '<span class="material-icons" aria-hidden="true">delete</span> ' . $e(Lang::t('table.delete'))
-               . '</button>'
-               . '<button type="button" data-gk-bulk-cancel>' . $e(Lang::t('table.cancel')) . '</button>'
-               . '</div>';
+    /** The search field of search(), holding the search the page was opened with. */
+    private function renderSearchField(\Closure $e): void
+    {
+        // A placeholder is not an accessible name: it is not always
+        // announced, and it disappears as soon as anything is typed.
+        $searchLabel = $e(Lang::t('table.search'));
+        echo '<input type="text" class="gk-search" data-gk-search'
+           . ' placeholder="' . $searchLabel . '" aria-label="' . $searchLabel . '"'
+           . ' value="' . $e($this->searchQuery) . '">';
+    }
+
+    /** One filter() as a select: "All" first, then its options, the one in the URL selected. */
+    private function renderFilter(int|string $col, array $f, \Closure $e): void
+    {
+        // The active value comes back from the URL. Without this the
+        // dropdown snaps to "All" on every full page load while the table
+        // below it still shows filtered rows — which is what a shared link
+        // or a plain reload does.
+        $active = self::param('gk_filter_' . $col);
+        $sel = static fn(string $value): string => $value === $active ? ' selected' : '';
+
+        $filterLabel = $f['label']
+            ?? $this->columns[$col]['label']
+            ?? $f['placeholder']
+            ?? Lang::t('table.filter_all');
+        echo '<select class="gk-filter" data-gk-filter="' . $e($col) . '"'
+           . ' aria-label="' . $e($filterLabel) . '">';
+        echo '<option value=""' . $sel('') . '>'
+           . $e($f['placeholder'] ?? Lang::t('table.filter_all')) . '</option>';
+        foreach ($f['options'] ?? [] as $val => $label) {
+            echo '<option value="' . $e($val) . '"' . $sel((string) $val) . '>'
+               . $e($label) . '</option>';
         }
+        echo '</select>';
+    }
 
-        $this->renderInner();
+    /** The download button of exportCsv(). */
+    private function renderCsvButton(): void
+    {
+        echo Button::render($this->csvOpts['label'] ?? Lang::t('table.export_csv'), [
+            'variant' => 'outlined',
+            'color' => 'neutral',
+            'size' => 'sm',
+            'shape' => 'pill',
+            'icon' => 'download',
+            'data' => ['gk-export-csv' => $this->csvFile, 'gk-export-delimiter' => $this->csvOpts['delimiter'] ?? ','],
+        ]);
+    }
 
-        // Modals
+    /** The button of newButton(), pushed to the end of the toolbar; with 'modal' it opens that modal. */
+    private function renderNewButton(): void
+    {
+        echo '<div class="gk-toolbar-spacer"></div>';
+        $modal = $this->newBtnOpts['modal'] ?? '';
+        echo Button::render($this->newBtnLabel, [
+            'variant' => 'filled',
+            'color' => 'primary',
+            'icon' => $this->newBtnOpts['icon'] ?? 'add',
+            'shape' => 'pill',
+            'data' => $modal ? ['gk-modal' => $modal] : [],
+        ]);
+    }
+
+    /**
+     * The bar that appears while rows are ticked: the count, the buttons of bulkAction(), delete
+     * and cancel. Written hidden; the script shows it.
+     */
+    private function renderBulkBar(\Closure $e): void
+    {
+        echo '<div class="gk-bulk-bar" style="display:none;">'
+           . '<span class="material-icons" style="font-size:18px;" aria-hidden="true">check_box</span>'
+           . '<span class="gk-bulk-count">0 ' . $e(Lang::t('table.selected', ['n' => ''])) . '</span>'
+           . '<div class="gk-toolbar-spacer"></div>'
+           . $this->renderBulkActions($e)
+           . '<button type="button" data-gk-bulk-delete>'
+           .   '<span class="material-icons" aria-hidden="true">delete</span> ' . $e(Lang::t('table.delete'))
+           . '</button>'
+           . '<button type="button" data-gk-bulk-cancel>' . $e(Lang::t('table.cancel')) . '</button>'
+           . '</div>';
+    }
+
+    /** One template per modal(): the title, URL and size a button with that 'modal' opens it with. */
+    private function renderModalTemplates(\Closure $e): void
+    {
         foreach ($this->modals as $mid => $m) {
             echo '<template data-gk-modal-tpl="' . $e($mid) . '" data-gk-modal-title="' . $e($m['title']) . '" data-gk-modal-url="' . $e($m['url']) . '" data-gk-modal-size="' . $e($m['size'] ?? 'medium') . '"></template>';
         }
-
-        echo '</div>';
     }
 
     private function renderInner(): void
@@ -880,6 +1395,15 @@ class Table
         echo '<div class="gk-sr-only" role="status" aria-live="polite"'
            . ' data-gk-table-status="' . $e($this->id) . '"></div>';
 
+        // What every editable cell says after its value (aria-describedby). Hidden, so a screen
+        // reader does not read it as a loose sentence above the table; a hidden element still
+        // describes what points at it. Here and not in render(): an AJAX reload swaps this part.
+        if ($this->editSpecs !== []) {
+            echo '<span id="' . $e($this->editHintId()) . '" hidden>' . $e(Lang::t('table.edit_hint')) . '</span>';
+        }
+        $box = $this->stickyBox($leftButtons, $e);
+        echo $box;
+
         echo '<table class="' . $tableClass . '">'
            . ($this->caption !== '' ? '<caption class="gk-sr-only">' . $e($this->caption) . '</caption>' : '')
            . '<thead><tr>';
@@ -888,9 +1412,38 @@ class Table
         $this->renderTableFoot($colCount, $e);
 
         echo '</table>';
+        if ($box !== '') echo '</div>';
 
         // Pagination
         $this->renderPager($e);
+    }
+
+    /**
+     * The opening tag of the box a sticky table scrolls in, or '' when it needs none (1.107.0).
+     *
+     * Here and not in render(): an AJAX reload replaces everything renderInner() wrote, so the
+     * box has to come back with the table, around the table only — the pager stays below it,
+     * in view, however far the rows are scrolled.
+     *
+     * data-gk-sticky-col says how many cells of a row stick: the checkbox, the cell of the
+     * left buttons and the first column. Counted here, because the header row writes the
+     * cell over the left buttons at its end, so the stylesheet cannot count the classes of
+     * the header; it takes the first n cells of every row, header and body alike.
+     *
+     * The box is a region with a name and a tab stop: content that scrolls has to be
+     * scrollable by keyboard, and a table without a single control in it offers nothing
+     * else to put the focus on.
+     */
+    private function stickyBox(array $leftButtons, \Closure $e): string
+    {
+        if (!$this->stickyColumn && $this->stickyHeight === '') return '';
+        $height = $this->stickyHeight !== '' ? $this->stickyHeight : ($this->stickyHead ? '70vh' : '');
+        $stuck = ($this->selectable ? 1 : 0) + ($leftButtons ? 1 : 0) + ($this->columns ? 1 : 0);
+        $name = $this->caption !== '' ? $this->caption : Lang::t('table.scroll_region');
+        return '<div class="gk-table-sticky-box" role="region" tabindex="0" aria-label="' . $e($name) . '"'
+            . ($this->stickyColumn && $stuck > 0 ? ' data-gk-sticky-col="' . $stuck . '"' : '')
+            . ($height !== '' ? ' style="--gk-table-sticky-height:' . $e($height) . '"' : '')
+            . '>';
     }
 
     /** The header row up to its end: the select-all cell, one cell per column, the empty cells over the buttons. */
@@ -904,13 +1457,16 @@ class Table
                . ' aria-label="' . $e(Lang::t('table.select_all')) . '"'
                . ' title="' . $e(Lang::t('table.select_all')) . '"></th>';
         }
+        // Empty header cells still need the scope, or the cells beneath them
+        // inherit the association of the last real header to their left.
+        // The cell over the left buttons stands where the buttons stand in a row: before the
+        // first column (1.110.1). It stood at the end of the header row, beside the one over the
+        // right buttons, so with left buttons every heading stood one column before its cells.
+        if ($leftButtons) echo '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">'
+            . $e(Lang::t('table.actions')) . '</span></th>';
         foreach ($this->columns as $key => $col) {
             $this->renderHeadCell($key, $col, $e);
         }
-        // Empty header cells still need the scope, or the cells beneath them
-        // inherit the association of the last real header to their left.
-        if ($leftButtons) echo '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">'
-            . $e(Lang::t('table.actions')) . '</span></th>';
         if ($rightButtons) echo '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">'
             . $e(Lang::t('table.actions')) . '</span></th>';
         echo '</tr></thead>';
@@ -1038,8 +1594,10 @@ class Table
     /** One row: its selection cell, the buttons on both sides and one cell per column. */
     private function renderRow(array $row, array $leftButtons, array $rightButtons, ?string $linkKey, \Closure $e): void
     {
-        $rowId = $this->selectable ? $e($row[$this->selectKey] ?? '') : '';
-        $rowIdAttr = $this->selectable ? ' data-gk-row-id="' . $rowId . '"' : '';
+        // The record a row stands for: the selection's key, or editable()'s (a change is saved under it).
+        $idKey = $this->rowIdKey();
+        $rowId = $idKey !== null ? $e($row[$idKey] ?? '') : '';
+        $rowIdAttr = $idKey !== null ? ' data-gk-row-id="' . $rowId . '"' : '';
         $target = $linkKey !== null ? $this->rowTarget($row, $e) : null;
         echo '<tr' . ($target !== null ? ' class="gk-row-link"' : '') . $rowIdAttr . '>';
         if ($this->selectable) {
@@ -1088,7 +1646,8 @@ class Table
         $dataLabel = ' data-label="' . $e($col['label']) . '"';
         // (string): a key like '2024' is an integer in a PHP array.
         $formatted = $this->cellContent($val, $col, $row, $e, (string) $key === $linkKey ? $target : null);
-        echo "<td{$tdClass}{$tdStyle}{$dataLabel}>{$formatted}</td>";
+        $editAttrs = $this->editSpecs !== [] ? $this->editAttrs($key, $row, $val, $e) : '';
+        echo "<td{$tdClass}{$tdStyle}{$dataLabel}{$editAttrs}>{$formatted}</td>";
     }
 
     /** The footer: the cells the caller gave, and the load time or the row count. */
@@ -1196,151 +1755,193 @@ class Table
         }
     }
 
+    /** The buttons on one side of a row, in the order they were added: each one that shows in this row. */
     private function renderButtons(array $buttons, array $row, \Closure $e): void
     {
         foreach ($buttons as $bname => $bopts) {
-            // showIf: only show the button when the row field is truthy
-            if (isset($bopts["showIf"])) {
-                $field = $bopts["showIf"];
-                if (empty($row[$field])) continue;
-            }
-            // hideIf: hide the button when the row field is truthy
-            if (isset($bopts["hideIf"])) {
-                $field = $bopts["hideIf"];
-                if (!empty($row[$field])) continue;
-            }
-            // Almost every row button needs to say which row it belongs to, and
-            // forgetting `'params' => ['id' => 'id']` failed silently: the edit
-            // modal opened as if it were a new record. The row's own id is sent
-            // unless the caller mapped one itself.
-            $params = self::rowParams($bopts['params'] ?? [], $row);
-
-            // Every other component in GridKit names this option `color` —
-            // Button::render(), ActionGroup items, StatCards. The row button
-            // read `class` and nothing else, so the `'color' => 'danger'` in
-            // the skill's own example produced a grey delete button. Both names
-            // work; `color` is the one to use.
-            $colorMap = ['danger' => 'danger', 'success' => 'success', 'warning' => 'warning', 'primary' => 'primary'];
-            $colorName = $bopts['color'] ?? $bopts['class'] ?? '';
-            $color = $colorMap[$colorName] ?? 'neutral';
-
-            // `'confirm' => true` (or a message) asks before the button acts.
-            // It was documented in the README and read by nothing at all, which
-            // left the delete button in the headline example deleting without
-            // asking — and, with neither onclick nor modal, doing nothing.
-            $confirmAttr = '';
-            $confirmMsg  = null;
-            if (!empty($bopts['confirm'])) {
-                $confirmMsg = is_string($bopts['confirm'])
-                    ? $bopts['confirm']
-                    : Lang::t('table.confirm_delete');
-                $confirmAttr = ' data-gk-confirm="' . $e($confirmMsg) . '"';
-            }
-
-            // Data attributes
-            $dataAttrs = ' data-gk-action="' . $e($bname) . '"'
-                       . " data-gk-params='" . $e(json_encode($params)) . "'"
-                       . $confirmAttr;
-            if (isset($bopts['modal'])) {
-                $dataAttrs .= ' data-gk-modal="' . $e($bopts['modal']) . '"';
-            }
-            // The accessible name. A row button is usually icon-only, so its
-            // whole content is an <svg> — nothing a screen reader can read. It
-            // announced as "button", six times over on a three-row table, and
-            // one of those six deletes the record.
-            //
-            // title is not enough on its own: GK.tip moves it into
-            // data-gk-tip on the first hover and removes the attribute, so a
-            // control named only by its title goes silent as the pointer
-            // crosses it. aria-label is the name; title stays for the tooltip.
-            $actionName = $bopts['aria'] ?? $bopts['title'] ?? null;
-            if ($actionName === null) {
-                $key = 'action.' . $bname;
-                $translated = Lang::t($key);
-                // Lang::t returns the key when it knows nothing about it.
-                $actionName = $translated !== $key
-                    ? $translated
-                    : ucfirst(str_replace(['_', '-'], ' ', $bname));
-            }
-            $ariaAttr  = ' aria-label="' . $e($actionName) . '"';
-            $titleAttr = !empty($bopts['title']) ? ' title="' . $e($bopts['title']) . '"' : '';
-
-            // 'href' => '/users/{id}' makes the row button a real link: middle
-            // click, "open in new tab" and the browser's status bar work again.
-            // Ten SSI Panel views pushed window.location.href into a <button>
-            // instead, and none of them could be opened in a second tab.
-            // 'modal' and 'onclick' keep what they had: a button that already
-            // opens something must not turn into a link because someone added
-            // href — it would lose its behaviour without a word.
-            $href = null;
-            if (isset($bopts['href']) && (string) $bopts['href'] !== ''
-                && !isset($bopts['modal']) && empty($bopts['onclick'])) {
-                $href = self::fillTarget((string) $bopts['href'], $row);
-            }
-            // A link carries no data-gk-action: the delegated handler would fire
-            // gk:rowaction on top of the navigation. The confirmation stays — the
-            // handler below asks before it follows the link.
-            // A question before a link cannot live on an <a>: a middle click, a
-            // Ctrl-click and Enter each take the native path, and a page whose
-            // JavaScript failed to load would follow it without asking at all.
-            // So a link WITH a confirmation is a button carrying its target.
-            $fragtVorher = $href !== null && $confirmMsg !== null;
-            if ($fragtVorher) {
-                // No data-gk-action: going somewhere is not a row action, and the
-                // delegated handler would ask its own question on top of this one.
-                $dataAttrs = " data-gk-params='" . $e(json_encode($params)) . "'"
-                    . $confirmAttr . ' data-gk-href="' . $e($href) . '"';
-                $href = null;
-            }
-            $linkAttrs = $href === null ? '' : ' href="' . $e($href) . '"'
-                . " data-gk-params='" . $e(json_encode($params)) . "'";
-            $clickAttr = '';
-            if (!empty($bopts['onclick'])) {
-                $js = preg_replace_callback('/\{(\w+)\}/', static function ($m) use ($row) {
-                    return json_encode($row[$m[1]] ?? null, JSON_UNESCAPED_UNICODE);
-                }, (string) $bopts['onclick']);
-                // An inline handler runs before any delegated listener could stop
-                // it, so the confirmation has to wrap the code itself.
-                if ($confirmMsg !== null) {
-                    $js = 'GK.confirm(' . json_encode($confirmMsg, JSON_UNESCAPED_UNICODE)
-                        . ',{danger:true}).then(function(ok){if(ok){' . $js . '}})';
-                }
-                $clickAttr = ' onclick="' . $e($js) . '"';
-            }
-
-            $hasText  = !empty($bopts['text']);
-            $iconName = $bopts['icon'] ?? '';
-            $iconHtml = $iconName ? $this->iconSvg($iconName) : '';
-
-            // $hasText alone, not $hasText && $iconHtml: a row button given
-            // 'text' and no 'icon' fell past both arms and rendered nothing at
-            // all. On a setData() table the client re-render draws that same
-            // button, so it appeared out of nowhere on the first sort.
-            if ($hasText) {
-                // Icon + Text button
-                $cls = 'gk-btn gk-btn-icon-text gk-btn-text gk-btn-' . $color;
-                if ($href !== null) {
-                    echo '<a class="' . $cls . '"' . $linkAttrs . $titleAttr . '>'
-                       . $iconHtml . '<span>' . $e($bopts['text']) . '</span></a>';
-                } else {
-                    echo '<button type="button" class="' . $cls . '"' . $titleAttr . $clickAttr . $dataAttrs . '>'
-                       . $iconHtml . '<span>' . $e($bopts['text']) . '</span></button>';
-                }
-            } elseif ($iconHtml) {
-                // Icon-only button (sm) — same classes as JS renderBtnGroup
-                // aria-label only here. The icon+text branch above is named by
-                // its visible text, and an aria-label would override that —
-                // which also breaks activating the control by speaking its
-                // visible name.
-                $cls = 'gk-btn gk-btn-icon-only gk-btn-text gk-btn-' . $color . ' gk-btn-sm';
-                if ($href !== null) {
-                    echo '<a class="' . $cls . '"' . $linkAttrs . $ariaAttr . $titleAttr . '>' . $iconHtml . '</a>';
-                } else {
-                    echo '<button type="button" class="' . $cls . '"' . $ariaAttr . $titleAttr . $clickAttr . $dataAttrs . '>'
-                       . $iconHtml . '</button>';
-                }
-            }
+            if (self::buttonShows($bopts, $row)) $this->renderButton($bname, $bopts, $row, $e);
         }
+    }
+
+    /** showIf and hideIf: does this button show in this row? */
+    private static function buttonShows(array $bopts, array $row): bool
+    {
+        // showIf: only show the button when the row field is truthy
+        if (isset($bopts["showIf"]) && empty($row[$bopts["showIf"]])) return false;
+        // hideIf: hide the button when the row field is truthy
+        if (isset($bopts["hideIf"]) && !empty($row[$bopts["hideIf"]])) return false;
+        return true;
+    }
+
+    /**
+     * One row button: a <button> that fires its row action, opens its modal or runs its onclick —
+     * or an <a> when it goes somewhere without asking first. It shows its text (after its icon,
+     * if it has one) or its icon alone; a button with neither is not written.
+     *
+     * $bname keeps its type: a button named '1' has the key 1, an int, and a `string` parameter
+     * would turn that button into a TypeError.
+     */
+    private function renderButton(int|string $bname, array $bopts, array $row, \Closure $e): void
+    {
+        // Almost every row button needs to say which row it belongs to, and
+        // forgetting `'params' => ['id' => 'id']` failed silently: the edit
+        // modal opened as if it were a new record. The row's own id is sent
+        // unless the caller mapped one itself.
+        $params = self::rowParams($bopts['params'] ?? [], $row);
+        $color = self::buttonColor($bopts);
+        $confirmMsg = self::buttonConfirm($bopts);
+        $confirmAttr = $confirmMsg !== null ? ' data-gk-confirm="' . $e($confirmMsg) . '"' : '';
+
+        // Data attributes
+        $paramsAttr = " data-gk-params='" . $e(json_encode($params)) . "'";
+        $dataAttrs = ' data-gk-action="' . $e($bname) . '"' . $paramsAttr . $confirmAttr;
+        if (isset($bopts['modal'])) {
+            $dataAttrs .= ' data-gk-modal="' . $e($bopts['modal']) . '"';
+        }
+        // aria-label is the name, title stays for the tooltip — see buttonName().
+        $ariaAttr  = ' aria-label="' . $e(self::buttonName($bname, $bopts)) . '"';
+        $titleAttr = !empty($bopts['title']) ? ' title="' . $e($bopts['title']) . '"' : '';
+
+        $href = self::buttonHref($bopts, $row);
+        // A link carries no data-gk-action: the delegated handler would fire
+        // gk:rowaction on top of the navigation. The confirmation stays — the
+        // handler below asks before it follows the link.
+        // A question before a link cannot live on an <a>: a middle click, a
+        // Ctrl-click and Enter each take the native path, and a page whose
+        // JavaScript failed to load would follow it without asking at all.
+        // So a link WITH a confirmation is a button carrying its target.
+        if ($href !== null && $confirmMsg !== null) {
+            // No data-gk-action: going somewhere is not a row action, and the
+            // delegated handler would ask its own question on top of this one.
+            $dataAttrs = $paramsAttr . $confirmAttr . ' data-gk-href="' . $e($href) . '"';
+            $href = null;
+        }
+        $linkAttrs = $href === null ? '' : ' href="' . $e($href) . '"' . $paramsAttr;
+        $clickAttr = self::buttonOnclick($bopts, $row, $confirmMsg, $e);
+
+        $hasText  = !empty($bopts['text']);
+        $iconName = $bopts['icon'] ?? '';
+        $iconHtml = $iconName ? $this->iconSvg($iconName) : '';
+
+        // $hasText alone, not $hasText && $iconHtml: a row button given
+        // 'text' and no 'icon' fell past both arms and rendered nothing at
+        // all. On a setData() table the client re-render draws that same
+        // button, so it appeared out of nowhere on the first sort.
+        if ($hasText) {
+            // Icon + Text button
+            $cls = 'gk-btn gk-btn-icon-text gk-btn-text gk-btn-' . $color;
+            $nameAttr = '';
+            $inner = $iconHtml . '<span>' . $e($bopts['text']) . '</span>';
+        } elseif ($iconHtml) {
+            // Icon-only button (sm) — same classes as JS renderBtnGroup
+            // aria-label only here. The icon+text branch above is named by
+            // its visible text, and an aria-label would override that —
+            // which also breaks activating the control by speaking its
+            // visible name.
+            $cls = 'gk-btn gk-btn-icon-only gk-btn-text gk-btn-' . $color . ' gk-btn-sm';
+            $nameAttr = $ariaAttr;
+            $inner = $iconHtml;
+        } else {
+            return;
+        }
+        if ($href !== null) {
+            echo '<a class="' . $cls . '"' . $linkAttrs . $nameAttr . $titleAttr . '>' . $inner . '</a>';
+        } else {
+            echo '<button type="button" class="' . $cls . '"' . $nameAttr . $titleAttr . $clickAttr . $dataAttrs . '>'
+               . $inner . '</button>';
+        }
+    }
+
+    /**
+     * The colour of a row button: 'color', or 'class'; neutral for anything else.
+     *
+     * Every other component in GridKit names this option `color` — Button::render(), ActionGroup
+     * items, StatCards. The row button read `class` and nothing else, so the `'color' => 'danger'`
+     * in the skill's own example produced a grey delete button. Both names work; `color` is the
+     * one to use.
+     */
+    private static function buttonColor(array $bopts): string
+    {
+        $colorMap = ['danger' => 'danger', 'success' => 'success', 'warning' => 'warning', 'primary' => 'primary'];
+        $colorName = $bopts['color'] ?? $bopts['class'] ?? '';
+        return $colorMap[$colorName] ?? 'neutral';
+    }
+
+    /**
+     * The question a row button asks before it acts, or null: `'confirm' => true` asks the
+     * standard one, a message asks itself.
+     *
+     * 'confirm' was documented in the README and read by nothing at all, which left the delete
+     * button in the headline example deleting without asking — and, with neither onclick nor
+     * modal, doing nothing.
+     */
+    private static function buttonConfirm(array $bopts): ?string
+    {
+        if (empty($bopts['confirm'])) return null;
+        return is_string($bopts['confirm'])
+            ? $bopts['confirm']
+            : Lang::t('table.confirm_delete');
+    }
+
+    /**
+     * The accessible name of a row button: 'aria', else 'title', else the catalogue's
+     * action.<name>, else the name itself made readable.
+     *
+     * A row button is usually icon-only, so its whole content is an <svg> — nothing a screen
+     * reader can read. It announced as "button", six times over on a three-row table, and one
+     * of those six deletes the record.
+     *
+     * title is not enough on its own: GK.tip moves it into data-gk-tip on the first hover and
+     * removes the attribute, so a control named only by its title goes silent as the pointer
+     * crosses it. aria-label is the name; title stays for the tooltip.
+     */
+    private static function buttonName(int|string $bname, array $bopts): string
+    {
+        $actionName = $bopts['aria'] ?? $bopts['title'] ?? null;
+        if ($actionName !== null) return (string) $actionName;
+        $key = 'action.' . $bname;
+        $translated = Lang::t($key);
+        // Lang::t returns the key when it knows nothing about it.
+        // (string): a button named '3' arrives as the key 3, and str_replace() under strict_types
+        // refused the int — the whole table threw a TypeError (1.110.2). renderBulkActions() casts too.
+        return $translated !== $key
+            ? $translated
+            : ucfirst(str_replace(['_', '-'], ' ', (string) $bname));
+    }
+
+    /**
+     * Where a row button goes, filled from the row: null without 'href', for a target
+     * fillTarget() refuses, and for a button with 'modal' or 'onclick'.
+     *
+     * 'href' => '/users/{id}' makes the row button a real link: middle click, "open in new tab"
+     * and the browser's status bar work again. Ten SSI Panel views pushed window.location.href
+     * into a <button> instead, and none of them could be opened in a second tab. 'modal' and
+     * 'onclick' keep what they had: a button that already opens something must not turn into a
+     * link because someone added href — it would lose its behaviour without a word.
+     */
+    private static function buttonHref(array $bopts, array $row): ?string
+    {
+        if (isset($bopts['href']) && (string) $bopts['href'] !== ''
+            && !isset($bopts['modal']) && empty($bopts['onclick'])) {
+            return self::fillTarget((string) $bopts['href'], $row);
+        }
+        return null;
+    }
+
+    /** The onclick attribute of a row button, every {field} of its code filled from the row; '' without 'onclick'. */
+    private static function buttonOnclick(array $bopts, array $row, ?string $confirmMsg, \Closure $e): string
+    {
+        if (empty($bopts['onclick'])) return '';
+        $js = preg_replace_callback('/\{(\w+)\}/', static function ($m) use ($row) {
+            return json_encode($row[$m[1]] ?? null, JSON_UNESCAPED_UNICODE);
+        }, (string) $bopts['onclick']);
+        // An inline handler runs before any delegated listener could stop
+        // it, so the confirmation has to wrap the code itself.
+        if ($confirmMsg !== null) {
+            $js = 'GK.confirm(' . json_encode($confirmMsg, JSON_UNESCAPED_UNICODE)
+                . ',{danger:true}).then(function(ok){if(ok){' . $js . '}})';
+        }
+        return ' onclick="' . $e($js) . '"';
     }
 
     /**
@@ -1574,6 +2175,25 @@ class Table
             $html .= '<button type="button" data-gk-bulk-action="' . $e($name) . '"' . $confirm . '>' . $icon . $e($label) . '</button>';
         }
         return $html;
+    }
+
+    /**
+     * The control of densityToggle(): the segmented button (.gk-segmented, 1.99.0) with three
+     * aria-pressed buttons, the pattern of the theme switcher. It is written `hidden` and with no
+     * step pressed. Which step is on depends on the stored choice and on the page's density, and
+     * only the script knows both: shown by the server, the control would claim a state it may not
+     * have and offer three buttons that do nothing without the script. The script marks the step
+     * and shows the group; with no script, or with an older js/gridkit.js, the control stays
+     * hidden and the table looks as it does without the option.
+     */
+    private function renderDensityToggle(\Closure $e): string
+    {
+        $html = '<div class="gk-segmented" role="group" aria-label="' . $e(Lang::t('table.density')) . '" data-gk-density-toggle hidden>';
+        foreach (['konsole' => 'table.density_compact', 'normal' => 'table.density_normal', 'weit' => 'table.density_roomy'] as $step => $key) {
+            $html .= '<button type="button" class="gk-segmented-item" data-gk-set-density="' . $step . '" aria-pressed="false">'
+                   . $e(Lang::t($key)) . '</button>';
+        }
+        return $html . '</div>';
     }
 
     private function renderEmpty(int $colspan): string

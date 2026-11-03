@@ -51,6 +51,9 @@ use GridKit\Lang;
                         ->button('delete', ['icon' => 'delete', 'class' => 'danger', 'position' => 'right', 'params' => ['id' => 'article_id']])
                         ->newButton('New Article', ['icon' => 'add'])
                         ->nowrap(true)
+                        // A box of its own where the content is narrower than the table
+                        // (a 900px window beside the sidebar); the page no longer scrolls sideways.
+                        ->stickyColumn()
                         ->paginate(5)
                         ->render();
         });
@@ -87,6 +90,11 @@ use GridKit\Lang;
             ->button('delete', ['icon' => 'delete', 'class' => 'danger'])
             ->newButton('New Invoice', ['icon' => 'add'])
             ->nowrap(true)
+            // Seven columns that do not wrap and buttons on both sides are wider than the
+            // content beside an open sidebar on a 1280px screen: without a box of its own the
+            // table pushed the whole page sideways. stickyColumn() (1.107.0) gives it one, with
+            // the number and the view button in front.
+            ->stickyColumn()
             ->paginate(5)
             ->render();
         ?>
@@ -182,7 +190,9 @@ use GridKit\Lang;
         ?>
 
     <h3 style="margin: 32px 0 16px;">Sizes</h3>
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px;">
+    <?php /* 300px, not 240: size('lg') needs about 290px for its three columns, and at 240 a
+             1100px window put it in a narrower track and pushed the page sideways. */ ?>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr)); gap:20px;">
         <?php
         $sizeData = [
             ['name' => 'Widget A', 'value' => '1.200 €', 'status' => 'active'],
@@ -273,8 +283,110 @@ $table->variant('celled')->variant('padded');   // celled is dropped — padded 
 // Variant and size are separate slots, so those two do stack:
 $table->variant('striped')->size('sm');</pre></div>
 
+    <h3 class="demo-h3" id="table-sticky">Sticky head and column <?= since('table') ?></h3>
+    <p class="demo-intro"><code>stickyHead()</code> keeps the header row in view while the rows scroll under it — on the page, or in a box as high as you say (<code>'320px'</code> here). <code>stickyColumn()</code> keeps the first column in view while the table scrolls sideways, with the checkbox in front of it. Scroll the box both ways. On a phone a table in card mode stays as it is.</p>
+        <?php
+        $stickyArticles = array_map(static fn (array $a): array => $a + [
+            'gross'    => round($a['net_price'] * 1.2, 2),
+            'supplier' => 'Supplier ' . chr(64 + $a['article_id']),
+            'stock'    => $a['article_id'] * 7,
+        ], $articles);
+        showcase(function () use ($stickyArticles) {
+            (new Table('demo-sticky'))
+                ->setData($stickyArticles)
+                ->caption('Articles with a sticky head and column')
+                ->selectable('article_id')
+                ->column('name', 'Description', ['sortable' => true, 'minWidth' => '200px'])
+                ->column('article_number', 'Article No.', ['muted' => true])
+                ->column('unit', 'Unit')
+                ->column('net_price', 'Net', ['format' => 'currency', 'sortable' => true])
+                ->column('tax_rate', 'VAT', ['format' => 'percent'])
+                ->column('gross', 'Gross', ['format' => 'currency'])
+                ->column('stock', 'Stock', ['align' => 'right'])
+                ->column('supplier', 'Supplier', ['minWidth' => '360px'])
+                ->column('is_active', 'Status', ['format' => 'label'])
+                ->button('edit', ['icon' => 'edit', 'params' => ['id' => 'article_id']])
+                ->nowrap()
+                ->toolbar(false)
+                ->stickyHead('320px')
+                ->stickyColumn()
+                ->render();
+        });
+        ?>
+
+    <h3 class="demo-h3" id="table-columns">Columns to show and hide <?= since('col-toggle') ?></h3>
+    <p class="demo-intro"><code>columnToggle()</code> puts a "Columns" button in the toolbar. Untick a column in its menu and it is gone from the header and the rows — through a sort, a search and a page change, and on your next visit too: the browser remembers it for this table. <code>'hidden' =&gt; true</code> starts a column hidden (here the unit and the VAT), <code>'toggle' =&gt; false</code> keeps one on screen (the article number). The CSV holds what the table shows; on a phone a hidden column is left out of the card, and if it was the card's title the next column takes its place.</p>
+        <?php
+        showcase(function () use ($articles) {
+            (new Table('demo-columns'))
+                ->setData(array_slice($articles, 0, 8))
+                ->search(['article_number', 'name'])
+                ->column('article_number', 'Article No.', ['muted' => true, 'toggle' => false])
+                ->column('name', 'Description', ['sortable' => true])
+                ->column('unit', 'Unit', ['hidden' => true])
+                ->column('net_price', 'Net', ['format' => 'currency', 'align' => 'right', 'sortable' => true])
+                ->column('tax_rate', 'VAT', ['format' => 'percent', 'hidden' => true])
+                ->column('is_active', 'Status', ['format' => 'label'])
+                ->columnToggle()
+                ->exportCsv('articles.csv')
+                ->paginate(5)
+                ->render();
+        });
+        ?>
+
+    <h3 class="demo-h3" id="table-density">Row spacing, chosen at the screen <?= since('table') ?></h3>
+    <p class="demo-intro"><code>densityToggle()</code> puts Compact · Normal · Roomy into the toolbar. The steps are those of <code>Theme::density()</code> (<code>konsole</code>, the default, <code>weit</code>), applied to this table only and remembered for its id in this browser — choose one, sort or search, reload the page. Normal is GridKit's default rhythm; on a page set to <code>konsole</code> the control starts at Compact. Without the script the control is not shown.</p>
+        <?php
+        showcase(function () use ($articles) {
+            (new Table('demo-density'))
+                ->setData(array_slice($articles, 0, 6))
+                ->search(['name'])
+                ->column('article_number', 'No.', ['muted' => true, 'width' => '110px'])
+                ->column('name', 'Description', ['sortable' => true])
+                ->column('net_price', 'Net', ['format' => 'currency', 'align' => 'right'])
+                ->column('is_active', 'Status', ['format' => 'label'])
+                ->button('edit', ['icon' => 'edit', 'position' => 'right', 'params' => ['id' => 'article_id']])
+                ->densityToggle()
+                ->render();
+        });
+        ?>
+
+    <h3 class="demo-h3" id="table-edit">Editing in the cell <?= since('table') ?></h3>
+    <p class="demo-intro"><code>editable()</code> and a column's <code>'edit'</code> (<code>'text'</code>, <code>'number'</code> or <code>'select'</code>) let a value be changed where it stands: click a cell with the dotted line, or Tab to it and press Enter. Enter or leaving the field saves, Escape puts the old value back, Tab saves and opens the next one. The field holds the stored value (1200, not €1,200.00). Every change fires <code>gk:celledit</code>; with a URL GridKit posts it there and shows the answer. This page has no server, so the listener below answers with <code>respondWith()</code> after a moment, the way an endpoint would — and refuses a negative price.</p>
+        <?php
+        showcase(function () use ($articles) {
+            (new Table('demo-edit'))
+                ->setData(array_slice($articles, 0, 4))
+                ->caption('Articles, editable in the cell')
+                ->editable('article_id')           // with a URL: ->editable('article_id', '/api/article-cell.php')
+                ->column('article_number', 'No.', ['muted' => true, 'width' => '110px'])
+                ->column('name', 'Description', ['edit' => 'text'])
+                ->column('net_price', 'Net', ['format' => 'currency', 'edit' => 'number'])
+                ->column('is_active', 'Status', ['format' => 'label', 'edit' => 'select', 'labels' => [
+                    'active'   => ['color' => 'green', 'text' => 'Active'],
+                    'draft'    => ['color' => 'orange', 'text' => 'Draft'],
+                    'inactive' => ['color' => 'gray', 'text' => 'Inactive'],
+                ]])
+                ->toolbar(false)
+                ->render();
+        });
+        ?>
+    <script>
+    document.addEventListener('gk:celledit', function (e) {
+        if (e.detail.tableId !== 'demo-edit') return;
+        // No server on this page: answer after a moment, as an endpoint would ({ ok, value?, error? }).
+        e.detail.respondWith(new Promise(function (done) {
+            setTimeout(function () {
+                done(e.detail.column === 'net_price' && e.detail.value < 0
+                    ? { ok: false, error: 'A price cannot be negative.' }
+                    : { ok: true });
+            }, 400);
+        }));
+    });
+    </script>
+
     <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
-    <p class="demo-intro">Resize the browser window to &lt;768px to see the mobile layout.</p>
+    <p class="demo-intro">Resize the browser window to &lt;768px to see the mobile layout. In card mode the first line of a card is its head: the checkbox, the left buttons, the title and the right buttons side by side, then the other fields without rules (since 1.106.0). The title is the first column that is not <code>'muted'</code> — here the description, because the article number is muted; on a row with <code>rowLink()</code> it is the cell with the link.</p>
 
     <div style="overflow:hidden">
         <div style="padding:10px 16px;border-bottom:1px solid var(--gk-border);background:var(--gk-bg-muted);font-size:12px;font-weight:600;color:var(--gk-text-muted);letter-spacing:.04em;text-transform:uppercase;">mobile('card') – Standard</div>
@@ -286,10 +398,11 @@ $table->variant('striped')->size('sm');</pre></div>
         ];
         $t = new Table('mobile-card');
         $t->setData($mobileData)
-            ->column('nr', 'Article No.')
+            ->column('nr', 'Article No.', ['muted' => true])
             ->column('name', 'Description')
             ->column('price', 'Price')
             ->column('status', 'Status', ['format' => 'label'])
+            ->button('edit', ['icon' => 'edit', 'position' => 'right'])
             ->mobile('card')->toolbar(false)->paginate(false)->render();
         ?>
     </div>
@@ -334,7 +447,8 @@ $table->setData($articles)
     ->render();
 
 // Mobile-Responsive
-$table->mobile('card');      // Cards on mobile (default)
+$table->mobile('card');      // Cards on mobile (default): the first column that is
+                             // not 'muted' is the card's title, beside the buttons
 $table->mobile('scroll');    // Horizontal Scroll
 $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
 
@@ -357,6 +471,7 @@ $table->column('desc', 'Description', ['hideOnMobile' => true]);</pre></div>
                 ->bulkAction('archive', ['icon' => 'archive', 'label' => 'Archive'])
                 ->bulkAction('void', ['icon' => 'block', 'confirm' => 'Void the selected articles?', 'color' => 'danger'])
                 ->exportCsv('articles.csv')
+                ->stickyColumn()   // a box of its own just above the phone width, where it was 8px too wide
                 ->render();
         });
         ?>

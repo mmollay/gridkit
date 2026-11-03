@@ -1,4 +1,4 @@
-# GridKit 1.105.0 — components
+# GridKit 1.110.3 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -203,6 +203,10 @@ button out when the row's `archived` value is truthy.
 | `labels` | `label` only: `'value' => 'green'`, or `'value' => ['color' => 'green', 'text' => 'Paid']` |
 | `href`, `sub` | the cell links to `'/customers/{id}'`; `sub` names a row key shown as a quiet second line |
 | `export` | `false` leaves the column out of the CSV file of `exportCsv()` |
+| `edit` | `'text'`, `'number'` or `'select'`: the cell can be edited in place, see `editable()` below; `false` (or `null`, `''`) is read-only without a word |
+| `options` | `edit => 'select'`: what it offers, value => text (like a filter's `options`); a `label` column without it offers the keys of its `labels` |
+| `hidden` | `true` starts the column hidden in a table with `columnToggle()`; the user's stored choice wins |
+| `toggle` | `false` keeps the column on screen: in the `columnToggle()` menu, ticked and disabled |
 
 **`->selectable('id')`:** checkbox column, a select-all in the header, and a bulk bar. Deleting fires `gk:bulkdelete` with `{ ids, tableId }` — the application does the deleting. Every change fires `gk:selectionchange` with `{ ids, tableId, count }`, bulk bar or not. Shift-click selects a range. Without the `Table` class: `data-gk-table` + `data-gk-selectable`, rows carrying `data-gk-row-id` and a `td.gk-cb-col`. A row without `data-gk-row-id` cannot be selected. Select-all covers the visible rows only. After a live reload (`gk-live-reloaded`) GridKit re-binds the table.
 
@@ -247,6 +251,142 @@ if (Table::wantsCsv()) {
 }
 ```
 
+**`->columnToggle()` (since 1.108.0):** a "Columns" button in the toolbar. Its menu has one checkbox
+per column; unticking one hides the column — its header, its cells and a footer cell that stands
+alone over it — and a group heading, the empty state and a footer cell over several columns get
+narrower. The browser remembers the choice per table id (`localStorage` `gk-cols-<id>`, only what
+differs from the page's defaults; storage that is missing or throws remembers nothing). Column
+options: `'hidden' => true` starts the column hidden (a stored choice wins), `'toggle' => false` keeps
+it on screen — it stays in the menu, ticked and disabled, so the list still reads as the table's
+columns. The `rowLink()` column is kept the same way (it carries the row's only control), and the
+last column shown cannot be unticked.
+
+```php
+(new Table('people'))->setData($rows)
+    ->column('name',  'Name',  ['toggle' => false])     // always shown
+    ->column('email', 'Email')
+    ->column('role',  'Role',  ['hidden' => true])      // hidden until the user shows it
+    ->columnToggle()
+    ->render();
+```
+
+The rows are written as before: the hiding is CSS keyed on the menu's checkboxes, so a sort, a
+search, a page change and the AJAX reload of a `rows()`/`query()` table keep it, and a `'hidden'`
+column is hidden in the server's markup — no flash before the script runs. The menu is a native
+popover: Escape and a click elsewhere close it, the focus goes into it and back to the button, and
+`aria-expanded` follows. Without `js/gridkit.js` 1.108.0 (an older copy, or no script) the menu still
+opens and its checkboxes still work, but nothing is remembered. Search and sort do not change: the
+search looks at its keys whether their columns show or not. **The CSV holds what the table shows:**
+a `setData()` table leaves hidden columns out of the file (and `'export' => false` ones, as before);
+a server table's button adds `?gk_hidden=email,role`, and `Table::sendCsv()` leaves those keys out of
+the `$columns` it is given. On a phone a hidden column is left out of the card, and when it was the
+card's title the next column that is not muted takes the title. `'hidden'` and `'toggle'` take `true`
+or `false`; anything else, `'hidden'` without `columnToggle()`, on a `'toggle' => false` column or on
+the `rowLink()` column, and `columnToggle()` with `toolbar(false)` raise a warning, and the column shows.
+
+**`->densityToggle()` (since 1.109.0):** a segmented control in the toolbar, Compact · Normal ·
+Roomy (German: Kompakt · Normal · Weit), with which the person at the screen sets how tightly this
+one table is set. The steps are those of `Theme::density()`: Compact is `konsole` (8px / 12px, label
+radius 4px), Roomy is `weit` (16px / 20px), Normal the default (12px / 16px). The script writes the
+step on the table's wrap as `data-gk-density`, so it reaches this table only, and remembers it per
+table id in this browser (localStorage `gk-density-<id>`, in the namespace of `GK.theme`; where
+storage is blocked it holds for the page view). It survives every sort, search, page and AJAX reload.
+Every size keeps its distance from `md` (`sm` 6px tighter, `lg` 4px roomier), a `size('list')` row
+goes from 64px to 52px or 76px, the variants `compact`, `padded` and `very-compact` move by the same
+step, and so does the spacing of a phone card; a row link stays at least 44px and the row buttons
+keep their size. **Normal is GridKit's default rhythm, not the page's:** the control starts at the
+page's own step, so on a page with `Theme::density('konsole')` it starts at Compact and Normal is
+roomier than the rest of the page. Choosing the page's own step forgets the stored choice, and the
+table follows the page again. The page-wide `Theme::density()` reaches the same padding since 1.110.3
+(with `themes.css`, which holds its tokens); the toggle's steps work with `css/gridkit.css` alone. The control
+is rendered hidden and `js/gridkit.js` 1.109.0 shows it: without the script, or with an older copy,
+the table is the table without the option. With `toolbar(false)` there is no control.
+
+**`->editable($key, $url, $opts)` (since 1.110.0): inline editing.** A cell of a column with `'edit'`
+turns into a field on a click, or on Enter or F2 while it has the focus; every such cell is in the tab
+order and tells a screen reader that it can be edited (`aria-describedby` → "Editable: press Enter to
+change it."). Enter saves, **leaving the field saves**, Escape puts the old value back, Tab saves and
+opens the next editable cell (Shift+Tab the previous one). An unchanged value sends nothing. `$key` is
+the row field that names a record, as in `selectable()` — it is written into every row as
+`data-gk-row-id` and posted as `id`; with `selectable()` under another key, the selection's key is used
+for both and GridKit says so. A row whose key is empty is not editable. `$url` is where a change is
+POSTed; without it nothing is sent and your listener saves. Option `headers` adds request headers,
+typically `['X-CSRF-Token' => $token]` (the name `uploadHeaders` and the sortable container use too).
+A table without a column that can be edited renders exactly as it would without the call.
+
+```
+(new Table('invoices'))->setData($rows)
+    ->editable('id', '/api/invoice-cell.php', ['headers' => ['X-CSRF-Token' => $csrf]])
+    ->column('customer', 'Customer', ['edit' => 'text', 'sub' => 'city'])
+    ->column('total', 'Amount', ['format' => 'currency', 'edit' => 'number'])
+    ->column('status', 'Status', ['format' => 'label', 'edit' => 'select',
+        'labels' => ['paid' => ['color' => 'green', 'text' => 'Paid'], 'open' => ['color' => 'orange', 'text' => 'Open']]])
+    ->column('kind', 'Kind', ['edit' => 'select', 'options' => ['b2b' => 'Business', 'b2c' => 'Consumer']])
+    ->render();
+```
+
+- **The field holds the raw value**, not the formatted one: a currency cell showing `€1,200.50` opens
+  with `1200.5`. A `setData()` table takes it from its data block; a `rows()` or `query()` table writes it
+  into each editable cell as `data-gk-raw`. `text` is an input, `number` an `<input type="number">`
+  (empty is `null`), `select` offers the column's `options`, else the keys of a label column's `labels`
+  with their `text`; a stored value that is not on the list stays in the list. A select saves as soon as an
+  option is picked with the pointer; with the arrow keys it waits for Enter, Tab or leaving the field.
+- **Refused, with a warning, and the column stays read-only:** `'format' => 'html'` and `'email'` (they
+  write markup of their own), a column with `'href'` (a link cannot also open a field), the column that
+  carries `rowLink()`'s control, a `select` with nothing to choose from, an unknown `edit` type, and `'edit'`
+  on a table without `editable()`. The other cells of a row with a link are editable: a click on one opens
+  its field, a click elsewhere in the row still follows the link.
+- **The event** `gk:celledit` fires on the table (it bubbles) before anything is sent, with
+  `{ tableId, id, column, value, oldValue }` — `id` as text; `value` and `oldValue` are text, numbers (or
+  `null`) for a `number` column. `preventDefault()` puts the old value back and sends nothing.
+  `event.detail.respondWith(promise)`, called in the listener, answers instead of the URL: the promise
+  resolves to what the server would send (`true` is short for `{ ok: true }`); a rejection is a failure.
+- **The request** (with `$url`, and no `respondWith()`): `POST`, `Content-Type: application/json`,
+  `X-Requested-With: XMLHttpRequest`, `credentials: same-origin`, your `headers`, body
+  `{"id":"7","column":"total","value":1500.25}`. **The answer:** a 2xx with `{"ok":true}` saves; it may
+  add `"value"` (what was stored, when it differs from what was sent: trimmed, rounded) and `"display"`
+  (the cell's markup — inserted as HTML, so escape what you put in it; used by a `rows()`/`query()` table
+  only). Anything else — another status, `{"ok":false,"error":"…"}`, a body that is not JSON, no network —
+  puts the old value back and shows a toast with your `error` as text (never as markup), else "The change
+  could not be saved." (`js.edit_error`). While it saves the cell is `aria-busy="true"` and cannot be
+  opened again.
+- **After a save** the cell shows the value formatted the way the column formats it (the same code that
+  redraws a sorted table), and the table's live region says "Saved.". A `setData()` table also changes its
+  data, so a later sort, search, page or CSV export has the new value; the row stays where it is until then.
+  A `rows()` or `query()` table shows `display` when the server sent it; its next reload comes from the
+  server, which owns the value. A date column redrawn in the browser has the client's date format (the known
+  gap of a sorted table) — send `display` if that matters. A rebuild of the table (a sort, a page,
+  `GK.table.refresh()`) saves a field that is still open first.
+- **Styling hooks:** an editable cell is `td[data-gk-edit]` (a dotted line under it, solid on hover, a focus
+  ring), the open one `td[data-gk-editing]` (the field lies over the hidden value, so no column moves; in a
+  phone card it takes the value's place), a saving one `td[aria-busy="true"]`. Needs `js/gridkit.js`
+  1.110.0; an older copy shows the table read-only.
+
+```js
+// Without a URL: save it yourself, and let GridKit show the outcome.
+document.querySelector('[data-gk-table=invoices]').addEventListener('gk:celledit', e => {
+  const { id, column, value } = e.detail;
+  if (column === 'total' && value < 0) return e.preventDefault();     // refused: old value back
+  e.detail.respondWith(fetch('/api/cell', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, column, value }),
+  }).then(r => r.json()));                                            // { ok, value?, display?, error? }
+});
+```
+
+An endpoint, in plain PHP:
+
+```
+$in = json_decode(file_get_contents('php://input'), true);
+header('Content-Type: application/json');
+if (!in_array($in['column'] ?? '', ['customer', 'total', 'status', 'kind'], true)) {   // never trust the column name
+    http_response_code(422);
+    exit(json_encode(['ok' => false, 'error' => 'This field cannot be changed.']));
+}
+$repo->update((int) $in['id'], $in['column'], $in['value']);
+echo json_encode(['ok' => true, 'value' => $repo->find((int) $in['id'])[$in['column']]]);
+```
+
 **`->emptyState($title, $opts)`** sets the wording for a table with no rows —
 `['hint' => …, 'icon' => …, 'action' => …]`. GridKit works out by itself whether
 the table is genuinely empty or only filtered, and offers the way back in the
@@ -274,7 +414,68 @@ second case, so only describe the first.
                      // ->footer() it shares that one row — the time only
                      // fills the columns the footer cells leave over.
 ->mobile('card')     // card | scroll — how it collapses on a phone
+->stickyHead()       // the header row stays in view; stickyHead('70vh'): in a box that high
+->stickyColumn()     // the first column stays in view when the table scrolls sideways
+->densityToggle()    // Compact · Normal · Roomy in the toolbar, kept per
+                     // table id in the browser (see above)
 ```
+
+**Card mode (the default below 768px, except for a list).** Each row becomes a
+card. Since 1.106.0 its first line is a head — checkbox, left buttons, title,
+right buttons, side by side — and the other fields follow as label and value
+without rules. The **title is the first column that is not `'muted'`** and not
+`'hideOnMobile'` (nor hidden with `columnToggle()`); on a row with `rowLink()` it is the cell with the link; when
+every column is muted, the first one. Order the columns, or mark a number column
+`'muted'`, to choose it. A long title wraps. A card with nothing but its head has
+no rule under it. Group headings, the summary row, the empty state and the footer
+are not cards of fields and keep their layout. CSS only: no class, no markup.
+
+**`->stickyHead($maxHeight)` and `->stickyColumn()` (since 1.107.0).** A long list keeps its
+header row in view, a wide one its first column:
+
+```php
+(new Table('invoices'))->setData($rows)
+    ->selectable('id')
+    ->column('customer', 'Customer')        // the first column: it sticks
+    ->column('number', 'No.')
+    // … many more columns
+    ->stickyHead()                          // the header row sticks to the page
+    ->stickyColumn()                        // the checkbox and the first column stick sideways
+    ->render();
+```
+
+- `stickyHead()` without an argument sticks the header row to the top of the page — or of
+  whatever scrolls around the table. Under a fixed or sticky GridKit header it stops at 56px
+  (`--gk-sheet-top`); set `--gk-table-sticky-top` on the wrap or higher up for another offset.
+  It needs an uninterrupted way up: an ancestor with `overflow: hidden` or `auto` (a
+  `.gk-table-card`, a container of your own) is the scroller then, and the head sticks to
+  that. On a phone a scrolling table (`mobile('scroll')`) scrolls in its wrap, so its head
+  only sticks in a box.
+- `stickyHead('70vh')` — a CSS length, a number with `px`, `vh`, `dvh`, `svh`, `lvh`, `rem`,
+  `em` or `%` — puts the table in a box of at most that height, and the head sticks to the top
+  of the box. Anything else raises a warning and is left out (the head sticks to the page).
+  The pager stays below the box.
+- `stickyColumn()` keeps the first column in view while the table scrolls sideways, and the
+  cells in front of it too: the checkbox of `selectable()` and the buttons with
+  `'position' => 'left'`. Scrolling sideways needs a box, so the table gets one
+  (`overflow-x: auto`). A box is a scroller in both directions, so **with `stickyHead()` the
+  head cannot stick to the page any more: the box gets a height, the one you gave
+  `stickyHead()` or `70vh`.** While the box is scrolled sideways a hairline marks the edge of
+  the column. The footer's cells stick under their columns as long as every cell before them
+  is one column wide; group headings and the empty state span the row and do not stick (the
+  empty state is kept in the middle of the box).
+- The box is `.gk-table-sticky-box` inside `.gk-table-wrap`, written around the `<table>` only;
+  the wrap carries `.gk-table-sticky-head` / `.gk-table-sticky-col`. It is a region named by
+  `caption()` (else "Scrollable table") with a tab stop, so the keyboard scrolls it too. A
+  sort, search, page change or AJAX reload keeps it where it was scrolled.
+- Sticky cells get the surface of the table and the colour of their row (selected, striped,
+  hovered, dark), so nothing shows through them. A sticky table draws its borders separate,
+  not collapsed (`border-spacing: 0`) — at rest it looks the same.
+- Card mode (a phone) is untouched: no box, nothing sticks. `size('list')` keeps its columns
+  giving way; a list does not scroll sideways, so there only the head matters.
+- The offsets of the cells after the first are measured by `js/gridkit.js` 1.107.0 (on load,
+  after every rebuild, on resize). An older copy still renders the table: the head and the
+  first cell stick, the cell after a checkbox at 36px, a column after left buttons stays put.
 
 **A list: `->size('list')` and `'priority'` (since 1.92.0).** The row the six
 rules describe, without CSS of your own: 64px rows, the name at 15px over the

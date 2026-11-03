@@ -1332,6 +1332,10 @@
             // search rebuilds the table, and until 1.80.3 it took them away.
             '<th scope="col" class="gk-cb-col"><input type="checkbox" data-gk-select-all aria-label="' +
             e(_lang["select_all"] || "Select all") + '" title="' + e(_lang["select_all"] || "Select all") + '"></th>';
+        // The cell over the left buttons stands where a row has them: before the first column,
+        // as Table.php writes it since 1.110.1 (it stood at the end, every heading one place early).
+        if (Object.values(data.buttons || {}).some((b) => (b.position || "right") === "left"))
+          html += '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">' + _gkEsc(_t("actions")) + "</span></th>";
         for (const [key, col] of Object.entries(columns)) {
           // width, min-width, max-width and nowrap, as Table.php writes them on a header cell.
           const thStyles = [];
@@ -1434,7 +1438,6 @@
           '<th scope="col" class="gk-actions-col"><span class="gk-sr-only">' +
           _gkEsc(_t("actions")) +
           "</span></th>";
-        if (hasLeft) html += actionsHead;
         if (hasRight) html += actionsHead;
         html += "</tr></thead><tbody>";
 
@@ -6421,3 +6424,1061 @@ function _gkShowIfInit(root) {
   _gkReady(function () { _gkShowIfInit(document); });
 })();
 
+// === 1.107.0 — sticky head and column (Table::stickyHead / stickyColumn) ===
+/*
+ * The stylesheet does the sticking. What it cannot know is how wide the cells in front of the
+ * sticky column are: the checkbox and the left buttons stick as well, each at the right edge of
+ * the one before, and only a measurement says where that is. This block measures the header
+ * row and writes the sums on the box as --gk-table-sticky-left-2 and -3: when the page is
+ * ready, after every rebuild or reload, and whenever one of those cells changes its width
+ * (ResizeObserver — a window resize, a font that arrives late, a column the sort widened).
+ *
+ * Beside that it marks a box scrolled sideways (data-gk-scrolled-x, which draws the line at the
+ * edge of the column), keeps a box's scroll position across a rebuild or an AJAX reload, and
+ * puts a setData() table back into its box: GK.table.renderStatic() removes the old table and
+ * writes the new one after the toolbar, which left the box empty and the table outside it.
+ *
+ * Opt-in markup (.gk-table-sticky-head, .gk-table-sticky-col) — a page without it never meets
+ * this code. A copy of the file without the block (the PawBot dashboard keeps its own) still
+ * renders a sticky table: the head and the first cell stick, the cell after a checkbox at 36px,
+ * a cell after the left buttons stays put; a sorted setData() table then scrolls with the page.
+ */
+(function () {
+  if (!window.GK || !GK.table) return;
+
+  var STICKY = ".gk-table-sticky-head, .gk-table-sticky-col";
+
+  function boxOf(wrap) {
+    return wrap.querySelector(":scope > .gk-table-sticky-box");
+  }
+
+  /** The left edge of each sticky cell after the first, from the widths of the header cells
+   *  before it, and the width of the box (the empty state spans it). Returns what the
+   *  ResizeObserver watches: the box and the cells whose width counts. */
+  function place(box) {
+    box.style.setProperty("--gk-table-sticky-w", box.clientWidth + "px");
+    var n = parseInt(box.getAttribute("data-gk-sticky-col"), 10) || 0;
+    var row = box.querySelector(":scope > .gk-table > thead > tr") ||
+      box.querySelector(":scope > .gk-table > tbody > tr:not(.gk-table-group):not(.gk-table-more):not(.gk-empty-row)");
+    var cells = row && n > 1 ? Array.prototype.slice.call(row.children, 0, n - 1) : [];
+    var left = 0;
+    cells.forEach(function (cell, i) {
+      // The rendered width, fractions included: offsetWidth rounds, and half a pixel per
+      // cell adds up to a gap the scrolled content shows through.
+      left += cell.getBoundingClientRect().width;
+      box.style.setProperty("--gk-table-sticky-left-" + (i + 2), left + "px");
+    });
+    return [box].concat(cells);
+  }
+
+  /** The line at the edge of the column belongs to a box that is scrolled sideways. */
+  function mark(box) {
+    if (box.scrollLeft !== 0) box.setAttribute("data-gk-scrolled-x", "");
+    else box.removeAttribute("data-gk-scrolled-x");
+  }
+
+  /** (Re)bind one wrap: idempotent, run again whenever its children change. */
+  function bind(wrap) {
+    var st = wrap._gkSticky || (wrap._gkSticky = { x: 0, y: 0, box: null });
+    var box = boxOf(wrap);
+    if (box !== st.box) {
+      // A box this wrap has not had before: the first run, or the one an AJAX reload wrote.
+      // It takes over the scroll position of the one it replaces.
+      st.box = box;
+      if (box) {
+        box.addEventListener("scroll", function () {
+          if (st.box !== box) return;
+          st.x = box.scrollLeft;
+          st.y = box.scrollTop;
+          mark(box);
+        }, { passive: true });
+        box.scrollLeft = st.x;
+        box.scrollTop = st.y;
+      }
+      if (!st.mo && window.MutationObserver) {
+        // The wrap's children change on a reload (a new box) and on a rebuild of a setData()
+        // table (a new table, the box moved to it) — then the cells to measure are new.
+        st.mo = new MutationObserver(function () { bind(wrap); });
+        st.mo.observe(wrap, { childList: true });
+      }
+    }
+    if (st.ro) st.ro.disconnect();
+    st.ro = null;
+    if (!box) return;
+    mark(box);
+    var watched = place(box);
+    if (window.ResizeObserver) {
+      st.ro = new ResizeObserver(function () { place(box); });
+      watched.forEach(function (el) { st.ro.observe(el); });
+    }
+  }
+
+  /** Every sticky table with a box under root. A head that sticks to the page needs no script. */
+  function init(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    var wraps = Array.prototype.slice.call(scope.querySelectorAll(STICKY));
+    if (scope.matches && scope.matches(STICKY)) wraps.unshift(scope);
+    wraps.forEach(function (wrap) {
+      if (boxOf(wrap)) bind(wrap);
+    });
+  }
+
+  // A setData() table rebuilt in the browser: back into its box, the box where the table now
+  // stands, the scroll position as it was. Wrapped, not changed — every rebuild goes through
+  // this.renderStatic(), so it goes through here. The wrap's observer measures the new head.
+  var render = GK.table.renderStatic;
+  if (typeof render === "function") {
+    GK.table.renderStatic = function (wrap) {
+      var box = wrap && wrap.querySelector ? boxOf(wrap) : null;
+      var x = box ? box.scrollLeft : 0;
+      var y = box ? box.scrollTop : 0;
+      var result = render.apply(this, arguments);
+      var table = box ? wrap.querySelector(":scope > .gk-table") : null;
+      if (table) {
+        table.parentNode.insertBefore(box, table);
+        box.appendChild(table);
+        box.scrollLeft = x;
+        box.scrollTop = y;
+      }
+      return result;
+    };
+  }
+
+  // Tables that arrive later (a modal, a live reload) go through GK.initContent.
+  var original = GK.initContent;
+  if (typeof original === "function") {
+    GK.initContent = function (root) {
+      var result = original.apply(GK, arguments);
+      init(root || document);
+      return result;
+    };
+  }
+  _gkReady(function () { init(document); });
+})();
+// === 1.108.0 — column toggle (Table::columnToggle) ===
+/* ══════════════════════════════════════════════════════════════════════════
+ * The menu of Table::columnToggle(): a native popover in the toolbar with one checkbox per column.
+ *
+ * The hiding itself is CSS (css/gridkit.css, "1.108.0 — column toggle"): an unticked checkbox hides
+ * the cells at its place in a row, so a sort, a search, a page or an AJAX reload, which write the
+ * rows anew, need nobody to hide anything again. This block does what a stylesheet cannot:
+ *
+ *   1. remember the choice per table id — localStorage "gk-cols-<id>", only what differs from the
+ *      page's own default, so a column added later, or a default changed later, still reaches a
+ *      returning user; storage that is missing or throws remembers nothing and breaks nothing;
+ *   2. aria-expanded on the button, the menu under its button, the focus into it and back, the
+ *      arrow keys, Escape claimed (a modal underneath stays open), the menu closed when the focus
+ *      leaves it — opening, light dismiss and the Escape of a page without this block are the
+ *      browser's own;
+ *   3. after every redraw of the rows (renderStatic, an AJAX reload, rows put in by other code):
+ *      mark the hidden cells .gk-col-hidden — the title of a card passes over them, and a column
+ *      past the twentieth place is hidden by the mark alone — and narrow what spans the row: group
+ *      headings, the empty state, the footer;
+ *   4. keep one column: the last one shown cannot be unticked;
+ *   5. the CSV of a setData() table leaves hidden columns out; the export of a server table names
+ *      them (?gk_hidden=…) and Table::sendCsv() leaves them out.
+ *
+ * Without this block (the PawBot dashboard keeps its own copy of the file) the menu still opens
+ * and its checkboxes still hide and show columns; nothing is remembered, and a group heading keeps
+ * its full colspan, which a browser draws without a gap.
+ * ══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  var STORE = "gk-cols-";
+
+  function menuOf(wrap) {
+    return wrap.querySelector(":scope > .gk-toolbar .gk-col-toggle-menu");
+  }
+
+  /** The checkboxes that can hide a column: 'toggle' => false and the rowLink() column have no place. */
+  function boxesOf(wrap) {
+    var menu = menuOf(wrap);
+    return menu ? Array.prototype.slice.call(menu.querySelectorAll("input[data-gk-col-pos]")) : [];
+  }
+
+  function buttonOf(menu) {
+    return menu.parentNode ? menu.parentNode.querySelector("[popovertarget]") : null;
+  }
+
+  /** The column menu that is open, or null — also where a browser does not know :popover-open. */
+  function openMenu() {
+    try {
+      return document.querySelector(".gk-col-toggle-menu:popover-open");
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function close(menu, focusButton) {
+    try {
+      menu.hidePopover();
+    } catch (e) {}
+    var btn = buttonOf(menu);
+    if (focusButton && btn) btn.focus();
+  }
+
+  function stored(id) {
+    try {
+      var v = JSON.parse(localStorage.getItem(STORE + id) || "null");
+      return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function store(wrap) {
+    var diff = {};
+    var n = 0;
+    boxesOf(wrap).forEach(function (cb) {
+      if (cb.checked !== cb.defaultChecked) {
+        diff[cb.getAttribute("data-gk-col")] = cb.checked;
+        n++;
+      }
+    });
+    try {
+      if (n) localStorage.setItem(STORE + wrap.dataset.gkTable, JSON.stringify(diff));
+      else localStorage.removeItem(STORE + wrap.dataset.gkTable);
+    } catch (e) {}
+  }
+
+  /** The keys of the columns the user has hidden. */
+  function hiddenKeys(wrap) {
+    return boxesOf(wrap)
+      .filter(function (cb) { return !cb.checked; })
+      .map(function (cb) { return cb.getAttribute("data-gk-col"); });
+  }
+
+  /**
+   * At least one column stays. Without a column that cannot be hidden, the last one shown cannot be
+   * unticked — and when nothing would show at all (every column 'hidden', or a stored choice that
+   * says so), the first one comes back.
+   */
+  function keepOne(wrap) {
+    var menu = menuOf(wrap);
+    if (!menu) return;
+    var fixed = menu.querySelectorAll("input[data-gk-col]:not([data-gk-col-pos])").length;
+    var boxes = boxesOf(wrap);
+    if (!fixed && boxes.length && !boxes.some(function (cb) { return cb.checked; })) boxes[0].checked = true;
+    var on = boxes.filter(function (cb) { return cb.checked; });
+    boxes.forEach(function (cb) {
+      var last = !fixed && on.length === 1 && cb === on[0];
+      if (cb.disabled !== last) cb.disabled = last;
+    });
+  }
+
+  /**
+   * Row by row, by the places each cell takes (a colspan takes several): a cell whose every place
+   * is hidden gets .gk-col-hidden; a cell spanning hidden places loses them from its colspan, which
+   * it keeps in data-gk-span for when they come back. Rows written by renderStatic() or by the
+   * server carry the full colspan again, and are narrowed again. The header row reads its places
+   * from data-gk-col-head: until 1.110.1 it wrote the cell over the left buttons at its end, so
+   * its places differed from a row's; since then the two numbers are the same.
+   */
+  function apply(wrap) {
+    // In the box of stickyColumn() / stickyHead('…') (1.107.0) when the table has one.
+    var table = wrap.querySelector(":scope > .gk-table, :scope > .gk-table-sticky-box > .gk-table");
+    if (!table) return;
+    var hiddenCells = {};
+    var hiddenHeads = {};
+    boxesOf(wrap).forEach(function (cb) {
+      if (cb.checked) return;
+      hiddenCells[parseInt(cb.getAttribute("data-gk-col-pos"), 10)] = true;
+      hiddenHeads[parseInt(cb.getAttribute("data-gk-col-head"), 10)] = true;
+    });
+    Array.prototype.forEach.call(table.rows, function (tr) {
+      var hidden = tr.parentNode === table.tHead ? hiddenHeads : hiddenCells;
+      var pos = 1;
+      Array.prototype.forEach.call(tr.cells, function (cell) {
+        var span = parseInt(cell.getAttribute("data-gk-span"), 10) || cell.colSpan || 1;
+        var gone = 0;
+        for (var p = pos; p < pos + span; p++) if (hidden[p]) gone++;
+        pos += span;
+        var off = gone === span;
+        if (cell.classList.contains("gk-col-hidden") !== off) cell.classList.toggle("gk-col-hidden", off);
+        if (span > 1 && !off) {
+          if (gone && !cell.hasAttribute("data-gk-span")) cell.setAttribute("data-gk-span", String(span));
+          if (cell.colSpan !== span - gone) cell.colSpan = span - gone;
+        }
+      });
+    });
+  }
+
+  /**
+   * Under its button, from the button's left edge, moved left where it would leave the window, and
+   * above the button where there is more room there. A popover stands where the browser puts it —
+   * the middle of the window — until it is told otherwise.
+   */
+  function place(menu) {
+    var btn = buttonOf(menu);
+    if (!btn) return;
+    var r = btn.getBoundingClientRect();
+    var vw = document.documentElement.clientWidth;
+    var vh = document.documentElement.clientHeight;
+    var s = menu.style;
+    s.position = "fixed";
+    s.inset = "auto";
+    s.margin = "0";
+    // Measured only now, its old place cleared: where it stood before, the window's edge squeezed
+    // it, and a squeezed menu measured narrow would stay squeezed instead of moving left.
+    var w = menu.offsetWidth || 240; // 0 before it is shown (beforetoggle): about its least width
+    var h = menu.scrollHeight || 0;
+    var below = vh - r.bottom - 12;
+    var above = r.top - 12;
+    s.left = Math.round(Math.max(8, Math.min(r.left, vw - w - 8))) + "px";
+    if (h > below && above > below) {
+      s.bottom = Math.round(vh - r.top + 4) + "px";
+      s.maxHeight = Math.round(Math.max(120, Math.min(480, above))) + "px";
+    } else {
+      s.top = Math.round(r.bottom + 4) + "px";
+      s.maxHeight = Math.round(Math.max(120, Math.min(480, below))) + "px";
+    }
+  }
+
+  function follow() {
+    var menu = openMenu();
+    if (menu) place(menu);
+  }
+
+  function bind(wrap) {
+    if (wrap._gkColumns) return;
+    var menu = menuOf(wrap);
+    if (!menu) return;
+    wrap._gkColumns = true;
+    var choice = stored(wrap.dataset.gkTable || "");
+    boxesOf(wrap).forEach(function (cb) {
+      var key = cb.getAttribute("data-gk-col");
+      // The page's default unless a choice is stored — also over the state a browser restores
+      // into form controls on a reload, which would otherwise be a third source of truth.
+      cb.checked = typeof choice[key] === "boolean" ? choice[key] : cb.defaultChecked;
+    });
+    var btn = buttonOf(menu);
+    if (btn) btn.setAttribute("aria-expanded", "false");
+    keepOne(wrap);
+    apply(wrap);
+    // Every redraw of the rows: renderStatic() replaces the <table>, an AJAX reload everything but
+    // the toolbar, a page's own code a <tbody> or a row. The callback runs before the next paint.
+    if (typeof MutationObserver === "function") {
+      new MutationObserver(function (records) {
+        for (var i = 0; i < records.length; i++) {
+          for (var j = 0; j < records[i].addedNodes.length; j++) {
+            if (/^(TABLE|THEAD|TBODY|TFOOT|TR|TD|TH)$/.test(records[i].addedNodes[j].nodeName)) {
+              apply(wrap);
+              return;
+            }
+          }
+        }
+      }).observe(wrap, { childList: true, subtree: true });
+    }
+  }
+
+  function init(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    if (scope.matches && scope.matches("[data-gk-table]")) bind(scope);
+    scope.querySelectorAll("[data-gk-table]").forEach(bind);
+  }
+
+  document.addEventListener("change", function (e) {
+    var cb = e.target;
+    if (!cb.matches || !cb.matches(".gk-col-toggle-menu input[data-gk-col-pos]")) return;
+    var wrap = cb.closest("[data-gk-table]");
+    if (!wrap) return;
+    keepOne(wrap);
+    store(wrap);
+    apply(wrap);
+  });
+
+  // beforetoggle and toggle do not bubble: heard on the way down. beforetoggle comes at once, for
+  // every way a popover opens or closes (the button, Escape, a click elsewhere, hidePopover()), so
+  // aria-expanded never lags; toggle comes a task later, once the menu has a size and can take focus.
+  document.addEventListener("beforetoggle", function (e) {
+    var menu = e.target;
+    if (!menu.classList || !menu.classList.contains("gk-col-toggle-menu")) return;
+    var open = e.newState === "open";
+    var btn = buttonOf(menu);
+    if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) {
+      place(menu);
+      window.addEventListener("scroll", follow, true);
+      window.addEventListener("resize", follow);
+    } else {
+      window.removeEventListener("scroll", follow, true);
+      window.removeEventListener("resize", follow);
+    }
+  }, true);
+  document.addEventListener("toggle", function (e) {
+    var menu = e.target;
+    if (e.newState !== "open" || !menu.classList || !menu.classList.contains("gk-col-toggle-menu")) return;
+    place(menu); // its own size is known now
+    var first = menu.querySelector("input:not(:disabled)");
+    if (first && !menu.contains(document.activeElement)) first.focus();
+  }, true);
+
+  // Escape: closed here and claimed, so GK.modal (which asks defaultPrevented) keeps a modal the
+  // table stands in. The focus goes back to the button.
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape" || e.defaultPrevented) return;
+    var menu = openMenu();
+    if (!menu) return;
+    e.preventDefault();
+    close(menu, true);
+  }, true);
+
+  // Up and down (round the ends), Home and End move between the checkboxes that can be ticked.
+  var MOVES = ["Home", "ArrowUp", "ArrowDown", "End"];
+  document.addEventListener("keydown", function (e) {
+    var menu = e.target.closest ? e.target.closest(".gk-col-toggle-menu") : null;
+    var move = MOVES.indexOf(e.key);
+    if (!menu || move < 0) return;
+    var items = Array.prototype.slice.call(menu.querySelectorAll("input:not(:disabled)"));
+    if (!items.length) return;
+    var i = items.indexOf(e.target);
+    var n = items.length;
+    var next = move === 0 ? 0 : move === 3 ? n - 1 : (i + (move === 2 ? 1 : -1) + n) % n;
+    e.preventDefault();
+    items[next].focus();
+  });
+
+  // Tab out of the menu closes it: a popover stays open where the focus has gone, over the page.
+  document.addEventListener("focusout", function (e) {
+    var box = e.target.closest ? e.target.closest(".gk-col-toggle") : null;
+    var to = e.relatedTarget;
+    if (!box || !to || box.contains(to)) return;
+    var menu = box.querySelector(".gk-col-toggle-menu");
+    if (menu && menu === openMenu()) close(menu, false);
+  });
+
+  // The CSV holds what the table shows. A setData() table builds it from its columns (1.105.0);
+  // the hidden ones are taken out of the copy handed over.
+  if (typeof GK.tableCsv === "function") {
+    var buildCsv = GK.tableCsv;
+    GK.tableCsv = function (wrap, delimiter) {
+      var data = wrap && wrap._gkData;
+      var off = data ? hiddenKeys(wrap) : [];
+      if (!off.length) return buildCsv.apply(this, arguments);
+      var columns = {};
+      Object.keys(data.columns).forEach(function (k) {
+        if (off.indexOf(k) < 0) columns[k] = data.columns[k];
+      });
+      return buildCsv.call(this, { _gkData: Object.assign({}, data, { columns: columns }), _gkMatching: wrap._gkMatching }, delimiter);
+    };
+  }
+
+  // A server table has no rows here: its button reloads the page with ?gk_export=csv, and the
+  // columns the user hid go along as ?gk_hidden=…, which Table::sendCsv() leaves out. Heard on the
+  // way down, before the handler of 1.105.0 — and only when there is a column to name.
+  document.addEventListener("click", function (ev) {
+    var btn = ev.target.closest ? ev.target.closest("[data-gk-export-csv]") : null;
+    var wrap = btn ? btn.closest("[data-gk-table]") : null;
+    if (!wrap || wrap._gkData) return;
+    var off = hiddenKeys(wrap);
+    if (!off.length) return;
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    var url = new URL(window.location.href);
+    url.searchParams.set("gk_export", "csv");
+    url.searchParams.set("gk_hidden", off.join(","));
+    window.location.href = url.toString();
+  }, true);
+
+  // Tables come through GK.table.init: GK.init() calls it when the document is ready, and
+  // GK.initContent() for what arrives later — a modal, a live reload, AJAX navigation. The pass
+  // below is for a script that arrives after the document is ready: GK.init() has then run inside
+  // the main block, before this one wrapped anything.
+  if (GK.table && typeof GK.table.init === "function") {
+    var initTables = GK.table.init;
+    GK.table.init = function (root) {
+      var result = initTables.apply(this, arguments);
+      init(root);
+      return result;
+    };
+  }
+  init(document);
+})();
+// === 1.109.0 — density toggle (Table::densityToggle) ===
+/*
+ * The control Table::densityToggle() writes into the toolbar: [data-gk-density-toggle], a group of
+ * [data-gk-set-density] buttons for the steps konsole, normal and weit. The step goes on the
+ * table's wrap as data-gk-density, which css/gridkit.css reads (block "1.109.0 — density toggle").
+ * The wrap outlives every redraw: renderStatic() after a sort, a search or a page, and the AJAX
+ * reload of a server table, replace what stands below the toolbar and leave the wrap and the
+ * toolbar alone, so nothing here has to run again after them.
+ *
+ * The step a table starts at: the one stored for its id, else the page's own (Theme::density()
+ * on <html> or <body>), else normal. A stored step is a difference from the page: choosing the
+ * page's own step removes it, so the table follows the page again when the page changes. On a
+ * page without a density of its own, Normal leaves the wrap without the attribute, and the table
+ * is exactly the table without the toggle.
+ *
+ * The control is rendered hidden and shown here: a copy of this file without the block (the
+ * PawBot dashboard keeps its own) leaves it hidden and the table as it was. localStorage can be
+ * missing or throw (a private window, blocked site data), so every access is wrapped and the step
+ * then holds for this page view only. The key is "gk-density-<table id>" in the namespace of
+ * GK.theme (window.GK_THEME_SCOPE, GK.theme.init({ scope })): the next person at a shared
+ * computer does not inherit it.
+ */
+(function () {
+  var STEPS = ["konsole", "normal", "weit"];
+
+  function storageKey(id) {
+    var name = "gk-density-" + id;
+    return GK.theme && typeof GK.theme._key === "function" ? GK.theme._key(name) : name;
+  }
+
+  function storedStep(id) {
+    try {
+      var step = window.localStorage.getItem(storageKey(id));
+      return STEPS.indexOf(step) > -1 ? step : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function storeStep(id, step) {
+    try {
+      if (step === null) window.localStorage.removeItem(storageKey(id));
+      else window.localStorage.setItem(storageKey(id), step);
+    } catch (e) {}
+  }
+
+  /** The page's step: the nearest data-gk-density above the wrap, where Theme::density() puts it. */
+  function pageStep(wrap) {
+    var host = wrap.parentElement ? wrap.parentElement.closest("[data-gk-density]") : null;
+    var step = host ? host.getAttribute("data-gk-density") : "";
+    return step === "konsole" || step === "weit" ? step : "normal";
+  }
+
+  function applyStep(wrap, step) {
+    if (step === "normal" && pageStep(wrap) === "normal") wrap.removeAttribute("data-gk-density");
+    else wrap.setAttribute("data-gk-density", step);
+    wrap.querySelectorAll("[data-gk-density-toggle] [data-gk-set-density]").forEach(function (btn) {
+      btn.setAttribute("aria-pressed", btn.getAttribute("data-gk-set-density") === step ? "true" : "false");
+    });
+  }
+
+  function initDensity(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll("[data-gk-density-toggle]").forEach(function (group) {
+      var wrap = group.closest("[data-gk-table]");
+      if (!wrap || group._gkDensityBound) return;
+      group._gkDensityBound = true;
+      applyStep(wrap, storedStep(wrap.getAttribute("data-gk-table")) || pageStep(wrap));
+      group.hidden = false;
+    });
+  }
+
+  document.addEventListener("click", function (ev) {
+    var btn = ev.target.closest ? ev.target.closest("[data-gk-set-density]") : null;
+    var group = btn ? btn.closest("[data-gk-density-toggle]") : null;
+    var wrap = group ? group.closest("[data-gk-table]") : null;
+    if (!wrap) return;
+    var step = btn.getAttribute("data-gk-set-density");
+    if (STEPS.indexOf(step) < 0) return;
+    storeStep(wrap.getAttribute("data-gk-table"), step === pageStep(wrap) ? null : step);
+    applyStep(wrap, step);
+  });
+
+  // Tables that arrive later — GK.initContent (AJAX navigation, a modal, a live table) and the
+  // pager of [data-gk-ajax-table] — all go through GK.table.init, so this rides along with it.
+  // The first pass is _gkReady: GK.init() has already run when the document was ready before
+  // this file was.
+  if (GK.table && typeof GK.table.init === "function") {
+    var tableInit = GK.table.init;
+    GK.table.init = function (root) {
+      var result = tableInit.apply(this, arguments);
+      initDensity(root);
+      return result;
+    };
+  }
+  _gkReady(function () { initDensity(document); });
+})();
+// === 1.110.0 — inline editing (Table::editable) ===
+/*
+ * A cell of a column with 'edit' (Table::editable()) turns into a field on a click, or on Enter or F2
+ * while it has the focus. Enter, Tab and leaving the field save; Escape puts the old value back.
+ * Saving fires gk:celledit on the table: cancelable, and answerable with detail.respondWith(). When
+ * the table names a URL, GridKit then POSTs { id, column, value } as JSON there.
+ *
+ * Everything hangs off markup PHP writes (data-gk-editable on the wrap, data-gk-edit on a cell) and
+ * the listeners are delegated, so a reloaded table needs no binding. A copy of this file without the
+ * block (the PawBot dashboard keeps its own) shows the same table read-only: the cells take the focus,
+ * nothing opens, and the first sort drops the attributes.
+ *
+ * Two functions are wrapped, none is changed:
+ *   GK.table.renderStatic  after a rebuild of a setData() table the rows get data-gk-row-id and the
+ *                          editable cells their attributes, exactly as Table::renderRow() and
+ *                          Table::editAttrs() write them; before it, a field still open is saved.
+ *   GK.table.reload        before the AJAX reload of a server table, a field still open is saved.
+ * A saved value is formatted by renderStatic itself, run on a table of one cell off the page: one
+ * implementation of every column format, not a second one here.
+ */
+(function () {
+  "use strict";
+  if (!window.GK || !GK.table || typeof GK.table.renderStatic !== "function") return;
+
+  function _t(key, fallback) {
+    var lang = window.GK_LANG || {};
+    return lang[key] || fallback;
+  }
+
+  /** PHP's (string): true is "1", false and null are "" — Table::rawText() is the other side. */
+  function asText(v) {
+    if (v === true) return "1";
+    if (v === false || v === null || v === undefined || typeof v === "object") return "";
+    return String(v);
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /** What Table::editConfig() wrote on the wrap: url, key, hint, columns (and headers, labelColors). */
+  function config(wrap) {
+    var src = wrap && wrap.getAttribute ? wrap.getAttribute("data-gk-editable") : null;
+    if (!src) return null;
+    if (wrap._gkEditSrc !== src) {
+      wrap._gkEditSrc = src;
+      try { wrap._gkEditCfg = JSON.parse(src); } catch (e) { wrap._gkEditCfg = null; }
+    }
+    return wrap._gkEditCfg && wrap._gkEditCfg.columns ? wrap._gkEditCfg : null;
+  }
+
+  /** A number column's value is a number, or null when it is empty; every other column's is text. */
+  function valueOf(type, raw) {
+    var s = asText(raw);
+    if (type !== "number") return s;
+    if (s.trim() === "") return null;
+    var n = Number(s);
+    return isFinite(n) ? n : null;
+  }
+
+  function isStatic(wrap) {
+    return wrap.hasAttribute("data-gk-static") && !!wrap._gkData && Array.isArray(wrap._gkData.rows);
+  }
+
+  /** The rows of a setData() table that stand for this record — normally one. */
+  function rowsOf(wrap, cfg, id) {
+    return isStatic(wrap) ? wrap._gkData.rows.filter(function (r) { return r && asText(r[cfg.key]) === id; }) : [];
+  }
+
+  /** The cell of a record and column, wherever a rebuild or a reload has put it by now. */
+  function cellOf(wrap, id, column) {
+    var rows = wrap.querySelectorAll(".gk-table > tbody > tr[data-gk-row-id]");
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].getAttribute("data-gk-row-id") !== id) continue;
+      var cells = rows[i].querySelectorAll(":scope > td[data-gk-edit]");
+      for (var j = 0; j < cells.length; j++) {
+        if (cells[j].getAttribute("data-gk-edit") === column) return cells[j];
+      }
+    }
+    return null;
+  }
+
+  function pendingKey(id, column) {
+    return id + "\u0000" + column;
+  }
+
+  function focusCell(td) {
+    if (!td || !td.isConnected) return;
+    try { td.focus({ preventScroll: true }); } catch (e) { td.focus(); }
+  }
+
+  /** Said in the table's own live region (role=status), where a sort says what it did. */
+  function announce(wrap, msg) {
+    var el = wrap.querySelector("[data-gk-table-status]");
+    // The same words twice in a row are not read twice: a no-break space makes them new.
+    if (el) el.textContent = el.textContent === msg ? msg + " " : msg;
+  }
+
+  var renderStatic = GK.table.renderStatic;
+
+  /*
+   * The markup of one cell, written by renderStatic itself: a table of one row and one column, built
+   * off the page. Whatever a format does (a currency, a label and its colour, a number's em dash)
+   * happens exactly as on every sort. null when it cannot be had.
+   */
+  function formatted(wrap, cfg, column, row) {
+    var data = isStatic(wrap) ? wrap._gkData : null;
+    var col = data ? data.columns && data.columns[column] : cfg.columns[column] && cfg.columns[column].column;
+    if (!col) return null;
+    var one = {};
+    one[column] = col;
+    var scratch = document.createElement("div");
+    scratch._gkEditScratch = true; // a wrapper of renderStatic can tell this table from a real one
+    scratch._gkData = {
+      rows: [row], columns: one, perPage: 0, search: [], buttons: {}, footer: [], loadTimeMs: null,
+      caption: "", groupBy: null, rowLink: null, nowrap: false,
+      labelColors: (data ? data.labelColors : cfg.labelColors) || null,
+    };
+    try {
+      renderStatic.call(GK.table, scratch);
+    } catch (e) {
+      return null;
+    }
+    var td = scratch.querySelector("tbody td[data-label]");
+    return td ? td.innerHTML : null;
+  }
+
+  /** The second line ('sub') of a server table's cell: the browser does not have its field. */
+  function subLine(html) {
+    var box = document.createElement("div");
+    box.innerHTML = html;
+    var sub = box.querySelector(".gk-cell-sub");
+    return sub ? sub.outerHTML : "";
+  }
+
+  /** The next (step 1) or previous (-1) editable cell of the table that is shown and not saving. */
+  function neighbour(wrap, td, step) {
+    var cells = Array.prototype.slice.call(wrap.querySelectorAll(".gk-table > tbody > tr > td[data-gk-edit]"));
+    for (var i = cells.indexOf(td) + step; i >= 0 && i < cells.length; i += step) {
+      if (cells[i].offsetParent !== null && cells[i].getAttribute("aria-busy") !== "true") return cells[i];
+    }
+    return null;
+  }
+
+  /** Turn a cell into its field. false when it cannot be edited now (saving, no id, no raw value). */
+  function open(td) {
+    var wrap = td.closest("[data-gk-table]");
+    var cfg = config(wrap);
+    var column = td.getAttribute("data-gk-edit");
+    var spec = cfg ? cfg.columns[column] : null;
+    var id = td.parentElement ? td.parentElement.getAttribute("data-gk-row-id") : null;
+    if (!spec || !id || td._gkEdit || td.getAttribute("aria-busy") === "true") return false;
+
+    // The value as stored, not as shown: a currency cell reads "€1,200.50", its field "1200.5".
+    var raw;
+    if (isStatic(wrap)) {
+      var rows = rowsOf(wrap, cfg, id);
+      if (!rows.length) return false;
+      raw = rows[0][column];
+    } else {
+      if (!td.hasAttribute("data-gk-raw")) return false;
+      raw = td.getAttribute("data-gk-raw");
+    }
+
+    var text = asText(raw);
+    var control;
+    if (spec.type === "select") {
+      control = document.createElement("select");
+      var options = (spec.options || []).slice();
+      // A stored value that is not on the list stays choosable: leaving the field must not change it.
+      if (!options.some(function (o) { return String(o[0]) === text; })) options.unshift([text, text]);
+      options.forEach(function (o) {
+        var option = document.createElement("option");
+        option.value = String(o[0]);
+        option.textContent = String(o[1]);
+        control.appendChild(option);
+      });
+    } else {
+      control = document.createElement("input");
+      control.type = spec.type === "number" ? "number" : "text";
+      if (spec.type === "number") {
+        control.step = "any";
+        control.inputMode = "decimal";
+      }
+      control.autocomplete = "off";
+    }
+    // .value, never markup: whatever the record holds is text in the field.
+    control.value = text;
+    control.setAttribute("aria-label", td.getAttribute("data-label") || column);
+
+    var s = {
+      wrap: wrap, cfg: cfg, td: td, id: id, column: column, type: spec.type, control: control,
+      oldHtml: td.innerHTML, oldValue: valueOf(spec.type, raw), done: false, keyed: false,
+    };
+    td._gkEdit = s;
+    td.setAttribute("data-gk-editing", "");
+    // The value stays under the field, hidden: the cell keeps its width and height, so opening a
+    // field does not move a column (the field lies over it — see the CSS block of 1.110.0).
+    var was = document.createElement("span");
+    was.setAttribute("data-gk-edit-was", "");
+    while (td.firstChild) was.appendChild(td.firstChild);
+    td.appendChild(was);
+    td.appendChild(control);
+    bind(s);
+    control.focus();
+    if (typeof control.select === "function") control.select();
+    return true;
+  }
+
+  function bind(s) {
+    var c = s.control;
+    c.addEventListener("keydown", function (e) {
+      if (e.isComposing) return;
+      if (e.key === "Enter") {
+        // Claimed, so that a form around the table is not submitted.
+        e.preventDefault();
+        e.stopPropagation();
+        finish(s, "commit", "enter");
+      } else if (e.key === "Escape") {
+        // Claimed and stopped here: a modal or a sheet around the table must not close with it.
+        e.preventDefault();
+        e.stopPropagation();
+        finish(s, "cancel", "escape");
+      } else if (e.key === "Tab") {
+        e.preventDefault();
+        finish(s, "commit", e.shiftKey ? "prev" : "next");
+      } else {
+        s.keyed = true;
+      }
+    });
+    c.addEventListener("blur", function () {
+      // The window lost the focus, not the field: it is still open when the person comes back.
+      if (!document.hasFocus()) return;
+      finish(s, "commit", "blur");
+    });
+    if (s.type === "select") {
+      // A choice made with the pointer is the decision; one made with the arrow keys is browsing
+      // until Enter, Tab or leaving the field (an arrow key changes a closed select at once).
+      c.addEventListener("change", function () {
+        if (!s.keyed) finish(s, "commit", "pick");
+      });
+    }
+  }
+
+  /** Close a field: "commit" saves what it holds, "cancel" puts the old value back. */
+  function finish(s, mode, how) {
+    if (s.done) return;
+    var td = s.td;
+    var c = s.control;
+    var value = null;
+    if (mode === "commit") {
+      if (s.type === "number" && c.validity && c.validity.badInput) {
+        if (GK.toast) GK.toast.error(_t("edit_number", "Enter a number."));
+        if (how === "enter" || how === "next" || how === "prev") {
+          c.setAttribute("aria-invalid", "true");
+          return; // the field stays open with what was typed
+        }
+        mode = "cancel";
+      } else {
+        value = valueOf(s.type, c.value);
+      }
+    }
+    s.done = true;
+    td._gkEdit = null;
+    td.removeAttribute("data-gk-editing");
+    if (mode === "cancel" || value === s.oldValue) {
+      // Nothing changed: the cell gets its own markup back, nothing is sent.
+      td.innerHTML = s.oldHtml;
+      after(s, how);
+      return;
+    }
+    // What was chosen, as text, while it is saved; the formatted value follows the answer.
+    td.textContent = s.type === "select" && c.selectedIndex > -1 ? c.options[c.selectedIndex].textContent : c.value;
+    after(s, how);
+    save(s, value);
+  }
+
+  /** Where the focus goes once a field is closed: back to its cell, or on to the next field. */
+  function after(s, how) {
+    if ((how === "next" || how === "prev") && s.td.isConnected) {
+      var next = neighbour(s.wrap, s.td, how === "next" ? 1 : -1);
+      if (next && open(next)) return;
+    }
+    if (how === "enter" || how === "escape" || how === "pick" || how === "next" || how === "prev") focusCell(s.td);
+  }
+
+  function save(s, value) {
+    var wrap = s.wrap;
+    var pending = wrap._gkEditPending || (wrap._gkEditPending = {});
+    // Busy until the answer: the cell cannot be opened again, not even after a rebuild (markRows).
+    pending[pendingKey(s.id, s.column)] = true;
+    s.td.setAttribute("aria-busy", "true");
+
+    var answer = null;
+    var detail = {
+      tableId: wrap.getAttribute("data-gk-table") || "",
+      id: s.id,
+      column: s.column,
+      value: value,
+      oldValue: s.oldValue,
+      respondWith: function (result) {
+        answer = Promise.resolve(result);
+      },
+    };
+    var go = wrap.dispatchEvent(new CustomEvent("gk:celledit", { bubbles: true, cancelable: true, detail: detail }));
+    detail.respondWith = function () {
+      if (window.console) console.warn("GridKit: respondWith() after gk:celledit was handled does nothing — call it in the listener.");
+    };
+    if (!go) {
+      failed(s, null, true);
+      return;
+    }
+    if (!answer) answer = s.cfg.url ? post(s.cfg, s.id, s.column, value) : Promise.resolve({ ok: true });
+    answer
+      .then(normalize, function () { return { ok: false, error: null }; })
+      .then(function (res) {
+        if (res.ok) saved(s, value, res);
+        else failed(s, res.error, false);
+      })
+      .catch(function (err) {
+        failed(s, null, false);
+        if (window.console) console.error("GridKit: showing the saved cell failed", err);
+      });
+  }
+
+  function post(cfg, id, column, value) {
+    var headers = { "Content-Type": "application/json", Accept: "application/json", "X-Requested-With": "XMLHttpRequest" };
+    Object.keys(cfg.headers || {}).forEach(function (h) { headers[h] = String(cfg.headers[h]); });
+    return fetch(cfg.url, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: headers,
+      body: JSON.stringify({ id: id, column: column, value: value }),
+    }).then(function (r) {
+      return r.text().then(function (body) {
+        var json = null;
+        try { json = JSON.parse(body); } catch (e) { /* not JSON: a failure below */ }
+        // A refusal with a reason (422 and { ok: false, error }) keeps its reason; any other status fails.
+        return r.ok ? json : { ok: false, error: json && typeof json === "object" ? json.error : null };
+      });
+    });
+  }
+
+  /** The answer, from the server or from respondWith(): { ok: true, value?, display? } or a failure. */
+  function normalize(a) {
+    if (a === true) a = { ok: true };
+    if (a && typeof a === "object" && a.ok === true) {
+      return {
+        ok: true,
+        hasValue: Object.prototype.hasOwnProperty.call(a, "value"),
+        value: a.value,
+        display: typeof a.display === "string" ? a.display : null,
+      };
+    }
+    var why = a && typeof a === "object" && typeof a.error === "string" ? a.error.trim() : "";
+    return { ok: false, error: why || null };
+  }
+
+  function saved(s, sent, res) {
+    var wrap = s.wrap;
+    var value = res.hasValue ? res.value : sent;
+    delete wrap._gkEditPending[pendingKey(s.id, s.column)];
+    var td = cellOf(wrap, s.id, s.column);
+    var html = null;
+    if (isStatic(wrap)) {
+      // The data block is the table: a later sort, search or page shows the new value. The row
+      // stays where it is until then — a row that jumps away while one works on it is lost.
+      var rows = rowsOf(wrap, s.cfg, s.id);
+      rows.forEach(function (r) { r[s.column] = value; });
+      if (rows.length) html = formatted(wrap, s.cfg, s.column, rows[0]);
+    } else if (td) {
+      // A server table: the server owns the value, a reload shows what it stored. Until then its
+      // `display`, or the value formatted the way the column does.
+      td.setAttribute("data-gk-raw", asText(value));
+      if (res.display !== null) {
+        html = res.display;
+      } else {
+        var row = {};
+        row[s.column] = value;
+        html = formatted(wrap, s.cfg, s.column, row);
+        if (html !== null) html += subLine(s.oldHtml);
+      }
+    }
+    if (td) {
+      td.removeAttribute("aria-busy");
+      if (!td._gkEdit) td.innerHTML = html !== null ? html : esc(asText(value));
+    }
+    announce(wrap, _t("edit_saved", "Saved."));
+  }
+
+  function failed(s, why, quiet) {
+    var wrap = s.wrap;
+    if (wrap._gkEditPending) delete wrap._gkEditPending[pendingKey(s.id, s.column)];
+    var td = cellOf(wrap, s.id, s.column);
+    if (td) {
+      td.removeAttribute("aria-busy");
+      // The same cell still shows what was typed. A rebuilt or reloaded one shows the stored value.
+      if (td === s.td && !td._gkEdit) td.innerHTML = s.oldHtml;
+    }
+    // Text, never markup: GK.toast writes the server's words with textContent.
+    if (!quiet && GK.toast) GK.toast.error(why || _t("edit_error", "The change could not be saved."), 6000);
+  }
+
+  /** Before rows are redrawn: an open field is saved, the cell that has the focus is remembered. */
+  function beforeRedraw(wrap) {
+    var active = document.activeElement;
+    var td = active && active.closest ? active.closest("td[data-gk-edit]") : null;
+    var focus = td && wrap.contains(td) && td.parentElement
+      ? { id: td.parentElement.getAttribute("data-gk-row-id"), column: td.getAttribute("data-gk-edit") }
+      : null;
+    wrap.querySelectorAll("td[data-gk-editing]").forEach(function (c) {
+      if (c._gkEdit) finish(c._gkEdit, "commit", "rebuild");
+    });
+    return focus;
+  }
+
+  /*
+   * After renderStatic: what Table::renderRow() and Table::editAttrs() write on the server, in the
+   * same order, so a rebuilt table is the table PHP sent. The rows on the page are the rows the
+   * search and the filters left (_gkMatching), cut to the page; a row's cells of the columns are the
+   * ones with data-label, in the order of the data block's columns.
+   */
+  function markRows(wrap, cfg) {
+    var data = wrap._gkData;
+    if (!data || !data.columns) return;
+    var keys = Object.keys(data.columns);
+    var perPage = parseInt(data.perPage, 10) || 0;
+    var page = wrap._gkPage || 1;
+    var all = wrap._gkMatching || data.rows;
+    var shown = perPage > 0 ? all.slice((page - 1) * perPage, page * perPage) : all;
+    var pending = wrap._gkEditPending || {};
+    var trs = Array.prototype.filter.call(wrap.querySelectorAll(".gk-table > tbody > tr"), function (tr) {
+      return !!tr.querySelector(":scope > td[data-label]");
+    });
+    trs.forEach(function (tr, i) {
+      var row = shown[i];
+      if (!row) return;
+      if (!tr.hasAttribute("data-gk-row-id")) tr.setAttribute("data-gk-row-id", asText(row[cfg.key]));
+      var id = tr.getAttribute("data-gk-row-id");
+      if (asText(row[cfg.key]) === "") return; // a row without its key is not editable (Table::editAttrs)
+      var tds = tr.querySelectorAll(":scope > td[data-label]");
+      Object.keys(cfg.columns).forEach(function (column) {
+        var td = tds[keys.indexOf(column)];
+        if (!td) return;
+        td.setAttribute("data-gk-edit", column);
+        td.setAttribute("tabindex", "0");
+        td.setAttribute("aria-describedby", cfg.hint);
+        if (pending[pendingKey(id, column)]) td.setAttribute("aria-busy", "true");
+      });
+    });
+  }
+
+  GK.table.renderStatic = function (wrap) {
+    var cfg = wrap && !wrap._gkEditScratch ? config(wrap) : null;
+    var focus = cfg ? beforeRedraw(wrap) : null;
+    var result = renderStatic.apply(this, arguments);
+    if (cfg) {
+      markRows(wrap, cfg);
+      if (focus) focusCell(cellOf(wrap, focus.id, focus.column));
+    }
+    return result;
+  };
+
+  var reload = GK.table.reload;
+  if (typeof reload === "function") {
+    GK.table.reload = function (wrap) {
+      if (config(wrap)) beforeRedraw(wrap);
+      return reload.apply(this, arguments);
+    };
+  }
+
+  // A click opens a cell; the end of a text selection does not (the rule a row link follows).
+  document.addEventListener("click", function (e) {
+    var td = e.target.closest ? e.target.closest("td[data-gk-edit]") : null;
+    if (!td || td._gkEdit || e.defaultPrevented) return;
+    var own = e.target.closest("a[href], button, input, select, textarea, label");
+    if (own && td.contains(own)) return;
+    var sel = window.getSelection ? window.getSelection() : null;
+    if (sel && !sel.isCollapsed && String(sel).trim() !== "" && td.contains(sel.anchorNode)) return;
+    open(td);
+  });
+
+  // Enter or F2 on the cell itself (it is in the tab order and says it can be edited).
+  document.addEventListener("keydown", function (e) {
+    if ((e.key !== "Enter" && e.key !== "F2") || e.defaultPrevented) return;
+    var td = e.target;
+    if (!td || !td.matches || !td.matches("td[data-gk-edit]")) return;
+    if (open(td)) e.preventDefault();
+  });
+})();

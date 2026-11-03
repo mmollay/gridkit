@@ -122,6 +122,23 @@ ob_start();
     ->render();
 $pages = ob_get_clean();
 
+// Buttons on the left: until 1.110.1 the header wrote the cell over them at its end, in PHP and in
+// the client rebuild, so every heading stood one column before its cells.
+ob_start();
+(new Table('lefty'))
+    ->setData([
+        ['id' => 1, 'name' => 'Beta',  'city' => 'Graz'],
+        ['id' => 2, 'name' => 'Alpha', 'city' => 'Linz'],
+    ])
+    ->selectable()
+    ->column('name', 'Name', ['sortable' => true])
+    ->column('city', 'City')
+    ->button('view', ['icon' => 'visibility', 'position' => 'left', 'params' => ['id' => 'id']])
+    ->button('edit', ['icon' => 'edit', 'params' => ['id' => 'id']])
+    ->toolbar(false)
+    ->render();
+$lefty = ob_get_clean();
+
 // The side sheet the people table opens: written the way the skill teaches,
 // with no role and no name on the close button — GK.sheet fills both in.
 $personSheet = '<div class="gk-sheet" id="person-sheet" hidden>'
@@ -534,6 +551,7 @@ echo '<!DOCTYPE html><html lang="en">' . $head . '<body class="gk-root">'
    . '<div class="gk-modal-header"><h3 class="gk-modal-title">Hidden</h3></div></div></div>'
    . $people
    . $pages
+   . $lefty
    . $personSheet
    // A second sheet, for "one at a time".
    . '<div class="gk-sheet" id="other-sheet" hidden><div class="gk-sheet-header">'
