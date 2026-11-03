@@ -7,6 +7,30 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.110.0] - 2026-11-03
+
+A table cell can be changed where it stands: `Table::editable()` and a column's `'edit'` turn it into a field on a click or on Enter, save it on Enter or when the field is left, fire `gk:celledit`, and post the change when the table names a URL. A table without an editable column renders exactly as before.
+
+### Added
+- **`Table::editable($key = 'id', $url = '', $opts = [])`**: inline editing. `$key` names the record (written as `data-gk-row-id`, posted as `id`; with `selectable()` under another key the selection's key is used and GridKit says so); `$url` is where a change is POSTed; option `headers` adds request headers (a CSRF token). Every editable cell is in the tab order and points at a hidden sentence that says it can be edited; Enter or F2 opens it, Enter and leaving the field save, Escape restores, Tab moves to the next editable cell. The field holds the raw value (`1200.5`, not `€1,200.50`): a `setData()` table has it in its data block, a `rows()`/`query()` table writes it as `data-gk-raw` on editable cells.
+- **Column options `'edit'`** (`'text'`, `'number'`, `'select'`; `false` is read-only) and **`'options'`** (value => text for a select; a `label` column offers the keys of its `labels` without it). Refused with a warning, the column staying read-only: `'format' => 'html'` and `'email'`, a column with `'href'`, the column of `rowLink()`, an unknown type, a select with nothing to choose from, `'edit'` without `editable()`.
+- **`gk:celledit`** on the table, cancelable, with `{ tableId, id, column, value, oldValue }`; `preventDefault()` restores the old value, `event.detail.respondWith(promise)` answers in place of the URL. The request is a JSON POST of `{ id, column, value }`; `{ ok: true, value?, display? }` saves, anything else (another status, `{ ok: false, error }`, no JSON, no network) restores the old value and shows the reason as text. While saving the cell is `aria-busy` and cannot be opened again. A saved value is formatted the way the column formats it (by the code that redraws a sorted table); a `setData()` table keeps it for the next sort, search, page and CSV export.
+- New strings: `table.edit_hint`, `js.edit_error`, `js.edit_number`, `js.edit_saved` (en, de).
+
+### Demo
+- "Editing in the cell" above "Mobile-Responsive": text, number and select columns; the page has no server, so the listener answers with `respondWith()` after a moment and refuses a negative price.
+
+### Tests
+- `tests/table-inline-edit.test.php` (131 assertions): the markup of editable cells and rows in a fixed order, raw values, escaping, the AJAX fragment, select options, every refusal, and that a table without an editable column is byte for byte the same.
+- `ci/browser-inline-edit.js` (96 cases) with `ci/browser-inline-edit-fixture.php`: pointer and keyboard, the event and its veto, `respondWith()`, the request and every kind of answer (answered by `page.route()`), the rebuild after a sort, a page and a search (the same ids and attributes as PHP writes), a server table, a selection, a row link, no column moving when a field opens, a card at 390px, both dark spellings, forced colours. Each of 79 rules of the script, the stylesheet and `Table` was taken out in turn and a check turned red.
+- Whole suite: 9,615 assertions; every browser check of 1.107.0 to 1.109.0 as before, with the four blocks side by side in `js/gridkit.js` (each wraps `GK.table.renderStatic` or `GK.table.init` in turn; the wrappers chain).
+
+### Notes
+- **`js/gridkit.js`: one block at the end, no line elsewhere.** It wraps `GK.table.renderStatic` and `GK.table.reload` and changes neither. A copy without it, such as the PawBot dashboard's, shows an editable table read-only.
+- **No new class:** an editable cell is `td[data-gk-edit]`, an open one `td[data-gk-editing]`, a saving one `td[aria-busy="true"]` — a dotted line under the value, solid on hover, a focus ring.
+- A date column redrawn in the browser after a save uses the browser's format, as a sorted table always has; a server can send `display` to keep its own.
+
+---
 ## [1.109.0] - 2026-11-03
 
 A table can carry Compact · Normal · Roomy in its toolbar, and the person at the screen chooses how tightly it is set; the choice stays with the table in this browser. It uses the steps of `Theme::density()`, needs `gridkit.css` only, and a table without the option is unchanged.

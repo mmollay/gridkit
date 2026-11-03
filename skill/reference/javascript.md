@@ -1,4 +1,4 @@
-# GridKit 1.109.0 — JavaScript
+# GridKit 1.110.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -60,6 +60,9 @@ GK.announce('saved', 'Saved.', 'success');   // tone: info, success, warning, er
 GK.announce('saved', '');                    // empty: no box, still a live region
 document.addEventListener('gk:sheetopen', e => fill(e.target, e.detail.params));  // detail: { opener, params }
 document.addEventListener('gk:sheetclose', e => { /* e.detail.opener */ });
+
+// Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
+document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
 ```
 
 An AJAX form (`Form::ajax()`) reports its own outcome: `{ok: true, message: '…'}` closes the modal, refreshes
