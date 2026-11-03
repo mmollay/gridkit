@@ -11971,3 +11971,473 @@ html[data-gk-tt] .gk-tooltip-content[data-gk-tone] {
     outline: 1px solid CanvasText;
   }
 }
+
+/* === 1.115.0 — permission matrix === */
+/* GridKit\PermissionMatrix: .gk-perm is the card (as .gk-table-wrap is), .gk-perm-box the box the
+   matrix scrolls in, .gk-perm-table a .gk-table — so rows, lines, the head's type and the density
+   steps are the table's own. What is new is what a matrix needs: the role row and the permission
+   column stay in view (the 1.107.0 idea: a box with a height, separate borders that travel with their
+   cell, a surface of its own on every cell that sticks), the states of a cell — inherited, locked,
+   changed — each in a shape and in words, not in a colour alone, and one role at a time on a phone.
+
+   The surfaces, by mode: a cell that sticks lies over the cells that scroll under it and needs one.
+   Dark mode takes the table card's #161b22 (DARK MODE, "4-level"), whatever the theme. */
+.gk-perm {
+  --gk-perm-bg: var(--gk-surface);
+  --gk-perm-group-bg: var(--gk-surface-container);
+  --gk-perm-hover: var(--gk-surface-container-low);
+  --gk-perm-all-bg: color-mix(in srgb, var(--gk-surface-container) 55%, var(--gk-perm-bg));
+  --gk-perm-changed-bg: color-mix(in srgb, var(--gk-primary) 13%, var(--gk-perm-bg));
+  --gk-perm-line: var(--gk-outline-variant);
+  /* The mark of a cell that cannot be changed here: the muted text colour, 4.5:1 and more in both modes. */
+  --gk-perm-fixed: var(--gk-on-surface-variant);
+  min-width: 0;
+  max-width: 100%;
+  background: var(--gk-perm-bg);
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: 12px;
+  color: var(--gk-on-surface);
+}
+[data-gk-mode="dark"] .gk-perm,
+.gk-dark .gk-perm {
+  --gk-perm-bg: #161b22;
+  --gk-perm-group-bg: var(--gk-surface-container-high);
+  --gk-perm-hover: #1c2128;
+  --gk-perm-all-bg: #1a2029;
+  --gk-perm-line: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+/* The script shows what needs it ([data-gk-perm-js]) and hides the plain twins ([data-gk-perm-nojs]).
+   `hidden` alone loses to every rule that sets a display (.gk-toolbar, .gk-btn), so it is said here. */
+.gk-perm [hidden] {
+  display: none !important;
+}
+
+/* A width, not a flex-basis: .gk-toolbar turns into a column on a phone, where a basis is a height
+   (the field became a 280px disc). The phone rule below makes this toolbar a row again as well. */
+.gk-perm-toolbar .gk-search {
+  flex: 0 1 auto;
+  width: 280px;
+  max-width: 100%;
+}
+.gk-perm-changes {
+  font-size: var(--gk-text-caption);
+  color: var(--gk-on-surface-variant);
+}
+.gk-perm-changes[data-gk-perm-dirty] {
+  color: var(--gk-on-surface);
+  font-weight: 600;
+}
+.gk-perm-changes[data-gk-perm-dirty]::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--gk-primary);
+  vertical-align: 1px;
+}
+
+/* The phone's role select: shown by the script, and only on a phone (below). */
+.gk-perm-picker {
+  display: none;
+}
+
+/* The box: it scrolls both ways, as high as height() said (70vh), clipped to the card's corners.
+   A region with a tab stop (PermissionMatrix writes both), so the keyboard scrolls it too. */
+.gk-perm-box {
+  /* PermissionMatrix::height() writes its value inline on this element, which wins over this one. */
+  --gk-perm-height: 70vh;
+  overflow: auto;
+  position: relative;
+  max-height: var(--gk-perm-height);
+  border-radius: inherit;
+}
+.gk-perm-toolbar:not([hidden]) ~ .gk-perm-box {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.gk-perm-box:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+/* Separate borders: a collapsed border stays with the grid while its cell sticks (see 1.107.0). */
+.gk-perm-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.gk-perm-table th,
+.gk-perm-table td {
+  border-bottom-color: var(--gk-perm-line);
+}
+/* Every cell paints its own surface. A row's colour (dark mode's zebra and hover, DARK MODE) would
+   show behind the role cells and not behind the sticky column — a striped matrix with a plain edge. */
+.gk-perm-table > tbody > tr > td {
+  background: var(--gk-perm-bg);
+}
+
+/* The role row sticks to the top of the box, the permission column to its left; where they meet,
+   above both. */
+.gk-perm-table > thead > tr > th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--gk-perm-bg);
+}
+.gk-perm-table > tbody > tr > th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--gk-perm-bg);
+  box-shadow: inset -1px 0 0 var(--gk-perm-line);
+}
+.gk-perm-table > thead > tr > th.gk-perm-corner {
+  left: 0;
+  z-index: 3;
+  box-shadow: inset -1px 0 0 var(--gk-perm-line);
+  vertical-align: bottom;
+}
+
+/* A role: its name (a label when it has a colour), a line about it, what it is (locked, inherits),
+   the column's toggle and how many permissions it has. The head's caps are for the name only. */
+/* The table head does not wrap (.gk-table thead th); a role's head has to, or one description sets
+   the width of its column. */
+.gk-perm-table > thead > tr > th.gk-perm-role {
+  min-width: 88px;
+  max-width: 140px;
+  text-align: center;
+  vertical-align: bottom;
+  white-space: normal;
+}
+.gk-perm-role-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.gk-perm-role-desc,
+.gk-perm-role-note,
+.gk-perm-count {
+  font-size: var(--gk-text-overline);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--gk-on-surface-variant);
+}
+.gk-perm-role-desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+.gk-perm-role-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 2px;
+  font-weight: 600;
+}
+.gk-perm-role-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.gk-perm-count {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gk-perm-icon {
+  flex: none;
+}
+
+/* "All roles": the toggles of a row and of a group across every role that can change. A quieter
+   surface, so it does not read as one more role. */
+.gk-perm-table .gk-perm-all {
+  width: 1%;
+  min-width: 64px;
+  text-align: center;
+  background: var(--gk-perm-all-bg);
+}
+.gk-perm-table > thead > tr > th.gk-perm-all {
+  white-space: normal;
+  vertical-align: bottom;
+}
+
+/* A permission: its name, the "Risky" label, a line about it and what it needs. */
+.gk-perm-name {
+  min-width: 220px;
+  max-width: 340px;
+  font-weight: 500;
+  white-space: normal;
+}
+.gk-perm-label {
+  color: var(--gk-on-surface);
+}
+.gk-perm-risk {
+  margin-left: 4px;
+  font-size: var(--gk-text-overline);
+  padding: 1px 6px;
+}
+.gk-perm-desc,
+.gk-perm-needs {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--gk-text-caption);
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--gk-on-surface-variant);
+}
+.gk-perm-needs {
+  font-style: italic;
+}
+
+/* A module's heading row: the fold button, the count, the group toggles. */
+.gk-perm-table > tbody > tr.gk-perm-group-row > :is(th, td) {
+  background: var(--gk-perm-group-bg);
+  padding-top: 8px;
+  padding-bottom: 6px;
+}
+.gk-perm-table .gk-perm-group-head {
+  font-size: var(--gk-text-caption);
+}
+.gk-perm-fold,
+.gk-perm-group-plain {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.gk-perm-fold {
+  padding: 2px 4px 2px 0;
+  margin: 0;
+  border: 0;
+  border-radius: var(--gk-radius-sm, 6px);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.gk-perm-fold:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+.gk-perm-chevron {
+  flex: none;
+  transition: transform var(--gk-dur-1, 0.15s) ease;
+}
+tbody[data-gk-perm-folded] .gk-perm-chevron {
+  transform: rotate(-90deg);
+}
+.gk-perm-group-head .gk-perm-desc {
+  display: inline;
+  margin-left: 8px;
+}
+/* Folded and filtered rows; a group without a match goes as a whole. */
+.gk-perm-table > tbody[data-gk-perm-folded] > tr.gk-perm-row,
+.gk-perm-table > tbody > tr[data-gk-perm-out],
+.gk-perm-table > tbody[data-gk-perm-out] {
+  display: none;
+}
+
+/* A cell: the whole cell is the target (the script forwards a click to its box). The table selector
+   is for weight: .gk-table td aligns left. */
+.gk-perm-table td.gk-perm-cell {
+  position: relative;
+  min-width: 88px;
+  text-align: center;
+  vertical-align: middle;
+}
+.gk-perm[data-gk-perm-ready]:not([data-gk-perm-readonly]) .gk-perm-row > .gk-perm-cell:not(.gk-perm-locked, .gk-perm-inherited),
+.gk-perm[data-gk-perm-ready] .gk-perm-all {
+  cursor: pointer;
+}
+.gk-perm-check,
+.gk-perm-bulk {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  vertical-align: middle;
+  accent-color: var(--gk-primary);
+  cursor: pointer;
+}
+.gk-perm-table :is(.gk-perm-check, .gk-perm-bulk):focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+.gk-perm-table :is(th, td):focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+/* The row under the pointer or holding the focus (the table's own rule tints only its td, and the
+   sticky name cell beside them would stay plain). */
+.gk-perm-table .gk-perm-row:is(:hover, :focus-within) > :is(th, td) {
+  background: var(--gk-perm-hover);
+}
+.gk-perm-table .gk-perm-row:is(:hover, :focus-within) > .gk-perm-all {
+  background: color-mix(in srgb, var(--gk-on-surface) 4%, var(--gk-perm-all-bg));
+}
+/* A risky right, ticked: the error colour on top of the "Risky" label in words. */
+.gk-perm-danger > .gk-perm-cell:not(.gk-perm-locked, .gk-perm-inherited) .gk-perm-check {
+  accent-color: var(--gk-error);
+}
+/* Locked and inherited: ticked, and plainly not a choice here — the muted colour. Inherited also gets
+   a dashed ring and "via <role>" under it, so the state does not live in a colour; locked is said in
+   its column's head. Read-only (aria-disabled) is not dimmed: it has to stay legible. */
+:is(.gk-perm-locked, .gk-perm-inherited) .gk-perm-check {
+  accent-color: var(--gk-perm-fixed);
+  cursor: default;
+}
+.gk-perm-inherited .gk-perm-check {
+  outline: 1.5px dashed var(--gk-perm-fixed);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.gk-perm-table .gk-perm-inherited .gk-perm-check:focus-visible {
+  outline: 2px solid var(--gk-primary);
+}
+.gk-perm-note {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--gk-text-overline);
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--gk-on-surface-variant);
+}
+/* Changed and not saved: a tinted cell and a dot in its corner (the dot is the shape, the description
+   says it in words). */
+.gk-perm-changed {
+  background: var(--gk-perm-changed-bg);
+}
+.gk-perm-table .gk-perm-row > td.gk-perm-changed,
+.gk-perm-table .gk-perm-row:is(:hover, :focus-within) > td.gk-perm-changed {
+  background: var(--gk-perm-changed-bg);
+}
+.gk-perm-changed::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gk-primary);
+}
+.gk-perm-check[aria-busy="true"] {
+  opacity: 0.6;
+}
+
+/* Nothing matched the filter. */
+.gk-perm-empty {
+  margin: 0;
+  padding: 24px 16px;
+  text-align: center;
+  font-size: var(--gk-font-size);
+  color: var(--gk-on-surface-variant);
+}
+
+/* The legend: the marks as the cells draw them, each with its words. */
+.gk-perm-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0;
+  padding: 10px 16px 12px;
+  list-style: none;
+  border-top: 1px solid var(--gk-perm-line);
+  font-size: var(--gk-text-caption);
+  color: var(--gk-on-surface-variant);
+}
+.gk-perm-legend > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.gk-perm-swatch {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 30px;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+.gk-perm-swatch .gk-perm-note {
+  margin-top: 2px;
+}
+.gk-perm-swatch.gk-perm-changed {
+  padding-right: 12px;
+}
+.gk-perm-swatch.gk-perm-changed::after {
+  top: 3px;
+  right: 3px;
+}
+
+/* A phone: one role at a time — the column the select picked (.gk-perm-col-on), no "All roles"
+   column, and the head sticks to the page under GridKit's header. Without the script (no select)
+   the box keeps every column and scrolls sideways inside itself; the page does not. */
+@media (max-width: 768px) {
+  .gk-perm[data-gk-perm-ready] .gk-perm-picker:not([hidden]) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px var(--gk-spacing, 16px);
+    border-bottom: 1px solid var(--gk-perm-line);
+    font-size: var(--gk-font-size);
+  }
+  .gk-perm-picker .gk-filter {
+    flex: 1;
+    min-width: 0;
+  }
+  /* The search on a line of its own, the rest beside each other under it. */
+  .gk-perm-toolbar {
+    flex-direction: row;
+    align-items: center;
+  }
+  .gk-perm-toolbar .gk-search {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .gk-perm[data-gk-perm-ready] .gk-perm-table :is(th, td)[data-gk-perm-role]:not(.gk-perm-col-on),
+  .gk-perm[data-gk-perm-ready] .gk-perm-table .gk-perm-all {
+    display: none;
+  }
+  .gk-perm[data-gk-perm-ready] .gk-perm-box {
+    overflow: visible;
+    max-height: none;
+  }
+  /* The page's own setting for sticky table heads (--gk-table-sticky-top, 1.107.0) holds here too. */
+  .gk-perm[data-gk-perm-ready] .gk-perm-table > thead > tr > th {
+    top: var(--gk-table-sticky-top, var(--gk-sheet-top, 0px));
+  }
+  .gk-perm[data-gk-perm-ready] .gk-perm-name {
+    min-width: 0;
+    max-width: none;
+  }
+  .gk-perm[data-gk-perm-ready] .gk-perm-cell,
+  .gk-perm[data-gk-perm-ready] .gk-perm-role {
+    width: 96px;
+    min-width: 0;
+  }
+  /* A finger's target: a cell's height works as its least height. */
+  .gk-perm-cell {
+    height: 48px;
+  }
+  .gk-perm-check,
+  .gk-perm-bulk {
+    width: 22px;
+    height: 22px;
+  }
+  .gk-perm-name {
+    min-width: 180px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gk-perm-chevron {
+    transition: none;
+  }
+}

@@ -22,7 +22,7 @@ return (static function (): array {
 $sidebar = static function (): string {
     $s = new Sidebar('demo');
     $s->brand('', 'widgets')->group('Components');
-    foreach (['table', 'form', 'cards', 'layout', 'tabs', 'navigation', 'gallery', 'suche', 'feedback', 'ui', 'tooltip', 'changelog'] as $id) {
+    foreach (['table', 'form', 'cards', 'layout', 'tabs', 'navigation', 'gallery', 'suche', 'feedback', 'ui', 'tooltip', 'permissions', 'changelog'] as $id) {
         $s->item(ucfirst($id), '#' . $id, 'circle');
     }
     ob_start();

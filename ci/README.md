@@ -278,6 +278,23 @@ block was taken out in turn and a check turned red. About forty seconds.
 GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-tooltip.js
 ```
 
+The permission matrix (`PermissionMatrix`, 1.115.0) is driven by `ci/browser-permission-matrix.js`
+on `ci/browser-permission-matrix-fixture.php`: a matrix in a form with a locked role, two heirs
+of one parent and a two-level chain, `requires` chains, risky rights, a folded group and rows
+without a group; one that saves as you go (fetch is stubbed: ok, a refusal with a reason, a
+broken answer) and a read-only one. It toggles cells and the bulk toggles of a row, a column, a
+group and all roles, checks inheritance (live, not removable, the heir's own grant kept),
+`requires` both ways and through the heirs, the filter, folding, the count of changes, Reset,
+the form's own reset, `commit()`, the event and its veto, the grid's keys, a phone at 390px, and
+the form as posted with and without the script — handed to PHP (`--read`) and read back with
+`read()` and `fromPost()`. Then 450 measurements of contrast and shape in the six themes, light
+and both dark spellings. Each rule of the script, the stylesheet and `PermissionMatrix` was
+taken out in turn and a check turned red. About twenty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-permission-matrix.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

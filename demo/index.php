@@ -430,6 +430,7 @@ $sidebar->brand('', 'widgets')
     ->item('Feedback', '#feedback', 'notifications')
     ->item('UI', '#ui', 'palette')
     ->item('Tooltip', '#tooltip', 'chat_bubble')
+    ->item('Permissions', '#permissions', 'admin_panel_settings')
     ->group('Examples')
     ->item('Examples', '#examples', 'rocket_launch')
     ->group('Info')
@@ -480,6 +481,7 @@ echo $demoHeader->title($headerTitle, true)
 <?php require __DIR__ . '/sections/ui.php'; ?>
 <?php require __DIR__ . '/sections/examples.php'; ?>
 <?php require __DIR__ . '/sections/tooltip.php'; ?>
+<?php require __DIR__ . '/sections/permissions.php'; ?>
 <?php require __DIR__ . '/sections/changelog.php'; ?>
 </div><!-- /gk-with-sidebar -->
 

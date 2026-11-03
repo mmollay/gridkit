@@ -9434,3 +9434,805 @@ function _gkShowIfInit(root) {
   // After GK.theme.restore(), which runs on DOMContentLoaded too and was registered first.
   _gkReady(start);
 })();
+// === 1.115.0 — permission matrix (GridKit\PermissionMatrix) ===
+/*
+ * What PermissionMatrix::render() writes is a form: every cell a hidden "0" and a checkbox "1" under
+ * perm[role][permission], an inherited or locked cell a disabled checkbox. This block makes it a
+ * matrix one works in, and changes nothing that the form posts except through those same fields:
+ *
+ *   - Inheritance stays live. A role with a parent shows what the parent has as ticked "via <parent>",
+ *     not removable there; tick something for the parent and it appears in the child at once. The
+ *     inherited checkbox has no name, so the cell posts its hidden 0 (inheritance follows from the
+ *     parent and is not stored); disabled becomes aria-disabled, so the arrow keys still reach it.
+ *   - `requires`: ticking a permission ticks what it needs (through what that needs); unticking a
+ *     permission unticks what needs it, in that role and in the roles that inherit from it. Both are
+ *     said in the status line, so nothing changes out of sight.
+ *   - Bulk toggles for a row (all roles), a column (one role, the rows in view), a group (one role, or
+ *     all roles), each mixed while only some are granted. Ticked → untick what can be unticked;
+ *     mixed or empty → tick what can be ticked. Locked and inherited cells are left alone.
+ *   - Filter, fold, the count of changes and Reset; changed cells marked until saved (or commit()).
+ *   - A grid: one tab stop, the arrow keys move between cells (Home/End, Ctrl+Home/End, PageUp/Down),
+ *     Space toggles. On a phone (≤ 768px) one role at a time, chosen in a select.
+ *   - gk:permchange on the matrix after every change, cancelable: preventDefault() puts it back.
+ *     With saveUrl() each change is POSTed as JSON ({ matrix, changes: {role: {permission: bool}} })
+ *     and put back, with a toast, when the answer is not { ok: true }.
+ *
+ * GK.permMatrix.changes(el), .reset(el), .commit(el) and .init(root). A copy of this file without the
+ * block (the PawBot dashboard keeps its own) leaves the form: the controls that need the script stay
+ * hidden ([data-gk-perm-js]) and every cell posts as it is ticked.
+ */
+(function () {
+  "use strict";
+  if (!window.GK || GK.permMatrix) return;
+
+  function fmt(text, params) {
+    text = String(text == null ? "" : text);
+    if (params) Object.keys(params).forEach(function (k) { text = text.split("{" + k + "}").join(String(params[k])); });
+    return text;
+  }
+
+  /** Lower case, accents off: "Lösch" finds "löschen" and "Losch" finds both. */
+  function norm(s) {
+    return String(s == null ? "" : s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  }
+
+  function shown(el) {
+    return !!el && el.getClientRects().length > 0;
+  }
+
+  function rootOf(el) {
+    if (typeof el === "string") {
+      var key = el;
+      el = document.getElementById(key) ||
+        Array.prototype.find.call(document.querySelectorAll("[data-gk-perm]"), function (r) { return r.getAttribute("data-gk-perm") === key; });
+    }
+    return el && el.closest ? el.closest("[data-gk-perm]") : null;
+  }
+
+  function stateOf(el) {
+    var root = rootOf(el);
+    return root ? setup(root) : null;
+  }
+
+  // ── the model ─────────────────────────────────────────────────────────
+
+  function editable(s, r) {
+    return !s.cfg.readonly && !!s.roles[r] && !s.roles[r].locked;
+  }
+
+  /** Has the role the permission — itself, by being locked, or through its parents? */
+  function eff(s, r, p) {
+    for (var k = r, n = 0; k && s.roles[k] && n < 64; k = s.roles[k].parent, n++) {
+      if (s.roles[k].locked || s.own[k][p]) return true;
+    }
+    return false;
+  }
+
+  /** The nearest ancestor that has it, or null. */
+  function source(s, r, p) {
+    for (var k = s.roles[r].parent, n = 0; k && s.roles[k] && n < 64; k = s.roles[k].parent, n++) {
+      if (s.roles[k].locked || s.own[k][p]) return k;
+    }
+    return null;
+  }
+
+  /** Everything p needs, through what that needs. */
+  function needs(s, p) {
+    var seen = {}, out = [], todo = ((s.perms[p] && s.perms[p].requires) || []).slice();
+    seen[p] = true;
+    while (todo.length) {
+      var q = todo.shift();
+      if (seen[q] || !s.perms[q]) continue;
+      seen[q] = true;
+      out.push(q);
+      todo.push.apply(todo, s.perms[q].requires || []);
+    }
+    return out;
+  }
+
+  /** Everything that needs p, through what needs that. */
+  function needers(s, p) {
+    var seen = {}, out = [], todo = [p];
+    seen[p] = true;
+    while (todo.length) {
+      var q = todo.shift();
+      s.permOrder.forEach(function (k) {
+        if (!seen[k] && (s.perms[k].requires || []).indexOf(q) > -1) { seen[k] = true; out.push(k); todo.push(k); }
+      });
+    }
+    return out;
+  }
+
+  /** The role and every role that inherits from it. */
+  function heirs(s, r) {
+    var out = [r];
+    for (var i = 0; i < out.length; i++) {
+      s.roleOrder.forEach(function (k) {
+        if (s.roles[k].parent === out[i] && out.indexOf(k) < 0) out.push(k);
+      });
+    }
+    return out;
+  }
+
+  function snapshot(s) {
+    var o = {};
+    s.roleOrder.forEach(function (r) { o[r] = Object.assign({}, s.own[r]); });
+    return o;
+  }
+
+  function diffOf(s, before) {
+    var out = [];
+    s.roleOrder.forEach(function (r) {
+      s.permOrder.forEach(function (p) {
+        if (!!before[r][p] !== !!s.own[r][p]) out.push({ role: r, permission: p, granted: !!s.own[r][p] });
+      });
+    });
+    return out;
+  }
+
+  /** What differs from the last saved state (the page as the server wrote it, or commit()). */
+  function pending(s) {
+    var out = [];
+    s.roleOrder.forEach(function (r) {
+      if (!editable(s, r)) return;
+      s.permOrder.forEach(function (p) {
+        if (s.cells[r][p] && !!s.own[r][p] !== !!s.was[r][p]) out.push({ role: r, permission: p, granted: !!s.own[r][p] });
+      });
+    });
+    return out;
+  }
+
+  /** "View invoices, Edit invoices" — or "Editor: View invoices, Guest: …" when more than one role is involved. */
+  function names(s, list) {
+    var roles = {};
+    list.forEach(function (c) { roles[c[0]] = true; });
+    var many = Object.keys(roles).length > 1;
+    var words = list.map(function (c) { return (many ? s.roles[c[0]].label + ": " : "") + s.perms[c[1]].label; });
+    return words.length > 6 ? words.slice(0, 6).join(", ") + ", …" : words.join(", ");
+  }
+
+  /**
+   * Set the cells, then keep `requires` whole: what a granted cell needs is granted with it; what
+   * needs a revoked cell goes with it — in that role and its heirs, which lost it as well. Only the
+   * permissions this change touches are looked at: an old gap elsewhere in the data stays as it is.
+   */
+  function apply(s, targets, granted) {
+    var also = [], touched = [];
+    // Parents first: a right granted to "all roles" goes to Guest and is inherited by Support and
+    // Editor, rather than given to each of them as well — three own grants nobody asked for.
+    var depth = function (r) { for (var n = 0, k = r; k && s.roles[k] && n < 64; k = s.roles[k].parent) n++; return n; };
+    targets = targets.slice().sort(function (a, b) { return depth(a[0]) - depth(b[0]); });
+    targets.forEach(function (t) {
+      var r = t[0], p = t[1];
+      if (!editable(s, r) || !s.cells[r][p]) return;
+      if (granted && !eff(s, r, p)) { s.own[r][p] = true; touched.push(t); }
+      else if (!granted && s.own[r][p]) { s.own[r][p] = false; touched.push(t); }
+    });
+    if (granted) {
+      touched.forEach(function (t) {
+        needs(s, t[1]).forEach(function (q) {
+          if (s.cells[t[0]][q] && !eff(s, t[0], q)) { s.own[t[0]][q] = true; also.push([t[0], q]); }
+        });
+      });
+    } else {
+      var roles = {}, perms = {};
+      touched.forEach(function (t) {
+        heirs(s, t[0]).forEach(function (r) { roles[r] = true; });
+        needers(s, t[1]).forEach(function (p) { perms[p] = true; });
+      });
+      for (var again = true, n = 0; again && n < 64; n++) {
+        again = false;
+        Object.keys(roles).forEach(function (r) {
+          if (!editable(s, r)) return;
+          Object.keys(perms).forEach(function (p) {
+            if (!s.own[r][p]) return;
+            var gap = (s.perms[p].requires || []).some(function (q) { return !eff(s, r, q); });
+            if (gap) { s.own[r][p] = false; also.push([r, p]); again = true; }
+          });
+        });
+      }
+    }
+    return also;
+  }
+
+  // ── what it looks like ────────────────────────────────────────────────
+
+  function fieldName(s, r, p) {
+    return s.cfg.name + "[" + r + "][" + p + "]";
+  }
+
+  function note(cell, text) {
+    var el = cell.td.querySelector(":scope > .gk-perm-note");
+    if (!text) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement("span");
+      el.className = "gk-perm-note";
+      el.setAttribute("aria-hidden", "true");
+      cell.td.appendChild(el);
+    }
+    el.textContent = text;
+  }
+
+  /** The cell's description: inherited from, changed, needed by — shared texts by id, the last one its own. */
+  function describe(s, cell, from, changed, needed) {
+    var ids = [];
+    if (from) ids.push(s.inhIds[from]);
+    if (changed && s.changedId) ids.push(s.changedId);
+    var own = cell.td.querySelector(":scope > [data-gk-perm-needed]");
+    if (needed.length) {
+      if (!own) {
+        own = document.createElement("span");
+        own.hidden = true;
+        own.id = cell.box.id + "-n";
+        own.setAttribute("data-gk-perm-needed", "");
+        cell.td.appendChild(own);
+      }
+      own.textContent = fmt(s.t.needed_by, { list: needed.join(", ") });
+      ids.push(own.id);
+    } else if (own) {
+      own.remove();
+    }
+    ids = ids.filter(Boolean);
+    if (ids.length) cell.box.setAttribute("aria-describedby", ids.join(" "));
+    else cell.box.removeAttribute("aria-describedby");
+  }
+
+  function render(s) {
+    if (s.cfg.readonly) return;
+    var total = s.permOrder.length;
+    s.roleOrder.forEach(function (r) {
+      var count = 0;
+      s.permOrder.forEach(function (p) {
+        var has = eff(s, r, p);
+        if (has) count++;
+        var cell = s.cells[r][p];
+        if (!cell || !cell.box || !editable(s, r)) return;
+        var from = s.own[r][p] ? null : source(s, r, p);
+        var changed = !!s.own[r][p] !== !!s.was[r][p];
+        cell.box.checked = has;
+        cell.td.classList.toggle("gk-perm-inherited", !!from);
+        cell.td.classList.toggle("gk-perm-changed", changed);
+        if (from) {
+          cell.box.removeAttribute("name");
+          cell.box.setAttribute("aria-disabled", "true");
+        } else {
+          cell.box.name = fieldName(s, r, p);
+          cell.box.removeAttribute("aria-disabled");
+        }
+        note(cell, from ? fmt(s.t.via, { role: s.roles[from].label }) : "");
+        var needed = [];
+        if (!from && has) {
+          s.permOrder.forEach(function (k) {
+            if ((s.perms[k].requires || []).indexOf(p) > -1 && eff(s, r, k)) needed.push(s.perms[k].label);
+          });
+        }
+        describe(s, cell, from, changed, needed);
+      });
+      var head = s.heads[r];
+      var countEl = head && head.querySelector("[data-gk-perm-count]");
+      if (countEl) countEl.textContent = fmt(s.t.count, { n: count, total: total });
+    });
+    bulkStates(s);
+    changeBar(s);
+  }
+
+  /** The rows on screen: matching the filter, in a group that is open. */
+  function rowInView(s, p) {
+    var tr = s.rows[p];
+    return !!tr && !tr.hasAttribute("data-gk-perm-out") && !tr.parentElement.hasAttribute("data-gk-perm-folded");
+  }
+
+  function rowMatches(s, p) {
+    var tr = s.rows[p];
+    return !!tr && !tr.hasAttribute("data-gk-perm-out");
+  }
+
+  /** The cells a bulk toggle stands for, as [role, permission]. */
+  function scope(s, box) {
+    var kind = box.getAttribute("data-gk-perm-bulk");
+    var editRoles = s.roleOrder.filter(function (r) { return editable(s, r); });
+    var out = [];
+    if (kind === "role") {
+      var r = box.closest("th").getAttribute("data-gk-perm-role");
+      if (!editable(s, r)) return [];
+      s.permOrder.forEach(function (p) { if (rowInView(s, p)) out.push([r, p]); });
+    } else if (kind === "group" || kind === "group-all") {
+      var g = box.closest("tbody").getAttribute("data-gk-perm-group");
+      var roles = kind === "group" ? [box.closest("td").getAttribute("data-gk-perm-role")] : editRoles;
+      roles.forEach(function (rk) {
+        if (!editable(s, rk)) return;
+        s.permOrder.forEach(function (p) { if (s.perms[p].group === g && rowMatches(s, p)) out.push([rk, p]); });
+      });
+    } else if (kind === "row") {
+      var perm = box.closest("tr").getAttribute("data-gk-perm-perm");
+      editRoles.forEach(function (rk) { out.push([rk, perm]); });
+    }
+    return out.filter(function (c) { return !!s.cells[c[0]][c[1]]; });
+  }
+
+  function bulkStates(s) {
+    s.bulks.forEach(function (box) {
+      var cells = scope(s, box);
+      var n = cells.filter(function (c) { return eff(s, c[0], c[1]); }).length;
+      box.checked = cells.length > 0 && n === cells.length;
+      box.indeterminate = n > 0 && n < cells.length;
+      if (cells.length) box.removeAttribute("aria-disabled");
+      else box.setAttribute("aria-disabled", "true");
+    });
+  }
+
+  function changeBar(s) {
+    var el = s.root.querySelector("[data-gk-perm-changes]");
+    var n = pending(s).length;
+    if (el) {
+      var text;
+      if (s.cfg.save) text = s.inflight ? s.t.saving : (s.savedOnce ? s.t.saved : s.t.changes_none);
+      else text = n === 0 ? s.t.changes_none : n === 1 ? s.t.changes_one : fmt(s.t.changes, { n: n });
+      el.textContent = text;
+      el.toggleAttribute("data-gk-perm-dirty", n > 0);
+    }
+    var reset = s.root.querySelector("[data-gk-perm-reset]");
+    if (reset) reset.disabled = n === 0;
+  }
+
+  function announce(s, text) {
+    var live = s.root.querySelector("[data-gk-perm-status]");
+    if (!live) return;
+    live.textContent = "";
+    clearTimeout(s.liveTimer);
+    if (text) s.liveTimer = setTimeout(function () { live.textContent = text; }, 60);
+  }
+
+  // ── changing it ───────────────────────────────────────────────────────
+
+  /**
+   * After the model changed: draw, tell the page (gk:permchange, cancelable), say what came along
+   * with it, save. A listener's preventDefault() puts everything back as it was before.
+   */
+  function finish(s, before, kind, primary, granted, also) {
+    var diff = diffOf(s, before);
+    render(s);
+    if (!diff.length) {
+      if (kind !== "reset") announce(s, s.t.nothing);
+      return false;
+    }
+    var ev = new CustomEvent("gk:permchange", {
+      bubbles: true,
+      cancelable: kind !== "revert",
+      detail: {
+        matrix: s.cfg.id,
+        role: primary.role || null,
+        permission: primary.permission || null,
+        granted: granted,
+        kind: kind,
+        changed: diff,
+        changes: pending(s),
+      },
+    });
+    if (!s.root.dispatchEvent(ev)) {
+      s.own = before;
+      render(s);
+      return false;
+    }
+    if (also && also.length) {
+      announce(s, fmt(granted ? s.t.also_granted : s.t.also_removed, { list: names(s, also) }));
+    } else if (kind === "reset") {
+      announce(s, s.t.reset_done);
+    }
+    if (s.cfg.save && kind !== "revert") save(s, diff);
+    return true;
+  }
+
+  function change(s, targets, granted, kind, primary) {
+    var before = snapshot(s);
+    var also = apply(s, targets, granted);
+    return finish(s, before, kind, primary, granted, also);
+  }
+
+  function reset(s) {
+    var before = snapshot(s);
+    s.roleOrder.forEach(function (r) {
+      if (!editable(s, r)) return;
+      s.permOrder.forEach(function (p) { if (s.cells[r][p]) s.own[r][p] = !!s.was[r][p]; });
+    });
+    return finish(s, before, "reset", {}, null, []);
+  }
+
+  function commit(s) {
+    s.roleOrder.forEach(function (r) {
+      s.permOrder.forEach(function (p) { s.was[r][p] = !!s.own[r][p]; });
+    });
+    render(s);
+  }
+
+  /** One request at a time, in order; a failed one puts its cells back (those not changed again since). */
+  function save(s, diff) {
+    var body = { matrix: s.cfg.id, changes: {} };
+    diff.forEach(function (d) { (body.changes[d.role] = body.changes[d.role] || {})[d.permission] = d.granted; });
+    var busy = function (on) {
+      diff.forEach(function (d) {
+        var c = s.cells[d.role][d.permission];
+        if (c && c.box) { if (on) c.box.setAttribute("aria-busy", "true"); else c.box.removeAttribute("aria-busy"); }
+      });
+    };
+    s.inflight++;
+    busy(true);
+    changeBar(s);
+    var headers = Object.assign({ "Content-Type": "application/json", Accept: "application/json", "X-Requested-With": "XMLHttpRequest" }, s.cfg.headers || {});
+    s.queue = s.queue.then(function () {
+      return fetch(s.cfg.save, { method: "POST", credentials: "same-origin", headers: headers, body: JSON.stringify(body) })
+        .then(function (res) {
+          return res.json().then(function (d) { return { ok: res.ok, d: d }; }, function () { return { ok: res.ok, d: null }; });
+        })
+        .then(function (o) {
+          return o.ok && o.d && o.d.ok === true ? null : String((o.d && (o.d.error || o.d.message)) || s.t.save_error);
+        }, function () {
+          return s.t.save_error;
+        })
+        .then(function (error) {
+          s.inflight--;
+          busy(false);
+          if (error === null) {
+            diff.forEach(function (d) { s.was[d.role][d.permission] = d.granted; });
+            s.savedOnce = true;
+            render(s);
+            if (!s.inflight && GK.toast) GK.toast.success(s.t.saved, 1500);
+            return;
+          }
+          var before = snapshot(s);
+          diff.forEach(function (d) {
+            if (!!s.own[d.role][d.permission] === d.granted) s.own[d.role][d.permission] = !d.granted;
+          });
+          finish(s, before, "revert", {}, null, []);
+          if (GK.toast) GK.toast.error(error, 6000);
+          else announce(s, error);
+        })
+        // A step that throws (a listener of the revert event, say) must not stop every save after it.
+        .catch(function (e) { if (window.console) console.error(e); });
+    });
+  }
+
+  /** Why a cell does not change: locked, inherited, or a read-only matrix. */
+  function explain(s, box) {
+    var td = box.closest("td");
+    var r = td && td.getAttribute("data-gk-perm-role");
+    var tr = box.closest("tr[data-gk-perm-perm]");
+    var text;
+    if (s.cfg.readonly) text = s.t.readonly_hint;
+    else if (r && s.roles[r] && s.roles[r].locked) text = fmt(s.t.locked_hint, { role: s.roles[r].label });
+    else if (r && tr) {
+      var from = source(s, r, tr.getAttribute("data-gk-perm-perm"));
+      text = from ? fmt(s.t.inherited_hint, { role: s.roles[from].label }) : s.t.nothing;
+    } else text = s.t.nothing;
+    if (GK.toast) GK.toast.info(text, 4000);
+    else announce(s, text);
+  }
+
+  // ── filter and folding ────────────────────────────────────────────────
+
+  function fold(s, tbody, folded) {
+    tbody.toggleAttribute("data-gk-perm-folded", folded);
+    var btn = tbody.querySelector(".gk-perm-fold");
+    if (btn) btn.setAttribute("aria-expanded", folded ? "false" : "true");
+  }
+
+  function foldAllLabel(s) {
+    var btn = s.root.querySelector("[data-gk-perm-foldall]");
+    if (!btn) return;
+    var open = s.groups.some(function (tb) { return !tb.hasAttribute("data-gk-perm-folded"); });
+    var span = btn.querySelector("span:last-child") || btn;
+    span.textContent = open ? s.t.fold_all : s.t.unfold_all;
+  }
+
+  function filter(s, query) {
+    var words = norm(query).split(/\s+/).filter(Boolean);
+    var searching = words.length > 0;
+    // A search shows what it finds, folded or not; the folds come back when it is cleared.
+    if (searching && !s.searching) {
+      s.foldedBefore = s.groups.filter(function (tb) { return tb.hasAttribute("data-gk-perm-folded"); });
+      s.groups.forEach(function (tb) { fold(s, tb, false); });
+    } else if (!searching && s.searching) {
+      s.groups.forEach(function (tb) { fold(s, tb, (s.foldedBefore || []).indexOf(tb) > -1); });
+    }
+    s.searching = searching;
+    var hits = 0;
+    s.bodies.forEach(function (tb) {
+      var g = tb.getAttribute("data-gk-perm-group");
+      var any = false;
+      tb.querySelectorAll(":scope > tr[data-gk-perm-perm]").forEach(function (tr) {
+        var text = (s.groupText[g] || "") + " " + (s.text[tr.getAttribute("data-gk-perm-perm")] || "");
+        var hit = words.every(function (w) { return text.indexOf(w) > -1; });
+        tr.toggleAttribute("data-gk-perm-out", !hit);
+        if (hit) { any = true; hits++; }
+      });
+      tb.toggleAttribute("data-gk-perm-out", !any);
+    });
+    var empty = s.root.querySelector("[data-gk-perm-empty]");
+    if (empty) empty.hidden = hits > 0;
+    foldAllLabel(s);
+    render(s);
+    roving(s);
+    clearTimeout(s.filterTimer);
+    s.filterTimer = setTimeout(function () {
+      announce(s, searching ? fmt(s.t.shown, { n: hits, total: s.permOrder.length }) : "");
+    }, 400);
+  }
+
+  // ── a phone: one role at a time ───────────────────────────────────────
+
+  function pick(s, key) {
+    if (!s.roles[key]) key = s.roleOrder.filter(function (r) { return editable(s, r); })[0] || s.roleOrder[0];
+    s.pick = key;
+    s.table.querySelectorAll("[data-gk-perm-role]").forEach(function (el) {
+      el.classList.toggle("gk-perm-col-on", el.getAttribute("data-gk-perm-role") === key);
+    });
+    var select = s.root.querySelector("[data-gk-perm-pick]");
+    if (select && select.value !== key) select.value = key;
+    roving(s);
+    measure(s);
+  }
+
+  // ── the grid ──────────────────────────────────────────────────────────
+
+  /** What takes the focus in a cell: its control, or the cell itself. */
+  function itemOf(cell) {
+    var ctl = cell.querySelector('input:not([type="hidden"]), button, select');
+    return ctl && shown(ctl) ? ctl : cell;
+  }
+
+  function rowsOf(s) {
+    return Array.prototype.filter.call(s.table.querySelectorAll(":scope > thead > tr, :scope > tbody > tr"), shown);
+  }
+
+  function cellsOf(tr) {
+    return Array.prototype.filter.call(tr.children, shown);
+  }
+
+  function focusTo(s, el) {
+    if (!el) return;
+    if (s.current && s.current !== el) s.current.setAttribute("tabindex", "-1");
+    el.setAttribute("tabindex", "0");
+    s.current = el;
+    el.focus();
+  }
+
+  /** Keep the grid's one tab stop on something that can be reached. */
+  function roving(s) {
+    if (s.current && shown(s.current) && s.table.contains(s.current)) return;
+    var first = Array.prototype.find.call(s.table.querySelectorAll(":scope > tbody > tr .gk-perm-check"), shown) ||
+      Array.prototype.find.call(s.table.querySelectorAll(":scope > tbody > tr > *"), shown) ||
+      s.table.querySelector("thead th");
+    if (s.current) s.current.setAttribute("tabindex", "-1");
+    s.current = first || null;
+    if (first) first.setAttribute("tabindex", "0");
+  }
+
+  /** The cell a key moves to, as [row, column] in the rows and cells on screen; null for any other key. */
+  function step(key, ctrl, ri, ci, last) {
+    switch (key) {
+      case "ArrowRight": return [ri, ci + 1];
+      case "ArrowLeft": return [ri, Math.max(0, ci - 1)];
+      case "ArrowDown": return [Math.min(last, ri + 1), ci];
+      case "ArrowUp": return [Math.max(0, ri - 1), ci];
+      case "Home": return [ctrl ? 0 : ri, 0];
+      case "End": return [ctrl ? last : ri, Infinity];
+      case "PageDown": return [Math.min(last, ri + 10), ci];
+      case "PageUp": return [Math.max(0, ri - 10), ci];
+      default: return null;
+    }
+  }
+
+  function onKey(s, e) {
+    if (e.altKey || e.metaKey || e.defaultPrevented) return;
+    var cell = e.target.closest ? e.target.closest("th, td") : null;
+    if (!cell || cell.closest("table") !== s.table) return;
+    // Space on a header cell (a permission's name) would scroll the box; it toggles only a box.
+    if (e.key === " " && e.target === cell) { e.preventDefault(); return; }
+    var rows = rowsOf(s);
+    var ri = rows.indexOf(cell.parentElement);
+    if (ri < 0) return;
+    var to = step(e.key, e.ctrlKey, ri, cellsOf(rows[ri]).indexOf(cell), rows.length - 1);
+    if (!to) return;
+    var nr = to[0], nc = to[1];
+    var target = cellsOf(rows[nr]);
+    e.preventDefault();
+    focusTo(s, itemOf(target[Math.min(nc, target.length - 1)]));
+  }
+
+  /** The focus scrolls a cell into view below the sticky head and right of the sticky column. */
+  function measure(s) {
+    var box = s.root.querySelector(".gk-perm-box");
+    var head = s.table.tHead && s.table.tHead.rows[0];
+    if (!box || !head) return;
+    box.style.scrollPaddingTop = head.offsetHeight + "px";
+    box.style.scrollPaddingLeft = (head.cells[0] ? head.cells[0].offsetWidth : 0) + "px";
+  }
+
+  // ── setting up ────────────────────────────────────────────────────────
+
+  function setup(root) {
+    if (root._gkPerm) return root._gkPerm;
+    var cfg;
+    try { cfg = JSON.parse(root.getAttribute("data-gk-perm-config") || ""); } catch (e) { return null; }
+    var table = root.querySelector(".gk-perm-table");
+    if (!cfg || !table) return null;
+    var s = {
+      root: root, cfg: cfg, t: cfg.i18n || {}, table: table,
+      roles: {}, roleOrder: [], perms: {}, permOrder: [], cells: {}, own: {}, was: {},
+      rows: {}, heads: {}, text: {}, groupText: {}, inhIds: {}, bulks: [], groups: [], bodies: [],
+      inflight: 0, queue: Promise.resolve(), current: null, searching: false,
+    };
+    root._gkPerm = s;
+    (cfg.roles || []).forEach(function (r) {
+      s.roles[r.key] = r; s.roleOrder.push(r.key); s.cells[r.key] = {}; s.own[r.key] = {}; s.was[r.key] = {};
+    });
+    (cfg.perms || []).forEach(function (p) { s.perms[p.key] = p; s.permOrder.push(p.key); });
+    root.querySelectorAll("[data-gk-perm-inh]").forEach(function (el) { s.inhIds[el.getAttribute("data-gk-perm-inh")] = el.id; });
+    var changedHint = root.querySelector("[data-gk-perm-changed-hint]");
+    s.changedId = changedHint ? changedHint.id : "";
+    table.querySelectorAll(":scope > thead th[data-gk-perm-role]").forEach(function (th) { s.heads[th.getAttribute("data-gk-perm-role")] = th; });
+    // Every <tbody> is filtered; only those with a heading row fold (the permissions without a group
+    // have no button to open them again).
+    s.bodies = Array.prototype.slice.call(table.querySelectorAll(":scope > tbody[data-gk-perm-group]"));
+    s.groups = s.bodies.filter(function (tb) { return !!tb.querySelector(":scope > tr.gk-perm-group-row"); });
+    s.bodies.forEach(function (tb) {
+      var g = tb.getAttribute("data-gk-perm-group");
+      var head = tb.querySelector(".gk-perm-group-head");
+      s.groupText[g] = norm(((cfg.groups || {})[g] || "") + " " + (head ? head.textContent : ""));
+    });
+    table.querySelectorAll(":scope > tbody > tr[data-gk-perm-perm]").forEach(function (tr) {
+      var p = tr.getAttribute("data-gk-perm-perm");
+      if (!s.perms[p]) return;
+      s.rows[p] = tr;
+      var name = tr.querySelector(".gk-perm-name");
+      s.text[p] = norm(p + " " + (name ? name.textContent : s.perms[p].label));
+      tr.querySelectorAll(":scope > td[data-gk-perm-role]").forEach(function (td) {
+        var r = td.getAttribute("data-gk-perm-role");
+        if (!s.roles[r]) return;
+        var box = td.querySelector(".gk-perm-check");
+        s.cells[r][p] = { td: td, box: box };
+        if (!box) return;
+        // Disabled checkboxes cannot take the focus, and a grid has to reach every cell: the
+        // locked, inherited and read-only ones say so with aria-disabled instead (no name, nothing posted).
+        if (box.disabled) { box.disabled = false; box.setAttribute("aria-disabled", "true"); }
+        if (!editable(s, r)) return;
+        // A browser that restored the form (Back) shows what was ticked before: that counts as a change.
+        s.own[r][p] = !td.classList.contains("gk-perm-inherited") && box.checked;
+        s.was[r][p] = box.getAttribute("data-gk-perm-was") === "1";
+      });
+    });
+    s.bulks = Array.prototype.slice.call(table.querySelectorAll(".gk-perm-bulk"));
+
+    // A grid: one tab stop, the arrow keys inside. Without the script it is a table of checkboxes.
+    table.setAttribute("role", "grid");
+    if (cfg.readonly) table.setAttribute("aria-readonly", "true");
+    table.querySelectorAll('input:not([type="hidden"]), button').forEach(function (el) { el.setAttribute("tabindex", "-1"); });
+    root.querySelectorAll("[data-gk-perm-js]").forEach(function (el) { el.hidden = false; });
+    root.querySelectorAll("[data-gk-perm-nojs]").forEach(function (el) { el.hidden = true; });
+    root.querySelectorAll("[data-gk-perm-mixed]").forEach(function (el) { el.indeterminate = true; });
+    s.groups.forEach(function (tb) { if (tb.hasAttribute("data-gk-perm-start-folded")) fold(s, tb, true); });
+    foldAllLabel(s);
+    root.setAttribute("data-gk-perm-ready", "");
+
+    root.addEventListener("click", function (e) {
+      var t = e.target;
+      if (!t.closest) return;
+      var box = t.closest('input[type="checkbox"]');
+      if (box && s.table.contains(box)) {
+        if (box.getAttribute("aria-disabled") === "true") { e.preventDefault(); explain(s, box); }
+        return;
+      }
+      // The whole cell is the target, not only its 18px box.
+      var td = t.closest("td.gk-perm-cell, td.gk-perm-all");
+      if (td && s.table.contains(td) && !t.closest("a, button, input, label, select")) {
+        var inner = td.querySelector(".gk-perm-check, .gk-perm-bulk");
+        // A box that cannot change says why when it is clicked itself; its padding stays quiet.
+        if (inner && shown(inner) && inner.getAttribute("aria-disabled") !== "true") { inner.click(); focusTo(s, inner); }
+        return;
+      }
+      var foldBtn = t.closest(".gk-perm-fold");
+      if (foldBtn && s.table.contains(foldBtn)) {
+        fold(s, foldBtn.closest("tbody"), foldBtn.getAttribute("aria-expanded") === "true");
+        foldAllLabel(s);
+        render(s);
+        return;
+      }
+      if (t.closest("[data-gk-perm-foldall]")) {
+        var open = s.groups.some(function (tb) { return !tb.hasAttribute("data-gk-perm-folded"); });
+        s.groups.forEach(function (tb) { fold(s, tb, open); });
+        foldAllLabel(s);
+        render(s);
+        roving(s);
+        return;
+      }
+      if (t.closest("[data-gk-perm-reset]")) reset(s);
+    });
+
+    root.addEventListener("change", function (e) {
+      var el = e.target;
+      if (el.matches("[data-gk-perm-pick]")) { pick(s, el.value); return; }
+      if (!s.table.contains(el) || el.getAttribute("aria-disabled") === "true") return;
+      if (el.classList.contains("gk-perm-check")) {
+        var r = el.closest("td").getAttribute("data-gk-perm-role");
+        var p = el.closest("tr").getAttribute("data-gk-perm-perm");
+        change(s, [[r, p]], el.checked, "cell", { role: r, permission: p });
+      } else if (el.classList.contains("gk-perm-bulk")) {
+        var kind = el.getAttribute("data-gk-perm-bulk");
+        var cell = el.closest("td, th");
+        var primary = {
+          role: kind === "role" || kind === "group" ? cell.getAttribute("data-gk-perm-role") : null,
+          permission: kind === "row" ? el.closest("tr").getAttribute("data-gk-perm-perm") : null,
+        };
+        // A mixed box is unticked underneath: a click ticks it, and so grants; a ticked one revokes.
+        change(s, scope(s, el), el.checked, kind, primary);
+      }
+    });
+
+    var search = root.querySelector("[data-gk-perm-search]");
+    if (search) {
+      search.addEventListener("input", function () { filter(s, search.value); });
+      if (search.value) filter(s, search.value);
+    }
+
+    table.addEventListener("keydown", function (e) { onKey(s, e); });
+    table.addEventListener("focusin", function (e) {
+      var t = e.target;
+      if (t === s.current || !t.closest || t.closest("table") !== s.table) return;
+      if (s.current) s.current.setAttribute("tabindex", "-1");
+      t.setAttribute("tabindex", "0");
+      s.current = t;
+    });
+
+    var form = root.closest("form");
+    if (form) form.addEventListener("reset", function () { setTimeout(function () { reset(s); }, 0); });
+
+    var select = root.querySelector("[data-gk-perm-pick]");
+    pick(s, select ? select.value : "");
+    render(s);
+    roving(s);
+    measure(s);
+    return s;
+  }
+
+  var resizeTimer = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      document.querySelectorAll("[data-gk-perm]").forEach(function (root) { if (root._gkPerm) measure(root._gkPerm); });
+    }, 150);
+  });
+
+  GK.permMatrix = {
+    /** Bind every matrix under root (idempotent): the page's on load, later ones through GK.initContent. */
+    init: function (root) {
+      var scopeEl = root && root.querySelectorAll ? root : document;
+      if (scopeEl.matches && scopeEl.matches("[data-gk-perm]")) setup(scopeEl);
+      scopeEl.querySelectorAll("[data-gk-perm]").forEach(setup);
+    },
+    /** What is not saved yet: [{ role, permission, granted }], in the matrix's order. */
+    changes: function (el) {
+      var s = stateOf(el);
+      return s ? pending(s) : [];
+    },
+    /** Back to the last saved state. Returns false when there was nothing to undo or a listener said no. */
+    reset: function (el) {
+      var s = stateOf(el);
+      return s ? reset(s) : false;
+    },
+    /** The current state is saved (an AJAX form saved it): the marks and the count go. */
+    commit: function (el) {
+      var s = stateOf(el);
+      if (s) commit(s);
+    },
+  };
+
+  if (typeof GK.initContent === "function") {
+    var initContent = GK.initContent;
+    GK.initContent = function (root) {
+      var result = initContent.apply(this, arguments);
+      GK.permMatrix.init(root);
+      return result;
+    };
+  }
+  _gkReady(function () { GK.permMatrix.init(document); });
+})();
