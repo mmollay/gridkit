@@ -212,4 +212,7 @@ return [
     'table.delete_note'        => 'Das lässt sich nicht rückgängig machen.',
     'form.cancel'              => 'Abbrechen',
     'auth.failed'              => 'Falscher Benutzername oder Passwort.',
+    // The help icon of a tooltip (Tooltip::help(), 1.112.0): its accessible name.
+    'tooltip.help'             => 'Mehr Informationen',
+    'tooltip.help_about'       => 'Mehr zu {label}',
 ];

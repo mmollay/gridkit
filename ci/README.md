@@ -260,6 +260,24 @@ its 1.111.0 block (`php ci/browser-tabs-fixture.php old`). About twenty seconds.
 GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-tabs.js
 ```
 
+The tooltip engine (1.112.0) is checked by `ci/browser-tooltip.js` on
+`ci/browser-tooltip-fixture.php`: triggers at the four window edges and corners (flip, shift,
+`auto`, the arrow on the trigger), in a box that scrolls (its visible part is the room; a small
+scroll moves the bubble, scrolling away closes it) and in a transformed box; the hover delay
+(default, 0, 800), the grace on leaving, the pointer resting on the bubble, keyboard focus,
+Escape (claimed, so a modal around it stays), blur, one at a time; names and descriptions read
+from Chrome's accessibility tree; the toggletip by mouse and keyboard (Enter, Space, Tab into its
+link and button, Escape back to the trigger, a click outside); the help icon's 24px and 44px;
+Button, a `setData()` table before and after a sort, and Form with their options; a modal;
+`GK.initContent()`; a phone with a finger; reduced motion; the contrast of every tone in light
+mode and both dark spellings under every theme; and the page without the script, with the copy
+of `js/gridkit.js` that has no 1.112.0 block and with the script added late. Each rule of the
+block was taken out in turn and a check turned red. About forty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-tooltip.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

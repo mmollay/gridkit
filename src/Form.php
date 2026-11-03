@@ -328,7 +328,16 @@ class Form
                   || ($type === 'select' && empty($f['native']));
         $labelId   = $e($name) . '-label';
 
+        // 'help' (1.112.0): a help icon that opens its text on a click (Tooltip::help()). It
+        // stands BESIDE the label, never inside it — inside, its name would become part of the
+        // field's name ("Email More about Email"). Without a visible label it follows the
+        // control. A field without 'help' renders exactly as before.
+        $help = isset($f['help']) && $f['help'] !== '' && $f['help'] !== []
+            ? Tooltip::help($f['help'], ['label' => (string) $label])
+            : '';
+
         if ($showLabel) {
+            if ($help !== '') echo '<div class="gk-label-row">';
             echo '<label class="gk-label-text" id="' . $labelId . '"'
                . ($composite ? '' : ' for="' . $e($name) . '"') . '>' . $e($label);
             // aria-hidden: the input already carries `required`, which is what
@@ -336,6 +345,7 @@ class Form
             // star", and the asterisk is decoration doing the same job twice.
             if ($isRequired) echo ' <span class="gk-required" aria-hidden="true">*</span>';
             echo '</label>';
+            if ($help !== '') echo $help . '</div>';
         }
 
         // What names a composite widget: its visible label when there is one.
@@ -369,6 +379,7 @@ class Form
             case 'richtext':    $this->renderRichtext($f, $e, $x); break;
             default:            $this->renderInput($f, $e, $x); // text, number, email, tel, url, password, date, time, datetime
         }
+        if (!$showLabel && $help !== '') echo $help;
 
         // role=alert so an error the client writes after submit is announced;
         // without it the message appears silently for anyone not looking.

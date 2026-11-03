@@ -212,4 +212,7 @@ return [
     'table.delete_note'        => 'This cannot be undone.',
     'form.cancel'              => 'Cancel',
     'auth.failed'              => 'Wrong username or password.',
+    // The help icon of a tooltip (Tooltip::help(), 1.112.0): its accessible name.
+    'tooltip.help'             => 'More information',
+    'tooltip.help_about'       => 'More about {label}',
 ];

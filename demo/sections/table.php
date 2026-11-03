@@ -18,6 +18,7 @@ use GridKit\Lang;
     <h2>Table <?= since('table') ?></h2>
 
     <h3 style="margin: 32px 0 16px;">Complete table with all features</h3>
+    <p class="demo-intro">The "VAT" header has a help icon, and the delete button a tooltip of its own instead of the browser's title <?= since('tooltip') ?></p>
         <?php
         $articles = $demoRows([
             ['article_id' => 1, 'article_number' => 'ART-001', 'name' => 'Webdesign Paket S', 'unit' => 'psch', 'net_price' => 1200.00, 'tax_rate' => 20, 'is_active' => 'active'],
@@ -44,11 +45,13 @@ use GridKit\Lang;
                         ->column('name', 'Description', ['sortable' => true, 'nowrap' => true])
                         ->column('unit', 'Unit', ['width' => '80px', 'nowrap' => true])
                         ->column('net_price', 'Net', ['format' => 'currency', 'align' => 'right', 'width' => '100px', 'nowrap' => true])
-                        ->column('tax_rate', 'VAT', ['format' => 'percent', 'width' => '80px', 'nowrap' => true])
+                        ->column('tax_rate', 'VAT', ['format' => 'percent', 'width' => '80px', 'nowrap' => true,
+                                                     'tooltip' => 'The rate the net price is taxed at'])
                         ->column('is_active', 'Status', ['format' => 'label', 'nowrap' => true])
                         ->filter('is_active', 'select', ['options' => ['active' => 'Active', 'inactive' => 'Inactive', 'draft' => 'Draft'], 'placeholder' => 'All Status'])
                         ->button('edit', ['icon' => 'edit', 'class' => 'primary', 'position' => 'right', 'params' => ['id' => 'article_id']])
-                        ->button('delete', ['icon' => 'delete', 'class' => 'danger', 'position' => 'right', 'params' => ['id' => 'article_id']])
+                        ->button('delete', ['icon' => 'delete', 'class' => 'danger', 'position' => 'right', 'params' => ['id' => 'article_id'],
+                                            'tooltip' => ['text' => 'Deletes the article', 'tone' => 'danger']])
                         ->newButton('New Article', ['icon' => 'add'])
                         ->nowrap(true)
                         // A box of its own where the content is narrower than the table

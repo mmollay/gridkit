@@ -22,7 +22,7 @@ error_reporting(E_ALL);
 require_once '%ROOT%/autoload.php';
 use GridKit\{ActionGroup, Auth, BelegModal, Button, FilterChips, Form, Header, Icon,
               Lang, Layout, Modal, PageSize, Pagination, Select, Sidebar, SortLink,
-              StatCards, Table, TableHeader, Tabs, Theme, YearFilter};
+              StatCards, Table, TableHeader, Tabs, Theme, Tooltip, YearFilter};
 Lang::set('en');
 
 // Context the examples assume a caller has already set up.

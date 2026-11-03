@@ -8062,3 +8062,907 @@ function _gkShowIfInit(root) {
   // A script that arrives after the document is ready: GK.init() has run before the wrap above.
   _gkReady(function () { init(document); });
 })();
+// === 1.112.0 — tooltip engine (GK.tooltip, GK.tip, toggletips) ===
+/*
+ * One engine for every tooltip GridKit has. There were three, each with its own idea of where to
+ * go and when to close: the CSS-only data-gk-tooltip (an ::after, cut off at the window edge, for
+ * a mouse only, not in the accessibility tree), GK.tip for title attributes (above, clamped, no
+ * keyboard) and the rich data-gk-tooltip-rich (below, a 100 ms timer). All of them, and the new
+ * toggletip, now share:
+ *
+ *   placement  the preferred side (data-gk-tooltip-pos: top, bottom, left, right, auto), the
+ *              opposite side when it does not fit, then the other two; shifted along the edge
+ *              to stay inside the window and inside the visible part of a box that scrolls; the
+ *              arrow keeps pointing at the trigger after the shift.
+ *   opening    hover after a delay (data-gk-tooltip-delay, 300 ms; none when the pointer moves
+ *              on from a tooltip just shown), keyboard focus at once (:focus-visible — a mouse
+ *              click on a button is not asking for one), a tap on a trigger that is not itself
+ *              a control. A button or link keeps its click: nothing here prevents it.
+ *   closing    Escape, blur, the pointer leaving trigger and bubble (100 ms of grace, so it can
+ *              cross into the bubble and rest there, WCAG 1.4.13), the trigger scrolling out of
+ *              sight, a tap elsewhere. One tooltip at a time, one toggletip at a time.
+ *   reading    a plain or title tooltip describes its trigger (aria-describedby) through a
+ *              hidden copy of its text, so a screen reader has it before anything is shown.
+ *
+ * Toggletip (data-gk-toggletip="text" or "#id", and the .gk-help icon Tooltip::help() writes):
+ * opens on a click, Enter or Space, stays open, may hold links and buttons. Its bubble is a live
+ * region (role=status) placed right after the trigger: the text is read out when it opens and
+ * the focus STAYS on the trigger — a help text is read, not operated, and moving the focus into a
+ * popup would take a person out of the form they were filling in. Tab from the trigger walks into
+ * the bubble's links, because they come next in the document; Escape closes it and brings the
+ * focus back; so do a click outside, a second click and the focus moving on past it.
+ *
+ * Progressive enhancement: this block marks <html data-gk-tt>, and only then does the stylesheet
+ * drop the CSS-only ::after (and the rich tooltip's .visible) — so nothing shows twice, and a
+ * page with an older copy of this file (the PawBot dashboard keeps its own) keeps the CSS-only
+ * tooltip and GK.tip exactly as they were.
+ *
+ * Nothing above is changed. Replaced or wrapped from here:
+ *   GK.tooltip.init        the rich tooltip's binding is now this engine (plus show, hide, update)
+ *   GK.tip.show/hide/init  on this engine. When the old GK.tip.init already ran — a script added
+ *                          after the page was complete — its listeners are left without effect
+ *                          (see the note at GK.tip below).
+ *   GK.table.renderStatic  a column's help icon and a row button's tooltip come back after a
+ *                          rebuild, exactly as Table.php wrote them (tooltipHtml / tooltipAttrs)
+ *   GK.table.init          a table that arrives later has its tooltips bound with it
+ */
+(function () {
+  "use strict";
+  if (!window.GK || !GK.tooltip || GK.tooltip._engine) return;
+
+  var doc = document;
+  var SIDES = ["top", "bottom", "left", "right"];
+  var OPPOSITE = { top: "bottom", bottom: "top", left: "right", right: "left" };
+  var TONES = ["neutral", "info", "success", "warning", "danger", "light"];
+  var OPEN_DELAY = 300;  // ms on hover before a tooltip opens
+  var CLOSE_DELAY = 100; // ms of grace after the pointer leaves
+  var WARM = 300;        // ms after a close in which the next hover opens at once
+  var GAP = 8;           // px between trigger and bubble; the arrow sits in it
+  var EDGE = 8;          // px a bubble keeps from the edge of the window or box
+  var MARK = "__gk_tt__:";
+  var CONTROL = "a[href], area[href], button, input, select, textarea, summary, label, iframe, " +
+    "[contenteditable=''], [contenteditable='true'], [role='button'], [role='link'], [role='checkbox'], " +
+    "[role='switch'], [role='tab'], [role='menuitem'], [role='option'], [onclick]";
+  var FOCUSABLE = "a[href], area[href], button:not(:disabled), input:not(:disabled):not([type='hidden']), " +
+    "select:not(:disabled), textarea:not(:disabled), summary, iframe, [contenteditable=''], " +
+    "[contenteditable='true'], [tabindex]:not([tabindex='-1'])";
+  var TRIGGER = "[data-gk-toggletip], [data-gk-tooltip-rich], [data-gk-tooltip], [title], [data-gk-tip]";
+
+  // From the first moment: the CSS-only ::after must not flash before the engine is bound.
+  doc.documentElement.setAttribute("data-gk-tt", "");
+
+  var cur = null;     // the open tooltip: { el, kind, bubble, o, reasons }
+  var toggle = null;  // the open toggletip: { el, bubble, o, src, home, wasHidden }
+  var pending = null, openTimer = 0, closeTimer = 0, lastClosed = 0;
+  var suppressed = null; // closed with Escape or a click: not again until the pointer leaves
+  var lastPointer = "mouse";
+  var shared = null;  // the one bubble of plain and title tooltips
+
+  function attr(el, name) {
+    var v = el.getAttribute(name);
+    return v == null ? "" : v;
+  }
+  function each(root, sel, fn) {
+    if (root.nodeType === 1 && root.matches(sel)) fn(root);
+    root.querySelectorAll(sel).forEach(fn);
+  }
+  function clamp(v, lo, hi) {
+    return hi < lo ? lo : Math.min(Math.max(v, lo), hi);
+  }
+  function inside(c, node) {
+    return !!(c && node && (c.el.contains(node) || c.bubble.contains(node)));
+  }
+
+  // ── What a trigger is ─────────────────────────────────────────────────
+
+  /** The element a '#id' toggletip shows, or null for a text. */
+  function ref(spec) {
+    if (!/^#[A-Za-z][\w:.-]*$/.test(spec)) return null;
+    return doc.getElementById(spec.slice(1));
+  }
+
+  function richOf(el) {
+    try { return doc.querySelector(attr(el, "data-gk-tooltip-rich").trim()); } catch (e) { return null; }
+  }
+
+  /** toggle, rich, plain or tip — the toggletip first: a .gk-help carries data-gk-tooltip too,
+   *  as its fallback for a page without this block. */
+  function kindOf(el) {
+    if (el.hasAttribute("data-gk-toggletip")) return attr(el, "data-gk-toggletip").trim() ? "toggle" : null;
+    if (el.hasAttribute("data-gk-tooltip-rich")) return richOf(el) ? "rich" : null;
+    if (attr(el, "data-gk-tooltip").trim()) return "plain";
+    if (el.hasAttribute("title") || el.hasAttribute("data-gk-tip")) {
+      if (el.closest("[data-gk-tip-off]")) return null;
+      if (!(attr(el, "title") || attr(el, "data-gk-tip")).trim()) return null;
+      return "tip";
+    }
+    return null;
+  }
+
+  /** The innermost trigger at or above a node: { el, kind } or null. */
+  function triggerOf(node) {
+    var el = node && node.nodeType === 1 ? node : node && node.parentElement;
+    while (el && el.closest) {
+      el = el.closest(TRIGGER);
+      if (!el) return null;
+      var k = kindOf(el);
+      if (k) return { el: el, kind: k };
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  /** The options of a trigger, from data-gk-tooltip-*; anything unknown is the default. */
+  function optionsOf(el) {
+    var pos = attr(el, "data-gk-tooltip-pos").trim();
+    if (pos !== "auto" && SIDES.indexOf(pos) < 0) pos = "top";
+    var tone = attr(el, "data-gk-tooltip-tone").trim();
+    if (TONES.indexOf(tone) < 0) tone = "";
+    var delay = parseInt(attr(el, "data-gk-tooltip-delay"), 10);
+    delay = delay >= 0 ? Math.min(delay, 10000) : OPEN_DELAY;
+    var max = attr(el, "data-gk-tooltip-max").trim();
+    if (/^\d+(\.\d+)?$/.test(max)) max += "px";
+    else if (!/^\d+(\.\d+)?(px|rem|em|ch|vw|%)$/.test(max)) max = "";
+    return {
+      pos: pos, tone: tone, delay: delay, max: max,
+      kbd: attr(el, "data-gk-tooltip-kbd").trim(),
+      wrap: el.hasAttribute("data-gk-tooltip-wrap"),
+    };
+  }
+
+  /** A control of its own between the node and the trigger (null: anywhere above). */
+  function isControl(node, trigger) {
+    for (var el = node && node.nodeType === 1 ? node : node && node.parentElement; el; el = el.parentElement) {
+      if (el.matches(CONTROL) || (el.hasAttribute("tabindex") && !el._gkTtTab)) return true;
+      if (el === trigger) return false;
+    }
+    return false;
+  }
+
+  function focusVisible(el) {
+    try { return el.matches(":focus-visible"); } catch (e) { return true; }
+  }
+
+  // ── Reading: the description ──────────────────────────────────────────
+
+  var descHost = null, descByText = Object.create(null), descSeq = 0;
+
+  /** The id of a hidden element holding this text; one per distinct text, shared. */
+  function descriptionId(text) {
+    var node = descByText[text];
+    if (node && node.isConnected) return node.id;
+    if (!descHost || !descHost.isConnected) {
+      descHost = doc.createElement("div");
+      descHost.hidden = true;
+      descHost.setAttribute("data-gk-tt-descriptions", "");
+      doc.body.appendChild(descHost);
+    }
+    node = doc.createElement("span");
+    node.id = "gk-tt-d" + ++descSeq;
+    node.textContent = text;
+    descHost.appendChild(node);
+    descByText[text] = node;
+    return node.id;
+  }
+
+  /** Join an element to the text with aria-describedby, replacing what this engine set before. */
+  function describe(el, text) {
+    var id = descriptionId(text);
+    var ids = attr(el, "aria-describedby").split(/\s+/).filter(Boolean);
+    if (el._gkTtDesc === id && ids.indexOf(id) >= 0) return;
+    var prev = el._gkTtDesc;
+    ids = ids.filter(function (x) { return x !== prev && x !== id; });
+    ids.push(id);
+    el.setAttribute("aria-describedby", ids.join(" "));
+    el._gkTtDesc = id;
+  }
+
+  /** Text a screen reader would name the element by, roughly: icons and hidden parts left out. */
+  function ownText(el) {
+    var out = "";
+    (function walk(n) {
+      for (var c = n.firstChild; c; c = c.nextSibling) {
+        if (c.nodeType === 3) out += c.nodeValue;
+        else if (c.nodeType === 1) {
+          if (c.hidden || c.getAttribute("aria-hidden") === "true") continue;
+          if (c.matches(".material-icons, .material-symbols-outlined, .material-symbols-rounded")) continue;
+          if (c.matches("img")) { out += attr(c, "alt"); continue; }
+          if (attr(c, "aria-label")) { out += attr(c, "aria-label"); continue; }
+          if (c.matches("svg")) continue;
+          walk(c);
+        }
+      }
+    })(el);
+    return out.trim();
+  }
+
+  /** The element that takes the focus for a trigger: itself, a control inside it, or itself made
+   *  focusable (tabindex=0) — a trigger the keyboard cannot reach cannot show a tooltip on focus. */
+  function focusTarget(el) {
+    if (el.matches(FOCUSABLE) || el.hasAttribute("tabindex")) return el;
+    var inner = el.querySelector(FOCUSABLE);
+    if (inner) return inner;
+    if (el.matches("button, input, select, textarea")) return el; // disabled: nothing to add
+    el.tabIndex = 0;
+    el._gkTtTab = true;
+    return el;
+  }
+
+  function descText(text, o) {
+    return o.kbd ? text + " (" + o.kbd + ")" : text;
+  }
+
+  function prepPlain(el) {
+    var text = attr(el, "data-gk-tooltip").trim();
+    var o = optionsOf(el);
+    var key = text + "\u0000" + o.kbd;
+    if (el._gkTtPlain === key) return;
+    el._gkTtPlain = key;
+    describe(focusTarget(el), descText(text, o));
+  }
+
+  /**
+   * A title, taken over: moved to data-gk-tip so the browser draws no popup of its own (GK.tip's
+   * rule since 1.23.0). For a control with no name of its own the title WAS its name and becomes
+   * aria-label, as before; for one with a name — a button with text, a labelled input — it was
+   * the description and stays one, through aria-describedby. It used to become aria-label there
+   * too, and replaced the visible name: "Save" was announced as "Save the current draft".
+   */
+  function prepTip(el) {
+    var title = attr(el, "title");
+    if (!title) return;
+    el.setAttribute("data-gk-tip", title);
+    el.removeAttribute("title");
+    var named = !!(attr(el, "aria-labelledby") || (el.labels && el.labels.length) ||
+      (attr(el, "aria-label") && !el._gkTtNamed));
+    if (!named && (el._gkTtNamed || !ownText(el))) {
+      el.setAttribute("aria-label", title);
+      el._gkTtNamed = true;
+    } else {
+      describe(el, title);
+    }
+  }
+
+  function prepRich(el) {
+    var tip = richOf(el);
+    if (!tip) return null;
+    tip.classList.add("gk-tooltip-content");
+    if (!tip.querySelector(":scope > .gk-tip-arrow")) tip.appendChild(arrowEl());
+    if (tip.id) {
+      var ids = attr(el, "aria-describedby").split(/\s+/).filter(Boolean);
+      if (ids.indexOf(tip.id) < 0) {
+        ids.push(tip.id);
+        el.setAttribute("aria-describedby", ids.join(" "));
+      }
+    }
+    if (!el.hasAttribute("tabindex") && !el.matches("a[href], button, input, select, textarea")) {
+      el.tabIndex = 0;
+      el._gkTtTab = true;
+    }
+    el._gkTipRich = true; // the mark the old binding used: it must not bind this one again
+    return tip;
+  }
+
+  /** A toggletip trigger: a button to the keyboard, and its live region right after it. */
+  function prepToggle(el) {
+    var st = el._gkTt;
+    if (st && st.bubble.isConnected && el.nextElementSibling === st.bubble) return st;
+    if (!el.matches("button, a[href], input, select, textarea, summary")) {
+      if (!el.hasAttribute("role")) el.setAttribute("role", "button");
+      if (!el.hasAttribute("tabindex")) el.tabIndex = 0;
+    }
+    if (!el.hasAttribute("aria-expanded")) el.setAttribute("aria-expanded", "false");
+    var next = el.nextElementSibling;
+    var bubble = next && next.classList.contains("gk-toggletip") && (!next._gkTtOwner || next._gkTtOwner === el) ? next : null;
+    if (!bubble) {
+      bubble = doc.createElement("span");
+      bubble.className = "gk-toggletip";
+      bubble.setAttribute("role", "status");
+      el.insertAdjacentElement("afterend", bubble);
+    }
+    bubble._gkTtOwner = el;
+    var src = ref(attr(el, "data-gk-toggletip").trim());
+    if (src && src.tagName !== "TEMPLATE" && !src.closest(".gk-toggletip")) src.hidden = true;
+    // A live region is only heard when it was in the accessibility tree before its words
+    // changed (GK.announce, 1.93.0). One made this instant waits a moment before it speaks.
+    el._gkTt = { bubble: bubble, born: Date.now() };
+    return el._gkTt;
+  }
+
+  function prepare(root) {
+    root = root && root.querySelectorAll ? root : doc;
+    each(root, "[data-gk-toggletip]", prepToggle);
+    each(root, "[data-gk-tooltip-rich]", function (el) { if (!el.hasAttribute("data-gk-toggletip")) prepRich(el); });
+    each(root, "[data-gk-tooltip]", function (el) {
+      if (!el.hasAttribute("data-gk-toggletip") && attr(el, "data-gk-tooltip").trim()) prepPlain(el);
+    });
+  }
+
+  // ── The bubbles ───────────────────────────────────────────────────────
+
+  function arrowEl() {
+    var a = doc.createElement("span");
+    a.className = "gk-tip-arrow";
+    a.setAttribute("aria-hidden", "true");
+    return a;
+  }
+
+  /** Where the shared bubble lives: an open <dialog> is in the top layer and would cover body;
+   *  a themed or dark part of the page lends it its colours. */
+  function hostFor(el) {
+    return el.closest("dialog[open]") || el.closest("[data-gk-mode], .gk-dark, [data-gk-theme]") || doc.body;
+  }
+
+  function sharedBubble(host) {
+    if (!shared) {
+      shared = doc.createElement("div");
+      shared.className = "gk-tip";
+      shared.setAttribute("role", "tooltip");
+      shared.hidden = true;
+    }
+    if (shared.parentNode !== host) host.appendChild(shared);
+    return shared;
+  }
+
+  function fill(bubble, content, o) {
+    bubble.textContent = "";
+    if (typeof content === "string") bubble.appendChild(doc.createTextNode(content));
+    else if (content) bubble.appendChild(content);
+    if (o.kbd) {
+      var k = doc.createElement("kbd");
+      k.textContent = o.kbd;
+      bubble.appendChild(k);
+    }
+    bubble.appendChild(arrowEl());
+  }
+
+  function look(bubble, o) {
+    if (o.tone) bubble.setAttribute("data-gk-tone", o.tone);
+    else bubble.removeAttribute("data-gk-tone");
+    var max = o.max || (o.wrap ? "280px" : "");
+    bubble.style.maxWidth = max ? "min(" + max + ", calc(100vw - " + 2 * EDGE + "px))" : "";
+  }
+
+  // ── Placement ─────────────────────────────────────────────────────────
+
+  /** Does this box hold position:fixed descendants (and so clip them, when it clips)? */
+  function holdsFixed(s) {
+    return s.transform !== "none" || s.filter !== "none" || (s.backdropFilter && s.backdropFilter !== "none") ||
+      s.perspective !== "none" || /paint|layout|strict|content/.test(s.contain || "") ||
+      /transform|filter|perspective/.test(s.willChange || "");
+  }
+
+  function viewport() {
+    var de = doc.documentElement;
+    return { left: 0, top: 0, right: de.clientWidth || window.innerWidth, bottom: de.clientHeight || window.innerHeight };
+  }
+
+  /**
+   * The room a bubble may use: the window, narrowed by every box around the trigger that
+   * scrolls (to its visible part) and, for a bubble that stays in place, by a box that holds it
+   * and clips. With all = true by every box that clips at all — what "can the trigger still be
+   * seen" asks. Stops at a fixed box: what lies outside it does not scroll it away.
+   */
+  function areaOf(el, all, inPlace) {
+    var de = doc.documentElement;
+    var b = viewport();
+    for (var p = el.parentElement; p && p !== doc.body && p !== de; p = p.parentElement) {
+      var s = getComputedStyle(p);
+      var ov = s.overflowX + " " + s.overflowY;
+      if (/auto|scroll|hidden|clip/.test(ov) && (all || (inPlace && holdsFixed(s)) ||
+          (/auto|scroll/.test(ov) && (p.scrollHeight > p.clientHeight + 1 || p.scrollWidth > p.clientWidth + 1)))) {
+        var r = p.getBoundingClientRect();
+        var l = r.left + p.clientLeft, t = r.top + p.clientTop;
+        b = {
+          left: Math.max(b.left, l), top: Math.max(b.top, t),
+          right: Math.min(b.right, l + p.clientWidth), bottom: Math.min(b.bottom, t + p.clientHeight),
+        };
+      }
+      if (s.position === "fixed") break;
+    }
+    return b;
+  }
+
+  function room(side, r, box) {
+    return side === "top" ? r.top - box.top : side === "bottom" ? box.bottom - r.bottom
+      : side === "left" ? r.left - box.left : box.right - r.right;
+  }
+
+  function fits(side, r, w, h, box) {
+    var vertical = side === "top" || side === "bottom";
+    var need = (vertical ? h : w) + GAP + EDGE;
+    var cross = vertical ? box.right - box.left - 2 * EDGE >= w : box.bottom - box.top - 2 * EDGE >= h;
+    return room(side, r, box) >= need && cross;
+  }
+
+  /** The sides to try, best first: the preferred, its opposite, then the other two by room.
+   *  'auto': above or below, whichever has more room, then right or left. */
+  function order(pos, r, box) {
+    var byRoom = function (a, b) { return room(a, r, box) >= room(b, r, box) ? [a, b] : [b, a]; };
+    if (pos === "auto") return byRoom("top", "bottom").concat(byRoom("right", "left"));
+    var vertical = pos === "top" || pos === "bottom";
+    return [pos, OPPOSITE[pos]].concat(vertical ? byRoom("right", "left") : byRoom("top", "bottom"));
+  }
+
+  function chooseSide(pos, r, w, h, box) {
+    var sides = order(pos, r, box);
+    for (var i = 0; i < sides.length; i++) if (fits(sides[i], r, w, h, box)) return sides[i];
+    return null;
+  }
+
+  /**
+   * Put a bubble beside its trigger. It is measured where it stands at left/top 0: inside a box
+   * that holds position:fixed (a transform, a filter) that origin is the box, not the window, and
+   * the difference is taken off — that is what keeps a toggletip in a modal where it belongs.
+   */
+  function place(c) {
+    var el = c.el, b = c.bubble, o = c.o;
+    if (!b.hasAttribute("data-gk-side")) b.setAttribute("data-gk-side", "top");
+    b.style.left = "0px";
+    b.style.top = "0px";
+    b.style.width = "";
+    var origin = b.getBoundingClientRect();
+    // Whole pixels: the width is set to this below, and a fraction rounded the other way put a
+    // bubble at the edge half a pixel past it.
+    var w = Math.ceil(origin.width), h = Math.ceil(origin.height);
+    var r = el.getBoundingClientRect();
+    var box = areaOf(el, false, c === toggle);
+    var side = chooseSide(o.pos, r, w, h, box);
+    if (!side) {
+      // Nothing fits the box: the window alone, then the side with the most room.
+      box = viewport();
+      side = chooseSide(o.pos, r, w, h, box);
+      if (!side) {
+        var best = -Infinity;
+        order(o.pos, r, box).forEach(function (s) {
+          var spare = room(s, r, box) - (s === "top" || s === "bottom" ? h : w);
+          if (spare > best) { best = spare; side = s; }
+        });
+      }
+    }
+    var x, y;
+    if (side === "top" || side === "bottom") {
+      y = side === "top" ? r.top - GAP - h : r.bottom + GAP;
+      x = clamp(r.left + r.width / 2 - w / 2, box.left + EDGE, box.right - EDGE - w);
+    } else {
+      x = side === "left" ? r.left - GAP - w : r.right + GAP;
+      y = clamp(r.top + r.height / 2 - h / 2, box.top + EDGE, box.bottom - EDGE - h);
+    }
+    b.setAttribute("data-gk-side", side);
+    // The width it was measured at: near an edge a fixed box would otherwise shrink and wrap its
+    // text again, taller than it was measured.
+    b.style.width = w + "px";
+    b.style.left = Math.round(x - origin.left) + "px";
+    b.style.top = Math.round(y - origin.top) + "px";
+
+    var a = b.querySelector(":scope > .gk-tip-arrow");
+    if (a) {
+      var border = parseFloat(getComputedStyle(b).borderLeftWidth) || 0;
+      // At the middle of the trigger, wherever the shift put the bubble — never past a corner.
+      if (side === "top" || side === "bottom") {
+        a.style.top = "";
+        a.style.left = Math.round(clamp(r.left + r.width / 2 - x, 12, w - 12) - 5 - border) + "px";
+      } else {
+        a.style.left = "";
+        a.style.top = Math.round(clamp(r.top + r.height / 2 - y, 10, h - 10) - 5 - border) + "px";
+      }
+    }
+  }
+
+  /** Can the trigger still be seen — in the window and in every box around it? */
+  function seen(el) {
+    if (!el.isConnected) return false;
+    var r = el.getBoundingClientRect();
+    if (!r.width && !r.height) return false;
+    var box = areaOf(el, true, false);
+    return r.right > box.left && r.left < box.right && r.bottom > box.top && r.top < box.bottom;
+  }
+
+  // ── Open and close ────────────────────────────────────────────────────
+
+  function cancelOpen() {
+    clearTimeout(openTimer);
+    openTimer = 0;
+    pending = null;
+  }
+  function cancelClose() {
+    clearTimeout(closeTimer);
+    closeTimer = 0;
+  }
+
+  function open(t, reason) {
+    if (t.kind === "toggle") return openToggle(t.el);
+    cancelOpen();
+    if (cur && cur.el === t.el) {
+      cur.reasons[reason] = true;
+      cancelClose();
+      return;
+    }
+    close();
+    var o = optionsOf(t.el), bubble;
+    if (t.kind === "rich") {
+      bubble = prepRich(t.el);
+      if (!bubble) return;
+    } else {
+      var text;
+      if (t.kind === "tip") {
+        prepTip(t.el);
+        text = attr(t.el, "data-gk-tip");
+      } else {
+        prepPlain(t.el);
+        text = attr(t.el, "data-gk-tooltip").trim();
+      }
+      bubble = sharedBubble(hostFor(t.el));
+      fill(bubble, text, o);
+      bubble.hidden = false;
+    }
+    look(bubble, o);
+    cur = { el: t.el, kind: t.kind, bubble: bubble, o: o, reasons: {} };
+    cur.reasons[reason] = true;
+    place(cur);
+  }
+
+  function close() {
+    cancelClose();
+    if (!cur) return;
+    var c = cur;
+    cur = null;
+    c.bubble.removeAttribute("data-gk-side");
+    if (c.kind === "rich") c.bubble.classList.remove("visible");
+    else c.bubble.hidden = true;
+    lastClosed = Date.now();
+  }
+
+  /** A reason to stay open is gone; close when none is left — after the grace, for the pointer. */
+  function release(reason, delay) {
+    if (!cur || !cur.reasons[reason]) return;
+    var c = cur;
+    var go = function () {
+      if (cur !== c) return;
+      delete c.reasons[reason];
+      if (!Object.keys(c.reasons).length) close();
+    };
+    if (!delay) return go();
+    cancelClose();
+    closeTimer = setTimeout(go, delay);
+  }
+
+  function openToggle(el) {
+    var st = prepToggle(el);
+    if (toggle && toggle.el === el) return;
+    closeToggle();
+    cancelOpen();
+    close();
+    var o = optionsOf(el);
+    var t = { el: el, bubble: st.bubble, o: o, src: null, home: null, wasHidden: false };
+    toggle = t;
+    el.setAttribute("aria-expanded", "true");
+    var show = function () {
+      if (toggle !== t) return;
+      var spec = attr(el, "data-gk-toggletip").trim();
+      var src = ref(spec), content;
+      if (src && src.tagName === "TEMPLATE") {
+        content = src.content.cloneNode(true);
+      } else if (src) {
+        // The element itself moves in — its links keep their listeners, its ids stay unique —
+        // and goes back where it was on close.
+        t.src = src;
+        t.home = doc.createComment("gk-toggletip");
+        src.parentNode.insertBefore(t.home, src);
+        t.wasHidden = src.hidden;
+        src.hidden = false;
+        content = src;
+      } else {
+        content = spec;
+      }
+      fill(t.bubble, content, o);
+      look(t.bubble, o);
+      place(t);
+    };
+    var wait = 150 - (Date.now() - st.born);
+    if (wait > 0) setTimeout(show, wait);
+    else show();
+  }
+
+  function closeToggle(refocus) {
+    if (!toggle) return;
+    var t = toggle;
+    toggle = null;
+    t.el.setAttribute("aria-expanded", "false");
+    if (t.src) {
+      t.src.hidden = t.wasHidden;
+      if (t.home && t.home.parentNode) t.home.parentNode.replaceChild(t.src, t.home);
+      else if (t.src.parentNode === t.bubble) t.bubble.removeChild(t.src);
+    }
+    t.bubble.textContent = "";
+    t.bubble.removeAttribute("data-gk-side");
+    t.bubble.removeAttribute("data-gk-tone");
+    t.bubble.removeAttribute("style");
+    if (refocus && t.el.isConnected) {
+      try { t.el.focus({ preventScroll: true }); } catch (e) { t.el.focus(); }
+    }
+  }
+
+  function toggleOf(el) {
+    if (toggle && toggle.el === el) closeToggle();
+    else openToggle(el);
+  }
+
+  /** Whatever is open whose trigger has left the page (a rebuilt table) closes with it. */
+  function dropDetached() {
+    if (cur && !cur.el.isConnected) close();
+    if (toggle && !toggle.el.isConnected) closeToggle();
+  }
+
+  // ── Listeners: delegated, so content that arrives later needs no binding to work ──
+
+  doc.addEventListener("pointerover", function (e) {
+    if (e.pointerType === "touch") return;
+    dropDetached();
+    if (cur && cur.bubble.contains(e.target)) {
+      cur.reasons.hover = true;
+      cancelClose();
+      return;
+    }
+    var t = triggerOf(e.target);
+    if (cur && t && cur.el === t.el) {
+      cur.reasons.hover = true;
+      cancelClose();
+      // An older copy of this file, loaded late, may still move a rich tooltip on mouseenter.
+      if (t.kind === "rich") requestAnimationFrame(function () { if (cur && cur.el === t.el) place(cur); });
+      return;
+    }
+    if (!t || t.kind === "toggle" || suppressed === t.el) return;
+    if (pending && pending.el === t.el) return;
+    cancelOpen();
+    // The title goes now, before the browser starts its own popup.
+    if (t.kind === "tip") prepTip(t.el);
+    var o = optionsOf(t.el);
+    var warm = (cur && cur.reasons.hover) || Date.now() - lastClosed < WARM;
+    if (warm || o.delay === 0) return open(t, "hover");
+    pending = t;
+    openTimer = setTimeout(function () {
+      var p = pending;
+      pending = null;
+      if (p && p.el.isConnected) open(p, "hover");
+    }, o.delay);
+  }, true);
+
+  doc.addEventListener("pointerout", function (e) {
+    if (e.pointerType === "touch") return;
+    var to = e.relatedTarget;
+    if (pending && !(to && pending.el.contains(to))) cancelOpen();
+    if (suppressed && !(to && suppressed.contains(to))) suppressed = null;
+    if (!cur || !cur.reasons.hover || !inside(cur, e.target) || inside(cur, to)) return;
+    release("hover", CLOSE_DELAY);
+  }, true);
+
+  doc.addEventListener("focusin", function (e) {
+    var t = triggerOf(e.target);
+    if (!t || t.kind === "toggle") return;
+    // The trigger itself, or the control a wrapping trigger holds — not every field that happens
+    // to sit inside an element with a title.
+    if (t.el !== e.target && t.el.querySelector(FOCUSABLE) !== e.target) return;
+    // Only a focus a person can see asks for a tooltip: Tab does, a mouse click on a button
+    // does not (it would cover what was just clicked).
+    if (!focusVisible(e.target)) return;
+    suppressed = null;
+    open(t, "focus");
+  }, true);
+
+  doc.addEventListener("focusout", function (e) {
+    var to = e.relatedTarget;
+    if (cur && cur.reasons.focus && inside(cur, e.target) && !inside(cur, to)) release("focus");
+    // A toggletip closes when the focus moves on past it — not when it goes nowhere (a click
+    // on the bubble's own text takes the focus to the body).
+    if (toggle && to && inside(toggle, e.target) && !inside(toggle, to)) closeToggle();
+  }, true);
+
+  doc.addEventListener("pointerdown", function (e) {
+    lastPointer = e.pointerType || "mouse";
+    dropDetached();
+    if (cur && !inside(cur, e.target)) close();
+    else if (cur && lastPointer !== "touch" && cur.el.contains(e.target) && isControl(e.target, null)) {
+      // A click on a button closes its tooltip, as GK.tip always did: what it said is done.
+      suppressed = cur.el;
+      close();
+    }
+  }, true);
+
+  doc.addEventListener("keydown", function (e) {
+    lastPointer = "keyboard";
+    // A toggletip on an element that is not a button: Enter and Space, as on a button.
+    if ((e.key === "Enter" || e.key === " ") && e.target && e.target.matches &&
+        e.target.matches("[data-gk-toggletip]:not(button, a[href], input, select, textarea, summary)")) {
+      e.preventDefault();
+      toggleOf(e.target);
+    }
+  }, true);
+
+  // Escape is claimed (preventDefault) when it closed something the keyboard was on: a modal or
+  // a sheet ignores a key that was handled, so it stays, and the next Escape closes it. A
+  // tooltip the mouse merely rests on closes without taking the key.
+  window.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape" && e.key !== "Esc") return;
+    if (toggle) {
+      closeToggle(inside(toggle, doc.activeElement));
+      e.preventDefault();
+      return;
+    }
+    if (cur) {
+      var keyboard = !!cur.reasons.focus || cur.el.contains(doc.activeElement);
+      suppressed = cur.el;
+      close();
+      if (keyboard) e.preventDefault();
+    }
+  }, true);
+
+  doc.addEventListener("click", function (e) {
+    var tg = e.target && e.target.closest ? e.target.closest("[data-gk-toggletip]") : null;
+    if (tg) {
+      toggleOf(tg);
+      return;
+    }
+    if (toggle && !inside(toggle, e.target)) closeToggle();
+    if (lastPointer !== "touch") return;
+    // A tap. On a trigger that is only a trigger it shows (or, the second time, hides) the
+    // tooltip; on a button or a link it does nothing here — the click is theirs, untouched.
+    var t = triggerOf(e.target);
+    if (!t || t.kind === "toggle" || isControl(e.target, t.el)) return;
+    if (cur && cur.el === t.el) close();
+    else open(t, "touch");
+  });
+
+  var frame = 0;
+  function follow() {
+    if (frame || (!cur && !toggle)) return;
+    frame = requestAnimationFrame(function () {
+      frame = 0;
+      if (cur) { if (seen(cur.el)) place(cur); else close(); }
+      if (toggle) { if (seen(toggle.el)) place(toggle); else closeToggle(); }
+    });
+  }
+  window.addEventListener("scroll", follow, true);
+  window.addEventListener("resize", follow);
+  window.addEventListener("blur", function () {
+    cancelOpen();
+    if (cur && !cur.reasons.focus) close();
+  });
+
+  // ── API ───────────────────────────────────────────────────────────────
+
+  GK.tooltip._engine = true;
+  /** Bind the tooltips in root (default: the document). Idempotent; GK.initContent calls it. */
+  GK.tooltip.init = function (root) {
+    if (doc.body) prepare(root);
+  };
+  /** Open the tooltip (or toggletip) of an element now, without a delay. */
+  GK.tooltip.show = function (el) {
+    var k = el && el.nodeType === 1 ? kindOf(el) : null;
+    if (k) open({ el: el, kind: k }, "api");
+  };
+  /** Close what is open: the tooltip and the toggletip. */
+  GK.tooltip.hide = function () {
+    cancelOpen();
+    close();
+    closeToggle();
+  };
+  /** Place what is open again — after its text or the layout around it changed. */
+  GK.tooltip.update = function () {
+    if (cur) place(cur);
+    if (toggle) place(toggle);
+  };
+
+  /*
+   * GK.tip, on the same engine: the title handling (data-gk-tip, data-gk-tip-off, \n for a line
+   * break) is unchanged, the popup is this one. When this file was added to a page that was
+   * already complete, the old GK.tip.init has run and its listeners stay on the document — they
+   * cannot be removed. They decide through GK.tip.cur and show through GK.tip.show: cur now
+   * always answers "something else", so their timer never calls show, and hide only closes a
+   * title tooltip this API or the mouse opened (their scroll, click and keydown close it, as
+   * they always did).
+   */
+  var elsewhere = { contains: function () { return true; } };
+  try {
+    Object.defineProperty(GK.tip, "cur", { configurable: true, get: function () { return elsewhere; }, set: function () {} });
+  } catch (e) { /* a frozen GK.tip keeps its own */ }
+  GK.tip.show = function (target) {
+    if (target && target.nodeType === 1 && (target.hasAttribute("title") || target.hasAttribute("data-gk-tip"))) {
+      open({ el: target, kind: "tip" }, "api");
+    }
+  };
+  GK.tip.hide = function () {
+    clearTimeout(GK.tip.timer);
+    GK.tip.timer = null;
+    if (cur && cur.kind === "tip" && (cur.reasons.api || cur.reasons.hover)) close();
+  };
+  GK.tip.init = function () {};
+
+  // ── Tables ────────────────────────────────────────────────────────────
+
+  /** A row button's name, as the rebuild gives it: 'aria', 'title', the catalogue, the name. */
+  function rowButtonName(name, b) {
+    if (b.aria) return String(b.aria);
+    if (b.title) return String(b.title);
+    var lang = window.GK_LANG || {};
+    if (lang["action_" + name]) return lang["action_" + name];
+    var s = String(name).replace(/[_-]+/g, " ");
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  /** Copy the attributes of a string like ' data-gk-tooltip="…" data-gk-tooltip-pos="…"'. */
+  function setAttrs(el, attrs) {
+    var tpl = doc.createElement("template");
+    tpl.innerHTML = "<b" + attrs + "></b>";
+    var b = tpl.content.firstChild;
+    if (!b) return;
+    for (var i = 0; i < b.attributes.length; i++) el.setAttribute(b.attributes[i].name, b.attributes[i].value);
+  }
+
+  if (GK.table && typeof GK.table.renderStatic === "function") {
+    var renderStatic = GK.table.renderStatic;
+    /*
+     * The rebuild of a setData() table writes its row buttons and header cells itself and knows
+     * no 'tooltip'. Table.php puts its own markup into the data block (tooltipAttrs on a button,
+     * tooltipHtml on a column). A button with one is handed to the rebuild with a marked title,
+     * which is then swapped for those attributes; each column's help icon goes back into its
+     * header cell. The rebuild is not changed, and a table without tooltips is not touched.
+     */
+    GK.table.renderStatic = function (wrap) {
+      var data = wrap && wrap._gkData;
+      var buttons = data && data.buttons;
+      var marked = null;
+      if (buttons && typeof buttons === "object") {
+        Object.keys(buttons).forEach(function (name) {
+          var b = buttons[name];
+          if (!b || !b.tooltipAttrs) return;
+          marked = marked || Object.assign({}, buttons);
+          marked[name] = Object.assign({}, b, { title: MARK + name, aria: rowButtonName(name, b) });
+        });
+      }
+      if (marked) data.buttons = marked;
+      var result;
+      try {
+        result = renderStatic.apply(this, arguments);
+      } finally {
+        if (marked) data.buttons = buttons;
+      }
+      if (data && wrap.querySelectorAll) {
+        if (marked) {
+          wrap.querySelectorAll('[title^="' + MARK + '"]').forEach(function (el) {
+            var b = buttons[attr(el, "title").slice(MARK.length)];
+            el.removeAttribute("title");
+            if (b && b.tooltipAttrs) setAttrs(el, b.tooltipAttrs);
+          });
+        }
+        var cols = data.columns || {};
+        var keys = Object.keys(cols);
+        if (keys.some(function (k) { return cols[k] && cols[k].tooltipHtml; })) {
+          var table = wrap.querySelector("table.gk-table");
+          var ths = table ? Array.prototype.filter.call(table.querySelectorAll(":scope > thead > tr > th"), function (th) {
+            return !th.matches(".gk-cb-col, .gk-actions-col");
+          }) : [];
+          keys.forEach(function (k, i) {
+            var th = ths[i];
+            if (th && cols[k] && cols[k].tooltipHtml && !th.querySelector(".gk-help")) {
+              th.insertAdjacentHTML("beforeend", cols[k].tooltipHtml);
+            }
+          });
+        }
+        dropDetached();
+        prepare(wrap);
+      }
+      return result;
+    };
+  }
+  if (GK.table && typeof GK.table.init === "function") {
+    var tableInit = GK.table.init;
+    GK.table.init = function (root) {
+      var result = tableInit.apply(this, arguments);
+      if (doc.body) prepare(root);
+      return result;
+    };
+  }
+
+  _gkReady(function () { prepare(doc); });
+})();
