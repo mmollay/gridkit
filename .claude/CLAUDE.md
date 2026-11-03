@@ -19,7 +19,8 @@ Every tracked file that does not start with a dot is served. Tool notes live und
 - `ci/*.js` check behaviour in a real browser (`browser.js`, `browser-picker.js`,
   `browser-reiter.js`, `browser-reiter-varianten.js`, `browser-sortierbar.js`,
   `browser-1105.js` for bulk actions, CSV export and conditional fields,
-  `browser-karten.js` for the compact table card on a phone) and
+  `browser-karten.js` for the compact table card on a phone,
+  `browser-sticky.js` for `stickyHead()`/`stickyColumn()`) and
   contrast (`farben.js`). They are not part of the suite and need the `playwright`
   package. Run them when touching `js/gridkit.js` or the markup they exercise.
 - `node ci/demo-coverage.js` opens the demo and fails when a class of `css/blocks.json` is
