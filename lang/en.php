@@ -215,4 +215,9 @@ return [
     // The help icon of a tooltip (Tooltip::help(), 1.112.0): its accessible name.
     'tooltip.help'             => 'More information',
     'tooltip.help_about'       => 'More about {label}',
+
+    // Tabs in a form (1.113.0): the error badge of a tab, one and more than one. The script reads
+    // both off the form's hidden tab field, so the browser counts in the page's language.
+    'form.tab_errors_one'      => '{n} error',
+    'form.tab_errors'          => '{n} errors',
 ];

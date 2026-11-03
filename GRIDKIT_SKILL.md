@@ -1559,6 +1559,81 @@ $errors   = ['customer' => 'Required', '_form' => 'Could not save'];
     ->render();
 ```
 
+**Tabs in a form (since 1.113.0).** `->tab($key, $label, $opts)` starts a tab: every field added after it,
+up to the next `tab()` or `->endTabs()`, goes into that tab's panel. Fields before the first `tab()` stand
+above the tabs (the fields that belong to every tab: a number, a name); fields after `->endTabs()` stand
+below them, and the buttons below everything. Without `endTabs()` the tabs run to the end. One set of tabs
+per form. Never write tab markup into a form by hand — a required field in a hidden tab then blocks the
+submit with a browser message nobody can see, and a message from `errors()` marks a field nobody can find.
+
+```php
+// A customer form shown again after a failed save ($_POST carries the tab the user was on):
+$roles    = ['admin' => 'Admin', 'sales' => 'Sales'];
+$canGrant = true;
+$customer = ['number' => 'C-7', 'name' => 'Ada Lovelace', 'city' => ''];
+$errors   = ['city' => 'Required'];
+
+(new Form('customer'))
+    ->action('save.php')
+    ->field('number', 'Customer no.', 'text', ['width' => 8])        // above the tabs
+    ->tab('general', 'General', ['icon' => 'person'])
+        ->field('name',  'Name',  'text',  ['required' => true])
+        ->field('email', 'Email', 'email')
+    ->tab('address', 'Address', ['icon' => 'home'])
+        ->field('city', 'City', 'text', ['required' => true])
+    ->tab('rights', 'Rights', ['count' => count($roles), 'disabled' => !$canGrant])
+        ->field('roles', 'Roles', 'multiselect', ['options' => $roles])
+    ->endTabs()
+    ->field('note', 'Internal note', 'textarea')                     // below the tabs
+    ->tabsRemember()                     // optional: reopen the last tab next time (per form id)
+    ->values($_POST ?: $customer)        // also hands back the posted tab (Form::TAB_FIELD)
+    ->errors($errors)                    // the first tab with an error opens, each such tab gets a badge
+    ->submit('Save')
+    ->render();
+```
+
+| `tab()` option | Effect |
+|---|---|
+| `icon` | a Material icon before the word (`gk-tab-icon`) |
+| `badge` | a short word after it (`gk-tab-badge`) — only for a deviation ("Customised"), never "Default" |
+| `count` | a whole number of things behind the tab (`gk-tab-count`) |
+| `disabled` | the tab cannot be chosen; its fields are still posted as they are |
+
+| Form method | Effect |
+|---|---|
+| `->tabsStyle($style)` | the row's style: `'karte'` (the default: page tabs on their surface, `gk-tab-flaeche`), `'linie'`, `'kapsel'` or `'text'` |
+| `->tabsSecondary()` | the second-row shape (`gk-tab-nav-karte gk-tab-nav-secondary`, no surface) — call it for a form in a **modal, a side sheet or a panel of the page's own tabs**: the window is the surface. The form cannot see where it is rendered, so the page says. Only with `'karte'` |
+| `->activeTab($key)` | the tab to start on instead of the first, e.g. `->activeTab($_GET['tab'] ?? '')` |
+| `->tabsRemember()` | the browser notes the chosen tab per form id (`localStorage`, key `gk-form-tab-<id>`) and opens it next time — only when the page chose none (no error, no posted tab, no `activeTab()`); blocked storage just means no memory. Give such a form an id that names its purpose |
+
+Unknown options, a style that does not exist, a duplicate key (renamed `key-2`), `tab()` inside a `row()` (the
+row is closed first), a second set of tabs (its fields stand below the first) and an `activeTab()` that names
+no tab that can be opened raise `E_USER_WARNING` and fall back. A form without `tab()` renders exactly as before.
+
+- **Which tab opens:** the first tab with an error (from `errors()` or a field's own `'error'`; an error above
+  the tabs chooses none) — even a disabled one, since a message nobody can reach is the problem; else the tab
+  posted back in the hidden field `_gk_tab` (`Form::TAB_FIELD`), handed in through `->values($_POST)`; else
+  `activeTab()`; else the first tab that is not disabled. All of it in PHP, so it holds with no script.
+- **The posted tab:** the form posts `_gk_tab` (the tab on screen), so a failed save opens where the user was.
+  Leave it out when you store `$_POST` as a whole. A value that names no open tab is ignored without a warning.
+- **Error badges:** every tab with errors carries `<span class="gk-tab-badge gk-tab-badge-error">2 errors</span>`
+  — the count in words (`form.tab_errors_one` / `form.tab_errors`), never colour alone. A server message counts
+  until the form is sent again.
+- **Every panel is in the page and is posted:** a hidden panel is `display:none`, never `disabled`. `showIf`
+  works across tabs (a field in one tab may depend on a field in another).
+- **With `js/gridkit.js` 1.113.0:** a submit the browser blocks for a field in a hidden tab opens that tab, and
+  the browser focuses the field and shows its own message — the first rejected field in page order, one switch
+  per submit, for a submit button, Enter, `requestSubmit()` and `reportValidity()` (not for a script's
+  `checkValidity()`). After that first try each tab with rejected fields carries the badge too, counted again on
+  every input and change and gone when the tab is clean. Errors an AJAX form gets back open the tab of the first
+  one when it is hidden, and so does an empty required `richtext`. The chosen tab is kept in `_gk_tab`.
+  `GK.formTabs.refresh(form)` counts again after a script changed what is valid (`setCustomValidity()`).
+- **With an older `js/gridkit.js`** (or none): the tabs switch as any tab row does, and the server's tab and
+  badges are there; the jump to a rejected field, the live badges, remembering and following the user's clicks
+  into `_gk_tab` are missing — the form then posts the tab it was rendered with.
+- The markup is the authored shape of **Tabs** (each button `type="button"`, so a click on a tab never submits),
+  so a card row turns into the phone grid up to 600px and nests inside a page's own tabs with the same keys.
+
 **Field types.** Twelve have rendering of their own:
 
 `textarea` · `select` (searchable) · `multiselect` · `ajaxselect` · `checkbox` ·
@@ -2273,6 +2348,11 @@ document.addEventListener('gk:tabload', e => { /* a lazy panel: { tabsId, key, p
 
 // Tooltips (since 1.112.0) — see "Tooltips". Delegated: new content needs no call.
 GK.tooltip.show(el);  GK.tooltip.hide();  GK.tooltip.update();
+
+// Tabs in a form (since 1.113.0) — Form::tab(), see "Form". Nothing to call for the usual case; after a
+// script changed what is valid (setCustomValidity), count the error badges of the tabs again:
+GK.formTabs.refresh(document.getElementById('customer'));
+GK.formTabs.init(container);     // inserted markup: GK.initContent(container) does this too
 ```
 
 An AJAX form (`Form::ajax()`) reports its own outcome: `{ok: true, message: '…'}` closes the modal, refreshes
@@ -2809,6 +2889,8 @@ Links between pages take the same classes (`<nav class="gk-tab-nav gk-tab-nav-ka
 - **Nesting:** a `.gk-tabs` inside a panel of another is fine since 1.101.0 — a click on an outer tab
   touches only its own row and panels; the inner choice stays. The inner row takes the second-row
   shape. `data-tab` keys may repeat between levels.
+- **Tabs inside a form** (since 1.113.0): use `Form::tab()` (see **Form**), not this markup by hand — it
+  opens the tab of a field the browser or the server rejects and puts the error badge on every such tab.
 - **Steps on a phone:** `.gk-steps` draws a shorter line before each step up to 480px; three steps
   of the length "Changes · Approval · Publish" fit in 340px, and when a band wraps after all, no line
   hangs at the end or the start of a row.

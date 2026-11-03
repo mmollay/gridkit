@@ -11739,3 +11739,15 @@ html[data-gk-tt] .gk-tooltip-content[data-gk-tone] {
     transition: none;
   }
 }
+
+/* === 1.113.0 — tabs in a form === */
+/* Form::tab() writes the authored tab markup, so the tab rules above draw it; no class is new. One thing
+   is: the fields after Form::endTabs() keep a field's distance from what stands above them. The last field
+   of a panel gives its margin up (.gk-field:last-child), so a footer field touched the surface of the tabs.
+   Vertical margins collapse, so a field with a margin of its own gains nothing twice. Scoped by the hidden
+   tab field Form writes before the tabs, so a .gk-tabs written by hand into a form is left as it was. No
+   colour here: the same in light and in both dark spellings. */
+.gk-form > [data-gk-form-tab] + .gk-tabs ~ .gk-field,
+.gk-form > [data-gk-form-tab] + .gk-tabs ~ .gk-form-row {
+  margin-top: 16px;
+}

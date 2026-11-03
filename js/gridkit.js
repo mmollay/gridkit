@@ -5968,7 +5968,7 @@ document.addEventListener(
     e.preventDefault();
     e.stopPropagation();
     var label = missing.getAttribute("data-gk-required-rich") || "";
-    var msg = _t("field_required").replace("{name}", label);
+    var msg = _tOr("field_required", "{name} is required.").replace("{name}", label); // _t lives inside the closure above: here it threw before the toast
     if (window.GK && GK.toast) GK.toast.error(msg);
     else alert(msg);
     var wrap = missing.previousElementSibling;
@@ -8965,4 +8965,338 @@ function _gkShowIfInit(root) {
   }
 
   _gkReady(function () { prepare(doc); });
+})();
+
+// === 1.113.0 — tabs in a form (Form::tab) ===
+/*
+ * Form::tab() renders the authored tab markup inside a <form>, with a hidden input in front of it:
+ *
+ *   <input type="hidden" name="_gk_tab" value="address" data-gk-form-tab data-gk-tab-error="{n} error"
+ *          data-gk-tab-errors="{n} errors" [data-gk-tab-remember] [data-gk-tab-chosen]>
+ *   <div class="gk-tabs"> <div class="gk-tab-nav …">…</div> <div class="gk-tab-panel" data-tab="…">…</div> … </div>
+ *
+ * Switching is the existing tab script's job (GK.tabsMarkup and its click handler). This block adds what a
+ * form needs on top of it:
+ *   1. A submit the browser blocks for a field in a hidden tab opens that tab first. The browser fires
+ *      `invalid` at every rejected control in tree order and only then shows its message at the first one
+ *      it can focus — a control in a display:none panel is not one, so the submit failed in silence. The
+ *      tab of the FIRST rejected control is opened while those events run, and the browser itself then
+ *      focuses the control and shows its own message. Once per submit: a second switch would show a
+ *      different tab from the one the message is in. Only for a real submit (a submit button, Enter,
+ *      requestSubmit(), reportValidity()) — a page that calls checkValidity() to grey out a button would
+ *      otherwise make the tabs jump while somebody types.
+ *   2. An error badge on every tab with something wrong in it — a message under a field (server, AJAX), or,
+ *      after the first submit, a field the browser rejects — with the count in words, kept current on
+ *      input and change and gone when the tab is clean. PHP writes the same badge for errors(), so it is
+ *      there without this block.
+ *   3. The chosen tab goes into the hidden input, so a form shown again after a failed save opens where
+ *      the user was (Form reads it back through values()). With tabsRemember() it is also kept per form id
+ *      in localStorage and opened next time, unless the page chose a tab (an error, a posted tab, activeTab()).
+ *   4. Errors an AJAX form gets back (GK.form writes them under the fields): when the first of them is in a
+ *      hidden tab, that tab opens and the field takes the focus GK.form could not give it.
+ *   5. A required rich-text field the check further up (data-gk-required-rich) finds empty in a hidden tab:
+ *      its tab opens, so the toast points at something on screen.
+ *
+ * A copy of this file without the block (the PawBot dashboard keeps its own) still switches the tabs and
+ * shows the badges PHP wrote; the jump, the live badges, remembering and following the user's clicks into
+ * the hidden input are what it lacks. Nothing existing is changed: GK.initContent is wrapped, as 1.105.0 does.
+ */
+(function () {
+  "use strict";
+  if (!window.GK) return;
+
+  var MARK = "input[data-gk-form-tab]";
+  var STORE = "gk-form-tab-";
+
+  function own(frame, sel) {
+    return Array.prototype.filter.call(frame.querySelectorAll(sel), function (el) {
+      return el.closest(".gk-tabs") === frame;
+    });
+  }
+  function buttonFor(st, key) {
+    return own(st.frame, ".gk-tab-btn").filter(function (b) { return b.dataset.tab === key; })[0] || null;
+  }
+  function on(el) { return el.classList.contains("gk-active"); }
+  function enabled(b) { return !b.disabled && b.getAttribute("aria-disabled") !== "true"; }
+
+  /** The panel of THIS form's tabs that holds el — not one of a page's own tabs around the form. */
+  function panelOf(st, el) {
+    var p = el.closest(".gk-tab-panel");
+    return p && p.closest(".gk-tabs") === st.frame ? p : null;
+  }
+
+  function word(st, n) {
+    var one = st.input.getAttribute("data-gk-tab-error") || "{n} error";
+    var many = st.input.getAttribute("data-gk-tab-errors") || "{n} errors";
+    return (n === 1 ? one : many).replace("{n}", String(n));
+  }
+
+  function read(form) {
+    try { return window.localStorage.getItem(STORE + form.id); } catch (e) { return null; }
+  }
+  function write(form, key) {
+    try { window.localStorage.setItem(STORE + form.id, key); } catch (e) { /* private mode, blocked storage */ }
+  }
+
+  /** The hidden input follows the tab on screen; with tabsRemember() so does the browser's note. */
+  function sync(st) {
+    var b = own(st.frame, ".gk-tab-btn").filter(on)[0];
+    if (!b) return;
+    st.input.value = b.dataset.tab;
+    if (st.remember && st.form.id) write(st.form, b.dataset.tab);
+  }
+
+  /**
+   * Open a tab the way a user does: GK.tabs.select() where a newer script has it, else a click on the tab.
+   * A disabled tab takes no click, and a field in it can still hold the submit up — then the classes are set
+   * here, exactly as the click handler sets them, because a message nobody can reach is worse.
+   */
+  function open(st, b) {
+    if (!b || on(b)) return;
+    if (GK.tabs && typeof GK.tabs.select === "function") {
+      try { GK.tabs.select(st.frame, b.dataset.tab); } catch (e) { /* an older or a different signature */ }
+    }
+    if (!on(b)) b.click();
+    if (!on(b)) {
+      own(st.frame, ".gk-tab-btn").forEach(function (x) {
+        x.classList.toggle("gk-active", x === b);
+        if (x.getAttribute("role") === "tab") {
+          x.setAttribute("aria-selected", x === b ? "true" : "false");
+          x.tabIndex = x === b ? 0 : -1;
+        }
+      });
+      own(st.frame, ".gk-tab-panel").forEach(function (p) {
+        p.classList.toggle("gk-active", p.dataset.tab === b.dataset.tab);
+      });
+    }
+    sync(st);
+  }
+
+  function richEmpty(el) {
+    return String(el.value || "").replace(/<[^>]*>/g, "").replace(/&nbsp;|\s/g, "") === "";
+  }
+
+  /** A field counts once: a message under it, or — after the first submit — a control the browser rejects. */
+  function wrong(st, field) {
+    var slot = field.querySelector(".gk-field-error");
+    if (slot && slot.textContent.trim() !== "") return true;
+    if (!st.checked) return false;
+    var bad = Array.prototype.some.call(field.querySelectorAll("input, select, textarea"), function (c) {
+      return c.willValidate && c.validity && !c.validity.valid;
+    });
+    if (bad) return true;
+    var rich = field.querySelector("[data-gk-required-rich]");
+    return !!rich && richEmpty(rich);
+  }
+
+  /** The fields of the form in DOM order, without those showIf has put away (a sheet around the form may be hidden too). */
+  function fields(st) {
+    return Array.prototype.filter.call(st.form.querySelectorAll(".gk-field"), function (f) {
+      var away = f.closest("[hidden]");
+      return !away || !st.form.contains(away);
+    });
+  }
+
+  function badges(st) {
+    var count = {};
+    fields(st).forEach(function (f) {
+      var p = panelOf(st, f);
+      if (p && wrong(st, f)) count[p.dataset.tab] = (count[p.dataset.tab] || 0) + 1;
+    });
+    own(st.frame, ".gk-tab-btn").forEach(function (b) {
+      var n = count[b.dataset.tab] || 0;
+      var badge = b.querySelector(".gk-tab-badge-error");
+      if (!n) {
+        if (badge) badge.remove();
+        return;
+      }
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "gk-tab-badge gk-tab-badge-error";
+        b.appendChild(badge);
+      }
+      var text = word(st, n);
+      if (badge.textContent !== text) badge.textContent = text;
+    });
+  }
+
+  function later(st) {
+    clearTimeout(st.timer);
+    st.timer = setTimeout(function () { badges(st); }, 0);
+  }
+
+  /** What GK.form would have focused (the control it marked), else the first control a person can reach. */
+  function focusField(field) {
+    var c = field.querySelector(".gk-has-error, [aria-invalid='true']") ||
+      field.querySelector("input:not([type=hidden]):not([tabindex='-1']), select, textarea, [tabindex='0']");
+    if (c && typeof c.focus === "function") c.focus();
+  }
+
+  /** A submit is coming: set by a submit button's click (Enter in a field is one), requestSubmit() and reportValidity(). */
+  function intend(form) {
+    form._gkTabIntent = true;
+    clearTimeout(form._gkTabIntentT);
+    form._gkTabIntentT = setTimeout(function () { form._gkTabIntent = false; }, 0);
+  }
+
+  function setup(form) {
+    if (!form || form.nodeName !== "FORM") return null;
+    if (form._gkFormTabs !== undefined) return form._gkFormTabs;
+    var input = form.querySelector(MARK);
+    var frame = input && input.nextElementSibling;
+    if (!frame || !frame.classList.contains("gk-tabs")) {
+      form._gkFormTabs = null;
+      return null;
+    }
+    var st = {
+      form: form,
+      input: input,
+      frame: frame,
+      remember: input.hasAttribute("data-gk-tab-remember"),
+      checked: false,
+      round: false,
+      timer: 0,
+    };
+    form._gkFormTabs = st;
+
+    // A remembered tab, unless the page chose one: an error, the tab posted back, activeTab().
+    if (st.remember && !input.hasAttribute("data-gk-tab-chosen")) {
+      var b = buttonFor(st, read(form) || "");
+      if (b && enabled(b)) open(st, b);
+    }
+    // A script that validates by itself is as much a submit as a click on the button.
+    ["requestSubmit", "reportValidity"].forEach(function (name) {
+      var native = form[name];
+      if (typeof native !== "function") return;
+      form[name] = function () {
+        intend(form);
+        return native.apply(form, arguments);
+      };
+    });
+    // Messages written under the fields by script (GK.form's AJAX answer): count them, and open the tab of
+    // the first one when it is hidden — but only when that first one is among those just written, so a page
+    // that writes a message under the field the user is in does not pull them away to an older one.
+    if (window.MutationObserver) {
+      var mo = new MutationObserver(function (records) {
+        var fresh = [];
+        records.forEach(function (r) {
+          var el = r.target.nodeType === 1 ? r.target : r.target.parentNode;
+          var slot = el && el.closest ? el.closest(".gk-field-error") : null;
+          if (slot && slot.textContent.trim() !== "" && fresh.indexOf(slot) < 0) fresh.push(slot);
+        });
+        badges(st);
+        if (!fresh.length) return;
+        var first = fields(st).filter(function (f) {
+          var s = f.querySelector(".gk-field-error");
+          return s && s.textContent.trim() !== "";
+        })[0];
+        if (!first || fresh.indexOf(first.querySelector(".gk-field-error")) < 0) return;
+        var p = panelOf(st, first);
+        if (!p || on(p)) return;
+        open(st, buttonFor(st, p.dataset.tab));
+        focusField(first);
+      });
+      form.querySelectorAll(".gk-field-error").forEach(function (slot) {
+        mo.observe(slot, { childList: true, characterData: true, subtree: true });
+      });
+    }
+    badges(st);
+    return st;
+  }
+
+  function init(root) {
+    root = root && root.querySelectorAll ? root : document;
+    var inputs = Array.prototype.slice.call(root.querySelectorAll(MARK));
+    if (root.matches && root.matches(MARK)) inputs.push(root);
+    inputs.forEach(function (input) { setup(input.form); });
+  }
+
+  // 1 ── the first control the browser rejects, in a hidden tab: open it before the browser looks for one to focus.
+  // Enter in a field is covered here too: the browser submits by a click on the form's first submit button.
+  document.addEventListener(
+    "click",
+    function (e) {
+      var b = e.target.closest ? e.target.closest("button, input") : null;
+      if (b && b.form && (b.type === "submit" || b.type === "image")) intend(b.form);
+    },
+    true,
+  );
+  document.addEventListener(
+    "invalid",
+    function (e) {
+      var form = e.target.form;
+      var st = form ? setup(form) : null;
+      if (!st || !form._gkTabIntent) return;
+      st.checked = true;
+      later(st);
+      if (st.round) return;
+      st.round = true;
+      setTimeout(function () { st.round = false; }, 0);
+      var p = panelOf(st, e.target);
+      if (p && !on(p)) open(st, buttonFor(st, p.dataset.tab));
+    },
+    true,
+  );
+
+  // 5 ── the rich-text check (capture, further up) stopped the submit: open the tab it points at.
+  document.addEventListener(
+    "submit",
+    function (e) {
+      var st = setup(e.target);
+      if (!st) return;
+      st.checked = true;
+      later(st);
+      if (!e.defaultPrevented) return;
+      var missing = Array.prototype.filter.call(st.form.querySelectorAll("[data-gk-required-rich]"), richEmpty)[0];
+      var p = missing ? panelOf(st, missing) : null;
+      if (!p || on(p)) return;
+      open(st, buttonFor(st, p.dataset.tab));
+      var wrap = missing.previousElementSibling;
+      var editable = wrap && wrap.querySelector(".ck-editor__editable");
+      if (editable) editable.focus();
+      else if (wrap && wrap.scrollIntoView) wrap.scrollIntoView({ block: "center" });
+    },
+    true,
+  );
+
+  // 2 ── live badges while the user puts things right (after showIf has shown or hidden its fields).
+  ["input", "change"].forEach(function (type) {
+    document.addEventListener(type, function (e) {
+      var form = e.target && e.target.form;
+      var st = form ? setup(form) : null;
+      if (st) badges(st);
+    });
+  });
+
+  // 3 ── a tab the user chose goes into the hidden input; gk:tabchange covers a switch made by GK.tabs.select().
+  function chosen(e) {
+    var t = e.target && e.target.closest ? e.target : null;
+    if (!t || (e.type === "click" && !t.closest(".gk-tab-btn"))) return;
+    var el = t.closest(".gk-tabs");
+    var form = el ? el.closest("form") : null;
+    var st = form ? setup(form) : null;
+    if (st && el === st.frame) sync(st);
+  }
+  document.addEventListener("click", chosen);
+  document.addEventListener("gk:tabchange", chosen);
+
+  GK.formTabs = {
+    init: init,
+    /** Count the badges again — after a script changed what is valid (setCustomValidity) or wrote a message. */
+    refresh: function (form) {
+      var st = setup(form);
+      if (st) badges(st);
+    },
+  };
+
+  // Forms that arrive later (a modal, AJAX navigation) go through GK.initContent; the first pass is now.
+  var original = GK.initContent;
+  if (typeof original === "function") {
+    GK.initContent = function (root) {
+      var result = original.apply(GK, arguments);
+      init(root || document);
+      return result;
+    };
+  }
+  _gkReady(function () { init(document); });
 })();
