@@ -280,7 +280,9 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-sort-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
         .demo-sort-grid > *, .demo-sort-list > * { padding:16px 64px 16px 16px; border:1px solid var(--gk-outline-variant);
             border-radius:var(--gk-radius); background:var(--gk-surface-container); }
-        .demo-sort-grid + .demo-sort-list { margin-top:24px; }
+        /* ~, not +: js/sortierbar.js puts its live region (.gk-sort-meldungen) right after each
+           container, so the list is no longer the grid's next sibling and + never matched. */
+        .demo-sort-grid ~ .demo-sort-list { margin-top:24px; }
         .demo-sort-grid h4, .demo-sort-list h4 { margin:0 0 4px; font-size:15px; }
         .demo-sort-grid p, .demo-sort-list p { margin:0; font-size:13px; color:var(--gk-on-surface-variant); }
 
