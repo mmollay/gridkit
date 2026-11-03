@@ -449,7 +449,12 @@ return [
     $at = strpos($css, '/* === 1.115.0 — permission matrix === */');
     T::ok($at !== false, 'the block heading');
     $block = substr($css, (int) $at);
-    T::ok(!str_contains(substr($block, 10), '/* === '), 'nothing after the block');
+    // Up to the next release's block (1.116.0 appended one after it): only later releases follow.
+    $next = strpos($block, '/* === ', 10);
+    if ($next !== false) {
+        T::ok((bool) preg_match('~^/\* === 1\.(\d+)\.~', substr($block, $next), $v) && (int) $v[1] > 115, 'only a later release\'s block follows');
+        $block = substr($block, 0, $next);
+    }
     T::contains($block, '[data-gk-mode="dark"] .gk-perm', 'dark by attribute');
     T::contains($block, '.gk-dark .gk-perm', 'dark by class');
     T::ok(substr_count(substr($css, 0, (int) $at), '.gk-perm') === 0, 'no gk-perm rule before the block');
@@ -467,7 +472,11 @@ return [
     $at = strpos($js, '// === 1.115.0 — permission matrix (GridKit\PermissionMatrix) ===');
     T::ok($at !== false, 'the block heading');
     $block = substr($js, (int) $at);
-    T::ok(!preg_match('~\n// === ~', substr($block, 5)), 'nothing after the block');
+    // Up to the next release's block, if a later one was appended; only later releases follow.
+    if (preg_match('~\n// === 1\.(\d+)\.~', substr($block, 5), $v, PREG_OFFSET_CAPTURE)) {
+        T::ok((int) $v[1][0] > 115, 'only a later release\'s block follows');
+        $block = substr($block, 0, 5 + $v[0][1]);
+    }
     T::ok(substr_count(substr($js, 0, (int) $at), 'permMatrix') === 0, 'no earlier function was changed to know about it');
     foreach (['data-gk-perm-config', 'data-gk-perm-js', 'data-gk-perm-nojs', 'data-gk-perm-search', 'data-gk-perm-pick',
               'data-gk-perm-reset', 'data-gk-perm-foldall', 'data-gk-perm-status', 'data-gk-perm-was', 'data-gk-perm-start-folded',

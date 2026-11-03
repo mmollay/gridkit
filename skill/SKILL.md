@@ -8,7 +8,7 @@ description: >-
   GridKit in composer.json.
 ---
 
-# GridKit 1.115.0
+# GridKit 1.116.0
 
 PHP components for admin dashboards. Zero dependencies, no build step,
 PHP 8.2+. A checkout is a working install.
@@ -44,6 +44,8 @@ without tripping over this.
 | `YearFilter::render()` | `Pagination::render()` | `PageSize::make()->…->render()` |
 | `ActionGroup::render()` | `Modal::container()` | `BelegModal::container()` |
 | `Tabs::render()` (1.111.0) | | |
+
+`Tree::render()` and `Tree::renderBranch()` (1.116.0) print as well.
 
 `PageSize::render()` above is an INSTANCE method — build it with the static
 `PageSize::make('per_page')` first, then chain. Same for `TableHeader::make()`.

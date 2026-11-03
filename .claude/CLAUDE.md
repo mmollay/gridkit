@@ -24,7 +24,7 @@ Every tracked file that does not start with a dot is served. Tool notes live und
   `columnToggle()`, `browser-density.js` for `densityToggle()`,
   `browser-inline-edit.js` for `editable()`, `browser-tabs.js` for `GridKit\Tabs` and `GK.tabs`,
   `browser-tooltip.js` for the tooltip engine, `browser-form-tabs.js` for `Form::tab()`,
-  `browser-permission-matrix.js` for `PermissionMatrix`) and
+  `browser-permission-matrix.js` for `PermissionMatrix`, `browser-tree.js` for `Tree`) and
   contrast (`farben.js`). They are not part of the suite and need the `playwright`
   package. Run them when touching `js/gridkit.js` or the markup they exercise.
 - `node ci/demo-coverage.js` opens the demo and fails when a class of `css/blocks.json` is

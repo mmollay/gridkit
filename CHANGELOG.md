@@ -7,6 +7,34 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.116.0] - 2026-11-03
+
+`GridKit\Tree` shows page trees, categories and folders: a nested list that works without script, which `js/tree.js` turns into a tree view with keys, selection, a filter, lazy branches and moving by drag and drop or keyboard. Nothing that exists changes; a page without a tree loads nothing new.
+
+### Added
+- **`GridKit\Tree`** (`new Tree($id)`, `render()` prints): nodes from flat rows that name their parent (`->nodes($rows, ['id' => 'id', 'parent' => 'parent_id', 'label' => 'title'])`), from nested arrays (`children`), or one at a time (`->node($id, $label, $parent, $opts)`), in any order. Node options `icon`, `href`, `badge` (text or `['text', 'color']`), `count`, `muted` (`true` or a word that is read with the name), `expanded`, `children` (`'lazy'`), `actions` (ActionGroup items, `showIf`), `disabled`, `draggable`; `->actions(fn (array $node): array)` gives every node its row buttons. A duplicate id, a parent that does not exist, a cycle, an unknown or mistyped option, a `javascript:` link: an `E_USER_WARNING`, and the tree still renders.
+- **Selection**: `->select('single' | 'multi')`, `->selected([...])`, `->name()`. Multi: checkboxes posted as `name[]=id`; a ticked parent ticks its branch (never a disabled node), a parent is mixed when some of its children are (`aria-checked="mixed"`, `indeterminate`) — the same rule on the server and in the script. Single: a radio button without script, `aria-selected` with it. A selected id in a branch not loaded yet is posted as `<input type="hidden" data-gk-tree-pending>` until its node arrives.
+- **`js/tree.js`**, a file of its own like `js/sortierbar.js`, loaded after `gridkit.js`: `role="tree"` / `treeitem` / `group`, `aria-level`, `aria-setsize`, `aria-posinset`, `aria-expanded`, a roving tabindex (Tab from a node reaches its own buttons and handle, then leaves); Up, Down, Left, Right, Home, End, `*`, type-ahead, Enter, Space. Open state remembered per tree in `localStorage` (`gk-tree:<id>`); `->expandTo($id)`, Expand all / Collapse all, `->remember(false)`, `->toolbar(false)`, `->label()`. Long names are cut, with the full name as a title and on focus; the indent stops after eight levels (five on a phone) and a level number takes over.
+- **Filter** (`->searchable()`): a match keeps its ancestors (opened) and its branch, is marked (`gk-tree-hit`), case and accents are ignored, the number of matches is announced, Escape restores the tree.
+- **Lazy branches** (`'children' => 'lazy'`, `->lazyUrl($url)`): `GET url?parent=<id>`, answered with the `<li>` of **`Tree::renderBranch($parent)`**; an error closes the node again with "Not loaded." and "Try again"; an empty answer makes it a leaf; `GK.tree.reload()` fetches a branch again.
+- **Moving** (`->moveUrl($url, ['headers' => …])`, or `->movable()` for the page to save): a handle per node; drag and drop before, after or into a node with a drop line (resting on a closed parent opens it), or on the keyboard — Space lifts, Up/Down/Home/End among the neighbours, Right into the node above, Left out of the parent, Space puts down, Escape gives back — with every position spoken. Never into its own branch or a disabled node. Each move is `POST {"id", "parent", "index"}`, one at a time in the order made; a refusal, another status or no network puts the node — and every move queued behind it — back where the server last agreed and shows the answer's `message` in a toast.
+- **Events** on the `.gk-tree`: `gk:treeselect`, `gk:treetoggle`, `gk:treemove` (cancelable, before the move), `gk:treemoved` (`ok`, `reverted`). **API**: `GK.tree.expand()`, `GK.tree.collapse()`, `GK.tree.select()`, `GK.tree.selected()`, `GK.tree.reload()`.
+- New classes (block "Tree"): `gk-tree`, `gk-tree-toolbar`, `gk-tree-search`, `gk-tree-list`, `gk-tree-node`, `gk-tree-open`, `gk-tree-row`, `gk-tree-toggle`, `gk-tree-check`, `gk-tree-radio`, `gk-tree-icon`, `gk-tree-label`, `gk-tree-muted`, `gk-tree-disabled`, `gk-tree-badge`, `gk-tree-count`, `gk-tree-actions`, `gk-tree-group`, `gk-tree-handle`, `gk-tree-hit`, `gk-tree-empty`, `gk-tree-error`, `gk-tree-loaderror`, `gk-tree-retry`, `gk-tree-lifted`, `gk-tree-dragging`, `gk-tree-ghost`, `gk-tree-ghost-no`, `gk-tree-drop-line`, `gk-tree-drop-inside`.
+- New strings `tree.*` and `js.tree_*` (en, de).
+
+### Demo
+- Section "Tree" (sidebar, after Tooltip): a CMS page tree — links, one page selected, a lazy blog from `demo/api/tree-children.php`, an archive that fails on purpose, moves posted to `demo/api/tree-move.php`, which refuses one on purpose so the way back can be seen; categories with checkboxes in a form that shows what it would post; folders moved without a URL (the page refuses Trash), ten levels deep. Both endpoints are shown under the first example.
+
+### Tests
+- `tests/tree.test.php` (260 assertions): flat and nested input write the same markup byte for byte, every warning and its fallback (duplicates, orphans, cycles, options, a `javascript:` href), escaping, the posted shape of both selections, `expandTo()`, lazy markers and `renderBranch()`, the contract with the script (every `data-gk-tree-*` read, every word in both catalogues) and the stylesheet block.
+- `ci/browser-tree.js` (114 cases) with `ci/browser-tree-fixture.php`, answered by `page.route()`: the ARIA tree, the keys and type-ahead, memory across a reload, lazy ok / 500 / retry / empty / reload / no network, both selections and the form post, the filter, drag and drop and keyboard moves, the refusals, the way back after 500, `{"ok":false}` and no network (with a queued move), the event veto, the API, 390px, contrast in 21 looks (plain and six themes × light, `data-gk-mode="dark"`, `.gk-dark`), the page without script. Each of 64 rules of `src/Tree.php`, `js/tree.js` and the stylesheet was taken out in turn and a check turned red.
+- Shared tests now know the new file and class: `tests/js.test.php` reads `js/tree.js` beside `gridkit.js`, `tests/options-documented.test.php` checks `Tree`, the skill examples import it, and the inline-editing test reads its block up to the next one.
+
+### Notes
+- **`js/tree.js` is not a block of `js/gridkit.js`**: the PawBot dashboard keeps its own `gridkit.js` and its sync never overwrites it, so a block there would never reach it — and a tree is not on every page. `skeleton.php` and the demo load it with `defer`.
+- Twenty components now (26 classes in `src/`): README, the landing page and the tests that hold them to `src/` say so.
+
+---
 ## [1.115.0] - 2026-11-03
 
 `PermissionMatrix` is the roles × permissions screen of a user and rights administration: inherited rights from a parent role, locked roles, `requires`, bulk toggles for a row, a column and a group, a filter, a keyboard grid and one role at a time on a phone.

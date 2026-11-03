@@ -1,4 +1,4 @@
-# GridKit 1.115.0 — components
+# GridKit 1.116.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -1970,6 +1970,201 @@ cells are disabled checkboxes, every row shows, and the post is the same shape. 
 needed. Classes: `.gk-perm` (the card), `.gk-perm-table`, `.gk-perm-cell` with the states
 `.gk-perm-inherited`, `.gk-perm-locked`, `.gk-perm-changed`, `.gk-perm-danger` on a risky row.
 
+### Tree (`GridKit\Tree`, since 1.116.0)
+
+A tree view for page trees, categories and folders. The server writes a plain nested list that
+works without any script — a link is followed, a ticked box is posted, every node is in view.
+**`js/tree.js`** makes it a WAI-ARIA tree view; it is a file of its own like `js/sortierbar.js`
+(the PawBot dashboard keeps its own `gridkit.js`), loaded with `defer` after `gridkit.js` —
+`skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/tree.js" defer></script>`. There is no call to make: the script finds every
+`.gk-tree`, also one inserted later. `Tree::render()` prints.
+
+```php
+$pages = [
+    ['id' => 1, 'parent_id' => null, 'title' => 'Home', 'icon' => 'home', 'href' => '/admin/pages/1', 'draggable' => false],
+    ['id' => 2, 'parent_id' => null, 'title' => 'About us', 'icon' => 'folder'],
+    ['id' => 3, 'parent_id' => 2, 'title' => 'Team', 'href' => '/admin/pages/3'],
+    ['id' => 4, 'parent_id' => 2, 'title' => 'History', 'muted' => 'unpublished'],
+    ['id' => 5, 'parent_id' => null, 'title' => 'Blog', 'icon' => 'article', 'children' => 'lazy', 'count' => 12],
+];
+(new Tree('pages'))
+    ->label('Pages')                                   // the accessible name of the tree
+    ->nodes($pages)                                    // map: id => 'id', parent => 'parent_id', label => 'title'
+    ->select('single')->name('page')->selected([3])    // posts page=3
+    ->expandTo('3')                                    // opens the path, the keyboard starts there
+    ->searchable()
+    ->lazyUrl('/admin/pages/children')                 // GET ?parent=5 when Blog is opened
+    ->moveUrl('/admin/pages/move', ['headers' => ['X-CSRF-Token' => 'token']])
+    ->actions(fn (array $n): array => [
+        ['icon' => 'edit', 'title' => 'Edit', 'href' => '/admin/pages/' . $n['id'] . '/edit'],
+        ['icon' => 'delete', 'title' => 'Delete', 'onclick' => "deletePage('{$n['id']}')", 'showIf' => $n['children'] === 0],
+    ])
+    ->render();
+```
+
+Nested arrays work as well, and so do single nodes — mixed as you like:
+
+```php
+(new Tree('cats'))
+    ->label('Categories')
+    ->select('multi')->name('cats')->selected(['books'])   // posts cats[]=books&cats[]=novels
+    ->nodes([
+        ['id' => 'books', 'title' => 'Books', 'children' => [
+            ['id' => 'novels', 'title' => 'Novels'],
+            ['id' => 'rare', 'title' => 'Rare editions', 'disabled' => true],
+        ]],
+        ['id' => 'music', 'title' => 'Music', 'children' => 'lazy'],
+    ])
+    ->node('games', 'Games', null, ['badge' => ['text' => 'New', 'color' => 'green']])
+    ->node('consoles', 'Consoles', 'games')                // the parent may also come later
+    ->render();
+```
+
+| Method | What it does |
+|---|---|
+| `->nodes(array $rows, array $map = [])` | Flat rows (each names its parent) or nested arrays (each carries `children`). `$map` renames the fields: `'id'`, `'parent'` (default `parent_id`), `'label'` (default `title`), `'children'`, and any node option (`'muted' => 'hidden'`). Every node option is read from the row under its own name unless the map says otherwise. A parent of `null`, `''` or `0` is the top level (`0` only while no node has the id 0). Rows may be objects. |
+| `->node($id, $label, $parent = null, $opts = [])` | One node. `$parent` may be added later; `'children'` takes nested rows here too. |
+| `->select('none' \| 'single' \| 'multi')` | `none` (default); `single` — one node, `aria-selected`, a radio button without script; `multi` — checkboxes with tri-state parents. |
+| `->selected(array $ids)` | Selected when the page opens. In `multi` a selected parent ticks its branch, and a parent whose enabled children are all ticked is ticked itself — on the server and in the script alike. |
+| `->name('pages')` | The field the selection posts under: `pages[]=id` (multi), `pages=id` (single). Default: the tree's id. |
+| `->expandTo($id)` | Opens the ancestors of a node (whatever the browser remembers) and makes it the node the keyboard starts on. Call it for several. |
+| `->lazyUrl($url)` | Where the children of a `'children' => 'lazy'` node come from (see "Lazy branches"). |
+| `->moveUrl($url, ['headers' => [...]])` | Nodes can be moved; every move is posted here (see "Moving"). `headers` go with every move. |
+| `->movable()` | Nodes can be moved without a URL: the page hears `gk:treemove` / `gk:treemoved` and saves itself. |
+| `->searchable()` | A filter field above the tree. |
+| `->toolbar(false)` | No bar above the tree (filter, Expand all, Collapse all). Without the filter and without parents there is none anyway. |
+| `->remember(false)` | The browser does not keep which nodes were open (default: it does, in `localStorage` under `gk-tree:<id>`). |
+| `->label('Pages')` | The accessible name of the tree; default the catalogue's "Tree". |
+| `->actions(fn (array $node): array)` | Row buttons for every node. `$node` holds `id`, `label`, `parent`, `level`, `children` (their number), `opts` and `row` (what `nodes()` was given). Added after the node's own `actions`. |
+| `->render()` | Prints the tree. |
+| `->renderBranch($parent)` | Prints the `<li>` of the children of `$parent` and their branches — the answer to a lazy request. |
+
+**Node options** (in `node()`'s `$opts`, or as fields of a row):
+
+| Option | |
+|---|---|
+| `icon` | Material icon name before the label. |
+| `href` | The label is a link (Enter on the node follows it). A `javascript:` URL is refused with a warning. |
+| `badge` | Text, or `['text' => 'Draft', 'color' => 'orange']` — a `gk-label` (gray, green, orange, red, blue). |
+| `count` | A number in a pill after the label (posts in a folder). |
+| `muted` | `true` or a word (`'unpublished'`): the label in italics and the quieter colour; the word is read with the name ("inactive" by default). |
+| `expanded` | Open when the page opens (unless the browser remembers otherwise). A lazy node that starts open is fetched at once. |
+| `children` | Nested rows, or `'lazy'`: the node is a parent whose children come from `lazyUrl()`. |
+| `actions` | Row buttons, ActionGroup items: `icon`, `label`, `href`, `onclick`, `title`, `color`, `variant`, `size`, `pill`, `disabled`, `class`, `showIf` (falsy: not drawn). Described by the node's name for a screen reader. |
+| `disabled` | Cannot be selected (its box is disabled and not posted), moved or dropped into; no link. Its children are not disabled. |
+| `draggable` | `false`: this node keeps its place (no handle); others can still be dropped beside or into it. |
+
+Yes/no options take `true`/`false`, `1`/`0` or `'1'`/`'0'`/`'yes'`/`'no'` (what a database hands
+over); anything else is dropped with a warning — `'expanded' => 'no'` is true to PHP.
+
+- **What a screen reader gets** (with the script): `role="tree"` with the label,
+  `aria-multiselectable` in `multi`; every node a `treeitem` with `aria-level`, `aria-setsize`,
+  `aria-posinset`, `aria-expanded` (parents only), `aria-selected` (single) or `aria-checked`
+  `true`/`false`/`mixed` (multi), named by its label, muted word, badge and count — never by its
+  children or buttons. The boxes and radios stay in the form for posting, `aria-hidden` and out of
+  the tab order. A polite live region speaks the moves, the matches and a branch that failed.
+- **Keys** (WAI tree pattern, roving tabindex — one tab stop per tree): Up/Down move through the
+  nodes in view, Right opens a parent or goes to its first child, Left closes it or goes to the
+  parent, Home/End, `*` opens every parent beside the focused node, a letter (or several typed
+  together) jumps to the next node that starts with it. Enter follows the link, or selects / ticks,
+  or opens and closes; Space selects or ticks. Tab from a node reaches its own row buttons and its
+  handle, then leaves the tree. In `rtl` Left and Right swap.
+- **Open and closed** is kept per tree id in `localStorage` (`gk-tree:<id>`, `{open, closed}`,
+  read and written in `try`); a node the browser has never seen keeps the server's state.
+  "Expand all" opens what is loaded — never a lazy branch, which may hold a thousand posts.
+  Without the script every branch is open; `@media (scripting: enabled)` keeps a closed one closed
+  from the first paint.
+- **The filter** (`searchable()`) hides what does not match, keeps the ancestors of a match (opened)
+  and the branch of a matching parent, marks the match (`mark.gk-tree-hit`), ignores case and
+  accents, says "3 matches" / "No matches", and Escape brings the tree back as it was. It searches
+  the loaded nodes. Nothing can be moved while it filters.
+- **Long names** are cut with an ellipsis; while a name is cut it gets a `title` (GK.tip shows it),
+  and the focused node shows its name in full. Deep trees indent up to eight levels (five on a phone),
+  then a small level number takes over — nothing pushes a 390px page sideways.
+
+**Lazy branches.** A node with `'children' => 'lazy'` is a closed parent with an empty group. Opened
+the first time, the script asks `GET lazyUrl?parent=<id>` (`Accept: text/html`,
+`X-Requested-With: XMLHttpRequest`, `credentials: same-origin`) and puts the `<li>` of the answer
+into the group — write them with `renderBranch()`, on a tree configured as on the page (select, name,
+actions, movable), so the children look and post the same. A child may be `'lazy'` itself. An empty
+answer makes the node a leaf; a node the tree already has is not taken twice. A status other than
+2xx or no network: the node closes again and its row says "Not loaded." with a "Try again" button
+(opening it again does the same). A selected id inside a branch not loaded yet travels as
+`<input type="hidden" data-gk-tree-pending>`, and its node takes over when it arrives.
+
+```php
+// GET /admin/pages/children?parent=5 — the children of one node, nothing around them
+$parent = (string) ($_GET['parent'] ?? '5');
+$children = [
+    ['id' => 51, 'parent_id' => 5, 'title' => 'Spring sale'],
+    ['id' => 52, 'parent_id' => 5, 'title' => '2025', 'children' => 'lazy'],
+];
+(new Tree('pages'))->select('single')->name('page')->nodes($children)->renderBranch($parent);
+```
+
+**Moving.** With `moveUrl()` or `movable()` every node that may move (not disabled, `draggable` not
+false) gets a handle (`.gk-tree-handle`, six dots, the only part that takes a finger).
+**With the pointer**: drag the handle; over the top quarter of a row a line shows "before", over the
+bottom quarter "after" (below an open parent: its first child), over the middle the row is framed:
+"into it, last". Resting on a closed parent opens it (a lazy one loads). Escape cancels. **With the
+keyboard**: Tab to the handle, Space lifts the node (`aria-pressed`), Up/Down move it among its
+neighbours, Home/End to the ends, Right puts it into the node above it (as its last child), Left
+takes it out of its parent (just after it), Space puts it down, Escape — or leaving the handle —
+gives it back; each step is announced ("Level 2, position 1 of 3, in About us."). **Refused**, with
+a word for a screen reader: into itself or its own branch, into a disabled node, and anything while
+the filter is on.
+
+Every move fires `gk:treemove` first — **cancelable**: `preventDefault()` and the node stays (a
+keyboard move goes back). With `moveUrl()` it is then posted, one at a time in the order made:
+`POST` with `Content-Type: application/json`, `credentials: same-origin`,
+`X-Requested-With: XMLHttpRequest`, the `headers` of `moveUrl()` and the body
+`{"id": "3", "parent": "5", "index": 0}` — `parent` is `null` for the top level, `index` counts from 0
+among the new siblings (the place the node now has). A 2xx is saved unless its JSON says
+`{"ok": false}`. A refusal, another status or no network puts the node back where the server last
+agreed — that move and every later one still waiting — shows the answer's `"message"` (or "The move
+could not be saved. The entry is back in its place.") in a toast (the line `.gk-tree-error` above the
+list where `gridkit.js` is not loaded), and fires `gk:treemoved` with `ok: false, reverted: true`.
+
+```php
+// POST /admin/pages/move — {"id": "3", "parent": "5", "index": 0}
+$move = json_decode((string) file_get_contents('php://input'), true) ?: ['id' => '3', 'parent' => null, 'index' => 0];
+// … check the token, refuse what your tree does not allow, store the new parent and order …
+header('Content-Type: application/json');
+echo json_encode(['ok' => true]);   // or http_response_code(409) and ['ok' => false, 'message' => 'Shown to the person.']
+```
+
+**Events**, on the `.gk-tree`, bubbling — for what the person does, not for calls of `GK.tree`:
+
+| Event | `detail` |
+|---|---|
+| `gk:treeselect` | `{ tree, id, selected, ids }` — `ids`: every selected id (pending ones included) |
+| `gk:treetoggle` | `{ tree, id, expanded }` |
+| `gk:treemove` | `{ tree, id, parent, index, oldParent, oldIndex }` — cancelable, before the move |
+| `gk:treemoved` | the same plus `ok` and `reverted` — after the save (at once without a URL), or after the way back |
+
+**JavaScript API** (the first argument is the tree's id as given to `new Tree()`, its element, or a selector):
+`GK.tree.expand(el, id)` opens a node and the path to it (without an id every loaded parent; a
+Promise that waits for a lazy branch), `GK.tree.collapse(el, id)`, `GK.tree.select(el, ids, on)`
+(ticks or selects one id or several, `false` unticks; returns the selected ids),
+`GK.tree.selected(el)`, `GK.tree.reload(el, id)` (fetches a branch again and opens it).
+
+- **Classes** (all `gk-tree-*`, in `css/blocks.json` as "Tree"): `gk-tree`, `-toolbar`, `-search`,
+  `-list`, `-node`, `-open`, `-row`, `-toggle`, `-check`, `-radio`, `-icon`, `-label`, `-muted`,
+  `-disabled`, `-badge`, `-count`, `-actions`, `-group`, `-handle`, `-hit`, `-empty`, `-error`,
+  `-loaderror`, `-retry`, and while moving `-lifted`, `-dragging`, `-ghost`, `-ghost-no`,
+  `-drop-line`, `-drop-inside`. Colours are roles: light, both dark spellings and the six themes
+  follow (measured: text 4.5:1, chevron, handle and focus ring 3:1).
+- **Words** come from `tree.*` (server) and `js.tree_*` (script) in `lang/`; the script's reach the
+  page through `Lang::jsConfig()`.
+- **Warnings** (`E_USER_WARNING`, the tree still renders): a duplicate id (the second node is left
+  out), a parent the tree does not have (the node goes to the top level), a cycle (its first node is
+  lifted to the top), an option it does not know or of the wrong type, a row without an id, a
+  selected id the tree does not have (without lazy branches), an unknown `expandTo()` id, an unknown
+  selection mode.
+- **Do not** write the handle, the roles or the tabindex yourself, put a `<form>` inside a row, or
+  give a node a second link — the label is the link.
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -2406,5 +2601,6 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Timeline | `.gk-timeline` | A log of steps, one under the other: a real ordered list, each step with a symbol and a word for its state (ok · failed · running · waiting · skipped), title, time, small chips, a detail and — when it broke — a message block (since 1.96.0) |
 | Portrait video frame | `.gk-video-frame` | A 9:16 frame for a video or picture: never wider than its column or taller than the window, optional guide lines for the zones a platform covers, an empty "being made" state and a failed state, a caption (since 1.96.0) |
 | Sortable container (JS) | `[data-gk-sortierbar]` / `js/sortierbar.js` | Cards or rows a person puts in order by hand: a handle in every entry (from two entries on), dragging with mouse or finger, Space and arrow keys, a spoken position, the order posted as JSON when there is a `url`, and a sentence beside a symbol when saving failed (since 1.97.0) |
+| Tree | `GridKit\Tree` / `js/tree.js` / `GK.tree` | Page trees, categories, folders: a nested list that works without script, made a WAI-ARIA tree view — keys, type-ahead, open/closed remembered, single or multi selection with tri-state parents, a filter, children loaded on demand, moving by drag and drop or keyboard with a save URL and a way back (since 1.116.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
