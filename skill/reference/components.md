@@ -1,4 +1,4 @@
-# GridKit 1.114.0 — components
+# GridKit 1.115.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -1819,6 +1819,157 @@ script finds every `[data-gk-sortierbar]`, also one inserted later.
 - **Do not** write the handle yourself, add a second drag script, or set `position` on the
   entry to something other than static/relative (the handle needs a positioned parent).
 
+### PermissionMatrix (since 1.115.0)
+
+Roles as columns, permissions as rows grouped by module, a checkbox where they meet — the screen
+of a user and rights administration. **It is a form first:** put it inside your own `<form>`
+(with your CSRF field and a submit button); `render()` writes no `<form>` of its own, so it can sit
+in a form that edits other things too.
+
+```php
+$matrix = (new PermissionMatrix('rights'))
+    ->caption('Roles and rights')                       // for a screen reader, and the box's name
+    ->role('admin', 'Admin', ['locked' => true, 'color' => 'red'])
+    ->role('accounting', 'Accounting', ['description' => 'Invoices and payments', 'color' => 'green'])
+    ->role('editor', 'Editor', ['parent' => 'guest', 'icon' => 'edit'])
+    ->role('guest', 'Guest')
+    ->group('invoices', 'Invoices', ['description' => 'Billing', 'icon' => 'receipt'])
+    ->permission('invoices.view', 'View invoices')
+    ->permission('invoices.edit', 'Create and edit invoices', ['requires' => 'invoices.view'])
+    ->permission('invoices.delete', 'Delete invoices', ['requires' => ['invoices.edit'], 'danger' => true,
+        'description' => 'Invoices have to be kept for seven years.'])
+    ->group('users', 'Users & rights', ['collapsed' => true])
+    ->permission('users.roles', 'Change roles and rights', ['danger' => true])
+    ->grants(['accounting' => ['invoices.view', 'invoices.edit'], 'guest' => ['invoices.view']])
+    ->grant('editor', 'users.roles');                  // adds to grants()
+
+echo '<form method="post">';
+$matrix->render();
+echo Button::render('Save', ['type' => 'submit']) . '</form>';
+```
+
+- **`->role($key, $label, $opts)`** — `description` (a line under the name), `parent` (the key of
+  the role whose rights this one inherits, through its parent's parent too), `locked` (`true`:
+  every permission, read-only, posts nothing — the administrator), `color` (`blue`, `green`,
+  `orange`, `red`, `gray`: the name as a `.gk-label`), `icon` (a Material icon name).
+- **`->group($key, $label, $opts)`** — the permissions after it belong to it: a heading row with a
+  fold button and the group's bulk toggles. `description`, `icon`, `collapsed` (starts folded —
+  only with the script; without it every row shows). Permissions before the first group stand
+  above it without a heading.
+- **`->permission($key, $label, $opts)`** — `description`, `danger` (`true`: a risky right, marked
+  "Risky" in words and ticked in the error colour), `requires` (a key or a list of keys).
+- **`->grant($role, ...$permissions)` / `->grants([$role => [$permission, …]])`** — what each
+  role was given itself, as your database holds it; both add. Unknown roles and permissions are
+  reported (`E_USER_WARNING`) and left out.
+- **`->name('perm')`** — the field name (default `perm`). A nested one works: `->name('user[rights]')`
+  posts `user[rights][role][permission]`, read back from `$_POST['user']['rights']`.
+- **`->readonly()`** shows the rights and posts nothing; **`->height('480px')`** is how high the
+  matrix grows before it scrolls in its own box (default `70vh`); **`->saveUrl()`** see below.
+
+Keys may contain dots, slashes and umlauts; a key with a bracket, a control character, nothing
+in it or spaces around it cannot be a field name and is refused with a warning. So are a colour
+that is not one of the five, a `locked` that is not a boolean, a `name()` PHP would not read back
+as that array, a `height()` that is not a CSS length and a `saveUrl()` that is not http(s) or
+relative. A `parent` that names no role, or a chain that loops, is reported when the matrix
+renders and the role inherits nothing; a `requires` that names no permission is left out.
+
+**The posted shape: `perm[role][permission]`, every cell, `0` or `1`.** Each cell writes a hidden
+`0` and, after it, the checkbox's `1` — PHP keeps the last value, so a ticked cell reads `"1"`
+and an unticked one `"0"`. That is what tells "unticked" from "not on this page". A locked role
+posts nothing; an inherited cell posts `0` — the heir does not have it itself, and inheritance is
+not stored: it follows from `parent`. (A role that has a right of its own *and* through its parent
+shows it as its own, removable; unticked, it is then shown inherited.) Each editable cell is up to two fields: a matrix that could
+post more than `max_input_vars` (PHP drops the rest without a word) says so with a warning.
+
+**Reading it back** — build the matrix as for the page, then:
+
+```php
+$matrix = (new PermissionMatrix('rights'))
+    ->role('editor', 'Editor', ['parent' => 'guest'])
+    ->role('guest', 'Guest')
+    ->permission('cms.view', 'View pages')
+    ->permission('cms.edit', 'Edit pages', ['requires' => 'cms.view']);
+$_POST = ['perm' => ['editor' => ['cms.view' => '0', 'cms.edit' => '1'], 'guest' => ['cms.view' => '0', 'cms.edit' => '0']]];
+
+$map = $matrix->read($_POST['perm'] ?? []);
+// ['editor' => ['cms.view' => true, 'cms.edit' => true], 'guest' => ['cms.view' => false, 'cms.edit' => false]]
+foreach ($map as $role => $cells) {
+    foreach ($cells as $permission => $granted) { /* $granted ? grant : revoke */ }
+}
+
+// Without the definition at hand: only the roles and keys you allow, only 0/1/true/false.
+$map = PermissionMatrix::fromPost($_POST['perm'] ?? [], ['editor', 'guest'], ['cms.view', 'cms.edit']);
+```
+
+`PermissionMatrix::fromPost($posted, $roles, $permissions)` returns role → permission → bool for
+**exactly the cells that were posted**: a cell not on the page is not in the result (a matrix
+that showed one module cannot wipe the others), unknown roles and keys, arrays and any value but
+`"0"`, `"1"`, `0`, `1`, `true`, `false`, `""` are dropped, a non-array is `[]`. Leave a locked
+role out of `$roles`. **`$matrix->read($posted)`** does the same with the matrix's own editable
+roles and permissions and makes `requires` whole the way ticking does in the browser: a granted
+permission gets what it needs added (unless the role inherits it). A `readonly()` matrix reads `[]`.
+
+**Inheritance.** A role with `parent` has its own grants plus everything the parent has. Such a
+cell is shown ticked with **"via Guest"** under it and a dashed ring (a state in words and shape,
+not colour alone), described to a screen reader as "Inherited from Guest — change it in the Guest
+column", and cannot be unticked there: a click says so in a toast. Tick something for the parent
+and it appears in the heirs at once; untick it and an heir that also has it as its own keeps it.
+
+**`requires`.** Ticking a permission ticks what it needs, through what that needs. Unticking a
+permission unticks what needs it — in that role and in the roles that inherit from it, which lost
+it too. Both are said in the status line ("Also granted, because it is needed: …"). A cell that
+something else needs is described as "Needed by …". Only what the change touches is looked at.
+
+**Bulk, filter, folding, changes.** With the script: an "All roles" column toggles a row for every
+role that can change; the toggle in a role's head toggles the column for the rows in view (filter
+and folding count); a group's heading row has a toggle per role and one for all roles. Each is
+mixed (indeterminate) while only some are granted; ticked → untick what can be unticked, else
+tick what can be ticked — locked and inherited cells are left alone, and a grant for all roles goes
+to the parent first, so heirs inherit it rather than get their own. The filter (label, key,
+description, group) shows matches across folded groups and folds them back when cleared. Changed
+cells are tinted with a dot until saved; the toolbar counts them ("3 changes") and Reset undoes
+them; per-role counts ("7 of 20") follow. A legend explains the marks.
+
+**Events and script API.** After every change `gk:permchange` bubbles from the matrix with
+`detail = { matrix, role, permission, granted, kind, changed, changes }` — `kind` is `cell`,
+`row`, `role`, `group`, `group-all`, `reset` or `revert`; `changed` lists this change's cells
+(`{ role, permission, granted }`, the needed ones included), `changes` everything not saved yet.
+It is **cancelable**: `preventDefault()` puts the change back (to ask before granting a risky
+right, say). `GK.permMatrix.changes(el)` returns what is not saved, `GK.permMatrix.reset(el)` goes
+back to the last saved state, `GK.permMatrix.commit(el)` makes the current state the saved one
+(call it when an AJAX form has saved), `GK.permMatrix.init(root)` binds matrices added later
+(`GK.initContent()` does it for you). `el` is the matrix, an element in it, or its id.
+
+**Saving as you go:** `->saveUrl('/api/permissions.php', ['headers' => ['X-CSRF-Token' => $token]])`.
+Each change is POSTed as JSON — `{"matrix":"rights","changes":{"editor":{"cms.edit":true}}}`,
+one request per change, one after the other — and the answer must be `{"ok": true}`. Anything
+else (`{"ok": false, "error": "…"}`, an error status, no network) puts the cells back and shows
+the `error` as text in a toast. The endpoint reads the body with
+`PermissionMatrix::fromPost($body['changes'], $roles, $permissions)` or `$matrix->read(...)`.
+There is no Reset then; the toolbar says "Saving …" / "Saved.". Without the script the fields post
+with the surrounding form as before.
+
+**Keyboard and screen reader.** The matrix is a real `<table>`: roles are `<th scope="col">`,
+permissions `<th scope="row">`, a group `<th scope="rowgroup">`, each checkbox is named
+"Role: Permission". With the script the table becomes an ARIA grid with **one tab stop**: the
+arrow keys move between cells (headers and toggles included), Home/End to the row's ends,
+Ctrl+Home/End to the corners, PageUp/PageDown by ten rows, Space toggles; Tab leaves the grid and
+comes back to the cell last used. Locked, inherited and read-only cells are `aria-disabled`
+rather than disabled, so the arrow keys still reach them and they say why. The scroll box is a
+named region with a tab stop; the role row and the permission column stick in it.
+
+**Phone (≤ 768px):** a matrix does not fit, so a "Role" select appears and the matrix shows one
+role's column at a time as a list of permissions — no "All roles" column, cells 48px high, the
+head sticking under GridKit's header (`--gk-sheet-top`), no sideways scroll. Without the script
+the box scrolls sideways inside itself instead; the page does not.
+
+**Without the script** (a copy of `gridkit.js` without the 1.115.0 block) it is the plain form:
+the toolbar, the bulk toggles, the fold buttons and the select stay hidden, inherited and locked
+cells are disabled checkboxes, every row shows, and the post is the same shape. Words come from
+`perm.*` in `lang/` and reach the script inside the matrix's own config — no `Lang::jsConfig()`
+needed. Classes: `.gk-perm` (the card), `.gk-perm-table`, `.gk-perm-cell` with the states
+`.gk-perm-inherited`, `.gk-perm-locked`, `.gk-perm-changed`, `.gk-perm-danger` on a risky row.
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -2250,6 +2401,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Tooltips (JS/CSS) | `GridKit\Tooltip` / `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` / `data-gk-toggletip` / `.gk-help` | Hint popups — plain, title, with HTML in them, or a toggletip that opens on a click; one engine places, flips and announces them all; `'tooltip'` on Button and Table, `'help'` on Form (since 1.112.0) |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
 | Image picker | `GridKit\ImagePicker` / `GK.picker` | Choose one image out of many: a compact grid of 16:9 tiles that works like a radio group, folds after two rows, and an enlarged view that can pick (since 1.94.0) |
+| PermissionMatrix | `GridKit\PermissionMatrix` / `GK.permMatrix` | Roles × permissions for user and rights management: inheritance from a parent role, locked roles, `requires`, bulk toggles per row, column and group, filter, folding, changes marked until saved, a keyboard grid, one role at a time on a phone; posts `perm[role][permission]` as 0/1, read back with `read()` / `fromPost()`, or saves each change as JSON (since 1.115.0) |
 | Announcement (JS/CSS) | `.gk-announce` / `GK.announce` | The line that says "Saved." where the person works, read by a screen reader; empty it draws no box (since 1.93.0) |
 | Timeline | `.gk-timeline` | A log of steps, one under the other: a real ordered list, each step with a symbol and a word for its state (ok · failed · running · waiting · skipped), title, time, small chips, a detail and — when it broke — a message block (since 1.96.0) |
 | Portrait video frame | `.gk-video-frame` | A 9:16 frame for a video or picture: never wider than its column or taller than the window, optional guide lines for the zones a platform covers, an empty "being made" state and a failed state, a caption (since 1.96.0) |
