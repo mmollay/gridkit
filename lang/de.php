@@ -61,6 +61,7 @@ return [
     'table.loading'         => 'Wird geladen…',
     'table.load_error'      => 'Die Tabelle konnte nicht geladen werden.',
     'table.retry'           => 'Erneut versuchen',
+    'table.edit_hint'       => 'Bearbeitbar: mit der Eingabetaste ändern.',
     'table.scroll_region'   => 'Scrollbare Tabelle',
 
     // Form
@@ -141,6 +142,9 @@ return [
     'js.empty_hint'             => 'Sobald Einträge angelegt sind, erscheinen sie hier.',
     'js.no_matches_hint'        => 'Für diese Suche oder Filterung gibt es keine Einträge.',
     'js.reset_filters'          => 'Filter zurücksetzen',
+    'js.edit_error'             => 'Die Änderung konnte nicht gespeichert werden.',
+    'js.edit_number'            => 'Bitte eine Zahl eingeben.',
+    'js.edit_saved'             => 'Gespeichert.',
     'js.too_small'          => '{name}: zu klein ({size}, min. {min})',
     'js.too_large'          => '{name}: zu groß ({size}, max. {max})',
     'js.one_file_only'      => 'Nur eine Datei erlaubt — {m} abgelegt',

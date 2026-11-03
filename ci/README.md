@@ -227,6 +227,23 @@ turn that way and the run turned red. About fifteen seconds.
 GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-density.js
 ```
 
+Inline editing (`Table::editable()`, 1.110.0) is checked by `ci/browser-inline-edit.js` on
+`ci/browser-inline-edit-fixture.php`: six tables (one that posts, one that pages and
+searches, one with a selection, one with a row link, one that only fires the event inside a
+form, a server table). The POSTs go to `http://gk.test/cell` and `page.route()` answers them —
+ok, ok with a stored value, ok with display markup, a refusal with a reason (200 and 422),
+500, a body that is not JSON, no network, or held until released — so no server is needed.
+It opens cells with the pointer, Enter and F2, closes them with Enter, Escape, Tab and by
+leaving, checks the event, its veto and `respondWith()`, the request and its headers, the
+rebuild after a sort, a page and a search (row ids and cell attributes as PHP writes them,
+attribute for attribute), the layout (no column moves when a field opens), a card at 390px,
+both dark spellings and forced colours. Each rule of the script, the stylesheet and
+`Table` was taken out in turn and a check turned red. About forty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-inline-edit.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

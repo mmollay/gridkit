@@ -511,6 +511,8 @@ button out when the row's `archived` value is truthy.
 | `labels` | `label` only: `'value' => 'green'`, or `'value' => ['color' => 'green', 'text' => 'Paid']` |
 | `href`, `sub` | the cell links to `'/customers/{id}'`; `sub` names a row key shown as a quiet second line |
 | `export` | `false` leaves the column out of the CSV file of `exportCsv()` |
+| `edit` | `'text'`, `'number'` or `'select'`: the cell can be edited in place, see `editable()` below; `false` (or `null`, `''`) is read-only without a word |
+| `options` | `edit => 'select'`: what it offers, value => text (like a filter's `options`); a `label` column without it offers the keys of its `labels` |
 | `hidden` | `true` starts the column hidden in a table with `columnToggle()`; the user's stored choice wins |
 | `toggle` | `false` keeps the column on screen: in the `columnToggle()` menu, ticked and disabled |
 
@@ -608,6 +610,91 @@ by `Table` it moves the label radius only, because the sizes set their padding i
 steps do reach the padding. Works with `css/gridkit.css` alone (`themes.css` is optional). The control
 is rendered hidden and `js/gridkit.js` 1.109.0 shows it: without the script, or with an older copy,
 the table is the table without the option. With `toolbar(false)` there is no control.
+
+**`->editable($key, $url, $opts)` (since 1.110.0): inline editing.** A cell of a column with `'edit'`
+turns into a field on a click, or on Enter or F2 while it has the focus; every such cell is in the tab
+order and tells a screen reader that it can be edited (`aria-describedby` → "Editable: press Enter to
+change it."). Enter saves, **leaving the field saves**, Escape puts the old value back, Tab saves and
+opens the next editable cell (Shift+Tab the previous one). An unchanged value sends nothing. `$key` is
+the row field that names a record, as in `selectable()` — it is written into every row as
+`data-gk-row-id` and posted as `id`; with `selectable()` under another key, the selection's key is used
+for both and GridKit says so. A row whose key is empty is not editable. `$url` is where a change is
+POSTed; without it nothing is sent and your listener saves. Option `headers` adds request headers,
+typically `['X-CSRF-Token' => $token]` (the name `uploadHeaders` and the sortable container use too).
+A table without a column that can be edited renders exactly as it would without the call.
+
+```
+(new Table('invoices'))->setData($rows)
+    ->editable('id', '/api/invoice-cell.php', ['headers' => ['X-CSRF-Token' => $csrf]])
+    ->column('customer', 'Customer', ['edit' => 'text', 'sub' => 'city'])
+    ->column('total', 'Amount', ['format' => 'currency', 'edit' => 'number'])
+    ->column('status', 'Status', ['format' => 'label', 'edit' => 'select',
+        'labels' => ['paid' => ['color' => 'green', 'text' => 'Paid'], 'open' => ['color' => 'orange', 'text' => 'Open']]])
+    ->column('kind', 'Kind', ['edit' => 'select', 'options' => ['b2b' => 'Business', 'b2c' => 'Consumer']])
+    ->render();
+```
+
+- **The field holds the raw value**, not the formatted one: a currency cell showing `€1,200.50` opens
+  with `1200.5`. A `setData()` table takes it from its data block; a `rows()` or `query()` table writes it
+  into each editable cell as `data-gk-raw`. `text` is an input, `number` an `<input type="number">`
+  (empty is `null`), `select` offers the column's `options`, else the keys of a label column's `labels`
+  with their `text`; a stored value that is not on the list stays in the list. A select saves as soon as an
+  option is picked with the pointer; with the arrow keys it waits for Enter, Tab or leaving the field.
+- **Refused, with a warning, and the column stays read-only:** `'format' => 'html'` and `'email'` (they
+  write markup of their own), a column with `'href'` (a link cannot also open a field), the column that
+  carries `rowLink()`'s control, a `select` with nothing to choose from, an unknown `edit` type, and `'edit'`
+  on a table without `editable()`. The other cells of a row with a link are editable: a click on one opens
+  its field, a click elsewhere in the row still follows the link.
+- **The event** `gk:celledit` fires on the table (it bubbles) before anything is sent, with
+  `{ tableId, id, column, value, oldValue }` — `id` as text; `value` and `oldValue` are text, numbers (or
+  `null`) for a `number` column. `preventDefault()` puts the old value back and sends nothing.
+  `event.detail.respondWith(promise)`, called in the listener, answers instead of the URL: the promise
+  resolves to what the server would send (`true` is short for `{ ok: true }`); a rejection is a failure.
+- **The request** (with `$url`, and no `respondWith()`): `POST`, `Content-Type: application/json`,
+  `X-Requested-With: XMLHttpRequest`, `credentials: same-origin`, your `headers`, body
+  `{"id":"7","column":"total","value":1500.25}`. **The answer:** a 2xx with `{"ok":true}` saves; it may
+  add `"value"` (what was stored, when it differs from what was sent: trimmed, rounded) and `"display"`
+  (the cell's markup — inserted as HTML, so escape what you put in it; used by a `rows()`/`query()` table
+  only). Anything else — another status, `{"ok":false,"error":"…"}`, a body that is not JSON, no network —
+  puts the old value back and shows a toast with your `error` as text (never as markup), else "The change
+  could not be saved." (`js.edit_error`). While it saves the cell is `aria-busy="true"` and cannot be
+  opened again.
+- **After a save** the cell shows the value formatted the way the column formats it (the same code that
+  redraws a sorted table), and the table's live region says "Saved.". A `setData()` table also changes its
+  data, so a later sort, search, page or CSV export has the new value; the row stays where it is until then.
+  A `rows()` or `query()` table shows `display` when the server sent it; its next reload comes from the
+  server, which owns the value. A date column redrawn in the browser has the client's date format (the known
+  gap of a sorted table) — send `display` if that matters. A rebuild of the table (a sort, a page,
+  `GK.table.refresh()`) saves a field that is still open first.
+- **Styling hooks:** an editable cell is `td[data-gk-edit]` (a dotted line under it, solid on hover, a focus
+  ring), the open one `td[data-gk-editing]` (the field lies over the hidden value, so no column moves; in a
+  phone card it takes the value's place), a saving one `td[aria-busy="true"]`. Needs `js/gridkit.js`
+  1.110.0; an older copy shows the table read-only.
+
+```js
+// Without a URL: save it yourself, and let GridKit show the outcome.
+document.querySelector('[data-gk-table=invoices]').addEventListener('gk:celledit', e => {
+  const { id, column, value } = e.detail;
+  if (column === 'total' && value < 0) return e.preventDefault();     // refused: old value back
+  e.detail.respondWith(fetch('/api/cell', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, column, value }),
+  }).then(r => r.json()));                                            // { ok, value?, display?, error? }
+});
+```
+
+An endpoint, in plain PHP:
+
+```
+$in = json_decode(file_get_contents('php://input'), true);
+header('Content-Type: application/json');
+if (!in_array($in['column'] ?? '', ['customer', 'total', 'status', 'kind'], true)) {   // never trust the column name
+    http_response_code(422);
+    exit(json_encode(['ok' => false, 'error' => 'This field cannot be changed.']));
+}
+$repo->update((int) $in['id'], $in['column'], $in['value']);
+echo json_encode(['ok' => true, 'value' => $repo->find((int) $in['id'])[$in['column']]]);
+```
 
 **`->emptyState($title, $opts)`** sets the wording for a table with no rows —
 `['hint' => …, 'icon' => …, 'action' => …]`. GridKit works out by itself whether
@@ -2153,6 +2240,9 @@ GK.announce('saved', 'Saved.', 'success');   // tone: info, success, warning, er
 GK.announce('saved', '');                    // empty: no box, still a live region
 document.addEventListener('gk:sheetopen', e => fill(e.target, e.detail.params));  // detail: { opener, params }
 document.addEventListener('gk:sheetclose', e => { /* e.detail.opener */ });
+
+// Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
+document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
 ```
 
 An AJAX form (`Form::ajax()`) reports its own outcome: `{ok: true, message: '…'}` closes the modal, refreshes

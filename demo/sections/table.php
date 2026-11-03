@@ -341,6 +341,40 @@ $table->variant('striped')->size('sm');</pre></div>
         });
         ?>
 
+    <h3 class="demo-h3" id="table-edit">Editing in the cell <?= since('table') ?></h3>
+    <p class="demo-intro"><code>editable()</code> and a column's <code>'edit'</code> (<code>'text'</code>, <code>'number'</code> or <code>'select'</code>) let a value be changed where it stands: click a cell with the dotted line, or Tab to it and press Enter. Enter or leaving the field saves, Escape puts the old value back, Tab saves and opens the next one. The field holds the stored value (1200, not €1,200.00). Every change fires <code>gk:celledit</code>; with a URL GridKit posts it there and shows the answer. This page has no server, so the listener below answers with <code>respondWith()</code> after a moment, the way an endpoint would — and refuses a negative price.</p>
+        <?php
+        showcase(function () use ($articles) {
+            (new Table('demo-edit'))
+                ->setData(array_slice($articles, 0, 4))
+                ->caption('Articles, editable in the cell')
+                ->editable('article_id')           // with a URL: ->editable('article_id', '/api/article-cell.php')
+                ->column('article_number', 'No.', ['muted' => true, 'width' => '110px'])
+                ->column('name', 'Description', ['edit' => 'text'])
+                ->column('net_price', 'Net', ['format' => 'currency', 'edit' => 'number'])
+                ->column('is_active', 'Status', ['format' => 'label', 'edit' => 'select', 'labels' => [
+                    'active'   => ['color' => 'green', 'text' => 'Active'],
+                    'draft'    => ['color' => 'orange', 'text' => 'Draft'],
+                    'inactive' => ['color' => 'gray', 'text' => 'Inactive'],
+                ]])
+                ->toolbar(false)
+                ->render();
+        });
+        ?>
+    <script>
+    document.addEventListener('gk:celledit', function (e) {
+        if (e.detail.tableId !== 'demo-edit') return;
+        // No server on this page: answer after a moment, as an endpoint would ({ ok, value?, error? }).
+        e.detail.respondWith(new Promise(function (done) {
+            setTimeout(function () {
+                done(e.detail.column === 'net_price' && e.detail.value < 0
+                    ? { ok: false, error: 'A price cannot be negative.' }
+                    : { ok: true });
+            }, 400);
+        }));
+    });
+    </script>
+
     <h3 style="margin: 32px 0 16px;">Mobile-Responsive</h3>
     <p class="demo-intro">Resize the browser window to &lt;768px to see the mobile layout. In card mode the first line of a card is its head: the checkbox, the left buttons, the title and the right buttons side by side, then the other fields without rules (since 1.106.0). The title is the first column that is not <code>'muted'</code> — here the description, because the article number is muted; on a row with <code>rowLink()</code> it is the cell with the link.</p>
 

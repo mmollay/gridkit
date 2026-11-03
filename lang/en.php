@@ -61,6 +61,7 @@ return [
     'table.loading'         => 'Loading…',
     'table.load_error'      => 'The table could not be loaded.',
     'table.retry'           => 'Try again',
+    'table.edit_hint'       => 'Editable: press Enter to change it.',
     'table.scroll_region'   => 'Scrollable table',
 
     // Form
@@ -141,6 +142,9 @@ return [
     'js.empty_hint'             => 'Entries will appear here once they exist.',
     'js.no_matches_hint'        => 'No entries match this search or filter.',
     'js.reset_filters'          => 'Reset filters',
+    'js.edit_error'             => 'The change could not be saved.',
+    'js.edit_number'            => 'Enter a number.',
+    'js.edit_saved'             => 'Saved.',
     'js.too_small'          => '{name}: too small ({size}, min. {min})',
     'js.too_large'          => '{name}: too large ({size}, max. {max})',
     'js.one_file_only'      => 'Only one file allowed — {m} dropped',

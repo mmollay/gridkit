@@ -13,6 +13,9 @@ class Table
     /** The highest page a request may ask for. A page past the end shows the empty state anyway. */
     private const MAX_PAGE = 1000000;
 
+    /** What a column's 'edit' may ask for (1.110.0). */
+    private const EDIT_TYPES = ['text', 'number', 'select'];
+
     private string $id;
     private array $columns = [];
     private array $buttons = [];
@@ -64,6 +67,17 @@ class Table
 
     /** columnToggle() (1.108.0): a toolbar button whose menu shows and hides columns. */
     private bool $columnToggle = false;
+    /** editable(): the row field that names a record; null while the table is not editable. */
+    private ?string $editKey = null;
+    private string $editUrl = '';
+    /** @var array{headers?:array<string,string>} */
+    private array $editOpts = [];
+    /**
+     * The columns that can be edited in the render under way, worked out once per render():
+     * key => ['type' => …, 'options' => [[value, text], …]]. Empty for every table without editable().
+     * @var array<string,array<string,mixed>>
+     */
+    private array $editSpecs = [];
 
     public function __construct(string $id)
     {
@@ -312,6 +326,35 @@ class Table
     {
         $this->selectable = true;
         $this->selectKey  = $key;
+        return $this;
+    }
+
+    /**
+     * Inline editing (1.110.0): a cell of a column with `'edit'` turns into a field on a click, or on
+     * Enter or F2 while it has the focus — every such cell is reachable with Tab and tells a screen
+     * reader that it can be edited. Enter and leaving the field save, Escape restores the old value,
+     * Tab saves and moves to the next editable cell.
+     *
+     * Saving fires `gk:celledit` on the table with `{ tableId, id, column, value, oldValue }`. It is
+     * cancelable: preventDefault() puts the old value back and sends nothing. With `$url` GridKit then
+     * POSTs `{ id, column, value }` as JSON there and expects `{ ok: true }` back (optionally with the
+     * stored `value` and the cell's `display` markup); anything else puts the old value back and says
+     * why. Without `$url` nothing is sent — the application saves in its listener, and may answer
+     * through `event.detail.respondWith(promise)` in the shape the server would.
+     *
+     * `$key` is the row field that names a record, as in selectable(): it is written into every row as
+     * `data-gk-row-id` and posted as `id`. A row whose key is empty is not editable. Option `headers`
+     * adds request headers, typically `['X-CSRF-Token' => $token]`.
+     *
+     * A table without a column that can be edited renders exactly as it would without this call.
+     *
+     * @param array{headers?:array<string,string>} $opts
+     */
+    public function editable(string $key = 'id', string $url = '', array $opts = []): static
+    {
+        $this->editKey  = $key;
+        $this->editUrl  = $url;
+        $this->editOpts = $opts;
         return $this;
     }
 
@@ -805,6 +848,158 @@ class Table
     }
 
     /**
+     * The columns a person may edit, worked out once per render (1.110.0).
+     *
+     * A column that asks for something GridKit will not do stays read-only and says why, out
+     * loud: 'html' and 'email' write markup of their own (a link inside the field's cell would
+     * take the click), a cell with 'href' is a link, and the cell of rowLink() carries the row's
+     * control — a click there must open the row, not a field. A select needs something to choose
+     * from. 'edit' => false (or null, or '') is simply "not editable", so a permission can switch
+     * a column off without a warning.
+     *
+     * @return array<string,array<string,mixed>>
+     */
+    private function resolveEditColumns(): array
+    {
+        $specs = [];
+        $linkKey = $this->rowLinkColumn();
+        foreach ($this->columns as $key => $col) {
+            $type = $col['edit'] ?? null;
+            if ($type === null || $type === false || $type === '') continue;
+            $k = (string) $key;
+            $refuse = static fn (string $why) => trigger_error("GridKit: column '$k' $why The column stays read-only.", E_USER_WARNING);
+            if ($this->editKey === null) {
+                $refuse("has 'edit', but the table is not editable() — there is no key to save a change under.");
+                continue;
+            }
+            if (!is_string($type) || !in_array($type, self::EDIT_TYPES, true)) {
+                $refuse("has 'edit' => " . (is_scalar($type) ? var_export($type, true) : get_debug_type($type))
+                    . " — it takes 'text', 'number' or 'select'.");
+                continue;
+            }
+            $format = $col['format'] ?? '';
+            if (is_string($format) && in_array($format, self::ROW_LINK_REFUSED, true)) {
+                $refuse("cannot be edited: 'format' => '$format' writes markup of its own, and a click on a link in it cannot also open a field.");
+                continue;
+            }
+            if (isset($col['href']) && (string) $col['href'] !== '') {
+                $refuse("cannot be edited: its 'href' makes the cell a link, and a click cannot both follow it and open a field.");
+                continue;
+            }
+            if ($k === $linkKey) {
+                $refuse("cannot be edited: it carries the control of rowLink(), and a click on it opens the row.");
+                continue;
+            }
+            $spec = ['type' => $type];
+            if ($type === 'select') {
+                $spec['options'] = self::editOptions($col);
+                if ($spec['options'] === []) {
+                    $refuse("has 'edit' => 'select' and nothing to choose from — give it 'options' (value => text), or make it a 'label' column with 'labels'.");
+                    continue;
+                }
+            }
+            $specs[$k] = $spec;
+        }
+        if ($specs && $this->selectable && $this->editKey !== $this->selectKey) {
+            trigger_error("GridKit: selectable('{$this->selectKey}') and editable('{$this->editKey}') name different keys; a row has one id,"
+                . " so both use '{$this->selectKey}'.", E_USER_WARNING);
+        }
+        return $specs;
+    }
+
+    /**
+     * What a select offers: the column's 'options' (value => text, like a filter's), else the
+     * 'labels' of a label column (each key a value, its 'text' or the key itself as the text).
+     * Pairs, not an object: JavaScript reorders the numeric-looking keys of an object.
+     *
+     * @return list<array{0:string,1:string}>
+     */
+    private static function editOptions(array $col): array
+    {
+        $out = [];
+        if (isset($col['options']) && is_array($col['options'])) {
+            foreach ($col['options'] as $value => $text) {
+                $out[] = [(string) $value, is_scalar($text) ? (string) $text : (string) $value];
+            }
+            return $out;
+        }
+        if (($col['format'] ?? '') === 'label' && isset($col['labels']) && is_array($col['labels'])) {
+            foreach ($col['labels'] as $value => $entry) {
+                $text = is_array($entry) && isset($entry['text']) && is_scalar($entry['text']) ? (string) $entry['text'] : (string) $value;
+                $out[] = [(string) $value, $text];
+            }
+        }
+        return $out;
+    }
+
+    /** The row field `data-gk-row-id` is written from: the selection's key, else editable()'s, else none. */
+    private function rowIdKey(): ?string
+    {
+        if ($this->selectable) return $this->selectKey;
+        return $this->editSpecs !== [] ? $this->editKey : null;
+    }
+
+    /** The id of the hidden sentence every editable cell points at with aria-describedby. */
+    private function editHintId(): string
+    {
+        return 'gk-edit-hint-' . $this->id;
+    }
+
+    /**
+     * A value as the text PHP makes of it, the way the client's twin does (asText() in the 1.110.0
+     * block): true is "1", false and null are "", and what has no text of its own (an array) is "" too.
+     */
+    private static function rawText(mixed $value): string
+    {
+        return is_scalar($value) ? (string) $value : '';
+    }
+
+    /**
+     * What the browser needs to edit this table, on the wrap as data-gk-editable. A server table
+     * (rows(), query()) has no column config in the browser, so its editable columns travel here
+     * too — a saved value is then shown the way the column formats it, by the same code that
+     * redraws a sorted setData() table — and the label colours when one of them is a label column.
+     *
+     * @return array<string,mixed>
+     */
+    private function editConfig(): array
+    {
+        $config = [
+            'url'     => $this->editUrl,
+            'key'     => $this->rowIdKey(),
+            'hint'    => $this->editHintId(),
+            'columns' => $this->editSpecs,
+        ];
+        $headers = $this->editOpts['headers'] ?? [];
+        if (is_array($headers) && $headers !== []) {
+            $config['headers'] = array_map(static fn ($v): string => is_scalar($v) ? (string) $v : '', $headers);
+        }
+        if (!$this->isStatic) {
+            foreach (array_keys($this->editSpecs) as $k) {
+                $config['columns'][$k]['column'] = $this->columns[$k];
+                if (($this->columns[$k]['format'] ?? '') === 'label') $config['labelColors'] = self::labelColors();
+            }
+        }
+        return $config;
+    }
+
+    /**
+     * The attributes that make a cell editable — '' for every cell of a table without editable(),
+     * so such a table renders byte for byte as before. js/gridkit.js writes the same three, in the
+     * same order, when it redraws a setData() table (the 1.110.0 block); keep them in step. Only a
+     * server table carries the raw value: a setData() table has it in its data block already.
+     */
+    private function editAttrs(int|string $key, array $row, mixed $val, \Closure $e): string
+    {
+        $k = (string) $key;
+        if (!isset($this->editSpecs[$k])) return '';
+        $idKey = $this->rowIdKey();
+        if ($idKey === null || self::rawText($row[$idKey] ?? '') === '') return '';
+        return ' data-gk-edit="' . $e($k) . '" tabindex="0" aria-describedby="' . $e($this->editHintId()) . '"'
+            . ($this->isStatic ? '' : ' data-gk-raw="' . $e(self::rawText($val)) . '"');
+    }
+
+    /**
      * The WHERE clauses this table adds to the query it was given, with their
      * bound parameters.
      *
@@ -939,6 +1134,8 @@ class Table
     public function render(): void
     {
         if ($this->db) $this->loadData();
+        // Before the AJAX branch: the fragment of a reload carries the editable cells too.
+        $this->editSpecs = $this->resolveEditColumns();
 
         // AJAX reload of this table: emit the fragment only. Stopping the
         // page around it is the caller's job — see isAjaxReload().
@@ -950,6 +1147,9 @@ class Table
         $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $staticAttr    = $this->isStatic   ? ' data-gk-static'    : '';
         $selectAttr    = $this->selectable ? ' data-gk-selectable' : '';
+        $editAttr      = $this->editSpecs !== []
+            ? ' data-gk-editable="' . $e(json_encode($this->editConfig(), JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) . '"'
+            : '';
         $wrapClasses   = 'gk-table-wrap';
         $wrapClasses  .= ' gk-table-' . $this->size;
         if ($this->variant !== 'default') $wrapClasses .= ' gk-table-' . $this->variant;
@@ -968,7 +1168,7 @@ class Table
         // renderInner() is what scrolls.
         if ($this->stickyHead) $wrapClasses .= ' gk-table-sticky-head';
         if ($this->stickyColumn) $wrapClasses .= ' gk-table-sticky-col';
-        echo '<div class="' . $wrapClasses . '" data-gk-table="' . $e($this->id) . '"' . $staticAttr . $selectAttr . '>';
+        echo '<div class="' . $wrapClasses . '" data-gk-table="' . $e($this->id) . '"' . $staticAttr . $selectAttr . $editAttr . '>';
 
         // Embed JSON data + column config for client-side operations
         if ($this->isStatic) {
@@ -1151,6 +1351,12 @@ class Table
         echo '<div class="gk-sr-only" role="status" aria-live="polite"'
            . ' data-gk-table-status="' . $e($this->id) . '"></div>';
 
+        // What every editable cell says after its value (aria-describedby). Hidden, so a screen
+        // reader does not read it as a loose sentence above the table; a hidden element still
+        // describes what points at it. Here and not in render(): an AJAX reload swaps this part.
+        if ($this->editSpecs !== []) {
+            echo '<span id="' . $e($this->editHintId()) . '" hidden>' . $e(Lang::t('table.edit_hint')) . '</span>';
+        }
         $box = $this->stickyBox($leftButtons, $e);
         echo $box;
 
@@ -1341,8 +1547,10 @@ class Table
     /** One row: its selection cell, the buttons on both sides and one cell per column. */
     private function renderRow(array $row, array $leftButtons, array $rightButtons, ?string $linkKey, \Closure $e): void
     {
-        $rowId = $this->selectable ? $e($row[$this->selectKey] ?? '') : '';
-        $rowIdAttr = $this->selectable ? ' data-gk-row-id="' . $rowId . '"' : '';
+        // The record a row stands for: the selection's key, or editable()'s (a change is saved under it).
+        $idKey = $this->rowIdKey();
+        $rowId = $idKey !== null ? $e($row[$idKey] ?? '') : '';
+        $rowIdAttr = $idKey !== null ? ' data-gk-row-id="' . $rowId . '"' : '';
         $target = $linkKey !== null ? $this->rowTarget($row, $e) : null;
         echo '<tr' . ($target !== null ? ' class="gk-row-link"' : '') . $rowIdAttr . '>';
         if ($this->selectable) {
@@ -1391,7 +1599,8 @@ class Table
         $dataLabel = ' data-label="' . $e($col['label']) . '"';
         // (string): a key like '2024' is an integer in a PHP array.
         $formatted = $this->cellContent($val, $col, $row, $e, (string) $key === $linkKey ? $target : null);
-        echo "<td{$tdClass}{$tdStyle}{$dataLabel}>{$formatted}</td>";
+        $editAttrs = $this->editSpecs !== [] ? $this->editAttrs($key, $row, $val, $e) : '';
+        echo "<td{$tdClass}{$tdStyle}{$dataLabel}{$editAttrs}>{$formatted}</td>";
     }
 
     /** The footer: the cells the caller gave, and the load time or the row count. */

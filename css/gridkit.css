@@ -11166,3 +11166,105 @@ label.gk-setting-title {
     align-self: flex-start;
   }
 }
+
+/* === 1.110.0 — inline editing === */
+/* A cell of a column with 'edit' (Table::editable()) says so before anyone hovers: a dotted line
+   under its content. A shape, not a colour, and in the muted text colour so it holds 3:1 for a
+   control (7.6:1 light, 6.2:1 dark) without shouting. A background, not a border or ::after: the
+   row keeps its own rule, and ::after is the chevron of a row link. The weight of the selector
+   (0,3,1) is on purpose — the hover and focus fill of a row (0,2,3) is written with the background
+   shorthand and would take the line away. No new class: the cell is found by data-gk-edit. */
+[data-gk-editable] .gk-table td[data-gk-edit] {
+  cursor: text;
+  background-image: repeating-linear-gradient(90deg, var(--gk-on-surface-variant) 0 1px, transparent 1px 3px);
+  background-origin: content-box;
+  background-size: 100% 1px;
+  background-position: left 0 bottom -4px;
+  background-repeat: no-repeat;
+}
+/* Under the pointer the line turns solid and primary: a second shape, not only a second colour. */
+[data-gk-editable] .gk-table td[data-gk-edit]:hover {
+  background-image: linear-gradient(var(--gk-primary), var(--gk-primary));
+}
+[data-gk-editable] .gk-table td[data-gk-edit]:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+/* The field lies over the cell, and the value stays under it, hidden: opening a field moves no
+   column and no row (a field in the flow widened its column by the width of an empty input).
+   text-align follows the cell, so a number stays on the right; so does a field wider than a narrow
+   column, which grows to the left there. */
+[data-gk-editable] .gk-table td[data-gk-edit][data-gk-editing] {
+  position: relative;
+  background-image: none; /* (0,4,1), after the hover rule: no line under the open field */
+}
+[data-gk-editable] .gk-table td[data-gk-editing] > [data-gk-edit-was] {
+  visibility: hidden;
+}
+[data-gk-editable] .gk-table td[data-gk-editing] > :is(input, select) {
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  transform: translateY(-50%);
+  box-sizing: border-box;
+  width: calc(100% - 8px);
+  min-width: 6em;
+  margin: 0;
+  padding: 3px 6px;
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  color: var(--gk-on-surface);
+  background-color: var(--gk-surface);
+  border: 1px solid var(--gk-primary);
+  border-radius: 6px;
+  box-shadow: var(--gk-focus-ring);
+  outline: none;
+  z-index: 1;
+}
+[data-gk-editable] .gk-table td.gk-td-num[data-gk-editing] > input {
+  left: auto;
+  right: 4px;
+}
+[data-gk-editable] .gk-table td[data-gk-editing] > input[aria-invalid="true"] {
+  border-color: var(--gk-error);
+  box-shadow: var(--gk-focus-ring-error);
+}
+/* Saving: aria-busy says it to a screen reader, the faded value and the cursor to the eye. */
+[data-gk-editable] .gk-table td[data-gk-edit][aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.55;
+  background-image: none;
+}
+/* In dark mode the surface is the table's own ground; the field steps up one container so that it
+   reads as a field and not as a hole in the row. */
+[data-gk-mode="dark"] [data-gk-editable] .gk-table td[data-gk-editing] > :is(input, select),
+.gk-dark [data-gk-editable] .gk-table td[data-gk-editing] > :is(input, select) {
+  background-color: var(--gk-surface-container);
+}
+/* A card on a phone: the cell is a line of label and value, 3px of padding below it. The line sits
+   in that padding, and the field takes the room of the value beside its label. */
+@media (max-width: 768px) {
+  .gk-table-mobile-card[data-gk-editable] .gk-table td[data-gk-edit] {
+    background-position: left 0 bottom -2px;
+  }
+  /* In a card the width is the card's, nothing can move: the field takes the place of the value. */
+  .gk-table-mobile-card[data-gk-editable] .gk-table td[data-gk-editing] > [data-gk-edit-was] {
+    display: none;
+  }
+  .gk-table-mobile-card[data-gk-editable] .gk-table td[data-gk-editing] > :is(input, select) {
+    position: static;
+    transform: none;
+    flex: 1 1 0;
+    align-self: stretch;
+    width: auto;
+    min-width: 0;
+    margin: -2px 0;
+  }
+}
+/* Forced colours drop the gradient; an underline survives them. */
+@media (forced-colors: active) {
+  [data-gk-editable] .gk-table td[data-gk-edit] {
+    text-decoration: underline dotted;
+  }
+}
