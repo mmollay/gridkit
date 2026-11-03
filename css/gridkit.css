@@ -6352,7 +6352,9 @@ a.gk-stat-card:hover {
 .gk-dark input,
 .gk-dark select,
 .gk-dark textarea {
-  background: #0d1117;
+  /* background-color, not the shorthand: the shorthand also reset background-image, and with
+     it the magnifier of .gk-search and the arrow of .gk-filter and select.gk-input (1.105.1). */
+  background-color: #0d1117;
   color: var(--gk-on-surface);
   border-color: rgba(255, 255, 255, 0.15);
 }
@@ -7256,7 +7258,8 @@ a.gk-stat-card:hover {
 /* --- Inputs & Forms --- */
 [data-gk-mode="dark"] .gk-input,
 .gk-dark .gk-input {
-  background: #0d1117;
+  /* background-color: the shorthand took the arrow of select.gk-input with it (1.105.1). */
+  background-color: #0d1117;
   border-color: rgba(255, 255, 255, 0.15);
   color: var(--gk-on-surface);
 }

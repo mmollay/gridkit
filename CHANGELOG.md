@@ -7,6 +7,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.105.1] - 2026-11-03
+
+In dark mode the table search has its magnifier again, and every filter, page-size select and form select has its arrow. Only the background colour of these fields was meant to change in dark mode, and the rule took their icon with it.
+
+### Fixed
+- **Dark mode removed the icon of 24 fields in the demo.** The magnifier of `.gk-search` and the arrow of `.gk-filter` (select, date and number), `.gk-pagesize-select` and `select.gk-input` are background images. Two dark-mode rules, `[data-gk-mode="dark"] input, select, textarea` (and `.gk-dark …`) and `[data-gk-mode="dark"] .gk-input`, wrote `background: #0d1117`. The shorthand also sets `background-image` to `none`, and both selectors outweigh the single class that draws the icon. Both rules write `background-color: #0d1117` now; the colour of the fields does not change. Compared in a browser over all 6811 elements of the demo, light against dark: before, 24 fields had an image in light mode and none in dark; now none. The only remaining differences are the range slider and `gk-skeleton`, whose gradients use colour tokens that differ between the modes, as before.
+
+### Tests
+- `tests/dark-inputs.test.php` (18 assertions): the three classes still draw their icon; no dark rule that reaches a bare `input`, `select` or `textarea`, or `.gk-input`, `.gk-search`, `.gk-filter` or `.gk-pagesize-select`, writes the `background` shorthand without `background-image`; both rules keep `#0d1117`. Putting the shorthand back in either rule turns it red.
+
+---
 ## [1.105.0] - 2026-11-02
 
 Four things an admin page keeps writing by hand are methods now: fill a form from a record, show a failed save's messages, put your own actions in the bulk bar, download a table as CSV, and show a field only while another has a value. The demo shows what it did not show, the skill names every option the code reads, and the examples use the new calls. Nothing that was there changes: every call below is an addition.
