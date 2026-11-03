@@ -3,7 +3,7 @@
     "blocks": {
         "table": {
             "name": "Table",
-            "changed": "1.110.3",
+            "changed": "1.114.0",
             "classes": {
                 "gk-actions": "0.9.0",
                 "gk-actions-col": "0.9.0",
@@ -185,7 +185,7 @@
         },
         "form": {
             "name": "Form",
-            "changed": "1.113.0",
+            "changed": "1.114.0",
             "classes": {
                 "gk-field": "0.9.0",
                 "gk-field-error": "0.9.0",
@@ -370,6 +370,7 @@
         },
         "card": {
             "name": "Cards",
+            "changed": "1.114.0",
             "classes": {
                 "gk-card": "0.9.0",
                 "gk-card-actions": "1.22.4",
@@ -403,7 +404,7 @@
         },
         "stat-cards": {
             "name": "StatCards",
-            "changed": "1.92.0",
+            "changed": "1.114.0",
             "classes": {
                 "gk-stat-blue": "0.9.0",
                 "gk-stat-card": "0.9.0",
@@ -453,7 +454,7 @@
                 "gk-message-success": "1.0.0",
                 "gk-message-warning": "1.0.0"
             },
-            "changed": "1.99.0"
+            "changed": "1.114.0"
         },
         "announce": {
             "name": "Announcement",
@@ -598,6 +599,7 @@
         },
         "sortierbar": {
             "name": "Sortable container",
+            "changed": "1.114.0",
             "classes": {
                 "gk-sort-aktiv": "1.97.0",
                 "gk-sort-fehler": "1.97.0",
@@ -780,7 +782,7 @@
         },
         "button": {
             "name": "Button",
-            "changed": "1.110.5",
+            "changed": "1.114.0",
             "classes": {
                 "gk-btn": "0.9.0",
                 "gk-btn-badge": "0.9.0",
@@ -821,6 +823,7 @@
         },
         "label": {
             "name": "Label",
+            "changed": "1.114.0",
             "classes": {
                 "gk-label": "0.9.0",
                 "gk-label-blue": "0.9.0",
@@ -891,7 +894,7 @@
         },
         "header": {
             "name": "Header",
-            "changed": "1.92.0",
+            "changed": "1.114.0",
             "classes": {
                 "gk-body-with-header": "0.9.0",
                 "gk-dropdown-divider": "0.9.0",
@@ -918,7 +921,7 @@
         },
         "sidebar": {
             "name": "Sidebar",
-            "changed": "1.92.0",
+            "changed": "1.114.0",
             "classes": {
                 "gk-sidebar": "0.9.0",
                 "gk-sidebar-badge": "0.9.0",
@@ -951,10 +954,12 @@
         },
         "theme": {
             "name": "Themes and dark mode",
-            "changed": "1.110.3",
+            "changed": "1.114.0",
             "classes": {
                 "gk-dark": "0.9.0",
+                "gk-mode-auto": "1.114.0",
                 "gk-mode-dark": "0.9.0",
+                "gk-mode-group": "1.114.0",
                 "gk-mode-light": "0.9.0",
                 "gk-mode-toggle": "0.9.0",
                 "gk-theme-active": "0.9.0",

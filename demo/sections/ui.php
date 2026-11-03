@@ -377,7 +377,8 @@ GK.sidebar.toggle(); GK.sidebar.open(); GK.sidebar.close();</pre></div>
     <div class="demo-code"><pre>Theme::set('ocean', 'dark');
 echo Theme::bodyTag('gk-root');
 echo Theme::switcher();
-GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();</pre></div>
+GK.theme.set('forest'); GK.theme.toggleMode(); GK.theme.restore();
+GK.theme.setMode('auto');   // 'light' | 'dark' | 'auto' — auto follows the system (1.114.0)</pre></div>
 
     <h3 class="demo-h3" id="action-group">Action group <?= since('action-group') ?></h3>
     <p class="demo-intro"><code>ActionGroup::html()</code> returns a row of small buttons in one go; <code>render()</code> prints it. An item with <code>'showIf' => false</code> is left out, <code>'pill'</code> rounds it, and an icon-only item needs <code>'title'</code> for its name.</p>

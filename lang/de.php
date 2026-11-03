@@ -6,6 +6,9 @@ return [
     // Table
     'theme.choose'          => 'Farbschema: {name}',
     'theme.toggle_mode'     => 'Zwischen hell und dunkel wechseln',
+    'theme.accent'          => 'Akzentfarbe',
+    'theme.mode'            => 'Farbmodus',
+    'theme.mode_auto'       => 'Wie das System',
     'action.settings'       => 'Einstellungen',
     'action.close'          => 'Schließen',
     'action.search'         => 'Suchen',

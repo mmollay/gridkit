@@ -7,7 +7,8 @@
  * Handy-Rückfall der Seitenleiste, untere feste Leiste, Überläufe, Kontrast hell und dunkel, Strichseite, Optionen.
  * Rückwärtsverträglichkeit: die berechneten Werte aller älteren Reiterformen stehen in ci/reiter-bestand.json (Stand 1.102.0,
  * seit 1.103.1 mit der ruhigeren Kantenfarbe des Karteireiters — als einzige Abweichung, nur border*Color der Formen alt-karte,
- * alt-karte-secondary und alt-links);
+ * alt-karte-secondary und alt-links; seit 1.114.0 mit den Farben des neuen Farbsystems — neu geschrieben, nachdem der
+ * Vergleich nur Farbwerte abweichen sah: border*Color, color, backgroundColor und die Farbe im boxShadow, keine Maße);
  * `GK_QUELLE=<Ordner mit css/ und js/ von 1.102.0> GK_BESTAND_SCHREIBEN=1 node ci/browser-reiter-varianten.js` schreibt die Datei neu
  * (nur nach einer gewollten Änderung der alten Formen; den Ordner liefert `git archive <Stand> css js`).
  * Aufruf: GK_PLAYWRIGHT=/pfad/zu/playwright node ci/browser-reiter-varianten.js — Exit 0, wenn alles hält.

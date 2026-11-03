@@ -477,7 +477,10 @@ return [
     // Series never follow the theme.
     T::notContains((string) file_get_contents(__DIR__ . '/../css/themes.css'), '--gk-series', 'a theme moves the series colours');
     // Dark: every slot a readable mark on both dark grounds.
-    foreach (['#0d1117', '#1e293b'] as $ground) {
+    // The grounds were the two dark palettes that ran side by side until 1.114.0 (#0d1117 without
+    // themes.css, #1e293b with it). Since then one ladder, read here: the page, the card and the
+    // hover step — the darkest and the lightest ground a chart lies on.
+    foreach ([$token('gk-surface-container', true), $token('gk-surface', true), $token('gk-surface-container-high', true)] as $ground) {
         foreach ($dark as $n => $hex) {
             T::ok($contrast($hex, $ground) >= 3.0, sprintf('dark series %d is %.2f:1 on %s', $n, $contrast($hex, $ground), $ground));
         }

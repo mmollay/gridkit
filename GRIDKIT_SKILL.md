@@ -37,7 +37,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Modal | `GridKit\Modal` | Dialog overlays |
 | Button | `GridKit\Button` | Filled/Outlined/Text/Tonal, icons, sizes |
 | Auth | `GridKit\Auth` | Session auth, bcrypt, remember-me |
-| Theme | `GridKit\Theme` | 6 themes (indigo/ocean/forest/rose/amber/slate), light/dark |
+| Theme | `GridKit\Theme` | 6 themes (indigo/ocean/forest/rose/amber/slate), light/dark — and auto with the switcher since 1.114.0, which also refined every colour |
 | Layout | `GridKit\Layout` | Layout modes (sidebar-first, header-first) |
 | StatCards | `GridKit\StatCards` | KPI cards with icon, color, format |
 | FilterChips | `GridKit\FilterChips` | URL-based filter chip buttons |
@@ -2182,6 +2182,67 @@ Theme::set('indigo', 'light');  // themes: indigo, ocean, forest, rose, amber, s
 echo Theme::switcher();          // RETURNS the switcher HTML — must be echoed
 ```
 
+**The six themes (since 1.114.0).** The keys are what they always were; the colours were
+refined. A theme is an accent hue and the neutral it is paired with — every other value is
+derived in OKLCH at the same lightness steps, so all six have the same contrast:
+
+| Key | Accent (light / dark) | Neutrals | Character |
+|---|---|---|---|
+| `indigo` (default) | `#4e5ad7` / `#a1b2ff` | cool blue-grey | deep ink indigo |
+| `ocean` | `#00769f` / `#7fc1e3` | blue-grey | deep cerulean |
+| `forest` | `#0a7f60` / `#87c7ae` | sage | jade |
+| `rose` | `#b13276` / `#f595c0` | mauve | berry — kept away from the red of errors |
+| `amber` | `#a55115` / `#e8a681` | sand | copper |
+| `slate` | `#424852` / `#b3b8c0` | graphite | monochrome: a near-black accent (L 0.40) |
+
+White text on every light accent: 4.98:1 (forest) to 9.2:1 (slate); dark text on every dark
+accent 8:1 or more. `Theme::available()` carries these light accents as the swatch colours.
+
+**The switcher.** `Theme::switcher()` (and the *Appearance* part of `Header::user()`) shows six
+swatches — the chosen one with a ring in its colour, a check mark and `aria-pressed`, never colour
+alone — and one mode group. With `js/gridkit.js` 1.114.0 the group is **light | dark | auto**;
+*auto* follows the system setting (`prefers-color-scheme`) and is stored per browser beside the
+mode (`gk-mode-auto`, in the `GK.theme` scope). From code: `GK.theme.setMode('light' | 'dark' |
+'auto')`; `GK.theme.toggleMode()` still toggles and ends *auto*. A copy of `gridkit.js` without the
+1.114.0 block keeps the plain light/dark toggle — the auto button stays hidden. The markup since
+1.114.0: the swatches sit in `.gk-theme-colors` (`role="group"`), each dot is `type="button"` and
+carries its colour as `--gk-swatch`; the toggle and the auto button (`.gk-mode-auto`, rendered
+`hidden`) sit in `.gk-mode-group` (`role="group"`). The old classes and attributes are unchanged.
+
+### Colour system and roles
+
+GridKit's colour is a set of **roles** (`--gk-*` custom properties), never literals: write a role
+and a page follows the theme and both dark spellings (`[data-gk-mode="dark"]`, `.gk-dark`) by
+itself. The principles behind the values (1.114.0): the neutrals carry the interface and the
+accent is a signal (the one primary action, the selection, focus, links); neutrals are tinted
+towards their theme, under 0.02 chroma; each role sits at a fixed OKLCH lightness; dark mode is
+its own ladder of near-black with the theme's hue, layered upward; the semantic colours never
+follow the theme.
+
+| Role | Use it for | Light | Dark |
+|---|---|---|---|
+| `--gk-surface` | cards, the header, fields in focus, menus' paper | `#ffffff` | `#191b21` (L 0.222) |
+| `--gk-surface-container` | the page under the cards, a muted band | `#f4f5f8` (L 0.970) | `#111218` (L 0.185) |
+| `--gk-surface-container-low` | a subtle fill: card footer, resting field, stripe | `#f9fafc` | `#14161c` (recessed) |
+| `--gk-surface-container-high` | hover on a surface, a track | `#ecedf2` | `#22242b` (raised) |
+| `--gk-surface-container-highest` | pressed, the strongest neutral fill, menus in dark | `#e2e4e9` | `#2b2d36` |
+| `--gk-on-surface` | text | `#181a22` (17:1) | `#ebecf1` (14.6:1) |
+| `--gk-on-surface-variant` | secondary text, icons | `#565965` (7:1) | `#a4a7b2` (7.2:1) |
+| `--gk-outline-variant` | hairlines: card edges, dividers | `#e4e5ea` | white at 8 % |
+| `--gk-outline` | a control's edge | `#9b9ea9` | `#50525c` |
+| `--gk-primary` / `--gk-on-primary` | the one primary action, selection, focus | accent / white | light accent / dark text |
+| `--gk-primary-text` | the accent as text on a surface (links, chosen tab) | one step darker | = the accent, a step lower |
+| `--gk-primary-container` / `--gk-on-primary-container` | a tonal fill: chosen segment, count, hover of the grip | L 0.95 / L 0.36 | L 0.36 / L 0.92 |
+| `--gk-success` `--gk-warning` `--gk-error` `--gk-info` | dots, borders, icons — not text | emerald, amber, red, sky | lighter steps |
+| `--gk-*-text`, `--gk-*-fill` | the semantic colour as text / as a filled button with white text | 4.5:1 and more | |
+| `--gk-elev-1` … `-4` | shadow steps: card, raised card, menu, dialog | soft, two layers | deeper |
+
+The ladder runs the same way in both modes: cards are lighter than the page, a hover is a step
+away from its surface, a field is a step recessed. Prefer the role to the older alias
+(`--gk-bg`, `--gk-text-muted`, …) in new code; since 1.114.0 the aliases resolve to their role in
+dark mode too. The error role is a true red since 1.114.0 (`#dd2d34`, white 4.67:1), so a badge
+or a bulk-delete button in it reads; the rose theme's accent stays clearly apart from it.
+
 ### The small helpers
 
 ```php
@@ -2660,7 +2721,9 @@ Features:
 | `gk-picker` `gk-picker-grid` `gk-picker-item` `gk-picker-media` `gk-picker-input` `gk-picker-caption` | Image picker (since 1.94.0): container, grid, one tile, its picture area, the radio drawn as that area, the title row |
 | `gk-card-elevated` `gk-card-flat` | Card with a shadow / with a hairline border instead |
 | `gk-card-image` | A picture flush with the top of a card (rounds the two upper corners) |
-| `gk-card-title` `gk-card-actions` | Heading inside a card / a right-aligned row of buttons in its header |
+| `gk-card-title` `gk-card-actions` | Heading inside a card (since 1.114.0 semibold in the text colour, in the case it is written in — it was the accent in capitals) / a right-aligned row of buttons in its header |
+| `gk-card-header` `gk-card-body` `gk-card-footer` | A card made of parts: since 1.114.0 a card with a `gk-card-body` lets its parts do the padding — header and footer lines run edge to edge, the footer is a quiet band, a `gk-card-image` sits flush. A card without a body keeps its own padding (20px 24px) |
+| `gk-card-link` | The whole card is a link: under the pointer one step of elevation and a firmer edge, 1px up (none with reduced motion); a focus ring in the accent |
 | `gk-field-hint` `gk-field-has-error` | Help text under a field / colours a label to match its error |
 | `gk-checkbox-label` `gk-radio-label` | Label sitting beside its own box or dot |
 | `gk-form-page` `gk-form-wide` | A form capped at 800 px / one with no cap at all |
@@ -2693,8 +2756,10 @@ Features:
 | `gk-timeline-ok` `gk-timeline-failed` `gk-timeline-running` `gk-timeline-waiting` `gk-timeline-skipped` | The state of a step, on its `<li>`: check, cross, a turning ring (still under reduced motion), an empty ring, a dash |
 | `gk-video-frame` `gk-video-frame-media` `gk-video-frame-caption` | A 9:16 frame for a video or picture (since 1.96.0): never wider than the column or taller than 75% of the window, the picture shown whole, no autoplay |
 | `gk-video-frame-safe` `gk-video-frame-busy` `gk-video-frame-error` | On the frame: guide lines for the zones a platform covers (top 10%, bottom 20%, no click caught) / nothing to show yet / it broke — the last two reuse `.gk-empty` |
-| `gk-sort-griff` `gk-sort-aktiv` | The handle the script puts in an entry (since 1.97.0) and the mark on a container that has handles (two entries or more) |
-| `gk-sort-zieht` `gk-sort-frei` `gk-sort-platz` | The entry in the air (outline, shadow), the entry flying with the pointer (fixed), and the dashed gap it left |
+| `gk-sort-griff` `gk-sort-aktiv` | The handle the script puts in an entry (since 1.97.0) and the mark on a container that has handles (two entries or more). Since 1.114.0 a quiet grip (subtle surface, hairline); under the pointer the tonal accent, lifted with the keyboard the accent fill, and the entry whose grip is under the pointer or in focus gets a thin accent ring |
+| `gk-sort-zieht` `gk-sort-frei` `gk-sort-platz` | The entry in the air (accent outline, the surface, the highest elevation), the entry flying with the pointer (fixed), and the dashed gap it left (in a share of the accent) |
+| `gk-theme-switcher` `gk-theme-colors` `gk-theme-dot` `gk-theme-active` | The theme switcher: its swatches (`--gk-swatch`, the chosen one with ring and check) |
+| `gk-mode-group` `gk-mode-toggle` `gk-mode-auto` `gk-mode-light` `gk-mode-dark` | The mode group of the switcher (1.114.0): the light/dark toggle and the auto button the script shows (light, dark, auto as one track with one thumb) |
 | `gk-sort-meldungen` `gk-sort-ok` `gk-sort-fehler` | Under a sortable container: the wrapper of the two lines, "saved" for a moment, and the failure as a sentence beside a symbol |
 | `gk-show-mobile` | Shown at 768px and below only — the counterpart of `gk-hide-mobile` |
 | `gk-choice` `gk-choice-mark` `gk-choice-text` `gk-choice-title` `gk-choice-hint` | A radio or checkbox as an answer tile with a letter (Form `'choice'`) |

@@ -9300,3 +9300,137 @@ function _gkShowIfInit(root) {
   }
   _gkReady(function () { init(document); });
 })();
+
+// === 1.114.0 — colour system: theme switcher ===
+/*
+ * The mode control of Theme::switcher() as one group of three: light | dark | auto (follow the
+ * system). The PHP renders the light/dark toggle as it always did and the auto button hidden; this
+ * block shows the auto button and marks the group (data-gk-mode-ready, data-gk-mode-state), and the
+ * stylesheet then draws the two glyphs of the toggle as two segments with one thumb under the mode
+ * in effect. A copy of gridkit.js without this block (the PawBot dashboard keeps its own) keeps the
+ * plain toggle, which works exactly as before.
+ *
+ * Auto is stored beside the mode, as "gk-mode-auto" = "1" in the namespace of GK.theme (scope).
+ * "gk-mode" keeps the light or dark in effect, so GK.theme.restore() — which knows nothing of auto —
+ * still sets a sensible mode on load, and this block then corrects it to what the system says now
+ * and follows it while the page is open.
+ *
+ * A click on one of the two glyphs chooses that mode (the base handler would toggle, which on the
+ * glyph already in effect is the opposite of what was clicked); Enter or Space on the toggle still
+ * toggles. Choosing a mode, or GK.theme.toggleMode() from the page's own code, ends auto.
+ *
+ * GK.theme.setMode("light" | "dark" | "auto") does the same from code.
+ */
+(function () {
+  var GK = window.GK;
+  if (!GK || !GK.theme || typeof GK.theme._key !== "function") return;
+  var media = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+
+  function autoKey() {
+    return GK.theme._key("gk-mode-auto");
+  }
+  function isAuto() {
+    try {
+      return window.localStorage.getItem(autoKey()) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+  function storeAuto(on) {
+    try {
+      if (on) window.localStorage.setItem(autoKey(), "1");
+      else window.localStorage.removeItem(autoKey());
+    } catch (e) {}
+  }
+  function systemMode() {
+    return media && media.matches ? "dark" : "light";
+  }
+  function current() {
+    return document.body && document.body.dataset.gkMode === "dark" ? "dark" : "light";
+  }
+
+  /** Every switcher on the page: ready, which of the three is in effect, the auto button shown and pressed or not. */
+  function mark() {
+    var auto = isAuto();
+    var state = auto ? "auto" : current();
+    document.querySelectorAll(".gk-theme-switcher").forEach(function (sw) {
+      var btn = sw.querySelector("[data-gk-mode-auto]");
+      if (!btn) return;
+      btn.hidden = false;
+      btn.setAttribute("aria-pressed", auto ? "true" : "false");
+      sw.setAttribute("data-gk-mode-ready", "");
+      sw.setAttribute("data-gk-mode-state", state);
+    });
+  }
+
+  /** Light or dark, written the way GK.theme writes it, so restore() finds it on the next page. */
+  function apply(mode) {
+    if (!document.body) return;
+    document.body.dataset.gkMode = mode;
+    try {
+      window.localStorage.setItem(GK.theme._key("gk-mode"), mode);
+    } catch (e) {}
+    if (typeof GK.theme._markMode === "function") GK.theme._markMode(mode);
+    mark();
+  }
+
+  var api = {
+    /** "light", "dark" or "auto" (follow the system and keep following it). */
+    setMode: function (mode) {
+      if (mode === "auto") {
+        storeAuto(true);
+        apply(systemMode());
+        return;
+      }
+      storeAuto(false);
+      apply(mode === "dark" ? "dark" : "light");
+    },
+  };
+  GK.theme.setMode = api.setMode;
+
+  // The page's own call (and the base click handler, which calls it) ends auto.
+  var toggle = GK.theme.toggleMode;
+  if (typeof toggle === "function") {
+    GK.theme.toggleMode = function () {
+      storeAuto(false);
+      var out = toggle.apply(this, arguments);
+      mark();
+      return out;
+    };
+  }
+
+  // Captured before the base handler: a glyph chooses its own mode instead of toggling.
+  document.addEventListener(
+    "click",
+    function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+      if (t.closest("[data-gk-mode-auto]")) {
+        e.stopImmediatePropagation();
+        GK.theme.setMode(isAuto() ? current() : "auto");
+        return;
+      }
+      if (!t.closest(".gk-theme-switcher[data-gk-mode-ready] [data-gk-toggle-mode]")) return;
+      var glyph = t.closest(".gk-mode-light") ? "light" : t.closest(".gk-mode-dark") ? "dark" : null;
+      if (!glyph) return;
+      e.stopImmediatePropagation();
+      GK.theme.setMode(glyph);
+    },
+    true
+  );
+
+  if (media) {
+    var follow = function () {
+      if (isAuto()) apply(systemMode());
+    };
+    if (typeof media.addEventListener === "function") media.addEventListener("change", follow);
+    else if (typeof media.addListener === "function") media.addListener(follow);
+  }
+
+  function start() {
+    if (isAuto()) apply(systemMode());
+    else mark();
+  }
+  // After GK.theme.restore(), which runs on DOMContentLoaded too and was registered first.
+  _gkReady(start);
+})();

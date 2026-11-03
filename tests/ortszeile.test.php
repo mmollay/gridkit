@@ -293,7 +293,10 @@ return [
 'the menu button is what it was, unless a word is asked for' => function (): void {
     Lang::set('en');
     $h = (new Header())->title('Invoices')->search('Find')->user('Jane Doe')->render();
-    T::eq(sha1($h), 'ee321d8429e6da97c0cde55c97e06ca96298dfc6', 'byte for byte, as before');
+    // The hash covers the whole header, and the user menu carries Theme::switcher(). 1.114.0 changed
+    // the switcher on purpose (the groups are named, type="button", the swatch colour as --gk-swatch,
+    // the hidden auto button) — the menu button this test is about is byte for byte what it was.
+    T::eq(sha1($h), '034ac47512a7293a31e3fe4204c10d5e686ba5ad', 'byte for byte, as before');
     T::eq(sha1((new Header())->title('x')->sidebarToggle(true, [])->render()), sha1((new Header())->title('x')->render()), 'an empty option list changes nothing');
 },
 

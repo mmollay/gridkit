@@ -6,6 +6,9 @@ return [
     // Table
     'theme.choose'          => 'Colour theme: {name}',
     'theme.toggle_mode'     => 'Switch between light and dark',
+    'theme.accent'          => 'Accent colour',
+    'theme.mode'            => 'Colour mode',
+    'theme.mode_auto'       => 'Follow the system setting',
     'action.settings'       => 'Settings',
     'action.close'          => 'Close',
     'action.search'         => 'Search',
