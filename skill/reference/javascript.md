@@ -1,4 +1,4 @@
-# GridKit 1.111.0 — JavaScript
+# GridKit 1.112.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -73,6 +73,9 @@ GK.tabs.reload('settings', 'log');             // a lazy panel, fetched again; a
 document.addEventListener('gk:tabchange', e => { /* cancelable; e.detail: { tabsId, from, to, panel, source } */ });
 document.addEventListener('gk:tabshown', e => { /* after the switch */ });
 document.addEventListener('gk:tabload', e => { /* a lazy panel: { tabsId, key, panel, ok, status } */ });
+
+// Tooltips (since 1.112.0) — see "Tooltips". Delegated: new content needs no call.
+GK.tooltip.show(el);  GK.tooltip.hide();  GK.tooltip.update();
 ```
 
 An AJAX form (`Form::ajax()`) reports its own outcome: `{ok: true, message: '…'}` closes the modal, refreshes

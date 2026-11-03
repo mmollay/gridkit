@@ -1,4 +1,4 @@
-# GridKit 1.111.0 — components
+# GridKit 1.112.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -99,6 +99,14 @@ Both keep the raw value, so sorting and searching go on working — which is wha
 tab, and middle click does the rest.
 
 **`->groupBy($column, $labels)`:** inserts a group row whenever the value changes. Sort the rows by that column first.
+
+**`'tooltip'` on a column and on a row button (since 1.112.0):** on a column,
+`->column('net', 'Net', ['tooltip' => 'Before VAT'])` puts a help icon (`.gk-help`) beside
+the header label — a button of its own next to the sort button, opening its text on a click.
+On a row button, `->button('edit', ['icon' => 'edit', 'tooltip' => 'Edit this customer'])`
+writes GridKit's tooltip instead of the browser `title`; `'title'` or `'aria'` still name the
+button. Both take a string or `['text' => …, 'pos' => …, 'tone' => …]` and survive a sort of a
+`setData()` table. See *Tooltips*.
 
 **`->rowLink($target)` (since 1.91.0):** the whole row opens something — a page, or
 a side sheet on this page. Use it instead of putting selects, switches or a delete
@@ -633,7 +641,11 @@ echo Button::render('Label', [
     'shape'   => 'pill',      // rounded (default) | pill | circle | square
     'href'    => '/path',     // renders as <a>
     'onclick' => 'jsCode()',
-    'title'   => 'Add a row', // tooltip
+    'title'   => 'Add a row', // the browser's tooltip (GK.tip restyles it)
+    'tooltip' => 'Adds a row at the end',  // GridKit's tooltip instead: a string, or
+                              // ['text' => …, 'pos' => …, 'tone' => …, 'kbd' => …] — a
+                              // description, not the name; no title is written with it.
+                              // See "Tooltips" (since 1.112.0)
     'aria'    => 'Add a row', // accessible name; see below
     'disabled' => false,
     'type'    => 'submit',    // button (default) | submit | reset
@@ -1274,6 +1286,7 @@ searchable select is plain `'select'`.
 | `->cancel($label, $href)` | — | a link beside the submit button — a method, not a field |
 | `->hidden($name, $value)` | — | a hidden input — a method, not a field |
 | `error` | every field | a validation message, rendered red under the field. This is how a classic POST-redisplay shows errors: `['value' => $_POST['email'] ?? '', 'error' => $errors['email'] ?? '']`. The AJAX handler writes into the same slot, so both paths look identical |
+| `help` | every field | a help icon (`.gk-help`) beside the label that opens this text on a click — a toggletip, see *Tooltips* (since 1.112.0). A string, `'#id'` of an element holding HTML, or `['text' => …, 'pos' => …, 'tone' => …]`. The label and the icon stand in a `.gk-label-row`; the field keeps its label as its name. Without a visible label the icon follows the control |
 | `hint` | `toggle` | one sentence on what the switch does — the field becomes a settings row (`.gk-setting`): title and sentence on the left, the switch on the right, no label above it, and the input a `role="switch"` described by the sentence (since 1.92.0) |
 | `danger` | `toggle` with `hint` | marks a switch that locks someone out: the title in the error colour, the switch red when on |
 | `options` | `choice` | `value => label`, or `value => ['title' => …, 'hint' => …, 'mark' => …]`; the mark is A, B, C … by position unless given |
@@ -2098,7 +2111,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
 | Tabs | `GridKit\Tabs` / `.gk-tabs` / `[data-gk-tabs]` | Tab navigation, two shapes — full tablist semantics and arrow keys since 1.69.0; the Karteireiter shape `.gk-tab-nav-karte` + `.gk-tab-flaeche`, nesting and a phone grid since 1.101.0; a row that does not fit its box becomes the grid by itself (`GK.tabsFit`) and `gk-tab-badge-error` since 1.102.0; line tabs for the second row, `--gk-tab-radius` and link tabs that keep their place (`GK.tabsScroll`) since 1.102.0; three more styles (line, pill, text), four alignments (left, right, bottom, fixed bar) and options (size, full width, symbol above or only, neutral, disabled) as classes on the row since 1.103.0; the PHP class `Tabs` for every option, deep links (`->hash()`, `->param()`), remembered tabs, lazy panels, `gk:tabchange`/`gk:tabshown` and `GK.tabs.select/current/badge/count/reload`, arrows on a row wider than its box (`GK.tabsOverflow`) since 1.111.0 |
 | Accordion (JS) | `.gk-accordion` | Collapsible sections, optional single-open (`data-gk-single`) |
-| Tooltips (JS/CSS) | `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` | Hint popups — plain, CSS-only, or with HTML in them |
+| Tooltips (JS/CSS) | `GridKit\Tooltip` / `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` / `data-gk-toggletip` / `.gk-help` | Hint popups — plain, title, with HTML in them, or a toggletip that opens on a click; one engine places, flips and announces them all; `'tooltip'` on Button and Table, `'help'` on Form (since 1.112.0) |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
 | Image picker | `GridKit\ImagePicker` / `GK.picker` | Choose one image out of many: a compact grid of 16:9 tiles that works like a radio group, folds after two rows, and an enlarged view that can pick (since 1.94.0) |
 | Announcement (JS/CSS) | `.gk-announce` / `GK.announce` | The line that says "Saved." where the person works, read by a screen reader; empty it draws no box (since 1.93.0) |
