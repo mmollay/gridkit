@@ -142,6 +142,16 @@ return [
     T::contains($html, 'href="/k"', 'an option read under its own name');
 },
 
+'yes and no as a database hands them over: 1/0, "1"/"0", "yes"/"no" — "no" is not true' => function (): void {
+    [$html, $notes] = trRender(fn () => (new Tree('f'))->select('multi')->nodes([
+        ['id' => 'a', 'title' => 'A', 'expanded' => 'no', 'disabled' => '0', 'muted' => 'no', 'children' => [['id' => 'a1', 'title' => 'A1']]],
+        ['id' => 'b', 'title' => 'B', 'expanded' => 'yes', 'disabled' => 1, 'muted' => '1', 'draggable' => 'no', 'children' => [['id' => 'b1', 'title' => 'B1']]],
+    ])->render());
+    T::eq($notes, [], 'no warning');
+    T::contains($html, 'class="gk-tree-node" data-gk-tree-id="a">', "'no' and '0' leave a node closed, enabled and not muted");
+    T::contains($html, 'class="gk-tree-node gk-tree-open gk-tree-muted gk-tree-disabled" data-gk-tree-id="b" data-gk-tree-disabled data-gk-tree-nodrag>', "'yes', 1 and '1' are true; 'no' keeps it in place");
+},
+
 'a parent of null, empty or 0 is the top level — 0 only while no node is called 0' => function (): void {
     [$html] = trRender(fn () => (new Tree('z'))->nodes([
         ['id' => 'a', 'parent_id' => 0, 'title' => 'A'],

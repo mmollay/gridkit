@@ -512,6 +512,16 @@ class Tree
                 $path[$at] = true;
                 $at = (string) $this->nodes[$at]['parent'];
             }
+            if (!isset($path[$at])) {
+                // The chain ended at a node that is not there: no cycle, only a node the steps above
+                // did not place. It is not lost — it goes to the top level, like an orphan.
+                $this->warn("node '$id' could not be placed — it is shown at the top level.");
+                $p = (string) $n['parent'];
+                if (isset($this->kids[$p])) $this->kids[$p] = array_values(array_diff($this->kids[$p], [$id]));
+                $this->kids[''][] = $id;
+                $walk($id);
+                continue;
+            }
             $ring = [];
             $cur = $at;
             do {
@@ -524,7 +534,7 @@ class Tree
             }
             $this->warn("nodes '" . implode("', '", $ring) . "' are each other's ancestors — '$first' is shown at the top level.");
             $p = (string) $this->nodes[$first]['parent'];
-            $this->kids[$p] = array_values(array_diff($this->kids[$p], [$first]));
+            $this->kids[$p] = array_values(array_diff($this->kids[$p] ?? [], [$first]));
             $this->kids[''][] = $first;
             $walk($first);
         }

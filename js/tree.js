@@ -848,7 +848,7 @@
     var row = el && el.closest ? el.closest(".gk-tree-row") : null;
     var target = row && st.list.contains(row) ? row.parentElement : null;
     if (!target) return null;
-    if (target === d.li || d.li.contains(target)) return { target: target, zone: "inside", parent: target, index: null, why: "tree_into_itself" };
+    if (target === d.li) return { target: target, zone: "inside", parent: target, index: null, why: "tree_into_itself" };
     var r = row.getBoundingClientRect();
     var zone = y - r.top < r.height * 0.25 ? "before" : r.bottom - y < r.height * 0.25 ? "after" : "inside";
     var visibleKids = childNodes(target).filter(function (k) { return !k.hidden && k !== d.li; });

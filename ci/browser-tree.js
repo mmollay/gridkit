@@ -94,7 +94,7 @@ const PIXEL = `
         if (r.hold) await new Promise((res) => { releaseLazy = res; });
         if (r.abort) return route.abort("failed");
         const failed = (r.status || 200) >= 400;
-        return route.fulfill({ status: r.status || 200, contentType: "text/html", headers: cors, body: failed ? "<p>Server error</p>" : BRANCHES[parent] || "" });
+        return route.fulfill({ status: r.status || 200, contentType: "text/html", headers: cors, body: failed ? "<p>Server error</p>" : r.body || BRANCHES[parent] || "" });
       }
       if (u.pathname === "/move") {
         const r = moveReply;
@@ -159,7 +159,7 @@ const PIXEL = `
       const list = document.querySelector('[data-gk-tree="pages"] .gk-tree-list');
       const cats = document.querySelector('[data-gk-tree="cats"] .gk-tree-list');
       const item = (id) => document.querySelector(`[data-gk-tree-id="${id}"]`);
-      const name = (li) => (li.getAttribute("aria-labelledby") || "").split(" ").map((i) => document.getElementById(i).textContent).join(" ");
+      const name = (li) => (li.getAttribute("aria-labelledby") || "").split(" ").filter(Boolean).map((i) => (document.getElementById(i) || {}).textContent).join(" ");
       return {
         role: list.getAttribute("role"), label: list.getAttribute("aria-label"), multi: list.getAttribute("aria-multiselectable"),
         catsMulti: cats.getAttribute("aria-multiselectable"),
@@ -290,9 +290,9 @@ const PIXEL = `
       (await attr(N("pages", "y2025"), "aria-expanded")) === "false" && (await attr(N("pages", "y2026"), "aria-expanded")) === "false");
     lazyReply.y2026 = { status: 500 };
     await page.click(`${R("pages", "y2026")} > .gk-tree-toggle`);
-    await page.waitForSelector(`${R("pages", "y2026")} > .gk-tree-loaderror`);
+    await settled();
     check("a failed branch closes again and says so in its row, with a button to try again",
-      (await attr(N("pages", "y2026"), "aria-expanded")) === "false" && (await page.textContent(`${R("pages", "y2026")} > .gk-tree-loaderror`)) === "Not loaded.Try again");
+      (await attr(N("pages", "y2026"), "aria-expanded")) === "false" && (await page.textContent(`${R("pages", "y2026")} > .gk-tree-loaderror`, { timeout: 500 }).catch(() => "")) === "Not loaded.Try again");
     check("…and the live region names the node", (await live("pages")) === "The entries of 2026 could not be loaded.");
     lazyReply.y2026 = { status: 200 };
     await page.click(`${R("pages", "y2026")} .gk-tree-retry`);
@@ -309,6 +309,12 @@ const PIXEL = `
     check("GK.tree.reload() fetches a branch again and puts the same nodes back, once each",
       req.length === 1 && req[0].parent === "blog" && JSON.stringify(await kidsOf("pages", "blog")) === '["y2026","y2025"]'
       && (await page.$$(N("pages", "y2025"))).length === 1);
+    // An answer can hold a node the tree has elsewhere (a branch fetched again while a move out of it is
+    // still being saved): the tree keeps the one it has.
+    lazyReply.y2026 = { body: BRANCHES.y2026 + BRANCHES.blog.match(/<li class="gk-tree-node" data-gk-tree-id="y2025">.*?<\/li><\/ul><\/li>/s)[0] };
+    await page.evaluate(() => GK.tree.reload("pages", "y2026"));
+    check("a node the tree already has is not taken twice from an answer",
+      (await page.$$(N("pages", "y2025"))).length === 1 && JSON.stringify(await kidsOf("pages", "y2026")) === '["post-c","post-d"]', JSON.stringify(await kidsOf("pages", "y2026")));
     lazyReply.y2026 = { abort: true };
     await page.evaluate(() => GK.tree.reload("pages", "y2026"));
     check("no network is a failed branch too", !!(await page.$(`${R("pages", "y2026")} > .gk-tree-loaderror`)));
@@ -576,18 +582,36 @@ const PIXEL = `
     check("moves are sent one after the other; when one fails, it and the later ones go back",
       sentWhileHeld === 1 && take().filter((r) => r.path === "/move").length === 0 && JSON.stringify(await kidsOf("pages", "services")) === '["web","hosting","seo","cafe"]',
       sentWhileHeld + " " + JSON.stringify(await kidsOf("pages", "services")));
+    await events();
+    moveReply = { status: 200, body: '{"ok":true}' };
+    await page.focus(`${R("pages", "shop")} > .gk-tree-handle`);
+    await page.keyboard.press(" ");
+    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press(" ");
+    await page.waitForFunction(() => window._ev.some((e) => e.type === "gk:treemoved"));
+    await wait(100);
+    req = take().filter((r) => r.path === "/move");
+    check("…and nothing of the refused queue is sent later: the next move goes out alone",
+      JSON.stringify(req.map((r) => r.body)) === '[{"id":"shop","parent":null,"index":4}]', JSON.stringify(req.map((r) => r.body)));
+    await events();
     moveReply = { abort: true };
     await page.focus(`${R("pages", "cafe")} > .gk-tree-handle`);
     await page.keyboard.press(" ");
     await page.keyboard.press("ArrowUp");
     await page.keyboard.press(" ");
-    await page.waitForFunction(() => window._ev.filter((e) => e.type === "gk:treemoved").length >= 2);
+    await page.waitForFunction(() => window._ev.some((e) => e.type === "gk:treemoved"));
     check("no network: the node goes back as well", JSON.stringify(await kidsOf("pages", "services")) === '["web","hosting","seo","cafe"]');
     moveReply = { status: 200, body: '{"ok":true}' };
     await events();
 
     // ── The page's veto, a tree without a URL, the API ───────────────────
     await page.evaluate(() => { window._cancel = (d) => d.id === "work"; });
+    target = await centre(R("plain", "archive"));
+    await drag("plain", "work", { x: target.x, y: target.y });
+    await wait(150);
+    ev = await events();
+    check("gk:treemove is cancelable on a drop too: the node stays where it was, gk:treemoved never comes",
+      JSON.stringify(await kidsOf("plain", "inbox")) === '["work","private"]' && ev.length === 1 && ev[0].type === "gk:treemove" && ev[0].parent === "archive", JSON.stringify(ev));
     await page.focus(`${R("plain", "work")} > .gk-tree-handle`);
     await page.keyboard.press(" ");
     await page.keyboard.press("ArrowDown");
