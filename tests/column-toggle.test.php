@@ -69,6 +69,20 @@ function ctJs(): string
     return (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
 }
 
+/**
+ * One release's block of the stylesheet or the script: from its heading to the heading of the next
+ * block (`/* === ` or `// === ` at the start of a line), or to the end of the file. The blocks of
+ * 1.107.0 to 1.110.0 stand at the end in version order, so "to the end of the file" would hold the
+ * later ones too (1.109.0 added storage calls of its own after this one).
+ */
+function ctBlock(string $text, string $head): string
+{
+    $at = strpos($text, $head);
+    if ($at === false) return '';
+    $next = preg_match('~\n(?:/\* === |// === )~', $text, $m, PREG_OFFSET_CAPTURE, $at + strlen($head)) ? $m[0][1] : strlen($text);
+    return substr($text, $at, $next - $at);
+}
+
 /** @return array<string,callable> */
 return [
 
@@ -270,7 +284,7 @@ return [
     $css = ctCss();
     $at = strpos($css, '/* === 1.108.0 — column toggle === */');
     T::ok($at !== false, 'the block of 1.108.0 is missing');
-    $block = substr($css, (int) $at);
+    $block = ctBlock($css, '/* === 1.108.0 — column toggle === */');
     for ($p = 1; $p <= 20; $p++) {
         T::contains($block, '.gk-table-wrap:has(> .gk-toolbar [data-gk-col-head="' . $p . '"]:not(:checked)) > .gk-table > thead > tr > :nth-child(' . $p . '),', "header place $p");
         T::contains($block, '.gk-table-wrap:has(> .gk-toolbar [data-gk-col-pos="' . $p . '"]:not(:checked)) > .gk-table > tbody > tr:not(.gk-table-group, .gk-table-more, .gk-empty-row) > :nth-child(' . $p . '),', "row place $p");
@@ -281,11 +295,11 @@ return [
     T::ok((bool) preg_match('~@supports not selector\(:popover-open\) \{\s*\.gk-col-toggle-menu \{\s*display: none;~', $block), 'a browser without popovers shows the menu open in the toolbar');
     T::contains($block, '[data-gk-mode="dark"] .gk-col-toggle-menu,' . "\n" . '.gk-dark .gk-col-toggle-menu {', 'the menu has no dark rule in both spellings');
     T::contains($block, '.gk-dark .gk-col-toggle-menu .gk-dropdown-item:focus-within', 'the row under the keyboard has no dark rule');
-    T::ok(strlen(rtrim($css)) - strlen(rtrim($block)) === $at, 'the block is not at the end of the stylesheet');
+    T::ok($at > (int) strpos($css, '/* === 1.107.0'), 'the block is not after the one of 1.107.0');
 },
 
 'a card passes over a hidden cell for its title' => function (): void {
-    $block = substr(ctCss(), (int) strpos(ctCss(), '/* === 1.108.0 — column toggle === */'));
+    $block = ctBlock(ctCss(), '/* === 1.108.0 — column toggle === */');
     T::ok((bool) preg_match('~@media \(max-width: 768px\) \{(.*)\n\}~s', $block, $m), 'there is no card rule in the block');
     $card = $m[1] ?? '';
     // One in each of the three rules of the title, two in each of the other three (a :has() and an :nth-child).
@@ -301,8 +315,8 @@ return [
     T::eq(substr_count($js, $head), 1, 'the block heading is not there once');
     $at = (int) strpos($js, $head);
     T::ok($at > (int) strpos($js, '1.105.0 — additions that need script'), 'the block is not after the one of 1.105.0');
-    $block = substr($js, $at);
-    T::ok(str_ends_with(rtrim($block), '})();'), 'something follows the block');
+    $block = ctBlock($js, $head);
+    T::ok(str_ends_with(rtrim($block), '})();'), 'the block is not one closed function');
     foreach (['gk-col-toggle', 'gk-col-hidden', 'data-gk-col', 'gk-cols-'] as $mark) {
         T::notContains(substr($js, 0, $at), $mark, 'the column toggle reaches into the file before its block');
     }

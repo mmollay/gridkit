@@ -7,6 +7,30 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.109.0] - 2026-11-03
+
+A table can carry Compact · Normal · Roomy in its toolbar, and the person at the screen chooses how tightly it is set; the choice stays with the table in this browser. It uses the steps of `Theme::density()`, needs `gridkit.css` only, and a table without the option is unchanged.
+
+### Added
+- **`Table::densityToggle()`**: a segmented control (`.gk-segmented`, three `aria-pressed` buttons in a labelled group) in the toolbar, after the search, the filters and the CSV button. Compact is `konsole` (8px / 12px, labels with a 4px radius), Roomy is `weit` (16px / 20px), Normal the default (12px / 16px). The script writes the step on the table's wrap as `data-gk-density` and remembers it per table id in `localStorage` (`gk-density-<id>`, in the namespace of `GK.theme`); where storage is blocked it holds for the page view. It survives sorting, searching, paging and the AJAX reload; a table handed to `GK.initContent()` later gets it too. New strings: `table.density`, `table.density_compact`, `table.density_normal`, `table.density_roomy` (en, de).
+- **Every kind of table takes the step.** Each size keeps its distance from `md` (`sm` 6px tighter, `lg` 4px roomier, `xs` with a 2px floor), and so do the variants `compact`, `padded` and `very-compact`. A `size('list')` row goes from 64px to 52px or 76px and its columns stay. On a phone the scroll-mode cells and the compact card (its padding, the gap between cards, the space round a field) move by the same step; the head of a card keeps its spacing and a card with a link its 40px. A row link stays at least 44px and the row buttons keep their size.
+
+### Notes
+- **Normal is GridKit's default rhythm, not the page's.** The control starts at the page's own step: on a page with `Theme::density('konsole')` it starts at Compact, and Normal is roomier than the rest of the page. Choosing the page's own step forgets the stored choice, so the table follows the page again. On a page without a density, Normal leaves no attribute on the wrap: the table is then exactly the table without the toggle.
+- **`themes.css` is optional.** The steps are in `gridkit.css` as tokens on the wrap (block "1.109.0 — density toggle") with the numbers of `themes.css`, which `tests/density-toggle.test.php` holds them to. Nothing in the block matches without `data-gk-density` on a `.gk-table-wrap`, so `Theme::density()` and `themes.css` behave as before.
+- **Found on the way, left as it is:** `.gk-table-sm/-md/-lg td` set their padding in pixels at the weight of the token rule and after it, so the page-wide `Theme::density()` has never changed the padding of a table drawn by `Table`, only its label radius. The toggle's steps do reach the padding.
+- **Without JavaScript** the control is not shown (it is rendered `hidden`); a copy of `js/gridkit.js` without the 1.109.0 block, such as the PawBot dashboard's, leaves it hidden and the table as it was. `js/gridkit.js` gets one block at the end that wraps `GK.table.init`. No new class, and no change to the markup of a table without the option (golden tests unchanged).
+
+### Demo
+- "Row spacing, chosen at the screen" in the table section, above Mobile-Responsive.
+
+### Tests
+- `tests/density-toggle.test.php` (120 assertions): the markup, the labels and their escaping; with the option a table renders as without it plus the control (five kinds of table), and the AJAX fragment is unchanged; the steps against `themes.css` and `:root`; every padding written against the tokens adds up at Normal to the pixels of the rule it stands for (14 size and variant rules, the phone, the card); the list row; every rule of the block needs the attribute on the wrap; the script is one block after 1.105.0 and touches `localStorage` only inside `try`.
+- `ci/browser-density.js` with `ci/browser-density-fixture.php` (252 cases): thirteen tables, each with the control and without it. At Normal each measures as its twin, cell by cell; every step per size and variant, with and without `themes.css`; a `konsole` and a `weit` page, a reload, the namespace of `GK.theme`, a stored value that is not a step, sort, search, AJAX reload, `GK.initContent()`, the keyboard, contrast in light and both dark spellings, `localStorage` that throws, 390px, no JavaScript, the older script, a script added late. Each of 46 rules and branches was taken out in turn and the run turned red.
+- Whole suite: 9,451 assertions; every browser check of 1.107.0 and 1.108.0 as before, with the three blocks side by side in `js/gridkit.js` and `css/gridkit.css`.
+- `tests/column-toggle.test.php` and `tests/sticky.test.php` read their block of the stylesheet and the script up to the heading of the next block, not to the end of the file: with 1.109.0 after it, the column toggle counted the storage calls of the density toggle as its own.
+
+---
 ## [1.108.0] - 2026-11-03
 
 A table can let each user choose its columns: `columnToggle()` puts a "Columns" button in the toolbar whose menu hides and shows them, and the browser remembers the choice per table. A hidden column stays hidden through a sort, a search, a page change and an AJAX reload, a column can start hidden or be kept on screen, and the CSV holds what the table shows. A table that does not call it is written byte for byte as before.

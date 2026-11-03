@@ -195,7 +195,9 @@ return [
     $css = (string) file_get_contents(__DIR__ . '/../css/gridkit.css');
     $at = strpos($css, '/* === 1.107.0 — sticky head and column === */');
     T::ok($at !== false, 'the block is not headed as the others are');
-    $block = substr($css, (int) $at);
+    // To the next release's block (1.108.0 and later stand after it) or the end of the file.
+    $next = strpos($css, "\n/* === ", (int) $at + 1);
+    $block = $next === false ? substr($css, (int) $at) : substr($css, (int) $at, $next - (int) $at);
     T::contains($block, "  border-collapse: separate;\n  border-spacing: 0;", 'collapsed borders stay where a sticky cell was — the slit shows what scrolls under it');
     T::contains($block, 'top: var(--gk-table-sticky-top, var(--gk-sheet-top, 0px));', 'the head does not stop under a fixed GridKit header');
     T::contains($block, '[data-gk-mode="dark"] :is(.gk-table-sticky-head, .gk-table-sticky-col),' . "\n" . '.gk-dark :is(.gk-table-sticky-head, .gk-table-sticky-col) {', 'the dark surfaces miss a spelling');
@@ -218,7 +220,8 @@ return [
     $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
     $at = strpos($js, '// === 1.107.0 — sticky head and column (Table::stickyHead / stickyColumn) ===');
     T::ok($at !== false, 'the block is not headed as the brief says');
-    $block = substr($js, (int) $at);
+    $next = strpos($js, "\n// === ", (int) $at + 1);
+    $block = $next === false ? substr($js, (int) $at) : substr($js, (int) $at, $next - (int) $at);
     T::ok(strpos($js, '1.105.0 — additions that need script') < $at, 'the block is not after the 1.105.0 block');
     T::contains($block, 'var render = GK.table.renderStatic;', 'the rebuild of a setData() table is not wrapped');
     T::contains($block, 'render.apply(this, arguments)', 'the wrapped rebuild does not call the original');
