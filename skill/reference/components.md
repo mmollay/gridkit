@@ -1,4 +1,4 @@
-# GridKit 1.107.0 — components
+# GridKit 1.108.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -203,6 +203,8 @@ button out when the row's `archived` value is truthy.
 | `labels` | `label` only: `'value' => 'green'`, or `'value' => ['color' => 'green', 'text' => 'Paid']` |
 | `href`, `sub` | the cell links to `'/customers/{id}'`; `sub` names a row key shown as a quiet second line |
 | `export` | `false` leaves the column out of the CSV file of `exportCsv()` |
+| `hidden` | `true` starts the column hidden in a table with `columnToggle()`; the user's stored choice wins |
+| `toggle` | `false` keeps the column on screen: in the `columnToggle()` menu, ticked and disabled |
 
 **`->selectable('id')`:** checkbox column, a select-all in the header, and a bulk bar. Deleting fires `gk:bulkdelete` with `{ ids, tableId }` — the application does the deleting. Every change fires `gk:selectionchange` with `{ ids, tableId, count }`, bulk bar or not. Shift-click selects a range. Without the `Table` class: `data-gk-table` + `data-gk-selectable`, rows carrying `data-gk-row-id` and a `td.gk-cb-col`. A row without `data-gk-row-id` cannot be selected. Select-all covers the visible rows only. After a live reload (`gk-live-reloaded`) GridKit re-binds the table.
 
@@ -247,6 +249,39 @@ if (Table::wantsCsv()) {
 }
 ```
 
+**`->columnToggle()` (since 1.108.0):** a "Columns" button in the toolbar. Its menu has one checkbox
+per column; unticking one hides the column — its header, its cells and a footer cell that stands
+alone over it — and a group heading, the empty state and a footer cell over several columns get
+narrower. The browser remembers the choice per table id (`localStorage` `gk-cols-<id>`, only what
+differs from the page's defaults; storage that is missing or throws remembers nothing). Column
+options: `'hidden' => true` starts the column hidden (a stored choice wins), `'toggle' => false` keeps
+it on screen — it stays in the menu, ticked and disabled, so the list still reads as the table's
+columns. The `rowLink()` column is kept the same way (it carries the row's only control), and the
+last column shown cannot be unticked.
+
+```php
+(new Table('people'))->setData($rows)
+    ->column('name',  'Name',  ['toggle' => false])     // always shown
+    ->column('email', 'Email')
+    ->column('role',  'Role',  ['hidden' => true])      // hidden until the user shows it
+    ->columnToggle()
+    ->render();
+```
+
+The rows are written as before: the hiding is CSS keyed on the menu's checkboxes, so a sort, a
+search, a page change and the AJAX reload of a `rows()`/`query()` table keep it, and a `'hidden'`
+column is hidden in the server's markup — no flash before the script runs. The menu is a native
+popover: Escape and a click elsewhere close it, the focus goes into it and back to the button, and
+`aria-expanded` follows. Without `js/gridkit.js` 1.108.0 (an older copy, or no script) the menu still
+opens and its checkboxes still work, but nothing is remembered. Search and sort do not change: the
+search looks at its keys whether their columns show or not. **The CSV holds what the table shows:**
+a `setData()` table leaves hidden columns out of the file (and `'export' => false` ones, as before);
+a server table's button adds `?gk_hidden=email,role`, and `Table::sendCsv()` leaves those keys out of
+the `$columns` it is given. On a phone a hidden column is left out of the card, and when it was the
+card's title the next column that is not muted takes the title. `'hidden'` and `'toggle'` take `true`
+or `false`; anything else, `'hidden'` without `columnToggle()`, on a `'toggle' => false` column or on
+the `rowLink()` column, and `columnToggle()` with `toolbar(false)` raise a warning, and the column shows.
+
 **`->emptyState($title, $opts)`** sets the wording for a table with no rows —
 `['hint' => …, 'icon' => …, 'action' => …]`. GridKit works out by itself whether
 the table is genuinely empty or only filtered, and offers the way back in the
@@ -282,7 +317,7 @@ second case, so only describe the first.
 card. Since 1.106.0 its first line is a head — checkbox, left buttons, title,
 right buttons, side by side — and the other fields follow as label and value
 without rules. The **title is the first column that is not `'muted'`** and not
-`'hideOnMobile'`; on a row with `rowLink()` it is the cell with the link; when
+`'hideOnMobile'` (nor hidden with `columnToggle()`); on a row with `rowLink()` it is the cell with the link; when
 every column is muted, the first one. Order the columns, or mark a number column
 `'muted'`, to choose it. A long title wraps. A card with nothing but its head has
 no rule under it. Group headings, the summary row, the empty state and the footer

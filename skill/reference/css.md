@@ -1,4 +1,4 @@
-# GridKit 1.107.0 — CSS
+# GridKit 1.108.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 

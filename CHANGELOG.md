@@ -7,6 +7,37 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.108.0] - 2026-11-03
+
+A table can let each user choose its columns: `columnToggle()` puts a "Columns" button in the toolbar whose menu hides and shows them, and the browser remembers the choice per table. A hidden column stays hidden through a sort, a search, a page change and an AJAX reload, a column can start hidden or be kept on screen, and the CSV holds what the table shows. A table that does not call it is written byte for byte as before.
+
+### Added
+- **`Table::columnToggle()`**: a "Columns" button in the toolbar ("Spalten" in German) that opens a menu with one checkbox per column. Unticking one hides the column — its header, its cells and a footer cell that stands alone over it; group headings, the empty state and a footer cell over several columns get narrower. The choice is remembered in `localStorage` (`gk-cols-<id>`) as what differs from the page's defaults, so a column added or a default changed later still reaches a returning user; storage that is missing or throws remembers nothing and breaks nothing. The last column shown cannot be unticked.
+- **Column option `'hidden' => true`**: the column starts hidden (a stored choice wins). It is hidden in the server's markup, so nothing flashes before the script runs.
+- **Column option `'toggle' => false`**: the column cannot be hidden. It stays in the menu, ticked and disabled, so the list still reads as the table's columns. The column that carries `rowLink()`'s control is kept the same way: hidden, the row would lose the one control the keyboard reaches.
+- **The menu is a native popover** opened by `popovertarget`, in the top layer, so no card with `overflow: hidden` cuts it off; Escape and a click elsewhere close it. The script puts it under its button and inside the window, moves the focus into it and back to the button, keeps `aria-expanded` in step, claims Escape (a modal the table stands in stays open), closes the menu when the focus leaves it, and moves between the boxes with the arrows, Home and End.
+- **The CSV holds what the table shows.** A `setData()` table leaves hidden columns out of the file of `exportCsv()`, as it leaves out `'export' => false`. A server table's export button adds `?gk_hidden=email,role`, and `Table::sendCsv()` leaves those keys out of the `$columns` it is given (a key it does not have changes nothing; `Table::csv()` does not read the request). Search and sort do not change: the search looks at its keys whether their columns show or not.
+- New string `table.columns` (en "Columns", de "Spalten"); new classes `gk-col-toggle`, `gk-col-toggle-menu` and `gk-col-hidden` (block "Column toggle").
+
+### How it works
+- **The hiding is CSS, keyed on the checkboxes.** An unticked box hides the cells at its place in a row (`data-gk-col-pos`), its header (`data-gk-col-head`) and the footer cell over it (`data-gk-col-foot`), through `:has()` and `:nth-child()` rules for twenty places. The rows are written exactly as before, so `renderStatic()` and the AJAX reload redraw them and the column stays hidden without anything re-applied; the toolbar that holds the menu survives both. The header has a place of its own because `Table` writes the header cell of the left buttons at the end of the header row, while a row writes its left buttons before the first column.
+- **The script** — one block at the end of `js/gridkit.js`, no line in an existing function — restores and stores the choice and, after every redraw (a `MutationObserver` on the table, before the next paint), marks hidden cells `.gk-col-hidden` (which also hides a column past the twentieth place) and narrows what spans the row (`data-gk-span` keeps the original colspan). It wraps `GK.table.init` (tables that arrive through `GK.initContent()`) and `GK.tableCsv`, and takes the export click of a server table in the capture phase.
+- **On a phone** a hidden column is left out of the card. When it was the card's title, the next column that shows and is not muted takes the title, and a card whose visible fields are all muted takes the first of them: the title rules of 1.106.0 once more, passing over `.gk-col-hidden`.
+- **Without the 1.108.0 script** (the PawBot dashboard's copy, or no script at all) the menu still opens and its checkboxes still hide and show columns; nothing is remembered, group headings keep their full colspan (drawn without a gap), and a card whose title column is hidden has no title line.
+- Warnings (`E_USER_WARNING`, and the column shows): `'hidden'` or `'toggle'` that is not `true` or `false`; `'hidden'` without `columnToggle()`, on a `'toggle' => false` column or on the `rowLink()` column; `columnToggle()` with `toolbar(false)`.
+
+### Demo
+- "Columns to show and hide", above "Mobile-Responsive": the article list with the unit and the VAT hidden, the article number fixed, and CSV export.
+
+### Tests
+- `tests/column-toggle.test.php` (153 assertions): the markup of the button and the menu; the places past a checkbox and left buttons, the header's own place, footer cells over one column and over several, a colspan of 0; escaping of labels, keys and ids, a safe and distinct menu id; German; a table without the menu byte for byte as before (`columnToggle(false)` too), the rows of a table with the menu unchanged, its AJAX fragment identical with or without a hidden column; every warning; `sendCsv()` with `gk_hidden`; the rules, the card rules, both dark spellings; the script as one block at the end with its storage guarded.
+- `ci/browser-column-toggle.js` with `ci/browser-column-toggle-fixture.php` (61 cases), see `ci/README.md`. Each rule of the CSS block and each branch of the script and of the PHP was taken out in turn (61 mutations) and the run or the PHP test turned red. On the way they found a fault: a menu at the right edge was measured while squeezed by its own previous position, and stayed against the window's edge instead of moving left.
+- Whole suite: 9,315 assertions (9,132 at 1.107.0). `ci/browser.js` (138), `ci/browser-1105.js` (29), `ci/browser-karten.js` (271), `ci/farben.js` and `ci/demo-coverage.js` (609 of 783 classes shown) as before.
+
+### Notes
+- Found on the way and left as it is: with left buttons, the header of every column stands one place before its cells — `Table::renderTableHead()` and `renderStatic()` write the header cell of the left buttons at the end of the header row. `tests/golden/table.json` pins that markup; it wants a release of its own.
+
+---
 ## [1.107.0] - 2026-11-03
 
 A long table keeps its header row in view while its rows scroll, and a wide one its first column while it scrolls sideways. Two methods, `Table::stickyHead()` and `Table::stickyColumn()`; a table without them renders exactly as before, and in card mode on a phone nothing changes.
