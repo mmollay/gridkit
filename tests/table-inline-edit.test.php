@@ -301,7 +301,9 @@ return [
     }
     $c = strpos($css, '/* === 1.110.0 — inline editing === */');
     T::ok($c !== false, 'the stylesheet block is missing');
-    $block = substr($css, (int) $c);
+    // The block runs to the next release's block (1.111.0 and later append theirs after it), or to the end.
+    $next = strpos($css, "\n/* === ", (int) $c + 10);
+    $block = $next === false ? substr($css, (int) $c) : substr($css, (int) $c, $next - (int) $c);
     T::contains($block, '[data-gk-mode="dark"] [data-gk-editable]', 'the block has no [data-gk-mode="dark"] rule');
     T::contains($block, '.gk-dark [data-gk-editable]', 'the block has no .gk-dark rule');
     // Cells and fields are found by data-gk-edit, data-gk-editing and data-gk-edit-was: no class of its own,

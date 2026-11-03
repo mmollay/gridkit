@@ -214,7 +214,7 @@ by `ci/build-skill.sh`, and a test fails if the two drift apart.
 
 ## Components
 
-Seventeen, each a PHP class with a chainable API:
+Eighteen, each a PHP class with a chainable API:
 
 | | | |
 |---|---|---|
@@ -223,7 +223,7 @@ Seventeen, each a PHP class with a chainable API:
 | `StatCards` — KPI tiles with trend, or compact tiles for a sheet | `Pagination` — standalone or attached | `Select` — searchable, multi, AJAX |
 | `FilterChips` — one-click filters | `TableHeader` — unified filter bar | `PageSize` — rows per page |
 | `ActionGroup` — grouped row actions | `SortLink` — sortable headers | `YearFilter` — year navigation |
-| `BelegModal` — document preview | `ImagePicker` — choose one image from many: a compact grid, an enlarged view that can pick | |
+| `BelegModal` — document preview | `ImagePicker` — choose one image from many: a compact grid, an enlarged view that can pick | `Tabs` — every tab style and option, deep links, remembered tabs, lazy panels |
 
 Plus `Theme`, `Layout`, `Lang`, `Auth` and `Icon` as infrastructure — and the
 side sheet (`.gk-sheet`, `GK.sheet`), markup and script rather than a class: the

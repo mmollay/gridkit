@@ -307,10 +307,11 @@
     ]
   },
   "tabs": {
-    "reason": "Earlier names of the tab markup, kept for pages that still use them; the demo shows the current forms.",
+    "reason": "Earlier names of the tab markup, kept for pages that still use them; the demo shows the current forms. gk-tab-loading is only there while a lazy panel loads (open “Slow” under Lazy panels: 1.2 s).",
     "classes": [
       "gk-tab",
       "gk-tab-active",
+      "gk-tab-loading",
       "gk-tab-nav-einzeilig",
       "gk-tab-nav-flach",
       "gk-tabs-nav"

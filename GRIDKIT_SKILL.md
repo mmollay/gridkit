@@ -51,7 +51,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | ActionGroup | `GridKit\ActionGroup` | Container for action buttons inside table columns (since v1.16.0) |
 | SortLink | `GridKit\SortLink` | Sortable column headers for hand-built tables (server-side sort) |
 | Select | `GridKit\Select` | Searchable single/multi select, optionally AJAX-fed |
-| Tabs (JS) | `.gk-tabs` / `[data-gk-tabs]` | Tab navigation, two shapes — full tablist semantics and arrow keys since 1.69.0; the Karteireiter shape `.gk-tab-nav-karte` + `.gk-tab-flaeche`, nesting and a phone grid since 1.101.0; a row that does not fit its box becomes the grid by itself (`GK.tabsFit`) and `gk-tab-badge-error` since 1.102.0; line tabs for the second row, `--gk-tab-radius` and link tabs that keep their place (`GK.tabsScroll`) since 1.102.0; three more styles (line, pill, text), four alignments (left, right, bottom, fixed bar) and options (size, full width, symbol above or only, neutral, disabled) as classes on the row since 1.103.0 |
+| Tabs | `GridKit\Tabs` / `.gk-tabs` / `[data-gk-tabs]` | Tab navigation, two shapes — full tablist semantics and arrow keys since 1.69.0; the Karteireiter shape `.gk-tab-nav-karte` + `.gk-tab-flaeche`, nesting and a phone grid since 1.101.0; a row that does not fit its box becomes the grid by itself (`GK.tabsFit`) and `gk-tab-badge-error` since 1.102.0; line tabs for the second row, `--gk-tab-radius` and link tabs that keep their place (`GK.tabsScroll`) since 1.102.0; three more styles (line, pill, text), four alignments (left, right, bottom, fixed bar) and options (size, full width, symbol above or only, neutral, disabled) as classes on the row since 1.103.0; the PHP class `Tabs` for every option, deep links (`->hash()`, `->param()`), remembered tabs, lazy panels, `gk:tabchange`/`gk:tabshown` and `GK.tabs.select/current/badge/count/reload`, arrows on a row wider than its box (`GK.tabsOverflow`) since 1.111.0 |
 | Accordion (JS) | `.gk-accordion` | Collapsible sections, optional single-open (`data-gk-single`) |
 | Tooltips (JS/CSS) | `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` | Hint popups — plain, CSS-only, or with HTML in them |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
@@ -70,7 +70,7 @@ error and no warning — the page renders, the piece is simply missing. Five
 agents were given this file and a page to build; not one got a first draft
 without tripping over this.
 
-**These twelve PRINT. Call them as a statement — `<?php $x->render(); ?>`:**
+**These thirteen PRINT. Call them as a statement — `<?php $x->render(); ?>`:**
 
 | | | |
 |---|---|---|
@@ -78,6 +78,7 @@ without tripping over this.
 | `StatCards::render()` | `FilterChips::render()` | `TableHeader::render()` |
 | `YearFilter::render()` | `Pagination::render()` | `PageSize::make()->…->render()` |
 | `ActionGroup::render()` | `Modal::container()` | `BelegModal::container()` |
+| `Tabs::render()` (1.111.0) | | |
 
 `PageSize::render()` above is an INSTANCE method — build it with the static
 `PageSize::make('per_page')` first, then chain. Same for `TableHeader::make()`.
@@ -89,6 +90,9 @@ Everything else in that table is called on an object you constructed with `new`.
 |---|---|---|
 | `Header::render()` | `Button::render()` | `Button::icon()` |
 | `Theme::switcher()` | `Theme::attributes()` | `Layout::bodyTag()` |
+| `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
+| `Lang::jsConfig()` | `Pagination::build()` | `Layout::skipLink()` |
+| `Tabs::html()` — the string twin of `Tabs::render()` (1.111.0) | | |
 
 `Theme::density('konsole')` sets how tightly tables are set — `konsole` fits
 about a third more rows on a screen, `weit` gives them room, and the default
@@ -98,8 +102,6 @@ and both modes; an unknown value is ignored. Its steps are tokens in
 of every table `Table` draws, in each size and variant, a list's row and a
 phone card (before, only the label radius moved). To let the person at the
 screen choose for one table, see `Table::densityToggle()`.
-| `Icon::svg()` | `Select::searchable()` | `Layout::asset()` |
-| `Lang::jsConfig()` | `Pagination::build()` | `Layout::skipLink()` |
 
 `Header::render()` is the exception that catches people: every other component
 you construct with `new` prints, and this one does not. `<?php (new Header())
@@ -2245,6 +2247,16 @@ document.addEventListener('gk:sheetclose', e => { /* e.detail.opener */ });
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
+
+// Tabs (since 1.111.0) — see "Tabs". A row by its .gk-tabs element or id; hand-written rows too.
+GK.tabs.select('settings', 'bank');            // as a click (gk:tabchange can refuse it); { focus, force }
+GK.tabs.current('settings');                   // the key of the current tab
+GK.tabs.badge('settings', 'logo', 'Error', { tone: 'error' });   // null takes it away
+GK.tabs.count('settings', 'log', 12);          // null takes it away
+GK.tabs.reload('settings', 'log');             // a lazy panel, fetched again; a Promise of true/false
+document.addEventListener('gk:tabchange', e => { /* cancelable; e.detail: { tabsId, from, to, panel, source } */ });
+document.addEventListener('gk:tabshown', e => { /* after the switch */ });
+document.addEventListener('gk:tabload', e => { /* a lazy panel: { tabsId, key, panel, ok, status } */ });
 ```
 
 An AJAX form (`Form::ajax()`) reports its own outcome: `{ok: true, message: '…'}` closes the modal, refreshes
@@ -2541,6 +2553,8 @@ Features:
 | `gk-tab-nav-raster` `gk-tab-badge-error` | Karteireiter row as a grid when it does not fit its box (set by `GK.tabsFit`, not by hand); the error badge (1.102.0) |
 | `gk-ortszeile-schlicht` | Option `schlicht` of `Header::ortszeile()`: on a phone (up to 768px) plain links without the pill outline, 44px target kept (1.104.0) |
 | `gk-tab-nav-einzeilig` `gk-tab-nav-flach` | Karteireiter on a phone (up to 600px), opt-in: ONE row of equal cells instead of two columns; icon beside the word, cell 44px high instead of about 56px (1.104.0) |
+| `gk-tab-nav-overflow` `gk-tab-arrow` `gk-tab-arrow-start` `gk-tab-arrow-end` | A line, pill or text row wider than its box: the mark and the two round arrows `GK.tabsOverflow` puts on and in it — never written by hand (1.111.0) |
+| `gk-tab-loading` `gk-tab-fallback` | A lazy panel: the skeleton while it loads, the link a page without the 1.111.0 script shows (1.111.0) |
 | `gk-tab-nav-linie` `gk-tab-nav-kapsel` `gk-tab-nav-text` | Tab row styles beside `gk-tab-nav-karte`: line with a stroke under the chosen tab, pill with the chosen tab filled, words only (1.103.0) |
 | `gk-tab-nav-links` `gk-tab-nav-rechts` `gk-tab-nav-unten` `gk-tab-nav-fest` | Tab row alignment: a side column from 601px (the horizontal row below), the row after the panels, a bar that sticks to the lower edge (1.103.0) |
 | `gk-tab-nav-sm` `gk-tab-nav-lg` `gk-tab-nav-fluid` `gk-tab-nav-icon-oben` `gk-tab-nav-nur-icon` `gk-tab-nav-neutral` | Tab row options: size, full width, symbol above the word, symbol only (`aria-label` + `title`), the chosen tab in the text colour (1.103.0) |
@@ -2657,8 +2671,8 @@ them with `data-tab`:
 ```html
 <div class="gk-tabs">
     <div class="gk-tab-nav">
-        <button class="gk-tab-btn gk-active" data-tab="overview">Overview</button>
-        <button class="gk-tab-btn" data-tab="details">Details</button>
+        <button type="button" class="gk-tab-btn gk-active" data-tab="overview">Overview</button>
+        <button type="button" class="gk-tab-btn" data-tab="details">Details</button>
     </div>
     <div class="gk-tab-panel gk-active" data-tab="overview">…</div>
     <div class="gk-tab-panel" data-tab="details">…</div>
@@ -2666,7 +2680,10 @@ them with `data-tab`:
 ```
 
 The `data-tab` values must match between a button and its panel, and exactly
-one of each starts with `gk-active`.
+one of each starts with `gk-active`. `type="button"`: a tab inside a `<form>`
+must not submit it. **`GridKit\Tabs` writes this markup for you** (since
+1.111.0) — every style, alignment and option of this section as a call, plus deep
+links, remembered tabs and lazy panels; see *Tabs from PHP* at the end of this section.
 
 **Generated nav** — you write only the panels, the buttons are built from them:
 
@@ -2811,7 +2828,8 @@ Put exactly one **style** class on the row, at most one **alignment**, any numbe
 - **Light and dark** are measured (`ci/farben.js`, `ci/browser-reiter-varianten.js`): the chosen word
   ≥ 4.5:1, the stroke or fill of the chosen tab and the focus ring ≥ 3:1; the track is a calm frame line
   like a card edge. On a phone every tab of the line, pill and text styles
-  is at least 44px high; a row too wide for the screen scrolls sideways (the card style becomes the grid).
+  is at least 44px high; a row too wide for its box scrolls sideways, with an arrow at each side that has
+  more since 1.111.0 (the card style becomes the grid).
 - **Side rows** sit in the `.gk-tabs` as its direct child; the panels follow in the same wrapper.
   `aria-orientation="vertical"` and the Up / Down keys come from the layout, not from a class.
 - **Combining rows** (a row inside a panel of another): each `.gk-tabs` answers for its own tabs,
@@ -2825,6 +2843,150 @@ Put exactly one **style** class on the row, at most one **alignment**, any numbe
 - **Not supported:** the `gk-tab-nav-secondary` shape together with `gk-tab-nav-unten`; a
   `position: fixed` bar (`gk-tab-nav-fest` is sticky — it follows its box, so a page-wide bar is the
   page's own job).
+
+**Tabs from PHP: `GridKit\Tabs`** (since 1.111.0) — writes exactly the authored markup above (and the
+link row), so every style, alignment and option of this section is a call and a page writes no tab
+markup by hand. It **prints**, like `Table`: `->render()`; `->html()` returns the same markup as a string.
+
+```php
+$address = '<p>Company name and address.</p>';
+(new Tabs('settings'))
+    ->style('karte')                    // karte | linie | kapsel | text — without it, the classic row
+    ->label('Settings')                 // aria-label of the row
+    ->tab('general', 'General', ['icon' => 'tune', 'content' => $address])
+    ->tab('bank', 'Bank', ['content' => function () { echo '<p>IBAN and BIC.</p>'; }])
+    ->tab('logo', 'Logo', ['badge' => ['text' => 'Error', 'tone' => 'error']])
+    ->tab('log', 'Log', ['count' => 12, 'url' => 'panels/log.php'])   // fetched when first opened
+    ->tab('api', 'API', ['disabled' => true])
+    ->hash()                            // #settings=bank in the address, read on load
+    ->remember()                        // the last tab per row, in the browser
+    ->param('tab')                      // ?tab=bank opens Bank on the server, without any script
+    ->render();
+
+// A row of links between pages: every tab has an 'href'; active() marks the current page.
+(new Tabs('areas'))->style('linie')->label('Areas of this page')->active('results')
+    ->tab('edit', 'Edit', ['href' => '/page/7/edit', 'icon' => 'edit'])
+    ->tab('results', 'Results', ['href' => '/page/7/results', 'icon' => 'bar_chart'])
+    ->render();
+```
+
+| Call | Writes | Note |
+|---|---|---|
+| `new Tabs(string $id)` | `<div class="gk-tabs" id="…">` | one word: the element id, the name in the address, the storage key |
+| `->tab(string $key, string $label, array $opts = [])` | a `.gk-tab-btn[data-tab]` and its `.gk-tab-panel` | `$key` pairs tab and panel; options below |
+| `->style('karte' \| 'linie' \| 'kapsel' \| 'text')` | `gk-tab-nav-karte` … | without a style: the classic row |
+| `->align('top' \| 'links' \| 'rechts' \| 'unten' \| 'fest')` | `gk-tab-nav-links` …; `fest` writes `-unten -fest` | `unten` and `fest` put the row after the panels |
+| `->size('sm' \| 'md' \| 'lg')` | `gk-tab-nav-sm`, `-lg` | `md` is the default |
+| `->fluid()`, `->iconTop()`, `->neutral()` | `gk-tab-nav-fluid`, `-icon-oben`, `-neutral` | |
+| `->iconOnly()` | `gk-tab-nav-nur-icon` | each tab gets `aria-label` (its word, badge and count) and `title` |
+| `->secondary()` | `gk-tab-nav-secondary` | the second row of the classic row, or of `style('karte')` in a surface or a window |
+| `->fill()` | `gk-tab-nav-fill` | the classic row as the main row of a page; never with a style |
+| `->oneRow()`, `->flat()` | `gk-tab-nav-einzeilig`, `-flach` | `style('karte')` on a phone (1.104.0) |
+| `->surface(bool $on = true)` | `gk-tab-flaeche` on the panels | on by default with `style('karte')`, off for its `secondary()` row |
+| `->active(string $key)` | `gk-active` | the page's decision (the tab with the error): it wins over the address and the memory |
+| `->label(string $label)` | `aria-label` on the row | |
+| `->hash()`, `->remember()`, `->param(string $name = 'tab')` | `data-gk-tabs-hash`, `-remember`, `-param` | deep links and memory, below |
+| `->render()`, `->html()` | | prints, returns |
+
+| Option of `->tab()` | |
+|---|---|
+| `icon` | a Material icon name before the word (`gk-tab-icon`) |
+| `badge` | text, or `['text' => 'Error', 'tone' => 'error']` — only for a deviation from the default |
+| `badgeError` | `true`: the red badge (`gk-tab-badge-error`); the word stays |
+| `count` | a number of things behind the tab (`gk-tab-count`); `0` is shown, leave the key out for none |
+| `disabled` | dimmed, stepped over by the arrow keys, never the active tab |
+| `title` | a tooltip; with `iconOnly()` it is the word unless you give one |
+| `content` | the panel's HTML — **trusted markup, not escaped** — or a callable that echoes (or returns) it |
+| `url` | a lazy panel, fetched when its tab is first opened (below) |
+| `reload` | with `url`: fetched again every time the tab is chosen |
+| `href` | the tab is a link to a page: the row becomes `<nav class="gk-tab-nav">` with `<a class="gk-tab-btn" data-tab="…">`, the current page (`active()` or the parameter) with `aria-current="page"`. Every tab needs one: a row is links OR panels |
+
+- **Escaped**: the id, keys, words, icons, badges, counts, titles and addresses. Not `content` — it is
+  markup, like a `Form` `html` field; escape data inside it yourself. `url` and `href` take a path or an
+  http(s) address: `javascript:`, `data:` and every other scheme are refused.
+- **A wrong value warns and falls back, it never throws**: an `E_USER_WARNING` ("GridKit: Tabs 'settings':
+  …") and the nearest correct markup. An unknown style, alignment or size is left out; an alignment, size
+  or option of 1.103.0 without a style gets `style('linie')`; a duplicate or empty key keeps the first tab;
+  an `active()` that names no tab, or a disabled one, falls back to the parameter, then the first tab; tabs
+  with `href` mixed with panel tabs are left out; `secondary()` with a line, pill or text style or at the
+  bottom, `fill()` with a style, `oneRow()`/`flat()`/`surface()` without the card style are left out.
+- **The active tab on the server**: `->active()`, else the parameter of `->param()` (an unknown, disabled or
+  array value is passed over in silence — a hand-typed address is not the page's bug), else the first tab
+  that is not disabled. A row of links marks no page current without `active()` or the parameter.
+
+**Deep links and memory** (opt-in):
+
+- `->hash()` — the chosen tab stays in the address as `#settings=bank`. Several rows and the page's own
+  fragment share it, joined by `&` (`#top&settings=bank&inner=x`); each row rewrites only its own pair. A
+  switch updates it with `replaceState`: it is no navigation, so Back leaves the page as before. On load
+  the pair selects the tab — of a nested row too, and the outer panel around it is opened; a link to
+  `#settings=bank` and Back/Forward between such links switch it (`hashchange`). A key no tab can take is
+  replaced by the tab shown. A page that reads its fragment itself reads the part before the first `&`.
+- `->param('tab')` — the server reads the active tab from `$_GET['tab']`: a link opens a tab with no script
+  at all. While the address carries the parameter a switch rewrites it in place; it never adds one.
+- `->remember()` — the last tab per row in `localStorage` (`gk-tab-<id>`, in the scope of `GK.theme`: the
+  next person at a shared computer does not inherit it). Storage that is missing or throws just forgets.
+- **On load**: `->active()` (the page decides; nothing overrides it), then the fragment, the parameter,
+  the memory, the first tab. Hand-written rows take the attributes `data-gk-tabs-hash`,
+  `data-gk-tabs-remember` and `data-gk-tabs-param="tab"` on a `.gk-tabs` with an `id`.
+
+**Lazy panels** (`'url' => 'panels/log.php'`; by hand `data-gk-tab-url="…"` and `data-gk-tab-reload` on the
+`.gk-tab-panel`): fetched the first time the tab is opened — a GET to the same origin with
+`X-Requested-With: XMLHttpRequest` — with a skeleton meanwhile (`gk-tab-loading`, lines of `gk-skeleton`,
+`aria-busy="true"` on the panel), and kept. `GK.initContent()` runs on the answer, so tables, selects,
+forms and tabs inside work; a lazy panel inside a loaded one loads too. Scripts in the answer do not run.
+`'reload' => true` fetches on every choice and keeps the old content, dimmed, until the new one is in.
+A failure — an error status, no network, a whole page (a login page after the session ended), another
+origin — shows the table's failure state: "This tab could not be loaded." with "Try again" (`gk-empty`,
+`role="alert"`), never the server's own answer. The endpoint answers the fragment to an AJAX request.
+Until the tab is opened the panel holds a link to the address (`gk-tab-fallback`, "Open “Log”"): what a
+page whose gridkit.js is older than 1.111.0 shows instead of a skeleton that never ends — so the endpoint
+may answer a page of its own when it is opened directly.
+
+**Events** — on the `.gk-tabs`; they bubble, so a listener on an outer row hears the rows nested in it:
+
+```javascript
+document.getElementById('settings').addEventListener('gk:tabchange', function (e) {
+  // e.detail: { tabsId, from, to, panel, source } — source "user" (click or key), "api", "address"
+  if (e.target !== this) return;             // a nested row
+  if (form.dirty) e.preventDefault();        // the tab stays: unsaved changes in this panel
+});
+document.addEventListener('gk:tabshown', e => { /* after the switch; same detail */ });
+document.addEventListener('gk:tabload', e => { /* a lazy panel: { tabsId, key, panel, ok, status } */ });
+```
+
+Every switch fires them — a click, the arrow keys, `GK.tabs.select()`, the address; the tab a page opens
+with fires none. A refused switch keeps the tab, its panel, `aria-selected` and the address, and after a
+key the focus goes back to the tab that stays. To switch once the person has confirmed (say in
+`GK.confirm()`), call `GK.tabs.select(row, key, { force: true })`: the event is then not cancelable.
+
+**JS API** — the target is the `.gk-tabs` (or any element in it) or its id; it works on hand-written
+authored markup as well as on `Tabs` output:
+
+```javascript
+GK.tabs.select('settings', 'bank');                  // as a click; false when refused, unknown or disabled
+GK.tabs.select('settings', 'bank', { focus: true, force: true });
+GK.tabs.current('settings');                         // 'bank' — of a row of links: the aria-current one
+GK.tabs.badge('settings', 'logo', 'Error', { tone: 'error' });   // null or '' takes it away
+GK.tabs.count('settings', 'log', 12);                // null takes it away; 0 is a count
+GK.tabs.reload('settings', 'log').then(ok => {});    // a lazy panel, now; true once the new content is in
+```
+
+`GK.tabs.*` and the events serve the authored shape (`.gk-tabs`); the generated shape (`[data-gk-tabs]`)
+keeps what it had. `badge()` and `count()` also take a row of links (`Tabs` writes `data-tab` on its links).
+
+**A line, pill or text row wider than its box** (since 1.111.0) still scrolls sideways, and a round arrow
+shows at each side that has more (`gk-tab-arrow`, `gk-tab-arrow-start`, `gk-tab-arrow-end`); a click pages
+the row. `GK.tabsOverflow` measures the row by its own width, like `GK.tabsFit`, and puts
+`gk-tab-nav-overflow` on it — never set it by hand. Scroll arrows, not a "More" menu: every tab stays a
+tab of the one tablist, the arrow keys reach all of them and bring each into view, a screen reader hears
+"tab 5 of 8"; the arrows are pointer aids, `aria-hidden` and outside the tab order. The chosen tab is
+scrolled into view on load and on every switch. The card style keeps its grid; without the script the
+row scrolls as before.
+
+**With an older gridkit.js** (the PawBot dashboard keeps its own copy): `Tabs` output is the hand-written
+markup, so its tabs switch with roles and arrow keys as always; the address, the memory, the events, the
+JS API and the arrows do nothing, and a lazy panel shows its link.
 
 ### Accordion
 

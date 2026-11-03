@@ -31,7 +31,7 @@ return [
     $generic = ['label', 'name', 'type', 'value', 'id', 'class', 'href', 'text', 'title', 'url'];
 
     $classes = ['Table', 'Form', 'Button', 'Header', 'Sidebar', 'Select', 'TableHeader', 'Pagination',
-                'ImagePicker', 'ActionGroup', 'Auth', 'StatCards', 'FilterChips', 'PageSize', 'YearFilter', 'Layout'];
+                'ImagePicker', 'ActionGroup', 'Auth', 'StatCards', 'FilterChips', 'PageSize', 'YearFilter', 'Layout', 'Tabs'];
     foreach ($classes as $class) {
         $src = (string) file_get_contents(__DIR__ . "/../src/$class.php");
         preg_match_all('/\$(?:' . $vars . ')\[[\'"]([A-Za-z_]+)[\'"]\]/', $src, $m);

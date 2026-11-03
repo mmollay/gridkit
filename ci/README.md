@@ -244,6 +244,22 @@ both dark spellings and forced colours. Each rule of the script, the stylesheet 
 GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-inline-edit.js
 ```
 
+Tabs 1.111.0 (`GridKit\Tabs`, `GK.tabs.*`) are checked by `ci/browser-tabs.js` on
+`ci/browser-tabs-fixture.php`: rows of `Tabs` and of hand-written markup, served from
+`http://gk.test/` by `page.route()`, which also answers the lazy panels — ok, a 500, no
+network (then ok, for the retry), a whole page, slow, and another origin that must never be
+asked. It checks the address in and out (`#<id>=<key>` beside other parts of the fragment),
+Back, nested rows, the memory and a storage that throws, the parameter and `active()`, lazy
+panels with `GK.initContent()` inside, `gk:tabchange`/`gk:tabshown`/`gk:tabload` and a
+refused switch by click, key, API and address, the JS API on hand-written markup, a row
+wider than its box (by its own width, arrows, keyboard, smooth and reduced motion), a modal,
+injected markup, 390px, light and both dark spellings, and the page with the script cut at
+its 1.111.0 block (`php ci/browser-tabs-fixture.php old`). About twenty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-tabs.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

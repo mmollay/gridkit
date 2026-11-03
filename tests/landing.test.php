@@ -49,14 +49,14 @@ return [
 'the page agrees with itself about how many components there are' => function (): void {
     $src = (string) file_get_contents(LANDING);
 
-    // src/ holds 22 classes: 17 components plus five infrastructure ones
+    // src/ holds 23 classes: 18 components (Tabs since 1.111.0) plus five infrastructure ones
     // (Theme, Layout, Lang, Auth, Icon). The hero stat said 16; the meta
     // description, the og: tags and two body sentences said 12.
     $classes = count(glob(dirname(__DIR__) . '/src/*.php') ?: []);
-    T::eq($classes, 22, 'the class count this claim rests on');
+    T::eq($classes, 23, 'the class count this claim rests on');
 
-    T::ok(!str_contains($src, '12 components'), 'no stale count left');
-    T::ok(substr_count($src, '17 components') >= 3,
+    T::ok(!str_contains($src, '12 components') && !str_contains($src, '17 components'), 'no stale count left');
+    T::ok(substr_count($src, '18 components') >= 3,
         'the count appears where a reader and a search engine both see it');
 },
 

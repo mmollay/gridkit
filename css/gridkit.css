@@ -11349,3 +11349,93 @@ label.gk-setting-title {
     text-decoration: underline dotted;
   }
 }
+
+/* === 1.111.0 — tabs: overflow, lazy panels === */
+/* ── A line, pill or text row wider than its box (GK.tabsOverflow) ────────────────────────────────
+   The row scrolls sideways, as it has since 1.103.0; GK.tabsOverflow measures it by its own width (as
+   GK.tabsFit measures a card row) and puts .gk-tab-nav-overflow on it, and a round arrow shows on each side
+   that has more. Scroll arrows rather than a "More" menu: every tab stays a tab of the one tablist, the arrow
+   keys reach all of them and the focus scrolls the tab into view. The arrows are pointer aids inside the
+   row — sticky to its edges, aria-hidden, no tab stop — and each one's width is taken back by its margin
+   (the 4px of the row's gap included): the tabs stand where they stood, and the measure never sees the
+   arrows. scroll-padding keeps a focused or chosen tab clear of them. Never set .gk-tab-nav-overflow by hand.
+   Roles only — the surface, its text colour, the row's calm frame line — so light, [data-gk-mode="dark"] and
+   .gk-dark follow from the tokens and there is no dark rule here. The card style keeps its grid (GK.tabsFit). */
+.gk-tab-arrow { display: none; }
+.gk-tab-nav.gk-tab-nav-overflow {
+  --gk-tab-arrow-size: 32px;
+  scroll-padding-inline: calc(var(--gk-tab-arrow-size) + 8px);
+}
+.gk-tab-nav-overflow > .gk-tab-arrow {
+  position: sticky;
+  z-index: 2;
+  flex: none;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--gk-tab-arrow-size);
+  height: var(--gk-tab-arrow-size);
+  border: 1px solid var(--gk-tab-kante);
+  border-radius: 50%;
+  background: var(--gk-surface);
+  color: var(--gk-on-surface);
+  box-shadow: var(--gk-shadow);
+  cursor: pointer;
+}
+.gk-tab-nav-overflow > .gk-tab-arrow:hover { background: var(--gk-surface-container-high); }
+.gk-tab-nav-overflow > .gk-tab-arrow[hidden] { display: none; }
+.gk-tab-nav-overflow > .gk-tab-arrow-start {
+  order: -1;
+  inset-inline-start: 0;
+  margin-inline-end: calc(-1 * var(--gk-tab-arrow-size) - 4px);
+}
+.gk-tab-nav-overflow > .gk-tab-arrow-end {
+  order: 9999;
+  inset-inline-end: 0;
+  margin-inline-start: calc(-1 * var(--gk-tab-arrow-size) - 4px);
+}
+/* The chevron is drawn, not a glyph: a page whose icon font does not load still shows it. */
+.gk-tab-arrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border: solid currentColor;
+  border-width: 0 0 2px 2px;
+  transform: translateX(1px) rotate(45deg);
+}
+.gk-tab-arrow-end::before { transform: translateX(-1px) rotate(-135deg); }
+.gk-tab-arrow:dir(rtl)::before { transform: translateX(-1px) rotate(-135deg); }
+.gk-tab-arrow-end:dir(rtl)::before { transform: translateX(1px) rotate(45deg); }
+
+/* ── A lazy panel (Tabs: 'url' — data-gk-tab-url) ──────────────────────────────────────────────────
+   .gk-tab-loading: the skeleton of the first load (lines of .gk-skeleton, the word for a screen reader in
+   .gk-sr-only; the panel says aria-busy). A reload keeps the old content, dimmed, until the new one is in.
+   A failure is the empty state of a table that could not load (.gk-empty with its retry button), with less
+   room around it. .gk-tab-fallback: the link Tabs writes into the panel, for a page whose script is older
+   than 1.111.0 — the script replaces it on the first view. */
+.gk-tab-loading {
+  display: grid;
+  gap: 12px;
+  padding: 8px 0 16px;
+}
+.gk-tab-loading > .gk-skeleton {
+  display: block;
+  width: 100%;
+  height: 0.9em;
+}
+.gk-tab-loading > .gk-skeleton:nth-child(3) { width: 82%; }
+.gk-tab-loading > .gk-skeleton:nth-child(4) { width: 58%; }
+.gk-tab-panel[aria-busy="true"] > :not(.gk-tab-loading) {
+  opacity: 0.55;
+  transition: opacity var(--gk-dur-2) var(--gk-ease-out);
+}
+.gk-tab-panel > .gk-empty { padding: 32px 16px; }
+.gk-tab-fallback {
+  margin: 0;
+  padding: 8px 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gk-tab-panel[aria-busy="true"] > :not(.gk-tab-loading) { transition: none; }
+}
