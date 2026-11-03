@@ -179,6 +179,11 @@ return [
     'js.sortierbar_gespeichert' => 'Reihenfolge gespeichert',
     'js.sortierbar_fehler'      => 'Die Reihenfolge konnte nicht gespeichert werden. Bitte noch einmal versuchen.',
 
+    // Tabs (1.111.0), a lazy panel: the link a page without the script shows, the skeleton, the failure
+    'tabs.open'                 => '„{label}“ öffnen',
+    'js.tab_loading'            => 'Wird geladen…',
+    'js.tab_load_error'         => 'Dieser Reiter konnte nicht geladen werden.',
+
     // Pagination, Seitengroesse, Select, Tabellenkopf, Jahresfilter
     'format.decimal'           => ',',
     'format.thousands'         => '.',

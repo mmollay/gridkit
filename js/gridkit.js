@@ -7482,3 +7482,583 @@ function _gkShowIfInit(root) {
     if (open(td)) e.preventDefault();
   });
 })();
+// === 1.111.0 — tabs: API, deep links, lazy panels, events (GK.tabs.*) ===
+/*
+ * What a row of tabs could not do before: be named from outside (a link to its third tab, a reload
+ * that keeps it, a person who comes back to the tab they left), load a heavy panel only when somebody
+ * looks at it, tell the page that a switch is about to happen — and let the page say no, because the
+ * panel holds unsaved changes — and be steered from script.
+ *
+ * It all hangs off the authored shape (.gk-tabs > .gk-tab-nav > .gk-tab-btn[data-tab] with
+ * .gk-tab-panel[data-tab]): what GridKit\Tabs writes, and what a page writes by hand. Tabs adds an
+ * attribute only for what was asked for:
+ *   data-gk-tabs-hash      the chosen tab stays in the address as #<id>=<key>. The fragment is a list
+ *                          joined by "&": the pair of every row and anything else a page keeps there
+ *                          (an anchor, a section of its own) stay as they are. Written with replaceState:
+ *                          a switch is no navigation, so Back leaves the page as it always did; a link to
+ *                          "#<id>=<key>" and Back/Forward between such links switch the tab (hashchange).
+ *   data-gk-tabs-remember  the last tab, per row id, in localStorage ("gk-tab-<id>" in the scope of
+ *                          GK.theme, so the next person at a shared computer does not inherit it)
+ *   data-gk-tabs-param     the query parameter the server read the tab from; a switch rewrites it in
+ *                          place while the address carries it, so a reload shows the tab in view
+ *   data-gk-tabs-chosen    where the server's choice came from: "page" (Tabs::active(): nothing overrides
+ *                          it) or "url" (the parameter: only the fragment, which is newer, overrides it)
+ *   data-gk-tab-url        a lazy panel, fetched on its first view (with data-gk-tab-reload: every view)
+ * On load the order is: the page's decision, the fragment, the parameter, the memory, the markup.
+ *
+ * Every switch — a click, the arrow keys (GK.tabsMarkup moves the focus and clicks), GK.tabs.select()
+ * and the address — goes through change(): gk:tabchange first (cancelable), then the switch, then
+ * gk:tabshown. The tab a page opens with fires nothing.
+ *
+ * Nothing that exists is changed:
+ *   GK.tabsMarkup.init  is wrapped: once the roles are on, a row is set up here. GK.initContent() reaches
+ *                       every row that arrives later (a modal, a loaded panel, AJAX navigation) the same way.
+ *   GK.tabs             (the object of the generated shape) gains select/current/badge/count/reload.
+ *   the old switch      (a bubbling click listener on document) stays. The listener below runs before it,
+ *                       in the capture phase: it asks first and switches itself. A refusal ends the click
+ *                       there, so the old switch never sees it; after a switch it has nothing left to change.
+ * A copy of this file without the block (the PawBot dashboard keeps its own) switches tabs as before;
+ * a lazy panel shows the link Tabs writes into it, and a long row scrolls as it did.
+ *
+ * A line, pill or text row that is wider than its box (GK.tabsOverflow) keeps scrolling sideways, as
+ * since 1.103.0, and shows where more tabs are: a round arrow on the side that has more, which pages
+ * the row. Measured on the row itself, like GK.tabsFit. Scroll arrows, not a "More" menu: every tab
+ * stays a tab of the one tablist — the arrow keys reach all of them (the focus scrolls the tab into
+ * view), a screen reader hears "tab 5 of 8", nothing moves into a second list with other roles. The
+ * arrows are pointer aids, aria-hidden and outside the tab order. The card style keeps its grid.
+ */
+(function () {
+  "use strict";
+  if (!window.GK || !GK.tabsMarkup || typeof GK.tabsMarkup.init !== "function") return;
+  if (!GK.tabs) GK.tabs = { init: function () {} };
+
+  function _t(key, fallback) {
+    var lang = window.GK_LANG || {};
+    return lang[key] || fallback;
+  }
+
+  function own(wrap, sel) {
+    return GK.tabsMarkup.own(wrap, sel);
+  }
+
+  function off(btn) {
+    return !!btn && (btn.disabled || btn.getAttribute("aria-disabled") === "true");
+  }
+
+  /** A row by element or id: a .gk-tabs (or anything in it), or a row of links outside one. */
+  function rowOf(target) {
+    var el = typeof target === "string" ? document.getElementById(target) : target;
+    if (!el || el.nodeType !== 1) return null;
+    if (el.matches(".gk-tab-nav") && !el.closest(".gk-tabs")) {
+      return { wrap: null, tabs: Array.prototype.slice.call(el.querySelectorAll(".gk-tab-btn")) };
+    }
+    var wrap = el.matches(".gk-tabs") ? el : el.closest(".gk-tabs");
+    return wrap ? { wrap: wrap, tabs: own(wrap, ".gk-tab-btn") } : null;
+  }
+
+  function tabOf(row, key) {
+    if (!row || key === null || key === undefined) return null;
+    key = String(key);
+    return row.tabs.filter(function (b) { return b.getAttribute("data-tab") === key; })[0] || null;
+  }
+
+  function currentOf(wrap) {
+    var on = own(wrap, ".gk-tab-btn").filter(function (b) { return b.classList.contains("gk-active"); })[0];
+    return on ? on.getAttribute("data-tab") : null;
+  }
+
+  /** The tab for a key, when it can be chosen: it exists, switches a panel and is not disabled. */
+  function usable(wrap, key) {
+    var b = tabOf({ tabs: own(wrap, ".gk-tab-btn") }, key);
+    return b && !off(b) && !b.matches("a[href]") ? b : null;
+  }
+
+  /** The state of a switch, exactly as the click handler of GK.tabsMarkup sets it (roles only where init put them). */
+  function apply(wrap, btn) {
+    var panel = GK.tabsMarkup.panel(wrap, btn.getAttribute("data-tab"));
+    own(wrap, ".gk-tab-btn").forEach(function (b) {
+      var on = b === btn;
+      b.classList.toggle("gk-active", on);
+      if (b.getAttribute("role") === "tab") {
+        b.setAttribute("aria-selected", on ? "true" : "false");
+        b.tabIndex = on ? 0 : -1;
+      }
+    });
+    own(wrap, ".gk-tab-panel").forEach(function (p) {
+      p.classList.toggle("gk-active", p === panel);
+    });
+    return panel;
+  }
+
+  function fire(wrap, type, detail, cancelable) {
+    return wrap.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: !!cancelable, detail: detail }));
+  }
+
+  // ── The address: #<id>=<key>, beside everything else in the fragment ──────────────────────────
+  var address = {
+    decode: function (s) {
+      try { return decodeURIComponent(s); } catch (e) { return null; }
+    },
+    parts: function () {
+      var h = location.hash.replace(/^#/, "");
+      return h ? h.split("&") : [];
+    },
+    read: function (id) {
+      var self = this, found = null;
+      this.parts().forEach(function (part) {
+        var i = part.indexOf("=");
+        if (i > 0 && self.decode(part.slice(0, i)) === id) found = self.decode(part.slice(i + 1));
+      });
+      return found;
+    },
+    write: function (id, key) {
+      var self = this, pair = encodeURIComponent(id) + "=" + encodeURIComponent(key), done = false;
+      var parts = this.parts().map(function (part) {
+        var i = part.indexOf("=");
+        if (i > 0 && self.decode(part.slice(0, i)) === id) {
+          done = true;
+          return pair;
+        }
+        return part;
+      });
+      if (!done) parts.push(pair);
+      var next = "#" + parts.join("&");
+      if (next === location.hash) return;
+      // replaceState: no history entry, and no hashchange for this very switch.
+      try { history.replaceState(history.state, "", location.href.replace(/#.*$/, "") + next); } catch (e) {}
+    },
+  };
+
+  // ── The memory: localStorage, guarded — a private window or blocked site data just forgets ─────
+  var memory = {
+    name: function (id) {
+      var n = "gk-tab-" + id;
+      return GK.theme && typeof GK.theme._key === "function" ? GK.theme._key(n) : n;
+    },
+    read: function (id) {
+      try { return window.localStorage.getItem(this.name(id)); } catch (e) { return null; }
+    },
+    write: function (id, key) {
+      try { window.localStorage.setItem(this.name(id), key); } catch (e) {}
+    },
+  };
+
+  // ── The query parameter the server read (Tabs::param()) ───────────────────────────────────────
+  var param = {
+    read: function (wrap) {
+      var name = wrap.getAttribute("data-gk-tabs-param");
+      if (!name) return null;
+      try { return new URLSearchParams(location.search).get(name); } catch (e) { return null; }
+    },
+    write: function (wrap, key) {
+      var name = wrap.getAttribute("data-gk-tabs-param");
+      if (!name) return;
+      try {
+        var url = new URL(location.href);
+        // Only where the address already names the tab: a parameter added out of nothing would change
+        // what the server sees (a live table reads a bare address as a fresh visit).
+        if (!url.searchParams.has(name) || url.searchParams.get(name) === key) return;
+        url.searchParams.set(name, key);
+        history.replaceState(history.state, "", url.href);
+      } catch (e) {}
+    },
+  };
+
+  function persist(wrap, key) {
+    if (wrap.id && wrap.hasAttribute("data-gk-tabs-hash")) address.write(wrap.id, key);
+    if (wrap.id && wrap.hasAttribute("data-gk-tabs-remember")) memory.write(wrap.id, key);
+    param.write(wrap, key);
+  }
+
+  // ── Lazy panels ───────────────────────────────────────────────────────────────────────────────
+  var lazy = {
+    /** On the screen: the panel and every panel around it is the active one of its row. */
+    shown: function (panel) {
+      for (var p = panel; p; p = p.parentElement ? p.parentElement.closest(".gk-tab-panel") : null) {
+        if (!p.classList.contains("gk-active")) return false;
+      }
+      return true;
+    },
+    /** A panel that has just come into view: load it the first time (with data-gk-tab-reload: each time it
+        is chosen), and the lazy panels inside it that are now in view too. */
+    show: function (panel, chosen) {
+      var self = this;
+      if (panel.hasAttribute("data-gk-tab-url")) {
+        if ((chosen && panel.hasAttribute("data-gk-tab-reload")) || (!panel._gkTabLoaded && !panel._gkTabLoading)) this.load(panel);
+      }
+      panel.querySelectorAll(".gk-tab-panel.gk-active[data-gk-tab-url]").forEach(function (inner) {
+        if (self.shown(inner) && !inner._gkTabLoaded && !inner._gkTabLoading) self.load(inner);
+      });
+    },
+    clear: function (panel, box) {
+      while (panel.firstChild) panel.removeChild(panel.firstChild);
+      panel.appendChild(box);
+    },
+    /** The first load: lines of skeleton, and the word for a screen reader. A reload keeps the old content (dimmed). */
+    wait: function (panel) {
+      var box = document.createElement("div");
+      box.className = "gk-tab-loading";
+      var say = document.createElement("span");
+      say.className = "gk-sr-only";
+      say.textContent = _t("tab_loading", "Loading…");
+      box.appendChild(say);
+      for (var i = 0; i < 3; i++) {
+        var line = document.createElement("span");
+        line.className = "gk-skeleton";
+        line.setAttribute("aria-hidden", "true");
+        box.appendChild(line);
+      }
+      this.clear(panel, box);
+    },
+    /** The failure, in the words and the shape of a table that could not load — never the server's own answer. */
+    fail: function (panel) {
+      var self = this, box = document.createElement("div");
+      box.className = "gk-empty";
+      box.setAttribute("role", "alert");
+      box.innerHTML = '<div class="gk-empty-inner"><span class="material-icons gk-empty-icon" aria-hidden="true">cloud_off</span>' +
+        '<span class="gk-empty-title"></span><span class="gk-empty-action">' +
+        '<button type="button" class="gk-btn gk-btn-text gk-btn-primary gk-btn-sm"></button></span></div>';
+      box.querySelector(".gk-empty-title").textContent = _t("tab_load_error", "This tab could not be loaded.");
+      var again = box.querySelector("button");
+      again.textContent = _t("retry", "Try again");
+      again.addEventListener("click", function () { self.load(panel); });
+      this.clear(panel, box);
+      return again;
+    },
+    /** Fetch the panel. Resolves to true when the new content is in; an older answer never overwrites a newer one. */
+    load: function (panel) {
+      var self = this, wrap = panel.closest(".gk-tabs"), key = panel.getAttribute("data-tab");
+      var run = (panel._gkTabRun || 0) + 1, status = 0;
+      var focused = panel.contains(document.activeElement);
+      panel._gkTabRun = run;
+      panel._gkTabLoading = true;
+      panel.setAttribute("aria-busy", "true");
+      if (!panel._gkTabLoaded) this.wait(panel);
+      var target = null;
+      try { target = new URL(panel.getAttribute("data-gk-tab-url") || "", location.href); } catch (e) {}
+      // Same origin only: the answer becomes markup on this page.
+      var request = target && target.origin === location.origin && /^https?:$/.test(target.protocol)
+        ? fetch(target.href, { headers: { "X-Requested-With": "XMLHttpRequest" }, credentials: "same-origin", mode: "same-origin" })
+        : Promise.reject(new Error("a lazy tab loads from this origin only"));
+      var done = function (ok) {
+        panel._gkTabLoading = false;
+        panel.removeAttribute("aria-busy");
+        if (wrap) fire(wrap, "gk:tabload", { tabsId: wrap.id || null, key: key, panel: panel, ok: ok, status: status }, false);
+        return ok;
+      };
+      return request
+        .then(function (r) {
+          status = r.status;
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.text();
+        })
+        .then(function (html) {
+          // A whole page is not a panel: a login page after the session ended, an address that is a page.
+          if (/^\s*<!doctype|<html[\s>]/i.test(html)) throw new Error("a whole page came back");
+          if (panel._gkTabRun !== run) return false;
+          panel.innerHTML = html;
+          panel._gkTabLoaded = true;
+          // Widgets inside work as on a page of their own; a widget that fails to start does not turn the
+          // content that did arrive into "could not be loaded".
+          try { GK.initContent(panel); } catch (e) { if (window.console) console.error("GridKit: a widget in a loaded tab did not start", e); }
+          if (focused) {
+            if (!panel.hasAttribute("tabindex")) panel.setAttribute("tabindex", "-1");
+            panel.focus();
+          }
+          return done(true);
+        })
+        .catch(function (err) {
+          if (panel._gkTabRun !== run) return false;
+          panel._gkTabLoaded = false;
+          var again = self.fail(panel);
+          if (focused) again.focus();
+          if (window.console) console.warn("GridKit: a lazy tab did not load —", err && err.message);
+          return done(false);
+        });
+    },
+  };
+
+  // ── Overflow of a line, pill or text row ──────────────────────────────────────────────────────
+  var ROWS = ".gk-tab-nav-linie, .gk-tab-nav-kapsel, .gk-tab-nav-text";
+  GK.tabsOverflow = {
+    cls: "gk-tab-nav-overflow",
+    init: function (root) {
+      var self = this, scope = root && root.querySelectorAll ? root : document;
+      scope.querySelectorAll(ROWS).forEach(function (nav) {
+        if (nav._gkTabsOverflow || !nav.classList.contains("gk-tab-nav")) return;
+        nav._gkTabsOverflow = true;
+        self.fit(nav);
+        nav.addEventListener("scroll", function () { self.edges(nav); }, { passive: true });
+        if (!window.ResizeObserver) return;
+        // As GK.tabsFit: the re-measure waits one frame (a change of size from inside the observer
+        // ends in "ResizeObserver loop completed with undelivered notifications").
+        var queued = false;
+        var watch = new ResizeObserver(function () {
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(function () {
+            queued = false;
+            self.fit(nav);
+          });
+        });
+        watch.observe(nav);
+        Array.prototype.forEach.call(nav.children, function (tab) {
+          if (tab.classList.contains("gk-tab-btn")) watch.observe(tab);
+        });
+      });
+    },
+    /** Measured as it stands: the arrows take no width of their own, so they never decide the overflow. */
+    fit: function (nav) {
+      var was = nav.classList.contains(this.cls);
+      var over = nav.scrollWidth > nav.clientWidth + 1;
+      nav.classList.toggle(this.cls, over);
+      if (over && !nav._gkTabArrows) this.arrows(nav);
+      this.edges(nav);
+      if (over && !was) this.reveal(nav, nav.querySelector(':scope > .gk-tab-btn.gk-active, :scope > .gk-tab-btn[aria-current="page"]'));
+    },
+    arrows: function (nav) {
+      nav._gkTabArrows = ["start", "end"].map(function (side) {
+        var arrow = document.createElement("span");
+        arrow.className = "gk-tab-arrow gk-tab-arrow-" + side;
+        arrow.setAttribute("aria-hidden", "true");
+        arrow.addEventListener("click", function (e) {
+          e.preventDefault();
+          var rtl = getComputedStyle(nav).direction === "rtl";
+          var step = Math.max(nav.clientWidth * 0.8, 80) * (side === "start" ? -1 : 1) * (rtl ? -1 : 1);
+          var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          try { nav.scrollBy({ left: step, behavior: still ? "auto" : "smooth" }); } catch (err) { nav.scrollLeft += step; }
+        });
+        // At the end of the row in the markup, so every tab keeps its place (:nth-child included);
+        // the stylesheet puts the start arrow first with `order`.
+        nav.appendChild(arrow);
+        return arrow;
+      });
+    },
+    /** An arrow only on a side that has more — measured, so a row that fits again hides both. */
+    edges: function (nav) {
+      var a = nav._gkTabArrows;
+      if (!a) return;
+      var pos = Math.abs(nav.scrollLeft), max = nav.scrollWidth - nav.clientWidth;
+      a[0].hidden = pos <= 1;
+      a[1].hidden = pos >= max - 1;
+    },
+    /** The chosen tab whole in view and clear of the arrows (the row's scroll-padding says how far). */
+    reveal: function (nav, btn) {
+      if (!nav || !btn || !nav.classList.contains(this.cls)) return;
+      var pad = parseFloat(getComputedStyle(nav).scrollPaddingInlineStart) || 0;
+      var n = nav.getBoundingClientRect(), b = btn.getBoundingClientRect();
+      if (b.left < n.left + pad) nav.scrollLeft -= n.left + pad - b.left;
+      else if (b.right > n.right - pad) nav.scrollLeft += b.right - n.right + pad;
+    },
+  };
+
+  /** After a switch, and for the tab a row opens with: load what is now in view, show the tab in its row. */
+  function settle(btn, panel, chosen) {
+    if (panel && lazy.shown(panel)) lazy.show(panel, chosen);
+    GK.tabsOverflow.reveal(btn.parentElement, btn);
+  }
+
+  /**
+   * The one way a tab changes. Returns true when the tab is the current one afterwards. force: the
+   * event cannot be refused (a switch the page has already confirmed).
+   */
+  function change(wrap, btn, source, force) {
+    var to = btn.getAttribute("data-tab"), from = currentOf(wrap);
+    if (from === to) return true;
+    var panel = GK.tabsMarkup.panel(wrap, to);
+    var detail = { tabsId: wrap.id || null, from: from, to: to, panel: panel, source: source };
+    if (!fire(wrap, "gk:tabchange", detail, !force)) return false;
+    // A listener chose a tab itself (GK.tabs.select inside it): that choice stands.
+    if (currentOf(wrap) !== from) return currentOf(wrap) === to;
+    apply(wrap, btn);
+    persist(wrap, to);
+    settle(btn, panel, true);
+    fire(wrap, "gk:tabshown", { tabsId: detail.tabsId, from: from, to: to, panel: panel, source: source }, false);
+    return true;
+  }
+
+  /**
+   * A deep link into an inner row shows the panels around it too — unless an outer row was told otherwise:
+   * on load by the page or by a pair of its own, later (a link, Back) by a pair of its own in the address.
+   */
+  function revealAround(wrap, viaChange) {
+    var panel = wrap.parentElement ? wrap.parentElement.closest(".gk-tab-panel") : null;
+    for (; panel; panel = panel.parentElement ? panel.parentElement.closest(".gk-tab-panel") : null) {
+      var outer = panel.closest(".gk-tabs");
+      if (!outer) return;
+      var named = outer.id && outer.hasAttribute("data-gk-tabs-hash") && address.read(outer.id) !== null;
+      if (viaChange ? named : outer._gkTabsFrom === "page" || outer._gkTabsFrom === "address") return;
+      var b = usable(outer, panel.getAttribute("data-tab"));
+      if (!b || panel.classList.contains("gk-active")) continue;
+      if (viaChange) {
+        if (!change(outer, b, "address", false)) return;
+      } else {
+        apply(outer, b);
+      }
+    }
+  }
+
+  /** The tab a row opens with: the page's decision, the fragment, the parameter, the memory, the markup. */
+  function setup(wrap) {
+    if (wrap._gkTabsApi || !own(wrap, ".gk-tab-nav")[0]) return false;
+    wrap._gkTabsApi = true;
+    var id = wrap.id, chosen = wrap.getAttribute("data-gk-tabs-chosen"), pick = null, from = "markup";
+    if (chosen === "page") {
+      from = "page";
+    } else {
+      var named = id && wrap.hasAttribute("data-gk-tabs-hash") ? usable(wrap, address.read(id)) : null;
+      var asked = usable(wrap, param.read(wrap));
+      var kept = id && wrap.hasAttribute("data-gk-tabs-remember") ? usable(wrap, memory.read(id)) : null;
+      if (named) { pick = named; from = "address"; }
+      else if (asked) { pick = asked; from = "url"; }
+      else if (chosen === "url") from = "url";
+      else if (kept) { pick = kept; from = "memory"; }
+    }
+    wrap._gkTabsFrom = from;
+    if (pick && pick.getAttribute("data-tab") !== currentOf(wrap)) apply(wrap, pick);
+    if (from === "address") revealAround(wrap, false);
+    // The address names a tab the row did not take (the page decided, or the tab is disabled or gone):
+    // it says what is shown instead.
+    if (id && wrap.hasAttribute("data-gk-tabs-hash")) {
+      var cur = currentOf(wrap), said = address.read(id);
+      if (said !== null && cur !== null && said !== cur) address.write(id, cur);
+    }
+    return true;
+  }
+
+  function init(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    var fresh = Array.prototype.filter.call(scope.querySelectorAll(".gk-tabs"), setup);
+    GK.tabsOverflow.init(scope);
+    // Loaded once every row has made its choice: a panel a deep link switches away from is never fetched.
+    fresh.forEach(function (wrap) {
+      var key = currentOf(wrap), btn = tabOf({ tabs: own(wrap, ".gk-tab-btn") }, key);
+      if (btn) settle(btn, GK.tabsMarkup.panel(wrap, key), false);
+    });
+  }
+
+  // Click and keyboard: ahead of the old switch (see above).
+  document.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest(".gk-tab-btn") : null;
+    if (!btn || !btn.hasAttribute("data-tab") || off(btn) || btn.matches("a[href]")) return;
+    var wrap = btn.closest(".gk-tabs");
+    if (!wrap) return;
+    var to = btn.getAttribute("data-tab");
+    if (currentOf(wrap) === to) return;
+    if (!change(wrap, btn, "user", false)) {
+      e.preventDefault();
+      e.stopPropagation();
+      // The arrow keys moved the focus before they clicked: it goes back to the tab that stays.
+      var stays = tabOf({ tabs: own(wrap, ".gk-tab-btn") }, currentOf(wrap));
+      if (stays && document.activeElement === btn) stays.focus();
+      return;
+    }
+    // A gk:tabshown listener moved on to another tab: the old switch must not undo that.
+    if (currentOf(wrap) !== to) e.stopPropagation();
+  }, true);
+
+  window.addEventListener("hashchange", function () {
+    document.querySelectorAll(".gk-tabs[data-gk-tabs-hash]").forEach(function (wrap) {
+      var said = wrap.id ? address.read(wrap.id) : null;
+      if (said === null) return;
+      var b = usable(wrap, said), cur = currentOf(wrap);
+      if (b && b.getAttribute("data-tab") === cur) return;
+      // A key no tab can take (unknown, disabled), or a switch that was refused: the address says what is shown.
+      if (b && change(wrap, b, "address", false)) revealAround(wrap, true);
+      else if (cur !== null) address.write(wrap.id, currentOf(wrap));
+    });
+  });
+
+  var api = {
+    /** Switch to a tab, as a click would (gk:tabchange can refuse it). opts: { focus, force }. */
+    select(target, key, opts) {
+      var row = rowOf(target);
+      if (!row || !row.wrap) return false;
+      var btn = usable(row.wrap, key);
+      if (!btn) return false;
+      var ok = change(row.wrap, btn, "api", !!(opts && opts.force));
+      if (ok && opts && opts.focus) btn.focus();
+      return ok;
+    },
+    /** The key of the current tab (of a row of links: the one with aria-current="page"), or null. */
+    current(target) {
+      var row = rowOf(target);
+      if (!row) return null;
+      if (row.wrap) return currentOf(row.wrap);
+      var on = row.tabs.filter(function (b) { return b.getAttribute("aria-current") === "page"; })[0];
+      return on ? on.getAttribute("data-tab") : null;
+    },
+    /** Put, change or (text null or "") take away the badge of a tab. opts: { tone: "error" }. */
+    badge(target, key, text, opts) {
+      var btn = tabOf(rowOf(target), key);
+      if (!btn) return false;
+      var el = btn.querySelector(":scope > .gk-tab-badge");
+      if (text === null || text === undefined || text === "") {
+        if (el) el.remove();
+      } else {
+        if (!el) {
+          el = document.createElement("span");
+          btn.insertBefore(el, btn.querySelector(":scope > .gk-tab-count"));
+        }
+        el.className = "gk-tab-badge" + (opts && opts.tone === "error" ? " gk-tab-badge-error" : "");
+        el.textContent = String(text);
+      }
+      named(btn);
+      return true;
+    },
+    /** Put, change or (n null or "") take away the count of a tab. */
+    count(target, key, n) {
+      var btn = tabOf(rowOf(target), key);
+      if (!btn) return false;
+      var el = btn.querySelector(":scope > .gk-tab-count");
+      if (n === null || n === undefined || n === "") {
+        if (el) el.remove();
+      } else {
+        if (!el) {
+          el = document.createElement("span");
+          el.className = "gk-tab-count";
+          btn.appendChild(el);
+        }
+        el.textContent = String(n);
+      }
+      named(btn);
+      return true;
+    },
+    /** Fetch a lazy panel again now (key: the current tab when left out). Resolves to true once the content is in. */
+    reload(target, key) {
+      var row = rowOf(target);
+      if (!row || !row.wrap) return Promise.resolve(false);
+      var k = key === undefined || key === null ? currentOf(row.wrap) : String(key);
+      var panel = k === null ? null : GK.tabsMarkup.panel(row.wrap, k);
+      if (!panel || !panel.hasAttribute("data-gk-tab-url")) return Promise.resolve(false);
+      return lazy.load(panel);
+    },
+  };
+  Object.keys(api).forEach(function (name) { GK.tabs[name] = api[name]; });
+
+  /** An icon-only tab is named by its aria-label: the badge and the count belong in it, as Tabs writes it. */
+  function named(btn) {
+    var nav = btn.parentElement;
+    if (!nav || !nav.classList.contains("gk-tab-nav-nur-icon") || !btn.hasAttribute("aria-label")) return;
+    var word = "";
+    Array.prototype.forEach.call(btn.childNodes, function (n) {
+      if (n.nodeType === 3 || (n.nodeType === 1 && !n.matches(".gk-tab-icon, .gk-tab-badge, .gk-tab-count"))) word += n.textContent;
+    });
+    var parts = [word.trim()];
+    [":scope > .gk-tab-badge", ":scope > .gk-tab-count"].forEach(function (sel) {
+      var el = btn.querySelector(sel);
+      if (el && el.textContent.trim() !== "") parts.push(el.textContent.trim());
+    });
+    btn.setAttribute("aria-label", parts.filter(Boolean).join(", "));
+  }
+
+  // Every row GK.tabsMarkup gives its roles to — on load and through GK.initContent() later.
+  var markupInit = GK.tabsMarkup.init;
+  GK.tabsMarkup.init = function (root) {
+    var result = markupInit.apply(this, arguments);
+    init(root);
+    return result;
+  };
+  // A script that arrives after the document is ready: GK.init() has run before the wrap above.
+  _gkReady(function () { init(document); });
+})();

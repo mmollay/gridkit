@@ -213,6 +213,9 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-tabs-box-700 { width:700px; }
         .demo-tabs-box-560 { width:560px; }
         .demo-tabs-box-340 { width:340px; }
+        .demo-tabs-log { min-height:4.6em; margin:12px 0 0; padding:8px 12px; border-radius:8px; background:var(--gk-surface-container); color:var(--gk-on-surface); font-size:13px; white-space:pre-wrap; }
+        .demo-tabs-api { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; }
+        .demo-tabs-api output { font-size:13px; color:var(--gk-on-surface-variant); }
         /* Reiter-Varianten (1.103.0): Baukasten und Telefonrahmen der Demo */
         .demo-baukasten-felder { display:grid; grid-template-columns:repeat(auto-fit, minmax(10rem, 1fr)); gap:12px; margin-bottom:16px; }
         .demo-baukasten-felder .gk-field { margin:0; }
@@ -280,7 +283,9 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-sort-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
         .demo-sort-grid > *, .demo-sort-list > * { padding:16px 64px 16px 16px; border:1px solid var(--gk-outline-variant);
             border-radius:var(--gk-radius); background:var(--gk-surface-container); }
-        .demo-sort-grid + .demo-sort-list { margin-top:24px; }
+        /* ~, not +: js/sortierbar.js puts its live region (.gk-sort-meldungen) right after each
+           container, so the list is no longer the grid's next sibling and + never matched. */
+        .demo-sort-grid ~ .demo-sort-list { margin-top:24px; }
         .demo-sort-grid h4, .demo-sort-list h4 { margin:0 0 4px; font-size:15px; }
         .demo-sort-grid p, .demo-sort-list p { margin:0; font-size:13px; color:var(--gk-on-surface-variant); }
 
@@ -474,6 +479,30 @@ echo $demoHeader->title($headerTitle, true)
     var sections = document.querySelectorAll('.demo-section');
     var links = document.querySelectorAll('.gk-sidebar-item');
 
+    // The fragment is shared since 1.111.0: Tabs::hash() keeps "id=key" pairs in it, joined by "&",
+    // beside the demo's own section ("#tabs&demo-deep=billing"). The section is the part without "=";
+    // an id of an element inside a section (an anchor such as #tabs-php) shows that section; with only
+    // pairs, the section of the first row they name.
+    function sectionOf(hash) {
+        var parts = hash.replace(/^#/, '').split('&').filter(Boolean);
+        var inside = function (id) {
+            var el = id ? document.getElementById(id) : null;
+            var s = el ? el.closest('.demo-section') : null;
+            return s ? s.getAttribute('data-section') : null;
+        };
+        for (var i = 0; i < parts.length; i++) {
+            if (parts[i].indexOf('=') !== -1) continue;
+            if (document.querySelector('[data-section="' + parts[i].replace(/"/g, '') + '"]')) return parts[i];
+            if (inside(parts[i])) return inside(parts[i]);
+        }
+        for (var j = 0; j < parts.length; j++) {
+            var name = parts[j].split('=')[0];
+            try { name = decodeURIComponent(name); } catch (e) {}
+            if (inside(name)) return inside(name);
+        }
+        return null;
+    }
+
     function showSection(id) {
         sections.forEach(function(s) { s.classList.remove('active'); });
         var target = document.querySelector('[data-section="' + id + '"]');
@@ -496,11 +525,7 @@ echo $demoHeader->title($headerTitle, true)
         });
     });
 
-    if (window.location.hash) {
-        showSection(window.location.hash.substring(1));
-    } else {
-        showSection('table');
-    }
+    showSection(sectionOf(window.location.hash) || 'table');
     // The news box is open while it has news for this browser: on a first visit and
     // whenever the newest release is one it has not shown yet. After that it starts
     // folded, so the first example is on the first screen; its summary line still names
@@ -521,7 +546,8 @@ echo $demoHeader->title($headerTitle, true)
 
     // "All release notes" in the news box is a plain link, not a sidebar item.
     window.addEventListener('hashchange', function () {
-        if (window.location.hash) showSection(window.location.hash.substring(1));
+        var id = sectionOf(window.location.hash);
+        if (id) showSection(id);
     });
 })();
 

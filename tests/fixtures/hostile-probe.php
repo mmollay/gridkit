@@ -16,7 +16,7 @@ ini_set('display_errors', '0');
 
 require __DIR__ . '/../../autoload.php';
 
-use GridKit\{FilterChips, Lang, PageSize, Pagination, Table, YearFilter};
+use GridKit\{FilterChips, Lang, PageSize, Pagination, Table, Tabs, YearFilter};
 
 Lang::set('en');
 
@@ -42,6 +42,7 @@ $render = match ($argv[1] ?? '') {
     'PageSize'    => fn() => (new PageSize())->render(),
     'YearFilter'  => fn() => (new YearFilter('y'))->range(2020, 2026)->render(),
     'Pagination'  => fn() => print(Pagination::build(['totalPages' => 10, 'current' => 3])),
+    'Tabs'        => fn() => (new Tabs('t'))->param('status')->hash()->remember()->tab('a', 'A')->tab('b', 'B', ['disabled' => true])->render(),
     default       => throw new InvalidArgumentException('unknown component'),
 };
 

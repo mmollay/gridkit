@@ -264,6 +264,14 @@ return [
     }
 },
 
+
+'the demo spaces the list from the grid with ~, since the script puts its live region between them' => function (): void {
+    // js/sortierbar.js writes .gk-sort-meldungen right after each container (makeMessages: st.box.after(wrap)).
+    // The demo's ".demo-sort-grid + .demo-sort-list" therefore never matched: the grid and the list touched.
+    $index = (string) file_get_contents(__DIR__ . '/../demo/index.php');
+    T::contains($index, '.demo-sort-grid ~ .demo-sort-list { margin-top:24px; }', 'the demo list is spaced from the grid by a rule that the live region breaks');
+    T::notContains($index, '.demo-sort-grid + .demo-sort-list', 'the adjacent-sibling rule is back — it cannot match after the live region');
+},
 ];
 
 })();

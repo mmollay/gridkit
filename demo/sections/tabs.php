@@ -12,11 +12,194 @@ use GridKit\Button;
 use GridKit\Theme;
 use GridKit\Layout;
 use GridKit\Lang;
+use GridKit\Tabs;
 ?>
 <!-- ===== TABS (1.101.0: Karteireiter) ===== -->
 <div class="demo-section" data-section="tabs">
     <h2>Tabs <?= since('tabs', 'steps') ?></h2>
     <p class="demo-intro">Karteireiter: the tabs sit framed on their surface, the chosen one grows into it — taller, bold, a 3px accent on top. Ordered with <code>.gk-tab-nav-karte</code> and <code>.gk-tab-flaeche</code>; without them every tab row keeps the <a href="#navigation">previous shape</a>. Levels: page tabs &gt; second row (on a line, also inside a window) &gt; segmented button. On a phone every Karteireiter row is a grid, two columns up to 480px — nothing scrolls, nothing is cut.</p>
+
+    <!-- ===== Tabs from PHP (1.111.0): GridKit\Tabs, deep links, memory, lazy panels, events, JS API, overflow ===== -->
+    <h3 class="demo-h3" id="tabs-php">Tabs from PHP <?= since('tabs') ?></h3>
+    <p class="demo-intro"><code>GridKit\Tabs</code> writes the markup of this page for you: every style, alignment and option below is a call, a panel is HTML or a callable. Like <code>Table</code> it prints; <code>html()</code> returns the same string. Under each example is the code that ran. A wrong value (an unknown style, a key used twice, an <code>active()</code> that names no tab) raises a warning and renders the nearest correct thing — never an exception.</p>
+    <?php
+    showcase(function () {
+        (new Tabs('demo-php'))
+            ->style('karte')
+            ->label('Texts of this page')
+            ->tab('signup', 'Sign-up', ['icon' => 'edit_note', 'content' => '<p>The sign-up form — our default texts apply.</p>'])
+            ->tab('confirm', 'Confirmation page', ['icon' => 'task_alt', 'badge' => 'Customised', 'content' => '<p>Your own text for the confirmation page.</p>'])
+            ->tab('remind', 'Reminders', ['icon' => 'alarm', 'count' => 3, 'content' => '<p>Three reminders.</p>'])
+            ->tab('legal', 'Legal', ['icon' => 'gavel', 'badge' => ['text' => 'Error', 'tone' => 'error'], 'content' => '<p>Legal notice and privacy.</p>'])
+            ->tab('stats', 'Statistics', ['icon' => 'bar_chart', 'disabled' => true])
+            ->render();
+    });
+    ?>
+    <p class="demo-intro"><strong>Styles</strong> — <code>style('karte' | 'linie' | 'kapsel' | 'text')</code>; the card style puts its panels on the surface by itself (<code>surface(false)</code> takes it away).</p>
+    <?php
+    showcase(function () {
+        foreach (['karte', 'linie', 'kapsel', 'text'] as $style) {
+            (new Tabs('demo-php-' . $style))->style($style)->label("Style $style")
+                ->tab('a', 'Overview', ['content' => "<p>style('$style')</p>"])
+                ->tab('b', 'Details', ['count' => 3, 'content' => '<p>Three details.</p>'])
+                ->tab('c', 'History', ['content' => '<p>The history.</p>'])
+                ->render();
+        }
+    });
+    ?>
+    <p class="demo-intro"><strong>Alignment and size</strong> — <code>align('top' | 'links' | 'rechts' | 'unten' | 'fest')</code> and <code>size('sm' | 'md' | 'lg')</code>. A bottom row is written after its panels, so the reading order is the order on the screen.</p>
+    <?php
+    showcase(function () {
+        (new Tabs('demo-php-links'))->style('linie')->align('links')->label('Settings, left')
+            ->tab('general', 'General', ['icon' => 'tune', 'content' => '<p>General settings.</p>'])
+            ->tab('look', 'Look', ['icon' => 'palette', 'content' => '<p>Colours and fonts.</p>'])
+            ->tab('privacy', 'Privacy', ['icon' => 'lock', 'content' => '<p>Who sees what.</p>'])
+            ->render();
+        (new Tabs('demo-php-unten'))->style('kapsel')->align('unten')->size('sm')->label('Sections, bottom')
+            ->tab('a', 'Overview', ['content' => '<p>The row stands after the panels.</p>'])
+            ->tab('b', 'Details', ['content' => '<p>The details.</p>'])
+            ->render();
+    });
+    ?>
+    <p class="demo-intro"><strong>Options</strong> — <code>iconOnly()</code> keeps the word for a screen reader and gives every tab <code>aria-label</code> (with its badge and count) and <code>title</code>; <code>neutral()</code>, <code>fluid()</code>, <code>iconTop()</code>; <code>secondary()</code>, <code>fill()</code>, <code>oneRow()</code> and <code>flat()</code> for the shapes of 1.99 and 1.104.</p>
+    <?php
+    showcase(function () {
+        (new Tabs('demo-php-icons'))->style('kapsel')->iconOnly()->neutral()->label('Symbols only')
+            ->tab('a', 'Overview', ['icon' => 'dashboard', 'content' => '<p>The word stays for a screen reader.</p>'])
+            ->tab('b', 'Inbox', ['icon' => 'inbox', 'count' => 12, 'content' => '<p>Twelve messages.</p>'])
+            ->tab('c', 'History', ['icon' => 'history', 'content' => '<p>The history.</p>'])
+            ->render();
+        (new Tabs('demo-php-fluid'))->style('linie')->fluid()->iconTop()->size('lg')->label('Full width, symbol above')
+            ->tab('a', 'Home', ['icon' => 'home', 'content' => '<p>Home.</p>'])
+            ->tab('b', 'Search', ['icon' => 'search', 'content' => '<p>Search.</p>'])
+            ->tab('c', 'Inbox', ['icon' => 'inbox', 'content' => '<p>Inbox.</p>'])
+            ->render();
+    });
+    ?>
+    <p class="demo-intro"><strong>Links between pages</strong> — when every tab has an <code>href</code> the row is a <code>&lt;nav&gt;</code> of links, the current page (<code>active()</code> or the parameter) marked with <code>aria-current="page"</code>. A row is links or panels, never both.</p>
+    <?php
+    showcase(function () {
+        (new Tabs('demo-php-pages'))->style('linie')->label('Pages')->active('results')
+            ->tab('edit', 'Edit', ['href' => '#tabs-php', 'icon' => 'edit'])
+            ->tab('results', 'Results', ['href' => '#tabs-php', 'icon' => 'bar_chart'])
+            ->tab('mails', 'Mails', ['href' => '#tabs-php', 'icon' => 'mail', 'count' => 2])
+            ->render();
+    });
+    ?>
+
+    <h3 class="demo-h3" id="tabs-adresse">Deep links and memory <?= since('tabs') ?></h3>
+    <p class="demo-intro"><code>hash()</code> keeps the chosen tab in the address: choose one and look at the address bar (<code>#tabs&amp;demo-deep=…</code>) — the demo's own part of the fragment stays beside it, and Back still leaves the page. Open that address in another window and the tab is there. <code>remember()</code> keeps the last tab of the row in this browser: reload the page. <code>param('tab')</code> lets the server open a tab from <code>?tab=…</code> without any script. The address wins over the memory, <code>active()</code> — the page's own decision — over both.</p>
+    <?php
+    showcase(function () {
+        (new Tabs('demo-deep'))->style('linie')->label('Account')->hash()->remember()->param('tab')
+            ->tab('profile', 'Profile', ['content' => '<p>Your profile.</p>'])
+            ->tab('password', 'Password', ['content' => '<p>Your password.</p>'])
+            ->tab('sessions', 'Sessions', ['content' => '<p>Where you are signed in.</p>'])
+            ->tab('billing', 'Billing', ['content' => '<p>Billing.</p>'])
+            ->render();
+    });
+    ?>
+    <p class="demo-intro">Links into it: <a href="#tabs&amp;demo-deep=billing"><code>#tabs&amp;demo-deep=billing</code></a> switches here and now; <a href="?tab=sessions#tabs"><code>?tab=sessions</code></a> loads the page with Sessions open on the server.</p>
+
+    <h3 class="demo-h3" id="tabs-lazy">Lazy panels <?= since('tabs') ?></h3>
+    <p class="demo-intro"><code>'url' =&gt; …</code> leaves the panel empty until its tab is opened, then fetches it (same origin, <code>X-Requested-With</code>), with a skeleton meanwhile and <code>aria-busy</code> on the panel, and keeps it. Widgets inside work: the table in <em>Figures</em> sorts, because <code>GK.initContent()</code> runs on the answer. A failure shows the table's failure state with “Try again” — never the server's own error page. <code>'reload' =&gt; true</code> fetches every time. A page with an older gridkit.js shows a link to the panel's address instead.</p>
+    <?php
+    showcase(function () {
+        (new Tabs('demo-lazy'))->style('karte')->label('Invoices')
+            ->tab('now', 'Now', ['content' => '<p>This panel came with the page; the others are fetched when you open them.</p>'])
+            ->tab('figures', 'Figures', ['icon' => 'insights', 'url' => 'api/tab-panel.php?part=figures'])
+            ->tab('slow', 'Slow', ['icon' => 'hourglass_top', 'url' => 'api/tab-panel.php?part=slow'])
+            ->tab('fail', 'Fails', ['icon' => 'error', 'url' => 'api/tab-panel.php?part=fail'])
+            ->tab('time', 'Every time', ['icon' => 'schedule', 'url' => 'api/tab-panel.php?part=time', 'reload' => true])
+            ->render();
+    });
+    ?>
+
+    <h3 class="demo-h3" id="tabs-events">Events: a switch that can be refused <?= since('tabs') ?></h3>
+    <p class="demo-intro">Every switch — a click, the arrow keys, <code>GK.tabs.select()</code>, the address — fires <code>gk:tabchange</code> first, and it is cancelable: change the name below and choose another tab. The tab stays (focus included) and asks; after a yes the page switches with <code>{ force: true }</code>. <code>gk:tabshown</code> follows every switch.</p>
+    <?php
+    showcase(function () {
+        (new Tabs('demo-unsaved'))->style('linie')->label('Customer')
+            ->tab('edit', 'Edit', ['content' => '<div class="gk-field"><label class="gk-label-text" for="demo-unsaved-name">Name</label><input class="gk-input" id="demo-unsaved-name" value="Ecklund &amp; Partner"></div>'])
+            ->tab('orders', 'Orders', ['content' => '<p>Twelve orders.</p>'])
+            ->tab('notes', 'Notes', ['content' => '<p>No notes yet.</p>'])
+            ->render();
+        echo <<<'HTML'
+        <pre class="demo-tabs-log" id="demo-unsaved-log" aria-live="polite"></pre>
+        <script>
+        (function () {
+          var row = document.getElementById('demo-unsaved');
+          var field = document.getElementById('demo-unsaved-name');
+          var log = document.getElementById('demo-unsaved-log');
+          var saved = field.value;
+          function say(line) { log.textContent = [line].concat(log.textContent.split('\n').slice(0, 3)).join('\n'); }
+          row.addEventListener('gk:tabchange', function (e) {
+            if (e.target !== row) return;   // the events bubble: a row nested inside fires here too
+            say('gk:tabchange ' + e.detail.from + ' → ' + e.detail.to + ' (' + e.detail.source + ')');
+            if (!e.cancelable || e.detail.from !== 'edit' || field.value === saved) return;
+            e.preventDefault();             // the tab stays: the name is not saved
+            GK.confirm('Leave without saving the name?', { confirmText: 'Leave', danger: true }).then(function (yes) {
+              if (!yes) return;
+              field.value = saved;
+              GK.tabs.select(row, e.detail.to, { force: true });
+            });
+          });
+          row.addEventListener('gk:tabshown', function (e) {
+            if (e.target === row) say('gk:tabshown ' + e.detail.to);
+          });
+        })();
+        </script>
+        HTML;
+    });
+    ?>
+
+    <h3 class="demo-h3" id="tabs-js">The JS API <?= since('tabs') ?></h3>
+    <p class="demo-intro"><code>GK.tabs.select()</code>, <code>current()</code>, <code>badge()</code>, <code>count()</code> and <code>reload()</code> take the row or its id — rows written by hand as well as by <code>Tabs</code>.</p>
+    <?php
+    showcase(function () {
+        (new Tabs('demo-api'))->style('linie')->label('Mail')
+            ->tab('inbox', 'Inbox', ['count' => 4, 'content' => '<p>Four new messages.</p>'])
+            ->tab('drafts', 'Drafts', ['content' => '<p>No drafts.</p>'])
+            ->tab('sent', 'Sent', ['content' => '<p>Sent mail.</p>'])
+            ->render();
+        echo <<<'HTML'
+        <div class="demo-tabs-api" id="demo-api-buttons">
+          <button type="button" class="gk-btn gk-btn-outlined gk-btn-neutral gk-btn-sm" data-demo-api="more">One more mail</button>
+          <button type="button" class="gk-btn gk-btn-outlined gk-btn-neutral gk-btn-sm" data-demo-api="error">Mark Drafts as failed</button>
+          <button type="button" class="gk-btn gk-btn-outlined gk-btn-neutral gk-btn-sm" data-demo-api="clear">Clear the marks</button>
+          <button type="button" class="gk-btn gk-btn-outlined gk-btn-neutral gk-btn-sm" data-demo-api="sent">Open Sent</button>
+          <output id="demo-api-current"></output>
+        </div>
+        <script>
+        document.getElementById('demo-api-buttons').addEventListener('click', function (e) {
+          var b = e.target.closest('[data-demo-api]');
+          if (!b) return;
+          var count = document.querySelector('#demo-api [data-tab="inbox"] .gk-tab-count');
+          if (b.dataset.demoApi === 'more') GK.tabs.count('demo-api', 'inbox', (count ? Number(count.textContent) : 0) + 1);
+          if (b.dataset.demoApi === 'error') GK.tabs.badge('demo-api', 'drafts', 'Error', { tone: 'error' });
+          if (b.dataset.demoApi === 'clear') { GK.tabs.badge('demo-api', 'drafts', null); GK.tabs.count('demo-api', 'inbox', null); }
+          if (b.dataset.demoApi === 'sent') GK.tabs.select('demo-api', 'sent', { focus: true });
+          document.getElementById('demo-api-current').textContent = 'GK.tabs.current() → ' + GK.tabs.current('demo-api');
+        });
+        </script>
+        HTML;
+    });
+    ?>
+
+    <h3 class="demo-h3" id="tabs-ueberlauf">A row wider than its box <?= since('tabs') ?></h3>
+    <p class="demo-intro">Ten tabs in a 340px box. A line, pill or text row still scrolls sideways, and a round arrow shows at each side that has more — a click pages the row. Measured on the row itself, like the card grid. Every tab stays a tab of the one row: the arrow keys and Home/End reach all of them and bring each into view, a screen reader hears all ten; the arrows are only for the pointer. The card style keeps its grid.</p>
+    <?php
+    showcase(function () {
+        $areas = ['Overview', 'Details', 'History', 'Settings', 'Members', 'Billing', 'Invoices', 'Reports', 'Integrations', 'Audit log'];
+        foreach (['linie', 'kapsel', 'text'] as $style) {
+            $row = (new Tabs('demo-over-' . $style))->style($style)->label("Ten tabs, $style");
+            foreach ($areas as $i => $area) $row->tab('t' . $i, $area, ['content' => "<p>$area.</p>"]);
+            echo '<div class="demo-tabs-box demo-tabs-box-340">';
+            $row->render();
+            echo '</div>';
+        }
+    });
+    ?>
 
     <h3 class="demo-h3">Page tabs with symbol, badge and count</h3>
     <p class="demo-intro">A badge only reports a deviation from the default (“Customised”, “Error”) — never “Default” on every tab. <code>gk-tab-badge-error</code> is the red one: the word stays, because colour alone says nothing. A count is a number of things behind the tab.</p>
@@ -196,7 +379,7 @@ use GridKit\Lang;
     <p class="demo-intro">One row, three choices. The <strong>style</strong> is a class on the row (<code>.gk-tab-nav-karte</code>, <code>-linie</code>, <code>-kapsel</code>, <code>-text</code>), the <strong>alignment</strong> another (top is the default; <code>-links</code>, <code>-rechts</code>, <code>-unten</code>, <code>-fest</code>), and any number of <strong>options</strong> (<code>-sm</code>, <code>-lg</code>, <code>-fluid</code>, <code>-icon-oben</code>, <code>-nur-icon</code>, <code>-neutral</code>) join them. One script serves every form: role, selection, arrow keys by axis, Home and End. A row without any of these classes looks as it did before. Links between pages (<code>&lt;nav&gt;</code> with <code>&lt;a&gt;</code> and <code>aria-current="page"</code>) take the same classes and keep their place: they are links, not a switch.</p>
 
     <h3 class="demo-h3" id="tabs-baukasten">Builder: choose the shape, copy the markup</h3>
-    <p class="demo-intro">Six choices, a live preview and the markup it is made from. The preview and the listing are one string, so what you see is what you copy. Every choice is a class; try the arrow keys inside the preview.</p>
+    <p class="demo-intro">Six choices, a live preview, the markup it is made from and the same row as a <code>GridKit\Tabs</code> call. The preview and the listing are one string, so what you see is what you copy. Every choice is a class; try the arrow keys inside the preview.</p>
     <div class="demo-card">
         <form class="demo-baukasten-felder" id="tabs-baukasten-form" aria-label="Tab builder">
             <div class="gk-field">
@@ -257,6 +440,8 @@ use GridKit\Lang;
             <span class="demo-baukasten-status" id="tabs-baukasten-status" role="status"></span>
         </div>
         <div class="demo-code"><pre><code id="tabs-baukasten-code" tabindex="0" aria-label="Markup of the preview"></code></pre></div>
+        <p class="demo-intro">The same row from PHP, with <code>GridKit\Tabs</code> (1.111.0):</p>
+        <div class="demo-code"><pre><code id="tabs-baukasten-php" tabindex="0" aria-label="The same row with GridKit\Tabs"></code></pre></div>
     </div>
 
     <h3 class="demo-h3" id="tabs-stile">Styles</h3>
@@ -701,10 +886,35 @@ use GridKit\Lang;
             return '<div class="gk-tabs">\n' + teile.join('\n') + '\n</div>';
         }
 
+        // The same choices as calls of GridKit\Tabs: what the class writes is the markup above.
+        function bauenPhp() {
+            var stil = wahl('stil'), lage = wahl('lage'), groesse = wahl('groesse');
+            var breite = wahl('breite'), symbol = wahl('symbol'), zaehler = wahl('zaehler');
+            var z = ["(new Tabs('sections'))", "    ->style('" + stil + "')"];
+            if (lage !== 'oben') z.push("    ->align('" + lage + "')");
+            if (groesse !== 'normal') z.push("    ->size('" + groesse + "')");
+            if (breite === 'fluid') z.push('    ->fluid()');
+            if (symbol === 'oben') z.push('    ->iconTop()');
+            if (symbol === 'nur') z.push('    ->iconOnly()');
+            z.push("    ->label('Sections')");
+            NAMEN.forEach(function (name, i) {
+                var o = [];
+                if (symbol !== 'ohne') o.push("'icon' => '" + SYMBOLE[i] + "'");
+                if (zaehler === 'zaehler' && i === 1) o.push("'count' => 3");
+                if (zaehler === 'etikett' && i === 2) o.push("'badge' => ['text' => 'Error', 'tone' => 'error']");
+                o.push("'content' => '<p>" + name + " — the content of this tab.</p>'");
+                z.push("    ->tab('t" + i + "', '" + name + "', [" + o.join(', ') + '])');
+            });
+            z.push('    ->render();');
+            return z.join('\n');
+        }
+
         function zeigen() {
             var markup = bauen();
             vorschau.innerHTML = markup;
             code.textContent = markup;
+            var php = document.getElementById('tabs-baukasten-php');
+            if (php) php.textContent = bauenPhp();
             status.textContent = '';
             if (window.GK && GK.initContent) GK.initContent(vorschau);
         }

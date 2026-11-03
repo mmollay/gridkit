@@ -179,6 +179,11 @@ return [
     'js.sortierbar_gespeichert' => 'Order saved',
     'js.sortierbar_fehler'      => 'The order could not be saved. Please try again.',
 
+    // Tabs (1.111.0), a lazy panel: the link a page without the script shows, the skeleton, the failure
+    'tabs.open'                 => 'Open “{label}”',
+    'js.tab_loading'            => 'Loading…',
+    'js.tab_load_error'         => 'This tab could not be loaded.',
+
     // Pagination, page size, select, table header, year filter
     'format.decimal'           => '.',
     'format.thousands'         => ',',

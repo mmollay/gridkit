@@ -201,13 +201,13 @@ return [
 },
 
 'the README accounts for every class, and no others' => function (): void {
-    // "Seventeen components" plus five named as infrastructure. Both numbers are
+    // "Eighteen components" (Tabs is the eighteenth, 1.111.0) plus five named as infrastructure. Both numbers are
     // on the landing page and in the meta description too, and a count like
     // this drifts the moment a class is added — the repository description
     // still said "17+" long after the README said sixteen.
     $readme = (string) file_get_contents(GK_ROOT . '/README.md');
 
-    preg_match('/Seventeen, each a PHP class.*?\n\n(.*?)\n\nPlus (.*?)\n/s', $readme, $m);
+    preg_match('/Eighteen, each a PHP class.*?\n\n(.*?)\n\nPlus (.*?)\n/s', $readme, $m);
     T::ok(isset($m[1]), 'the component table is gone from the README');
 
     preg_match_all('/`(\w+)` +—/', $m[1], $c);
@@ -219,7 +219,7 @@ return [
         glob(GK_ROOT . '/src/*.php')
     );
 
-    T::eq(count($c[1]), 17, 'the README says seventeen components and lists ' . count($c[1]));
+    T::eq(count($c[1]), 18, 'the README says eighteen components and lists ' . count($c[1]));
     sort($listed); sort($actual);
     T::eq($listed, $actual,
         'README and src/ disagree: ' . implode(', ', array_diff($actual, $listed))
