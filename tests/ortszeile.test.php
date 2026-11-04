@@ -450,7 +450,7 @@ return [
     T::notContains($link, 'min-height', 'the calm line changes the height of a target');
     T::contains($rules($c, ':where(.gk-ortszeile-ruhig) .gk-ortszeile-link:hover'), 'background: var(--gk-surface-container)', 'the calm step has no hover surface');
     T::contains($rules($c, ':where(.gk-ortszeile-ruhig) .gk-ortszeile-current'), 'font-weight: 600', 'the page is as heavy as the pill words were');
-    $from = strpos($c, '  :where(.gk-ortszeile-ruhig) li:first-child .gk-ortszeile-link');
+    $from = strpos($c, '  :where(.gk-ortszeile-ruhig) li:first-child { margin-left: -8px; }');
     T::ok($from !== false && strrpos(substr($c, 0, $from), '@media (min-width: 769px)') > strrpos(substr($c, 0, $from), '}' . "\n\n"), 'the first step does not step out to the left on the computer only');
 },
 

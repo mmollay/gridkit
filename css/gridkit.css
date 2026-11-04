@@ -4774,7 +4774,7 @@ a.gk-stat-card:hover {
 :where(.gk-ortszeile-ruhig) .gk-ortszeile-current { font-weight: 600; }
 .gk-ortszeile-ruhig li + li::before { margin: 0 4px 0 2px; border-color: var(--gk-outline); }   /* not weak: the separator rule above carries the class of the line */
 @media (min-width: 769px) {
-  :where(.gk-ortszeile-ruhig) li:first-child .gk-ortszeile-link { margin-left: -8px; }
+  :where(.gk-ortszeile-ruhig) li:first-child { margin-left: -8px; }
 }
 
 /* The link that jumps over the header to the content (Layout::skipLink, 1.100.0):
