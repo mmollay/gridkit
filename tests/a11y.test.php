@@ -785,4 +785,22 @@ return [
         'the client-side rebuild drops the caption');
 },
 
+'a message under a field is in the text-safe red, not the fill red (1.118.1)' => function (): void {
+    // --gk-danger is a fill: 3.46:1 on white as rose, 4.67:1 as the red of 1.114.0. --gk-danger-text
+    // is the red made for words (5.67:1 on white; a light red on the dark ladder).
+    $css = (string) preg_replace('~/\*.*?\*/~s', '', (string) file_get_contents(dirname(__DIR__) . '/css/gridkit.css'));
+    T::ok((bool) preg_match('/(?:^|\n)\.gk-field-error\s*\{([^}]*)\}/', $css, $m), 'the .gk-field-error rule');
+    T::contains($m[1] ?? '', 'color: var(--gk-danger-text', 'its colour is --gk-danger-text');
+    $hex = static function (string $role, string $css): array {
+        preg_match('/:root\s*\{[^}]*' . preg_quote($role, '/') . ':\s*(#[0-9a-f]{6})/i', $css, $r);
+        return array_map('hexdec', str_split(ltrim($r[1] ?? '#000000', '#'), 2));
+    };
+    $lum = static function (array $c): float {
+        $l = array_map(static fn(int $v): float => ($x = $v / 255) <= 0.04045 ? $x / 12.92 : (($x + 0.055) / 1.055) ** 2.4, $c);
+        return 0.2126 * $l[0] + 0.7152 * $l[1] + 0.0722 * $l[2];
+    };
+    $ratio = (1.05) / ($lum($hex('--gk-danger-text', $css)) + 0.05);
+    T::ok($ratio >= 4.5, sprintf('--gk-danger-text on white is %.2f:1, under 4.5:1', $ratio));
+},
+
 ];

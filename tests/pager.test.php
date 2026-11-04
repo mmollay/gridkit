@@ -164,7 +164,7 @@ return [
     T::eq($count(gkPgrTable(95, 10, 4, true)), '31–40 of 95', 'a server table counts from the total it was given');
     // A hand-typed page past the end shows the empty state: no rows, so no range.
     T::eq($count(gkPgrTable(12, 5, 99)), '12 entries', 'past the end: how many there are');
-    T::contains(gkPgrTable(12, 5, 99), 'data-gk-page="3" aria-label="Previous">', 'and its Previous leads to the last page, not to page 98');
+    T::contains(gkPgrTable(12, 5, 99), 'data-gk-page="3" aria-label="Previous" title="Previous">', 'and its Previous leads to the last page, not to page 98');
     Lang::set('de');
     T::eq($count(gkPgrTable(1234, 100, 13)), '1.201–1.234 von 1.234', 'German: its words and its separator');
     Lang::set('en');
@@ -330,6 +330,19 @@ return [
     $pg = gkCssDeclFor('.gk-pg');
     T::eq([$pg['min-width'] ?? '', $pg['height'] ?? '', $pg['border-radius'] ?? '', $pg['font-size'] ?? '', $pg['font-weight'] ?? ''],
         ['34px', '34px', '8px', '13px', '600'], '.gk-pg measures what the fallback copies');
+},
+
+'the arrows that lead somewhere carry their name as a title, as Pagination\'s do; a disabled one none (1.118.1)' => function (): void {
+    $first = gkPgrTable(12, 5, 1);
+    T::contains($first, 'data-gk-page="1" aria-label="First page" disabled>', 'First on page 1: disabled, no title');
+    T::contains($first, 'data-gk-page="1" aria-label="Previous" disabled>', 'Previous on page 1: disabled, no title');
+    T::contains($first, 'data-gk-page="2" aria-label="Next" title="Next">', 'Next: the title is its name');
+    T::contains($first, 'data-gk-page="3" aria-label="Last page" title="Last page">', 'Last: the title is its name');
+    preg_match_all('/<button[^>]*gk-pg-icon[^>]*>/', gkPgrTable(30, 5, 3), $m);
+    foreach ($m[0] as $b) {
+        preg_match('/aria-label="([^"]*)"/', $b, $l);
+        T::contains($b, ' title="' . $l[1] . '"', 'an arrow in the middle of the list has its name as a title: ' . $b);
+    }
 },
 
 ];

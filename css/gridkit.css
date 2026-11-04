@@ -2503,7 +2503,9 @@ select.gk-input {
   font-size: var(--gk-text-label);
 }
 .gk-field-error {
-  color: var(--gk-danger);
+  /* The text-safe red (5.67:1 on white, 1.118.1): --gk-danger is a fill colour and read 3.46:1
+     as rose, 4.67:1 as the red of 1.114.0 — too close to the line for a message. */
+  color: var(--gk-danger-text, var(--gk-danger));
   font-size: var(--gk-text-caption);
   min-height: 0;
   margin-top: 4px;
@@ -13095,7 +13097,7 @@ a.gk-tree-label:hover {
   min-width: min(18rem, 80vw);
 }
 /* An empty message line takes no room; it stays in the tree, so what it says later is heard. The
-   words in the text-safe red: .gk-field-error's own --gk-danger reads 3.46:1 on white. */
+   words in the text-safe red — since 1.118.1 every .gk-field-error is, this rule only says it here. */
 .gk-lines .gk-field-error {
   color: var(--gk-danger-text);
 }

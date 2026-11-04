@@ -1742,10 +1742,13 @@ class Table
                 'to'    => $num(min($this->totalRows, $page * $this->perPage)),
                 'total' => $num($this->totalRows),
             ]);
-        // First, previous, next and last, named for what they do and not for their glyph.
+        // First, previous, next and last, named for what they do and not for their glyph. The ones
+        // that lead somewhere carry the name as a title too, as Pagination's do, so the tooltip
+        // engine shows it on hover and focus (1.118.1); a disabled button shows no tooltip.
         $icon = static fn (string $glyph, int $target, string $name, bool $off): string =>
             '<button type="button" class="gk-pg gk-pg-icon' . ($off ? ' gk-pg-off' : '') . '" data-gk-page="' . $target . '"'
-            . ' aria-label="' . $e(Lang::t($name)) . '"' . ($off ? ' disabled' : '') . '>'
+            . ' aria-label="' . $e(Lang::t($name)) . '"'
+            . ($off ? ' disabled' : ' title="' . $e(Lang::t($name)) . '"') . '>'
             . '<span class="material-icons" aria-hidden="true">' . $glyph . '</span></button>';
 
         // nav, so the pager is a landmark a screen reader can jump to and skip past, instead of

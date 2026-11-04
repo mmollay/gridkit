@@ -7,6 +7,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.118.1] - 2026-11-04
+
+A message under a form field is in the red made for text, and the arrows of the table pager carry their name as a tooltip, as those of `GridKit\Pagination` do.
+
+### Changed
+- **`.gk-field-error`** takes `--gk-danger-text` (5.67:1 on white; a light red on the dark ladder) instead of the fill colour `--gk-danger` (4.67:1 since 1.114.0, 3.46:1 as rose before). Every form's messages, `Form::errors()` and the live messages of `gridkit.js`; LineItems already did.
+- **Table pager:** First, Previous, Next and Last carry their name as a `title` too when they lead somewhere, so the tooltip engine shows it on hover and focus — the same as `GridKit\Pagination`. A disabled arrow has none. PHP and `js/gridkit.js` write the same markup.
+
+### Tests
+- `tests/a11y`: the field message's colour is `--gk-danger-text`, at least 4.5:1 on white. `tests/pager`: the arrows' titles, none on a disabled one. `tests/golden-table`: the nine paged tables differ only by those titles.
+
+---
 ## [1.118.0] - 2026-11-04
 
 The pager of `Table::paginate()` is now the bar of `GridKit\Pagination` — the count on the left ("6–10 of 12"), the page buttons on the right, first and last included — so every pager in GridKit looks the same. No new class: the table's pager wears `Pagination`'s.
