@@ -224,6 +224,12 @@
       "gk-page-btn"
     ]
   },
+  "palette": {
+    "reason": "An entry's shortcut is shown, not bound: the page binds its keys itself, and the demo binds none, so no entry of its palette shows one (a key it does not answer would be a promise it breaks). ci/browser-palette.js checks it.",
+    "classes": [
+      "gk-palette-shortcut"
+    ]
+  },
   "richtext": {
     "reason": "CKEditor (1.4 MB) is loaded on demand and not on the demo's first paint; the field is shown by the form demos only as the hidden carrier until then.",
     "classes": [

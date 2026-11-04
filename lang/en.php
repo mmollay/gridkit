@@ -301,6 +301,32 @@ return [
     'js.tree_no_matches'        => 'No matches',
     'js.tree_filter_first'      => 'Clear the filter to move entries.',
 
+    // Command palette (1.122.0) — GridKit\CommandPalette on the server, js/command-palette.js in the browser.
+    // The js.* words are read by both: the server writes the dialog, the script builds one when no server did.
+    'palette.trigger'           => 'Search',
+    'js.palette_label'          => 'Command palette',
+    'js.palette_placeholder'    => 'Type a command or search…',
+    'js.palette_close'          => 'Close',
+    'js.palette_results'        => 'Results',
+    'js.palette_help'           => 'Up and Down move through the results, Enter opens one, Control and Enter opens a link in a new tab, Escape closes.',
+    'js.palette_foot_move'      => 'move',
+    'js.palette_foot_open'      => 'open',
+    'js.palette_foot_tab'       => 'new tab',
+    'js.palette_foot_close'     => 'close',
+    'js.palette_recent'         => 'Recent',
+    'js.palette_pages'          => 'Pages',
+    'js.palette_commands'       => 'Commands',
+    'js.palette_records'        => 'Records',
+    'js.palette_current'        => 'Current page',
+    'js.palette_count'          => '{n} results',
+    'js.palette_count_one'      => '1 result',
+    'js.palette_none'           => 'No results for “{q}”',
+    'js.palette_more'           => '{n} more — keep typing to narrow it down',
+    'js.palette_loading'        => 'Searching…',
+    'js.palette_no_records'     => 'No records found.',
+    'js.palette_error'          => 'The records could not be searched.',
+    'js.palette_retry'          => 'Try again',
+
     // Line items (1.117.0) — GridKit\LineItems. The browser gets these through the editor's
     // own config, so it says what the server would.
     'lineitems.label'          => 'Line items',

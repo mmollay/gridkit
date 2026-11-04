@@ -876,6 +876,33 @@
                 "gk-search-unter": "1.24.0"
             }
         },
+        "palette": {
+            "name": "Command palette",
+            "classes": {
+                "gk-palette": "1.122.0",
+                "gk-palette-close": "1.122.0",
+                "gk-palette-empty": "1.122.0",
+                "gk-palette-foot": "1.122.0",
+                "gk-palette-group-label": "1.122.0",
+                "gk-palette-head": "1.122.0",
+                "gk-palette-hint": "1.122.0",
+                "gk-palette-hit": "1.122.0",
+                "gk-palette-icon": "1.122.0",
+                "gk-palette-input": "1.122.0",
+                "gk-palette-kbd": "1.122.0",
+                "gk-palette-label": "1.122.0",
+                "gk-palette-list": "1.122.0",
+                "gk-palette-meta": "1.122.0",
+                "gk-palette-more": "1.122.0",
+                "gk-palette-option": "1.122.0",
+                "gk-palette-retry": "1.122.0",
+                "gk-palette-shortcut": "1.122.0",
+                "gk-palette-status": "1.122.0",
+                "gk-palette-text": "1.122.0",
+                "gk-palette-trigger": "1.122.0",
+                "gk-palette-trigger-label": "1.122.0"
+            }
+        },
         "toast": {
             "name": "Toast",
             "classes": {

@@ -14647,3 +14647,409 @@ a.gk-cal-event:hover,
   .gk-chart .gk-chart-c4 .gk-chart-line { stroke-dasharray: 10 3 2 3; }
   .gk-chart .gk-chart-c5 .gk-chart-line { stroke-dasharray: 14 4; }
 }
+
+/* === 1.122.0 — command palette === */
+/* GridKit\CommandPalette writes a closed <dialog>; js/command-palette.js opens it as a modal — the browser's
+   top layer, the page behind it inert. Near the top of the screen at a desk, the whole screen on a phone,
+   where nothing scrolls sideways: a long name is cut with an ellipsis. The input keeps the focus; the
+   entry it points at (aria-activedescendant) wears the selection of a tree node — its colours and a bar at
+   its start, so not the colour alone. The letters that matched are underlined and heavier.
+
+   Roles only, so light, [data-gk-mode="dark"], .gk-dark and the six themes follow from the tokens. The one
+   literal is the veil behind it (the backdrop): no role is a scrim, and GK.search's overlay has the same. */
+.gk-palette {
+  --gk-palette-bg: var(--gk-surface);
+  box-sizing: border-box;
+  width: min(640px, calc(100vw - 32px));
+  max-width: none;
+  max-height: 76vh;
+  max-height: min(76dvh, 600px);
+  margin: 12vh auto auto;
+  padding: 0;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-lg);
+  background: var(--gk-palette-bg);
+  color: var(--gk-on-surface);
+  box-shadow: var(--gk-elev-4);
+  font-family: var(--gk-font);
+  font-size: var(--gk-text-body);
+  line-height: var(--gk-leading-snug);
+  overflow: hidden;
+}
+.gk-palette[open] {
+  display: flex;
+  flex-direction: column;
+}
+.gk-palette::backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.gk-palette-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 0 16px;
+  border-bottom: 1px solid var(--gk-outline-variant);
+}
+/* The field has the focus all the time; its ring is the line under the head. */
+.gk-palette-head:focus-within {
+  box-shadow: inset 0 -2px 0 var(--gk-primary);
+}
+.gk-palette-head > svg {
+  flex: none;
+  color: var(--gk-on-surface-variant);
+}
+.gk-palette-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 56px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--gk-on-surface);
+  font: inherit;
+  font-size: var(--gk-text-subtitle);
+}
+.gk-palette-input::placeholder {
+  color: var(--gk-on-surface-variant);
+  opacity: 1;
+}
+.gk-palette-close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--gk-radius-sm);
+  background: transparent;
+  color: var(--gk-on-surface-variant);
+  cursor: pointer;
+}
+.gk-palette-close:hover {
+  background: var(--gk-state-hover);
+  color: var(--gk-on-surface);
+}
+.gk-palette-close:focus-visible,
+.gk-palette-retry:focus-visible,
+.gk-palette-trigger:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+
+.gk-palette-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 6px 6px;
+}
+.gk-palette-list:empty {
+  display: none;
+}
+.gk-palette-group-label {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 10px 4px;
+  background: var(--gk-palette-bg);
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-overline);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.gk-palette-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 40px;
+  padding: 6px 10px;
+  border-radius: var(--gk-radius-sm);
+  color: var(--gk-on-surface);
+  text-decoration: none;
+  cursor: pointer;
+  /* Clear of the sticky heading when the list scrolls to it. */
+  scroll-margin-block: 34px 6px;
+}
+.gk-palette-option[aria-selected="true"] {
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+  box-shadow: inset 3px 0 0 var(--gk-primary);
+}
+.gk-palette-icon {
+  flex: none;
+  width: 20px;
+  overflow: hidden;
+  color: var(--gk-on-surface-variant);
+  font-size: 20px;
+  line-height: 1;
+  text-align: center;
+}
+.gk-palette-text {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.gk-palette-label,
+.gk-palette-hint {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.gk-palette-hint {
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+}
+.gk-palette-option[aria-selected="true"] :is(.gk-palette-icon, .gk-palette-hint, .gk-palette-hit) {
+  color: inherit;
+}
+.gk-palette-meta {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.gk-palette-hit {
+  background: none;
+  color: var(--gk-primary-text);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.gk-palette-more {
+  padding: 2px 10px 6px 42px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+}
+/* A key: an entry's shortcut, the line of keys, the trigger's hint. */
+.gk-palette-shortcut,
+.gk-palette-kbd {
+  flex: none;
+  display: inline-block;
+  min-width: 1.6em;
+  box-sizing: border-box;
+  padding: 0 5px;
+  border: 1px solid color-mix(in oklab, currentColor 35%, transparent);
+  border-radius: 4px;
+  background: color-mix(in oklab, currentColor 8%, transparent);
+  color: inherit;
+  font: 600 11px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  text-align: center;
+  white-space: nowrap;
+}
+.gk-palette-kbd + .gk-palette-kbd {
+  margin-inline-start: 3px;
+}
+
+.gk-palette-status {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--gk-outline-variant);
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+}
+.gk-palette-status[hidden],
+.gk-palette-empty[hidden] {
+  display: none;
+}
+.gk-palette-status[data-gk-state="loading"]::before {
+  content: "";
+  flex: none;
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--gk-outline-variant);
+  border-top-color: var(--gk-primary);
+  border-radius: 50%;
+  animation: gk-spin 0.7s linear infinite;
+}
+.gk-palette-status[data-gk-state="error"] {
+  color: var(--gk-danger-text);
+}
+.gk-palette-retry {
+  margin: 0 0 0 auto;
+  padding: 4px 10px;
+  border: 1px solid var(--gk-outline);
+  border-radius: var(--gk-radius-sm);
+  background: transparent;
+  color: var(--gk-on-surface);
+  font: inherit;
+  cursor: pointer;
+}
+.gk-palette-retry:hover {
+  background: var(--gk-state-hover);
+}
+.gk-palette-empty {
+  flex: none;
+  margin: 0;
+  padding: 28px 16px;
+  color: var(--gk-on-surface-variant);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.gk-palette-foot {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--gk-outline-variant);
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+}
+.gk-palette-foot .gk-palette-kbd {
+  margin-inline-end: 2px;
+}
+
+/* The trigger: a field to look at, a button to press. Hidden until the script shows it — unless it is the
+   link of fallback(). */
+.gk-palette-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface-container-low);
+  color: var(--gk-on-surface-variant);
+  font: inherit;
+  font-size: var(--gk-text-label);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--gk-transition-state);
+}
+.gk-palette-trigger[hidden] {
+  display: none;
+}
+.gk-palette-trigger:hover {
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface);
+}
+.gk-palette-trigger > svg {
+  flex: none;
+}
+.gk-palette-trigger-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gk-palette-trigger .gk-palette-kbd {
+  margin-inline-start: 12px;
+}
+
+/* A phone: the whole screen and no line of keys. The trigger is its symbol at the size of a finger; its
+   name stays for a screen reader. */
+@media (max-width: 600px) {
+  .gk-palette {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .gk-palette-head {
+    padding-inline-start: 12px;
+  }
+  .gk-palette-foot {
+    display: none;
+  }
+  .gk-palette-trigger {
+    justify-content: center;
+    width: var(--gk-target-min);
+    min-height: var(--gk-target-min);
+    padding: 0;
+  }
+  .gk-palette-trigger-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .gk-palette-trigger .gk-palette-kbd {
+    display: none;
+  }
+}
+/* A finger: the close button and every entry at 44px. */
+@media (max-width: 600px), (pointer: coarse) {
+  .gk-palette-close {
+    width: var(--gk-target-min);
+    height: var(--gk-target-min);
+  }
+  .gk-palette-option {
+    min-height: var(--gk-target-min);
+  }
+}
+@media (pointer: coarse) {
+  .gk-palette-foot {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gk-palette[open] {
+    animation: gk-palette-in var(--gk-dur-2) var(--gk-ease-out);
+  }
+  .gk-palette[open]::backdrop {
+    animation: gk-palette-veil var(--gk-dur-2) var(--gk-ease-out);
+  }
+}
+@keyframes gk-palette-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.985);
+  }
+}
+@keyframes gk-palette-veil {
+  from {
+    opacity: 0;
+  }
+}
+@media (forced-colors: active) {
+  .gk-palette-option[aria-selected="true"] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+/* Dark: raised above the page like a menu, on a deeper veil. The field stays part of the head: the
+   dark rule for every input would give it a box of its own. */
+[data-gk-mode="dark"] .gk-palette,
+.gk-dark .gk-palette {
+  --gk-palette-bg: var(--gk-surface-container-high);
+}
+[data-gk-mode="dark"] .gk-palette-input,
+.gk-dark .gk-palette-input {
+  background-color: transparent;
+}
+[data-gk-mode="dark"] .gk-palette::backdrop,
+.gk-dark .gk-palette::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}

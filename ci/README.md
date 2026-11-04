@@ -431,6 +431,35 @@ GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-cha
 GK_SHOTS=/some/dir node ci/browser-chart.js
 ```
 
+The command palette (`GridKit\CommandPalette` and `js/command-palette.js`, 1.122.0) is checked by
+`ci/browser-palette.js` on `ci/browser-palette-fixture.php`: an admin shell with a sidebar
+(groups, a badge, a submenu, the current page), the trigger in the header, links, commands, an
+umlaut and a hostile label, two search URLs — `http://gk.test/search` on the page's origin and
+`http://other.test/search` on another —, a field, a rich-text editor, `GK.search` on Ctrl+K as
+well and a modal. `page.route()` serves the page as `http://gk.test/fixture.html` and answers the
+records: found, held until released, failed, empty, a flat list, hostile. It checks the key on
+Windows and Linux (Ctrl+K; Meta+K and Ctrl+Shift+K do nothing) and on a Mac (Cmd+K, `⌘K` on the
+trigger, Cmd+Enter), `/`, the trigger, `GK.palette.open()`, that the palette owns its key (the
+global search stays shut) but leaves it to a rich-text editor; what is offered with no query
+(the sidebar's groups, labels, hints, symbols, the limit per group), typing and the ranking
+(start, start of a word, inside a word, letters in order word by word), umlauts and ß both ways,
+keywords, the hint, the marks; the keys of the listbox (round at the ends, Home, End, Page Up and
+Down), Tab kept inside; Enter on a command, a link and a sidebar entry (a click on that link),
+Ctrl+Enter and Ctrl+click into a new tab, the pointer, the veil; the veto of `gk:paletteselect`;
+the records — minimum length, debounce, the headers, the order, a slow answer overtaken and
+aborted, closing that aborts, a failure and Try again, no records, a hostile answer, the other
+origin never asked; the recent list (newest first, its limit, a careful read of what is stored,
+`GK.theme`'s scope, storage that throws); Escape over a modal; 390px as a full-screen sheet
+without a sideways scroll; contrast in 18 looks; the page without script, with a fallback link,
+and without a palette from the server (`GK.palette.open()` builds one; `register()`). Each new
+rule, branch and option of the script, the stylesheet and `CommandPalette.php` was taken out in
+turn (a bounded sample) and a check turned red. About twenty-five seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-palette.js
+GK_SHOTS=/some/dir GK_ICONFONT=/path/MaterialIcons.woff2 node ci/browser-palette.js   # with pictures
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

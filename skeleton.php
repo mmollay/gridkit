@@ -3,7 +3,8 @@
  * GridKit skeleton
  * ----------------
  * Copy it, change the parts marked below, and you have a working page.
- * Needs: autoload.php, css/gridkit.css, css/themes.css, js/gridkit.js, js/sortierbar.js, js/tree.js, js/import.js, js/calendar.js, js/chart.js
+ * Needs: autoload.php, css/gridkit.css, css/themes.css, js/gridkit.js, js/sortierbar.js, js/tree.js, js/import.js, js/calendar.js,
+ * js/chart.js, js/command-palette.js
  *
  * Copied out of the GridKit directory this file used to die on its first line
  * with an uncaught Error, because the require below was relative to itself.
@@ -58,7 +59,7 @@ if (realpath($gkRoot) !== realpath(__DIR__)) {
 }
 
 
-use GridKit\{Button, Form, Header, Lang, Layout, Sidebar, StatCards, Table, Theme};
+use GridKit\{Button, CommandPalette, Form, Header, Lang, Layout, Sidebar, StatCards, Table, Theme};
 
 // ─── The product modal answers itself ────────────────────────────────────────
 // The table below opens a modal that fetches a URL. Pointing it at a file that
@@ -95,6 +96,11 @@ Theme::set('indigo', 'light');
 
 // Layout: header-first (header spans the full width) | sidebar-first (sidebar does)
 Layout::mode('header-first');
+
+// Ctrl+K (Cmd+K on a Mac) or the search button in the header: the sidebar's pages are found by
+// themselves; add your commands, links and a search URL for your records (see GRIDKIT_SKILL.md).
+$palette = (new CommandPalette('main'))
+    ->item('Toggle dark mode', '', ['icon' => 'dark_mode', 'action' => 'toggle-dark']);
 
 ?>
 <!DOCTYPE html>
@@ -141,6 +147,7 @@ Layout::mode('header-first');
         ->title($pageTitle)
         ->sidebarToggle(true)
         ->fixed(true)
+        ->action($palette->trigger())
         ->action(Button::render('New', [
             'variant' => 'filled',
             'color'   => 'primary',
@@ -218,11 +225,20 @@ Layout::mode('header-first');
 
 </div><!-- /gk-with-sidebar -->
 
+<?php $palette->render(); ?>
+
 <script src="<?= Layout::asset($gkAssets . 'js/gridkit.js') ?>"></script>
 <script src="<?= Layout::asset($gkAssets . 'js/sortierbar.js') ?>" defer></script>
 <script src="<?= Layout::asset($gkAssets . 'js/tree.js') ?>" defer></script>
 <script src="<?= Layout::asset($gkAssets . 'js/import.js') ?>" defer></script>
 <script src="<?= Layout::asset($gkAssets . 'js/calendar.js') ?>" defer></script>
 <script src="<?= Layout::asset($gkAssets . 'js/chart.js') ?>" defer></script>
+<script src="<?= Layout::asset($gkAssets . 'js/command-palette.js') ?>" defer></script>
+<script>
+// A command of the palette is yours to carry out.
+document.addEventListener('gk:paletteaction', function (e) {
+    if (e.detail.action === 'toggle-dark') GK.theme.toggleMode();
+});
+</script>
 </body>
 </html>

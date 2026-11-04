@@ -67,6 +67,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Chart | `GridKit\Chart` / `js/chart.js` / `GK.chart` | Line, area, bar (grouped, stacked, horizontal) and donut charts and sparklines as inline SVG from the server: nice axes, numbers in the chart's language, a summary in words, a legend, the data as a table; with the script a tooltip, the keys, a crosshair, series switched off in the legend, `GK.chart.update()` drawing the same SVG as PHP (since 1.121.0) |
 | Tree | `GridKit\Tree` / `js/tree.js` / `GK.tree` | Page trees, categories, folders: a nested list that works without script, made a WAI-ARIA tree view — keys, type-ahead, open/closed remembered, single or multi selection with tri-state parents, a filter, children loaded on demand, moving by drag and drop or keyboard with a save URL and a way back (since 1.116.0) |
 | Calendar | `GridKit\Calendar` / `js/calendar.js` / `GK.calendar` | A month of appointments, deadlines and campaigns: a table of days with events as links, bars across days, "+3 more", week numbers, months as links (`?month=2026-12`), an agenda when narrower than 600px, arrow keys / Home / End / PageUp / PageDown with the script (since 1.120.0) |
+| CommandPalette | `GridKit\CommandPalette` / `js/command-palette.js` / `GK.palette` | Ctrl+K (Cmd+K on a Mac): a few letters, Enter — to a page of the sidebar (read from the page), an entry or a command of yours, or a record your search URL returns as you type (same origin, debounced, the stale answer dropped); fuzzy, umlauts both ways, marked matches, recent entries, groups; a modal dialog with the keys of a combobox and a listbox; a full-screen sheet on a phone (since 1.122.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
 
@@ -88,8 +89,9 @@ without tripping over this.
 | `Tabs::render()` (1.111.0) | | |
 
 `Tree::render()` and `Tree::renderBranch()` (1.116.0) print as well, and so do `Import::render()` (1.119.0),
-`DateRange::render()` and `Calendar::render()` (1.120.0) and `Chart::render()` (1.121.0) — their `->html()` returns
-the same string (`Chart::sparkline()` returns a string to place).
+`DateRange::render()` and `Calendar::render()` (1.120.0), `Chart::render()` (1.121.0) and `CommandPalette::render()`
+(1.122.0) — their `->html()` returns the same string (`Chart::sparkline()` and `CommandPalette::trigger()` return a
+string to place).
 
 `PageSize::render()` above is an INSTANCE method — build it with the static
 `PageSize::make('per_page')` first, then chain. Same for `TableHeader::make()`.
@@ -189,7 +191,7 @@ The other classes import the same way — the full list is in the table above,
 each one `GridKit\<Name>`:
 
 ```php
-use GridKit\{ActionGroup, Auth, BelegModal, FilterChips, Header, Icon,
+use GridKit\{ActionGroup, Auth, BelegModal, CommandPalette, FilterChips, Header, Icon,
               PageSize, Pagination, Select, SortLink, TableHeader, YearFilter};
 ```
 
@@ -3085,6 +3087,38 @@ $cal->events($rows, ['title' => 'subject', 'start' => 'begins_at', 'end' => 'end
     ->event('2026-11-20', 'Invoice run', ['href' => '/runs/3', 'color' => 'red', 'allDay' => true])
     ->event(['start' => '2026-11-23', 'end' => '2026-12-04'], 'Winter campaign')
     ->render();
+
+### CommandPalette (`GridKit\CommandPalette`, since 1.122.0)
+
+Quick navigation and commands for an admin: Ctrl+K (Cmd+K on a Mac), a few letters, Enter — to a
+page, a customer, an invoice, or a command the page carries out. The server writes a closed
+`<dialog>` holding the field, an empty list and the configuration as JSON; **`js/command-palette.js`**
+opens it, reads the sidebar's links out of the page, ranks what matches and fetches records as you
+type. It is a file of its own like `js/tree.js` (the PawBot dashboard keeps its own `gridkit.js`),
+loaded with `defer` after `gridkit.js` — `skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/command-palette.js" defer></script>`.
+
+**`CommandPalette::render()` PRINTS the dialog** — once per page, anywhere in `<body>` (not inside a
+hidden container). **`->trigger()` RETURNS** the button that opens it, for `Header::action()` or
+anywhere else; `->html()` returns what `render()` prints.
+
+```php
+$palette = (new CommandPalette('main'))                    // the id: storage key and DOM ids
+    ->item('New invoice', '/invoices/new', ['icon' => 'add', 'group' => 'Create', 'keywords' => ['bill', 'create'], 'shortcut' => 'N'])
+    ->item('Dark mode', '', ['icon' => 'dark_mode', 'action' => 'toggle-dark', 'hint' => 'Switches the colours'])
+    ->items([['label' => 'Monthly report', 'href' => '/reports/monthly', 'group' => 'Reports']])
+    ->search('/admin/palette-search', ['minLength' => 2, 'debounce' => 250])   // customers, invoices
+    ->recent(5)                                            // what was chosen comes first next time
+    ->maxPerGroup(6)
+    ->slash();                                             // "/" opens it too, outside fields
+
+echo (new Header())->title('Invoices')->action($palette->trigger())->render();   // the trigger: RETURNED
+$palette->render();                                                               // the dialog: PRINTED
+```
+
+```javascript
+// A command is the page's to carry out.
+document.addEventListener('gk:paletteaction', e => { if (e.detail.action === 'toggle-dark') GK.theme.toggleMode(); });
 ```
 
 | Method | What it does |
@@ -3321,6 +3355,149 @@ it is drawn exactly as before. In a table, a column with `'format' => 'html'` ta
   `markers()` or `dashes()` on a type that has no use for it; a width or height out of range.
 - **Do not** write the SVG yourself, colour text with a series colour, put two value scales in one
   chart (draw two charts), or pass `0.125` for 12.5 % — `percent` takes the percentage.
+| `new CommandPalette($id = 'main')` | The id names the recent list in `localStorage` (`gk-palette-<id>`) and the DOM ids. Empty: a warning, `main`. |
+| `->item($label, $href = '', $opts = [])` | One entry: a link, or with the option `action` a command. Options below. |
+| `->items(iterable $rows)` | Many at once — rows from a database: `label` (or `title`), `href` (or `url`) and any option under its own name. Rows may be objects. |
+| `->search($url, $opts = [])` | Records from the server, asked as you type (see "Records"). Options: `minLength` (letters before it asks, 0 to 10, default 2), `debounce` (ms of quiet before it asks, 0 to 2000, default 250), `group` (the heading of a bare list), `param` (the query parameter, default `q`). Call it again for a second URL. |
+| `->sidebar(true \| false \| '#nav')` | The links of the sidebar are entries (default `true`: `.gk-sidebar-nav`, GridKit's sidebar); a selector reads another navigation; `false` none. |
+| `->recent(int $count)` | How many chosen entries come first next time (0 to 20, default 5; 0 remembers nothing). |
+| `->maxPerGroup(int $count)` | At most this many entries under one heading (1 to 50, default 6); the rest is counted ("3 more — keep typing to narrow it down"). |
+| `->hotkey('mod+k')` | The key that opens it: `mod` is Ctrl, Cmd on a Mac; any of `mod`, `ctrl`, `meta`, `alt`, `shift` joined with `+` to one key (`'mod+shift+p'`). At least one of mod, ctrl, meta, alt. `false` or `''`: no key — the trigger and `GK.palette.open()` still work. |
+| `->slash(true)` | `/` opens it as well, unless the focus is in a field (default off). |
+| `->placeholder($text)` | The words in the empty field (default: the catalogue's "Type a command or search..."). |
+| `->label($text)` | The accessible name of the dialog (default "Command palette"). |
+| `->fallback($url)` | Without the script the trigger is a link to this search page; with it, the link opens the palette (Ctrl+click still follows it). Without `fallback()` the trigger is a `hidden` button the script shows. |
+| `->trigger($opts = [])` | RETURNS the trigger: a search symbol, its word and the key (`Ctrl K`, `⌘K` on a Mac), `aria-keyshortcuts`. Options: `label` (default "Search"), `class` (more classes), `kbd` (`false`: no key shown). On a phone it is its symbol at 44px; its name stays for a screen reader. |
+| `->render()` | Prints the dialog. |
+| `->html()` | Returns it. |
+
+**Entry options** (in `item()`'s `$opts`, or as fields of a row of `items()`):
+
+| Option | |
+|---|---|
+| `icon` | A Material icon name (`[a-z0-9_]`). |
+| `group` | The heading it is listed under. Without: "Pages" for a link, "Commands" for a command. |
+| `keywords` | Text or a list of words: found, not shown ("bill" finds "New invoice"). |
+| `hint` | A second line, smaller (searched too). |
+| `shortcut` | Shown at the end of the entry as a key (`N`, `G I`). Shown only: the page binds its keys itself. |
+| `action` | A name (letters, digits, `- _ . :`, starting with a letter): the entry is a command, and choosing it fires `gk:paletteaction` with that name. With an `$href` too, it stays a link and the action is ignored (a warning). |
+
+**Where the entries come from**, each time the palette opens: the sidebar (labels from
+`data-label` or `.gk-sidebar-label` — no badge, no symbol word; the group heading above; the symbol;
+a submenu entry names its parent as hint; the current page, `aria-current="page"`, says so), the
+items of the server, what a script added with `GK.palette.register()`, and — once something is typed
+— the records of the search URLs. Chosen from the sidebar, an entry is followed by a click on that
+very link, so AJAX navigation (`ajaxNav`) and the page's own handlers see it.
+
+**Records.** After `minLength` letters and `debounce` ms of quiet the script asks
+`GET url?q=<what was typed>` (`Accept: application/json`, `X-Requested-With: XMLHttpRequest`,
+`credentials: same-origin`) — **on the page's own origin only**: a URL on another origin is refused
+with a console warning and never asked. A newer question aborts the older one, and an answer that
+arrives late anyway is dropped; closing aborts too. While it asks, a line says "Searching..." and
+the list is `aria-busy`; a failed answer (no 2xx, not JSON, no network) says "The records could not
+be searched." with a **Try again** button; an answer with nothing in it, while the page has entries,
+says "No records found.". The answer is the shape `GK.search` reads, so an endpoint written for it
+works unchanged — `{"groups": [{"title", "items": [...]}]}`, or `{"items": [...]}` (under the
+search's `group`, default "Records"), or a bare list. A record has a `title` and a `url`, and may
+have `subtitle`, `icon` and `amount` (shown at the end). Every label is put in as text; a record
+without a link, or with a `javascript:`, `data:` or `vbscript:` one, is dropped. Records come after
+the page's entries, in the server's order, at most `maxPerGroup` per heading.
+
+```php
+// GET /admin/palette-search?q=eck — the query arrives as it was typed
+$q = trim((string) ($_GET['q'] ?? 'eck'));
+$customers = [['id' => 1042, 'name' => 'Ecklund & Partner', 'city' => 'Vienna']];   // your query, LIKE '%eck%'
+header('Content-Type: application/json');
+echo json_encode(['groups' => [[
+    'title' => 'Customers',
+    'items' => array_map(fn (array $c): array => [
+        'title' => $c['name'], 'subtitle' => $c['city'] . ' · no. ' . $c['id'],
+        'url' => '/customers/' . $c['id'], 'icon' => 'business',
+    ], $customers),
+]]]);
+```
+
+**Finding and ranking.** Case and accents do not count, and the German umlauts are found both ways:
+`muller` and `mueller` find the name written with a u-umlaut, `strasse` the one with a sharp s. The
+best match comes first: a name that **starts** with the query, then one where a **word starts** with
+it (a capital in `invoiceList` starts a word, and every word of a query with spaces may start a word:
+`ne in` finds "New invoice"), then one that holds it **inside a word**, then its **letters in order**
+— the first starting a word, a letter in another word starting that word, letters skipped only inside
+a word (`ninv` and `invce` find "New invoice"; `tvl` does not find "Print the invoice list").
+Within each step: earlier and shorter first. Keywords and the hint are searched a step and a half
+lower and mark nothing. The letters that matched are marked (`mark.gk-palette-hit`, underlined and
+heavier) on the letters that were written. With a query the group of the best match comes first;
+with none, the recent entries, then every group in the order of the page.
+
+**Recent entries.** What was chosen is kept in `localStorage` under `gk-palette-<id>` — in
+`GK.theme`'s scope when one is set (`GK.theme.init({ scope: 'u42' })` or `window.GK_THEME_SCOPE`:
+`gk-palette-<id>:u42`), so the next person at a shared computer does not find the last one's
+customers. Shown first under "Recent" when nothing is typed (and not a second time below), found by
+typing (a record too, before the server answers). A command this page does not have is left out; a
+stored link with a `javascript:` URL is dropped; storage that throws (a private window) just forgets.
+
+- **Keys** (the WAI combobox with a listbox, `aria-activedescendant` — the focus stays in the field):
+  Down/Up move (round at the ends), Home/End to the first/last entry, Page Down/Page Up by a page,
+  Enter opens, **Ctrl+Enter** (Cmd+Enter on a Mac) opens a link in a new tab, Escape closes. Tab goes
+  round inside the dialog (the field, Try again, the close button). The pointer marks what it is over;
+  a click opens, Ctrl/Cmd/Shift/middle click on a link is the browser's.
+- **Its key belongs to it** while it is on the page: the palette takes Ctrl+K first, so `GK.search` on
+  the same key stays shut (its `data-gk-search` button still works). Inside a rich-text editor
+  (`contenteditable`) Ctrl+K stays the editor's — it makes a link there. The modifiers have to be
+  exact (Ctrl+Shift+K is the browser's); a keyboard that writes another alphabet presses the same key.
+  On a Mac it is Cmd+K and Ctrl+K is left to the text field. Pressed again, the key closes it.
+- **A modal dialog** (`showModal()`): the page behind is inert, the focus stays inside, Escape closes
+  the palette and not a modal underneath, and closing gives the focus back to what had it (else to the
+  trigger). The field is `role="combobox"` with `aria-expanded` and `aria-controls`, the list a
+  `listbox` of `group`s named by their headings, an entry an `option` (`aria-selected` on the one the
+  field points at; a link is an `<a role="option">` out of the tab order). A polite live region says
+  "12 results", "No results for ..." or that the server failed, once the list has settled. The field
+  is described by a sentence that says the keys; the line of keys under the list is for the eye.
+- **A phone** (up to 600px): the dialog covers the screen, every entry and the close button are 44px,
+  the line of keys is gone, and nothing scrolls sideways — a long name is cut with an ellipsis.
+- **Without script** the trigger is hidden (or the link of `fallback()`), and the closed dialog draws
+  nothing.
+
+**Events**, on the `<dialog>`, bubbling:
+
+| Event | `detail` |
+|---|---|
+| `gk:paletteopen` | `{ palette, source }` — `source`: `hotkey`, `slash`, `trigger` or `api` |
+| `gk:paletteselect` | `{ palette, item, query, newTab }` — **cancelable**: `preventDefault()` and nothing happens; the palette stays open and nothing is remembered |
+| `gk:paletteaction` | `{ palette, action, item, query }` — a command was chosen; the palette has closed and given the focus back |
+
+`item` is `{ label, href, action, group, hint, icon, kind, source, element, data }` — `kind`: `link`,
+`action` or `record`; `source`: `sidebar`, `page`, `script`, `search` or `recent`; `element` the
+sidebar's link; `data` what a script registered, or the record as the server sent it.
+
+**JavaScript API**: `GK.palette.open()` (or `GK.palette.open('inv')` with a query typed in, or
+`{ id, query }`; returns the dialog — on a page whose server wrote no palette it builds one: the
+sidebar and what a script registered, no key of its own), `GK.palette.close()`,
+`GK.palette.register(source)` — more entries for every palette of the page, returning a function
+that takes them away:
+
+```javascript
+GK.palette.register([{ label: 'Reload', action: 'reload', icon: 'refresh' }]);            // a list of entries
+const off = GK.palette.register({ group: 'Tools', items: () => tools.map(t => ({ label: t.name, href: t.url })) });  // asked at each open
+GK.palette.register({ group: 'People', url: '/api/people', minLength: 2, debounce: 250, param: 'q' });               // records, same origin
+GK.palette.register({ group: 'Orders', search: (q, signal) => fetch('/api/orders?q=' + encodeURIComponent(q), { signal }).then(r => r.json()) });
+off();
+```
+
+- **Classes** (all `gk-palette-*`, in `css/blocks.json` as "Command palette"): `gk-palette`, `-head`,
+  `-input`, `-close`, `-list`, `-group-label`, `-option`, `-icon`, `-text`, `-label`, `-hint`, `-meta`,
+  `-shortcut`, `-hit`, `-more`, `-status`, `-retry`, `-empty`, `-foot`, `-kbd`, `-trigger`,
+  `-trigger-label`. Colours are roles: light, both dark spellings and the six themes follow (measured:
+  text 4.5:1, the selection bar 3:1); the veil behind it is the one literal.
+- **Words** come from `js.palette_*` (the dialog — the server writes them, the script reads them for a
+  palette it builds) and `palette.trigger` in `lang/`; the script's reach the page through
+  `Lang::jsConfig()`, and it has the English ones as a floor.
+- **Warnings** (`E_USER_WARNING`, the palette still renders): an entry without a label, with a
+  `javascript:`, `data:` or `vbscript:` link, with neither a link nor an action, with a link and an
+  action, with an action that is not a name, an option it does not know or of the wrong type; a
+  search URL that is empty or not a link; a count out of range; a hotkey that is not one; an empty id.
+- **Do not** render the same palette twice or inside a hidden container, bind Ctrl+K yourself on a
+  page that has one, or put markup in a label — it is shown as text.
 
 ### Auth
 
@@ -3599,6 +3776,12 @@ GK.chart.toggle('revenue', 1, false);      // switches series 1 off; returns whe
 GK.chart.html(config);                     // the markup Chart::html() writes for a config, byte for byte
 document.addEventListener('gk:chartselect', e => { /* e.detail: { chart, index, label, series, values } */ });
 document.addEventListener('gk:charttoggle', e => { /* e.detail: { chart, series, name, visible } */ });
+// Command palette (since 1.122.0) — GridKit\CommandPalette and js/command-palette.js, see "CommandPalette".
+GK.palette.open('inv');                    // opens it, with a query typed in; no argument: empty. Returns the <dialog>.
+GK.palette.close();
+const off = GK.palette.register({ group: 'Tools', items: () => [{ label: 'Reload', action: 'reload' }] });  // off() takes it away
+document.addEventListener('gk:paletteselect', e => { if (e.detail.item.kind === 'record') { /* cancelable */ } });
+document.addEventListener('gk:paletteaction', e => { if (e.detail.action === 'reload') location.reload(); });
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
