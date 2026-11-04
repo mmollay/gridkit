@@ -1,4 +1,4 @@
-# GridKit 1.120.0 — JavaScript
+# GridKit 1.121.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -68,6 +68,14 @@ GK.tree.select('cats', ['books', 'music']); // ticks (multi) or selects (single)
 GK.tree.selected('cats');                  // ['books', 'novels', …]
 GK.tree.reload('pages', '5');              // fetches the children of 5 again (lazyUrl)
 document.addEventListener('gk:treemove', e => { if (e.detail.parent === 'legal') e.preventDefault(); });
+
+// Charts (since 1.121.0) — GridKit\Chart and js/chart.js, see "Chart". First argument: the chart's id, element or selector.
+GK.chart.update('revenue', { series: [{ name: '2026', values: [9100, 8800, 10900] }] });  // any key of Chart::config()
+GK.chart.data('revenue');                  // the config as it is now (a copy)
+GK.chart.toggle('revenue', 1, false);      // switches series 1 off; returns whether it is shown
+GK.chart.html(config);                     // the markup Chart::html() writes for a config, byte for byte
+document.addEventListener('gk:chartselect', e => { /* e.detail: { chart, index, label, series, values } */ });
+document.addEventListener('gk:charttoggle', e => { /* e.detail: { chart, series, name, visible } */ });
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
