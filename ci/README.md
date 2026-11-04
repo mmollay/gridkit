@@ -375,3 +375,35 @@ not failed, until the surface ladder in `themes.css` is decided. Run it when
 touching a colour variable in either file.
 
 Like `ci/browser.js` and `ci/parity.php` it stays outside the suite.
+
+## Automatic delivery
+
+`gridkit-deploy.sh` brings `main` to the live checkout on the server — the document root of
+gridkit.at — without anyone logging in. pawbot's cron starts it every minute. It is quiet while
+nothing is new; for a new commit on `origin/main` it runs `php tests/run.php` on that commit in a
+worktree next to the live checkout (`/home/pawbot/projects/gridkit-deploy-check`, never in the
+website itself), and only when the suite is green it moves the website forward (`--ff-only`)
+and tags `v<VERSION>` if that tag does not exist yet. Packagist takes the tag from there.
+
+- A red commit is not delivered, tried once (not every minute) and reported in the log; the
+  next commit is tried again. The output of the suite is in `~/.gridkit-deploy/tests.log`.
+- A file changed by hand in the website stops the delivery instead of being overwritten.
+- An existing tag is never moved: Packagist keeps the first commit a version pointed at
+  (1.110.3, 2026-11-03). When one merge carries several versions, only the last is tagged;
+  earlier ones can be tagged by hand.
+- No workflow file and no GitHub setting is involved (see above: the push token cannot carry
+  workflow files). Merging to `main` IS the release.
+
+**Switching it on**, once, as root on the server:
+
+```bash
+mkdir -p /home/pawbot/bin
+curl -fsSL https://raw.githubusercontent.com/mmollay/gridkit/main/ci/gridkit-deploy.sh -o /home/pawbot/bin/gridkit-deploy.sh
+chown -R pawbot:pawbot /home/pawbot/bin && chmod 750 /home/pawbot/bin/gridkit-deploy.sh
+sudo -u pawbot /home/pawbot/bin/gridkit-deploy.sh; echo "exit $?"
+(sudo -u pawbot crontab -l 2>/dev/null; echo '* * * * * /home/pawbot/bin/gridkit-deploy.sh >> /home/pawbot/gridkit-deploy.log 2>&1') | sudo -u pawbot crontab -
+```
+
+The copy in `/home/pawbot/bin` is deliberate: the script that runs on the server does not change
+with what is merged. After a change to `ci/gridkit-deploy.sh`, copy it again. Its behaviour is
+held by `tests/deploy.test.php`, which runs it against a stand-in origin and website.

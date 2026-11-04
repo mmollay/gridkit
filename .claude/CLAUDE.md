@@ -49,8 +49,13 @@ Every tracked file that does not start with a dot is served. Tool notes live und
    `php tests/run.php`. 1.80.0 went out red because this step was forgotten.
 
 A new `gk-` class goes into `css/blocks.json` with its version; a test enforces it.
-`skill/` is generated, never edited by hand. The dashboard sync, the release and tags
-are done by the owner on the server. The last tag is `v1.95.0`; later versions are untagged.
+`skill/` is generated, never edited by hand.
+
+**Merging to `main` is the release.** On the server, pawbot's cron runs
+`ci/gridkit-deploy.sh` every minute: it runs the suite on the new `main` in a worktree next
+to the live checkout and, when green, moves gridkit.at forward and tags `v<VERSION>` (pushed,
+so Packagist publishes it). Merge only what the owner has approved to go live. The PawBot
+dashboard sync is still done by the owner.
 
 ## Handle with care
 
