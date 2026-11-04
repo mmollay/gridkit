@@ -448,6 +448,7 @@ $sidebar->brand('', 'widgets')
     ->item('Charts', '#charts', 'bar_chart')
     ->item('Command palette', '#palette', 'keyboard_command_key')
     ->item('Filter builder', '#filterbuilder', 'filter_alt')
+    ->item('Kanban', '#kanban', 'view_kanban')
     ->group('Examples')
     ->item('Examples', '#examples', 'rocket_launch')
     ->group('Info')
@@ -527,6 +528,7 @@ echo $demoHeader->title($headerTitle, true)
 <?php require __DIR__ . '/sections/charts.php'; ?>
 <?php require __DIR__ . '/sections/palette.php'; ?>
 <?php require __DIR__ . '/sections/filterbuilder.php'; ?>
+<?php require __DIR__ . '/sections/kanban.php'; ?>
 <?php require __DIR__ . '/sections/changelog.php'; ?>
 </div><!-- /gk-with-sidebar -->
 
@@ -539,6 +541,7 @@ echo $demoHeader->title($headerTitle, true)
 <script src="<?= Layout::asset('../js/calendar.js') ?>" defer></script>
 <script src="<?= Layout::asset('../js/import.js') ?>" defer></script>
 <script src="<?= Layout::asset('../js/command-palette.js') ?>" defer></script>
+<script src="<?= Layout::asset('../js/kanban.js') ?>" defer></script>
 <script src="<?= Layout::asset('../js/filter-builder.js') ?>" defer></script>
 <script>
 (function() {

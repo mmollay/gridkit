@@ -69,6 +69,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Calendar | `GridKit\Calendar` / `js/calendar.js` / `GK.calendar` | A month of appointments, deadlines and campaigns: a table of days with events as links, bars across days, "+3 more", week numbers, months as links (`?month=2026-12`), an agenda when narrower than 600px, arrow keys / Home / End / PageUp / PageDown with the script (since 1.120.0) |
 | CommandPalette | `GridKit\CommandPalette` / `js/command-palette.js` / `GK.palette` | Ctrl+K (Cmd+K on a Mac): a few letters, Enter — to a page of the sidebar (read from the page), an entry or a command of yours, or a record your search URL returns as you type (same origin, debounced, the stale answer dropped); fuzzy, umlauts both ways, marked matches, recent entries, groups; a modal dialog with the keys of a combobox and a listbox; a full-screen sheet on a phone (since 1.122.0) |
 | FilterBuilder | `GridKit\FilterBuilder` / `js/filter-builder.js` / `GK.filterBuilder` | Conditions combined freely for tables, segments, invoice lists: rows of field, operator, value; AND/OR groups nested to a depth; add, duplicate, remove; saved views stored by the page. The state is compact JSON in one URL parameter, `FilterBuilder::fromRequest()` checks it, `toSql()` writes a WHERE clause with placeholders only, `matches()` filters rows in memory, `summary()` says it in words; a form without script, instant with it (since 1.123.0) |
+| Kanban | `GridKit\Kanban` / `js/kanban.js` / `GK.kanban` | Columns with cards for tasks, orders, campaigns, tickets: a labelled region of lists with headings and counts that works without script (links, a "Move to" form per card); with the script dragging by mouse or finger with a drop line and the board scrolling under the card, full keyboard moving with every step spoken, work-in-progress limits that warn or refuse, every move saved as JSON one at a time with the way back on a refusal; lanes that snap on a phone (since 1.124.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
 
@@ -90,8 +91,8 @@ without tripping over this.
 | `Tabs::render()` (1.111.0) | | |
 
 `Tree::render()` and `Tree::renderBranch()` (1.116.0) print as well, and so do `Import::render()` (1.119.0),
-`DateRange::render()` and `Calendar::render()` (1.120.0), `Chart::render()` (1.121.0) and `CommandPalette::render()`
-(1.122.0) — their `->html()` returns the same string (`Chart::sparkline()` and `CommandPalette::trigger()` return a
+`DateRange::render()` and `Calendar::render()` (1.120.0), `Chart::render()` (1.121.0), `CommandPalette::render()`
+(1.122.0) and `Kanban::render()` (1.124.0) — their `->html()` returns the same string (`Chart::sparkline()` and `CommandPalette::trigger()` return a
 string to place).
 
 `PageSize::render()` above is an INSTANCE method — build it with the static
@@ -3681,6 +3682,166 @@ nested fields switched off; an incomplete condition is marked and focused instea
 sent), `GK.filterBuilder.reset('f')` (back to `value()`, nothing sent), `GK.filterBuilder.apply('f')`
 (as the button), `GK.filterBuilder.json('f')`, `GK.filterBuilder.summary('f')`.
 
+### Kanban (`GridKit\Kanban`, since 1.124.0)
+
+Columns with cards for tasks, orders, campaigns and support tickets. The server writes a labelled
+region (`<section aria-label>`) of columns — each a heading, a count and a list of cards — that works
+without any script: every card is in view, a card with `href` is a link, and a card that may move has a
+**"Move to" form** (a `<details>` with a select of the columns and a button) that posts to `moveUrl()`
+like any form. **`js/kanban.js`** adds a handle to every movable card and with it dragging (mouse, pen,
+finger), moving with the keyboard, counts and limits that follow every move and the save as JSON; it is
+a file of its own like `js/tree.js` (the PawBot dashboard keeps its own `gridkit.js`), loaded with
+`defer` after `gridkit.js` — `skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/kanban.js" defer></script>`. There is no call to make: the script finds every
+`.gk-kanban`, also one inserted later. `Kanban::render()` prints, `->html()` returns the same string.
+
+```php
+$tickets = [
+    ['id' => 'T-101', 'subject' => 'Printer offline', 'status' => 'new', 'priority' => ['High', 'red'],
+     'owner' => 'Anna Huber', 'due' => '2026-11-02', 'tags' => ['Hardware', ['Office', 'blue']], 'href' => '/tickets/101'],
+    ['id' => 'T-102', 'subject' => 'New laptop', 'status' => 'doing', 'comments' => 3],
+    ['id' => 'T-103', 'subject' => 'Password policy', 'status' => 'review', 'draggable' => false],   // stays where it is
+];
+(new Kanban('tickets'))
+    ->label('Support tickets')                                    // the accessible name of the board
+    ->column('new', 'New', ['color' => 'blue', 'description' => 'Not looked at yet'])
+    ->column('doing', 'In progress', ['color' => 'orange', 'limit' => 3])
+    ->column('review', 'Review')
+    ->column('done', 'Done', ['color' => 'green'])
+    ->cards($tickets, ['title' => 'subject', 'column' => 'status', 'badge' => 'priority', 'assignee' => 'owner',
+                       'labels' => 'tags', 'count' => 'comments'])
+    ->moveUrl('/tickets/move', ['headers' => ['X-CSRF-Token' => 'token'], 'fields' => ['_token' => 'token']])
+    ->wipLimits('block')                                          // a full column takes no card
+    ->addUrl('/tickets/new?status={column}')
+    ->render();
+```
+
+| Method | What it does |
+|---|---|
+| `->column($key, $label, $opts = [])` | A column, in the order added. Options: `limit` (a work-in-progress limit, a whole number from 1: the count shows "2 / 3", a column over it is marked), `color` (`gray`, `green`, `orange`, `red`, `blue` — a stripe along its top), `description` (a line under the heading, also the list's description). |
+| `->card($id, $title, $column, $opts = [])` | One card (options below). A column the board does not have puts it in the first column, with a warning. |
+| `->cards($rows, $map = [])` | Rows as a database hands them over (arrays or objects). `$map` names the fields: `'id'`, `'title'` (default `title`), `'column'` (default `column`) and any card option (`'assignee' => 'owner'`); every option is read from the row under its own name unless the map says otherwise. |
+| `->moveUrl($url, ['headers' => [...], 'fields' => [...]])` | Cards can be moved, and every move is saved here (see "Moving"). `headers` go with every JSON move; `fields` are hidden fields of the "Move to" form (a form sends no header — put the CSRF token here too). |
+| `->movable()` | Cards can be moved without a URL: the page hears `gk:kanbanmove` / `gk:kanbanmoved` and saves itself. No "Move to" form (it would post nowhere). |
+| `->wipLimits('block' \| 'warn')` | What a move into a column at its `limit` does. `'warn'` (the default, also without a call): it is made, and the column is marked over its limit — the count in the error role, a frame and the words "Over limit". `'block'` (the argument's default): it is refused — no drop, no keyboard step, the column disabled and marked "(full)" in every "Move to" list — and the person is told why. Check the limit on the server too. |
+| `->empty('No tickets')` | The words in a column without cards; default "No cards". |
+| `->addUrl($url)` | An "Add card" link at the foot of every column. `{column}` in the URL is replaced by the column's key (URL-encoded); without it `?column=<key>` (or `&column=`) is added before any `#fragment`. |
+| `->compact()` | Smaller cards for a board with many: a card's `text` is left out, the gaps are tighter, columns narrower (200px instead of 232px), "Move" shows its symbol only. |
+| `->label('Support tickets')` | The accessible name of the board; default the catalogue's "Board". |
+| `->today('2026-11-04')` | The day a due date is measured against (`Y-m-d` or a `DateTimeInterface`); default today. For a fixed page and for tests. |
+| `->render()` / `->html()` | Prints the board / returns it. |
+| `Kanban::readMove($body = null, $post = null)` | Static. The move a request carries — the script's JSON or the form's fields — as `['id' => 'T-1', 'column' => 'done', 'index' => 1, 'form' => false]` (`index` null from the form: the end of the column), or null. `$body`/`$post` default to `php://input` and `$_POST`; JSON is read when the request's `Content-Type` says so (or `$body` is given). |
+
+**Card options** (in `card()`'s `$opts`, or as fields of a row):
+
+| Option | |
+|---|---|
+| `text` | A few lines under the title (cut after three; left out by `compact()`). |
+| `badge` | Text, or `['High', 'red']` / `['text' => 'High', 'color' => 'red']` — a `gk-label` beside the title (gray, green, orange, red, blue). |
+| `labels` | A list of the same: small labels under the text. |
+| `assignee` | A name: the initials in a circle, "Assigned to Anna Huber" for a screen reader, the name as its tooltip. |
+| `avatar` | A picture URL for that circle (with or without `assignee`). A `javascript:`/`vbscript:`/`data:` URL is refused (a `data:image/…` picture is taken). |
+| `due` | A day (`Y-m-d`) or a `DateTimeInterface`. Shown as "Due Nov 20" (the year when it is not this year); a day before `today()` is **"Overdue: Nov 2"** with a warning symbol and the error role, today is **"Due today"** — written out, never the colour alone. |
+| `href` | The title is a link. A `javascript:`/`vbscript:`/`data:` URL is refused with a warning. |
+| `count` | A number in a small pill (comments, attachments). |
+| `draggable` | `false`: the card keeps its place — no handle, no "Move to"; others can still be put beside it. |
+
+Yes/no options take `true`/`false`, `1`/`0` or `'1'`/`'0'`/`'yes'`/`'no'`; anything else is dropped with a
+warning.
+
+- **What a screen reader gets**: a region named by `label()`; per column a heading (`h3`) and a list
+  labelled by the heading and the count in words ("In progress 2 cards, limit 3"), described by the
+  column's `description`; every card a list item. With the script: a handle per movable card, a button
+  named "Move: <title>", described by the keys, `aria-pressed` while lifted; a polite live region speaks
+  every step, the save and a failure.
+- **Keys** (with the script): Tab reaches a card's links, its handle and its "Move" toggle. On the handle
+  Space (or Enter) lifts the card, Up/Down move it within its column, Left/Right to the column beside it
+  (at the same height, or its end), Home/End to the ends of the column; each step is spoken ("Column
+  Review, position 2 of 3."). Space puts it down ("Card Wi-Fi moved to column Review, position 2 of 3."),
+  Escape — or leaving the handle — gives it back. In `rtl` Left and Right swap. A full column in
+  `'block'` is refused with a word, the board's edge as well.
+- **The pointer**: drag the handle (mouse, pen or finger); a mouse may also take a card by its body (not
+  by a link, a button or the form in it) — a finger on the body scrolls the board. A press that travels
+  less than 4px is a click. While dragging a copy of the card follows the pointer, the card stays faded
+  in its place, a line with two dots stands where it would go (before the first card whose middle is
+  below the pointer, or at the end), the column under the pointer is framed (in the error role when it
+  is full in `'block'`); held near the side of the board it scrolls sideways, near the top or the bottom
+  of the window the page scrolls. Escape cancels.
+- **Phone**: the board is the box that scrolls sideways, never the page. Below 600px the columns are
+  lanes of 85% of the board that snap into place, the next one showing at the edge — every column stays
+  in the page, so Tab, a screen reader and a drag reach each one (a column switcher would hide all but
+  one and need a script). On a touch screen the handle, the title link, "Move", its form and "Add card"
+  are 44px.
+- **Counts and limits** follow every move, the way back too: the count ("4" or "2 / 3", in words for a
+  screen reader), the over-limit mark, the empty words, what each "Move to" list offers.
+
+**Moving.** Every move a person makes fires `gk:kanbanmove` first — **cancelable**: `preventDefault()`
+and the card stays (a keyboard move goes back). With `moveUrl()` it is then posted, one at a time in the
+order made: `POST` with `Content-Type: application/json`, `credentials: same-origin`,
+`X-Requested-With: XMLHttpRequest`, the `headers` of `moveUrl()` and the body
+`{"id": "T-101", "column": "done", "index": 1}` — `index` counts from 0 among the cards of the new
+column (the place the card now has). A 2xx is saved unless its JSON says `{"ok": false}`. A refusal,
+another status or no network puts the card back where the server last agreed — that move and every later
+one still waiting (they are never sent) — shows the answer's `"message"` (or "The move could not be
+saved. The card is back in its place.") in a toast (the line `.gk-kanban-error` above the board where
+`gridkit.js` is not loaded), and fires `gk:kanbanmoved` with `ok: false, reverted: true` for each.
+
+**Without the script** (or with an old `gridkit.js` that has no `kanban.js`) the card's "Move to" form
+posts `id`, the `fields` of `moveUrl()` and `column` as `application/x-www-form-urlencoded` — no
+`index`: the card goes to the end. The script sends the same form as JSON instead (no page load). Answer
+a form with a redirect back to the board (`303`), JSON with JSON — `Kanban::readMove()` says which:
+
+```php
+// POST /tickets/move — {"id": "T-101", "column": "done", "index": 1}, or the form: id=T-101&_token=…&column=done
+$move = Kanban::readMove('{"id": "T-101", "column": "done", "index": 1}');   // without an argument: the request
+// … check the token (header or field), the column, the limit and the person's right, store column and order …
+if ($move !== null && $move['form']) {
+    // header('Location: /tickets', true, 303);          // back to the board
+} else {
+    // header('Content-Type: application/json');
+    echo json_encode(['ok' => true]);   // or http_response_code(409) and ['ok' => false, 'message' => 'Shown to the person.']
+}
+```
+
+**Events**, on the `.gk-kanban`, bubbling — for every move a person makes (and for `GK.kanban.move()`
+without `save: false`):
+
+| Event | `detail` |
+|---|---|
+| `gk:kanbanmove` | `{ board, id, from, to, index, fromIndex }` — cancelable, before the move; `from`/`to` are column keys |
+| `gk:kanbanmoved` | the same plus `ok` and `reverted` — after the save (at once without a URL), or after the way back |
+
+**JavaScript API** (the first argument is the board's id as given to `new Kanban()`, its element, any
+element inside it, or a selector): `GK.kanban.move(el, id, column, index, opts)` moves a card the way a
+person would — the veto, the save, the way back; a Promise of `{ ok, reverted }`, or `false` when
+nothing moved (a full column in `'block'`, a card that may not move, an unknown id); `index` null or
+left out: the end; with `{ save: false }` it only puts the card there (a change the server already
+knows — another person's): no event, no request. `GK.kanban.cards(el, column)` — the ids of a column in
+order, or of every column as `{ key: [ids] }`. `GK.kanban.columns(el)` — `[{ key, label, count, limit,
+over }]`. `GK.kanban.refresh(el)` — after the page added or took out a card itself: handles, counts,
+limits.
+
+- **Classes** (all `gk-kanban-*`, in `css/blocks.json` as "Kanban"): `gk-kanban`, `-board`, `-column`,
+  `-column-gray`, `-column-green`, `-column-orange`, `-column-red`, `-column-blue`, `-head`, `-title`,
+  `-count`, `-over`, `-over-note`, `-desc`, `-list`, `-card`, `-card-head`, `-card-title`, `-badge`,
+  `-text`, `-labels`, `-meta`, `-due`, `-overdue`, `-due-today`, `-cardcount`, `-avatar`, `-move`,
+  `-move-toggle`, `-move-word`, `-move-form`, `-move-label`, `-move-select`, `-move-button`, `-empty`,
+  `-add`, `-compact`, `-error`, and from the script `-handle`, `-lifted`, `-dragging`, `-ghost`,
+  `-ghost-no`, `-target`, `-target-no`, `-drop`, `-busy`. Colours are roles: light, both dark spellings
+  and the six themes follow (measured: text 4.5:1, handle and focus ring 3:1).
+- **Words** come from `kanban.*` (server) and `js.kanban_*` (script) in `lang/`; the script's reach the
+  page through `Lang::jsConfig()`.
+- **Warnings** (`E_USER_WARNING`, the board still renders): an empty or duplicate column key (left out),
+  an empty or duplicate card id (left out), a card without a title (its id is shown), a card in a column
+  the board does not have (the first column), no `column()` at all (the columns are made from the
+  cards), an option it does not know or of the wrong type (a `limit` that is no whole number from 1, an
+  unknown colour — gray, a `due` that is no day, a script URL), an unknown `wipLimits()` mode (`'warn'`),
+  a `today()` that is no day, a `moveUrl()` option it does not know or a header or field that is not
+  name => text.
+- **Do not** put the board inside a `<form>` (every card that may move has a form of its own), write the
+  handle or the roles yourself, or trust the page's limits on the server — the page can be old, another
+  person faster.
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -3972,6 +4133,15 @@ GK.filterBuilder.set('f', '["and",["amount","gt",100]]');   // either shape or i
 GK.filterBuilder.reset('f');               // back to value(); GK.filterBuilder.apply('f') sends it like the button
 GK.filterBuilder.json('f');                // '["and",["amount","gt",100]]' — the URL parameter
 document.addEventListener('gk:filterchange', e => { e.preventDefault(); reloadTable(e.detail.json); });  // cancelable: filter live
+
+// Kanban (since 1.124.0) — GridKit\Kanban and js/kanban.js, see "Kanban". First argument: the board's id, element or selector.
+GK.kanban.move('tickets', 'T-101', 'done', 0);           // like a person's move: the veto, the save; a Promise of { ok, reverted }
+GK.kanban.move('tickets', 'T-101', 'done', null, { save: false });  // only put there (the server knows it): no event, no request
+GK.kanban.cards('tickets', 'done');                      // ['T-108', 'T-101']; without a column { new: [...], done: [...] }
+GK.kanban.columns('tickets');                            // [{ key, label, count, limit, over }, …]
+GK.kanban.refresh('tickets');                            // after the page added a card itself: handles, counts, limits
+document.addEventListener('gk:kanbanmove', e => { if (e.detail.to === 'done' && !mayClose(e.detail.id)) e.preventDefault(); });
+document.addEventListener('gk:kanbanmoved', e => { /* e.detail: { board, id, from, to, index, fromIndex, ok, reverted } */ });
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });

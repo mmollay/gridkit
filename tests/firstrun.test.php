@@ -201,15 +201,15 @@ return [
 },
 
 'the README accounts for every class, and no others' => function (): void {
-    // "Twenty-seven components" (Tabs 1.111.0, PermissionMatrix 1.115.0, Tree 1.116.0, LineItems 1.117.0,
-    // Import 1.119.0, DateRange and Calendar 1.120.0, Chart 1.121.0, CommandPalette 1.122.0, FilterBuilder 1.123.0) plus six
+    // "Twenty-eight components" (Tabs 1.111.0, PermissionMatrix 1.115.0, Tree 1.116.0, LineItems 1.117.0,
+    // Import 1.119.0, DateRange and Calendar 1.120.0, Chart 1.121.0, CommandPalette 1.122.0, FilterBuilder 1.123.0, Kanban 1.124.0) plus six
     // named as infrastructure (Tooltip since 1.112.0). Both numbers are
     // on the landing page and in the meta description too, and a count like
     // this drifts the moment a class is added — the repository description
     // still said "17+" long after the README said sixteen.
     $readme = (string) file_get_contents(GK_ROOT . '/README.md');
 
-    preg_match('/Twenty-seven, each a PHP class.*?\n\n(.*?)\n\nPlus (.*?)\n/s', $readme, $m);
+    preg_match('/Twenty-eight, each a PHP class.*?\n\n(.*?)\n\nPlus (.*?)\n/s', $readme, $m);
     T::ok(isset($m[1]), 'the component table is gone from the README');
 
     preg_match_all('/`(\w+)` +—/', $m[1], $c);
@@ -221,7 +221,7 @@ return [
         glob(GK_ROOT . '/src/*.php')
     );
 
-    T::eq(count($c[1]), 27, 'the README says twenty-seven components and lists ' . count($c[1]));
+    T::eq(count($c[1]), 28, 'the README says twenty-eight components and lists ' . count($c[1]));
     sort($listed); sort($actual);
     T::eq($listed, $actual,
         'README and src/ disagree: ' . implode(', ', array_diff($actual, $listed))

@@ -485,6 +485,32 @@ GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-fil
 GK_SHOTS=/some/dir GK_ICONFONT=/path/MaterialIcons.woff2 node ci/browser-filter-builder.js   # with pictures
 ```
 
+The kanban board (`GridKit\Kanban` and `js/kanban.js`, 1.124.0) is checked by `ci/browser-kanban.js`
+on `ci/browser-kanban-fixture.php`: a ticket board that saves to `http://gk.test/move` (headers,
+hidden fields, a limit of two in `'block'`, a locked card, links, every card option), a compact board
+that moves without a URL with a limit that only warns, and a board of eight columns wider than any
+screen; `page.route()` answers the moves — saved, held until released, 500 with a message,
+`{"ok":false}`, no network. It checks the handles and what a screen reader finds (the region, a
+heading and a counted list per column); the mouse by the handle and by the body of a card (the copy
+under the pointer, the drop line, the framed column, all gone after the release, a link and a small
+move are no drag); the request (`{id, column, index}`, the headers) and both events with their
+detail; the counts, the over-limit mark and its words, a full column refused by a drop, by the arrow
+keys and in every "Move to" list; Escape during a drag; the keyboard (Space and Enter lift, Up, Down,
+Left, Right, Home, End, the edges, Escape, leaving the handle, the focus kept) and every spoken
+sentence; the veto of `gk:kanbanmove` (keyboard and drop); the way back after a 500, a refusal while a
+second move waits (both back, the second never sent, an event for each), no network, the toast; the
+"Move to" form sent as JSON; the board scrolling sideways under a card held at its edge; `GK.kanban`;
+a finger on the handle (it drags) and on the body (it does not); 44px targets on a touch screen;
+390px as lanes that snap, and no sideways page scroll from 320 to 1600px; contrast in 21 looks; the
+page without script and with an old `gridkit.js` that has no `kanban.js` (the form posts, `id`,
+`_token`, `column`). Each new rule and branch of the script, the stylesheet and `Kanban.php` was
+taken out in turn (a bounded sample) and a check turned red. About twenty-five seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-kanban.js
+GK_SHOTS=/some/dir node ci/browser-kanban.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

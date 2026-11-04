@@ -15493,3 +15493,621 @@ a.gk-cal-event:hover,
 .gk-dark .gk-fb-conj {
   background-color: var(--gk-surface-container-highest);
 }
+
+/* === 1.124.0 — kanban === */
+/* GridKit\Kanban writes a labelled region of columns — a heading, a count, a list of cards — and
+   js/kanban.js adds the handles and the moving. The board works without the script: every card in
+   view, and a "Move to" form per card that posts.
+
+   The board is the box that scrolls sideways, never the page: columns are at least
+   --gk-kanban-col wide and share what is left. On a phone they become lanes of 85% of the board that
+   snap into place, so the next column shows at the edge — every column stays in the page (a screen
+   reader, Tab and a drag reach each one) where a switcher would hide all but one and need a script.
+   Roles only, so light, [data-gk-mode="dark"], .gk-dark and the six themes follow from the tokens. */
+.gk-kanban {
+  --gk-kanban-col: 232px;
+  --gk-kanban-gap: 12px;
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-body);
+}
+.gk-kanban-board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(var(--gk-kanban-col), 1fr);
+  align-items: start;
+  gap: var(--gk-kanban-gap);
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 2px 2px 10px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+.gk-kanban-board:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+
+/* A column: its colour is a stripe along the top — the heading says what it is. */
+.gk-kanban-column {
+  --gk-kanban-accent: var(--gk-outline-variant);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--gk-outline-variant);
+  border-top: 3px solid var(--gk-kanban-accent);
+  border-radius: var(--gk-radius);
+  background: var(--gk-surface-container-low);
+}
+.gk-kanban-column-gray { --gk-kanban-accent: var(--gk-outline); }
+.gk-kanban-column-green { --gk-kanban-accent: var(--gk-success); }
+.gk-kanban-column-orange { --gk-kanban-accent: var(--gk-warning); }
+.gk-kanban-column-red { --gk-kanban-accent: var(--gk-error); }
+.gk-kanban-column-blue { --gk-kanban-accent: var(--gk-info); }
+.gk-kanban-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 2px 10px;
+}
+.gk-kanban-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-body);
+  font-weight: 600;
+  line-height: var(--gk-leading-snug);
+  overflow-wrap: anywhere;
+}
+.gk-kanban-count {
+  flex: none;
+  box-sizing: border-box;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+  line-height: 22px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+/* Over its limit: the count in the error role, a frame, and the words — not the colour alone. */
+.gk-kanban-over {
+  border-color: color-mix(in oklab, var(--gk-error) 55%, var(--gk-outline-variant));
+}
+.gk-kanban-over .gk-kanban-count {
+  background: var(--gk-error-container);
+  color: var(--gk-on-error-container);
+}
+.gk-kanban-over-note {
+  flex: 1 0 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gk-on-error-container);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+}
+.gk-kanban-over-note::before,
+.gk-kanban-error::before {
+  content: "!";
+  flex: none;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 12px;
+  text-align: center;
+}
+.gk-kanban-desc {
+  flex: 1 0 100%;
+  margin: 0;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+  overflow-wrap: anywhere;
+}
+.gk-kanban-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A card. */
+.gk-kanban-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface);
+  box-shadow: var(--gk-elev-1);
+  list-style: none;
+}
+.gk-kanban-card:hover {
+  border-color: var(--gk-outline);
+}
+.gk-kanban-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+.gk-kanban-card-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-block: 3px;
+  color: var(--gk-on-surface);
+  font-weight: 600;
+  line-height: var(--gk-leading-snug);
+  overflow-wrap: anywhere;
+}
+a.gk-kanban-card-title {
+  text-decoration: none;
+}
+a.gk-kanban-card-title:hover {
+  color: var(--gk-primary-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+a.gk-kanban-card-title:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+.gk-kanban-badge {
+  flex: none;
+  margin-top: 2px;
+}
+.gk-kanban-text {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+  line-height: var(--gk-leading-normal);
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.gk-kanban-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gk-kanban-labels > li {
+  margin: 0;
+}
+.gk-kanban-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-width: 0;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+}
+/* The due date: a symbol and words. Overdue and today add a ground of their role. */
+.gk-kanban-due {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.gk-kanban-due .material-icons {
+  font-size: 16px;
+}
+.gk-kanban-overdue,
+.gk-kanban-due-today {
+  padding: 1px 8px 1px 5px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.gk-kanban-overdue {
+  background: var(--gk-error-container);
+  color: var(--gk-on-error-container);
+}
+.gk-kanban-due-today {
+  background: var(--gk-warning-container);
+  color: var(--gk-on-warning-container);
+}
+.gk-kanban-cardcount {
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface-variant);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.gk-kanban-avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-inline-start: auto;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+  font-size: 11px;
+  font-weight: 700;
+}
+.gk-kanban-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* "Move to": the way without a script (and without a pointer, with one). */
+.gk-kanban-move {
+  font-size: var(--gk-text-caption);
+}
+.gk-kanban-move-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  min-height: 28px;
+  padding: 0 8px 0 6px;
+  border-radius: 999px;
+  color: var(--gk-on-surface-variant);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.gk-kanban-move-toggle::-webkit-details-marker {
+  display: none;
+}
+.gk-kanban-move-toggle .material-icons {
+  font-size: 16px;
+}
+.gk-kanban-move-toggle:hover {
+  background: var(--gk-state-hover);
+  color: var(--gk-on-surface);
+}
+.gk-kanban-move-toggle:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+.gk-kanban-move[open] > .gk-kanban-move-toggle {
+  color: var(--gk-primary-text);
+}
+.gk-kanban-move-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0;
+}
+.gk-kanban-move-label {
+  flex: 1 0 100%;
+  color: var(--gk-on-surface-variant);
+}
+.gk-kanban-move-select {
+  flex: 1 1 120px;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--gk-outline);
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface);
+  color: var(--gk-on-surface);
+  font: inherit;
+  font-size: var(--gk-text-label);
+}
+.gk-kanban-move-select:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+.gk-kanban-move-button {
+  flex: none;
+}
+
+.gk-kanban-empty {
+  margin: 0;
+  padding: 14px 8px;
+  border: 1px dashed var(--gk-outline-variant);
+  border-radius: var(--gk-radius-sm);
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+  text-align: center;
+}
+.gk-kanban-add {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  min-height: 32px;
+  margin-top: 8px;
+  padding: 0 8px;
+  border-radius: var(--gk-radius-sm);
+  color: var(--gk-primary-text);
+  font-size: var(--gk-text-label);
+  font-weight: 600;
+  text-decoration: none;
+}
+.gk-kanban-add .material-icons {
+  font-size: 18px;
+}
+.gk-kanban-add:hover {
+  background: var(--gk-state-primary);
+}
+.gk-kanban-add:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+
+/* The handle (js/kanban.js): six dots drawn by a mask in the text colour. Only the handle takes a
+   finger — the rest of a card still scrolls the board and the page. */
+.gk-kanban-handle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: -2px 0 -2px -6px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gk-on-surface-variant);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.gk-kanban-handle::before {
+  content: "";
+  width: 10px;
+  height: 16px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16'%3E%3Cg fill='%23000'%3E%3Ccircle cx='2' cy='2' r='1.6'/%3E%3Ccircle cx='8' cy='2' r='1.6'/%3E%3Ccircle cx='2' cy='8' r='1.6'/%3E%3Ccircle cx='8' cy='8' r='1.6'/%3E%3Ccircle cx='2' cy='14' r='1.6'/%3E%3Ccircle cx='8' cy='14' r='1.6'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16'%3E%3Cg fill='%23000'%3E%3Ccircle cx='2' cy='2' r='1.6'/%3E%3Ccircle cx='8' cy='2' r='1.6'/%3E%3Ccircle cx='2' cy='8' r='1.6'/%3E%3Ccircle cx='8' cy='8' r='1.6'/%3E%3Ccircle cx='2' cy='14' r='1.6'/%3E%3Ccircle cx='8' cy='14' r='1.6'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+}
+.gk-kanban-handle:hover {
+  background: var(--gk-state-pressed);
+  color: var(--gk-on-surface);
+}
+.gk-kanban-handle:active {
+  cursor: grabbing;
+}
+.gk-kanban-handle:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+/* A mouse may take a card by its body as well. */
+.gk-kanban[data-gk-kanban-ready] .gk-kanban-card:has(> .gk-kanban-card-head > .gk-kanban-handle) {
+  cursor: grab;
+}
+/* Lifted with the keyboard: the handle says so by its colours, the card by a dashed frame and a
+   shadow, the live region in words. */
+.gk-kanban-handle[aria-pressed="true"] {
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+  box-shadow: inset 0 0 0 1px var(--gk-primary);
+}
+.gk-kanban-lifted {
+  outline: 2px dashed var(--gk-primary);
+  outline-offset: 2px;
+  box-shadow: var(--gk-shadow-lg);
+}
+/* Dragged with the pointer: the card stays where it was, faded and framed; a copy follows the
+   pointer; a line shows where it would go and the column under the pointer is framed. */
+.gk-kanban-dragging {
+  opacity: 0.45;
+  outline: 2px dashed var(--gk-outline);
+  outline-offset: -2px;
+}
+.gk-kanban-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1100;
+  margin: 0;
+  box-shadow: var(--gk-shadow-lg);
+  pointer-events: none;
+}
+.gk-kanban-ghost-no {
+  outline: 2px solid var(--gk-error);
+  outline-offset: -1px;
+}
+.gk-kanban-target {
+  border-color: var(--gk-primary);
+  background: color-mix(in oklab, var(--gk-primary) 6%, var(--gk-surface-container-low));
+}
+.gk-kanban-target-no {
+  border-color: var(--gk-error);
+  background: color-mix(in oklab, var(--gk-error) 6%, var(--gk-surface-container-low));
+}
+.gk-kanban-drop {
+  position: absolute;
+  z-index: 2;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 2px;
+  background: var(--gk-primary);
+  pointer-events: none;
+}
+.gk-kanban-drop::before,
+.gk-kanban-drop::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  box-sizing: border-box;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--gk-primary);
+  border-radius: 50%;
+  background: var(--gk-surface);
+}
+.gk-kanban-drop::before {
+  left: -6px;
+}
+.gk-kanban-drop::after {
+  right: -6px;
+}
+.gk-kanban-busy,
+.gk-kanban-busy * {
+  cursor: grabbing !important;
+}
+/* A failed save where no toast is (gridkit.js not loaded): the line above the board. */
+.gk-kanban-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in oklab, var(--gk-error) 25%, transparent);
+  border-radius: var(--gk-radius-sm);
+  background: color-mix(in oklab, var(--gk-error) 8%, transparent);
+  color: var(--gk-on-error-container);
+  font-size: var(--gk-text-label);
+}
+
+/* compact(): many cards — no text (the server leaves it out), tighter gaps. */
+.gk-kanban-compact {
+  --gk-kanban-col: 200px;
+  --gk-kanban-gap: 8px;
+}
+.gk-kanban-compact .gk-kanban-list {
+  gap: 6px;
+}
+.gk-kanban-compact .gk-kanban-card {
+  gap: 4px;
+  padding: 6px 10px;
+}
+/* "Move" keeps its symbol; the word is still read. */
+.gk-kanban-compact .gk-kanban-move-word {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A finger: every target of a card at 44px — the handle, the title link, "Move", the form, "Add". */
+@media (pointer: coarse) {
+  .gk-kanban-handle {
+    width: var(--gk-target-min);
+    height: var(--gk-target-min);
+    margin: -8px 0 -8px -10px;
+  }
+  a.gk-kanban-card-title {
+    display: flex;
+    align-items: center;
+    min-height: var(--gk-target-min);
+    padding-block: 0;
+  }
+  .gk-kanban-move-toggle,
+  .gk-kanban-move-select,
+  .gk-kanban-move-button,
+  .gk-kanban-add {
+    min-height: var(--gk-target-min);
+  }
+}
+/* A phone: lanes of 85% of the board that snap into place, the next one showing at the edge. A drag
+   switches the snapping off, or the board would fight the scroll that follows the card. */
+@media (max-width: 600px) {
+  .gk-kanban-board {
+    grid-auto-columns: 85%;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 2px;
+  }
+  .gk-kanban-column {
+    scroll-snap-align: start;
+  }
+  .gk-kanban-busy .gk-kanban-board {
+    scroll-snap-type: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gk-kanban-card {
+    transition: box-shadow var(--gk-dur-1) var(--gk-ease-out), border-color var(--gk-dur-1) var(--gk-ease-out);
+  }
+}
+@media (forced-colors: active) {
+  .gk-kanban-handle::before {
+    background-color: ButtonText;
+  }
+  .gk-kanban-drop,
+  .gk-kanban-drop::before,
+  .gk-kanban-drop::after {
+    border-color: Highlight;
+    background: Highlight;
+  }
+  .gk-kanban-overdue,
+  .gk-kanban-due-today {
+    border: 1px solid CanvasText;
+  }
+  .gk-kanban-target {
+    border-color: Highlight;
+  }
+}
+@media print {
+  .gk-kanban-board {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+  .gk-kanban-column {
+    flex: 1 1 200px;
+    break-inside: avoid;
+  }
+  .gk-kanban-handle,
+  .gk-kanban-move,
+  .gk-kanban-add {
+    display: none;
+  }
+}
+/* A raised layer is a step lighter in dark mode: the cards stand on their column, and the small pills
+   in a card on the card. */
+[data-gk-mode="dark"] .gk-kanban-card,
+.gk-dark .gk-kanban-card {
+  background: var(--gk-surface-container-high);
+  box-shadow: none;
+}
+[data-gk-mode="dark"] .gk-kanban-cardcount,
+.gk-dark .gk-kanban-cardcount,
+[data-gk-mode="dark"] .gk-kanban-card .gk-label-gray,
+.gk-dark .gk-kanban-card .gk-label-gray,
+[data-gk-mode="dark"] .gk-kanban-move-select,
+.gk-dark .gk-kanban-move-select {
+  background: var(--gk-surface-container-highest);
+}
+[data-gk-mode="dark"] .gk-kanban-drop::before,
+[data-gk-mode="dark"] .gk-kanban-drop::after,
+.gk-dark .gk-kanban-drop::before,
+.gk-dark .gk-kanban-drop::after {
+  background: var(--gk-surface-container-low);
+}

@@ -185,6 +185,19 @@
       "gk-import-notes"
     ]
   },
+  "kanban": {
+    "reason": "Drawn by js/kanban.js only while someone lifts a card with the keyboard (the frame) or drags one (the copy under the pointer, the faded card, the drop line, the framed column — in the error role over a full column — and the grabbing cursor); a still page cannot show them. ci/browser-kanban.js exercises every one.",
+    "classes": [
+      "gk-kanban-busy",
+      "gk-kanban-dragging",
+      "gk-kanban-drop",
+      "gk-kanban-ghost",
+      "gk-kanban-ghost-no",
+      "gk-kanban-lifted",
+      "gk-kanban-target",
+      "gk-kanban-target-no"
+    ]
+  },
   "label": {
     "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
     "classes": [
