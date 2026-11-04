@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.121.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.122.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -3087,38 +3087,6 @@ $cal->events($rows, ['title' => 'subject', 'start' => 'begins_at', 'end' => 'end
     ->event('2026-11-20', 'Invoice run', ['href' => '/runs/3', 'color' => 'red', 'allDay' => true])
     ->event(['start' => '2026-11-23', 'end' => '2026-12-04'], 'Winter campaign')
     ->render();
-
-### CommandPalette (`GridKit\CommandPalette`, since 1.122.0)
-
-Quick navigation and commands for an admin: Ctrl+K (Cmd+K on a Mac), a few letters, Enter — to a
-page, a customer, an invoice, or a command the page carries out. The server writes a closed
-`<dialog>` holding the field, an empty list and the configuration as JSON; **`js/command-palette.js`**
-opens it, reads the sidebar's links out of the page, ranks what matches and fetches records as you
-type. It is a file of its own like `js/tree.js` (the PawBot dashboard keeps its own `gridkit.js`),
-loaded with `defer` after `gridkit.js` — `skeleton.php` and the demo do it; a page of your own adds
-`<script src=".../js/command-palette.js" defer></script>`.
-
-**`CommandPalette::render()` PRINTS the dialog** — once per page, anywhere in `<body>` (not inside a
-hidden container). **`->trigger()` RETURNS** the button that opens it, for `Header::action()` or
-anywhere else; `->html()` returns what `render()` prints.
-
-```php
-$palette = (new CommandPalette('main'))                    // the id: storage key and DOM ids
-    ->item('New invoice', '/invoices/new', ['icon' => 'add', 'group' => 'Create', 'keywords' => ['bill', 'create'], 'shortcut' => 'N'])
-    ->item('Dark mode', '', ['icon' => 'dark_mode', 'action' => 'toggle-dark', 'hint' => 'Switches the colours'])
-    ->items([['label' => 'Monthly report', 'href' => '/reports/monthly', 'group' => 'Reports']])
-    ->search('/admin/palette-search', ['minLength' => 2, 'debounce' => 250])   // customers, invoices
-    ->recent(5)                                            // what was chosen comes first next time
-    ->maxPerGroup(6)
-    ->slash();                                             // "/" opens it too, outside fields
-
-echo (new Header())->title('Invoices')->action($palette->trigger())->render();   // the trigger: RETURNED
-$palette->render();                                                               // the dialog: PRINTED
-```
-
-```javascript
-// A command is the page's to carry out.
-document.addEventListener('gk:paletteaction', e => { if (e.detail.action === 'toggle-dark') GK.theme.toggleMode(); });
 ```
 
 | Method | What it does |
@@ -3355,6 +3323,42 @@ it is drawn exactly as before. In a table, a column with `'format' => 'html'` ta
   `markers()` or `dashes()` on a type that has no use for it; a width or height out of range.
 - **Do not** write the SVG yourself, colour text with a series colour, put two value scales in one
   chart (draw two charts), or pass `0.125` for 12.5 % — `percent` takes the percentage.
+
+### CommandPalette (`GridKit\CommandPalette`, since 1.122.0)
+
+Quick navigation and commands for an admin: Ctrl+K (Cmd+K on a Mac), a few letters, Enter — to a
+page, a customer, an invoice, or a command the page carries out. The server writes a closed
+`<dialog>` holding the field, an empty list and the configuration as JSON; **`js/command-palette.js`**
+opens it, reads the sidebar's links out of the page, ranks what matches and fetches records as you
+type. It is a file of its own like `js/tree.js` (the PawBot dashboard keeps its own `gridkit.js`),
+loaded with `defer` after `gridkit.js` — `skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/command-palette.js" defer></script>`.
+
+**`CommandPalette::render()` PRINTS the dialog** — once per page, anywhere in `<body>` (not inside a
+hidden container). **`->trigger()` RETURNS** the button that opens it, for `Header::action()` or
+anywhere else; `->html()` returns what `render()` prints.
+
+```php
+$palette = (new CommandPalette('main'))                    // the id: storage key and DOM ids
+    ->item('New invoice', '/invoices/new', ['icon' => 'add', 'group' => 'Create', 'keywords' => ['bill', 'create'], 'shortcut' => 'N'])
+    ->item('Dark mode', '', ['icon' => 'dark_mode', 'action' => 'toggle-dark', 'hint' => 'Switches the colours'])
+    ->items([['label' => 'Monthly report', 'href' => '/reports/monthly', 'group' => 'Reports']])
+    ->search('/admin/palette-search', ['minLength' => 2, 'debounce' => 250])   // customers, invoices
+    ->recent(5)                                            // what was chosen comes first next time
+    ->maxPerGroup(6)
+    ->slash();                                             // "/" opens it too, outside fields
+
+echo (new Header())->title('Invoices')->action($palette->trigger())->render();   // the trigger: RETURNED
+$palette->render();                                                               // the dialog: PRINTED
+```
+
+```javascript
+// A command is the page's to carry out.
+document.addEventListener('gk:paletteaction', e => { if (e.detail.action === 'toggle-dark') GK.theme.toggleMode(); });
+```
+
+| Method | What it does |
+|---|---|
 | `new CommandPalette($id = 'main')` | The id names the recent list in `localStorage` (`gk-palette-<id>`) and the DOM ids. Empty: a warning, `main`. |
 | `->item($label, $href = '', $opts = [])` | One entry: a link, or with the option `action` a command. Options below. |
 | `->items(iterable $rows)` | Many at once — rows from a database: `label` (or `title`), `href` (or `url`) and any option under its own name. Rows may be objects. |
@@ -3776,6 +3780,7 @@ GK.chart.toggle('revenue', 1, false);      // switches series 1 off; returns whe
 GK.chart.html(config);                     // the markup Chart::html() writes for a config, byte for byte
 document.addEventListener('gk:chartselect', e => { /* e.detail: { chart, index, label, series, values } */ });
 document.addEventListener('gk:charttoggle', e => { /* e.detail: { chart, series, name, visible } */ });
+
 // Command palette (since 1.122.0) — GridKit\CommandPalette and js/command-palette.js, see "CommandPalette".
 GK.palette.open('inv');                    // opens it, with a query typed in; no argument: empty. Returns the <dialog>.
 GK.palette.close();

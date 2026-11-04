@@ -1,4 +1,4 @@
-# GridKit 1.121.0 — JavaScript
+# GridKit 1.122.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -76,6 +76,13 @@ GK.chart.toggle('revenue', 1, false);      // switches series 1 off; returns whe
 GK.chart.html(config);                     // the markup Chart::html() writes for a config, byte for byte
 document.addEventListener('gk:chartselect', e => { /* e.detail: { chart, index, label, series, values } */ });
 document.addEventListener('gk:charttoggle', e => { /* e.detail: { chart, series, name, visible } */ });
+
+// Command palette (since 1.122.0) — GridKit\CommandPalette and js/command-palette.js, see "CommandPalette".
+GK.palette.open('inv');                    // opens it, with a query typed in; no argument: empty. Returns the <dialog>.
+GK.palette.close();
+const off = GK.palette.register({ group: 'Tools', items: () => [{ label: 'Reload', action: 'reload' }] });  // off() takes it away
+document.addEventListener('gk:paletteselect', e => { if (e.detail.item.kind === 'record') { /* cancelable */ } });
+document.addEventListener('gk:paletteaction', e => { if (e.detail.action === 'reload') location.reload(); });
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });

@@ -425,8 +425,12 @@ return [
     $css = (string) file_get_contents($root . '/css/gridkit.css');
     $at = strpos($css, '/* === 1.121.0 — chart === */');
     T::ok($at !== false, 'the block is headed /* === 1.121.0 — chart === */');
+    // Up to the next release's block (1.122.0 appended one after it): only a later release may follow.
     $block = substr($css, (int) $at);
-    T::eq(preg_match_all('#/\* === 1\.\d+\.\d+ #', $block), 1, 'it is the last block of the stylesheet');
+    $later = preg_match_all('#/\* === 1\.(\d+)\.\d+ #', substr($block, 10), $v) ? $v[1] : [];
+    T::ok(array_filter($later, static fn(string $m): bool => (int) $m <= 121) === [], 'only a later release\'s block follows it');
+    $next = strpos($block, "\n/* === ", 10);
+    if ($next !== false) $block = substr($block, 0, $next);
     T::eq(preg_match_all('/^\.gk-chart \{/m', $css), 1, 'and the only place .gk-chart is styled');
     foreach (['[data-gk-mode="dark"] :is(.gk-chart, .gk-chart-spark)', '.gk-dark :is(.gk-chart, .gk-chart-spark)',
               '@media (prefers-reduced-motion: no-preference)', '@media print', '@media (forced-colors: active)',
