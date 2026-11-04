@@ -83,8 +83,9 @@ function showcaseSource(callable $fn): string
  *
  * @param callable $fn    The example. Whatever it echoes becomes the output.
  * @param string   $label Optional heading for the disclosure.
+ * @param bool     $open  The code shown from the start (the charts show each chart beside its code).
  */
-function showcase(callable $fn, string $label = ''): void
+function showcase(callable $fn, string $label = '', bool $open = false): void
 {
     $source = showcaseSource($fn);
 
@@ -97,7 +98,7 @@ function showcase(callable $fn, string $label = ''): void
 
     echo '<div class="demo-showcase">';
     echo '<div class="demo-showcase-output">' . $output . '</div>';
-    echo '<details class="demo-showcase-code">';
+    echo '<details class="demo-showcase-code"' . ($open ? ' open' : '') . '>';
     echo '<summary>'
        . '<span class="material-icons" aria-hidden="true">code</span>'
        . '<span>' . $e($summary) . '</span>'

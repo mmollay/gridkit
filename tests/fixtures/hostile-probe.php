@@ -16,7 +16,7 @@ ini_set('display_errors', '0');
 
 require __DIR__ . '/../../autoload.php';
 
-use GridKit\{FilterChips, Lang, PageSize, Pagination, Table, Tabs, YearFilter};
+use GridKit\{Calendar, DateRange, FilterChips, Lang, PageSize, Pagination, Table, Tabs, YearFilter};
 
 Lang::set('en');
 
@@ -31,7 +31,7 @@ $inputs = [
     'script'  => '<script>alert(1)</script>',
     'nullbyte' => "a\0b",
 ];
-$params = ['gk_page', 'gk_sort', 'gk_dir', 'gk_search', 'gk_filter_c', 'gk_table', 'status', 'per_page', 'year', 'page'];
+$params = ['gk_page', 'gk_sort', 'gk_dir', 'gk_search', 'gk_filter_c', 'gk_table', 'status', 'per_page', 'year', 'page', 'period', 'month'];
 
 $render = match ($argv[1] ?? '') {
     'Table'       => fn() => (new Table('t'))->setData([['a' => 1], ['a' => 2], ['a' => 3]])
@@ -43,6 +43,8 @@ $render = match ($argv[1] ?? '') {
     'YearFilter'  => fn() => (new YearFilter('y'))->range(2020, 2026)->render(),
     'Pagination'  => fn() => print(Pagination::build(['totalPages' => 10, 'current' => 3])),
     'Tabs'        => fn() => (new Tabs('t'))->param('status')->hash()->remember()->tab('a', 'A')->tab('b', 'B', ['disabled' => true])->render(),
+    'DateRange'   => fn() => (new DateRange('period'))->filter()->preserve(['status', 'year'])->render(),
+    'Calendar'    => fn() => (new Calendar('c'))->weekNumbers()->preserve(['status'])->event('2026-11-04', 'A')->render(),
     default       => throw new InvalidArgumentException('unknown component'),
 };
 

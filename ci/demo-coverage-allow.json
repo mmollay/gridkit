@@ -38,12 +38,31 @@
       "gk-btn-icon-text"
     ]
   },
+  "calendar": {
+    "reason": "Written only for a month that holds no event, in the agenda a calendar narrower than 600px shows; the months of the demo hold events. tests/calendar.test.php and ci/browser-dates.js check it.",
+    "classes": [
+      "gk-cal-empty"
+    ]
+  },
   "cell-who": {
     "reason": "Hand-written markup of the 'rows of people' recipe in the skill (or 'format' => 'html'); not a PHP component.",
     "classes": [
       "gk-cell-sub-wrap",
       "gk-cell-who",
       "gk-cell-who-text"
+    ]
+  },
+  "chart": {
+    "reason": "Drawn by js/chart.js only while a category is under the pointer or the keys: the rows of the tooltip (title, line key, value, name, the total of a stack) and the marks of that category against the others stepping back. A still page cannot show them; ci/browser-chart.js exercises every one.",
+    "classes": [
+      "gk-chart-active",
+      "gk-chart-on",
+      "gk-chart-tip-key",
+      "gk-chart-tip-name",
+      "gk-chart-tip-row",
+      "gk-chart-tip-title",
+      "gk-chart-tip-total",
+      "gk-chart-tip-value"
     ]
   },
   "checkbox-radio": {
@@ -120,7 +139,6 @@
   "formatter": {
     "reason": "Number cells in the 'number' format; the demo's formatter table uses currency, percent, date, boolean, label and email.",
     "classes": [
-      "gk-num",
       "gk-num-empty"
     ]
   },
@@ -156,6 +174,15 @@
       "gk-body-with-header",
       "gk-header-meta",
       "gk-skip-link"
+    ]
+  },
+  "import": {
+    "reason": "Said only when a required field has no column (gk-import-missing), when a field is chosen for two columns or a quotation mark is never closed (gk-import-notes), when more than a hundred rows have errors (gk-import-more), and drawn only while a file is dragged over the box (gk-import-dragover); the sample file of the demo has none of these. tests/import.test.php and ci/browser-import.js show every one.",
+    "classes": [
+      "gk-import-dragover",
+      "gk-import-missing",
+      "gk-import-more",
+      "gk-import-notes"
     ]
   },
   "label": {
@@ -195,6 +222,12 @@
     "reason": "The hand-written pager of 0.9 (.gk-pagination with .gk-page-btn buttons), kept in the stylesheet for pages that still write it. Since 1.118.0 every pager GridKit draws is the .gk-rowpager bar (Pagination, Table::paginate()), and that is what the demo shows.",
     "classes": [
       "gk-page-btn"
+    ]
+  },
+  "palette": {
+    "reason": "An entry's shortcut is shown, not bound: the page binds its keys itself, and the demo binds none, so no entry of its palette shows one (a key it does not answer would be a promise it breaks). ci/browser-palette.js checks it.",
+    "classes": [
+      "gk-palette-shortcut"
     ]
   },
   "richtext": {

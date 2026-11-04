@@ -353,6 +353,113 @@ GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-pag
 GK_OLD_JS=/path/to/dashboard/js/gridkit.js node ci/browser-pager.js   # the dashboard's own copy, or any other
 ```
 
+The CSV import (`GridKit\Import` and `js/import.js`, 1.119.0) is checked by `ci/browser-import.js`
+on `ci/browser-import-fixture.php`, which runs behind PHP's own server so the forms really post:
+the script starts `php -S` on a free port with a temporary directory for the kept files
+(`GK_URL=http://127.0.0.1:8140/` uses a server already running the fixture instead). First the
+point of the whole thing — the browser reads and checks as the server does: 196 files (written by
+hand for each rule, 160 drawn at random from a fixed seed: every separator, quoting, line ending,
+encoding — Windows-1252, UTF-8 with and without a byte order mark, UTF-16 LE and BE — and every
+value shape) go through `GK.import.parse()` and `GK.import.read()` and must come out as
+`Import::parseCsv()` and `result()` say (rows, every message, counts, mapping, notes, meta), and the
+panel the script draws must be the one `Import.php` draws, byte for byte. Then the flow with the
+script: a file chosen (no request), dropped (the file field takes it) and pasted; the mapping
+changed (a field taken from another column, the summary changing in place, the focus kept); the
+separator, the encoding (UTF-8 for a Windows-1252 file is said, the file stays) and the header row;
+a refused file in words; Cancel; a step 2 drawn by the server taken over unchanged; and Import,
+after which the server, reading the posted file and mapping again, hands over the rows the browser
+showed. The same without script: upload, the file waiting under a token (0600, gone after the
+import and after Cancel), Check again with a field chosen twice, Import; the file carried in the
+form with `storage(false)`. Then 390px (no sideways scroll, the preview scrolling in its box),
+Chrome's accessibility tree, the keyboard, and contrast in 21 looks — no theme and the six × light,
+`data-gk-mode="dark"`, `.gk-dark`: text 4.5:1, edges, bars and symbols 3:1. `GK_SHOTS=<dir>` writes
+screenshots (with `GK_ICONFONT=<material-icons.woff2>` for the symbols). About forty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-import.js
+```
+
+Dates (1.120.0): `GridKit\DateRange` and `GridKit\Calendar` with `js/calendar.js` are checked by
+`ci/browser-dates.js` on `ci/browser-dates-fixture.php` — a period picker in a filter bar (its own
+GET form, a kept parameter), one as a `Form` field, one with every preset, one in German, a month
+of appointments (bars across days, two busy days, an event without a link, week numbers, a day
+link), the same month in a 380px column and an empty one. Every page is the fixture, served from
+`http://gk.test/` by `page.route()`, so a month link loads it again in the same origin and the focus
+can follow; the forms post to `http://gk.test/…`, and what they send is read back by
+`DateRange::fromRequest()` (`php ci/browser-dates-fixture.php --read '<query>' --name=<name>`). It
+checks that the browser counts all 240 preset ranges and writes all 142 periods in words exactly as
+PHP does (`--parity`: the edges of months, quarters and years, leap years, clock changes, the years 1
+and 9999, English and German); a preset filling the dates, typing switching to Custom, each date
+bounding the other, a filter sending a preset at once and typed dates on Apply, `name[shown]` left
+out with the script and decisive without it; the grid roles and the one tab stop, every key (arrows,
+Home/End, PageUp/PageDown and Shift, Enter, Space, Tab into a day and out, Escape), a month loaded
+past the edge with the focus on the same day, the veto of `gk:calendarnav` and `gk:calendarselect`,
+"+n more" in the window and one at a time, the API, a bar straight and joined across its week, the
+names in Chrome's accessibility tree, the agenda in a narrow column and at 390px with nothing
+sideways, the page without script, and contrast in 21 looks (plain and six themes × light,
+`data-gk-mode="dark"` and `.gk-dark`). About ten seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-dates.js
+GK_SHOTS=/some/dir node ci/browser-dates.js   # screenshots: the calendar light and dark, the filter, 390px
+```
+
+Charts (`GridKit\Chart` and `js/chart.js`, 1.121.0) are checked by `ci/browser-chart.js` on
+`ci/browser-chart-fixture.php`. The script draws a chart again — at the width of its box, after
+`GK.chart.update()`, after a series is switched off — with the code of `src/Chart.php` ported line
+by line, so the first question is whether the two agree: `GK.chart.html(config)` against
+`Chart::html()` for every chart of the page and 400 random ones (every type, gaps, zeros,
+negative values, hidden series, the three formats, both locales, odd widths and heights, `& " ' <
+>` and emoji in the words), byte for byte, in English and German; and the SVG on the page after
+fitting to 480 and 358px, after an update with new values, another type, a donut of one part and
+hostile strings, and after a click in the legend, against the `<template>` with what Chart.php
+writes for that state. Then the look in light, `[data-gk-mode="dark"]` and `.gk-dark`, without a
+theme and in each of the six: every series colour 3:1 against the card, the page, a hover row and
+the tooltip, the axis, the legend, a switched-off name, the tooltip's words, the table and the
+link 4.5:1, the focus ring 3:1. At 390px: no page scrolls sideways, every chart drawn at its box's
+width with 12px text, the legend wrapping, the table scrolling in its box; without the script the
+server's chart (an image with a title and a summary, the table, no switches) keeps 560px in a
+narrow box and scrolls inside it. The keys (one tab stop, the arrows, Home, End, Enter and Space
+as `gk:chartselect`, Escape, the live region, the legend's switches with Space, a donut's parts),
+the pointer (the tooltip of every series, the crosshair on the point, the way to the tooltip,
+leaving, a click on a bar, a donut's slice, markup in a label as text), reduced motion, print,
+forced colours, and the script without `js/gridkit.js`. Each rule and branch taken out in turn
+turned it (or `tests/chart`) red. About twenty seconds; `GK_SHOTS=<dir>` saves the pages.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-chart.js
+GK_SHOTS=/some/dir node ci/browser-chart.js
+```
+
+The command palette (`GridKit\CommandPalette` and `js/command-palette.js`, 1.122.0) is checked by
+`ci/browser-palette.js` on `ci/browser-palette-fixture.php`: an admin shell with a sidebar
+(groups, a badge, a submenu, the current page), the trigger in the header, links, commands, an
+umlaut and a hostile label, two search URLs — `http://gk.test/search` on the page's origin and
+`http://other.test/search` on another —, a field, a rich-text editor, `GK.search` on Ctrl+K as
+well and a modal. `page.route()` serves the page as `http://gk.test/fixture.html` and answers the
+records: found, held until released, failed, empty, a flat list, hostile. It checks the key on
+Windows and Linux (Ctrl+K; Meta+K and Ctrl+Shift+K do nothing) and on a Mac (Cmd+K, `⌘K` on the
+trigger, Cmd+Enter), `/`, the trigger, `GK.palette.open()`, that the palette owns its key (the
+global search stays shut) but leaves it to a rich-text editor; what is offered with no query
+(the sidebar's groups, labels, hints, symbols, the limit per group), typing and the ranking
+(start, start of a word, inside a word, letters in order word by word), umlauts and ß both ways,
+keywords, the hint, the marks; the keys of the listbox (round at the ends, Home, End, Page Up and
+Down), Tab kept inside; Enter on a command, a link and a sidebar entry (a click on that link),
+Ctrl+Enter and Ctrl+click into a new tab, the pointer, the veil; the veto of `gk:paletteselect`;
+the records — minimum length, debounce, the headers, the order, a slow answer overtaken and
+aborted, closing that aborts, a failure and Try again, no records, a hostile answer, the other
+origin never asked; the recent list (newest first, its limit, a careful read of what is stored,
+`GK.theme`'s scope, storage that throws); Escape over a modal; 390px as a full-screen sheet
+without a sideways scroll; contrast in 18 looks; the page without script, with a fallback link,
+and without a palette from the server (`GK.palette.open()` builds one; `register()`). Each new
+rule, branch and option of the script, the stylesheet and `CommandPalette.php` was taken out in
+turn (a bounded sample) and a check turned red. About twenty-five seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-palette.js
+GK_SHOTS=/some/dir GK_ICONFONT=/path/MaterialIcons.woff2 node ci/browser-palette.js   # with pictures
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

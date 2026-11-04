@@ -1,4 +1,4 @@
-# GridKit 1.118.1 — CSS
+# GridKit 1.122.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -74,6 +74,7 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-stat-tiles` `gk-stat-tile` `gk-stat-tile-value` `gk-stat-tile-label` `gk-stat-tile-sub` `gk-stat-tile-warning` `gk-stat-tile-danger` | Compact key figures (`StatCards->compact()`); a tile may be a `<button>` or `<a>` |
 | `gk-sheet-meta` | A line under the side sheet's title |
 | `gk-swatch` `gk-swatch-1` … `gk-swatch-5`, `gk-series-fill-1` … `-5`, `gk-series-stroke-1` … `-5` | Chart colours from `--gk-series-1` … `-5`: legend mark, SVG fill, SVG stroke |
+| `gk-chart` `gk-chart-*` (since 1.121.0) | Written by `GridKit\Chart`, never by hand — see "Chart". `--gk-chart-1` … `5` are the series colours at 3:1 on every ground; `gk-chart-c1` … `c5` set them on a mark or a legend key |
 | `gk-btn-touch` | A button at least `--gk-target-min` (44px) in both directions, type unchanged |
 | `gk-message-actions` | Actions on the right of a `.gk-message` |
 | `gk-message-sm` | A small message (since 1.95.0): denser than `.gk-message-compact` and with no margin of its own; the tone comes from `-info` `-success` `-warning` `-error` |

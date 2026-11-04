@@ -21,7 +21,10 @@ use GridKit\Lang;
         <p class="demo-intro">System-wide quick search. GridKit provides the widget only —
            WHAT is searched is decided by your backend endpoint. Opens with
            <kbd>Ctrl</kbd>+<kbd>K</kbd> (<kbd>Cmd</kbd>+<kbd>K</kbd> on Mac) or any element
-           carrying <code>data-gk-search</code>. Arrow keys select, Enter opens, Escape closes.</p>
+           carrying <code>data-gk-search</code>. Arrow keys select, Enter opens, Escape closes.
+           On this page <kbd>Ctrl</kbd>+<kbd>K</kbd> belongs to the <a href="#palette">command palette</a>
+           (1.122.0), which reads the same JSON and searches the pages and commands as well; the button
+           below still opens this search.</p>
         <div class="demo-btn-row">
             <button class="gk-btn gk-btn-primary" data-gk-search><span class="material-icons" style="font-size:16px" aria-hidden="true">search</span> Open search</button>
         </div>

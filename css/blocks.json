@@ -395,6 +395,44 @@
                 "gk-lines-wide": "1.117.0"
             }
         },
+        "import": {
+            "name": "Import",
+            "classes": {
+                "gk-import": "1.119.0",
+                "gk-import-actions": "1.119.0",
+                "gk-import-bad": "1.119.0",
+                "gk-import-badrow": "1.119.0",
+                "gk-import-col": "1.119.0",
+                "gk-import-col-name": "1.119.0",
+                "gk-import-col-sample": "1.119.0",
+                "gk-import-dragover": "1.119.0",
+                "gk-import-drop": "1.119.0",
+                "gk-import-drop-icon": "1.119.0",
+                "gk-import-drop-text": "1.119.0",
+                "gk-import-errors": "1.119.0",
+                "gk-import-errors-title": "1.119.0",
+                "gk-import-hint": "1.119.0",
+                "gk-import-ignored": "1.119.0",
+                "gk-import-map": "1.119.0",
+                "gk-import-missing": "1.119.0",
+                "gk-import-more": "1.119.0",
+                "gk-import-msg": "1.119.0",
+                "gk-import-notes": "1.119.0",
+                "gk-import-option": "1.119.0",
+                "gk-import-options": "1.119.0",
+                "gk-import-panel": "1.119.0",
+                "gk-import-paste": "1.119.0",
+                "gk-import-preview": "1.119.0",
+                "gk-import-rowno": "1.119.0",
+                "gk-import-skip": "1.119.0",
+                "gk-import-source": "1.119.0",
+                "gk-import-state": "1.119.0",
+                "gk-import-summary": "1.119.0",
+                "gk-import-target": "1.119.0",
+                "gk-import-text": "1.119.0",
+                "gk-import-upload": "1.119.0"
+            }
+        },
         "card": {
             "name": "Cards",
             "changed": "1.114.0",
@@ -673,6 +711,41 @@
                 "gk-tree-toolbar": "1.116.0"
             }
         },
+        "calendar": {
+            "name": "Calendar",
+            "classes": {
+                "gk-cal": "1.120.0",
+                "gk-cal-accent": "1.120.0",
+                "gk-cal-agenda": "1.120.0",
+                "gk-cal-agenda-date": "1.120.0",
+                "gk-cal-agenda-day": "1.120.0",
+                "gk-cal-agenda-list": "1.120.0",
+                "gk-cal-day": "1.120.0",
+                "gk-cal-daylink": "1.120.0",
+                "gk-cal-daynum": "1.120.0",
+                "gk-cal-empty": "1.120.0",
+                "gk-cal-event": "1.120.0",
+                "gk-cal-event-row": "1.120.0",
+                "gk-cal-event-title": "1.120.0",
+                "gk-cal-events": "1.120.0",
+                "gk-cal-grid": "1.120.0",
+                "gk-cal-head": "1.120.0",
+                "gk-cal-more": "1.120.0",
+                "gk-cal-more-date": "1.120.0",
+                "gk-cal-more-list": "1.120.0",
+                "gk-cal-nav": "1.120.0",
+                "gk-cal-outside": "1.120.0",
+                "gk-cal-slot": "1.120.0",
+                "gk-cal-span-head": "1.120.0",
+                "gk-cal-span-in": "1.120.0",
+                "gk-cal-span-out": "1.120.0",
+                "gk-cal-time": "1.120.0",
+                "gk-cal-title": "1.120.0",
+                "gk-cal-today": "1.120.0",
+                "gk-cal-today-mark": "1.120.0",
+                "gk-cal-wk": "1.120.0"
+            }
+        },
         "breadcrumb": {
             "name": "Breadcrumb",
             "classes": {
@@ -771,6 +844,20 @@
                 "gk-year-filter": "0.9.0"
             }
         },
+        "daterange": {
+            "name": "DateRange",
+            "classes": {
+                "gk-daterange": "1.120.0",
+                "gk-daterange-apply": "1.120.0",
+                "gk-daterange-dates": "1.120.0",
+                "gk-daterange-form": "1.120.0",
+                "gk-daterange-from": "1.120.0",
+                "gk-daterange-preset": "1.120.0",
+                "gk-daterange-sep": "1.120.0",
+                "gk-daterange-text": "1.120.0",
+                "gk-daterange-to": "1.120.0"
+            }
+        },
         "global-search": {
             "name": "Global search",
             "classes": {
@@ -787,6 +874,33 @@
                 "gk-search-titel": "1.24.0",
                 "gk-search-treffer": "1.24.0",
                 "gk-search-unter": "1.24.0"
+            }
+        },
+        "palette": {
+            "name": "Command palette",
+            "classes": {
+                "gk-palette": "1.122.0",
+                "gk-palette-close": "1.122.0",
+                "gk-palette-empty": "1.122.0",
+                "gk-palette-foot": "1.122.0",
+                "gk-palette-group-label": "1.122.0",
+                "gk-palette-head": "1.122.0",
+                "gk-palette-hint": "1.122.0",
+                "gk-palette-hit": "1.122.0",
+                "gk-palette-icon": "1.122.0",
+                "gk-palette-input": "1.122.0",
+                "gk-palette-kbd": "1.122.0",
+                "gk-palette-label": "1.122.0",
+                "gk-palette-list": "1.122.0",
+                "gk-palette-meta": "1.122.0",
+                "gk-palette-more": "1.122.0",
+                "gk-palette-option": "1.122.0",
+                "gk-palette-retry": "1.122.0",
+                "gk-palette-shortcut": "1.122.0",
+                "gk-palette-status": "1.122.0",
+                "gk-palette-text": "1.122.0",
+                "gk-palette-trigger": "1.122.0",
+                "gk-palette-trigger-label": "1.122.0"
             }
         },
         "toast": {
@@ -995,6 +1109,59 @@
                 "gk-swatch-3": "1.92.0",
                 "gk-swatch-4": "1.92.0",
                 "gk-swatch-5": "1.92.0"
+            }
+        },
+        "chart": {
+            "name": "Chart",
+            "classes": {
+                "gk-chart": "1.121.0",
+                "gk-chart-active": "1.121.0",
+                "gk-chart-area": "1.121.0",
+                "gk-chart-bar": "1.121.0",
+                "gk-chart-c1": "1.121.0",
+                "gk-chart-c2": "1.121.0",
+                "gk-chart-c3": "1.121.0",
+                "gk-chart-c4": "1.121.0",
+                "gk-chart-c5": "1.121.0",
+                "gk-chart-cross": "1.121.0",
+                "gk-chart-dashes": "1.121.0",
+                "gk-chart-data": "1.121.0",
+                "gk-chart-dot": "1.121.0",
+                "gk-chart-dot-on": "1.121.0",
+                "gk-chart-empty": "1.121.0",
+                "gk-chart-gridline": "1.121.0",
+                "gk-chart-key": "1.121.0",
+                "gk-chart-key-label": "1.121.0",
+                "gk-chart-key-off": "1.121.0",
+                "gk-chart-key-value": "1.121.0",
+                "gk-chart-keymark": "1.121.0",
+                "gk-chart-legend": "1.121.0",
+                "gk-chart-line": "1.121.0",
+                "gk-chart-on": "1.121.0",
+                "gk-chart-other": "1.121.0",
+                "gk-chart-plot": "1.121.0",
+                "gk-chart-slice": "1.121.0",
+                "gk-chart-spark": "1.121.0",
+                "gk-chart-stacked": "1.121.0",
+                "gk-chart-svg": "1.121.0",
+                "gk-chart-swatch": "1.121.0",
+                "gk-chart-table": "1.121.0",
+                "gk-chart-table-wrap": "1.121.0",
+                "gk-chart-tip": "1.121.0",
+                "gk-chart-tip-key": "1.121.0",
+                "gk-chart-tip-name": "1.121.0",
+                "gk-chart-tip-row": "1.121.0",
+                "gk-chart-tip-title": "1.121.0",
+                "gk-chart-tip-total": "1.121.0",
+                "gk-chart-tip-value": "1.121.0",
+                "gk-chart-title": "1.121.0",
+                "gk-chart-toggle": "1.121.0",
+                "gk-chart-total": "1.121.0",
+                "gk-chart-total-label": "1.121.0",
+                "gk-chart-track": "1.121.0",
+                "gk-chart-type-area": "1.121.0",
+                "gk-chart-type-donut": "1.121.0",
+                "gk-chart-zero": "1.121.0"
             }
         },
         "header": {

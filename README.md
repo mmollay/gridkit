@@ -214,7 +214,7 @@ by `ci/build-skill.sh`, and a test fails if the two drift apart.
 
 ## Components
 
-Twenty-one, each a PHP class with a chainable API:
+Twenty-six, each a PHP class with a chainable API:
 
 | | | |
 |---|---|---|
@@ -225,6 +225,9 @@ Twenty-one, each a PHP class with a chainable API:
 | `ActionGroup` — grouped row actions | `SortLink` — sortable headers | `YearFilter` — year navigation |
 | `BelegModal` — document preview | `ImagePicker` — choose one image from many: a compact grid, an enlarged view that can pick | `Tabs` — every tab style and option, deep links, remembered tabs, lazy panels |
 | `PermissionMatrix` — roles × permissions: inheritance, locked roles, bulk toggles, one role at a time on a phone | `Tree` — page trees, categories, folders: keys, selection, lazy branches, drag and drop | `LineItems` — the lines of an invoice: live totals per VAT rate, the same in PHP to the cent |
+| `Import` — a CSV file into checked rows: columns matched to fields, a preview with every error, Excel's encoding, works without script | `DateRange` — a period for reports and invoice lists: presets, two date fields, the period in words | `Calendar` — a month of appointments: bars across days, "+3 more", an agenda on a phone, keys |
+| `Chart` — line, area, bar, donut and sparkline as SVG from the server: nice axes, numbers in the reader's language, a summary in words, the data as a table | | |
+| `CommandPalette` — Ctrl+K: pages, commands and records from your server, fuzzy, recent entries first | | |
 
 Plus `Theme`, `Layout`, `Lang`, `Auth`, `Icon` and `Tooltip` (the attributes and the
 help icon of the tooltips, since 1.112.0) as infrastructure — and the
@@ -239,7 +242,10 @@ stylesheet of its own. Two blocks are markup and classes as well: a timeline
 and a portrait video frame (`.gk-video-frame`) for a 9:16 video or picture. A sortable
 container (`data-gk-sortierbar`, `js/sortierbar.js`, since 1.97.0) lets a person put cards
 or rows in order by dragging or by keyboard, and tells the server. The tree (`Tree`, since
-1.116.0) brings a script of its own as well, `js/tree.js`, loaded the same way.
+1.116.0) brings a script of its own as well, `js/tree.js`, loaded the same way, and so do the CSV
+import (`Import`, since 1.119.0): `js/import.js`, `DateRange` and `Calendar` (1.120.0): `js/calendar.js`, the charts
+(`Chart`, since 1.121.0): `js/chart.js`, which adds the tooltip, the keys and the legend's switches to a chart that is
+already complete without it, and the command palette (`CommandPalette`, since 1.122.0): `js/command-palette.js`.
 
 ---
 

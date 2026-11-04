@@ -83,6 +83,15 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await page.locator(".demo-section.active .gk-gallery img").first().click({ timeout: 2000 }).catch(() => {});
     await sleep(300);
     await collect();
+    await page.keyboard.press("Escape");
+    // The command palette (1.122.0), open: with nothing typed (the groups, the count of the rest), with "inv"
+    // (marked letters, records with an amount from api/palette.php), with "fail" (the server fails on purpose).
+    for (const q of ["", "inv", "fail"]) {
+      await page.evaluate((query) => { if (window.GK && GK.palette) GK.palette.open(query); }, q);
+      await sleep(q ? 1200 : 300);
+      await collect();
+    }
+    await page.evaluate(() => { if (window.GK && GK.palette) GK.palette.close(); });
   } finally {
     await browser.close();
   }

@@ -13416,3 +13416,1640 @@ button.gk-pg {
   padding: 0 4px;
   color: var(--gk-text-muted);
 }
+
+/* === 1.119.0 — import === */
+/* GridKit\Import: a CSV file into rows, in three steps — the file, the columns matched to fields with a
+   preview, the import. A form that works without script; js/import.js reads the file in the browser
+   and draws the same panel. Every error is a symbol and words (and a bar on the cell), never a colour
+   alone. The preview scrolls inside its own box, so a wide file never pushes a phone sideways.
+   Roles only, so light, [data-gk-mode="dark"], .gk-dark and the six themes follow from the tokens. */
+.gk-import {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-body);
+}
+.gk-import-upload,
+.gk-import-panel,
+.gk-import-panel > [data-gk-import-live] {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.gk-import-upload { gap: 10px; }
+
+/* The file: a dashed box around the native file field — it takes a dropped file by itself, and the
+   script makes the whole box a drop target. */
+.gk-import-drop {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  text-align: center;
+  /* The edge of a drop target is a control's edge: 3:1, so not the hairline outline. */
+  border: 2px dashed color-mix(in oklab, var(--gk-on-surface-variant) 80%, transparent);
+  border-radius: 12px;
+  background: var(--gk-surface-container-low);
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.gk-import-drop:focus-within { border-color: var(--gk-primary); }
+.gk-import-dragover {
+  border-style: solid;
+  border-color: var(--gk-primary);
+  background: color-mix(in oklab, var(--gk-primary) 9%, var(--gk-surface));
+}
+.gk-import-drop-icon {
+  font-size: 36px;
+  color: var(--gk-on-surface-variant);
+}
+.gk-import-dragover .gk-import-drop-icon { color: var(--gk-primary-text); }
+/* Once a file is read the box only offers another one: a line, not a stage. */
+.gk-import[data-gk-import-step="map"] .gk-import-drop {
+  grid-template-columns: auto minmax(0, 1fr);
+  justify-items: start;
+  align-items: center;
+  column-gap: 12px;
+  padding: 10px 14px;
+  text-align: start;
+}
+.gk-import[data-gk-import-step="map"] .gk-import-drop-icon,
+.gk-import[data-gk-import-step="map"] .gk-import-hint { display: none; }
+.gk-import-drop-text {
+  font-weight: 600;
+  color: var(--gk-on-surface);
+}
+.gk-import-drop input[type="file"] {
+  max-width: 100%;
+  font: inherit;
+  color: var(--gk-on-surface-variant);
+}
+.gk-import-drop input[type="file"]::file-selector-button {
+  min-height: 40px;
+  margin-inline-end: 10px;
+  padding: 8px 16px;
+  border: 1px solid var(--gk-outline);
+  border-radius: 8px;
+  background: var(--gk-surface);
+  color: var(--gk-primary-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gk-import-drop input[type="file"]::file-selector-button:hover { background: var(--gk-surface-container-high); }
+.gk-import-drop input[type="file"]:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+.gk-import-hint {
+  max-width: 62ch;
+  font-size: var(--gk-text-caption);
+  color: var(--gk-on-surface-variant);
+}
+.gk-import-paste > .gk-label-text {
+  display: block;
+  margin: 10px 0 4px;
+}
+textarea.gk-input.gk-import-text {
+  height: auto;
+  min-height: 8rem;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+/* What was read, in one line; what the person should know about it. */
+.gk-import-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin: 0;
+  color: var(--gk-on-surface-variant);
+  overflow-wrap: anywhere;
+}
+.gk-import-source strong { color: var(--gk-on-surface); }
+.gk-import-source .material-icons { font-size: 20px; }
+.gk-import-notes ul {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+}
+.gk-import-summary .gk-message-content,
+.gk-import-missing .gk-message-content { font-weight: 600; }
+
+/* How the file is read, and which field each column fills: two fieldsets without their frame. */
+.gk-import-options,
+.gk-import-map {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.gk-import-options > legend,
+.gk-import-map > legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-weight: 600;
+  color: var(--gk-on-surface);
+}
+.gk-import-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 20px;
+}
+.gk-import-option {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.gk-import-option select.gk-input {
+  width: auto;
+  min-width: 12rem;
+  max-width: 100%;
+}
+.gk-import-option.gk-checkbox-wrap {
+  display: inline-flex;
+  min-height: 44px;
+}
+.gk-import .gk-checkbox-wrap input:focus-visible + .gk-checkbox-custom {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+.gk-import-map {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 10px;
+}
+.gk-import-col {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: 10px;
+  background: var(--gk-surface);
+}
+.gk-import-col-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.gk-import-col-sample {
+  font-size: var(--gk-text-caption);
+  color: var(--gk-on-surface-variant);
+  overflow-wrap: anywhere;
+}
+.gk-import-col select.gk-input { width: 100%; }
+/* An ignored column: a dashed frame, the quieter text, and its select says so in words. */
+.gk-import-col.gk-import-ignored {
+  border-style: dashed;
+  border-color: color-mix(in oklab, var(--gk-on-surface-variant) 80%, transparent);
+  background: var(--gk-surface-container-low);
+}
+.gk-import-col.gk-import-ignored .gk-import-col-name { color: var(--gk-on-surface-variant); }
+
+/* The preview: GridKit's table, scrolling in its own box. */
+.gk-import-preview {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.gk-import-preview:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+.gk-import-preview .gk-table th,
+.gk-import-preview .gk-table td { vertical-align: top; }
+/* Each column as wide as its values (they are cut at 80 characters), so an address or an amount
+   stays on one line; the box scrolls instead. */
+.gk-import-preview .gk-table {
+  width: max-content;
+  min-width: 100%;
+}
+.gk-import-preview thead th { vertical-align: bottom; }
+.gk-import-target {
+  display: block;
+  margin-top: 2px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--gk-primary-text);
+}
+th.gk-import-ignored .gk-import-target {
+  font-style: italic;
+  color: var(--gk-on-surface-variant);
+}
+td.gk-import-ignored { color: var(--gk-on-surface-variant); }
+.gk-import-preview .gk-table .gk-import-rowno {
+  text-align: end;
+  font-weight: 500;
+  color: var(--gk-on-surface-variant);
+}
+.gk-import-preview .gk-table td.gk-import-state {
+  min-width: 0;
+  white-space: nowrap;
+}
+.gk-import-state .material-icons,
+.gk-import-msg .material-icons {
+  margin-inline-end: 4px;
+  font-size: 16px;
+  vertical-align: -3px;
+}
+.gk-import-state > .material-icons { color: var(--gk-success-text); }
+.gk-import-badrow > .gk-import-state {
+  font-weight: 600;
+  color: var(--gk-danger-text);
+}
+.gk-import-badrow > .gk-import-state > .material-icons { color: var(--gk-danger-text); }
+/* A cell with an error: a tint, a bar at its start, a symbol and the message under the value. */
+.gk-import-preview .gk-table td.gk-import-bad {
+  background: color-mix(in oklab, var(--gk-error) 8%, var(--gk-surface));
+  box-shadow: inset 3px 0 0 var(--gk-error);
+}
+.gk-import-msg {
+  display: block;
+  min-width: 12rem;
+  max-width: 20rem;
+  margin-top: 4px;
+  font-size: var(--gk-text-caption);
+  font-weight: 500;
+  white-space: normal;
+  color: var(--gk-danger-text);
+}
+
+/* Every row that will be left out, the rows the preview does not show included. */
+.gk-import-errors-title {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.gk-import-errors ul {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+.gk-import-errors li {
+  margin: 2px 0;
+  overflow-wrap: anywhere;
+}
+.gk-import-errors q { color: var(--gk-on-surface-variant); }
+.gk-import-more {
+  margin: 6px 0 0;
+  font-size: var(--gk-text-caption);
+  color: var(--gk-on-surface-variant);
+}
+
+/* What to do now. */
+.gk-import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.gk-import-skip {
+  font-size: var(--gk-text-caption);
+  color: var(--gk-on-surface-variant);
+}
+
+/* A phone: the options under each other, the buttons a finger wide. */
+@media (max-width: 600px) {
+  .gk-import-drop { padding: 18px 12px; }
+  .gk-import[data-gk-import-step="map"] .gk-import-drop { grid-template-columns: minmax(0, 1fr); }
+  .gk-import-options {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .gk-import-option select.gk-input {
+    width: 100%;
+    min-width: 0;
+  }
+  .gk-import-actions > .gk-btn {
+    flex: 1 1 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+}
+
+/* === 1.120.0 — dates === */
+/*
+ * GridKit\DateRange and GridKit\Calendar. Roles only, so light, [data-gk-mode="dark"], .gk-dark and the
+ * six themes follow from the tokens; the few dark rules below name both spellings.
+ *
+ * DateRange: a select of presets and two native date fields in one row that wraps. In a toolbar the
+ * fields are .gk-filter (the pill of the bar), in a Form .gk-input. A date field is no select: it
+ * loses the arrow .gk-filter draws, the browser draws its own picker button. On a phone the row is
+ * the width of the page: the select on top, the two dates side by side, the period in words below.
+ */
+.gk-daterange-form {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+.gk-daterange {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.gk-daterange-dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+.gk-daterange-sep {
+  color: var(--gk-on-surface-variant);
+}
+.gk-daterange input.gk-daterange-from,
+.gk-daterange input.gk-daterange-to {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+}
+.gk-daterange input.gk-filter {
+  background-image: none;
+  padding-inline-end: 10px;
+  cursor: text;
+}
+.gk-daterange .gk-daterange-preset.gk-input {
+  width: auto;
+  min-width: 10rem;
+}
+.gk-daterange-text {
+  font-size: var(--gk-text-label);
+  color: var(--gk-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gk-daterange-text:empty {
+  display: none;
+}
+@media (max-width: 600px) {
+  .gk-daterange-form,
+  .gk-daterange {
+    display: flex;
+    width: 100%;
+  }
+  .gk-daterange .gk-daterange-preset {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .gk-daterange-dates {
+    flex: 1 1 100%;
+  }
+  /* width 0: a date field's own width would hold a Form's column open past the page. */
+  .gk-daterange input.gk-daterange-from,
+  .gk-daterange input.gk-daterange-to {
+    flex: 1 1 0;
+    width: 0;
+  }
+  .gk-daterange-text {
+    flex: 1 1 auto;
+    white-space: normal;
+  }
+}
+
+/*
+ * Calendar: a table, a column per weekday, a row per week. The day cells are at least six lines
+ * high; an event is one line (--gk-cal-line) in a lane, and an empty lane above a bar keeps its place
+ * (.gk-cal-slot), so a bar across days stays straight. A segment joined to the day before or after
+ * reaches over the cell's padding and the line between (gk-cal-span-in / -out); the first segment of
+ * a run carries the title across the run (gk-cal-span-head, --gk-cal-days), above the segments after
+ * it. Today is the day number in a filled disc, and is read as "today". Days of the months around
+ * are on the quieter ground.
+ *
+ * The calendar is a size container: narrower than 600px — a phone, a side column — the grid gives
+ * way to the agenda, the days that hold something one under the other. Nothing scrolls sideways.
+ */
+.gk-cal {
+  --gk-cal-pad: 4px;
+  --gk-cal-line: 22px;
+  /* How many days the title of a bar runs across; the server writes it on the first segment. */
+  --gk-cal-days: 1;
+  container: gk-cal / inline-size;
+  min-width: 0;
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-body);
+}
+.gk-cal-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 0 0 12px;
+}
+.gk-cal-title {
+  font-size: var(--gk-text-title);
+  font-weight: 600;
+  line-height: var(--gk-leading-tight);
+}
+.gk-cal-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.gk-cal-nav .gk-btn-icon-only {
+  min-width: 32px;
+  min-height: 32px;
+  justify-content: center;
+}
+.gk-cal-nav .gk-btn-icon-only .material-icons {
+  font-size: var(--gk-icon-md);
+}
+
+.gk-cal-grid {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius);
+  background: var(--gk-surface);
+}
+.gk-cal-grid th,
+.gk-cal-grid td {
+  box-sizing: border-box;
+  padding: var(--gk-cal-pad);
+  vertical-align: top;
+  border-top: 1px solid var(--gk-outline-variant);
+  border-inline-start: 1px solid var(--gk-outline-variant);
+}
+.gk-cal-grid tr > :first-child {
+  border-inline-start: 0;
+}
+.gk-cal-grid thead th {
+  border-top: 0;
+  padding: 8px var(--gk-cal-pad);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+  color: var(--gk-on-surface-variant);
+  text-align: center;
+}
+/* The corners of the cells follow the corners of the table, so a tinted day does not stick out. */
+.gk-cal-grid thead tr > :first-child {
+  border-start-start-radius: calc(var(--gk-radius) - 1px);
+}
+.gk-cal-grid thead tr > :last-child {
+  border-start-end-radius: calc(var(--gk-radius) - 1px);
+}
+.gk-cal-grid tbody tr:last-child > :first-child {
+  border-end-start-radius: calc(var(--gk-radius) - 1px);
+}
+.gk-cal-grid tbody tr:last-child > :last-child {
+  border-end-end-radius: calc(var(--gk-radius) - 1px);
+}
+.gk-cal-grid th.gk-cal-wk {
+  width: 2.75rem;
+  padding-inline: 2px;
+  background: var(--gk-surface-container-low);
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.gk-cal-grid tbody th.gk-cal-wk {
+  padding-top: 8px;
+}
+
+.gk-cal-day {
+  position: relative;
+  height: calc(var(--gk-cal-line) * 4 + 36px);
+  min-width: 0;
+  overflow: visible;
+}
+.gk-cal-outside {
+  background: var(--gk-surface-container-low);
+}
+.gk-cal-daynum {
+  display: flex;
+  margin: 0 0 2px;
+  line-height: 1;
+}
+.gk-cal-daynum time > [aria-hidden] {
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  border-radius: 999px;
+  font-size: var(--gk-text-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.gk-cal-outside .gk-cal-daynum {
+  color: var(--gk-on-surface-variant);
+}
+.gk-cal-day.gk-cal-today .gk-cal-daynum time > [aria-hidden] {
+  background: var(--gk-primary);
+  color: var(--gk-on-primary);
+}
+.gk-cal-daylink {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 999px;
+}
+.gk-cal-daylink:hover time > [aria-hidden] {
+  background: var(--gk-state-hover);
+}
+.gk-cal-daylink:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+/* With the script the cell is the grid's cell: hover, the focus ring, the pointer. */
+.gk-cal[data-gk-cal-ready] .gk-cal-day {
+  cursor: pointer;
+}
+.gk-cal[data-gk-cal-ready] .gk-cal-day:hover {
+  background-image: linear-gradient(var(--gk-state-hover), var(--gk-state-hover));
+}
+.gk-cal-day:focus {
+  outline: none;
+}
+.gk-cal-day:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+
+.gk-cal-events {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gk-cal-slot {
+  display: block;
+  height: var(--gk-cal-line);
+}
+.gk-cal-event {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  min-width: 0;
+  height: var(--gk-cal-line);
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: var(--gk-text-caption);
+  font-weight: 500;
+  line-height: var(--gk-cal-line);
+  white-space: nowrap;
+  text-decoration: none;
+  overflow: hidden;
+}
+/* An event takes the colours of its label (.gk-label-blue …); without one, the accent's tonal pair. */
+.gk-cal-accent {
+  background-color: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+}
+a.gk-cal-event:hover,
+.gk-cal-event[role="button"]:hover {
+  background-image: linear-gradient(var(--gk-state-hover), var(--gk-state-hover));
+}
+.gk-cal-event:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+.gk-cal-event[role="button"] {
+  cursor: pointer;
+}
+.gk-cal-time {
+  flex: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.gk-cal-event-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gk-cal-span-in {
+  margin-inline-start: calc(-1 * var(--gk-cal-pad) - 1px);
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+.gk-cal-span-out {
+  margin-inline-end: calc(-1 * var(--gk-cal-pad));
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+.gk-cal-span-head {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+.gk-cal-span-head .gk-cal-event-title {
+  flex: none;
+  width: calc(var(--gk-cal-days) * 100% + (var(--gk-cal-days) - 1) * (var(--gk-cal-pad) + 13px));
+}
+
+/* "+3 more": a disclosure that opens the whole day over the grid — no script needed. */
+.gk-cal-more {
+  position: relative;
+}
+.gk-cal-more > summary {
+  display: block;
+  height: var(--gk-cal-line);
+  padding: 0 6px;
+  border-radius: 4px;
+  color: var(--gk-primary-text);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+  line-height: var(--gk-cal-line);
+  list-style: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.gk-cal-more > summary::-webkit-details-marker {
+  display: none;
+}
+.gk-cal-more > summary:hover {
+  background: var(--gk-state-hover);
+}
+.gk-cal-more > summary:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+.gk-cal-more-list {
+  position: absolute;
+  z-index: 20;
+  inset-block-start: calc(100% + 4px);
+  inset-inline-start: calc(-1 * var(--gk-cal-pad));
+  box-sizing: border-box;
+  width: max(100%, 15rem);
+  max-width: 80vw;
+  padding: 8px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface);
+  box-shadow: var(--gk-elev-3);
+  cursor: auto;
+}
+/* In the last three columns it opens towards the start, so it never leaves the page. */
+.gk-cal-day:nth-last-child(-n + 3) .gk-cal-more-list {
+  inset-inline-start: auto;
+  inset-inline-end: calc(-1 * var(--gk-cal-pad));
+}
+.gk-cal-more-date {
+  margin: 0 0 6px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+}
+.gk-cal-more-list ul,
+.gk-cal-agenda-day ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* An event in a list: the time (or "All day", or its days) in a column of its own, the title wraps. */
+.gk-cal-event-row {
+  align-items: baseline;
+  gap: 8px;
+  height: auto;
+  min-height: 28px;
+  padding: 4px 8px;
+  line-height: var(--gk-leading-snug);
+  white-space: normal;
+}
+.gk-cal-event-row .gk-cal-time {
+  min-width: 4.5em;
+}
+.gk-cal-event-row .gk-cal-event-title {
+  overflow-wrap: anywhere;
+}
+
+/* The agenda: what a narrow container shows instead of the grid. */
+.gk-cal-agenda {
+  display: none;
+}
+.gk-cal-agenda-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius);
+  background: var(--gk-surface);
+}
+.gk-cal-agenda-day {
+  padding: 10px 12px;
+}
+.gk-cal-agenda-day + .gk-cal-agenda-day {
+  border-top: 1px solid var(--gk-outline-variant);
+}
+.gk-cal-agenda-date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 0 6px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+  font-weight: 600;
+}
+.gk-cal-agenda-day.gk-cal-today .gk-cal-agenda-date {
+  color: var(--gk-primary-text);
+}
+.gk-cal-today-mark {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--gk-primary);
+  color: var(--gk-on-primary);
+  font-size: var(--gk-text-overline);
+  font-weight: 600;
+  line-height: 1.5;
+}
+.gk-cal-empty {
+  margin: 0;
+  padding: 24px 12px;
+  border: 1px dashed var(--gk-outline-variant);
+  border-radius: var(--gk-radius);
+  color: var(--gk-on-surface-variant);
+  text-align: center;
+}
+@container gk-cal (max-width: 599.98px) {
+  .gk-cal-grid {
+    display: none;
+  }
+  .gk-cal-agenda {
+    display: block;
+  }
+  .gk-cal-head {
+    margin-bottom: 8px;
+  }
+  .gk-cal-title {
+    font-size: var(--gk-text-subtitle);
+  }
+}
+
+/* Dark: the open day stands on the raised step of the dark ladder, as a menu does. */
+[data-gk-mode="dark"] .gk-cal-more-list,
+.gk-dark .gk-cal-more-list {
+  background: var(--gk-surface-container-high);
+}
+
+@media (forced-colors: active) {
+  .gk-cal-event {
+    border: 1px solid CanvasText;
+  }
+  .gk-cal-day.gk-cal-today .gk-cal-daynum time > [aria-hidden] {
+    outline: 2px solid CanvasText;
+  }
+}
+@media print {
+  .gk-cal-nav,
+  .gk-daterange-apply {
+    display: none;
+  }
+}
+
+/* === 1.121.0 — chart === */
+/* GridKit\Chart writes an inline SVG with a viewBox, a legend and the data as a table; js/chart.js
+   draws the SVG again at the width of its box and adds the tooltip, the crosshair and the legend's
+   switches. Roles only, so light, [data-gk-mode="dark"], .gk-dark and the six themes follow.
+
+   The colours of the series: --gk-chart-1 … 5, from the five --gk-series-N. On a light ground
+   slots 2 to 5 sit under 3:1 (2.0–2.9:1 on the page), so a chart mixes each of them towards the
+   theme's own ink (--gk-on-surface) until it clears 3:1 on the card, the page and a hover row
+   (L 0.947): 94, 87, 75 and 85 per cent of the hue. The dark steps of --gk-series-N clear 3:1 on
+   every step of the dark ladder already and are taken as they are. Adjacent pairs stay apart
+   under simulated protanopia and deuteranopia (OKLab ΔE ≥ 8.2 light, 8.4 dark) and for normal
+   vision (≥ 15.1, 19.3). Measured in all six themes by ci/browser-chart.js. A colour never
+   carries a series alone: the legend names it, lines can carry dashes and point shapes, and
+   the values are in the table. Text wears text roles, never a series colour. */
+.gk-chart,
+.gk-chart-spark {
+  --gk-chart-1: #2a78d6;
+  --gk-chart-2: #dd6335;
+  --gk-chart-3: #239a6e;
+  --gk-chart-4: #b27d28;
+  --gk-chart-5: #c56c8f;
+  --gk-chart-other: var(--gk-on-surface-variant);
+  /* The ring round a point: the ground the chart sits on (a card). */
+  --gk-chart-ground: var(--gk-surface);
+}
+@supports (color: color-mix(in oklab, red, blue)) {
+  .gk-chart,
+  .gk-chart-spark {
+    --gk-chart-1: var(--gk-series-1);
+    --gk-chart-2: color-mix(in oklab, var(--gk-series-2) 94%, var(--gk-on-surface));
+    --gk-chart-3: color-mix(in oklab, var(--gk-series-3) 87%, var(--gk-on-surface));
+    --gk-chart-4: color-mix(in oklab, var(--gk-series-4) 75%, var(--gk-on-surface));
+    --gk-chart-5: color-mix(in oklab, var(--gk-series-5) 85%, var(--gk-on-surface));
+  }
+}
+[data-gk-mode="dark"] :is(.gk-chart, .gk-chart-spark),
+.gk-dark :is(.gk-chart, .gk-chart-spark) {
+  --gk-chart-1: var(--gk-series-1);
+  --gk-chart-2: var(--gk-series-2);
+  --gk-chart-3: var(--gk-series-3);
+  --gk-chart-4: var(--gk-series-4);
+  --gk-chart-5: var(--gk-series-5);
+}
+.gk-chart-c1 { --gk-chart-color: var(--gk-chart-1); }
+.gk-chart-c2 { --gk-chart-color: var(--gk-chart-2); }
+.gk-chart-c3 { --gk-chart-color: var(--gk-chart-3); }
+.gk-chart-c4 { --gk-chart-color: var(--gk-chart-4); }
+.gk-chart-c5 { --gk-chart-color: var(--gk-chart-5); }
+.gk-chart-other { --gk-chart-color: var(--gk-chart-other); }
+
+.gk-chart {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-body);
+}
+.gk-chart-title {
+  margin: 0 0 8px;
+  font-size: var(--gk-text-subtitle);
+  font-weight: 600;
+  line-height: var(--gk-leading-tight);
+  color: var(--gk-on-surface);
+}
+.gk-chart-plot {
+  position: relative;
+  min-width: 0;
+  border-radius: var(--gk-radius-sm, 4px);
+}
+/* The width of the box decides; the donut is as wide as it is high and shrinks with a narrow box. */
+.gk-chart:not(.gk-chart-type-donut) > .gk-chart-plot {
+  container-type: inline-size;
+}
+.gk-chart-plot:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+.gk-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--gk-font);
+}
+/* Before the script has fitted it (or without the script), a chart scales with its box. Under
+   560px its text would shrink below 11px, so it keeps 560px and its box scrolls sideways
+   instead — the page never does. Once fitted, one px of the viewBox is one px on the screen. */
+.gk-chart:not([data-gk-chart-fit]) > .gk-chart-plot {
+  overflow-x: auto;
+}
+@container (max-width: 559px) {
+  .gk-chart:not([data-gk-chart-fit]) .gk-chart-svg {
+    width: 560px;
+    max-width: none;
+  }
+}
+.gk-chart-svg text {
+  font-size: 12px;
+  fill: var(--gk-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}
+.gk-chart-gridline {
+  stroke: var(--gk-outline-variant);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.gk-chart-gridline.gk-chart-zero {
+  stroke: var(--gk-outline);
+}
+.gk-chart-svg text.gk-chart-empty {
+  font-size: var(--gk-text-body);
+}
+
+/* ── The marks ── */
+.gk-chart-bar,
+.gk-chart-slice,
+.gk-chart-swatch {
+  fill: var(--gk-chart-color, var(--gk-chart-1));
+}
+.gk-chart-line {
+  fill: none;
+  stroke: var(--gk-chart-color, var(--gk-chart-1));
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+/* An area is a wash under its line; stacked, the bands are firmer and their lines part them. */
+.gk-chart-area {
+  fill: var(--gk-chart-color, var(--gk-chart-1));
+  fill-opacity: 0.12;
+}
+.gk-chart-type-area.gk-chart-stacked .gk-chart-area {
+  fill-opacity: 0.35;
+}
+/* Every value has its point; it shows where there is room (or it stands alone) and on the active
+   category. The ring in the ground's colour keeps it legible where it crosses a line. */
+.gk-chart-dot {
+  fill: var(--gk-chart-color, var(--gk-chart-1));
+  stroke: var(--gk-chart-ground);
+  stroke-width: 2;
+  paint-order: stroke;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.gk-chart-dot-on,
+.gk-chart-dot.gk-chart-on {
+  opacity: 1;
+}
+.gk-chart-dot.gk-chart-on {
+  transform: scale(1.35);
+}
+.gk-chart-track {
+  fill: none;
+  stroke: var(--gk-surface-container-high);
+}
+.gk-chart-svg text.gk-chart-total {
+  font-size: 20px;
+  font-weight: 600;
+  fill: var(--gk-on-surface);
+}
+.gk-chart-svg text.gk-chart-total-label {
+  font-size: 12px;
+}
+/* The category under the pointer or the keys: its marks stay, the others step back. */
+.gk-chart-active :is(.gk-chart-bar, .gk-chart-slice):not(.gk-chart-on) {
+  opacity: 0.55;
+}
+
+/* Dash patterns per slot (->dashes(); always in print and in forced colours). */
+.gk-chart-dashes .gk-chart-c2 .gk-chart-line { stroke-dasharray: 6 4; }
+.gk-chart-dashes .gk-chart-c3 .gk-chart-line { stroke-dasharray: 2 3; }
+.gk-chart-dashes .gk-chart-c4 .gk-chart-line { stroke-dasharray: 10 3 2 3; }
+.gk-chart-dashes .gk-chart-c5 .gk-chart-line { stroke-dasharray: 14 4; }
+
+/* ── Crosshair and tooltip (js/chart.js) ── */
+.gk-chart-cross {
+  position: absolute;
+  width: 0;
+  border-left: 1px solid var(--gk-outline);
+  pointer-events: none;
+}
+/* A card, not the slate bubble of a hint: it holds the values of every series with a line key in
+   its colour, and those keys need 3:1 on its ground. The pointer may rest on it (WCAG 1.4.13). */
+.gk-chart-tip {
+  position: absolute;
+  z-index: 3;
+  box-sizing: border-box;
+  min-width: 8rem;
+  max-width: min(18rem, calc(100% - 8px));
+  padding: 8px 10px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-sm, 6px);
+  background: var(--gk-surface-container-lowest);
+  box-shadow: var(--gk-elev-2);
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-caption);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+[data-gk-mode="dark"] .gk-chart-tip,
+.gk-dark .gk-chart-tip {
+  background: var(--gk-surface-container-high);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.gk-chart-tip-title {
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.gk-chart-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+/* A line key, not a box: a short stroke of the series' colour. */
+.gk-chart-tip-key {
+  flex: none;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--gk-chart-color, transparent);
+}
+.gk-chart-tip-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.gk-chart-tip-name {
+  min-width: 0;
+  color: var(--gk-on-surface-variant);
+}
+.gk-chart-tip-total {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--gk-outline-variant);
+}
+
+/* ── Legend ── */
+.gk-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--gk-text-label);
+  color: var(--gk-on-surface);
+}
+.gk-chart-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.gk-chart-keymark {
+  flex: none;
+  overflow: visible;
+}
+.gk-chart-key-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.gk-chart-key-value {
+  color: var(--gk-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* With the script a legend of two series or more is a row of switches. */
+.gk-chart-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  margin: 0 -8px;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: var(--gk-radius-sm, 6px);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.gk-chart-toggle:hover {
+  background: var(--gk-surface-container-high);
+}
+.gk-chart-toggle:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 0;
+}
+.gk-chart-key-off .gk-chart-keymark,
+.gk-chart-toggle[aria-pressed="false"] .gk-chart-keymark {
+  opacity: 0.35;
+}
+.gk-chart-key-off .gk-chart-key-label,
+.gk-chart-toggle[aria-pressed="false"] .gk-chart-key-label {
+  color: var(--gk-on-surface-variant);
+  text-decoration: line-through;
+}
+/* A donut: the ring and its parts side by side, one under the other when the box is narrow. */
+.gk-chart-type-donut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+}
+.gk-chart-type-donut > .gk-chart-title,
+.gk-chart-type-donut > .gk-chart-data {
+  flex: 1 1 100%;
+}
+.gk-chart-type-donut > .gk-chart-legend {
+  flex: 1 1 12rem;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+/* ── The data as a table ── */
+.gk-chart-data {
+  margin-top: 8px;
+  font-size: var(--gk-text-label);
+}
+.gk-chart-data > summary {
+  width: fit-content;
+  min-height: 24px;
+  padding: 2px 0;
+  color: var(--gk-primary);
+  cursor: pointer;
+}
+.gk-chart-data > summary:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.gk-chart-table-wrap {
+  max-width: 100%;
+  margin-top: 8px;
+  overflow-x: auto;
+}
+.gk-chart-table th[scope="row"] {
+  font-weight: 500;
+}
+.gk-chart-table .gk-num {
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ── Sparkline: a line in a sentence, a card or a cell ── */
+.gk-chart-spark {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+  vertical-align: middle;
+}
+.gk-chart-spark .gk-chart-line {
+  stroke-width: 1.5;
+}
+.gk-chart-spark .gk-chart-dot {
+  stroke-width: 1.5;
+}
+/* In a StatCards card or tile ('sparkline' => [...]): under the figure. */
+.gk-stat-content > .gk-chart-spark,
+.gk-stat-tile > .gk-chart-spark {
+  display: block;
+  margin-top: 6px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gk-chart-bar,
+  .gk-chart-slice,
+  .gk-chart-dot {
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+}
+
+@media print {
+  .gk-chart {
+    break-inside: avoid;
+  }
+  .gk-chart-tip,
+  .gk-chart-cross {
+    display: none !important;
+  }
+  .gk-chart-svg,
+  .gk-chart-keymark,
+  .gk-chart-spark {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .gk-chart .gk-chart-c2 .gk-chart-line { stroke-dasharray: 6 4; }
+  .gk-chart .gk-chart-c3 .gk-chart-line { stroke-dasharray: 2 3; }
+  .gk-chart .gk-chart-c4 .gk-chart-line { stroke-dasharray: 10 3 2 3; }
+  .gk-chart .gk-chart-c5 .gk-chart-line { stroke-dasharray: 14 4; }
+}
+
+/* Forced colours: the system's two inks, the series told apart by dashes, shapes and the legend. */
+@media (forced-colors: active) {
+  .gk-chart-bar,
+  .gk-chart-slice,
+  .gk-chart-swatch,
+  .gk-chart-dot {
+    fill: CanvasText;
+    stroke: Canvas;
+  }
+  .gk-chart-line {
+    stroke: CanvasText;
+  }
+  .gk-chart-area {
+    fill: CanvasText;
+    fill-opacity: 0.15;
+  }
+  .gk-chart-svg text {
+    fill: CanvasText;
+  }
+  .gk-chart-gridline {
+    stroke: GrayText;
+  }
+  .gk-chart-gridline.gk-chart-zero {
+    stroke: CanvasText;
+  }
+  .gk-chart-tip-key {
+    background: CanvasText;
+  }
+  .gk-chart .gk-chart-c2 .gk-chart-line { stroke-dasharray: 6 4; }
+  .gk-chart .gk-chart-c3 .gk-chart-line { stroke-dasharray: 2 3; }
+  .gk-chart .gk-chart-c4 .gk-chart-line { stroke-dasharray: 10 3 2 3; }
+  .gk-chart .gk-chart-c5 .gk-chart-line { stroke-dasharray: 14 4; }
+}
+
+/* === 1.122.0 — command palette === */
+/* GridKit\CommandPalette writes a closed <dialog>; js/command-palette.js opens it as a modal — the browser's
+   top layer, the page behind it inert. Near the top of the screen at a desk, the whole screen on a phone,
+   where nothing scrolls sideways: a long name is cut with an ellipsis. The input keeps the focus; the
+   entry it points at (aria-activedescendant) wears the selection of a tree node — its colours and a bar at
+   its start, so not the colour alone. The letters that matched are underlined and heavier.
+
+   Roles only, so light, [data-gk-mode="dark"], .gk-dark and the six themes follow from the tokens. The one
+   literal is the veil behind it (the backdrop): no role is a scrim, and GK.search's overlay has the same. */
+.gk-palette {
+  --gk-palette-bg: var(--gk-surface);
+  box-sizing: border-box;
+  width: min(640px, calc(100vw - 32px));
+  max-width: none;
+  max-height: 76vh;
+  max-height: min(76dvh, 600px);
+  margin: 12vh auto auto;
+  padding: 0;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-lg);
+  background: var(--gk-palette-bg);
+  color: var(--gk-on-surface);
+  box-shadow: var(--gk-elev-4);
+  font-family: var(--gk-font);
+  font-size: var(--gk-text-body);
+  line-height: var(--gk-leading-snug);
+  overflow: hidden;
+}
+.gk-palette[open] {
+  display: flex;
+  flex-direction: column;
+}
+.gk-palette::backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.gk-palette-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 0 16px;
+  border-bottom: 1px solid var(--gk-outline-variant);
+}
+/* The field has the focus all the time; its ring is the line under the head. */
+.gk-palette-head:focus-within {
+  box-shadow: inset 0 -2px 0 var(--gk-primary);
+}
+.gk-palette-head > svg {
+  flex: none;
+  color: var(--gk-on-surface-variant);
+}
+.gk-palette-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 56px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--gk-on-surface);
+  font: inherit;
+  font-size: var(--gk-text-subtitle);
+}
+.gk-palette-input::placeholder {
+  color: var(--gk-on-surface-variant);
+  opacity: 1;
+}
+.gk-palette-close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--gk-radius-sm);
+  background: transparent;
+  color: var(--gk-on-surface-variant);
+  cursor: pointer;
+}
+.gk-palette-close:hover {
+  background: var(--gk-state-hover);
+  color: var(--gk-on-surface);
+}
+.gk-palette-close:focus-visible,
+.gk-palette-retry:focus-visible,
+.gk-palette-trigger:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+
+.gk-palette-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 6px 6px;
+}
+.gk-palette-list:empty {
+  display: none;
+}
+.gk-palette-group-label {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 10px 4px;
+  background: var(--gk-palette-bg);
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-overline);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.gk-palette-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 40px;
+  padding: 6px 10px;
+  border-radius: var(--gk-radius-sm);
+  color: var(--gk-on-surface);
+  text-decoration: none;
+  cursor: pointer;
+  /* Clear of the sticky heading when the list scrolls to it. */
+  scroll-margin-block: 34px 6px;
+}
+.gk-palette-option[aria-selected="true"] {
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+  box-shadow: inset 3px 0 0 var(--gk-primary);
+}
+.gk-palette-icon {
+  flex: none;
+  width: 20px;
+  overflow: hidden;
+  color: var(--gk-on-surface-variant);
+  font-size: 20px;
+  line-height: 1;
+  text-align: center;
+}
+.gk-palette-text {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.gk-palette-label,
+.gk-palette-hint {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.gk-palette-hint {
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+}
+.gk-palette-option[aria-selected="true"] :is(.gk-palette-icon, .gk-palette-hint, .gk-palette-hit) {
+  color: inherit;
+}
+.gk-palette-meta {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.gk-palette-hit {
+  background: none;
+  color: var(--gk-primary-text);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.gk-palette-more {
+  padding: 2px 10px 6px 42px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+}
+/* A key: an entry's shortcut, the line of keys, the trigger's hint. */
+.gk-palette-shortcut,
+.gk-palette-kbd {
+  flex: none;
+  display: inline-block;
+  min-width: 1.6em;
+  box-sizing: border-box;
+  padding: 0 5px;
+  border: 1px solid color-mix(in oklab, currentColor 35%, transparent);
+  border-radius: 4px;
+  background: color-mix(in oklab, currentColor 8%, transparent);
+  color: inherit;
+  font: 600 11px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  text-align: center;
+  white-space: nowrap;
+}
+.gk-palette-kbd + .gk-palette-kbd {
+  margin-inline-start: 3px;
+}
+
+.gk-palette-status {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--gk-outline-variant);
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+}
+.gk-palette-status[hidden],
+.gk-palette-empty[hidden] {
+  display: none;
+}
+.gk-palette-status[data-gk-state="loading"]::before {
+  content: "";
+  flex: none;
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--gk-outline-variant);
+  border-top-color: var(--gk-primary);
+  border-radius: 50%;
+  animation: gk-spin 0.7s linear infinite;
+}
+.gk-palette-status[data-gk-state="error"] {
+  color: var(--gk-danger-text);
+}
+.gk-palette-retry {
+  margin: 0 0 0 auto;
+  padding: 4px 10px;
+  border: 1px solid var(--gk-outline);
+  border-radius: var(--gk-radius-sm);
+  background: transparent;
+  color: var(--gk-on-surface);
+  font: inherit;
+  cursor: pointer;
+}
+.gk-palette-retry:hover {
+  background: var(--gk-state-hover);
+}
+.gk-palette-empty {
+  flex: none;
+  margin: 0;
+  padding: 28px 16px;
+  color: var(--gk-on-surface-variant);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.gk-palette-foot {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--gk-outline-variant);
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+}
+.gk-palette-foot .gk-palette-kbd {
+  margin-inline-end: 2px;
+}
+
+/* The trigger: a field to look at, a button to press. Hidden until the script shows it — unless it is the
+   link of fallback(). */
+.gk-palette-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface-container-low);
+  color: var(--gk-on-surface-variant);
+  font: inherit;
+  font-size: var(--gk-text-label);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: var(--gk-transition-state);
+}
+.gk-palette-trigger[hidden] {
+  display: none;
+}
+.gk-palette-trigger:hover {
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface);
+}
+.gk-palette-trigger > svg {
+  flex: none;
+}
+.gk-palette-trigger-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gk-palette-trigger .gk-palette-kbd {
+  margin-inline-start: 12px;
+}
+
+/* A phone: the whole screen and no line of keys. The trigger is its symbol at the size of a finger; its
+   name stays for a screen reader. */
+@media (max-width: 600px) {
+  .gk-palette {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .gk-palette-head {
+    padding-inline-start: 12px;
+  }
+  .gk-palette-foot {
+    display: none;
+  }
+  .gk-palette-trigger {
+    justify-content: center;
+    width: var(--gk-target-min);
+    min-height: var(--gk-target-min);
+    padding: 0;
+  }
+  .gk-palette-trigger-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .gk-palette-trigger .gk-palette-kbd {
+    display: none;
+  }
+}
+/* A finger: the close button and every entry at 44px. */
+@media (max-width: 600px), (pointer: coarse) {
+  .gk-palette-close {
+    width: var(--gk-target-min);
+    height: var(--gk-target-min);
+  }
+  .gk-palette-option {
+    min-height: var(--gk-target-min);
+  }
+}
+@media (pointer: coarse) {
+  .gk-palette-foot {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gk-palette[open] {
+    animation: gk-palette-in var(--gk-dur-2) var(--gk-ease-out);
+  }
+  .gk-palette[open]::backdrop {
+    animation: gk-palette-veil var(--gk-dur-2) var(--gk-ease-out);
+  }
+}
+@keyframes gk-palette-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.985);
+  }
+}
+@keyframes gk-palette-veil {
+  from {
+    opacity: 0;
+  }
+}
+@media (forced-colors: active) {
+  .gk-palette-option[aria-selected="true"] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+/* Dark: raised above the page like a menu, on a deeper veil. The field stays part of the head: the
+   dark rule for every input would give it a box of its own. */
+[data-gk-mode="dark"] .gk-palette,
+.gk-dark .gk-palette {
+  --gk-palette-bg: var(--gk-surface-container-high);
+}
+[data-gk-mode="dark"] .gk-palette-input,
+.gk-dark .gk-palette-input {
+  background-color: transparent;
+}
+[data-gk-mode="dark"] .gk-palette::backdrop,
+.gk-dark .gk-palette::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}

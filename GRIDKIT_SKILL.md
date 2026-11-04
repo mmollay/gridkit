@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.118.1 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.122.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -33,6 +33,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Table | `GridKit\Table` | Data tables with search, sort, pagination |
 | Form | `GridKit\Form` | Grid-based forms (16-column), all field types, AJAX submit |
 | LineItems | `GridKit\LineItems` | The lines of an invoice, offer or order: posts `name[i][field]`, live totals per VAT rate, the same totals in PHP to the cent, add/duplicate/delete with Undo/reorder, cards on a phone, read-only for a sent invoice (since 1.117.0) |
+| Import | `GridKit\Import` / `js/import.js` / `GK.import` | A CSV file into checked rows: recipients, customers, articles. Fields with types, aliases, required and unique; separator, quotes, header row and encoding (UTF-8, Windows-1252 from Excel) found by themselves; columns matched by name, a select per column; a preview with every error in words; import the valid rows or cancel. A form in three steps without script, an instant preview with it; the server reads and checks the file again either way (since 1.119.0) |
 | Header | `GridKit\Header` | Fixed header with breadcrumb, user menu |
 | Sidebar | `GridKit\Sidebar` | Navigation with groups, badges, collapse |
 | Modal | `GridKit\Modal` | Dialog overlays |
@@ -43,6 +44,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | StatCards | `GridKit\StatCards` | KPI cards with icon, color, format |
 | FilterChips | `GridKit\FilterChips` | URL-based filter chip buttons |
 | YearFilter | `GridKit\YearFilter` | Year navigation filter |
+| DateRange | `GridKit\DateRange` / `js/calendar.js` / `GK.dateRange` | A period for reports and invoice lists: presets (today … last year, custom) and two native date fields, the period in words, `DateRange::fromRequest()` for the checked `from`/`to` (in order, within min/max, today in a time zone); stand-alone as a GET filter or the Form field type `daterange`; works without script (since 1.120.0) |
 | TableHeader | `GridKit\TableHeader` | **Unified filter/search bar above tables — Status / Toolbar / Advanced (since v1.10.0)** |
 | Lang | `GridKit\Lang` | i18n / multilingual support |
 | Pagination | `GridKit\Pagination` | Server-side pager below the table (`.gk-rowpager`), optional PageSize — the bar `Table::paginate()` draws too (since 1.118.0) |
@@ -62,7 +64,10 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Timeline | `.gk-timeline` | A log of steps, one under the other: a real ordered list, each step with a symbol and a word for its state (ok · failed · running · waiting · skipped), title, time, small chips, a detail and — when it broke — a message block (since 1.96.0) |
 | Portrait video frame | `.gk-video-frame` | A 9:16 frame for a video or picture: never wider than its column or taller than the window, optional guide lines for the zones a platform covers, an empty "being made" state and a failed state, a caption (since 1.96.0) |
 | Sortable container (JS) | `[data-gk-sortierbar]` / `js/sortierbar.js` | Cards or rows a person puts in order by hand: a handle in every entry (from two entries on), dragging with mouse or finger, Space and arrow keys, a spoken position, the order posted as JSON when there is a `url`, and a sentence beside a symbol when saving failed (since 1.97.0) |
+| Chart | `GridKit\Chart` / `js/chart.js` / `GK.chart` | Line, area, bar (grouped, stacked, horizontal) and donut charts and sparklines as inline SVG from the server: nice axes, numbers in the chart's language, a summary in words, a legend, the data as a table; with the script a tooltip, the keys, a crosshair, series switched off in the legend, `GK.chart.update()` drawing the same SVG as PHP (since 1.121.0) |
 | Tree | `GridKit\Tree` / `js/tree.js` / `GK.tree` | Page trees, categories, folders: a nested list that works without script, made a WAI-ARIA tree view — keys, type-ahead, open/closed remembered, single or multi selection with tri-state parents, a filter, children loaded on demand, moving by drag and drop or keyboard with a save URL and a way back (since 1.116.0) |
+| Calendar | `GridKit\Calendar` / `js/calendar.js` / `GK.calendar` | A month of appointments, deadlines and campaigns: a table of days with events as links, bars across days, "+3 more", week numbers, months as links (`?month=2026-12`), an agenda when narrower than 600px, arrow keys / Home / End / PageUp / PageDown with the script (since 1.120.0) |
+| CommandPalette | `GridKit\CommandPalette` / `js/command-palette.js` / `GK.palette` | Ctrl+K (Cmd+K on a Mac): a few letters, Enter — to a page of the sidebar (read from the page), an entry or a command of yours, or a record your search URL returns as you type (same origin, debounced, the stale answer dropped); fuzzy, umlauts both ways, marked matches, recent entries, groups; a modal dialog with the keys of a combobox and a listbox; a full-screen sheet on a phone (since 1.122.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
 
@@ -83,7 +88,10 @@ without tripping over this.
 | `ActionGroup::render()` | `Modal::container()` | `BelegModal::container()` |
 | `Tabs::render()` (1.111.0) | | |
 
-`Tree::render()` and `Tree::renderBranch()` (1.116.0) print as well.
+`Tree::render()` and `Tree::renderBranch()` (1.116.0) print as well, and so do `Import::render()` (1.119.0),
+`DateRange::render()` and `Calendar::render()` (1.120.0), `Chart::render()` (1.121.0) and `CommandPalette::render()`
+(1.122.0) — their `->html()` returns the same string (`Chart::sparkline()` and `CommandPalette::trigger()` return a
+string to place).
 
 `PageSize::render()` above is an INSTANCE method — build it with the static
 `PageSize::make('per_page')` first, then chain. Same for `TableHeader::make()`.
@@ -183,7 +191,7 @@ The other classes import the same way — the full list is in the table above,
 each one `GridKit\<Name>`:
 
 ```php
-use GridKit\{ActionGroup, Auth, BelegModal, FilterChips, Header, Icon,
+use GridKit\{ActionGroup, Auth, BelegModal, CommandPalette, FilterChips, Header, Icon,
               PageSize, Pagination, Select, SortLink, TableHeader, YearFilter};
 ```
 
@@ -1328,6 +1336,111 @@ reopens the exact hole the clamp closes: `?year=abc` becomes `0`, passes as
 "all years", and silently widens the report to every year instead of falling
 back to the current one.
 
+### DateRange (since 1.120.0)
+
+A period for reports and invoice lists: a select of presets and two native `<input type="date">`,
+from and to, with the period written out in words beside them ("Oct 1 – 31, 2026",
+"1.–31. Okt. 2026"). **Without any script it works as it is** — choose a preset or type the dates,
+send. With `js/calendar.js` — a file of its own like `js/tree.js`, loaded with `defer` after `gridkit.js`;
+`skeleton.php` and the demo do it, a page of your own adds `<script src=".../js/calendar.js" defer></script>`
+— a preset fills the dates at once, typing a date switches the select to *Custom*, and the words follow.
+There is no call to make: the script finds every picker and calendar, also one inserted later.
+`DateRange::render()` prints, `->html()` returns the same string.
+
+```php
+// A list page: the period in the filter bar, and the query reads the very same period.
+$range = (new DateRange('period'))
+    ->presets(['this-month', 'last-month', 'this-quarter', 'last-quarter', 'this-year', 'custom'])
+    ->default('this-month')
+    ->max(date('Y-m-d'))           // nothing after today
+    ->filter()                     // its own <form method="get"> with Apply; a preset is sent at once
+    ->preserve(['status', 'q']);   // the other filters stay in the URL
+['from' => $from, 'to' => $to] = $range->current();   // checked: real days, from <= to, within min/max
+// $stmt = $pdo->prepare('SELECT … WHERE invoice_date BETWEEN ? AND ?'); $stmt->execute([$from, $to]);
+
+TableHeader::make('invoices')
+    ->filter(fn () => $range->render())
+    ->render();
+```
+
+**Reading it** — on the page that queries, or on the POST of a form:
+
+```php
+$period = DateRange::fromRequest('period', 'this-month', ['max' => date('Y-m-d'), 'timezone' => 'Europe/Vienna']);
+// ['from' => '2026-11-01', 'to' => '2026-11-04', 'preset' => 'this-month']
+
+DateRange::presetRange('last-quarter', '2026-01-15');   // ['from' => '2025-10-01', 'to' => '2025-12-31']
+DateRange::text('2026-10-01', '2026-10-31');            // 'Oct 1 – 31, 2026' — '1.–31. Okt. 2026' with Lang 'de'
+DateRange::date('2026-02-30');                          // null: not a day
+```
+
+**In a Form** — the field type `daterange`; the field's options are the picker's, its label names the
+group, its message line describes every control:
+
+```php
+(new Form('report'))
+    ->field('period', 'Period', 'daterange', ['presets' => ['last-7-days', 'last-30-days', 'last-month'],
+        'default' => 'last-30-days', 'max' => date('Y-m-d'), 'required' => true])
+    ->values($_POST)                     // what was posted comes back, read by the same rules
+    ->submit('Show')
+    ->render();
+```
+
+| Method | What it does |
+|---|---|
+| `new DateRange($name)` | The name it posts under (default `period`): `name[preset]`, `name[from]`, `name[to]`, `name[shown]`. A plain name (letters, digits, `_`, `-`); anything else warns and is cleaned. |
+| `->presets([...])` | The presets offered, in this order: `today`, `yesterday`, `last-7-days`, `last-30-days`, `this-month`, `last-month`, `this-quarter`, `last-quarter`, `this-year`, `last-year`, `custom` (all of them by default, `DateRange::PRESETS`). `custom` — the dates as typed — is added at the end when it is missing; `[]` shows no select, only the dates. An unknown key warns and is left out. A posted preset the list does not offer is ignored. |
+| `->default('this-month')` | What is shown when the request names no period: a preset (`this-month` by default) or `['from' => 'Y-m-d', 'to' => 'Y-m-d']`. |
+| `->value($v)` | The period to show instead of the request's: a preset, `['from' => …, 'to' => …]`, or what was posted under the name — read by the same rules as the request. |
+| `->min('2020-01-01')` / `->max(date('Y-m-d'))` | The first and last day that can be chosen. Every date is held within them, the presets too; a preset that lies wholly outside is not offered. A day that is none, or a min after the max, warns and is no bound. |
+| `->timezone('Europe/Vienna')` | The zone "today" is counted in (default `date_default_timezone_get()`): at 00:30 in Vienna it is already the next day there, whatever the server's clock says. |
+| `->today('2026-11-04')` | The day the presets count from instead of today — `'Y-m-d'` or a `DateTimeInterface` (read in the time zone). For a report of a fixed day and for tests. |
+| `->label('Invoice date')` | The accessible name of the group (default "Period"). In a Form the field's label names it. |
+| `->filter()` | Stand-alone in a filter bar: its own `<form method="get">` (`gk-daterange-form`) and an Apply button; with the script a chosen preset is sent at once. Without `filter()` the picker is part of the form it stands in. |
+| `->baseUrl('/invoices')` | The action of the filter form (default: the page itself; a `#fragment` is kept). |
+| `->preserve(['status', 'q'])` | Query parameters the filter form carries along as hidden fields — names read from the URL, or `name => value`. |
+| `->required()` | Both dates must be filled in (the browser's `required`). |
+| `->current()` | `['from', 'to', 'preset']` of this picker — checked, as `fromRequest()` gives it. Call it on the picker you render, so both read the same options. |
+| `DateRange::fromRequest($name, $default, $opts)` | The same, without a picker. `$opts`: `presets`, `min`, `max`, `timezone`, `today` (as above), `request` (an array to read instead of `$_POST`, then `$_GET`). An unknown option warns. |
+| `DateRange::presetRange($preset, $today, $timezone)` | The days a preset covers: `['from', 'to']`, or `null` for `custom`. `$today` is `'Y-m-d'`, a moment, or null for today in `$timezone`. |
+| `DateRange::text($from, $to)` | A period in words, in the page's language. |
+| `DateRange::date($value)` | `'Y-m-d'` when it is a day that exists (years 1 to 9999), else `null` — the check every date here goes through. |
+| `DateRange::forForm($f, $field, $value, $invalid)` | What `Form` calls for a `daterange` field; not for your own use. |
+| `->render()` / `->html()` | Prints the picker / returns it. |
+
+- **The presets** count from today (or `today()`), on the calendar — a day of 23 or 25 hours changes
+  nothing: `last-7-days` is today and the six days before it, `last-30-days` today and 29 before;
+  `this-month`, `this-quarter` and `this-year` are the **whole** period, the days still to come included
+  (hold them with `->max(date('Y-m-d'))` for "so far"); `last-month`, `last-quarter` and `last-year` the
+  whole one before. February has 29 days in 2028 and 2000, 28 in 2100.
+- **What the server reads** (`current()`, `fromRequest()`): a preset wins and is counted from today
+  again — so a bookmarked "this month" is always this month. Dates win when the preset is `custom` or
+  missing, or when they were typed over without a script (they differ from `name[shown]`, the dates the
+  page showed). Reversed dates are swapped, both are held within min/max. A date that is no day, an
+  array, a hostile string: as if nothing was sent — the default. The script keeps preset and dates in
+  step and leaves `name[shown]` out.
+- **In the browser** (`js/calendar.js`): choosing a preset fills the dates (counted from the server's
+  today, in the browser the same days as `presetRange()`), typing a date makes the select *Custom*, the
+  words follow (`<output aria-live="polite">`), and each date bounds the other (`max` of from, `min` of
+  to), so the browser itself refuses an end before the start. In `filter()` mode a preset is sent at
+  once (`requestSubmit()`); typed dates wait for Apply. Every change by the person fires
+  **`gk:daterange`** on the `.gk-daterange` (bubbles; `detail: { name, from, to, preset, text }`).
+  `GK.dateRange.get(el)`, `GK.dateRange.set(el, 'last-month' | { from, to })` (fires nothing),
+  `GK.dateRange.presetRange(key, today)`, `GK.dateRange.text(from, to, el)` — `el` is the element, its
+  id or the name it posts under.
+- **Accessible**: a `role="group"` named "Period" (or the Form label); the select is "Preset", the
+  dates "From" and "To"; the words are an `<output>` for both. No colour carries anything.
+- **On a phone** (600px and less) the picker is the width of the page: the select on top, the two dates
+  side by side, the words below; the fields are 16px, iOS does not zoom.
+- **Classes** (block "DateRange" in `css/blocks.json`): `gk-daterange`, `gk-daterange-form`,
+  `gk-daterange-preset`, `gk-daterange-dates`, `gk-daterange-from`, `gk-daterange-to`,
+  `gk-daterange-sep`, `gk-daterange-text`, `gk-daterange-apply`. Fields are `.gk-filter` stand-alone,
+  `.gk-input` in a Form.
+- **Words**: `daterange.*` and `date.months_short` in `lang/`; the script takes them from the picker's
+  own `data-gk-daterange`, so it writes what PHP writes.
+- **Do not** compare the posted strings yourself or count "this month" by hand — `current()` /
+  `fromRequest()` have checked them; do not build `BETWEEN` from `$_GET['period']['from']`.
+
 ### SortLink
 
 Sortable headers for tables you build by hand. `Table` already sorts its own
@@ -1448,7 +1561,10 @@ page.
 makes the tile a link. `'color' => 'danger'` or `'warning'` (also `'red'`,
 `'orange'`, and `'highlight' => true`) tones the tile — every other colour stays
 neutral, because a colour that means nothing costs the one that does (rule 4).
-`icon` and `trend` belong to the full card and are not shown. By hand a tile may
+`icon` and `trend` belong to the full card and are not shown. `sparkline` (since 1.121.0) works on a
+card and a tile alike: `'sparkline' => [8200, 7900, 9400]` draws `Chart::sparkline()` under the figure,
+named by the label and written in the card's format (`['values' => [...], 'color' => 3, 'area' => true]`
+passes options — see "Chart"). By hand a tile may
 also be a `<button>`: at least 44px tall, with a focus ring and a hover that
 keeps its tone.
 
@@ -1662,7 +1778,11 @@ no tab that can be opened raise `E_USER_WARNING` and fall back. A form without `
 `toggle` · `radio` · `file` (drag & drop) · `richtext` (CKEditor) · `color` · `range` ·
 `choice` (answer tiles, since 1.92.0)
 
-and `lineitems` (since 1.117.0): the editor of `GridKit\LineItems`, handed in as the option
+and `daterange` (since 1.120.0): the period picker of `GridKit\DateRange` — the options `presets`,
+`default`, `min`, `max`, `timezone`, `today` and `required` are the picker's; `values($_POST)` hands
+back what was posted (`name[preset]`, `name[from]`, `name[to]`), read like a request. See **DateRange**.
+
+And `lineitems` (since 1.117.0): the editor of `GridKit\LineItems`, handed in as the option
 `lines` — `->field('items', 'Lines', 'lineitems', ['lines' => $lines])`. The field's label names
 it, `values(['items' => $rows])` fills it when it has no `items()` of its own, and an AJAX
 answer `{"errors": {"items[1][qty]": "…"}}` lands under that cell. See **LineItems**.
@@ -1697,7 +1817,8 @@ searchable select is plain `'select'`.
 | `showIf` | every field | the field shows only while another field of the form has a value (since 1.105.0): `['field' => 'kind', 'equals' => 'company']`, with exactly one of `equals`, `not` (a value), `in` (a list of values) or `filled` (`true`: anything entered, `false`: empty). A field that is not shown is hidden **and disabled**: it is not posted, `required` blocks nothing, it takes no focus. A condition on a field that is itself hidden counts as empty, so a chain folds away together. An unusable condition raises `E_USER_WARNING` and the field stays visible. Needs `js/gridkit.js` 1.105.0; a copy without it shows every field. |
 | `preset` | `richtext` | `'full'` (default) or `'basic'` — how much toolbar |
 | `upload` | `richtext` | a URL. Turns pictures on: an upload button, drag & drop, paste, **alignment** (left/right with text flowing beside it, own line centred), size handles and alt text. Off without it, because an upload button with nowhere to put the file is worse than none. The endpoint takes a POST with the file under `upload` and answers `{"url":"https://…"}`, or `{"error":{"message":"…"}}` — CKEditor's SimpleUploadAdapter contract. **Return an absolute URL**: relative ones work on the page and break the moment the content is mailed. Pictures render as a plain `<img>` in the paragraph with the size as an inline `style`, deliberately not as `<figure class="image">`, so the same content survives being sent as an e-mail |
-| `min`, `max`, `step` | `range`, `number`, `date`/`time` | bounds (`range` defaults to `0`/`100`/`1` and starts at `min`) |
+| `min`, `max`, `step` | `range`, `number`, `date`/`time`, `daterange` | bounds (`range` defaults to `0`/`100`/`1` and starts at `min`); a `daterange` takes `min` and `max` as `'Y-m-d'` |
+| `presets`, `default`, `timezone`, `today` | `daterange` | the presets offered, the period without a request (a preset or `['from' => …, 'to' => …]`), the zone of "today", a fixed today — as `DateRange`'s methods (since 1.120.0) |
 | `lines` | `lineitems` | the `GridKit\LineItems` the field shows (since 1.117.0); without it the field is left out with an `E_USER_WARNING` |
 | `->cancel($label, $href)` | — | a link beside the submit button — a method, not a field |
 | `->hidden($name, $value)` | — | a hidden input — a method, not a field |
@@ -1953,6 +2074,253 @@ others to `Form::errors()`: a cell is not a field of the Form, so `Form::errors(
 message in the box above the form instead (only the key `items` itself goes under the field). **Do not** read the
 totals from the POST, compute amounts with floats, or write a line's markup by hand: the script
 renumbers what it finds by its `data-gk-lines-*` attributes.
+
+### Import (`GridKit\Import`, since 1.119.0)
+
+A CSV file into rows a page can store: the recipients of a newsletter, customers, articles. The
+page defines the fields; the person chooses (or drops, or pastes) a file, sees which column fills
+which field and a preview with every error in words, and imports the valid rows or cancels.
+**It is a form of its own** (`<form method="post" enctype="multipart/form-data">`, so do not put it
+inside another form) that works without any script, in three steps: the file, the columns and the
+check, done. **`js/import.js`** — a file of its own like `js/tree.js`, loaded with `defer` after
+`gridkit.js` (`skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/import.js" defer></script>`) — reads the file in the browser instead: the
+mapping and the preview are there the moment a file is chosen, dropped or pasted, and follow every
+change. `Import::render()` prints; `->html()` returns the same string.
+
+```php
+$import = (new Import('customers'))
+    ->label('Import customers')                          // the form's accessible name
+    ->field('customer_no', 'Customer no.', ['required' => true, 'unique' => true, 'aliases' => ['Kundennummer', 'Nr']])
+    ->field('name', 'Name', ['required' => true, 'aliases' => ['Nachname', 'Last name']])
+    ->field('email', 'E-mail', ['type' => 'email', 'required' => true, 'unique' => true, 'aliases' => ['E-Mail', 'Mail']])
+    ->field('country', 'Country', ['type' => 'select', 'options' => ['AT' => 'Austria', 'DE' => 'Germany', 'CH' => 'Switzerland']])
+    ->field('revenue', 'Revenue', ['type' => 'money', 'aliases' => ['Umsatz']])
+    ->field('since', 'Customer since', ['type' => 'date'])
+    ->field('newsletter', 'Newsletter', ['type' => 'bool'])
+    ->locale('de')                                       // 1.500 is fifteen hundred, 1.234,50 an amount
+    ->limits(5000, 2 * 1024 * 1024)                      // rows and bytes: a larger file is refused
+    ->hidden(['_token' => 'the-csrf-token-of-the-page']); // carried through every step
+
+// Check the page's CSRF token first, then:
+$import->handle();                                       // reads $_POST and $_FILES of this importer
+if ($import->step() === 'done') {
+    foreach ($import->result()['rows'] as $row => $values) {
+        // $row: the row in the sheet (the header is row 1). $values, typed:
+        // ['customer_no' => 'K-1001', 'email' => 'anna@example.at', 'revenue' => '1234.50', 'newsletter' => true, ...]
+    }
+}
+$import->render();                                       // the step it stands at
+```
+
+**The steps.** `step()` says where the importer stands; `render()` draws it.
+
+| Step | What the person sees | What posts |
+|---|---|---|
+| `upload` | A drop box around the file field (`.csv`, `.txt`, `.tsv`), the limits in words, and in a disclosure a box for pasted text. "Check file". A refused file is said here (`role="alert"`). | `customers[file]` or `customers[text]`, `customers[step]=upload` |
+| `map` | The file in one line (name, size, rows); notes (a field chosen twice, a quote never closed); **how it is read** — separator, encoding, the header checkbox, preset to what was found; **which field each column fills** — per column its name, two sample values and a select of the fields (or "ignore"; required fields marked); a message for every required field no column fills; the **summary** ("238 rows, 3 with errors.", `role="status"`); the **preview** of the first `preview()` rows (a `.gk-table` in a box that scrolls sideways by itself; per row its number and "OK" or "2 errors", the message under each wrong cell); **every row with errors**, the rows the preview does not show included (the first 100); the buttons "Import the 235 valid rows" (off while a required field has no column or no row is valid), "Check again" and "Cancel". | `customers[map][i]` (a field key or `''`), `delimiter`, `encoding`, `header`, `cols`, and `token` (or the file itself, see storage) |
+| `done` | "235 rows imported; 3 with errors left out." and "Import another file". Take `result()['rows']` before you render — and if saving fails, show your own message instead. | |
+
+"Check again" checks the posted mapping; "Cancel" forgets the file and goes back to the start
+("The import was cancelled. Nothing was imported."). Import is only possible when every required
+field has a column and at least one row is valid; rows with errors are left out — the button says
+how many are imported.
+
+**Fields** — `->field($key, $label, $opts)`; the key is letters, digits, `_`, `.` and `-`:
+
+| Option | |
+|---|---|
+| `type` | `text` (default), `email`, `number`, `money`, `date`, `bool`, `select` — see below |
+| `required` | a row without a value here is not imported; a required field without a column stops the import |
+| `unique` | two rows of the file may not hold the same value: the second and every later one get "Already in row 5." (text and e-mail ignore case) |
+| `aliases` | other column names that mean this field: `['E-Mail', 'Mail', 'E-Mail-Adresse']` |
+| `options` | `select`: `value => label`, or a list of values |
+
+**Types** — what a cell may hold, and what `result()` hands over. Spaces around a value (the
+no-break space too) are ignored; an empty cell is `null` (`bool`: `false`) unless the field is
+required.
+
+| Type | Accepts | In `rows` |
+|---|---|---|
+| `text` | anything | the text |
+| `email` | an address mail servers take: ASCII, a dot in the domain, a TLD of letters (or `xn--`) | the address, its domain in lower case |
+| `number` | `1.234,5`, `1,234.5`, `1234.5`, `1 234,5`, `-12` — `LineItems::parseNumber()`: with both signs the last is the decimal sign; one sign before exactly three digits is decided by `locale()` | a string in machine form: `'1234.5'` |
+| `money` | the same, at most 2 decimals; a currency sign or code is ignored | `'1234.50'` |
+| `date` | `31.12.2026`, `2026-12-31`, `31/12/2026`, day and month with or without a zero; `31.02.` is an error | `'2026-12-31'` |
+| `bool` | `ja`, `j`, `yes`, `y`, `x`, `1`, `true`, `wahr`, `on` / `nein`, `n`, `no`, `0`, `false`, `falsch`, `off`, empty | `true` / `false` |
+| `select` | an option's value or its label; case, umlauts and spaces do not count | the option's value |
+
+Numbers and amounts are strings so nothing is lost to a float: cast them where you store them.
+
+**Reading the file** (`Import::parseCsv()` does it, and the script the same):
+
+- **Encoding**: a byte order mark decides (UTF-8, UTF-16 LE or BE); a file with NUL bytes in every
+  other place is UTF-16 without one; valid UTF-8 is UTF-8; anything else is **Windows-1252** — what
+  German Excel writes, and a superset of ISO-8859-1, which is read as Windows-1252 the way browsers
+  do. Everything comes out as UTF-8. A file with NUL bytes otherwise is "not a text file".
+- **Separator**: `;`, `,`, tab or `|` — the one that gives the first 50 records the same number of
+  cells most often (more than one); a tie goes to that order. A first line `sep=;` (Excel's hint)
+  names it and is not a row. When none splits the lines, the one that occurs least, so a single
+  column with a comma in one value stays one column.
+- **Quotation mark**: `"` (RFC 4180: a doubled `""` is a quote, a quoted cell may hold the separator
+  and line breaks), or `'` when the file quotes its cells with that. A quote inside an unquoted cell
+  is a character. A quote that is never closed takes the rest of the file into one cell — said as a
+  note ("Row 5 opens a quotation mark that is never closed…").
+- **Header row**: yes when a cell of the first row names a field (key, label or alias); no when a
+  cell holds what data holds (a number, a date, an e-mail address); yes otherwise. Without one the
+  columns are "Column 1", "Column 2", … and nothing is matched by name.
+- **Rows**: CRLF, LF and CR all end a row; a line break inside quotes does not, and becomes `\n`.
+  Row numbers are those of the sheet: the header is row 1, an empty line is a row that is left out,
+  a cell with a line break is still one row. Columns with no name and nothing in them at the end
+  (Excel's `;;;;`) are dropped.
+
+**Matching.** Column names are compared with the fields' keys and labels first, then with their
+aliases, from the left: lower case, accents folded, an umlaut matching both its spellings (`ue`
+and `u`), the sharp s as `ss`, signs and spaces dropped — "E-Mail" is "email", "Mueller" and
+"Muller" are the same name with an umlaut.
+A field takes one column; in the browser, choosing it for another column lets go of the first.
+`->map(['E-Mail' => 'email', 3 => 'country'])` starts from a mapping of your own instead (one saved
+from the last import, say): column name or index => field key, `null` to ignore; columns it does
+not name are ignored. What the person chooses on the page wins over both — but only for the very
+columns it was drawn for (the form posts their signature in `cols`).
+
+**`result()`** — what the file holds, checked:
+
+| Key | |
+|---|---|
+| `rows` | the valid rows, keyed by their row number: `[2 => ['email' => 'anna@example.at', ...], ...]`; only mapped fields are there |
+| `errors` | row number => `[field key => message]` for every row that is left out |
+| `total`, `valid`, `invalid` | counts of data rows (empty lines are not rows) |
+| `columns` | the column names |
+| `mapping` | column index => field key, or `null` when ignored |
+| `missing` | required fields that no column fills |
+| `notes` | what the person should know: a field chosen twice, a quote never closed |
+| `meta` | `filename`, `bytes`, `encoding`, `bom`, `delimiter`, `enclosure`, `lineEnding` (`CRLF`, `LF`, `CR` or `''`), `header`, `sep`, `unclosed` |
+| `error` | why the file was refused, or `null` |
+
+**Without a form** — a cron job, an API, a sample:
+
+```php
+$csv = "Kundennummer;Nachname;E-Mail;Umsatz\r\nK-1;Mueller;anna@example.at;1.234,50\r\nK-2;Huber;max@;12\r\n";
+$r = (new Import('api'))
+    ->field('no', 'No.', ['required' => true, 'aliases' => ['Kundennummer']])
+    ->field('name', 'Name', ['aliases' => ['Nachname']])
+    ->field('email', 'E-mail', ['type' => 'email', 'required' => true])
+    ->field('revenue', 'Revenue', ['type' => 'money', 'aliases' => ['Umsatz']])
+    ->locale('de')
+    ->fromString($csv, 'customers.csv')                  // or ->fromFile('/path/customers.csv')
+    ->result();
+// $r['rows'] === [2 => ['no' => 'K-1', 'name' => 'Mueller', 'email' => 'anna@example.at', 'revenue' => '1234.50']]
+// $r['errors'] === [3 => ['email' => 'Not a valid e-mail address.']]
+
+$parsed = Import::parseCsv($csv, ['delimiter' => 'auto', 'header' => true]);
+// ['columns' => ['Kundennummer', 'Nachname', 'E-Mail', 'Umsatz'], 'rows' => [2 => [...], 3 => [...]], 'meta' => [...], 'error' => null]
+```
+
+`Import::parseCsv($bytes, $opts)` reads a CSV without fields: `columns`, `rows` (row number =>
+cells, padded to the columns), `meta`, `error`. Options: `delimiter`, `enclosure`, `encoding`,
+`header` (as the setters), `maxRows`, `maxBytes`, `names` (column names that mark a header row).
+
+**Limits.** `->limits($rows, $bytes)` — default 10,000 rows and 5 MB, at most 100,000 and 20 MB; a
+row may have at most 200 columns. A larger file is **refused, never cut short**, with a sentence
+that says so ("The file has more than 10,000 rows. Import it in parts of at most 10,000 rows.",
+"The file is 7.4 MB; at most 5 MB can be imported."). An upload larger than `upload_max_filesize`
+or `post_max_size` is said in words too. The script refuses the same before it reads a byte.
+
+**Between the steps — and why nothing from the browser is trusted.** Without script the file has
+to wait for step 2 and 3. By default it waits **on the server**: `->storage($dir, $ttl)` (default:
+the system's temporary directory `/gridkit-import`, 3600 seconds) keeps the raw file under a token
+of 128 random bits (`random_bytes`), in a file only the server user may read; the form carries only
+the token. With a PHP session the token also belongs to that session, so another browser cannot use
+it. Files older than `$ttl` are removed whenever an importer is handled; "Cancel" and the import
+remove their own at once. `->storage(false)` keeps **nothing** on the server: the file travels in
+the form (base64), for several servers without a shared directory, or a public demo. Either way
+**every step reads the file again and checks every row again**, with the mapping as posted (each
+key checked against the fields) — the server never takes a row, a value or a count from the
+browser, so a forged form is no more than another file. With the script the browser shows step 2
+itself and the form posts the file and the mapping once (`step=confirm`); the server reads and
+checks it as above. Checking the page's CSRF token before `handle()` is the page's job — put the
+token in `->hidden()`.
+
+**Methods**
+
+| Method | |
+|---|---|
+| `->field($key, $label, $opts)` | a field a column can fill (above) |
+| `->label('Import customers')` | the form's accessible name; default "CSV import" |
+| `->locale('de')` | how a lone separator is read in numbers; default `Lang::locale()` |
+| `->limits($rows, $bytes)` | the most a file may hold |
+| `->preview(20)` | rows in the preview (1 to 500); every row is checked either way |
+| `->delimiter('auto')` | `'auto'`, `';'`, `','`, `"\t"` (or `'tab'`) or the vertical bar |
+| `->enclosure('auto')` | `'auto'`, `'"'`, `"'"` |
+| `->encoding('auto')` | `'auto'`, `'UTF-8'`, `'Windows-1252'` (`'ISO-8859-1'`), `'UTF-16LE'`, `'UTF-16BE'` |
+| `->header(null)` | `true`, `false`, or `null` to decide from the file |
+| `->map([...])` | the mapping to start from (above) |
+| `->action('/admin/import')` | where the form posts; default the page itself |
+| `->hidden(['_token' => $csrf])` | hidden fields carried through every step |
+| `->storage($dir, $ttl)` / `->storage(false)` | where the file waits between the steps (above) |
+| `->handle($post = null, $files = null)` | reads the POST of this importer (default `$_POST`, `$_FILES`) and moves it on a step |
+| `->fromString($bytes, $filename)` / `->fromFile($path)` | a CSV without an upload; the importer is then in step `map` |
+| `->step()` | `'upload'`, `'map'` or `'done'` |
+| `->result()` | the checked rows (above) |
+| `->render()` / `->html()` | prints / returns the step it stands at |
+| `Import::parseCsv($bytes, $opts)` | a CSV read without fields (above) |
+
+A wrong option value is an `E_USER_WARNING` with a fallback that still works: an unknown type
+(text), an unknown option, a field defined twice (the second is left out), a key that cannot be a
+field name, a select without options (text), a limit out of range (clamped), a `javascript:`
+action (the page itself), a name that is not a field name (cleaned).
+
+**In the browser** (`js/import.js`; nothing to call): a file chosen or dropped on the box is read
+with `FileReader`, decoded with `TextDecoder` (Windows-1252, UTF-16 and UTF-8 by the same rules) and
+split, matched and checked by the same rules as the server — the same counts, rows, messages and
+order. Text typed into the paste box is read a moment after the typing stops. A change of the
+separator, the encoding or the header checkbox reads the file again; a change of a column's field
+checks again and redraws what follows the mapping; the summary is a live region, so a screen reader
+hears "238 rows, 3 with errors." The file stays in the file field (a dropped one too), so
+"Import" posts it with the mapping. "Cancel" empties the form without a request. A step 2 the server
+drew with `storage(false)` is taken over the same way. A choice that makes the file unreadable
+(UTF-8 for a Windows-1252 file) is said, and the file is read as before — on the server as well.
+
+| Event (on the form, bubbling) | `detail` |
+|---|---|
+| `gk:importread` | `{ import, filename, bytes, meta, columns, total }` — a file or text was read |
+| `gk:importmap` | `{ import, mapping, source }` — `source`: `auto`, `user` or `api` |
+| `gk:importready` | `{ import, result }` — the rows were checked, after every change; `result` as `result()` |
+| `gk:importerror` | `{ import, message }` — a file was refused (too large, too many rows, not text) |
+
+```javascript
+GK.import.read('customers', file, 'customers.csv');   // a File, Blob or bytes as if chosen (it goes into the file field,
+                                                       // so Import posts it); text without a name as if pasted. A Promise of the result
+GK.import.map('customers', { 'E-Mail': 'email', 4: null });  // set the mapping; without a second argument, read it
+GK.import.result('customers');                         // what result() would say about what the browser holds
+GK.import.check('customers', 'revenue', '1.234,5');    // { value: '1234.50', error: null } — one value by a field's rules
+GK.import.reset('customers');                          // back to step 1
+GK.import.parse(bytesOrText, { delimiter: 'auto' });  // Import::parseCsv() without an importer
+```
+
+The first argument is the importer's name, its form, an element inside it, or a selector.
+
+- **Accessible**: every control has a label (a column's select is "Column E-Mail"), the preview is
+  a named region with a tab stop and a caption, the steps are `.gk-steps` with `aria-current`, a
+  refused file is an alert, the summary a status. **Errors are never colour alone**: a symbol, the
+  words under the cell, "2 errors" in the row's check column, a bar at the cell's start; an ignored
+  column says "ignored" and has a dashed frame.
+- **Phone**: the mapping is one column of cards, the options and buttons full width, the fields
+  16px; only the preview scrolls sideways, inside its box.
+- **Classes** (all `gk-import-*`, in `css/blocks.json` as "Import"): `gk-import` (the form),
+  `-upload`, `-drop`, `-drop-icon`, `-drop-text`, `-hint`, `-paste`, `-text`, `-dragover` (a file
+  over the box), `-panel`, `-source`, `-notes`, `-options`, `-option`, `-map`, `-col`, `-col-name`,
+  `-col-sample`, `-ignored`, `-missing`, `-summary`, `-preview`, `-target`, `-rowno`, `-state`,
+  `-badrow`, `-bad`, `-msg`, `-errors`, `-errors-title`, `-more`, `-actions`, `-skip`. Colours are
+  roles: light, both dark spellings and the six themes follow.
+- **Words** come from `import.*` in `lang/` and reach the script inside the importer's own config —
+  no `Lang::jsConfig()` needed.
+- **CSV injection** (a cell like `=HYPERLINK(...)` that a spreadsheet would run) concerns the other
+  direction: writing CSV for Excel. An import stores text and runs nothing; escape on output as
+  always. Guarding an export is not this component's job.
+- **Do not** put the importer inside another `<form>`, take rows or counts from the POST, or
+  trust `result()` of a request you did not `handle()` — and check the CSRF token before `handle()`.
 
 ### Admin blocks: settings, figures, dots, colours (since 1.92.0)
 
@@ -2695,6 +3063,446 @@ Promise that waits for a lazy branch), `GK.tree.collapse(el, id)`, `GK.tree.sele
 - **Do not** write the handle, the roles or the tabindex yourself, put a `<form>` inside a row, or
   give a node a second link — the label is the link.
 
+### Calendar (since 1.120.0)
+
+A month view for appointments, deadlines and campaigns. The server writes the month as a plain table —
+a column per weekday, a row per week, today marked, every day named by its full date — with the events
+as links in their days; the months before and after are links with a query parameter
+(`?month=2026-12`). **It works as it is, without script.** `js/calendar.js` (the file `DateRange` uses
+too, loaded after `gridkit.js`) makes the table a grid for the keyboard. `Calendar::render()` prints,
+`->html()` returns the same string.
+
+```php
+$cal = (new Calendar('appointments'))
+    ->label('Appointments')                         // the accessible name (default "Calendar")
+    ->weekNumbers()                                 // a column with the ISO week
+    ->preserve(['user'])                            // kept in the month links
+    ->dayUrl('/appointments/new?date={date}');      // the day number is a link
+['from' => $from, 'to' => $to] = $cal->visibleRange();   // the days the grid shows: fetch these
+$rows = [   // e.g. SELECT … WHERE begins_at <= :to AND COALESCE(ends_at, begins_at) >= :from
+    ['id' => 7, 'subject' => 'Team meeting', 'begins_at' => '2026-11-04 09:30', 'ends_at' => null, 'color' => 'blue'],
+    ['id' => 8, 'subject' => 'Trade fair', 'begins_at' => '2026-11-10', 'ends_at' => '2026-11-13', 'color' => 'orange'],
+];
+$cal->events($rows, ['title' => 'subject', 'start' => 'begins_at', 'end' => 'ends_at'])
+    ->event('2026-11-20', 'Invoice run', ['href' => '/runs/3', 'color' => 'red', 'allDay' => true])
+    ->event(['start' => '2026-11-23', 'end' => '2026-12-04'], 'Winter campaign')
+    ->render();
+```
+
+| Method | What it does |
+|---|---|
+| `new Calendar($id)` | The id: the element is `#gk-cal-<id>`, the script and the events name it. |
+| `->event($when, $title, $opts)` | One event. `$when`: a day `'2026-11-04'`, a day and time `'2026-11-04 09:30'` (or `T09:30`), a `DateTimeInterface` (read in the time zone; midnight is no time), or `['start' => …, 'end' => …]` — the last day included — for one that lasts days. |
+| `->events($rows, $map)` | Many from rows (arrays or objects): each has `date`, or `start` and maybe `end`, a `title` and any option under its own name; `$map` renames them (`['title' => 'subject', 'start' => 'begins_at']`). A row without a title or a date warns and is left out. |
+| `->month('2026-11')` | The month shown. Default: the query parameter when it names a month (`2026-11`, years 1 to 9999), else this month. Anything else in the URL is ignored. |
+| `->current()` | That month, `'Y-m'`. |
+| `->visibleRange()` | `['from', 'to']`: the first and last day of the weeks shown — the range to query. |
+| `->param('m')` | The query parameter of the month links (default `month`). |
+| `->weekStart('monday')` | `'monday'` or `'sunday'`; default by the page's language: Sunday for English, Monday otherwise. |
+| `->weekNumbers()` | A first column with the ISO 8601 week of each row (the week of its Monday), read as "Week 45". |
+| `->timezone('Europe/Vienna')` / `->today('2026-11-04')` | The zone "today" is counted in (default `date_default_timezone_get()`), or a fixed today (`'Y-m-d'` or a `DateTimeInterface`). |
+| `->baseUrl('/calendar')` / `->preserve(['user'])` | Where the month links lead (default the page; a `#fragment` stays last) and which query parameters they keep — names read from the URL, or `name => value`. |
+| `->maxPerDay(3)` | Events a day shows before "+n more" (default 3, at least 1). |
+| `->dayUrl('/new?date={date}')` | Makes every day number a link; `{date}` is the day. Enter on a day follows it. |
+| `->label('Appointments')` | The accessible name of the table and the agenda (default "Calendar"). |
+| `->render()` / `->html()` | Prints the calendar / returns it. |
+
+**Event options:** `href` (the event is a link; a `javascript:`, `vbscript:` or `data:` URL warns and is
+left out — the event is text), `color` (the label palette: `blue`, `green`, `orange`, `red`, `gray`;
+without one, the theme's accent; anything else warns), `time` (text before the title; default the time
+of the start), `allDay` (`true`: no time; read as yes/no like a database hands it over), `id` (handed to
+the script's events; default `e1`, `e2`, … in the order added). An unknown option, an end before the
+start (swapped), a date that is no day (the event is left out): `E_USER_WARNING`, and the calendar
+renders.
+
+- **A bar across days.** An event of several days is a segment in each day it covers, in the same lane of
+  the week, so the bar is straight (an empty lane above it keeps its place); the title is written once
+  per week and runs across the bar. Every segment still reads the title to a screen reader — a day says
+  what is on it. In a list (the agenda, "+n more") such an event says its days ("Nov 10 – 13, 2026").
+- **Order in a day:** events without a time (all day, several days) first, then by time, then as added.
+- **"+n more".** A day that holds more than `maxPerDay()` shows one less and "+3 more" — a `<details>`
+  that opens the whole day over the grid (no script needed; in the last three columns it opens towards
+  the start). With the script, Escape closes it and gives the focus back, a click elsewhere closes it,
+  and one is open at a time.
+- **Today** is the day number in a filled disc, `aria-current="date"` and ", today" in its name. Days of
+  the months around are on a quieter ground and keep their events.
+- **On a phone** — whenever the calendar itself is narrower than 600px (a container query, so a side
+  column counts too) — the grid gives way to an **agenda**: the days of the month that hold something, one
+  under the other, each event with its time, "All day" or its days. Nothing scrolls sideways. A month
+  without events says "Nothing this month."
+- **What a screen reader gets**: a table named by its label and the month ("Appointments November 2026"), column headers with the
+  whole weekday, every day's number read as "Wednesday, November 4, 2026"; the events are links (or,
+  without `href`, buttons once the script runs) named by their time and title. Without the script it is a
+  table of links in reading order.
+- **Keys** (with the script: `role="grid"`, one tab stop — the day; Tab from it reaches that day's events
+  and "+n more", then leaves): arrows move a day and a week (past the edge of the grid: that month),
+  Home/End to the ends of the week, PageUp/PageDown a month (Shift: a year) — the page loads it and the
+  same day takes the focus there (`sessionStorage`, read in `try`) — Enter and Space choose the day
+  (Enter then follows its `dayUrl`). A click on a day chooses it too. "Today" in the month shown only
+  moves the focus. In `rtl` Left and Right swap.
+- **Events**, on the `.gk-cal`, bubbling — for what the person does:
+  `gk:calendarnav` (`{ calendar, month, url, date }`, **cancelable**: before another month loads; call
+  `preventDefault()` and load it your own way) and `gk:calendarselect` (`{ calendar, date, event, events }`
+  — `event` is `{ id, title, href, start, end }` of the event chosen, or `null` for the day; cancelable:
+  then Enter does not follow the day link).
+- **JavaScript API** (first argument: the calendar's id, element or a selector): `GK.calendar.month(el)`
+  (`'2026-11'`), `GK.calendar.focus(el, '2026-11-12')` (false when the grid does not show it),
+  `GK.calendar.go(el, '2027-01')` (after `gk:calendarnav`; false when cancelled), `GK.calendar.events(el,
+  date)` (the events of a day).
+- **Classes** (all `gk-cal-*`, block "Calendar" in `css/blocks.json`): `gk-cal`, `-head`, `-title`,
+  `-nav`, `-grid`, `-wk`, `-day`, `-outside`, `-today`, `-daynum`, `-daylink`, `-events`, `-slot`,
+  `-event`, `-accent`, `-time`, `-event-title`, `-span-in`, `-span-out`, `-span-head`, `-more`,
+  `-more-list`, `-more-date`, `-event-row`, `-agenda`, `-agenda-list`, `-agenda-day`, `-agenda-date`,
+  `-today-mark`, `-empty`; an event's colour is its `gk-label-*`. Roles only: light, both dark spellings
+  and the six themes follow (the event colours are the labels' pairs, 4.5:1).
+- **Words**: `calendar.*` and `date.*` in `lang/` — month and weekday names, the full date
+  (`date.full`), "+{n} more". The week numbers, the order of the weekdays and the names follow `Lang`.
+- **Do not** put a form inside a day, write the grid roles or tabindex yourself, or hand the calendar a
+  month's events you did not limit to `visibleRange()` — a year of events is a year of markup.
+
+### Chart (`GridKit\Chart`, since 1.121.0)
+
+Line, area, bar and donut charts and sparklines, drawn on the server as inline SVG — no library,
+no canvas, nothing to wait for. Revenue per month, newsletter open rates, the sources of orders.
+**`js/chart.js`** adds what needs a script; it is a file of its own like `js/tree.js`, loaded with
+`defer` after `gridkit.js` — `skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/chart.js" defer></script>`. There is no call to make: the script finds every
+`.gk-chart`, also one inserted later. `Chart::render()` prints, `Chart::html()` returns the same
+string, `Chart::sparkline()` returns a string.
+
+```php
+(new Chart('revenue'))
+    ->type('bar')                                    // line (default), area, bar, donut, sparkline
+    ->title('Revenue per month')                     // the caption and the name a screen reader hears
+    ->labels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'])
+    ->series('2025', [8200, 7900, 9400, 10100, 9800, 11200])
+    ->series('2026', [9100, 8800, 10900, 11600, null, null])   // null: a gap (no bar, no point)
+    ->format('money', ['currency' => 'EUR', 'locale' => 'de'])   // 9.100,00 € — the axis: 10 Tsd. €
+    ->height(280)
+    ->render();
+```
+
+```php
+(new Chart('open-rates'))
+    ->type('line')
+    ->title('Newsletter open rate')
+    ->labels(['W1', 'W2', 'W3', 'W4'])
+    ->series('Customers', [41.2, 43.5, 39.8, 44.1])
+    ->series('Trial users', [28.4, 30.1, 33.6, 31.2], ['color' => 3])   // keep an entity on its slot
+    ->format('percent', ['locale' => 'en'])          // 41.2% — values are percentages, as in StatCards
+    ->zero(false)                                    // a line's axis may start near its data
+    ->markers()->dashes()                            // a point shape and a dash pattern per series
+    ->render();
+
+(new Chart('sources'))
+    ->type('donut')
+    ->title('Where the orders came from')
+    ->labels(['Online shop', 'Marketplace', 'Phone', 'Retail', 'Fairs', 'E-mail'])
+    ->series('Orders', [1240, 860, 410, 380, 150, 60])    // from the sixth part on: one grey "Other"
+    ->render();
+
+echo Chart::sparkline([30, 32, 35, 33, 38, 41, 44], ['label' => 'Sign-ups', 'color' => 2]);
+```
+
+| Method | What it does |
+|---|---|
+| `->type($type)` | `line` (default), `area`, `bar`, `donut`, `sparkline`. Anything else warns and keeps the type. |
+| `->title($text, $show = true)` | The `<figcaption>` above the chart and the `<title>` of the SVG; `$show = false` keeps it for a screen reader only (`gk-sr-only`). Default: the catalogue's "Chart". |
+| `->description($text)` | Your own sentence for the SVG's `<desc>` instead of the summary the chart writes. |
+| `->labels($labels)` | The categories along the axis (a donut: the names of its parts). Without labels a chart numbers its values 1 … n. A float label is written as its digits; an array is no label (warning). |
+| `->series($name, $values, $opts = [])` | One series, a value per label: an int, a float or a numeric string (`'1234.5'`); `null` or `''` is a gap. Options: `color` (the slot 1 … 5 of `--gk-chart-N`, default its position) and `hidden` (`true`: drawn switched off, the legend switches it on). At most five series (the five colours); a donut and a sparkline draw the first. |
+| `->format($kind, $opts = [])` | `number` (default), `money` or `percent` (`12.5` is 12.5 %). Options: `currency` (an ISO code, default EUR — EUR, USD and GBP get their sign, others are written out: `CHF 12.50`), `locale` (`de`, `en` and their regions; default the page's language — a German chart on an English page keeps its `1.234,50`), `decimals` (0 … 6; default: money 2, number up to 2, percent up to 1). |
+| `->height($px)` | 120 … 1200, default 280 (a sparkline 12 … 200, default 28). A donut is as wide as it is high. |
+| `->width($px)` | The width of the viewBox, 200 … 4000, default 640 (a sparkline 24 … 1000, default 96). The chart always fills its box; with the script it is drawn again at the box's width, so this matters only for the first paint without it. |
+| `->stacked()` | Bars or areas on top of each other (`bar`, `area`); negative values stack below zero, a gap counts as 0, the table gets a Total column. |
+| `->horizontal()` | Bars from the left, the categories down the side — for long names (`bar`). |
+| `->zero(false)` | A line chart's axis starts near its data. Bars and areas always start at zero (a warning says so). |
+| `->markers()` | A point shape per series — circle, square, diamond, triangle, triangle down (`line`, `area`). |
+| `->dashes()` | A dash pattern per series (`line`, `area`); in print and in forced colours they are always on. |
+| `->table($mode)` | The data as a table: `toggle` (default — behind "Show as table"), `open`, or `hidden` (for a screen reader only, `gk-sr-only`). |
+| `->config()` | The chart as data — what `data-gk-chart` holds and `GK.chart.update()` takes: `id`, `type`, `title`, `showTitle`, `desc`, `labels`, `series` (`name`, `values` as decimal strings, `color`, `hidden`), `format` (`kind`, `currency`, `locale`, `decimals`), `width`, `height`, `stacked`, `horizontal`, `zero`, `markers`, `dashes`, `table`, `area`. A JSON endpoint can answer with it. |
+| `->html()` / `->render()` | The markup, returned / printed. |
+| `Chart::sparkline($values, $opts)` | A small inline line for a sentence, a StatCards card or a table cell: an `<svg role="img">` named by its numbers in words ("Sign-ups: 7 values from 30 to 44, lowest 30, highest 44."). Options: `label` (default "Trend"), `format`, `currency`, `locale`, `decimals` (as `format()`), `width`, `height`, `color` (1 … 5), `area` (`true`: a wash under the line). |
+
+**What it draws.** The value axis steps by 1, 2 or 5 times a power of ten ("nice" ticks), about one
+tick per 44px, and from 10,000 on it writes `12K` / `12 Tsd.` (`M` / `Mio.`, `B` / `Mrd.`). Bars and
+areas start at zero; negative values hang below the zero line, which is drawn firmer than the grid.
+Bars are at most 24px thick, 2px apart, their end rounded and their base square. Lines are 2px; a
+point shows where there is room (a category 24px wide or more), where it stands alone between two
+gaps, and on the active category. A long category name is cut with "…" and keeps its full text in a
+`<title>`; when the names do not fit side by side, every second (third, …) is written. No values at
+all: the chart says "No data" in its middle. One value: a point. Only zeros: an axis 0 … 1 and no
+bar. A donut takes the first five parts in colour and folds the rest into a grey "Other"; its total
+stands in the hole (compact when it would not fit); a negative part counts as 0 (warning).
+
+**Numbers** are written by the chart, not by `number_format()`: the decimal string of the value,
+rounded half away from zero (`1.005` → `1.01`), grouped by the locale — `1.234,50 €`, `€1,234.50`,
+`12,5 %`, `12.5%`, a minus in front. The tooltip, the legend of a donut, the table and the summary
+use the value's decimals; the axis uses the tick's.
+
+**What a screen reader gets.** The SVG is `role="img"`, named by its `<title>` and described by a
+`<desc>` the chart writes from the data: "Bar chart, 6 categories from Jan to Jun. 2025: from
+8.200,00 € to 11.200,00 €, lowest 7.900,00 € (Feb), highest 11.200,00 € (Jun). …" (a donut: each
+part with its value and share). The legend names every series beside a mark like its own (a short
+line with its point shape, or a swatch) — never colour alone; a single series has no legend, the
+title names it. **The data table** is a `<details>` "Show as table" under the chart, not a visually
+hidden table: it works without a script, every reader can open it — a person who wants the exact
+figures, a keyboard user, a screen reader user — and it is not read twice by a screen reader that
+already heard the summary. `->table('hidden')` makes it a screen-reader-only table where a card has
+no room for the link.
+
+**With the script** (`js/chart.js`):
+
+- **Width.** The chart is drawn again at the width of its box, and again when the box changes — one
+  px of the viewBox is one px on the screen, so its text stays 12px on a phone. The script draws
+  with the code of `Chart.php`, ported line by line: `GK.chart.html($chart->config())` is
+  `$chart->html()` byte for byte (`ci/browser-chart.js` holds it for 400 random charts). Without the
+  script the SVG scales with its box; under 560px it keeps 560px and its box scrolls sideways.
+- **Pointer.** Over a category the tooltip lists the value of every series (the value first, then
+  the name, a line key in the series' colour), a line or area chart shows a crosshair on the
+  category, the bars of the category stay and the others step back. The way from the category to
+  its tooltip belongs to that category, so the pointer can reach the tooltip and rest on it.
+  A tap does the same on a touch screen. Leaving the chart closes it.
+- **Keys.** The plot is one tab stop (`role="application"`, named by the title and "Arrow keys move
+  between the values, Enter selects one", described by the summary). ← → (↑ ↓) move between the
+  categories that have a value, Home and End to the ends, Enter or Space selects, Escape closes the
+  tooltip. Each move is said through a polite live region ("Feb. 2025: 7.900,00 €. 2026: 8.800,00 €.").
+- **Legend.** With two series or more each name becomes a button (`.gk-chart-toggle`,
+  `aria-pressed`) that switches its series off and on; the axis follows what is shown, the series
+  keeps its colour, and the change is said ("2025 hidden"). A donut's legend lists its parts with
+  value and share instead — taking a part away would change every share.
+- `prefers-reduced-motion` drops the short fade of the marks; print hides the tooltip and turns the
+  dashes on; forced colours draw in the system's ink with dashes.
+
+**Events**, on the `.gk-chart`, bubbling — for what the person does, not for calls of `GK.chart`:
+
+| Event | `detail` |
+|---|---|
+| `gk:chartselect` | `{ chart, index, label, series, values }` — a click on a mark or Enter on the keys; `series` is the clicked mark's series (null from the keys or the band), `values` is `[{ series, name, value, text }]` for every series shown (a donut: its part, `text` with the share) |
+| `gk:charttoggle` | `{ chart, series, name, visible }` — a series switched in the legend |
+
+**JavaScript API** (the first argument is the chart's id as given to `new Chart()`, its element, or a selector):
+`GK.chart.update(el, data)` draws new data — any key of `config()`: `labels`, `series` (values as
+numbers or strings), `title`, `type`, `format`, `stacked` … — checked as the server checks it;
+`GK.chart.data(el)` returns the config as it is now (a copy), `GK.chart.toggle(el, series, visible)`
+switches a series (without `visible` the other way round; returns whether it is shown),
+`GK.chart.html(config)` returns the markup `Chart::html()` writes for a config, and
+`GK.chart.init(root)` sets up charts inserted without the MutationObserver seeing them.
+
+```javascript
+const rows = await (await fetch('/api/revenue?year=2026')).json();   // e.g. $chart->config()['series']
+GK.chart.update('revenue', { series: rows });
+document.addEventListener('gk:chartselect', e => openMonth(e.detail.label));
+```
+
+**Colours.** `--gk-chart-1` … `5` on `.gk-chart` and `.gk-chart-spark`, derived from the roles: the
+five `--gk-series-N`, mixed in light mode towards the theme's ink (`--gk-on-surface`) until each
+clears 3:1 on the card, the page and a hover row; in dark mode the dark steps of `--gk-series-N`,
+which clear it already. Measured in all six themes and both dark spellings — series ≥ 3:1, text
+≥ 4.5:1. `--gk-chart-ground` (default `--gk-surface`) is the ring round a point; set it when a chart
+sits on another ground. Text never wears a series colour.
+
+**In StatCards and a Table.** `->card('Revenue', 16900, ['format' => 'currency', 'sparkline' => [8200,
+…, 16900]])` puts a sparkline under the figure, named by the card's label and written in its format;
+`'sparkline' => ['values' => [...], 'color' => 3, 'area' => true]` passes options. A card without
+it is drawn exactly as before. In a table, a column with `'format' => 'html'` takes
+`Chart::sparkline()` as its cell value.
+
+- **Classes** (all `gk-chart-*`, in `css/blocks.json` as "Chart"): `gk-chart`, `-type-area`,
+  `-type-donut` (and `-type-line`, `-type-bar` on the figure), `-stacked`, `-dashes`, `-title`,
+  `-plot`, `-svg`, `-gridline`, `-zero`, `-bar`, `-line`, `-area`, `-dot`, `-dot-on`, `-slice`,
+  `-track`, `-total`, `-total-label`, `-empty`, `-c1` … `-c5`, `-other`, `-legend`, `-key`,
+  `-key-off`, `-keymark`, `-swatch`, `-key-label`, `-key-value`, `-toggle`, `-data`, `-table-wrap`,
+  `-table`, `-spark`, and from the script `-cross`, `-tip`, `-tip-title`, `-tip-row`, `-tip-key`,
+  `-tip-value`, `-tip-name`, `-tip-total`, `-active`, `-on`.
+- **Words** come from `chart.*` in `lang/`; `Lang::jsConfig()` hands them to the script as
+  `chart_*`, so a chart drawn again says what the server said.
+- **Warnings** (`E_USER_WARNING`, the chart still renders): an unknown type, format, option or table
+  mode; a sixth series; a value that is no number (a gap), not finite (a gap), beyond ±1e15 (cut);
+  more values than labels; a negative donut part; `stacked()`, `horizontal()`, `zero(false)`,
+  `markers()` or `dashes()` on a type that has no use for it; a width or height out of range.
+- **Do not** write the SVG yourself, colour text with a series colour, put two value scales in one
+  chart (draw two charts), or pass `0.125` for 12.5 % — `percent` takes the percentage.
+
+### CommandPalette (`GridKit\CommandPalette`, since 1.122.0)
+
+Quick navigation and commands for an admin: Ctrl+K (Cmd+K on a Mac), a few letters, Enter — to a
+page, a customer, an invoice, or a command the page carries out. The server writes a closed
+`<dialog>` holding the field, an empty list and the configuration as JSON; **`js/command-palette.js`**
+opens it, reads the sidebar's links out of the page, ranks what matches and fetches records as you
+type. It is a file of its own like `js/tree.js` (the PawBot dashboard keeps its own `gridkit.js`),
+loaded with `defer` after `gridkit.js` — `skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/command-palette.js" defer></script>`.
+
+**`CommandPalette::render()` PRINTS the dialog** — once per page, anywhere in `<body>` (not inside a
+hidden container). **`->trigger()` RETURNS** the button that opens it, for `Header::action()` or
+anywhere else; `->html()` returns what `render()` prints.
+
+```php
+$palette = (new CommandPalette('main'))                    // the id: storage key and DOM ids
+    ->item('New invoice', '/invoices/new', ['icon' => 'add', 'group' => 'Create', 'keywords' => ['bill', 'create'], 'shortcut' => 'N'])
+    ->item('Dark mode', '', ['icon' => 'dark_mode', 'action' => 'toggle-dark', 'hint' => 'Switches the colours'])
+    ->items([['label' => 'Monthly report', 'href' => '/reports/monthly', 'group' => 'Reports']])
+    ->search('/admin/palette-search', ['minLength' => 2, 'debounce' => 250])   // customers, invoices
+    ->recent(5)                                            // what was chosen comes first next time
+    ->maxPerGroup(6)
+    ->slash();                                             // "/" opens it too, outside fields
+
+echo (new Header())->title('Invoices')->action($palette->trigger())->render();   // the trigger: RETURNED
+$palette->render();                                                               // the dialog: PRINTED
+```
+
+```javascript
+// A command is the page's to carry out.
+document.addEventListener('gk:paletteaction', e => { if (e.detail.action === 'toggle-dark') GK.theme.toggleMode(); });
+```
+
+| Method | What it does |
+|---|---|
+| `new CommandPalette($id = 'main')` | The id names the recent list in `localStorage` (`gk-palette-<id>`) and the DOM ids. Empty: a warning, `main`. |
+| `->item($label, $href = '', $opts = [])` | One entry: a link, or with the option `action` a command. Options below. |
+| `->items(iterable $rows)` | Many at once — rows from a database: `label` (or `title`), `href` (or `url`) and any option under its own name. Rows may be objects. |
+| `->search($url, $opts = [])` | Records from the server, asked as you type (see "Records"). Options: `minLength` (letters before it asks, 0 to 10, default 2), `debounce` (ms of quiet before it asks, 0 to 2000, default 250), `group` (the heading of a bare list), `param` (the query parameter, default `q`). Call it again for a second URL. |
+| `->sidebar(true \| false \| '#nav')` | The links of the sidebar are entries (default `true`: `.gk-sidebar-nav`, GridKit's sidebar); a selector reads another navigation; `false` none. |
+| `->recent(int $count)` | How many chosen entries come first next time (0 to 20, default 5; 0 remembers nothing). |
+| `->maxPerGroup(int $count)` | At most this many entries under one heading (1 to 50, default 6); the rest is counted ("3 more — keep typing to narrow it down"). |
+| `->hotkey('mod+k')` | The key that opens it: `mod` is Ctrl, Cmd on a Mac; any of `mod`, `ctrl`, `meta`, `alt`, `shift` joined with `+` to one key (`'mod+shift+p'`). At least one of mod, ctrl, meta, alt. `false` or `''`: no key — the trigger and `GK.palette.open()` still work. |
+| `->slash(true)` | `/` opens it as well, unless the focus is in a field (default off). |
+| `->placeholder($text)` | The words in the empty field (default: the catalogue's "Type a command or search..."). |
+| `->label($text)` | The accessible name of the dialog (default "Command palette"). |
+| `->fallback($url)` | Without the script the trigger is a link to this search page; with it, the link opens the palette (Ctrl+click still follows it). Without `fallback()` the trigger is a `hidden` button the script shows. |
+| `->trigger($opts = [])` | RETURNS the trigger: a search symbol, its word and the key (`Ctrl K`, `⌘K` on a Mac), `aria-keyshortcuts`. Options: `label` (default "Search"), `class` (more classes), `kbd` (`false`: no key shown). On a phone it is its symbol at 44px; its name stays for a screen reader. |
+| `->render()` | Prints the dialog. |
+| `->html()` | Returns it. |
+
+**Entry options** (in `item()`'s `$opts`, or as fields of a row of `items()`):
+
+| Option | |
+|---|---|
+| `icon` | A Material icon name (`[a-z0-9_]`). |
+| `group` | The heading it is listed under. Without: "Pages" for a link, "Commands" for a command. |
+| `keywords` | Text or a list of words: found, not shown ("bill" finds "New invoice"). |
+| `hint` | A second line, smaller (searched too). |
+| `shortcut` | Shown at the end of the entry as a key (`N`, `G I`). Shown only: the page binds its keys itself. |
+| `action` | A name (letters, digits, `- _ . :`, starting with a letter): the entry is a command, and choosing it fires `gk:paletteaction` with that name. With an `$href` too, it stays a link and the action is ignored (a warning). |
+
+**Where the entries come from**, each time the palette opens: the sidebar (labels from
+`data-label` or `.gk-sidebar-label` — no badge, no symbol word; the group heading above; the symbol;
+a submenu entry names its parent as hint; the current page, `aria-current="page"`, says so), the
+items of the server, what a script added with `GK.palette.register()`, and — once something is typed
+— the records of the search URLs. Chosen from the sidebar, an entry is followed by a click on that
+very link, so AJAX navigation (`ajaxNav`) and the page's own handlers see it.
+
+**Records.** After `minLength` letters and `debounce` ms of quiet the script asks
+`GET url?q=<what was typed>` (`Accept: application/json`, `X-Requested-With: XMLHttpRequest`,
+`credentials: same-origin`) — **on the page's own origin only**: a URL on another origin is refused
+with a console warning and never asked. A newer question aborts the older one, and an answer that
+arrives late anyway is dropped; closing aborts too. While it asks, a line says "Searching..." and
+the list is `aria-busy`; a failed answer (no 2xx, not JSON, no network) says "The records could not
+be searched." with a **Try again** button; an answer with nothing in it, while the page has entries,
+says "No records found.". The answer is the shape `GK.search` reads, so an endpoint written for it
+works unchanged — `{"groups": [{"title", "items": [...]}]}`, or `{"items": [...]}` (under the
+search's `group`, default "Records"), or a bare list. A record has a `title` and a `url`, and may
+have `subtitle`, `icon` and `amount` (shown at the end). Every label is put in as text; a record
+without a link, or with a `javascript:`, `data:` or `vbscript:` one, is dropped. Records come after
+the page's entries, in the server's order, at most `maxPerGroup` per heading.
+
+```php
+// GET /admin/palette-search?q=eck — the query arrives as it was typed
+$q = trim((string) ($_GET['q'] ?? 'eck'));
+$customers = [['id' => 1042, 'name' => 'Ecklund & Partner', 'city' => 'Vienna']];   // your query, LIKE '%eck%'
+header('Content-Type: application/json');
+echo json_encode(['groups' => [[
+    'title' => 'Customers',
+    'items' => array_map(fn (array $c): array => [
+        'title' => $c['name'], 'subtitle' => $c['city'] . ' · no. ' . $c['id'],
+        'url' => '/customers/' . $c['id'], 'icon' => 'business',
+    ], $customers),
+]]]);
+```
+
+**Finding and ranking.** Case and accents do not count, and the German umlauts are found both ways:
+`muller` and `mueller` find the name written with a u-umlaut, `strasse` the one with a sharp s. The
+best match comes first: a name that **starts** with the query, then one where a **word starts** with
+it (a capital in `invoiceList` starts a word, and every word of a query with spaces may start a word:
+`ne in` finds "New invoice"), then one that holds it **inside a word**, then its **letters in order**
+— the first starting a word, a letter in another word starting that word, letters skipped only inside
+a word (`ninv` and `invce` find "New invoice"; `tvl` does not find "Print the invoice list").
+Within each step: earlier and shorter first. Keywords and the hint are searched a step and a half
+lower and mark nothing. The letters that matched are marked (`mark.gk-palette-hit`, underlined and
+heavier) on the letters that were written. With a query the group of the best match comes first;
+with none, the recent entries, then every group in the order of the page.
+
+**Recent entries.** What was chosen is kept in `localStorage` under `gk-palette-<id>` — in
+`GK.theme`'s scope when one is set (`GK.theme.init({ scope: 'u42' })` or `window.GK_THEME_SCOPE`:
+`gk-palette-<id>:u42`), so the next person at a shared computer does not find the last one's
+customers. Shown first under "Recent" when nothing is typed (and not a second time below), found by
+typing (a record too, before the server answers). A command this page does not have is left out; a
+stored link with a `javascript:` URL is dropped; storage that throws (a private window) just forgets.
+
+- **Keys** (the WAI combobox with a listbox, `aria-activedescendant` — the focus stays in the field):
+  Down/Up move (round at the ends), Home/End to the first/last entry, Page Down/Page Up by a page,
+  Enter opens, **Ctrl+Enter** (Cmd+Enter on a Mac) opens a link in a new tab, Escape closes. Tab goes
+  round inside the dialog (the field, Try again, the close button). The pointer marks what it is over;
+  a click opens, Ctrl/Cmd/Shift/middle click on a link is the browser's.
+- **Its key belongs to it** while it is on the page: the palette takes Ctrl+K first, so `GK.search` on
+  the same key stays shut (its `data-gk-search` button still works). Inside a rich-text editor
+  (`contenteditable`) Ctrl+K stays the editor's — it makes a link there. The modifiers have to be
+  exact (Ctrl+Shift+K is the browser's); a keyboard that writes another alphabet presses the same key.
+  On a Mac it is Cmd+K and Ctrl+K is left to the text field. Pressed again, the key closes it.
+- **A modal dialog** (`showModal()`): the page behind is inert, the focus stays inside, Escape closes
+  the palette and not a modal underneath, and closing gives the focus back to what had it (else to the
+  trigger). The field is `role="combobox"` with `aria-expanded` and `aria-controls`, the list a
+  `listbox` of `group`s named by their headings, an entry an `option` (`aria-selected` on the one the
+  field points at; a link is an `<a role="option">` out of the tab order). A polite live region says
+  "12 results", "No results for ..." or that the server failed, once the list has settled. The field
+  is described by a sentence that says the keys; the line of keys under the list is for the eye.
+- **A phone** (up to 600px): the dialog covers the screen, every entry and the close button are 44px,
+  the line of keys is gone, and nothing scrolls sideways — a long name is cut with an ellipsis.
+- **Without script** the trigger is hidden (or the link of `fallback()`), and the closed dialog draws
+  nothing.
+
+**Events**, on the `<dialog>`, bubbling:
+
+| Event | `detail` |
+|---|---|
+| `gk:paletteopen` | `{ palette, source }` — `source`: `hotkey`, `slash`, `trigger` or `api` |
+| `gk:paletteselect` | `{ palette, item, query, newTab }` — **cancelable**: `preventDefault()` and nothing happens; the palette stays open and nothing is remembered |
+| `gk:paletteaction` | `{ palette, action, item, query }` — a command was chosen; the palette has closed and given the focus back |
+
+`item` is `{ label, href, action, group, hint, icon, kind, source, element, data }` — `kind`: `link`,
+`action` or `record`; `source`: `sidebar`, `page`, `script`, `search` or `recent`; `element` the
+sidebar's link; `data` what a script registered, or the record as the server sent it.
+
+**JavaScript API**: `GK.palette.open()` (or `GK.palette.open('inv')` with a query typed in, or
+`{ id, query }`; returns the dialog — on a page whose server wrote no palette it builds one: the
+sidebar and what a script registered, no key of its own), `GK.palette.close()`,
+`GK.palette.register(source)` — more entries for every palette of the page, returning a function
+that takes them away:
+
+```javascript
+GK.palette.register([{ label: 'Reload', action: 'reload', icon: 'refresh' }]);            // a list of entries
+const off = GK.palette.register({ group: 'Tools', items: () => tools.map(t => ({ label: t.name, href: t.url })) });  // asked at each open
+GK.palette.register({ group: 'People', url: '/api/people', minLength: 2, debounce: 250, param: 'q' });               // records, same origin
+GK.palette.register({ group: 'Orders', search: (q, signal) => fetch('/api/orders?q=' + encodeURIComponent(q), { signal }).then(r => r.json()) });
+off();
+```
+
+- **Classes** (all `gk-palette-*`, in `css/blocks.json` as "Command palette"): `gk-palette`, `-head`,
+  `-input`, `-close`, `-list`, `-group-label`, `-option`, `-icon`, `-text`, `-label`, `-hint`, `-meta`,
+  `-shortcut`, `-hit`, `-more`, `-status`, `-retry`, `-empty`, `-foot`, `-kbd`, `-trigger`,
+  `-trigger-label`. Colours are roles: light, both dark spellings and the six themes follow (measured:
+  text 4.5:1, the selection bar 3:1); the veil behind it is the one literal.
+- **Words** come from `js.palette_*` (the dialog — the server writes them, the script reads them for a
+  palette it builds) and `palette.trigger` in `lang/`; the script's reach the page through
+  `Lang::jsConfig()`, and it has the English ones as a floor.
+- **Warnings** (`E_USER_WARNING`, the palette still renders): an entry without a label, with a
+  `javascript:`, `data:` or `vbscript:` link, with neither a link nor an action, with a link and an
+  action, with an action that is not a name, an option it does not know or of the wrong type; a
+  search URL that is empty or not a link; a count out of range; a hotkey that is not one; an empty id.
+- **Do not** render the same palette twice or inside a hidden container, bind Ctrl+K yourself on a
+  page that has one, or put markup in a label — it is shown as text.
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -2965,13 +3773,47 @@ GK.tree.selected('cats');                  // ['books', 'novels', …]
 GK.tree.reload('pages', '5');              // fetches the children of 5 again (lazyUrl)
 document.addEventListener('gk:treemove', e => { if (e.detail.parent === 'legal') e.preventDefault(); });
 
+// Charts (since 1.121.0) — GridKit\Chart and js/chart.js, see "Chart". First argument: the chart's id, element or selector.
+GK.chart.update('revenue', { series: [{ name: '2026', values: [9100, 8800, 10900] }] });  // any key of Chart::config()
+GK.chart.data('revenue');                  // the config as it is now (a copy)
+GK.chart.toggle('revenue', 1, false);      // switches series 1 off; returns whether it is shown
+GK.chart.html(config);                     // the markup Chart::html() writes for a config, byte for byte
+document.addEventListener('gk:chartselect', e => { /* e.detail: { chart, index, label, series, values } */ });
+document.addEventListener('gk:charttoggle', e => { /* e.detail: { chart, series, name, visible } */ });
+
+// Command palette (since 1.122.0) — GridKit\CommandPalette and js/command-palette.js, see "CommandPalette".
+GK.palette.open('inv');                    // opens it, with a query typed in; no argument: empty. Returns the <dialog>.
+GK.palette.close();
+const off = GK.palette.register({ group: 'Tools', items: () => [{ label: 'Reload', action: 'reload' }] });  // off() takes it away
+document.addEventListener('gk:paletteselect', e => { if (e.detail.item.kind === 'record') { /* cancelable */ } });
+document.addEventListener('gk:paletteaction', e => { if (e.detail.action === 'reload') location.reload(); });
+
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
+
+// Dates (since 1.120.0) — js/calendar.js, see "DateRange" and "Calendar".
+GK.dateRange.get('period');                    // { from: '2026-11-01', to: '2026-11-30', preset: 'this-month' }
+GK.dateRange.set('period', 'last-month');      // or { from, to } (custom); fires no event
+GK.dateRange.presetRange('this-quarter', '2026-11-04');   // { from: '2026-10-01', to: '2026-12-31' }
+GK.dateRange.text('2026-10-01', '2026-10-31', 'period');  // 'Oct 1 – 31, 2026', in the picker's words
+document.addEventListener('gk:daterange', e => { /* e.detail: { name, from, to, preset, text } */ });
+GK.calendar.month('appointments');            // '2026-11'
+GK.calendar.focus('appointments', '2026-11-12');
+GK.calendar.go('appointments', '2027-01');    // loads that month (gk:calendarnav can refuse it)
+GK.calendar.events('appointments', '2026-11-04');   // [{ id, title, href, start, end }]
+document.addEventListener('gk:calendarselect', e => { /* { calendar, date, event, events }, cancelable */ });
+document.addEventListener('gk:calendarnav', e => { /* { calendar, month, url, date }, cancelable */ });
 
 // Line items (since 1.117.0) — see "LineItems". The same totals as LineItems::totals(), to the cent.
 document.addEventListener('gk:lineitemschange', e => { /* e.detail: { items, totals } */ });
 GK.lineItems.totals(document.querySelector('.gk-lines'));
 GK.lineItems.add(document.querySelector('.gk-lines'), { description: 'Travel', qty: 1, price: '40', vat: 20 });
+
+// Import (since 1.119.0) — GridKit\Import and js/import.js, see "Import". First argument: the importer's name, form or selector.
+GK.import.read('customers', file);             // a File, Blob, bytes or text, as if chosen; a Promise of the result
+GK.import.map('customers', { 'E-Mail': 'email' }); // set the mapping (column name or index => field key); no 2nd argument reads it
+GK.import.result('customers');                 // { rows, errors, total, valid, invalid, columns, mapping, missing, notes, meta, error }
+document.addEventListener('gk:importready', e => { /* e.detail.result — after every change */ });
 
 // Tabs (since 1.111.0) — see "Tabs". A row by its .gk-tabs element or id; hand-written rows too.
 GK.tabs.select('settings', 'bank');            // as a click (gk:tabchange can refuse it); { focus, force }
@@ -3330,6 +4172,7 @@ Features:
 | `gk-stat-tiles` `gk-stat-tile` `gk-stat-tile-value` `gk-stat-tile-label` `gk-stat-tile-sub` `gk-stat-tile-warning` `gk-stat-tile-danger` | Compact key figures (`StatCards->compact()`); a tile may be a `<button>` or `<a>` |
 | `gk-sheet-meta` | A line under the side sheet's title |
 | `gk-swatch` `gk-swatch-1` … `gk-swatch-5`, `gk-series-fill-1` … `-5`, `gk-series-stroke-1` … `-5` | Chart colours from `--gk-series-1` … `-5`: legend mark, SVG fill, SVG stroke |
+| `gk-chart` `gk-chart-*` (since 1.121.0) | Written by `GridKit\Chart`, never by hand — see "Chart". `--gk-chart-1` … `5` are the series colours at 3:1 on every ground; `gk-chart-c1` … `c5` set them on a mark or a legend key |
 | `gk-btn-touch` | A button at least `--gk-target-min` (44px) in both directions, type unchanged |
 | `gk-message-actions` | Actions on the right of a `.gk-message` |
 | `gk-message-sm` | A small message (since 1.95.0): denser than `.gk-message-compact` and with no margin of its own; the tone comes from `-info` `-success` `-warning` `-error` |

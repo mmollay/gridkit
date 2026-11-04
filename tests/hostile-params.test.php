@@ -41,7 +41,7 @@ function hostileRun(string $fixture, array $args, int $seconds = 20): array
 return [
 
 'no hostile query parameter hangs or breaks a component' => function (): void {
-    foreach (['Table', 'TableRows', 'FilterChips', 'PageSize', 'YearFilter', 'Pagination', 'Tabs'] as $component) {
+    foreach (['Table', 'TableRows', 'FilterChips', 'PageSize', 'YearFilter', 'Pagination', 'Tabs', 'DateRange', 'Calendar'] as $component) {
         [$out, $timedOut] = hostileRun('hostile-probe.php', [$component]);
         $lines = explode("\n", trim($out));
         $current = '';

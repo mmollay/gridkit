@@ -112,6 +112,12 @@ class Lang
                 // paint, GK.picker.add() for a tile that arrives later — and a
                 // reader must hear the same words from both.
                 $jsKeys['picker_' . substr($key, 7)] = $val;
+            } elseif (str_starts_with($key, 'chart.')) {
+                // A chart (1.121.0) is drawn by both sides as well: js/chart.js draws it again
+                // at the width of its box and after GK.chart.update(), with the code of
+                // GridKit\Chart ported line by line — and with these words, or the summary a
+                // screen reader hears would change language on the first resize.
+                $jsKeys['chart_' . substr($key, 6)] = $val;
             } elseif (str_starts_with($key, 'format.')) {
                 // Number and date shapes, for exactly the same reason as
                 // action.* above — and this pair had already drifted. The

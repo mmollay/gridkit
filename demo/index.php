@@ -13,6 +13,7 @@ use GridKit\Button;
 use GridKit\Theme;
 use GridKit\Layout;
 use GridKit\Lang;
+use GridKit\CommandPalette;
 
 // Language switcher — ?lang=de or ?lang=en
 $lang = $_GET['lang'] ?? $_COOKIE['gk_lang'] ?? 'en';
@@ -384,6 +385,13 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-util-box { min-height:32px; background:var(--gk-surface-variant, rgba(0,0,0,.04)); border-radius:4px; overflow:hidden; }
         @media (max-width:600px) { .demo-news-row { grid-template-columns:minmax(0, 1fr); } }
         .demo-announce-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+        /* Charts (1.121.0): each chart beside its code on a wide screen, the code under it on a narrow one. */
+        [data-section="charts"] .demo-card > .demo-showcase { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr); gap:16px 24px; align-items:start; margin-bottom:0; }
+        [data-section="charts"] .demo-card > .demo-showcase > .demo-showcase-code { margin-top:0; }
+        @media (max-width:1180px) { [data-section="charts"] .demo-card > .demo-showcase { grid-template-columns:minmax(0, 1fr); } }
+        .demo-chart-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap:16px; margin-bottom:24px; }
+        .demo-chart-grid > .demo-card { margin-bottom:0; }
+        .demo-chart-grid .demo-card > .demo-showcase { display:block; }
         .demo-pair { display:flex; flex-direction:column; gap:16px; margin-bottom:24px; }
         .demo-pair-left { display:contents; }
         .demo-stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:24px; }
@@ -435,6 +443,10 @@ $sidebar->brand('', 'widgets')
     ->item('Permissions', '#permissions', 'admin_panel_settings')
     ->item('Tree', '#tree', 'account_tree')
     ->item('Line items', '#lineitems', 'receipt_long')
+    ->item('Import', '#import', 'upload_file')
+    ->item('Dates', '#dates', 'calendar_month')
+    ->item('Charts', '#charts', 'bar_chart')
+    ->item('Command palette', '#palette', 'keyboard_command_key')
     ->group('Examples')
     ->item('Examples', '#examples', 'rocket_launch')
     ->group('Info')
@@ -449,6 +461,26 @@ echo gkNavNews((string) ob_get_clean());
 <div class="gk-with-sidebar">
 
 <?php
+// The command palette of the whole demo (1.122.0): every section of the sidebar is an entry by itself,
+// the headings come from a script (sections/palette.php), the records from api/palette.php.
+$demoPaletteBuild = static function () use ($lang): CommandPalette {
+    $palette = new CommandPalette('demo');
+    $palette->item('Toggle dark mode', '', ['icon' => 'dark_mode', 'action' => 'demo-dark', 'keywords' => ['night', 'light', 'theme']])
+        ->item('Show a toast', '', ['icon' => 'notifications', 'action' => 'demo-toast', 'keywords' => 'message']);
+    foreach (['indigo' => 'Indigo', 'ocean' => 'Ocean', 'forest' => 'Forest', 'rose' => 'Rose', 'amber' => 'Amber', 'slate' => 'Slate'] as $key => $name) {
+        $palette->item("Theme: $name", '', ['icon' => 'palette', 'group' => 'Themes', 'action' => "demo-theme:$key", 'keywords' => 'colour color']);
+    }
+    $palette->item($lang === 'en' ? 'Show the demo in German' : 'Show the demo in English', '?lang=' . ($lang === 'en' ? 'de' : 'en'),
+            ['icon' => 'translate', 'group' => 'Links', 'keywords' => ['language', 'deutsch', 'english']])
+        ->item('GitHub repository', 'https://github.com/mmollay/gridkit', ['icon' => 'code', 'group' => 'Links', 'hint' => 'github.com/mmollay/gridkit'])
+        ->item('The agent skill', '../GRIDKIT_SKILL.md', ['icon' => 'smart_toy', 'group' => 'Links', 'hint' => 'GRIDKIT_SKILL.md', 'keywords' => 'docs documentation'])
+        ->item('GridKit home page', '../', ['icon' => 'home', 'group' => 'Links'])
+        ->search('api/palette.php', ['minLength' => 2])
+        ->slash();
+    return $palette;
+};
+$demoPalette = $demoPaletteBuild();
+
 $demoHeader = new Header();
 $headerTitle = 'GridKit <span style="font-size:11px;font-weight:400;color:var(--gk-on-surface-variant);margin-left:4px">v' . $version . '</span>';
 $langSwitch = $lang === 'en' ? 'de' : 'en';
@@ -458,6 +490,7 @@ $langBtn    = Button::render($langLabel, ['variant' => 'outlined', 'color' => 'n
 echo $demoHeader->title($headerTitle, true)
     ->sidebarToggle(true)
     ->fixed(true)
+    ->action($demoPalette->trigger())
     ->action($langBtn)
     ->user('Demo User', [
         'avatar' => ph(72, 72, 12, 'JD'),
@@ -488,12 +521,22 @@ echo $demoHeader->title($headerTitle, true)
 <?php require __DIR__ . '/sections/permissions.php'; ?>
 <?php require __DIR__ . '/sections/tree.php'; ?>
 <?php require __DIR__ . '/sections/lineitems.php'; ?>
+<?php require __DIR__ . '/sections/import.php'; ?>
+<?php require __DIR__ . '/sections/dates.php'; ?>
+<?php require __DIR__ . '/sections/charts.php'; ?>
+<?php require __DIR__ . '/sections/palette.php'; ?>
 <?php require __DIR__ . '/sections/changelog.php'; ?>
 </div><!-- /gk-with-sidebar -->
+
+<?php $demoPalette->render(); ?>
 
 <script src="<?= Layout::asset('../js/gridkit.js') ?>"></script>
 <script src="<?= Layout::asset('../js/sortierbar.js') ?>" defer></script>
 <script src="<?= Layout::asset('../js/tree.js') ?>" defer></script>
+<script src="<?= Layout::asset('../js/chart.js') ?>" defer></script>
+<script src="<?= Layout::asset('../js/calendar.js') ?>" defer></script>
+<script src="<?= Layout::asset('../js/import.js') ?>" defer></script>
+<script src="<?= Layout::asset('../js/command-palette.js') ?>" defer></script>
 <script>
 (function() {
     var sections = document.querySelectorAll('.demo-section');
@@ -529,7 +572,9 @@ echo $demoHeader->title($headerTitle, true)
         if (target) target.classList.add('active');
         links.forEach(function(a) {
             a.classList.remove('active');
-            if (a.getAttribute('href') === '#' + id) a.classList.add('active');
+            a.removeAttribute('aria-current');
+            // The section on screen is the current page — for a screen reader and the command palette too.
+            if (a.getAttribute('href') === '#' + id) { a.classList.add('active'); a.setAttribute('aria-current', 'page'); }
         });
         if (window.innerWidth <= 768) GK.sidebar.close();
     }

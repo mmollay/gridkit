@@ -1,4 +1,4 @@
-# GridKit 1.118.1 — JavaScript
+# GridKit 1.122.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -69,13 +69,47 @@ GK.tree.selected('cats');                  // ['books', 'novels', …]
 GK.tree.reload('pages', '5');              // fetches the children of 5 again (lazyUrl)
 document.addEventListener('gk:treemove', e => { if (e.detail.parent === 'legal') e.preventDefault(); });
 
+// Charts (since 1.121.0) — GridKit\Chart and js/chart.js, see "Chart". First argument: the chart's id, element or selector.
+GK.chart.update('revenue', { series: [{ name: '2026', values: [9100, 8800, 10900] }] });  // any key of Chart::config()
+GK.chart.data('revenue');                  // the config as it is now (a copy)
+GK.chart.toggle('revenue', 1, false);      // switches series 1 off; returns whether it is shown
+GK.chart.html(config);                     // the markup Chart::html() writes for a config, byte for byte
+document.addEventListener('gk:chartselect', e => { /* e.detail: { chart, index, label, series, values } */ });
+document.addEventListener('gk:charttoggle', e => { /* e.detail: { chart, series, name, visible } */ });
+
+// Command palette (since 1.122.0) — GridKit\CommandPalette and js/command-palette.js, see "CommandPalette".
+GK.palette.open('inv');                    // opens it, with a query typed in; no argument: empty. Returns the <dialog>.
+GK.palette.close();
+const off = GK.palette.register({ group: 'Tools', items: () => [{ label: 'Reload', action: 'reload' }] });  // off() takes it away
+document.addEventListener('gk:paletteselect', e => { if (e.detail.item.kind === 'record') { /* cancelable */ } });
+document.addEventListener('gk:paletteaction', e => { if (e.detail.action === 'reload') location.reload(); });
+
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
+
+// Dates (since 1.120.0) — js/calendar.js, see "DateRange" and "Calendar".
+GK.dateRange.get('period');                    // { from: '2026-11-01', to: '2026-11-30', preset: 'this-month' }
+GK.dateRange.set('period', 'last-month');      // or { from, to } (custom); fires no event
+GK.dateRange.presetRange('this-quarter', '2026-11-04');   // { from: '2026-10-01', to: '2026-12-31' }
+GK.dateRange.text('2026-10-01', '2026-10-31', 'period');  // 'Oct 1 – 31, 2026', in the picker's words
+document.addEventListener('gk:daterange', e => { /* e.detail: { name, from, to, preset, text } */ });
+GK.calendar.month('appointments');            // '2026-11'
+GK.calendar.focus('appointments', '2026-11-12');
+GK.calendar.go('appointments', '2027-01');    // loads that month (gk:calendarnav can refuse it)
+GK.calendar.events('appointments', '2026-11-04');   // [{ id, title, href, start, end }]
+document.addEventListener('gk:calendarselect', e => { /* { calendar, date, event, events }, cancelable */ });
+document.addEventListener('gk:calendarnav', e => { /* { calendar, month, url, date }, cancelable */ });
 
 // Line items (since 1.117.0) — see "LineItems". The same totals as LineItems::totals(), to the cent.
 document.addEventListener('gk:lineitemschange', e => { /* e.detail: { items, totals } */ });
 GK.lineItems.totals(document.querySelector('.gk-lines'));
 GK.lineItems.add(document.querySelector('.gk-lines'), { description: 'Travel', qty: 1, price: '40', vat: 20 });
+
+// Import (since 1.119.0) — GridKit\Import and js/import.js, see "Import". First argument: the importer's name, form or selector.
+GK.import.read('customers', file);             // a File, Blob, bytes or text, as if chosen; a Promise of the result
+GK.import.map('customers', { 'E-Mail': 'email' }); // set the mapping (column name or index => field key); no 2nd argument reads it
+GK.import.result('customers');                 // { rows, errors, total, valid, invalid, columns, mapping, missing, notes, meta, error }
+document.addEventListener('gk:importready', e => { /* e.detail.result — after every change */ });
 
 // Tabs (since 1.111.0) — see "Tabs". A row by its .gk-tabs element or id; hand-written rows too.
 GK.tabs.select('settings', 'bank');            // as a click (gk:tabchange can refuse it); { focus, force }
