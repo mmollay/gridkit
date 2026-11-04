@@ -361,6 +361,8 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-news-count { color:var(--gk-on-surface-variant); font-weight:500; }
         .demo-news-list { margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:4px; font-size:14px; line-height:1.5; }
         .demo-news-list li { padding-left:14px; text-indent:-14px; }
+        /* A method name such as PermissionMatrix::fromPost($posted, is wider than the card on a phone. */
+        .demo-news-list code { overflow-wrap:anywhere; }
         .demo-news-list li::before { content:"\00b7\00a0\00a0"; }
         .demo-news-list .demo-news-more::before { content:none; }
         .demo-news-more { color:var(--gk-on-surface-variant); }

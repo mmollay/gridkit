@@ -89,7 +89,7 @@ return [
     [$html, $w] = liRender(fn() => liInvoice()->render());
     T::eq($w, [], 'no warning');
     T::contains($html, '<div class="gk-lines" id="gk-lines-items" role="group" aria-label="Line items"', 'the root');
-    T::contains($html, 'style="--gk-lines-cols: var(--gk-lines-pos) minmax(9rem, 2fr) 4.5rem 6rem 7rem 4.25rem 6rem 7.5rem var(--gk-lines-act)"', 'one track per column');
+    T::contains($html, 'style="--gk-lines-cols: var(--gk-lines-pos) minmax(9rem, 2fr) 4.5rem 7rem 7rem 4.25rem 7rem 7.5rem var(--gk-lines-act)"', 'one track per column');
     T::contains($html, '<div class="gk-lines-head" aria-hidden="true">', 'the heading is for the eye');
     T::contains($html, '<ol class="gk-lines-body" data-gk-sortierbar>', 'js/sortierbar.js orders the lines');
     T::eq(substr_count($html, '<li class="gk-lines-row" data-gk-sort-id="r'), 2, 'one entry per line, keyed');
@@ -197,7 +197,7 @@ return [
         T::notContains($html, $no, "no $no");
     }
     T::contains($html, 'class="gk-lines gk-lines-readonly"', 'the modifier');
-    T::contains($html, 'style="--gk-lines-cols: var(--gk-lines-pos) minmax(9rem, 2fr) 4.5rem 6rem 7rem 4.25rem 6rem 7.5rem"', 'the same tracks, no actions');
+    T::contains($html, 'style="--gk-lines-cols: var(--gk-lines-pos) minmax(9rem, 2fr) 4.5rem 7rem 7rem 4.25rem 7rem 7.5rem"', 'the same tracks, no actions');
     T::contains($html, 'data-gk-lines-value="120"><span class="gk-lines-label">Unit price</span><span class="gk-lines-out gk-td-num">120,00&nbsp;€</span>', 'a price as money');
     T::contains($html, '<span class="gk-lines-out">Beratung</span><span class="gk-lines-sub">Vor Ort</span>', 'the description\'s second line beneath it');
     T::contains($html, 'data-gk-lines-sum="discount" data-gk-lines-value="3"><dt>Discount 3&nbsp;%</dt>', 'the discount with its rate, in machine form for the script');

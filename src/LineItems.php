@@ -46,7 +46,7 @@ class LineItems
      *  tracks and fr shares with a fixed minimum come out the same width in every line. */
     private const TRACKS = [
         'text' => 'minmax(9rem, 2fr)', 'textarea' => 'minmax(9rem, 2fr)', 'lookup' => 'minmax(8rem, 1fr)',
-        'number' => '4.5rem', 'select' => '6rem', 'money' => '7rem', 'percent' => '4.25rem',
+        'number' => '4.5rem', 'select' => '7rem', 'money' => '7rem', 'percent' => '4.25rem',
         'computed' => '7.5rem', 'readonly' => '6rem',
     ];
 

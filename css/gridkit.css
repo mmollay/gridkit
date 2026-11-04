@@ -13082,8 +13082,10 @@ a.gk-tree-label:hover {
   line-height: 1.45;
   field-sizing: content;
 }
+/* The arrow keeps its room: a value as long as "flat rate" ran under it with 4px (1.117.0). */
 .gk-lines select.gk-input {
-  padding-inline-end: 4px;
+  padding-inline-end: 26px;
+  background-position: right 8px center;
 }
 .gk-lines .gk-ajax-select .gk-select-display {
   min-height: 40px;
