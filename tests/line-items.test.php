@@ -227,6 +227,60 @@ return [
     T::ok(count($w2) === 1 && str_contains($w2[0], "needs 'lines' => new LineItems"), 'without an editor: said, and left out');
 },
 
+'a lookup column is Form\'s AJAX select, written in one place' => function (): void {
+    // 1.117.0 copied the markup of the 'ajaxselect' field into lookupHtml(), and GK.ajaxSelect
+    // binds both: a fix to one copy (a name, an aria attribute) would have missed the other.
+    // Both now render it through Form::ajaxSelectHtml(), and it stays that way.
+    $root = __DIR__ . '/..';
+    $src = '';
+    foreach (glob($root . '/src/*.php') ?: [] as $file) $src .= (string) file_get_contents($file);
+    $src = str_replace('\\"', '"', $src);   // the same markup in a "…" string: class=\"gk-ajax-select\"
+    foreach (['class="gk-ajax-select" data-gk-ajax-select', ' data-label-field="', ' data-min-chars="', ' data-search-param="',
+              'class="gk-ajax-search-input"', 'class="gk-ajax-clear"', 'class="gk-select-loading"', 'gk-select-icon'] as $mark) {
+        T::eq(substr_count($src, $mark), 1, "src/ writes `$mark` once");
+    }
+    $form = (string) file_get_contents($root . '/src/Form.php');
+    $lines = (string) file_get_contents($root . '/src/LineItems.php');
+    T::ok(preg_match('/function renderAjaxSelect\(.*?\n    \}\n/s', $form, $f) === 1 && str_contains($f[0], 'self::ajaxSelectHtml('),
+        "Form's 'ajaxselect' field draws through ajaxSelectHtml()");
+    T::ok(preg_match('/function lookupHtml\(.*?\n    \}\n/s', $lines, $l) === 1 && str_contains($l[0], 'Form::ajaxSelectHtml('),
+        'the lookup column draws through Form::ajaxSelectHtml()');
+    T::ok(preg_match('/gk-(?:ajax|select)-|form\.(?:clear|loading)/', $lines) === 0, 'LineItems writes no piece of that markup itself');
+    T::contains((string) (new ReflectionMethod(Form::class, 'ajaxSelectHtml'))->getDocComment(), '@internal',
+        'the shared method says it is no API');
+
+    // The same element, with what each caller adds: Form names it by the field, the lookup by its cell.
+    Lang::set('en');
+    $element = static function (string $html): string {
+        preg_match('#<div class="gk-ajax-select".*?gk-select-loading.*?</div></div></div>#s', $html, $m);
+        return $m[0] ?? '';
+    };
+    $opts = ['url' => '/articles?x=1&y=2', 'minChars' => 1, 'subtextField' => 'number'];
+    $viaForm = $element(T::capture(fn() => (new Form('f'))->field('article', 'Article', 'ajaxselect', $opts + ['value' => '7', 'displayValue' => 'Drill "XL"'])->render()));
+    $viaLines = $element((new LineItems('lk'))->column('article', 'Article', $opts + ['type' => 'lookup', 'display' => 'article_name', 'required' => true])
+        ->column('description', 'Description')->items([['article' => '7', 'article_name' => 'Drill "XL"', 'description' => 'x']])->html());
+    $skeleton = static function (string $el): array {
+        preg_match_all('/<(\/?[a-z]+)(?:[^>]*? class="([^"]*)")?/', $el, $m, PREG_SET_ORDER);
+        return array_map(static fn(array $t): string => $t[1] . (isset($t[2]) ? '.' . $t[2] : ''), $m);
+    };
+    T::ok($viaForm !== '' && $viaLines !== '', 'both render the element');
+    T::eq($skeleton($viaLines), $skeleton($viaForm), 'the same elements with the same classes, in the same order');
+    T::eq(strstr($viaLines, '<input', true), strstr($viaForm, '<input', true), 'the same data-* for GK.ajaxSelect');
+    preg_match('/aria-controls="([^"]+)"/', $viaLines, $c);
+    T::contains($viaLines, '<div class="gk-select-options" id="' . ($c[1] ?? 'x') . '" role="listbox">', 'the combobox points at its listbox');
+
+    // And byte for byte, the way tests/golden/form.json holds the field: a lookup cell as 1.117.0 wrote it.
+    T::eq($viaLines, '<div class="gk-ajax-select" data-gk-ajax-select data-url="/articles?x=1&amp;y=2" data-label-field="name" data-value-field="id" data-subtext-field="number" data-min-chars="1" data-search-param="q">'
+        . '<input type="text" class="gk-select-value-input" tabindex="-1" aria-hidden="true" id="lk-r1-article" name="lk[0][article]" data-gk-lines-field="article" data-gk-lines-required required value="7">'
+        . '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="lk-r1-article-list" aria-labelledby="lk-r1-article-label" aria-describedby="lk-r1-article-error">'
+        . '<span class="material-icons gk-select-icon" aria-hidden="true">search</span>'
+        . '<input type="text" class="gk-ajax-search-input" value="Drill &quot;XL&quot;" name="lk[0][article_name]" data-gk-lines-field="article_name" placeholder="Search article…" autocomplete="off" aria-labelledby="lk-r1-article-label">'
+        . '<button type="button" class="gk-ajax-clear" aria-label="Clear" title="Clear"><span aria-hidden="true">&times;</span></button></div>'
+        . '<div class="gk-select-dropdown"><div class="gk-select-options" id="lk-r1-article-list" role="listbox"></div>'
+        . '<div class="gk-select-loading" style="display:none;"><span class="material-icons gk-spin" aria-hidden="true">sync</span> Searching...</div></div></div>',
+        'the lookup cell, unchanged');
+},
+
 // ── Reading a POST ────────────────────────────────────────────────────────
 
 'parse(): machine numbers, blank lines dropped, the totals, every message keyed like the POST' => function (): void {

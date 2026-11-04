@@ -1074,8 +1074,8 @@ class LineItems
     }
 
     /**
-     * The search of a 'lookup' column: the markup GK.ajaxSelect binds (the same as Form's
-     * 'ajaxselect' field writes), the article's id posted under the column's key.
+     * The search of a 'lookup' column: Form's 'ajaxselect' markup, which GK.ajaxSelect binds, from
+     * its one source (Form::ajaxSelectHtml()) — the article's id posted under the column's key.
      *
      * @param array<string,mixed> $row
      * @param array<string,mixed> $c
@@ -1083,26 +1083,24 @@ class LineItems
     private function lookupHtml(array $row, array $c, string $id, string $postName, string $raw, bool $isReq, \Closure $e): string
     {
         $shown = $c['display'] !== null && is_scalar($row[$c['display']] ?? null) ? (string) $row[$c['display']] : '';
-        $listId = preg_replace('/[^A-Za-z0-9_-]/', '-', $id) . '-list';
-        return '<div class="gk-ajax-select" data-gk-ajax-select data-url="' . $e($c['url']) . '" data-label-field="' . $e($c['labelField']) . '"'
-             . ' data-value-field="' . $e($c['valueField']) . '" data-subtext-field="' . $e($c['subtextField']) . '"'
-             . ' data-min-chars="' . $e($c['minChars']) . '" data-search-param="' . $e($c['searchParam']) . '">'
-             . '<input type="text" class="gk-select-value-input" tabindex="-1" aria-hidden="true" id="' . $e($id) . '" name="' . $e($postName) . '"'
-             . ' data-gk-lines-field="' . $e($c['key']) . '"' . ($c['required'] ? ' data-gk-lines-required' : '') . ($isReq ? ' required' : '')
-             . ' value="' . $e($raw) . '">'
-             . '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false"'
-             . ' aria-controls="' . $e($listId) . '" aria-labelledby="' . $e($id . '-label') . '" aria-describedby="' . $e($id . '-error') . '">'
-             . '<span class="material-icons gk-select-icon" aria-hidden="true">search</span>'
-             // With 'display' the words shown post too (name[i][display]), so a form shown again
-             // after its POST still names the article.
-             . '<input type="text" class="gk-ajax-search-input" value="' . $e($shown) . '"'
-             . ($c['display'] !== null ? ' name="' . $e(preg_replace('/\[[^\[\]]*\]$/', '[' . $c['display'] . ']', $postName)) . '" data-gk-lines-field="' . $e($c['display']) . '"' : '')
-             . ' placeholder="' . $e($c['placeholder'] ?? Lang::t('lineitems.search_article')) . '" autocomplete="off" aria-labelledby="' . $e($id . '-label') . '">'
-             . '<button type="button" class="gk-ajax-clear" aria-label="' . $e(Lang::t('form.clear')) . '" title="' . $e(Lang::t('form.clear')) . '"' . ($raw === '' ? ' style="display:none;"' : '') . '><span aria-hidden="true">&times;</span></button>'
-             . '</div>'
-             . '<div class="gk-select-dropdown"><div class="gk-select-options" id="' . $e($listId) . '" role="listbox"></div>'
-             . '<div class="gk-select-loading" style="display:none;"><span class="material-icons gk-spin" aria-hidden="true">sync</span> ' . $e(Lang::t('form.loading')) . '</div>'
-             . '</div></div>';
+        $labelledBy = ' aria-labelledby="' . $e($id . '-label') . '"';
+        return Form::ajaxSelectHtml(
+            $e, $c,
+            value: $raw,
+            shown: $shown,
+            placeholder: $c['placeholder'] ?? Lang::t('lineitems.search_article'),
+            idBase: $id,
+            hideClear: $raw === '',
+            hidden: ' id="' . $e($id) . '" name="' . $e($postName) . '" data-gk-lines-field="' . $e($c['key']) . '"'
+                . ($c['required'] ? ' data-gk-lines-required' : '') . ($isReq ? ' required' : ''),
+            combo: $labelledBy . ' aria-describedby="' . $e($id . '-error') . '"',
+            // With 'display' the words shown post too (name[i][display]), so a form shown again
+            // after its POST still names the article.
+            searchBox: $c['display'] !== null
+                ? ' name="' . $e(preg_replace('/\[[^\[\]]*\]$/', '[' . $c['display'] . ']', $postName)) . '" data-gk-lines-field="' . $e($c['display']) . '"'
+                : '',
+            searchTail: $labelledBy,
+        );
     }
 
     /**

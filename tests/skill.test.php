@@ -204,6 +204,7 @@ return [
         'Pagination::fromPaginatorHtml',  // the string twin of a documented call
         'Table::loadTime',                // instrumentation for a page that measures
         'Auth::renderLogin',              // covered in prose, not as a signature
+        'Form::ajaxSelectHtml',           // @internal: the one source of the AJAX select's markup, for Form and LineItems
     ];
 
     $gaps = [];
