@@ -207,6 +207,7 @@
   "ortszeile": {
     "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
     "classes": [
+      "gk-ortszeile-ruhig",
       "gk-ortszeile-schlicht"
     ]
   },

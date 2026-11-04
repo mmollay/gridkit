@@ -7,6 +7,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.123.0] - 2026-11-04
+
+The "you are here" line can be calm: `Header::ortszeile(['ruhig' => true])` draws the steps as plain links at every width, no pill outline around each. Martin, 04.11.2026, about the header of the SSI panel: it looks "unharmonious" — three heavy pills next to the logo.
+
+### Added
+- **`gk-ortszeile-ruhig`** (`Header::ortszeile(['ruhig' => true])`) — the steps of the line are plain links without the pill outline at every width (`schlicht` does that on a phone only), a little lighter (500, the page 600), the separators closer (4px + 2px). The 44 px / 32 px target, the focus ring and the hover surface stay. On a computer the first step steps 8px out to the left, so its icon lines up with the logo above it. One class weak (`:where`), the separator rule carries the class of the line.
+
+### Tests
+- `tests/ortszeile.test.php`: the class is there only on request; the rules (outline, fill, hover surface, weight, no change of height, first step only above 769 px). 176 assertions.
+
 ## [1.122.1] - 2026-11-04
 
 The AJAX select gets four small corrections: a chosen "0" keeps its clear button, its search box has a name for a screen reader, invalid UTF-8 in a value is replaced instead of emptying the attribute, and the article search of `LineItems` says it is invalid when its line has an error.

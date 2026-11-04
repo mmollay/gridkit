@@ -4765,6 +4765,18 @@ a.gk-stat-card:hover {
   :where(.gk-ortszeile-schlicht) .gk-ortszeile-link:hover { background: var(--gk-surface-container); }
 }
 
+/* Ruhig (1.123.0, opt-in: Header::ortszeile(['ruhig' => true])): at every width the steps are plain links, no pill outline,
+   a little lighter than the pills were, the separators closer and softer; the height of a target, the focus ring and the hover surface stay.
+   One class weak (:where), so a rule of the page decides when it wants the pill back. On a computer the first step steps
+   8px out to the left, so its icon stands under the one above it (the brand) and not under the room of its hover surface. */
+:where(.gk-ortszeile-ruhig) .gk-ortszeile-link { border-color: transparent; background: transparent; padding: 0 8px; font-weight: 500; }
+:where(.gk-ortszeile-ruhig) .gk-ortszeile-link:hover { background: var(--gk-surface-container); }
+:where(.gk-ortszeile-ruhig) .gk-ortszeile-current { font-weight: 600; }
+.gk-ortszeile-ruhig li + li::before { margin: 0 4px 0 2px; border-color: var(--gk-outline); }   /* not weak: the separator rule above carries the class of the line */
+@media (min-width: 769px) {
+  :where(.gk-ortszeile-ruhig) li:first-child .gk-ortszeile-link { margin-left: -8px; }
+}
+
 /* The link that jumps over the header to the content (Layout::skipLink, 1.100.0):
    above the page until the keyboard reaches it — moved, not display: none, which
    no keyboard could land on. */
