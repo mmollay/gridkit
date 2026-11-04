@@ -1,0 +1,11 @@
+# systemd: one run of ci/gridkit-deploy.sh as pawbot (started by gridkit-deploy.path).
+[Unit]
+Description=GridKit: deliver main to gridkit.at once the suite is green
+
+[Service]
+Type=oneshot
+User=pawbot
+Group=pawbot
+ExecStart=/home/pawbot/bin/gridkit-deploy.sh
+StandardOutput=append:/home/pawbot/gridkit-deploy.log
+StandardError=append:/home/pawbot/gridkit-deploy.log

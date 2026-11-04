@@ -407,3 +407,35 @@ sudo -u pawbot /home/pawbot/bin/gridkit-deploy.sh; echo "exit $?"
 The copy in `/home/pawbot/bin` is deliberate: the script that runs on the server does not change
 with what is merged. After a change to `ci/gridkit-deploy.sh`, copy it again. Its behaviour is
 held by `tests/deploy.test.php`, which runs it against a stand-in origin and website.
+
+### At once, by GitHub webhook
+
+Cron asks every minute whether something is new. The webhook is told: GitHub posts each push to
+`https://gridkit.at/hooks/github.php`. That page checks the signature (HMAC-SHA256 with the
+webhook's secret) and, for a push to `main`, writes one line to `/var/lib/gridkit-deploy/trigger`
+— nothing else: no git, no shell, nothing runs as the web server's user. A systemd path unit
+watches that file and starts the same `gridkit-deploy.sh` as pawbot (`ci/gridkit-deploy.path`,
+`ci/gridkit-deploy.service`). The logic is `ci/deploy-hook.php` (behind the 403 of `ci/`), held
+by `tests/deploy-hook.test.php`. No workflow file and no token scope is involved: a webhook is a
+setting of the repository on GitHub.
+
+On the server, as root (`WEB` is the user PHP runs as for gridkit.at — `www-data`, or the site
+user of the panel; `ps -eo user,args | grep -E 'php-fpm: pool|apache2' | sort -u` shows it):
+
+```bash
+WEB=www-data
+install -d -m 750 -o root -g "$WEB" /etc/gridkit-deploy
+openssl rand -hex 32 > /etc/gridkit-deploy/hook-secret
+chgrp "$WEB" /etc/gridkit-deploy/hook-secret && chmod 640 /etc/gridkit-deploy/hook-secret
+install -d -m 770 -o pawbot -g "$WEB" /var/lib/gridkit-deploy
+cp /home/pawbot/projects/gridkit/ci/gridkit-deploy.path /home/pawbot/projects/gridkit/ci/gridkit-deploy.service /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now gridkit-deploy.path
+cat /etc/gridkit-deploy/hook-secret     # for GitHub, next step
+```
+
+On GitHub: Settings → Webhooks → Add webhook — Payload URL
+`https://gridkit.at/hooks/github.php`, Content type `application/json`, Secret: the line printed
+above, "Just the push event", Active. GitHub sends a ping at once; Recent Deliveries shows
+`200 pong`. A push to `main` answers `202 queued`, and the log says `delivered` seconds later.
+Keep the cron line as a safety net, hourly: `0 * * * *` instead of `* * * * *` — a delivery that
+was missed (server down, a webhook lost) then still arrives.

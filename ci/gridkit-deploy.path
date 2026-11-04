@@ -1,0 +1,12 @@
+# systemd: start the delivery the moment the GitHub webhook (hooks/github.php) writes its trigger.
+# Install: cp ci/gridkit-deploy.path ci/gridkit-deploy.service /etc/systemd/system/
+#          systemctl daemon-reload && systemctl enable --now gridkit-deploy.path
+[Unit]
+Description=GridKit: deliver main when the GitHub webhook asks
+
+[Path]
+PathModified=/var/lib/gridkit-deploy/trigger
+Unit=gridkit-deploy.service
+
+[Install]
+WantedBy=multi-user.target

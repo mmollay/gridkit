@@ -51,8 +51,8 @@ Every tracked file that does not start with a dot is served. Tool notes live und
 A new `gk-` class goes into `css/blocks.json` with its version; a test enforces it.
 `skill/` is generated, never edited by hand.
 
-**Merging to `main` is the release.** On the server, pawbot's cron runs
-`ci/gridkit-deploy.sh` every minute: it runs the suite on the new `main` in a worktree next
+**Merging to `main` is the release.** On the server `ci/gridkit-deploy.sh` runs when the GitHub
+webhook (`hooks/github.php`) reports a push, and from pawbot's cron as a safety net: it runs the suite on the new `main` in a worktree next
 to the live checkout and, when green, moves gridkit.at forward and tags `v<VERSION>` (pushed,
 so Packagist publishes it). Merge only what the owner has approved to go live. The PawBot
 dashboard sync is still done by the owner.

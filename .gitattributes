@@ -12,6 +12,8 @@
 /.design          export-ignore
 /.github          export-ignore
 /ci               export-ignore
+# The GitHub webhook of the automatic delivery belongs to gridkit.at, not to a project.
+/hooks            export-ignore
 /index.php        export-ignore
 /sitemap.xml      export-ignore
 /robots.txt       export-ignore
