@@ -64,8 +64,11 @@ return [
 },
 
 'the two dark rules set the colour of the field' => function (): void {
-    T::eq(gkCssDeclFor('[data-gk-mode="dark"] select')['background-color'] ?? '', '#0d1117', 'dark select has another background colour');
-    T::eq(gkCssDeclFor('[data-gk-mode="dark"] .gk-input')['background-color'] ?? '', '#0d1117', 'dark .gk-input has another background colour');
+    // What is held is that the two rules still give the field its colour, as background-color.
+    // The colour itself was #0d1117 until 1.114.0; since then a dark field is the recessed step of
+    // the ladder, the role --gk-surface-container-low, so it follows the theme like everything else.
+    T::eq(gkCssDeclFor('[data-gk-mode="dark"] select')['background-color'] ?? '', 'var(--gk-surface-container-low)', 'dark select has another background colour');
+    T::eq(gkCssDeclFor('[data-gk-mode="dark"] .gk-input')['background-color'] ?? '', 'var(--gk-surface-container-low)', 'dark .gk-input has another background colour');
 },
 
 ];

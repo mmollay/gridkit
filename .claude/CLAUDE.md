@@ -23,7 +23,9 @@ Every tracked file that does not start with a dot is served. Tool notes live und
   `browser-sticky.js` for `stickyHead()`/`stickyColumn()`, `browser-column-toggle.js` for
   `columnToggle()`, `browser-density.js` for `densityToggle()`,
   `browser-inline-edit.js` for `editable()`, `browser-tabs.js` for `GridKit\Tabs` and `GK.tabs`,
-  `browser-tooltip.js` for the tooltip engine) and
+  `browser-tooltip.js` for the tooltip engine, `browser-form-tabs.js` for `Form::tab()`,
+  `browser-permission-matrix.js` for `PermissionMatrix`, `browser-tree.js` for `Tree`,
+  `browser-line-items.js` for `LineItems`, `browser-pager.js` for the table pager) and
   contrast (`farben.js`). They are not part of the suite and need the `playwright`
   package. Run them when touching `js/gridkit.js` or the markup they exercise.
 - `node ci/demo-coverage.js` opens the demo and fails when a class of `css/blocks.json` is
@@ -47,8 +49,13 @@ Every tracked file that does not start with a dot is served. Tool notes live und
    `php tests/run.php`. 1.80.0 went out red because this step was forgotten.
 
 A new `gk-` class goes into `css/blocks.json` with its version; a test enforces it.
-`skill/` is generated, never edited by hand. The dashboard sync, the release and tags
-are done by the owner on the server. The last tag is `v1.95.0`; later versions are untagged.
+`skill/` is generated, never edited by hand.
+
+**Merging to `main` is the release.** On the server, pawbot's cron runs
+`ci/gridkit-deploy.sh` every minute: it runs the suite on the new `main` in a worktree next
+to the live checkout and, when green, moves gridkit.at forward and tags `v<VERSION>` (pushed,
+so Packagist publishes it). Merge only what the owner has approved to go live. The PawBot
+dashboard sync is still done by the owner.
 
 ## Handle with care
 

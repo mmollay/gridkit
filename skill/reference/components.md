@@ -1,4 +1,4 @@
-# GridKit 1.113.0 — components
+# GridKit 1.118.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -40,6 +40,23 @@ every declared filter, the `ORDER BY`, the `COUNT` and the `LIMIT`:
     ->paginate(25)
     ->render();
 ```
+
+**`paginate($perPage)`: the pager under the rows.** `paginate(false)` or `0` shows
+every row. With a page size, a table with more rows than that gets one pager, the
+same bar `Pagination` draws (since 1.118.0; before, a centred row of pill
+buttons): on the left which rows the page shows, "6–10 of 12" (`pagination.range`,
+with the thousands separator of the language), on the right first, previous, the
+first and the last page and two either side of the current one with `…` between
+(never 400 buttons), next and last. A `setData()` table pages in the browser, a
+`rows()` or `query()` table asks the server for `gk_page` (below); a search or a
+filter goes back to page 1, a sort of a server table too. The controls are
+`<button data-gk-page>`, not links — the table pages in place — inside
+`<nav class="gk-pagination gk-rowpager">`, a landmark named "Page navigation";
+each control has a name ("First page", "Page 3 of 12"), the current page
+`aria-current="page"`, and the keyboard focus stays on the control you pressed.
+Do not put a `Pagination` under a paginated table: that is two pagers. The rows
+per page from a `PageSize` select: `->paginate(PageSize::make('per_page')->resolve(25))`,
+the select in `toolbarHtml()` — it reloads the page and starts at page 1.
 
 **`filter($column, $type, $opts)`:** a dropdown in the toolbar, bound to the
 table — this is what "every declared filter" above means. `$type` is `'select'`;
@@ -1327,6 +1344,11 @@ no tab that can be opened raise `E_USER_WARNING` and fall back. A form without `
 `toggle` · `radio` · `file` (drag & drop) · `richtext` (CKEditor) · `color` · `range` ·
 `choice` (answer tiles, since 1.92.0)
 
+and `lineitems` (since 1.117.0): the editor of `GridKit\LineItems`, handed in as the option
+`lines` — `->field('items', 'Lines', 'lineitems', ['lines' => $lines])`. The field's label names
+it, `values(['items' => $rows])` fills it when it has no `items()` of its own, and an AJAX
+answer `{"errors": {"items[1][qty]": "…"}}` lands under that cell. See **LineItems**.
+
 Anything else becomes an `<input type="…">`, so every HTML type works:
 `text`, `number`, `email`, `tel`, `url`, `password`, `date`, `time`,
 `datetime` (rendered as `datetime-local`), `month`, `week`, `search`, `hidden`.
@@ -1358,6 +1380,7 @@ searchable select is plain `'select'`.
 | `preset` | `richtext` | `'full'` (default) or `'basic'` — how much toolbar |
 | `upload` | `richtext` | a URL. Turns pictures on: an upload button, drag & drop, paste, **alignment** (left/right with text flowing beside it, own line centred), size handles and alt text. Off without it, because an upload button with nowhere to put the file is worse than none. The endpoint takes a POST with the file under `upload` and answers `{"url":"https://…"}`, or `{"error":{"message":"…"}}` — CKEditor's SimpleUploadAdapter contract. **Return an absolute URL**: relative ones work on the page and break the moment the content is mailed. Pictures render as a plain `<img>` in the paragraph with the size as an inline `style`, deliberately not as `<figure class="image">`, so the same content survives being sent as an e-mail |
 | `min`, `max`, `step` | `range`, `number`, `date`/`time` | bounds (`range` defaults to `0`/`100`/`1` and starts at `min`) |
+| `lines` | `lineitems` | the `GridKit\LineItems` the field shows (since 1.117.0); without it the field is left out with an `E_USER_WARNING` |
 | `->cancel($label, $href)` | — | a link beside the submit button — a method, not a field |
 | `->hidden($name, $value)` | — | a hidden input — a method, not a field |
 | `error` | every field | a validation message, rendered red under the field. This is how a classic POST-redisplay shows errors: `['value' => $_POST['email'] ?? '', 'error' => $errors['email'] ?? '']`. The AJAX handler writes into the same slot, so both paths look identical |
@@ -1423,6 +1446,195 @@ echo json_encode(['ok' => true]);                          // success
 echo json_encode(['ok' => true, 'message' => 'Saved!']);  // with toast
 echo json_encode(['ok' => false, 'errors' => ['email' => 'Already exists']]);  // validation
 ```
+
+### LineItems (since 1.117.0)
+
+The lines of an invoice, an offer or an order: a description that may run to a second line,
+quantity, unit, unit price, discount, VAT rate, the line total — and under them the subtotal,
+an optional overall discount and shipping, one VAT line per rate and the total. The totals
+follow every keystroke, and **`LineItems::totals()` computes the very same figures in PHP, to
+the cent**, so the server never has to take the browser's word for an amount. Every line is an
+`<li>` of an `<ol data-gk-sortierbar>`: `js/sortierbar.js` moves it (mouse, finger, keyboard).
+
+```php
+$lines = (new LineItems('items'))
+    ->invoiceColumns()          // description, qty, unit, unit price, discount %, VAT, amount
+    ->locale('de')              // numbers with a decimal comma: 1.234,50
+    ->currency('EUR')
+    ->vatRates([20, 10, 13, 0]) // the VAT select, in this order; the first is a new line's rate
+    ->discount(3)               // an overall discount line with its field (posts items_discount)
+    ->shipping('4.90')          // a shipping line with its field (posts items_shipping)
+    ->limits(1, 50)             // at least one line (it starts with one empty), at most fifty
+    ->items([
+        ['id' => 41, 'description' => "Website relaunch\nDesign, templates", 'qty' => 1,
+         'unit' => 'flat', 'price' => '2400', 'discount' => 5, 'vat' => 20],
+        ['id' => 42, 'description' => 'Hosting, annual', 'qty' => 12, 'unit' => 'month',
+         'price' => 19.9, 'vat' => 20],
+    ]);
+$lines->render();   // prints, like Table::render(); ->html() returns the same string
+```
+
+**On the POST**, the same object (without `items()`) reads what came back:
+
+```php
+$lines = (new LineItems('items'))->invoiceColumns()->locale('de')->vatRates([20, 10])->discount(0);
+$in = $lines->parse($_POST);
+if ($in['errors']) {
+    // Show the form again: what was typed, the messages under their fields.
+    $lines->items($in['rows'])->errors($in['errors'])->discount($in['discount'] ?? 0);
+    // An AJAX Form answers instead: echo json_encode(['ok' => false, 'errors' => $in['errors']]);
+} else {
+    $store = $in['items'];             // lines in machine form ('1234.5'), blank ones dropped
+    $gross = $in['totals']['gross'];   // computed here — never taken from the browser
+}
+```
+
+**The totals contract** — `LineItems::totals($rows, $opts)`, the same in the browser as
+`GK.lineItems.calc(rows, opts)`:
+
+```php
+$t = LineItems::totals([
+    ['qty' => 3, 'price' => '120', 'discount' => 10, 'vat' => 20],
+    ['qty' => 2, 'price' => '39.90', 'vat' => 10],
+], ['discount' => 5, 'shipping' => '4.90']);
+// $t['gross'] === '458.63'
+// $t['vat'] === [['rate' => '20', 'base' => '312.70', 'amount' => '62.54'],
+//                ['rate' => '10', 'base' => '75.81', 'amount' => '7.58']]
+```
+
+- **Returns** strings with two decimals, `"-12.30"`, never floats: `lines` (one
+  `['total' => …, 'vat' => '20']` per row, in order), `subtotal` (the lines, net or gross like
+  the prices), `discount` (≤ 0), `shipping`, `net`, `vat` (per rate, highest first:
+  `rate`, `base` = the net, `amount`; a rate whose base and amount are both 0 is left out),
+  `vatTotal`, `gross`, and the `pricesNet` and `rounding` it used.
+- **Rows** hold numbers in machine form — an int, a float, `'1234.5'`; with the option `locale`
+  strings are read as a person types them. A figure that cannot be read counts as 0; a row
+  without a quantity column counts once.
+- **Options:** `pricesNet` (default `true`), `rounding` (`'line'`), `discount` (an overall
+  percentage, taken off each rate's sum before VAT), `shipping` (an amount, net or gross like the
+  prices, added after the discount), `shippingVat` (its rate; default the highest rate of the
+  lines), `keys` (which row key is the quantity, price, discount and VAT:
+  `['qty' => 'quantity', 'vat' => null]` — `null` for one the rows do not have), `locale`.
+  `->totalsOptions()` returns these for an editor, so `LineItems::totals($rows, $lines->totalsOptions())`
+  agrees with what it showed.
+- **The arithmetic is integer arithmetic.** Quantities and prices are read to 4 decimals,
+  percentages to 2, then multiplied, summed and rounded as integers of any length (on decimal
+  strings in PHP, BigInt in the browser) — no float, no drift, no overflow.
+  `->pricesNet(true)`: VAT = round(net × rate); `false` (gross entry): VAT =
+  round(gross × rate / (100 + rate)), net = gross − VAT, and the total is exactly the sum of the
+  lines. **Rounding** is half away from zero (0.005 → 0.01, −0.005 → −0.01).
+  `->rounding('line')` (default) rounds every line to the cent and sums what the lines show;
+  `->rounding('total')` sums the lines unrounded and rounds each rate's sum once (the lines still
+  show cents; their sum may then differ from the subtotal by a cent).
+
+**Posted shape.** `items[0][description]`, `items[0][qty]`, … — **the index is the position on
+the screen, 0 to n−1**, renumbered after every add, delete and move, so reading the array in
+order is reading the invoice in order. A line drawn from a row with an `id` posts it back as
+`items[i][id]` (a duplicate gets none: it is a new line). `items_discount` and
+`items_shipping` beside the array. A `readonly` column posts its value back (hidden) — the
+server decides whether to trust it. The line total (`computed`) does not post; `parse()` puts
+it into each item under the total column's key.
+
+**`parse($request)`** returns `items` (to store), `rows` (every posted line in posted order, a
+figure that could not be read left as typed — for `items()` when the form is shown again),
+`errors`, `discount`, `shipping` (machine form, or `null`) and `totals`. A **blank line** — every
+field empty or at its `default` — is not a line: it is dropped, nothing in it is required, and
+in the browser it does not block the form (except the first ones `->limits()` asks for). At most
+`maxRows` lines are read, never more than 1000 (a larger POST is an attack, and is said so).
+
+**Errors are keyed like the POST:** `items[2][qty]`, `items` (too few or too many lines),
+`items_discount`. That is the key `GK.form` looks for, so an AJAX Form's
+`{"ok": false, "errors": {"items[2][qty]": "Only 3 in stock."}}` lands under that very cell
+and moves the caret there. `->errors()` takes the same keys, or `items.2.qty`. The messages
+`parse()` writes are the ones the browser shows on leaving a field and on sending the form
+(constraint validation): a figure that is none ("Enter a number, such as 1.234,50."), too many
+decimals, `min`/`max`, a required field, a select value the list does not offer.
+
+**Numbers as people type them** — `LineItems::parseNumber($text, $locale)`, in the browser
+`GK.lineItems.parse(text, locale)`: `1.234,50`, `1,234.50`, `1234.5` and `1 234,50` are all
+1234.5; spaces, no-break spaces and apostrophes group thousands; a currency sign or code and a
+`%` at either end are ignored; `-` and `−` are minus. With both `.` and `,` the last one is the
+decimal sign. One sign alone is the decimal sign — unless exactly three digits follow it and one
+to three come before (`1.500`, `12,500`): only then does the language decide, as it would for a
+person (`de`: 1500, `en`: 1.5). Exponents, hex, other scripts' digits, a repeated decimal sign,
+groups that are not three digits, more than 15 digits before the sign: `null`. A field that can
+be read is written back in the page's shape when it is left (`1234,5` → `1.234,50`); it is
+never rounded — a decimal too many stays, with its message.
+
+**Columns** — `->column($key, $label, $opts)`; a `$label` of `''` takes the role's own words.
+`->invoiceColumns()` is description (`textarea`, required), `qty` (`number`, required, default
+1), `unit` (`select` of `->units()`), `price` (`money`, required), `discount` (`percent`, 0 to
+100), `vat` (`select` of `->vatRates()`, required) and `total` (`computed`). The position number
+is always the first cell and carries the handle.
+
+| Option | Types | Effect |
+|---|---|---|
+| `type` | — | `text` (default), `textarea` (grows with its text, so a description has room for a second line; read-only, the second line is set quieter beneath the first), `number`, `select`, `money`, `percent`, `computed` (the line total), `readonly` (shown and posted back), `lookup` (below). An unknown type warns and is `text` |
+| `role` | see effect | what the totals read: `qty` (`number`), `price` (`money`, `number`), `discount` (`percent`, `number`), `vat` (`select`, `percent`, `number`), `total` (`computed`). Default: the key itself when it is one of these names; a `computed` column is the total. One column per role |
+| `required` | editable | the browser's `required` (only on lines that are lines) and `parse()`'s message |
+| `decimals` | `number`, `money`, `percent` | how many a person may type: default 3, 2, 2; at most 4, 4, 2. `money` shows at least this many |
+| `min`, `max` | `number`, `money`, `percent` | bounds, checked in both places |
+| `default` | all | the value of a new line (`qty` 1, the first VAT rate); a line still at its defaults is blank |
+| `placeholder` | `text`, `textarea`, figures, `lookup` | the field's placeholder |
+| `width` | all | its grid track: `6rem`, `120px`, `2fr`, `minmax(8rem, 1fr)` — anything else warns |
+| `options` | `select` | `value => label`. A `unit` key without options takes `->units()`, the `vat` role takes `->vatRates()`. A stored value the list does not offer is shown as it is and marked; `parse()` and the browser refuse it |
+| `rows` | `textarea` | its height in rows to start with (default 1) |
+| `url`, `fill`, `labelField`, `valueField`, `subtextField`, `minChars`, `searchParam`, `display` | `lookup` | an article search (below) |
+
+**Article lookup.** A `lookup` column is Form's `ajaxselect` in a cell (`GK.ajaxSelect`, the
+same markup): typing asks `url?q=…` (`searchParam`, after `minChars`, default 2) for a JSON
+array; `labelField` (default `name`) is shown, `valueField` (default `id`) is posted under the
+column's key, `subtextField` is a second line in the list. Picking one fills the line by `fill`
+— `['description' => 'name', 'unit' => 'unit', 'price' => 'price', 'vat' => 'vat']`, target
+column => key of the JSON item; figures in machine form are written in the page's shape — and
+sets an empty quantity to 1. With `display` => a row key, the words shown post too
+(`items[i][article_name]`) and `items()` shows them again.
+
+**Other setters:** `->units(['h' => 'hours', 'pcs' => 'pieces'])` (default: pcs, h, day, month,
+km, flat rate in the page's language), `->pricesNet(false)` (gross entry: the unit price label
+says so), `->currency('USD')` (EUR, USD and GBP get their sign, any other ISO code is written
+out: `CHF 12.50`), `->locale('en')` (default `Lang::locale()`; `de` and `en` with their regions,
+anything else warns and reads English), `->label('Positions')` (the editor's accessible name,
+default "Line items"), `->readonly()`.
+
+**Read-only** (a sent invoice): the same columns and grid, the figures as text, no field, no
+button, no handle, nothing that posts; `GK.lineItems.totals()` still reads it (each cell carries
+its figure in machine form).
+
+**On a phone** — whenever the editor itself is narrower than 56rem, so also in a medium modal —
+every line is a card: the number and the handle (a finger's width) and the buttons on top, the
+description across, the other fields two by two with their labels shown, the line total last;
+the totals beneath, full width. Nothing scrolls sideways; fields are 16px, iOS does not zoom.
+
+**In the browser** (the block at the end of `js/gridkit.js`; `js/sortierbar.js` for the order):
+Add line (`data-gk-lines-action="add"`, also on a button of your own inside the editor), Enter
+in the last field of the last line adds one, and Enter in any other field of a line does not send
+the form. Duplicate puts a copy below. Delete takes the line out and says so in a toast with
+**Undo**, which puts it back where it was. Add and Duplicate are off at the maximum, Delete at
+the minimum. After every change `gk:lineitemschange` fires on the editor (bubbles; `detail.items`
+as `parse()` would return them, `detail.totals` as `totals()`), and the total is said once the
+typing stops. **Without script** the fields post as drawn and the server computes the totals;
+the buttons that could not work are not shown.
+
+```javascript
+document.addEventListener('gk:lineitemschange', e => preview(e.detail.totals.gross));
+const editor = document.querySelector('.gk-lines');   // or a selector, or any element inside it
+GK.lineItems.totals(editor);                 // the totals of what the editor holds now
+GK.lineItems.items(editor);                  // its lines, as parse() returns them as items
+GK.lineItems.add(editor, { description: 'Travel', qty: 1, price: '40', vat: 20 });
+GK.lineItems.calc(rows, opts);               // LineItems::totals() without an editor
+GK.lineItems.parse('1.234,50', 'de');        // '1234.5'
+```
+
+**In a Form** — `->field('items', 'Lines', 'lineitems', ['lines' => $lines])` (see Form): what
+`Form` calls is `LineItems::forForm($lines, $field, $value)`, which names the editor by the
+field's label and its message line and takes the Form's value as the lines. An AJAX Form needs
+nothing more: its JSON `errors` reach the cells by their names. For a Form shown again after a
+plain POST, give the cells' messages to the editor — `$lines->errors($in['errors'])` — and the
+others to `Form::errors()`: a cell is not a field of the Form, so `Form::errors()` would list its
+message in the box above the form instead (only the key `items` itself goes under the field). **Do not** read the
+totals from the POST, compute amounts with floats, or write a line's markup by hand: the script
+renumbers what it finds by its `data-gk-lines-*` attributes.
 
 ### Admin blocks: settings, figures, dots, colours (since 1.92.0)
 
@@ -1819,6 +2031,352 @@ script finds every `[data-gk-sortierbar]`, also one inserted later.
 - **Do not** write the handle yourself, add a second drag script, or set `position` on the
   entry to something other than static/relative (the handle needs a positioned parent).
 
+### PermissionMatrix (since 1.115.0)
+
+Roles as columns, permissions as rows grouped by module, a checkbox where they meet — the screen
+of a user and rights administration. **It is a form first:** put it inside your own `<form>`
+(with your CSRF field and a submit button); `render()` writes no `<form>` of its own, so it can sit
+in a form that edits other things too.
+
+```php
+$matrix = (new PermissionMatrix('rights'))
+    ->caption('Roles and rights')                       // for a screen reader, and the box's name
+    ->role('admin', 'Admin', ['locked' => true, 'color' => 'red'])
+    ->role('accounting', 'Accounting', ['description' => 'Invoices and payments', 'color' => 'green'])
+    ->role('editor', 'Editor', ['parent' => 'guest', 'icon' => 'edit'])
+    ->role('guest', 'Guest')
+    ->group('invoices', 'Invoices', ['description' => 'Billing', 'icon' => 'receipt'])
+    ->permission('invoices.view', 'View invoices')
+    ->permission('invoices.edit', 'Create and edit invoices', ['requires' => 'invoices.view'])
+    ->permission('invoices.delete', 'Delete invoices', ['requires' => ['invoices.edit'], 'danger' => true,
+        'description' => 'Invoices have to be kept for seven years.'])
+    ->group('users', 'Users & rights', ['collapsed' => true])
+    ->permission('users.roles', 'Change roles and rights', ['danger' => true])
+    ->grants(['accounting' => ['invoices.view', 'invoices.edit'], 'guest' => ['invoices.view']])
+    ->grant('editor', 'users.roles');                  // adds to grants()
+
+echo '<form method="post">';
+$matrix->render();
+echo Button::render('Save', ['type' => 'submit']) . '</form>';
+```
+
+- **`->role($key, $label, $opts)`** — `description` (a line under the name), `parent` (the key of
+  the role whose rights this one inherits, through its parent's parent too), `locked` (`true`:
+  every permission, read-only, posts nothing — the administrator), `color` (`blue`, `green`,
+  `orange`, `red`, `gray`: the name as a `.gk-label`), `icon` (a Material icon name).
+- **`->group($key, $label, $opts)`** — the permissions after it belong to it: a heading row with a
+  fold button and the group's bulk toggles. `description`, `icon`, `collapsed` (starts folded —
+  only with the script; without it every row shows). Permissions before the first group stand
+  above it without a heading.
+- **`->permission($key, $label, $opts)`** — `description`, `danger` (`true`: a risky right, marked
+  "Risky" in words and ticked in the error colour), `requires` (a key or a list of keys).
+- **`->grant($role, ...$permissions)` / `->grants([$role => [$permission, …]])`** — what each
+  role was given itself, as your database holds it; both add. Unknown roles and permissions are
+  reported (`E_USER_WARNING`) and left out.
+- **`->name('perm')`** — the field name (default `perm`). A nested one works: `->name('user[rights]')`
+  posts `user[rights][role][permission]`, read back from `$_POST['user']['rights']`.
+- **`->readonly()`** shows the rights and posts nothing; **`->height('480px')`** is how high the
+  matrix grows before it scrolls in its own box (default `70vh`); **`->saveUrl()`** see below.
+
+Keys may contain dots, slashes and umlauts; a key with a bracket, a control character, nothing
+in it or spaces around it cannot be a field name and is refused with a warning. So are a colour
+that is not one of the five, a `locked` that is not a boolean, a `name()` PHP would not read back
+as that array, a `height()` that is not a CSS length and a `saveUrl()` that is not http(s) or
+relative. A `parent` that names no role, or a chain that loops, is reported when the matrix
+renders and the role inherits nothing; a `requires` that names no permission is left out.
+
+**The posted shape: `perm[role][permission]`, every cell, `0` or `1`.** Each cell writes a hidden
+`0` and, after it, the checkbox's `1` — PHP keeps the last value, so a ticked cell reads `"1"`
+and an unticked one `"0"`. That is what tells "unticked" from "not on this page". A locked role
+posts nothing; an inherited cell posts `0` — the heir does not have it itself, and inheritance is
+not stored: it follows from `parent`. (A role that has a right of its own *and* through its parent
+shows it as its own, removable; unticked, it is then shown inherited.) Each editable cell is up to two fields: a matrix that could
+post more than `max_input_vars` (PHP drops the rest without a word) says so with a warning.
+
+**Reading it back** — build the matrix as for the page, then:
+
+```php
+$matrix = (new PermissionMatrix('rights'))
+    ->role('editor', 'Editor', ['parent' => 'guest'])
+    ->role('guest', 'Guest')
+    ->permission('cms.view', 'View pages')
+    ->permission('cms.edit', 'Edit pages', ['requires' => 'cms.view']);
+$_POST = ['perm' => ['editor' => ['cms.view' => '0', 'cms.edit' => '1'], 'guest' => ['cms.view' => '0', 'cms.edit' => '0']]];
+
+$map = $matrix->read($_POST['perm'] ?? []);
+// ['editor' => ['cms.view' => true, 'cms.edit' => true], 'guest' => ['cms.view' => false, 'cms.edit' => false]]
+foreach ($map as $role => $cells) {
+    foreach ($cells as $permission => $granted) { /* $granted ? grant : revoke */ }
+}
+
+// Without the definition at hand: only the roles and keys you allow, only 0/1/true/false.
+$map = PermissionMatrix::fromPost($_POST['perm'] ?? [], ['editor', 'guest'], ['cms.view', 'cms.edit']);
+```
+
+`PermissionMatrix::fromPost($posted, $roles, $permissions)` returns role → permission → bool for
+**exactly the cells that were posted**: a cell not on the page is not in the result (a matrix
+that showed one module cannot wipe the others), unknown roles and keys, arrays and any value but
+`"0"`, `"1"`, `0`, `1`, `true`, `false`, `""` are dropped, a non-array is `[]`. Leave a locked
+role out of `$roles`. **`$matrix->read($posted)`** does the same with the matrix's own editable
+roles and permissions and makes `requires` whole the way ticking does in the browser: a granted
+permission gets what it needs added (unless the role inherits it). A `readonly()` matrix reads `[]`.
+
+**Inheritance.** A role with `parent` has its own grants plus everything the parent has. Such a
+cell is shown ticked with **"via Guest"** under it and a dashed ring (a state in words and shape,
+not colour alone), described to a screen reader as "Inherited from Guest — change it in the Guest
+column", and cannot be unticked there: a click says so in a toast. Tick something for the parent
+and it appears in the heirs at once; untick it and an heir that also has it as its own keeps it.
+
+**`requires`.** Ticking a permission ticks what it needs, through what that needs. Unticking a
+permission unticks what needs it — in that role and in the roles that inherit from it, which lost
+it too. Both are said in the status line ("Also granted, because it is needed: …"). A cell that
+something else needs is described as "Needed by …". Only what the change touches is looked at.
+
+**Bulk, filter, folding, changes.** With the script: an "All roles" column toggles a row for every
+role that can change; the toggle in a role's head toggles the column for the rows in view (filter
+and folding count); a group's heading row has a toggle per role and one for all roles. Each is
+mixed (indeterminate) while only some are granted; ticked → untick what can be unticked, else
+tick what can be ticked — locked and inherited cells are left alone, and a grant for all roles goes
+to the parent first, so heirs inherit it rather than get their own. The filter (label, key,
+description, group) shows matches across folded groups and folds them back when cleared. Changed
+cells are tinted with a dot until saved; the toolbar counts them ("3 changes") and Reset undoes
+them; per-role counts ("7 of 20") follow. A legend explains the marks.
+
+**Events and script API.** After every change `gk:permchange` bubbles from the matrix with
+`detail = { matrix, role, permission, granted, kind, changed, changes }` — `kind` is `cell`,
+`row`, `role`, `group`, `group-all`, `reset` or `revert`; `changed` lists this change's cells
+(`{ role, permission, granted }`, the needed ones included), `changes` everything not saved yet.
+It is **cancelable**: `preventDefault()` puts the change back (to ask before granting a risky
+right, say). `GK.permMatrix.changes(el)` returns what is not saved, `GK.permMatrix.reset(el)` goes
+back to the last saved state, `GK.permMatrix.commit(el)` makes the current state the saved one
+(call it when an AJAX form has saved), `GK.permMatrix.init(root)` binds matrices added later
+(`GK.initContent()` does it for you). `el` is the matrix, an element in it, or its id.
+
+**Saving as you go:** `->saveUrl('/api/permissions.php', ['headers' => ['X-CSRF-Token' => $token]])`.
+Each change is POSTed as JSON — `{"matrix":"rights","changes":{"editor":{"cms.edit":true}}}`,
+one request per change, one after the other — and the answer must be `{"ok": true}`. Anything
+else (`{"ok": false, "error": "…"}`, an error status, no network) puts the cells back and shows
+the `error` as text in a toast. The endpoint reads the body with
+`PermissionMatrix::fromPost($body['changes'], $roles, $permissions)` or `$matrix->read(...)`.
+There is no Reset then; the toolbar says "Saving …" / "Saved.". Without the script the fields post
+with the surrounding form as before.
+
+**Keyboard and screen reader.** The matrix is a real `<table>`: roles are `<th scope="col">`,
+permissions `<th scope="row">`, a group `<th scope="rowgroup">`, each checkbox is named
+"Role: Permission". With the script the table becomes an ARIA grid with **one tab stop**: the
+arrow keys move between cells (headers and toggles included), Home/End to the row's ends,
+Ctrl+Home/End to the corners, PageUp/PageDown by ten rows, Space toggles; Tab leaves the grid and
+comes back to the cell last used. Locked, inherited and read-only cells are `aria-disabled`
+rather than disabled, so the arrow keys still reach them and they say why. The scroll box is a
+named region with a tab stop; the role row and the permission column stick in it.
+
+**Phone (≤ 768px):** a matrix does not fit, so a "Role" select appears and the matrix shows one
+role's column at a time as a list of permissions — no "All roles" column, cells 48px high, the
+head sticking under GridKit's header (`--gk-sheet-top`), no sideways scroll. Without the script
+the box scrolls sideways inside itself instead; the page does not.
+
+**Without the script** (a copy of `gridkit.js` without the 1.115.0 block) it is the plain form:
+the toolbar, the bulk toggles, the fold buttons and the select stay hidden, inherited and locked
+cells are disabled checkboxes, every row shows, and the post is the same shape. Words come from
+`perm.*` in `lang/` and reach the script inside the matrix's own config — no `Lang::jsConfig()`
+needed. Classes: `.gk-perm` (the card), `.gk-perm-table`, `.gk-perm-cell` with the states
+`.gk-perm-inherited`, `.gk-perm-locked`, `.gk-perm-changed`, `.gk-perm-danger` on a risky row.
+
+### Tree (`GridKit\Tree`, since 1.116.0)
+
+A tree view for page trees, categories and folders. The server writes a plain nested list that
+works without any script — a link is followed, a ticked box is posted, every node is in view.
+**`js/tree.js`** makes it a WAI-ARIA tree view; it is a file of its own like `js/sortierbar.js`
+(the PawBot dashboard keeps its own `gridkit.js`), loaded with `defer` after `gridkit.js` —
+`skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/tree.js" defer></script>`. There is no call to make: the script finds every
+`.gk-tree`, also one inserted later. `Tree::render()` prints.
+
+```php
+$pages = [
+    ['id' => 1, 'parent_id' => null, 'title' => 'Home', 'icon' => 'home', 'href' => '/admin/pages/1', 'draggable' => false],
+    ['id' => 2, 'parent_id' => null, 'title' => 'About us', 'icon' => 'folder'],
+    ['id' => 3, 'parent_id' => 2, 'title' => 'Team', 'href' => '/admin/pages/3'],
+    ['id' => 4, 'parent_id' => 2, 'title' => 'History', 'muted' => 'unpublished'],
+    ['id' => 5, 'parent_id' => null, 'title' => 'Blog', 'icon' => 'article', 'children' => 'lazy', 'count' => 12],
+];
+(new Tree('pages'))
+    ->label('Pages')                                   // the accessible name of the tree
+    ->nodes($pages)                                    // map: id => 'id', parent => 'parent_id', label => 'title'
+    ->select('single')->name('page')->selected([3])    // posts page=3
+    ->expandTo('3')                                    // opens the path, the keyboard starts there
+    ->searchable()
+    ->lazyUrl('/admin/pages/children')                 // GET ?parent=5 when Blog is opened
+    ->moveUrl('/admin/pages/move', ['headers' => ['X-CSRF-Token' => 'token']])
+    ->actions(fn (array $n): array => [
+        ['icon' => 'edit', 'title' => 'Edit', 'href' => '/admin/pages/' . $n['id'] . '/edit'],
+        ['icon' => 'delete', 'title' => 'Delete', 'onclick' => "deletePage('{$n['id']}')", 'showIf' => $n['children'] === 0],
+    ])
+    ->render();
+```
+
+Nested arrays work as well, and so do single nodes — mixed as you like:
+
+```php
+(new Tree('cats'))
+    ->label('Categories')
+    ->select('multi')->name('cats')->selected(['books'])   // posts cats[]=books&cats[]=novels
+    ->nodes([
+        ['id' => 'books', 'title' => 'Books', 'children' => [
+            ['id' => 'novels', 'title' => 'Novels'],
+            ['id' => 'rare', 'title' => 'Rare editions', 'disabled' => true],
+        ]],
+        ['id' => 'music', 'title' => 'Music', 'children' => 'lazy'],
+    ])
+    ->node('games', 'Games', null, ['badge' => ['text' => 'New', 'color' => 'green']])
+    ->node('consoles', 'Consoles', 'games')                // the parent may also come later
+    ->render();
+```
+
+| Method | What it does |
+|---|---|
+| `->nodes(array $rows, array $map = [])` | Flat rows (each names its parent) or nested arrays (each carries `children`). `$map` renames the fields: `'id'`, `'parent'` (default `parent_id`), `'label'` (default `title`), `'children'`, and any node option (`'muted' => 'hidden'`). Every node option is read from the row under its own name unless the map says otherwise. A parent of `null`, `''` or `0` is the top level (`0` only while no node has the id 0). Rows may be objects. |
+| `->node($id, $label, $parent = null, $opts = [])` | One node. `$parent` may be added later; `'children'` takes nested rows here too. |
+| `->select('none' \| 'single' \| 'multi')` | `none` (default); `single` — one node, `aria-selected`, a radio button without script; `multi` — checkboxes with tri-state parents. |
+| `->selected(array $ids)` | Selected when the page opens. In `multi` a selected parent ticks its branch, and a parent whose enabled children are all ticked is ticked itself — on the server and in the script alike. |
+| `->name('pages')` | The field the selection posts under: `pages[]=id` (multi), `pages=id` (single). Default: the tree's id. |
+| `->expandTo($id)` | Opens the ancestors of a node (whatever the browser remembers) and makes it the node the keyboard starts on. Call it for several. |
+| `->lazyUrl($url)` | Where the children of a `'children' => 'lazy'` node come from (see "Lazy branches"). |
+| `->moveUrl($url, ['headers' => [...]])` | Nodes can be moved; every move is posted here (see "Moving"). `headers` go with every move. |
+| `->movable()` | Nodes can be moved without a URL: the page hears `gk:treemove` / `gk:treemoved` and saves itself. |
+| `->searchable()` | A filter field above the tree. |
+| `->toolbar(false)` | No bar above the tree (filter, Expand all, Collapse all). Without the filter and without parents there is none anyway. |
+| `->remember(false)` | The browser does not keep which nodes were open (default: it does, in `localStorage` under `gk-tree:<id>`). |
+| `->label('Pages')` | The accessible name of the tree; default the catalogue's "Tree". |
+| `->actions(fn (array $node): array)` | Row buttons for every node. `$node` holds `id`, `label`, `parent`, `level`, `children` (their number), `opts` and `row` (what `nodes()` was given). Added after the node's own `actions`. |
+| `->render()` | Prints the tree. |
+| `->renderBranch($parent)` | Prints the `<li>` of the children of `$parent` and their branches — the answer to a lazy request. |
+
+**Node options** (in `node()`'s `$opts`, or as fields of a row):
+
+| Option | |
+|---|---|
+| `icon` | Material icon name before the label. |
+| `href` | The label is a link (Enter on the node follows it). A `javascript:` URL is refused with a warning. |
+| `badge` | Text, or `['text' => 'Draft', 'color' => 'orange']` — a `gk-label` (gray, green, orange, red, blue). |
+| `count` | A number in a pill after the label (posts in a folder). |
+| `muted` | `true` or a word (`'unpublished'`): the label in italics and the quieter colour; the word is read with the name ("inactive" by default). |
+| `expanded` | Open when the page opens (unless the browser remembers otherwise). A lazy node that starts open is fetched at once. |
+| `children` | Nested rows, or `'lazy'`: the node is a parent whose children come from `lazyUrl()`. |
+| `actions` | Row buttons, ActionGroup items: `icon`, `label`, `href`, `onclick`, `title`, `color`, `variant`, `size`, `pill`, `disabled`, `class`, `showIf` (falsy: not drawn). Described by the node's name for a screen reader. |
+| `disabled` | Cannot be selected (its box is disabled and not posted), moved or dropped into; no link. Its children are not disabled. |
+| `draggable` | `false`: this node keeps its place (no handle); others can still be dropped beside or into it. |
+
+Yes/no options take `true`/`false`, `1`/`0` or `'1'`/`'0'`/`'yes'`/`'no'` (what a database hands
+over); anything else is dropped with a warning — `'expanded' => 'no'` is true to PHP.
+
+- **What a screen reader gets** (with the script): `role="tree"` with the label,
+  `aria-multiselectable` in `multi`; every node a `treeitem` with `aria-level`, `aria-setsize`,
+  `aria-posinset`, `aria-expanded` (parents only), `aria-selected` (single) or `aria-checked`
+  `true`/`false`/`mixed` (multi), named by its label, muted word, badge and count — never by its
+  children or buttons. The boxes and radios stay in the form for posting, `aria-hidden` and out of
+  the tab order. A polite live region speaks the moves, the matches and a branch that failed.
+- **Keys** (WAI tree pattern, roving tabindex — one tab stop per tree): Up/Down move through the
+  nodes in view, Right opens a parent or goes to its first child, Left closes it or goes to the
+  parent, Home/End, `*` opens every parent beside the focused node, a letter (or several typed
+  together) jumps to the next node that starts with it. Enter follows the link, or selects / ticks,
+  or opens and closes; Space selects or ticks. Tab from a node reaches its own row buttons and its
+  handle, then leaves the tree. In `rtl` Left and Right swap.
+- **Open and closed** is kept per tree id in `localStorage` (`gk-tree:<id>`, `{open, closed}`,
+  read and written in `try`); a node the browser has never seen keeps the server's state.
+  "Expand all" opens what is loaded — never a lazy branch, which may hold a thousand posts.
+  Without the script every branch is open; `@media (scripting: enabled)` keeps a closed one closed
+  from the first paint.
+- **The filter** (`searchable()`) hides what does not match, keeps the ancestors of a match (opened)
+  and the branch of a matching parent, marks the match (`mark.gk-tree-hit`), ignores case and
+  accents, says "3 matches" / "No matches", and Escape brings the tree back as it was. It searches
+  the loaded nodes. Nothing can be moved while it filters.
+- **Long names** are cut with an ellipsis; while a name is cut it gets a `title` (GK.tip shows it),
+  and the focused node shows its name in full. Deep trees indent up to eight levels (five on a phone),
+  then a small level number takes over — nothing pushes a 390px page sideways.
+
+**Lazy branches.** A node with `'children' => 'lazy'` is a closed parent with an empty group. Opened
+the first time, the script asks `GET lazyUrl?parent=<id>` (`Accept: text/html`,
+`X-Requested-With: XMLHttpRequest`, `credentials: same-origin`) and puts the `<li>` of the answer
+into the group — write them with `renderBranch()`, on a tree configured as on the page (select, name,
+actions, movable), so the children look and post the same. A child may be `'lazy'` itself. An empty
+answer makes the node a leaf; a node the tree already has is not taken twice. A status other than
+2xx or no network: the node closes again and its row says "Not loaded." with a "Try again" button
+(opening it again does the same). A selected id inside a branch not loaded yet travels as
+`<input type="hidden" data-gk-tree-pending>`, and its node takes over when it arrives.
+
+```php
+// GET /admin/pages/children?parent=5 — the children of one node, nothing around them
+$parent = (string) ($_GET['parent'] ?? '5');
+$children = [
+    ['id' => 51, 'parent_id' => 5, 'title' => 'Spring sale'],
+    ['id' => 52, 'parent_id' => 5, 'title' => '2025', 'children' => 'lazy'],
+];
+(new Tree('pages'))->select('single')->name('page')->nodes($children)->renderBranch($parent);
+```
+
+**Moving.** With `moveUrl()` or `movable()` every node that may move (not disabled, `draggable` not
+false) gets a handle (`.gk-tree-handle`, six dots, the only part that takes a finger).
+**With the pointer**: drag the handle; over the top quarter of a row a line shows "before", over the
+bottom quarter "after" (below an open parent: its first child), over the middle the row is framed:
+"into it, last". Resting on a closed parent opens it (a lazy one loads). Escape cancels. **With the
+keyboard**: Tab to the handle, Space lifts the node (`aria-pressed`), Up/Down move it among its
+neighbours, Home/End to the ends, Right puts it into the node above it (as its last child), Left
+takes it out of its parent (just after it), Space puts it down, Escape — or leaving the handle —
+gives it back; each step is announced ("Level 2, position 1 of 3, in About us."). **Refused**, with
+a word for a screen reader: into itself or its own branch, into a disabled node, and anything while
+the filter is on.
+
+Every move fires `gk:treemove` first — **cancelable**: `preventDefault()` and the node stays (a
+keyboard move goes back). With `moveUrl()` it is then posted, one at a time in the order made:
+`POST` with `Content-Type: application/json`, `credentials: same-origin`,
+`X-Requested-With: XMLHttpRequest`, the `headers` of `moveUrl()` and the body
+`{"id": "3", "parent": "5", "index": 0}` — `parent` is `null` for the top level, `index` counts from 0
+among the new siblings (the place the node now has). A 2xx is saved unless its JSON says
+`{"ok": false}`. A refusal, another status or no network puts the node back where the server last
+agreed — that move and every later one still waiting — shows the answer's `"message"` (or "The move
+could not be saved. The entry is back in its place.") in a toast (the line `.gk-tree-error` above the
+list where `gridkit.js` is not loaded), and fires `gk:treemoved` with `ok: false, reverted: true`.
+
+```php
+// POST /admin/pages/move — {"id": "3", "parent": "5", "index": 0}
+$move = json_decode((string) file_get_contents('php://input'), true) ?: ['id' => '3', 'parent' => null, 'index' => 0];
+// … check the token, refuse what your tree does not allow, store the new parent and order …
+header('Content-Type: application/json');
+echo json_encode(['ok' => true]);   // or http_response_code(409) and ['ok' => false, 'message' => 'Shown to the person.']
+```
+
+**Events**, on the `.gk-tree`, bubbling — for what the person does, not for calls of `GK.tree`:
+
+| Event | `detail` |
+|---|---|
+| `gk:treeselect` | `{ tree, id, selected, ids }` — `ids`: every selected id (pending ones included) |
+| `gk:treetoggle` | `{ tree, id, expanded }` |
+| `gk:treemove` | `{ tree, id, parent, index, oldParent, oldIndex }` — cancelable, before the move |
+| `gk:treemoved` | the same plus `ok` and `reverted` — after the save (at once without a URL), or after the way back |
+
+**JavaScript API** (the first argument is the tree's id as given to `new Tree()`, its element, or a selector):
+`GK.tree.expand(el, id)` opens a node and the path to it (without an id every loaded parent; a
+Promise that waits for a lazy branch), `GK.tree.collapse(el, id)`, `GK.tree.select(el, ids, on)`
+(ticks or selects one id or several, `false` unticks; returns the selected ids),
+`GK.tree.selected(el)`, `GK.tree.reload(el, id)` (fetches a branch again and opens it).
+
+- **Classes** (all `gk-tree-*`, in `css/blocks.json` as "Tree"): `gk-tree`, `-toolbar`, `-search`,
+  `-list`, `-node`, `-open`, `-row`, `-toggle`, `-check`, `-radio`, `-icon`, `-label`, `-muted`,
+  `-disabled`, `-badge`, `-count`, `-actions`, `-group`, `-handle`, `-hit`, `-empty`, `-error`,
+  `-loaderror`, `-retry`, and while moving `-lifted`, `-dragging`, `-ghost`, `-ghost-no`,
+  `-drop-line`, `-drop-inside`. Colours are roles: light, both dark spellings and the six themes
+  follow (measured: text 4.5:1, chevron, handle and focus ring 3:1).
+- **Words** come from `tree.*` (server) and `js.tree_*` (script) in `lang/`; the script's reach the
+  page through `Lang::jsConfig()`.
+- **Warnings** (`E_USER_WARNING`, the tree still renders): a duplicate id (the second node is left
+  out), a parent the tree does not have (the node goes to the top level), a cycle (its first node is
+  lifted to the top), an option it does not know or of the wrong type, a row without an id, a
+  selected id the tree does not have (without lazy branches), an unknown `expandTo()` id, an unknown
+  selection mode.
+- **Do not** write the handle, the roles or the tabindex yourself, put a `<form>` inside a row, or
+  give a node a second link — the label is the link.
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -1868,6 +2426,67 @@ a statement, never echo it. Options: `error`, `title`, `subtitle`, `icon`,
 Theme::set('indigo', 'light');  // themes: indigo, ocean, forest, rose, amber, slate
 echo Theme::switcher();          // RETURNS the switcher HTML — must be echoed
 ```
+
+**The six themes (since 1.114.0).** The keys are what they always were; the colours were
+refined. A theme is an accent hue and the neutral it is paired with — every other value is
+derived in OKLCH at the same lightness steps, so all six have the same contrast:
+
+| Key | Accent (light / dark) | Neutrals | Character |
+|---|---|---|---|
+| `indigo` (default) | `#4e5ad7` / `#a1b2ff` | cool blue-grey | deep ink indigo |
+| `ocean` | `#00769f` / `#7fc1e3` | blue-grey | deep cerulean |
+| `forest` | `#0a7f60` / `#87c7ae` | sage | jade |
+| `rose` | `#b13276` / `#f595c0` | mauve | berry — kept away from the red of errors |
+| `amber` | `#a55115` / `#e8a681` | sand | copper |
+| `slate` | `#424852` / `#b3b8c0` | graphite | monochrome: a near-black accent (L 0.40) |
+
+White text on every light accent: 4.98:1 (forest) to 9.2:1 (slate); dark text on every dark
+accent 8:1 or more. `Theme::available()` carries these light accents as the swatch colours.
+
+**The switcher.** `Theme::switcher()` (and the *Appearance* part of `Header::user()`) shows six
+swatches — the chosen one with a ring in its colour, a check mark and `aria-pressed`, never colour
+alone — and one mode group. With `js/gridkit.js` 1.114.0 the group is **light | dark | auto**;
+*auto* follows the system setting (`prefers-color-scheme`) and is stored per browser beside the
+mode (`gk-mode-auto`, in the `GK.theme` scope). From code: `GK.theme.setMode('light' | 'dark' |
+'auto')`; `GK.theme.toggleMode()` still toggles and ends *auto*. A copy of `gridkit.js` without the
+1.114.0 block keeps the plain light/dark toggle — the auto button stays hidden. The markup since
+1.114.0: the swatches sit in `.gk-theme-colors` (`role="group"`), each dot is `type="button"` and
+carries its colour as `--gk-swatch`; the toggle and the auto button (`.gk-mode-auto`, rendered
+`hidden`) sit in `.gk-mode-group` (`role="group"`). The old classes and attributes are unchanged.
+
+### Colour system and roles
+
+GridKit's colour is a set of **roles** (`--gk-*` custom properties), never literals: write a role
+and a page follows the theme and both dark spellings (`[data-gk-mode="dark"]`, `.gk-dark`) by
+itself. The principles behind the values (1.114.0): the neutrals carry the interface and the
+accent is a signal (the one primary action, the selection, focus, links); neutrals are tinted
+towards their theme, under 0.02 chroma; each role sits at a fixed OKLCH lightness; dark mode is
+its own ladder of near-black with the theme's hue, layered upward; the semantic colours never
+follow the theme.
+
+| Role | Use it for | Light | Dark |
+|---|---|---|---|
+| `--gk-surface` | cards, the header, fields in focus, menus' paper | `#ffffff` | `#191b21` (L 0.222) |
+| `--gk-surface-container` | the page under the cards, a muted band | `#f4f5f8` (L 0.970) | `#111218` (L 0.185) |
+| `--gk-surface-container-low` | a subtle fill: card footer, resting field, stripe | `#f9fafc` | `#14161c` (recessed) |
+| `--gk-surface-container-high` | hover on a surface, a track | `#ecedf2` | `#22242b` (raised) |
+| `--gk-surface-container-highest` | pressed, the strongest neutral fill, menus in dark | `#e2e4e9` | `#2b2d36` |
+| `--gk-on-surface` | text | `#181a22` (17:1) | `#ebecf1` (14.6:1) |
+| `--gk-on-surface-variant` | secondary text, icons | `#565965` (7:1) | `#a4a7b2` (7.2:1) |
+| `--gk-outline-variant` | hairlines: card edges, dividers | `#e4e5ea` | white at 8 % |
+| `--gk-outline` | a control's edge | `#9b9ea9` | `#50525c` |
+| `--gk-primary` / `--gk-on-primary` | the one primary action, selection, focus | accent / white | light accent / dark text |
+| `--gk-primary-text` | the accent as text on a surface (links, chosen tab) | one step darker | = the accent, a step lower |
+| `--gk-primary-container` / `--gk-on-primary-container` | a tonal fill: chosen segment, count, hover of the grip | L 0.95 / L 0.36 | L 0.36 / L 0.92 |
+| `--gk-success` `--gk-warning` `--gk-error` `--gk-info` | dots, borders, icons — not text | emerald, amber, red, sky | lighter steps |
+| `--gk-*-text`, `--gk-*-fill` | the semantic colour as text / as a filled button with white text | 4.5:1 and more | |
+| `--gk-elev-1` … `-4` | shadow steps: card, raised card, menu, dialog | soft, two layers | deeper |
+
+The ladder runs the same way in both modes: cards are lighter than the page, a hover is a step
+away from its surface, a field is a step recessed. Prefer the role to the older alias
+(`--gk-bg`, `--gk-text-muted`, …) in new code; since 1.114.0 the aliases resolve to their role in
+dark mode too. The error role is a true red since 1.114.0 (`#dd2d34`, white 4.67:1), so a badge
+or a bulk-delete button in it reads; the rose theme's accent stays clearly apart from it.
 
 ### The small helpers
 
@@ -1964,8 +2583,12 @@ the `{placeholder}` substitution that `Lang::t()` does for free.
 ### Pagination + PageSize (since 1.22 / 1.27)
 
 Server-side pager **below** `.gk-table-wrap`, not inside the card and not
-and not inside the live container. Same look as `GK.rowPager`
-(`.gk-rowpager` / `.gk-pg`).
+inside the live container. Same look as `GK.rowPager`
+(`.gk-rowpager` / `.gk-pg`), and since 1.118.0 as the pager of
+`Table::paginate()`: one bar for every pager in GridKit. This one is for a list
+you page yourself — its controls are links (`?page=N`, no script needed), its
+count reads "238 invoices · Page 5 of 12" because it is handed pages, not rows
+(a table's says "101–125 of 238"). A `Table` with `paginate()` draws its own.
 
 **The two URL parameters you read yourself.** This pager does *not* use the
 `gk_*` convention of `Table`: the page links are `?…&page=N` and the PageSize
@@ -2165,19 +2788,20 @@ a block: `css/blocks.json` names the release that first shipped each class.
 |-----------|-------|---------|
 | Table | `GridKit\Table` | Data tables with search, sort, pagination |
 | Form | `GridKit\Form` | Grid-based forms (16-column), all field types, AJAX submit |
+| LineItems | `GridKit\LineItems` | The lines of an invoice, offer or order: posts `name[i][field]`, live totals per VAT rate, the same totals in PHP to the cent, add/duplicate/delete with Undo/reorder, cards on a phone, read-only for a sent invoice (since 1.117.0) |
 | Header | `GridKit\Header` | Fixed header with breadcrumb, user menu |
 | Sidebar | `GridKit\Sidebar` | Navigation with groups, badges, collapse |
 | Modal | `GridKit\Modal` | Dialog overlays |
 | Button | `GridKit\Button` | Filled/Outlined/Text/Tonal, icons, sizes |
 | Auth | `GridKit\Auth` | Session auth, bcrypt, remember-me |
-| Theme | `GridKit\Theme` | 6 themes (indigo/ocean/forest/rose/amber/slate), light/dark |
+| Theme | `GridKit\Theme` | 6 themes (indigo/ocean/forest/rose/amber/slate), light/dark — and auto with the switcher since 1.114.0, which also refined every colour |
 | Layout | `GridKit\Layout` | Layout modes (sidebar-first, header-first) |
 | StatCards | `GridKit\StatCards` | KPI cards with icon, color, format |
 | FilterChips | `GridKit\FilterChips` | URL-based filter chip buttons |
 | YearFilter | `GridKit\YearFilter` | Year navigation filter |
 | TableHeader | `GridKit\TableHeader` | **Unified filter/search bar above tables — Status / Toolbar / Advanced (since v1.10.0)** |
 | Lang | `GridKit\Lang` | i18n / multilingual support |
-| Pagination | `GridKit\Pagination` | Server-side pager below the table (`.gk-rowpager`), optional PageSize |
+| Pagination | `GridKit\Pagination` | Server-side pager below the table (`.gk-rowpager`), optional PageSize — the bar `Table::paginate()` draws too (since 1.118.0) |
 | PageSize | `GridKit\PageSize` | Rows per page — lives in the pager bar, not in the table footer |
 | liveTable (JS) | `GK.liveTable` | AJAX tables (search/filter/sort/pagination live, no reload) |
 | BelegModal | `GridKit\BelegModal` | PDF / document preview modal with iframe + mobile fallback (since v1.15.0) |
@@ -2189,9 +2813,11 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Tooltips (JS/CSS) | `GridKit\Tooltip` / `title` / `data-gk-tooltip` / `data-gk-tooltip-rich` / `data-gk-toggletip` / `.gk-help` | Hint popups — plain, title, with HTML in them, or a toggletip that opens on a click; one engine places, flips and announces them all; `'tooltip'` on Button and Table, `'help'` on Form (since 1.112.0) |
 | Gallery + Lightbox (JS) | `.gk-gallery` / `GK.lightbox` | Image grid with lazy loading and a keyboard-operable viewer |
 | Image picker | `GridKit\ImagePicker` / `GK.picker` | Choose one image out of many: a compact grid of 16:9 tiles that works like a radio group, folds after two rows, and an enlarged view that can pick (since 1.94.0) |
+| PermissionMatrix | `GridKit\PermissionMatrix` / `GK.permMatrix` | Roles × permissions for user and rights management: inheritance from a parent role, locked roles, `requires`, bulk toggles per row, column and group, filter, folding, changes marked until saved, a keyboard grid, one role at a time on a phone; posts `perm[role][permission]` as 0/1, read back with `read()` / `fromPost()`, or saves each change as JSON (since 1.115.0) |
 | Announcement (JS/CSS) | `.gk-announce` / `GK.announce` | The line that says "Saved." where the person works, read by a screen reader; empty it draws no box (since 1.93.0) |
 | Timeline | `.gk-timeline` | A log of steps, one under the other: a real ordered list, each step with a symbol and a word for its state (ok · failed · running · waiting · skipped), title, time, small chips, a detail and — when it broke — a message block (since 1.96.0) |
 | Portrait video frame | `.gk-video-frame` | A 9:16 frame for a video or picture: never wider than its column or taller than the window, optional guide lines for the zones a platform covers, an empty "being made" state and a failed state, a caption (since 1.96.0) |
 | Sortable container (JS) | `[data-gk-sortierbar]` / `js/sortierbar.js` | Cards or rows a person puts in order by hand: a handle in every entry (from two entries on), dragging with mouse or finger, Space and arrow keys, a spoken position, the order posted as JSON when there is a `url`, and a sentence beside a symbol when saving failed (since 1.97.0) |
+| Tree | `GridKit\Tree` / `js/tree.js` / `GK.tree` | Page trees, categories, folders: a nested list that works without script, made a WAI-ARIA tree view — keys, type-ahead, open/closed remembered, single or multi selection with tri-state parents, a filter, children loaded on demand, moving by drag and drop or keyboard with a save URL and a way back (since 1.116.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |

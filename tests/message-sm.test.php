@@ -158,11 +158,15 @@ return [
     $c = $css();
     $themes = (string) file_get_contents($root . '/css/themes.css');
     // The grounds: the dark surfaces of gridkit.css, and those themes.css puts over them under a theme.
+    // Since 1.114.0 themes.css has no hex ladder of its own any more (it derives each theme's ladder in
+    // OKLCH at the same lightness steps — ci/farben.js measures the messages over those in a browser),
+    // so the five grounds come from gridkit.css: the four a message lies on in a page or a card, and the
+    // highest step, the ground of menus and toasts.
     preg_match('/\n\[data-gk-mode="dark"\],\n\.gk-dark \{(.*?)\n\}/s', $c, $own);
     preg_match('/\n\[data-gk-mode="dark"\] \{(.*?)\n\}/s', $themes, $theirs);
     $grounds = [];
     foreach ([$own[1] ?? '', $theirs[1] ?? ''] as $block) {
-        foreach (['surface', 'surface-container-low', 'surface-container', 'surface-container-high'] as $role) {
+        foreach (['surface', 'surface-container-low', 'surface-container', 'surface-container-high', 'surface-container-highest'] as $role) {
             if (preg_match('/--gk-' . $role . ':\s*(#[0-9a-fA-F]{6})/', $block, $m)) $grounds[strtolower($m[1])] = $role;
         }
     }

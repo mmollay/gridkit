@@ -1,4 +1,4 @@
-# GridKit 1.113.0 — JavaScript
+# GridKit 1.118.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -61,8 +61,21 @@ GK.announce('saved', '');                    // empty: no box, still a live regi
 document.addEventListener('gk:sheetopen', e => fill(e.target, e.detail.params));  // detail: { opener, params }
 document.addEventListener('gk:sheetclose', e => { /* e.detail.opener */ });
 
+// Tree (since 1.116.0) — GridKit\Tree and js/tree.js, see "Tree". First argument: the tree's id, element or selector.
+GK.tree.expand('pages', '7');              // opens node 7 and the path to it; no id: every loaded parent. A Promise.
+GK.tree.collapse('pages');                 // every parent; with an id, one node
+GK.tree.select('cats', ['books', 'music']); // ticks (multi) or selects (single); false as third argument unticks
+GK.tree.selected('cats');                  // ['books', 'novels', …]
+GK.tree.reload('pages', '5');              // fetches the children of 5 again (lazyUrl)
+document.addEventListener('gk:treemove', e => { if (e.detail.parent === 'legal') e.preventDefault(); });
+
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
+
+// Line items (since 1.117.0) — see "LineItems". The same totals as LineItems::totals(), to the cent.
+document.addEventListener('gk:lineitemschange', e => { /* e.detail: { items, totals } */ });
+GK.lineItems.totals(document.querySelector('.gk-lines'));
+GK.lineItems.add(document.querySelector('.gk-lines'), { description: 'Travel', qty: 1, price: '40', vat: 20 });
 
 // Tabs (since 1.111.0) — see "Tabs". A row by its .gk-tabs element or id; hand-written rows too.
 GK.tabs.select('settings', 'bank');            // as a click (gk:tabchange can refuse it); { focus, force }

@@ -37,13 +37,11 @@
  *   - The sort indicator: the server draws it with a CSS ::after arrow, the
  *     client with a `material-icons` span and the `gk-sortable-mi` class that
  *     suppresses the arrow. Two mechanisms, one appearance.
- *   - The pager's page numbers: the server wraps each in a `<span>`, the client
- *     writes the text bare. Both sit inside the same button and look identical;
- *     nothing styles that span.
- *   - The disabled "Previous" button carries `data-gk-page="1"` on the server and
- *     `data-gk-page="0"` on the client. Neither is ever read: the button is
- *     disabled, and the handler ignores a disabled control. (Found during the
- *     1.85.0 acceptance, 21.09.2026 — older than that release.)
+ *
+ * Until 1.117.0 the pager added two more (the server wrapped a page number in a
+ * `<span>`, and the disabled "Previous" carried `data-gk-page="1"` on the server
+ * and `"0"` on the client). Since 1.118.0 both sides write the bar of
+ * GridKit\Pagination attribute for attribute, and the pager reports nothing.
  *
  * Everything else a run reports is worth reading. The pager's accessible names
  * were drifting when this harness was written — the server said "Previous" and

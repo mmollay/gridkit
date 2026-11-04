@@ -52,23 +52,18 @@ const PAARE = [
   ["--gk-text-muted", "--gk-on-surface-variant"],
   ["--gk-text-subtle","--gk-outline"],
   ["--gk-border",     "--gk-outline-variant"],
+  /* Bis 1.114.0 zurückgestellt: themes.css gab --gk-surface und --gk-surface-container im
+     dunklen Schema DIESELBE Farbe (#1e293b), gridkit.css hielt sie eine Stufe auseinander.
+     1.114.0 hat die Leiter entschieden — eine für beide Dateien und beide Schreibweisen, jede
+     Stufe ihr eigener Wert —, und die vier Oberflächen-Aliase folgen seither ihrer Rolle. */
+  ["--gk-bg",         "--gk-surface"],
+  ["--gk-bg-muted",   "--gk-surface-container"],
+  ["--gk-bg-subtle",  "--gk-surface-container-low"],
+  ["--gk-bg-hover",   "--gk-surface-container-high"],
 ];
 
-/**
- * Bewusst zurückgestellt, nicht vergessen: in themes.css sind --gk-surface und
- * --gk-surface-container im dunklen Schema DIESELBE Farbe (#1e293b, Zeile 140 und
- * 144), in gridkit.css eine Stufe auseinander (#0d1117 / #161b22). Würden diese
- * vier ihrer Rolle folgen, fielen --gk-bg und --gk-bg-muted zusammen und jede
- * gedämpfte Fläche auf einer glatten verlöre ihre Kante. Das ist eine
- * Palettenentscheidung für alle SSI-Systeme. Bis dahin wird hier gemessen und
- * berichtet, aber nicht beanstandet.
- */
-const ZURUECKGESTELLT = [
-  ["--gk-bg",        "--gk-surface"],
-  ["--gk-bg-muted",  "--gk-surface-container"],
-  ["--gk-bg-subtle", "--gk-surface-container-low"],
-  ["--gk-bg-hover",  "--gk-surface-container-high"],
-];
+/** Gemessen und berichtet, aber nicht beanstandet. Seit 1.114.0 leer. */
+const ZURUECKGESTELLT = [];
 const THEMEN = ["", "indigo", "ocean", "forest", "rose", "amber", "slate"];
 /* Der dunkle Block gilt für [data-gk-mode="dark"] UND .gk-dark. Gemessen werden
    beide: themes.css führt in einem seiner Blöcke nur die eine Schreibweise mit,
@@ -153,7 +148,10 @@ async function komponentenMessen(browser, mitThemes, schreibweise) {
       const sonde = document.createElement("span"); document.body.appendChild(sonde);
       const aufloesen = (v) => { sonde.style.color = `var(${v})`; return rgba(getComputedStyle(sonde).color); };
       const grund = schluessel(aufloesen("--gk-surface"));
-      const erwartet = schreibweise === "hell" ? "255,255,255" : (mitThemes ? "30,41,59" : "13,17,23");
+      /* Seit 1.114.0 eine Leiter für beide Fälle: die Karte im Dunkeln ist oklch(0.222 0.013 275) —
+         gridkit.css schreibt sie als Hex, themes.css leitet sie für indigo genauso her. Vorher zwei
+         Paletten: #1e293b mit themes.css, #0d1117 ohne. */
+      const erwartet = schreibweise === "hell" ? "255,255,255" : "25,27,33";
       if (grund !== erwartet) { sonde.remove(); return { fehler: `Grund ist rgb(${grund}), erwartet ${erwartet}` }; }
       /* Und greift das THEMA auch? themes.css setzt die dunklen Oberflächen ohne
          Themenbedingung — der Grund oben beweist nur, dass die Datei geladen ist.
@@ -723,6 +721,117 @@ function bausteineBerichten(wie, zeilen) {
   return schlecht;
 }
 
+/* ────────────────────────────────────────────────────────────────────────
+ * Vierter Abschnitt (1.114.0): der Themenwähler, offen im Benutzermenü, in jedem Thema und Modus.
+ *
+ * Der gewählte Farbpunkt sagt es dreifach — Ring in seiner Farbe (dunkel: zur Schrift hin
+ * aufgehellt), Haken, aria-pressed. Gemessen wird, was das Auge braucht: der Ring ≥ 3:1 gegen den
+ * Grund des Menüs (WCAG 1.4.11), der weisse Haken ≥ 3:1 auf jedem Farbpunkt, der Fokusring ≥ 3:1.
+ * In der Modusgruppe (hell | dunkel | auto) das Zeichen des gewählten Modus auf seinem Daumen und
+ * die beiden anderen auf der Spur: Symbole, also ≥ 3:1. Die Farben der Punkte stehen in
+ * Theme::available() und werden von dort gelesen, nicht abgeschrieben.
+ * ──────────────────────────────────────────────────────────────────────── */
+async function schalterMessen(browser) {
+  const sDir = fs.mkdtempSync(path.join(os.tmpdir(), "gk-farben-s-"));
+  try {
+    for (const f of ["gridkit.css", "themes.css"]) fs.copyFileSync(path.join(WURZEL, "css", f), path.join(sDir, f));
+    const php = fs.readFileSync(path.join(WURZEL, "src", "Theme.php"), "utf8");
+    const punkte = [...php.matchAll(/'(\w+)'\s*=>\s*\['name'\s*=>\s*'[^']*',\s*'color'\s*=>\s*'(#[0-9a-fA-F]{6})'\]/g)].map((m) => [m[1], m[2]]);
+    if (punkte.length !== 6) throw new Error(`Theme::available(): ${punkte.length} Farbpunkte gelesen, sechs erwartet`);
+    const menue = `<div class="gk-dropdown-menu" style="display:block;position:static;width:260px"><div class="gk-dropdown-item gk-dropdown-html">
+<div class="gk-theme-switcher" data-gk-mode-ready data-gk-mode-state="light"><div class="gk-theme-colors">
+${punkte.map(([k, c]) => `<button type="button" class="gk-theme-dot" data-gk-set-theme="${k}" id="punkt-${k}" style="--gk-swatch:${c};background:${c}" aria-pressed="false"></button>`).join("")}
+</div><div class="gk-mode-group"><button type="button" class="gk-mode-toggle" data-gk-toggle-mode><span class="material-icons gk-mode-light" id="m-light">l</span><span class="material-icons gk-mode-dark" id="m-dark">d</span></button>
+<button type="button" class="gk-mode-auto" id="m-auto" data-gk-mode-auto><span class="material-icons">a</span></button></div></div></div></div>`;
+    fs.writeFileSync(path.join(sDir, "probe.html"), `<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="gridkit.css"><link rel="stylesheet" href="themes.css"></head><body class="gk-root">${menue}</body></html>`);
+    const page = await browser.newPage({ viewport: { width: 800, height: 400 } });
+    await page.goto("file://" + path.join(sDir, "probe.html"));
+    const zeilen = await page.evaluate(([themen, modi, punkte]) => {
+      const c = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+      const rgba = (f) => { c.clearRect(0, 0, 1, 1); c.fillStyle = "#000"; c.fillStyle = f; c.fillRect(0, 0, 1, 1);
+        const d = c.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
+      const ueber = (vorn, hinten) => [0, 1, 2].map((i) => vorn[i] * vorn[3] + hinten[i] * (1 - vorn[3]));
+      const lum = (v) => { const f = (x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+        return 0.2126 * f(v[0]) + 0.7152 * f(v[1]) + 0.0722 * f(v[2]); };
+      const kontrast = (a, b) => { const la = lum(a), lb = lum(b); return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05); };
+      const grund = (el) => { const s = []; for (let e = el; e; e = e.parentElement) s.push(rgba(getComputedStyle(e).backgroundColor));
+        let g = [255, 255, 255]; for (const x of s.reverse()) g = ueber(x, g); return g; };
+      // Die Schichten eines box-shadow, an den Kommas der obersten Ebene getrennt; die Farbe steht vorn.
+      const schatten = (wert) => { const out = []; let tiefe = 0, cur = "";
+        for (const ch of wert) { tiefe += ch === "(" ? 1 : ch === ")" ? -1 : 0; if (ch === "," && !tiefe) { out.push(cur.trim()); cur = ""; } else cur += ch; }
+        out.push(cur.trim()); return out.map((s) => s.replace(/\s+-?[\d.]+px.*$/, "")); };
+      /* Ring und Zeichen gehen mit transition in ihren Zustand; ohne das Ende abzuwarten misst man
+         den Anfang (ein durchsichtiger Ring, 1,00:1). Erst rechnen lassen, dann jeden Übergang beenden. */
+      const fertig = () => { void document.body.offsetWidth;
+        document.getAnimations().filter((a) => isFinite(a.effect.getComputedTiming().endTime)).forEach((a) => a.finish()); };
+      const ergebnis = [];
+      for (const thema of themen) {
+        for (const modus of modi) {
+          document.body.setAttribute("data-gk-theme", thema);
+          document.body.classList.toggle("gk-dark", modus === "dark-klasse");
+          document.body.setAttribute("data-gk-mode", modus === "dark-klasse" ? "light" : modus);
+          fertig();
+          const menuGrund = grund(document.querySelector(".gk-theme-colors"));
+          const werte = [];
+          for (const [k] of punkte) {
+            const p = document.getElementById(`punkt-${k}`);
+            p.classList.add("gk-theme-active"); p.setAttribute("aria-pressed", "true");
+            fertig();
+            const lagen = schatten(getComputedStyle(p).boxShadow);
+            const ring = rgba(lagen[lagen.length - 1]);
+            const haken = rgba(getComputedStyle(p, "::after").borderLeftColor);
+            const scheibe = rgba(getComputedStyle(p).backgroundColor);
+            werte.push({ name: `Ring ${k}`, kontrast: kontrast(ueber(ring, menuGrund), menuGrund) });
+            werte.push({ name: `Haken ${k}`, kontrast: kontrast(ueber(haken, scheibe), scheibe) });
+            p.classList.remove("gk-theme-active"); p.setAttribute("aria-pressed", "false");
+          }
+          // Der Fokusring ist var(--gk-on-surface) (.gk-theme-dot:focus-visible) — aufgelöst an einer Sonde im Menü.
+          const sonde = document.createElement("span");
+          document.querySelector(".gk-theme-colors").appendChild(sonde);
+          sonde.style.color = "var(--gk-on-surface)";
+          werte.push({ name: "Fokusring Farbpunkt", kontrast: kontrast(rgba(getComputedStyle(sonde).color), menuGrund) });
+          sonde.remove();
+          const sw = document.querySelector(".gk-theme-switcher");
+          for (const zustand of ["light", "dark", "auto"]) {
+            sw.setAttribute("data-gk-mode-state", zustand);
+            fertig();
+            for (const id of ["m-light", "m-dark", "m-auto"]) {
+              const el = document.getElementById(id);
+              const g = grund(el);
+              const gewaehlt = id === `m-${zustand}`;
+              werte.push({ name: `Modus ${zustand} · ${id.slice(2)}${gewaehlt ? " (gewählt)" : ""}`,
+                kontrast: kontrast(ueber(rgba(getComputedStyle(el).color), g), g) });
+            }
+          }
+          sw.setAttribute("data-gk-mode-state", "light");
+          ergebnis.push({ thema, modus, werte });
+        }
+      }
+      return ergebnis;
+    }, [THEMEN.filter(Boolean), MODI, punkte]);
+    await page.close();
+    return zeilen;
+  } finally {
+    fs.rmSync(sDir, { recursive: true, force: true });
+  }
+}
+
+function schalterBerichten(zeilen) {
+  let schlecht = 0;
+  console.log("\nThemenwähler 1.114.0 (Ring, Haken, Fokus, Modusgruppe — je ≥ 3:1):");
+  for (const z of zeilen) {
+    const kopf = `${z.thema.padEnd(12)} ${z.modus.padEnd(11)}`;
+    const zuWenig = z.werte.filter((w) => w.kontrast < 3);
+    const schwaechster = z.werte.reduce((a, b) => (a.kontrast <= b.kontrast ? a : b));
+    if (zuWenig.length) {
+      schlecht++;
+      console.log(`FAIL  ${kopf}  ${zuWenig.map((w) => `${w.name} ${w.kontrast.toFixed(2)}:1`).join(", ")}`);
+    } else console.log(`ok    ${kopf}  alle ${z.werte.length} ≥ 3:1 (schwächster: ${schwaechster.name} ${schwaechster.kontrast.toFixed(2)}:1)`);
+  }
+  return schlecht;
+}
+
 (async () => {
   const browser = await chromium.launch();
   const page = await browser.newPage();
@@ -792,6 +901,7 @@ function bausteineBerichten(wie, zeilen) {
   const hell = await komponentenMessen(browser, true, "hell");
   const bausteineMitThemes = await bausteineMessen(browser, true);
   const bausteineOhneThemes = await bausteineMessen(browser, false);
+  const schalter = await schalterMessen(browser);
   await browser.close();
 
   let schlecht = 0;
@@ -855,6 +965,7 @@ function bausteineBerichten(wie, zeilen) {
   markenBerichten("ohne themes.css", bausteineOhneThemes, "Hochformat-Rahmen 1.96.0 (Titel, Satz, Symbol, Unterschrift)", /^Rahmen /);
   markenBerichten("mit themes.css", bausteineMitThemes, "Chips 1.93.3/1.93.4 (Zahl und Beschriftung)", /^Chip /);
   markenBerichten("ohne themes.css", bausteineOhneThemes, "Chips 1.93.3/1.93.4 (Zahl und Beschriftung)", /^Chip /);
+  schlecht += schalterBerichten(schalter);
 
   process.exit(schlecht ? 1 : 0);
 })().catch((e) => { console.error("Abbruch:", e.message.split("\n")[0]); process.exit(2); });

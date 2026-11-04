@@ -26,40 +26,46 @@ a:hover {
 :root,
 .gk-root,
 [data-gk-theme] {
+  /* 1.114.0 — the colour system. These literals are the default theme (indigo) written
+     out for a page without themes.css; themes.css derives the same roles for each theme
+     in OKLCH at the same lightness steps (see its head for the principles). Neutrals are
+     one ramp, tinted towards the accent's hue (chroma under 0.02): page L 0.970, subtle
+     fill 0.985, hover 0.947, hairline 0.922, muted text 0.465, text 0.22. The accent sits
+     at L 0.53. Role NAMES never change; only these values do. */
   /* Key Colors */
-  --gk-primary: #6366f1;
+  --gk-primary: #4e5ad7;
   --gk-on-primary: #ffffff;
-  --gk-primary-container: #e0e0ff;
-  --gk-on-primary-container: #1a1a6b;
+  --gk-primary-container: #e9eeff;
+  --gk-on-primary-container: #2a2f86;
 
-  --gk-secondary: #57606a;
+  --gk-secondary: #60636f;
   --gk-on-secondary: #ffffff;
-  --gk-secondary-container: #eaeef2;
-  --gk-on-secondary-container: #24292f;
+  --gk-secondary-container: #ecedf2;
+  --gk-on-secondary-container: #2b2d36;
 
   --gk-tertiary: #10b981;
   --gk-on-tertiary: #ffffff;
   --gk-tertiary-container: #d1fae5;
   --gk-on-tertiary-container: #064e3b;
 
-  --gk-error: #f43f5e;
+  --gk-error: #dd2d34;
   --gk-on-error: #ffffff;
-  --gk-error-container: #ffe4e6;
-  --gk-on-error-container: #881337;
+  --gk-error-container: #ffe8e7;
+  --gk-on-error-container: #7f1f29;
 
   /* Surface Roles */
-  --gk-surface-dim: #e8edf2;
+  --gk-surface-dim: #e8e9ee;
   --gk-surface: #ffffff;
   --gk-surface-bright: #ffffff;
   --gk-surface-container-lowest: #ffffff;
-  --gk-surface-container-low: #f6f8fa;
-  --gk-surface-container: #f1f5f9;
-  --gk-surface-container-high: #eaeef2;
-  --gk-surface-container-highest: #d8dee4;
-  --gk-on-surface: #0f172a;
-  --gk-on-surface-variant: #475569;
-  --gk-outline: #94a3b8;
-  --gk-outline-variant: #e2e8f0;
+  --gk-surface-container-low: #f9fafc;
+  --gk-surface-container: #f4f5f8;
+  --gk-surface-container-high: #ecedf2;
+  --gk-surface-container-highest: #e2e4e9;
+  --gk-on-surface: #181a22;
+  --gk-on-surface-variant: #565965;
+  --gk-outline: #9b9ea9;
+  --gk-outline-variant: #e4e5ea;
 
   /* === SEMANTIC ROLES ===
      Success, warning and info deliberately do NOT follow the theme accent: green
@@ -68,8 +74,8 @@ a:hover {
      because Forest sets tertiary to #8b5cf6.) */
   --gk-success: #10b981;
   --gk-on-success: #ffffff;
-  --gk-success-container: #d1fae5;
-  --gk-on-success-container: #064e3b;
+  --gk-success-container: #d8f9e9;
+  --gk-on-success-container: #004f38;
 
   /* Backward-compat aliases */
   --gk-bg: var(--gk-surface);
@@ -108,20 +114,20 @@ a:hover {
   --gk-success-fill-hover: #065f46;
   --gk-warning-fill-hover: #92400e;
   --gk-danger-fill-hover:  #b91c1c;
-  --gk-warning-container: #fef3c7;
+  --gk-warning-container: #fff2ce;
   --gk-on-warning-container: #92400e;
   --gk-on-info: #ffffff;
-  --gk-info-container: #dbeafe;
-  --gk-on-info-container: #1e40af;
+  --gk-info-container: #dff1ff;
+  --gk-on-info-container: #0e4f86;
 
   /* === STATE ROLES ===
      Hover and active steps are derived from their own role so that they follow the
      theme. The literals here are the fallback for browsers without relative color
      syntax; the @supports block at the end of this file replaces them with the
      derived variant (same chroma, lower lightness). */
-  --gk-primary-hover: #4f46e5;
+  --gk-primary-hover: #4046c2;
   --gk-tertiary-hover: #059669;
-  --gk-error-hover: #e11d48;
+  --gk-error-hover: #c70721;
   --gk-warning-hover: #d97706;
   /* Legacy hover aliases */
   --gk-success-hover: #059669;
@@ -151,22 +157,22 @@ a:hover {
      white surface the same colour measured 3.97:1 in forest, 4.20:1 in ocean
      and 4.41:1 in slate — under the 4.5:1 body text needs. Same idea as the two
      roles above: one step darker, used only where the colour is the text. */
-  --gk-primary-text: #4f46e5;
+  --gk-primary-text: #3d43bf;
 
   /* Focus ring — one promise, the same everywhere */
-  --gk-focus-ring: 0 0 0 3px color-mix(in oklab, var(--gk-primary) 32%, transparent);
+  --gk-focus-ring: 0 0 0 3px color-mix(in oklab, var(--gk-primary) 28%, transparent);
   --gk-focus-ring-soft: 0 0 0 3px color-mix(in oklab, var(--gk-primary) 10%, transparent);
-  --gk-focus-ring-error: 0 0 0 3px color-mix(in oklab, var(--gk-error) 32%, transparent);
+  --gk-focus-ring-error: 0 0 0 3px color-mix(in oklab, var(--gk-error) 28%, transparent);
 
   /* Legacy scale aliases (backward compat) */
-  --gk-primary-50: #eef2ff;
-  --gk-primary-100: #e0e7ff;
-  --gk-primary-200: #c7d2fe;
-  --gk-primary-300: #a5b4fc;
-  --gk-primary-400: #818cf8;
-  --gk-primary-500: #6366f1;
-  --gk-primary-600: #4f46e5;
-  --gk-primary-700: #4338ca;
+  --gk-primary-50: #f4f6ff;
+  --gk-primary-100: #e7ecff;
+  --gk-primary-200: #cfd9ff;
+  --gk-primary-300: #adbdff;
+  --gk-primary-400: #8194ff;
+  --gk-primary-500: #6070ef;
+  --gk-primary-600: #4e5ad7;
+  --gk-primary-700: #3e46ba;
   --gk-success-50: #ecfdf5;
   --gk-success-100: #d1fae5;
   --gk-success-200: #a7f3d0;
@@ -188,36 +194,36 @@ a:hover {
   --gk-danger-500: #f43f5e;
   --gk-danger-600: #e11d48;
   --gk-danger-700: #be123c;
-  --gk-neutral-50: #f8fafc;
-  --gk-neutral-100: #f1f5f9;
-  --gk-neutral-200: #e2e8f0;
-  --gk-neutral-300: #cbd5e1;
-  --gk-neutral-400: #94a3b8;
-  --gk-neutral-500: #64748b;
-  --gk-neutral-600: #475569;
-  --gk-neutral-700: #334155;
-  --gk-neutral-800: #1e293b;
-  --gk-neutral-900: #0f172a;
+  --gk-neutral-50: #f9fafc;
+  --gk-neutral-100: #f3f4f7;
+  --gk-neutral-200: #e4e5ea;
+  --gk-neutral-300: #d0d2da;
+  --gk-neutral-400: #9b9ea9;
+  --gk-neutral-500: #6f727f;
+  --gk-neutral-600: #575a66;
+  --gk-neutral-700: #3e404c;
+  --gk-neutral-800: #272a33;
+  --gk-neutral-900: #181a22;
 
   /* Sidebar Colors */
   /* Sidebar – light mode (dark = the dark mode block below) */
-  --gk-sidebar-bg: #f1f5f9;
-  --gk-sidebar-text: #374151;
+  --gk-sidebar-bg: #f6f7fb;
+  --gk-sidebar-text: #3c3f4b;
   /* #9ca3af measured 2.27:1 on the light sidebar — group labels, the version
      and the collapse label all sat under half the required 4.5:1. */
   --gk-sidebar-text-muted: #5b6472;
-  --gk-sidebar-text-hover: #111827;
-  --gk-sidebar-item-hover: rgba(0, 0, 0, 0.05);
-  --gk-sidebar-item-active: rgba(0, 0, 0, 0.07);
-  --gk-sidebar-border: rgba(0, 0, 0, 0.07);
+  --gk-sidebar-text-hover: #181a22;
+  --gk-sidebar-item-hover: rgba(24, 26, 34, 0.05);
+  --gk-sidebar-item-active: rgba(24, 26, 34, 0.07);
+  --gk-sidebar-border: rgba(24, 26, 34, 0.07);
   --gk-sidebar-brand-bg: transparent;
   --gk-sidebar-accent: var(--gk-primary);
   /* Was 2.37:1. Icons need 3:1, but these sit beside the labels above. */
   --gk-sidebar-icon-muted: #5b6472;
 
   /* Elevation (M3 uses tonal elevation) */
-  --gk-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --gk-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
+  --gk-shadow: 0 1px 2px rgba(24, 26, 34, 0.06), 0 1px 3px rgba(24, 26, 34, 0.04);
+  --gk-shadow-lg: 0 4px 10px rgba(24, 26, 34, 0.05), 0 14px 32px rgba(24, 26, 34, 0.10);
   --gk-radius: 12px;
   --gk-radius-sm: 8px;
   --gk-radius-lg: 16px;
@@ -317,10 +323,10 @@ a:hover {
   /* === ELEVATION ===
      Four steps, each two-layered: a tight contact shadow for the edge, a soft
      spread for the distance. A single-layer shadow looks glued on. */
-  --gk-elev-1: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.10);
-  --gk-elev-2: 0 2px 4px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.08);
-  --gk-elev-3: 0 4px 8px rgba(15, 23, 42, 0.08), 0 16px 32px rgba(15, 23, 42, 0.12);
-  --gk-elev-4: 0 8px 16px rgba(15, 23, 42, 0.10), 0 24px 48px rgba(15, 23, 42, 0.16);
+  --gk-elev-1: 0 1px 2px rgba(24, 26, 34, 0.05), 0 1px 3px rgba(24, 26, 34, 0.05);
+  --gk-elev-2: 0 1px 3px rgba(24, 26, 34, 0.05), 0 6px 16px rgba(24, 26, 34, 0.07);
+  --gk-elev-3: 0 4px 10px rgba(24, 26, 34, 0.06), 0 16px 36px rgba(24, 26, 34, 0.11);
+  --gk-elev-4: 0 8px 20px rgba(24, 26, 34, 0.08), 0 28px 60px rgba(24, 26, 34, 0.16);
   --gk-spacing: 16px;
   --gk-content-max-width: 1600px;
   font-family: var(--gk-font);
@@ -3343,13 +3349,13 @@ select.gk-input {
    below names its dark spellings too, at the same 0,3,0, and wins by coming later. */
 [data-gk-mode="dark"] .gk-chip,
 .gk-dark .gk-chip {
-  background: #161b22;
+  background: var(--gk-surface);
   border-color: rgba(255, 255, 255, 0.12);
   color: var(--gk-on-surface);
 }
 [data-gk-mode="dark"] .gk-chip:hover,
 .gk-dark .gk-chip:hover {
-  background: #21262d;
+  background: var(--gk-surface-container-high);
 }
 [data-gk-mode="dark"] .gk-chip.gk-chip-active,
 .gk-dark .gk-chip.gk-chip-active {
@@ -4099,32 +4105,43 @@ a.gk-stat-card:hover {
   }
 }
 
-/* === CARD === */
+/* === CARD ===
+   1.114.0: paper on the page. The surface with a hairline and the first step of
+   elevation; the page beneath carries the tint. Radius and shadow are tokens, so
+   a theme or the dark mode moves them with everything else. A card made of
+   parts (.gk-card-body) lays its parts edge to edge — see "Cards made of parts"
+   below. */
 .gk-card {
   background: var(--gk-surface, #fff);
-  border: 1px solid var(--gk-outline-variant, #d0d7de);
-  border-radius: 12px;
+  border: 1px solid var(--gk-outline-variant, #e4e5ea);
+  border-radius: var(--gk-radius, 12px);
   padding: 20px 24px;
   margin-bottom: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--gk-elev-1);
 }
+/* The heading of a card: the text colour, semibold, in the case it was written
+   in. It was the accent in capitals — the accent marks what can be done, a
+   heading is not that, and a grid of capital headings in the accent shouted. */
 .gk-card-title {
   margin: 0 0 16px;
-  font-size: var(--gk-text-body);
-  font-weight: 700;
-  color: var(--gk-primary, #6366f1);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: var(--gk-text-subtitle);
+  font-weight: 600;
+  line-height: var(--gk-leading-tight);
+  color: var(--gk-on-surface);
+  letter-spacing: -0.005em;
+}
+.gk-card-header .gk-card-title {
+  margin: 0;
+  font-size: inherit;
 }
 .gk-card-flat {
   box-shadow: none;
-  border: 1px solid var(--gk-outline-variant, #e2e8f0);
+  border: 1px solid var(--gk-outline-variant, #e4e5ea);
 }
+/* Lifted by its shadow. The edge stays, transparent, so the card keeps its size. */
 .gk-card-elevated {
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.06),
-    0 4px 12px rgba(0, 0, 0, 0.04);
-  border: none;
+  box-shadow: var(--gk-elev-2);
+  border-color: transparent;
 }
 
 /* Form field spacing */
@@ -5461,10 +5478,12 @@ a.gk-stat-card:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 20px;
+  min-height: 52px;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--gk-outline-variant);
   font-weight: 600;
   font-size: 15px;
+  letter-spacing: -0.005em;
 }
 /* Icon + heading on one line: the h3 inherits the header typography (instead of
    a browser h3 with its own margins), icons get a fixed size. */
@@ -5497,9 +5516,23 @@ a.gk-stat-card:hover {
   color: var(--gk-on-surface-variant);
 }
 .gk-card-image {
-  border-radius: var(--gk-radius) var(--gk-radius) 0 0;
+  /* One pixel inside the card's own corner: the border runs outside the picture. */
+  border-radius: calc(var(--gk-radius) - 1px) calc(var(--gk-radius) - 1px) 0 0;
   width: 100%;
   display: block;
+}
+/* Cards made of parts (1.114.0). A card with a body lets its parts do the
+   padding: the header line and the footer line run from edge to edge instead of
+   stopping 24px short, a picture sits flush with the top as .gk-card-image always
+   promised, and the footer becomes a quiet band of the subtle surface. Before,
+   the card padded and the body padded again — 40px of air, and lines floating
+   inside the card. A card without .gk-card-body keeps its padding. */
+.gk-card:has(> .gk-card-body) {
+  padding: 0;
+}
+.gk-card:has(> .gk-card-body) > .gk-card-footer {
+  background: var(--gk-surface-container-low);
+  border-radius: 0 0 calc(var(--gk-radius) - 1px) calc(var(--gk-radius) - 1px);
 }
 .gk-card-meta {
   font-size: var(--gk-text-caption);
@@ -5516,12 +5549,29 @@ a.gk-stat-card:hover {
   text-decoration: none;
   color: inherit;
   transition:
-    box-shadow 0.15s,
-    transform 0.15s;
+    box-shadow var(--gk-dur-2) var(--gk-ease-out),
+    border-color var(--gk-dur-1) var(--gk-ease-out),
+    transform var(--gk-dur-2) var(--gk-ease-out);
 }
+/* A clickable card answers the pointer with its edge and its height: one step of
+   elevation and a firmer line, 1px up instead of 2 — it lifts, it does not jump. */
 .gk-card-link:hover {
-  box-shadow: var(--gk-shadow-lg);
-  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--gk-outline-variant) 45%, var(--gk-outline));
+  box-shadow: var(--gk-elev-2);
+  transform: translateY(-1px);
+}
+.gk-card-link:active {
+  box-shadow: var(--gk-elev-1);
+  transform: none;
+}
+.gk-card-link:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gk-card-link:hover {
+    transform: none;
+  }
 }
 
 /* === ACCORDION === */
@@ -6318,15 +6368,15 @@ a.gk-stat-card:hover {
 /* === DARK MODE === */
 [data-gk-mode="dark"],
 .gk-dark {
-  --gk-primary: #a5b4fc;
-  --gk-on-primary: #2e2e8a;
-  --gk-primary-container: #4345b0;
-  --gk-on-primary-container: #e0e0ff;
+  --gk-primary: #a1b2ff;
+  --gk-on-primary: #141947;
+  --gk-primary-container: #2d3673;
+  --gk-on-primary-container: #dce3ff;
 
-  --gk-secondary: #ccc2dc;
-  --gk-on-secondary: #332d41;
-  --gk-secondary-container: #4a4458;
-  --gk-on-secondary-container: #e8def8;
+  --gk-secondary: #babdc8;
+  --gk-on-secondary: #1d1f25;
+  --gk-secondary-container: #2b2d36;
+  --gk-on-secondary-container: #dcdee5;
 
   --gk-tertiary: #6ee7b7;
   --gk-on-tertiary: #064e3b;
@@ -6343,17 +6393,17 @@ a.gk-stat-card:hover {
   --gk-error-container: #881337;
   --gk-on-error-container: #ffe4e6;
 
-  --gk-surface-dim: #0d1117;
-  --gk-surface: #0d1117;
-  --gk-surface-bright: #3a4250;
-  --gk-surface-container-lowest: #010409;
-  --gk-surface-container-low: #0d1117;
-  --gk-surface-container: #161b22;
-  --gk-surface-container-high: #21262d;
-  --gk-surface-container-highest: #2d333b;
-  --gk-on-surface: #e6edf3;
-  --gk-on-surface-variant: #8b949e;
-  --gk-outline: #484f58;
+  --gk-surface-dim: #0e0f14;
+  --gk-surface: #191b21;
+  --gk-surface-bright: #353740;
+  --gk-surface-container-lowest: #0a0b0f;
+  --gk-surface-container-low: #14161c;
+  --gk-surface-container: #111218;
+  --gk-surface-container-high: #22242b;
+  --gk-surface-container-highest: #2b2d36;
+  --gk-on-surface: #ebecf1;
+  --gk-on-surface-variant: #a4a7b2;
+  --gk-outline: #50525c;
   --gk-outline-variant: rgba(255, 255, 255, 0.08);
 
   --gk-warning: #fbbf24;
@@ -6364,14 +6414,18 @@ a.gk-stat-card:hover {
   --gk-on-info: #0c4a6e;
   --gk-info-container: #1e40af;
   --gk-on-info-container: #bfdbfe;
-  --gk-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --gk-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.4);
+  --gk-shadow: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px rgba(0, 0, 0, 0.24);
+  --gk-shadow-lg: 0 4px 10px rgba(0, 0, 0, 0.36), 0 14px 32px rgba(0, 0, 0, 0.44);
   /* Shadows barely carry on a dark ground — hence deeper, plus a light edge
      that lifts the layer above the surface the way M3 does. */
-  --gk-elev-1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.40);
-  --gk-elev-2: 0 2px 4px rgba(0, 0, 0, 0.32), 0 4px 12px rgba(0, 0, 0, 0.44);
-  --gk-elev-3: 0 4px 8px rgba(0, 0, 0, 0.36), 0 16px 32px rgba(0, 0, 0, 0.50);
-  --gk-elev-4: 0 8px 16px rgba(0, 0, 0, 0.40), 0 24px 48px rgba(0, 0, 0, 0.56);
+  --gk-elev-1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 3px rgba(0, 0, 0, 0.28);
+  --gk-elev-2: 0 1px 3px rgba(0, 0, 0, 0.34), 0 6px 16px rgba(0, 0, 0, 0.40);
+  --gk-elev-3: 0 4px 10px rgba(0, 0, 0, 0.38), 0 16px 36px rgba(0, 0, 0, 0.50);
+  --gk-elev-4: 0 8px 20px rgba(0, 0, 0, 0.42), 0 28px 60px rgba(0, 0, 0, 0.58);
+  /* A share of the accent on near-black reads fainter than the same share on white:
+     the halo takes more of it here, so focus looks as deliberate in both modes. */
+  --gk-focus-ring: 0 0 0 3px color-mix(in oklab, var(--gk-primary) 42%, transparent);
+  --gk-focus-ring-error: 0 0 0 3px color-mix(in oklab, var(--gk-error) 42%, transparent);
 
   /* Restate the alias variables in this block — an alias defined on :root resolves
      with the LIGHT values, so leaving them out would hand dark mode a light colour.
@@ -6387,20 +6441,17 @@ a.gk-stat-card:hover {
   --gk-text-subtle: var(--gk-outline);
   --gk-border: var(--gk-outline-variant);
 
-  /* The four SURFACE aliases stay literals, deliberately, until the ladder in
-     themes.css is decided. There --gk-surface and --gk-surface-container are the
-     SAME colour in dark mode (#1e293b, themes.css:140 and :144), while this file
-     keeps them a step apart (#0d1117 / #161b22). Deriving these four would make
-     --gk-bg and --gk-bg-muted identical, and every muted surface lying on a plain
-     one would lose its edge: the checklist's header strip, footer and row hover,
-     and the hover state in the newsletter group dropdown — you could no longer see
-     which entry you were about to click. That is a palette decision for the whole
-     family of systems, not a tidy-up. Until then these two names keep disagreeing
-     in dark mode under a theme; prefer the ROLE (--gk-surface-container) in new code. */
-  --gk-bg: #0d1117;
-  --gk-bg-muted: #161b22;
-  --gk-bg-subtle: #0d1117;
-  --gk-bg-hover: #21262d;
+  /* The four SURFACE aliases were literals until 1.114.0, held back until the ladder
+     was decided: themes.css gave --gk-surface and --gk-surface-container the SAME
+     colour in dark mode (#1e293b), this file kept them a step apart (#0d1117 /
+     #161b22), and deriving them would have made --gk-bg and --gk-bg-muted identical.
+     1.114.0 decided it: one ladder, written here as hex and derived per theme in
+     themes.css at the same lightness steps, every step its own value. So they follow
+     their role now, as in the light block. Prefer the ROLE in new code all the same. */
+  --gk-bg: var(--gk-surface);
+  --gk-bg-muted: var(--gk-surface-container);
+  --gk-bg-subtle: var(--gk-surface-container-low);
+  --gk-bg-hover: var(--gk-surface-container-high);
   /* Derived, not literal. 1.80.1 wrote #21262d / #8b949e here — right for the
      bare stylesheet, but themes.css moves the dark surfaces (#1e293b), and the
      literal then sat 1.04:1 on its own ground: the hovered page number this was
@@ -6414,7 +6465,7 @@ a.gk-stat-card:hover {
      whichever role applies. These values are only the fallback for browsers
      without relative color syntax — they have to be turned along in dark mode,
      otherwise the fallback path runs the light-mode direction there. */
-  --gk-primary-hover: #93a1e8;
+  --gk-primary-hover: #8a9dfa;
   --gk-tertiary-hover: #59d3a4;
   --gk-success-hover: #01bf87;
   --gk-warning-hover: #e7ac00;
@@ -6424,14 +6475,14 @@ a.gk-stat-card:hover {
   --gk-danger-text:  #fda4af;
   /* On a dark surface the primary is already light (L 0.80) and reads well. */
   --gk-primary-text: var(--gk-primary);
-  --gk-neutral-50: #2d333b;
-  --gk-neutral-100: #21262d;
-  --gk-neutral-200: #161b22;
-  --gk-neutral-800: #e6edf3;
-  --gk-neutral-900: #f8fafc;
+  --gk-neutral-50: #2b2d36;
+  --gk-neutral-100: #22242b;
+  --gk-neutral-200: #111218;
+  --gk-neutral-800: #ebecf1;
+  --gk-neutral-900: #f6f7f9;
 
   /* Sidebar dark mode */
-  --gk-sidebar-bg: #010409;
+  --gk-sidebar-bg: #0e0f15;
   --gk-sidebar-text: rgba(255, 255, 255, 0.7);
   /* 0.38 measured 3.40:1 on the dark sidebar — under the 4.5:1 that group
      labels, the version and the collapse label need. 0.55 reaches 5.48:1. */
@@ -6440,14 +6491,14 @@ a.gk-stat-card:hover {
   --gk-sidebar-item-hover: rgba(255, 255, 255, 0.09);
   --gk-sidebar-item-active: rgba(255, 255, 255, 0.1);
   --gk-sidebar-border: rgba(255, 255, 255, 0.06);
-  --gk-sidebar-accent: #a5b4fc;
+  --gk-sidebar-accent: #a1b2ff;
   /* Icons need 3:1, which 0.45 (4.17:1) already met — raised to match the
      label beside them rather than sit a shade below it. */
   --gk-sidebar-icon-muted: rgba(255, 255, 255, 0.55);
 
-  /* The same five hues, stepped for a dark ground: each clears 3:1 on
-     #0d1117 and on themes.css's #1e293b; adjacent pairs 8.4 apart under
-     simulated CVD, 19.3 for normal vision. */
+  /* The same five hues, stepped for a dark ground: each clears 3:1 on every
+     step of the dark ladder from the page (L 0.185) to the hover (L 0.262);
+     adjacent pairs 8.4 apart under simulated CVD, 19.3 for normal vision. */
   --gk-series-1: #3987e5;
   --gk-series-2: #d95926;
   --gk-series-3: #199e70;
@@ -6475,18 +6526,18 @@ a.gk-stat-card:hover {
 }
 [data-gk-mode="dark"] .gk-modal,
 .gk-dark .gk-modal {
-  background: #161b22;
+  background: var(--gk-surface);
 }
 /* (Dark table overrides consolidated below in Comprehensive Overrides section) */
 [data-gk-mode="dark"] .gk-search,
 .gk-dark .gk-search {
-  background-color: #0d1117;
+  background-color: var(--gk-surface-container-low);
   border-color: rgba(255, 255, 255, 0.15);
   color: var(--gk-on-surface);
 }
 [data-gk-mode="dark"] .gk-filter,
 .gk-dark .gk-filter {
-  background-color: #0d1117;
+  background-color: var(--gk-surface-container-low);
   border-color: rgba(255, 255, 255, 0.12);
   color: var(--gk-on-surface-variant);
 }
@@ -6498,24 +6549,24 @@ a.gk-stat-card:hover {
 .gk-dark textarea {
   /* background-color, not the shorthand: the shorthand also reset background-image, and with
      it the magnifier of .gk-search and the arrow of .gk-filter and select.gk-input (1.105.1). */
-  background-color: #0d1117;
+  background-color: var(--gk-surface-container-low);
   color: var(--gk-on-surface);
   border-color: rgba(255, 255, 255, 0.15);
 }
 [data-gk-mode="dark"] .gk-confirm-box,
 .gk-dark .gk-confirm-box {
-  background: #161b22;
+  background: var(--gk-surface);
 }
 [data-gk-mode="dark"] .gk-toast,
 .gk-dark .gk-toast {
-  background: #2d333b;
+  background: var(--gk-surface-container-highest);
   color: var(--gk-on-surface);
 }
 
 /* Dark mode: components that have to be switched over explicitly */
 [data-gk-mode="dark"] .gk-stat-card,
 .gk-dark .gk-stat-card {
-  background: #161b22;
+  background: var(--gk-surface);
   border-color: rgba(255, 255, 255, 0.1);
   color: var(--gk-on-surface);
 }
@@ -6533,26 +6584,42 @@ a.gk-stat-card:hover {
 
 [data-gk-mode="dark"] .gk-card,
 .gk-dark .gk-card {
-  background: #161b22;
+  background: var(--gk-surface);
   border-color: rgba(255, 255, 255, 0.1);
   color: var(--gk-on-surface);
+  /* A shadow barely shows in the dark; a faint light edge along the top says
+     "raised" instead, the way Apple and Linear light a panel (1.114.0). */
+  box-shadow: var(--gk-elev-1), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+[data-gk-mode="dark"] .gk-card-elevated,
+.gk-dark .gk-card-elevated {
+  box-shadow: var(--gk-elev-2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+[data-gk-mode="dark"] .gk-card-flat,
+.gk-dark .gk-card-flat {
+  box-shadow: none;
+}
+[data-gk-mode="dark"] .gk-card-link:hover,
+.gk-dark .gk-card-link:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: var(--gk-elev-2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Segment dark mode */
 [data-gk-mode="dark"] .gk-segment,
 .gk-dark .gk-segment {
-  background: #161b22;
+  background: var(--gk-surface);
   border-color: rgba(255, 255, 255, 0.1);
 }
 [data-gk-mode="dark"] .gk-segment-muted,
 .gk-dark .gk-segment-muted {
-  background: #0d1117;
+  background: var(--gk-surface-container-low);
 }
 
 /* Message dark mode */
 [data-gk-mode="dark"] .gk-message,
 .gk-dark .gk-message {
-  background: #161b22;
+  background: var(--gk-surface-container);
   border-color: rgba(255, 255, 255, 0.1);
   color: var(--gk-on-surface);
 }
@@ -6590,13 +6657,13 @@ a.gk-stat-card:hover {
 
 [data-gk-mode="dark"] .gk-page-btn,
 .gk-dark .gk-page-btn {
-  background: #161b22;
-  border-color: #484f58;
+  background: var(--gk-surface);
+  border-color: var(--gk-outline);
   color: var(--gk-on-surface);
 }
 [data-gk-mode="dark"] .gk-page-btn:hover,
 .gk-dark .gk-page-btn:hover {
-  background: #21262d;
+  background: var(--gk-surface-container-high);
 }
 [data-gk-mode="dark"] .gk-page-btn.active,
 .gk-dark .gk-page-btn.active {
@@ -6608,12 +6675,12 @@ a.gk-stat-card:hover {
 /* Dark Mode: tonal buttons – replace light backgrounds with dark variants */
 [data-gk-mode="dark"] .gk-btn-tonal.gk-btn-primary,
 .gk-dark .gk-btn-tonal.gk-btn-primary {
-  background: rgba(99, 102, 241, 0.22);
-  color: #c7d2fe;
+  background: color-mix(in oklab, var(--gk-primary) 22%, transparent);
+  color: var(--gk-on-primary-container);
 }
 [data-gk-mode="dark"] .gk-btn-tonal.gk-btn-primary:hover,
 .gk-dark .gk-btn-tonal.gk-btn-primary:hover {
-  background: rgba(99, 102, 241, 0.32);
+  background: color-mix(in oklab, var(--gk-primary) 32%, transparent);
 }
 [data-gk-mode="dark"] .gk-btn-tonal.gk-btn-success,
 .gk-dark .gk-btn-tonal.gk-btn-success {
@@ -6654,7 +6721,7 @@ a.gk-stat-card:hover {
 
 [data-gk-mode="dark"] .gk-header-search,
 .gk-dark .gk-header-search {
-  background: #21262d;
+  background: var(--gk-surface-container-low);
   color: var(--gk-on-surface);
 }
 [data-gk-mode="dark"] .gk-header-search input,
@@ -6665,21 +6732,21 @@ a.gk-stat-card:hover {
 }
 [data-gk-mode="dark"] .gk-header-user:hover,
 .gk-dark .gk-header-user:hover {
-  background: #21262d;
+  background: var(--gk-surface-container-high);
 }
 [data-gk-mode="dark"] .gk-dropdown-menu,
 .gk-dark .gk-dropdown-menu {
-  background: #2d333b;
+  background: var(--gk-surface-container-high);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 [data-gk-mode="dark"] .gk-dropdown-item:hover,
 .gk-dark .gk-dropdown-item:hover {
-  background: #21262d;
+  background: var(--gk-surface-container-highest);
 }
 
 [data-gk-mode="dark"] .gk-confirm-footer,
 .gk-dark .gk-confirm-footer {
-  background: #21262d;
+  background: var(--gk-surface-container-low);
   border-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -6687,14 +6754,14 @@ a.gk-stat-card:hover {
 [data-gk-mode="dark"] .gk-upload-zone,
 .gk-dark .gk-upload-zone {
   border-color: rgba(255, 255, 255, 0.15);
-  background: #0d1117;
+  background: var(--gk-surface-container-low);
 }
 [data-gk-mode="dark"] .gk-upload-zone:hover,
 [data-gk-mode="dark"] .gk-upload-zone.gk-dragover,
 .gk-dark .gk-upload-zone:hover,
 .gk-dark .gk-upload-zone.gk-dragover {
   border-color: var(--gk-primary);
-  background: rgba(99, 102, 241, 0.08);
+  background: color-mix(in oklab, var(--gk-primary) 8%, transparent);
 }
 [data-gk-mode="dark"] .gk-upload-icon,
 .gk-dark .gk-upload-icon {
@@ -6712,12 +6779,12 @@ a.gk-stat-card:hover {
 /* Dark Mode: Upload Queue */
 [data-gk-mode="dark"] .gk-uq-item,
 .gk-dark .gk-uq-item {
-  background: #161b22;
+  background: var(--gk-surface);
   border-color: rgba(255, 255, 255, 0.08);
 }
 [data-gk-mode="dark"] .gk-uq-uploading .gk-uq-status,
 .gk-dark .gk-uq-uploading .gk-uq-status {
-  background: rgba(99, 102, 241, 0.15);
+  background: color-mix(in oklab, var(--gk-primary) 15%, transparent);
   color: var(--gk-primary);
 }
 
@@ -6745,17 +6812,17 @@ a.gk-stat-card:hover {
 /* Dark Mode: Select dropdowns */
 [data-gk-mode="dark"] .gk-select-dropdown,
 .gk-dark .gk-select-dropdown {
-  background: #2d333b;
+  background: var(--gk-surface-container-high);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 [data-gk-mode="dark"] .gk-select-option:hover,
 .gk-dark .gk-select-option:hover {
-  background: #21262d;
+  background: var(--gk-surface-container-highest);
 }
 [data-gk-mode="dark"] .gk-select-display,
 .gk-dark .gk-select-display {
-  background: #0d1117;
+  background: var(--gk-surface-container-low);
   border-color: rgba(255, 255, 255, 0.15);
   color: var(--gk-on-surface);
 }
@@ -6781,12 +6848,12 @@ a.gk-stat-card:hover {
 }
 [data-gk-mode="dark"] .gk-accordion-trigger,
 .gk-dark .gk-accordion-trigger {
-  background: #161b22;
+  background: var(--gk-surface);
   color: var(--gk-on-surface);
 }
 [data-gk-mode="dark"] .gk-accordion-trigger:hover,
 .gk-dark .gk-accordion-trigger:hover {
-  background: #21262d;
+  background: var(--gk-surface-container-high);
 }
 [data-gk-mode="dark"] .gk-accordion-item,
 .gk-dark .gk-accordion-item {
@@ -6807,72 +6874,13 @@ a.gk-stat-card:hover {
 [data-gk-mode="dark"] .gk-richtext-wrap,
 .gk-dark .gk-richtext-wrap {
   border-color: rgba(255, 255, 255, 0.15);
-  background: #0d1117;
+  background: var(--gk-surface-container-low);
 }
 
-/* === THEME SWITCHER WIDGET === */
-.gk-theme-switcher {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 2px 0;
-}
-.gk-theme-colors {
-  display: flex;
-  gap: 8px;
-}
-.gk-theme-dot {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
-  cursor: pointer;
-  transition: var(--gk-transition-state), transform var(--gk-dur-2) var(--gk-ease-out);
-  box-shadow: 0 0 0 0 transparent;
-}
-.gk-theme-dot:hover {
-  transform: scale(1.15);
-  border-color: rgba(255, 255, 255, 0.45);
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
-}
-.gk-theme-dot.gk-theme-active {
-  border-color: rgba(255, 255, 255, 0.7);
-  transform: scale(1.15);
-  box-shadow: 0 0 0 2.5px var(--gk-primary);
-}
-[data-gk-mode="light"] .gk-theme-dot {
-  border-color: rgba(0, 0, 0, 0.12);
-  box-shadow: none;
-}
-[data-gk-mode="light"] .gk-theme-dot:hover {
-  border-color: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
-}
-[data-gk-mode="light"] .gk-theme-dot.gk-theme-active {
-  border-color: var(--gk-primary);
-  box-shadow: 0 0 0 2.5px var(--gk-primary);
-}
-.gk-mode-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 1.5px solid var(--gk-outline-variant);
-  background: var(--gk-surface-container);
-  cursor: pointer;
-  color: var(--gk-on-surface);
-  transition: var(--gk-transition-state);
-  flex-shrink: 0;
-}
-.gk-mode-toggle:hover {
-  background: var(--gk-surface-container-high);
-  border-color: var(--gk-outline);
-}
-.gk-mode-toggle .material-icons {
-  font-size: 14px;
-}
+/* === THEME SWITCHER WIDGET ===
+   The swatches, the mode group and their states are drawn in the 1.114.0 block
+   at the end of this file ("colour system"). What stays here: the dropdown item
+   that carries the switcher, and which glyph of the mode toggle shows. */
 /* Dropdown HTML items (e.g. the theme switcher in the avatar menu) */
 .gk-dropdown-html {
   cursor: default;
@@ -7300,7 +7308,7 @@ a.gk-stat-card:hover {
 /* --- Buttons: outlined primary/colors → theme-aware --- */
 [data-gk-mode="dark"] .gk-btn-outlined.gk-btn-primary:hover,
 .gk-dark .gk-btn-outlined.gk-btn-primary:hover {
-  background: rgba(var(--gk-primary-rgb, 99, 102, 241), 0.12);
+  background: color-mix(in oklab, var(--gk-primary) 12%, transparent);
 }
 
 /* --- Buttons: filled primary → theme-aware ---
@@ -7319,7 +7327,7 @@ a.gk-stat-card:hover {
 /* --- Tables: 4-level dark mode (page → panel → interactive → elevated) --- */
 [data-gk-mode="dark"] .gk-table thead th,
 .gk-dark .gk-table thead th {
-  background: #161b22;
+  background: var(--gk-surface);
   color: var(--gk-on-surface-variant);
   font-size: var(--gk-text-overline);
   letter-spacing: 0.05em;
@@ -7336,19 +7344,19 @@ a.gk-stat-card:hover {
 }
 [data-gk-mode="dark"] .gk-table tbody tr:hover,
 .gk-dark .gk-table tbody tr:hover {
-  background: #262d38;
+  background: var(--gk-surface-container-high);
 }
 [data-gk-mode="dark"] .gk-table tbody tr:nth-child(even),
 .gk-dark .gk-table tbody tr:nth-child(even) {
-  background: #1c2128;
+  background: var(--gk-surface-container-low);
 }
 [data-gk-mode="dark"] .gk-table tbody tr:nth-child(even):hover,
 .gk-dark .gk-table tbody tr:nth-child(even):hover {
-  background: #262d38;
+  background: var(--gk-surface-container-high);
 }
 [data-gk-mode="dark"] .gk-table-wrap,
 .gk-dark .gk-table-wrap {
-  background: #161b22;
+  background: var(--gk-surface);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
@@ -7375,13 +7383,13 @@ a.gk-stat-card:hover {
 /* Dark: Selectable */
 [data-gk-mode="dark"] .gk-table-selectable tbody tr:hover,
 .gk-dark .gk-table-selectable tbody tr:hover {
-  background: rgba(99, 102, 241, 0.12);
+  background: color-mix(in oklab, var(--gk-primary) 12%, transparent);
 }
 
 /* Dark: Definition */
 [data-gk-mode="dark"] .gk-table-definition td:first-child,
 .gk-dark .gk-table-definition td:first-child {
-  background: #0d1117;
+  background: var(--gk-surface-container-low);
   color: var(--gk-on-surface-variant);
 }
 
@@ -7390,7 +7398,7 @@ a.gk-stat-card:hover {
 /* Dark Mode: Table Mobile Card */
 [data-gk-mode="dark"] .gk-table-mobile-card tr,
 .gk-dark .gk-table-mobile-card tr {
-  background: #161b22;
+  background: var(--gk-surface);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -7403,7 +7411,7 @@ a.gk-stat-card:hover {
 [data-gk-mode="dark"] .gk-input,
 .gk-dark .gk-input {
   /* background-color: the shorthand took the arrow of select.gk-input with it (1.105.1). */
-  background-color: #0d1117;
+  background-color: var(--gk-surface-container-low);
   border-color: rgba(255, 255, 255, 0.15);
   color: var(--gk-on-surface);
 }
@@ -7411,31 +7419,31 @@ a.gk-stat-card:hover {
 /* --- Modal Header/Body --- */
 [data-gk-mode="dark"] .gk-modal-header,
 .gk-dark .gk-modal-header {
-  background: #161b22;
+  background: var(--gk-surface);
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 [data-gk-mode="dark"] .gk-modal-body,
 .gk-dark .gk-modal-body {
-  background: #161b22;
+  background: var(--gk-surface);
 }
 [data-gk-mode="dark"] .gk-modal-close:hover,
 .gk-dark .gk-modal-close:hover {
-  background: #21262d;
+  background: var(--gk-surface-container-high);
   color: var(--gk-on-surface);
 }
 
 [data-gk-mode="dark"] .gk-avatar,
 .gk-dark .gk-avatar {
-  background: rgba(99, 102, 241, 0.2);
+  background: color-mix(in oklab, var(--gk-primary) 20%, transparent);
   color: var(--gk-primary);
 }
 [data-gk-mode="dark"] .gk-avatar-status,
 .gk-dark .gk-avatar-status {
-  border-color: #161b22;
+  border-color: var(--gk-surface);
 }
 [data-gk-mode="dark"] .gk-avatar-group .gk-avatar,
 .gk-dark .gk-avatar-group .gk-avatar {
-  border-color: #161b22;
+  border-color: var(--gk-surface);
 }
 
 /* ===================================================================
@@ -7761,7 +7769,7 @@ a.gk-stat-card:hover {
 .gk-bg-danger-soft  { background: rgba(239, 68, 68, 0.08); }
 .gk-bg-success-soft { background: rgba(16, 185, 129, 0.08); }
 .gk-bg-warning-soft { background: rgba(245, 158, 11, 0.10); }
-.gk-bg-primary-soft { background: rgba(99, 102, 241, 0.08); }
+.gk-bg-primary-soft { background: color-mix(in oklab, var(--gk-primary) 8%, transparent); }
 
 /* — Border-Radius — */
 .gk-rounded-none { border-radius: 0; }
@@ -9431,9 +9439,12 @@ label.gk-setting-title {
   height: var(--gk-target-min);
   margin: 0;
   padding: 0;
+  /* 1.114.0: a quiet grip, not a white tile. The subtle surface and a hairline at
+     rest, the dots in the muted text colour (5.3:1 and more); the accent only
+     where something happens — under the pointer, in focus, while carried. */
   border: 1px solid var(--gk-outline-variant);
-  border-radius: var(--gk-radius-sm);
-  background: color-mix(in oklab, var(--gk-surface) 92%, transparent);
+  border-radius: calc(var(--gk-radius-sm) + 2px);
+  background: var(--gk-surface-container-low);
   color: var(--gk-on-surface-variant);
   font: inherit;
   cursor: grab;
@@ -9442,14 +9453,16 @@ label.gk-setting-title {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+  transition: var(--gk-transition-state);
 }
 .gk-sort-griff .material-icons {
-  font-size: 24px;
+  font-size: 22px;
   pointer-events: none;
 }
 .gk-sort-griff:hover {
-  background: var(--gk-surface-container-high);
-  color: var(--gk-on-surface);
+  border-color: color-mix(in oklab, var(--gk-primary) 35%, var(--gk-outline-variant));
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
 }
 .gk-sort-griff:active {
   cursor: grabbing;
@@ -9462,15 +9475,23 @@ label.gk-setting-title {
    (the entry carries the outline of .gk-sort-zieht, the live region says it in words). */
 .gk-sort-griff[aria-pressed="true"] {
   border-color: var(--gk-primary);
-  background: var(--gk-primary-container);
-  color: var(--gk-on-primary-container);
+  background: var(--gk-primary);
+  color: var(--gk-on-primary);
+}
+/* The entry whose grip is under the pointer or in focus shows that it is the one that will move:
+   a thin ring in a share of the accent. :where() keeps it at no weight, the page's own card rules win. */
+:where([data-gk-sortierbar].gk-sort-aktiv) > :where([data-gk-sort-id]:has(> .gk-sort-griff:hover, > .gk-sort-griff:focus-visible)) {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--gk-primary) 40%, transparent), var(--gk-elev-1);
 }
 
-/* The entry in the air – with the pointer (also .gk-sort-frei) and with the keyboard. */
+/* The entry in the air – with the pointer (also .gk-sort-frei) and with the keyboard. Lifted:
+   the accent ring, the surface under it (an entry with a transparent ground would otherwise
+   show what it passes over) and the highest step of elevation. */
 .gk-sort-zieht {
   outline: 2px solid var(--gk-primary);
   outline-offset: -2px;
-  box-shadow: var(--gk-shadow-lg);
+  background-color: var(--gk-surface);
+  box-shadow: var(--gk-elev-4);
   cursor: grabbing;
 }
 /* Dragged with the pointer: out of the flow and above its neighbours. !important because this
@@ -9485,9 +9506,9 @@ label.gk-setting-title {
 /* The gap it left: an empty element of the same tag and size, a dashed slot. */
 .gk-sort-platz {
   box-sizing: border-box;
-  border: 2px dashed var(--gk-outline);
+  border: 2px dashed color-mix(in oklab, var(--gk-primary) 55%, var(--gk-outline));
   border-radius: var(--gk-radius);
-  background: color-mix(in oklab, var(--gk-primary) 6%, transparent);
+  background: color-mix(in oklab, var(--gk-primary) 7%, transparent);
   list-style: none;
 }
 
@@ -10599,8 +10620,8 @@ label.gk-setting-title {
 }
 [data-gk-mode="dark"] :is(.gk-table-sticky-head, .gk-table-sticky-col),
 .gk-dark :is(.gk-table-sticky-head, .gk-table-sticky-col) {
-  --gk-table-sticky-bg: #161b22;
-  --gk-table-sticky-head-bg: #161b22;
+  --gk-table-sticky-bg: var(--gk-surface);
+  --gk-table-sticky-head-bg: var(--gk-surface);
   --gk-table-sticky-line: rgba(255, 255, 255, 0.1);
 }
 
@@ -10768,7 +10789,7 @@ label.gk-setting-title {
 }
 [data-gk-mode="dark"] .gk-table-sticky-col .gk-table tbody tr:nth-child(even),
 .gk-dark .gk-table-sticky-col .gk-table tbody tr:nth-child(even) {
-  --gk-table-sticky-row: #1c2128;
+  --gk-table-sticky-row: var(--gk-surface-container-low);
 }
 /* The row of the open side sheet tints its cells, not the row — translucently. Over the surface. */
 .gk-table-sticky-box[data-gk-sticky-col] > .gk-table > tbody > tr.gk-row-link[aria-current="true"] > td {
@@ -11035,14 +11056,14 @@ label.gk-setting-title {
 }
 [data-gk-mode="dark"] .gk-col-toggle-menu,
 .gk-dark .gk-col-toggle-menu {
-  background: #2d333b;
+  background: var(--gk-surface-container-high);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 [data-gk-mode="dark"] .gk-col-toggle-menu .gk-dropdown-item:focus-within,
 .gk-dark .gk-col-toggle-menu .gk-dropdown-item:focus-within,
 [data-gk-mode="dark"] .gk-col-toggle > .gk-btn[aria-expanded="true"],
 .gk-dark .gk-col-toggle > .gk-btn[aria-expanded="true"] {
-  background: #21262d;
+  background: var(--gk-surface-container-highest);
 }
 
 /* A card whose title column is hidden. The title of a compact card (1.106.0) is the first cell
@@ -11318,10 +11339,11 @@ label.gk-setting-title {
   background-image: none;
 }
 /* In dark mode the surface is the table's own ground; the field steps up one container so that it
-   reads as a field and not as a hole in the row. */
+   reads as a field and not as a hole in the row. Since 1.114.0 the step up is
+   --gk-surface-container-high: on the dark ladder --gk-surface-container is the page, below the card. */
 [data-gk-mode="dark"] [data-gk-editable] .gk-table td[data-gk-editing] > :is(input, select),
 .gk-dark [data-gk-editable] .gk-table td[data-gk-editing] > :is(input, select) {
-  background-color: var(--gk-surface-container);
+  background-color: var(--gk-surface-container-high);
 }
 /* A card on a phone: the cell is a line of label and value, 3px of padding below it. The line sits
    in that padding, and the field takes the room of the value beside its label. */
@@ -11750,4 +11772,1645 @@ html[data-gk-tt] .gk-tooltip-content[data-gk-tone] {
 .gk-form > [data-gk-form-tab] + .gk-tabs ~ .gk-field,
 .gk-form > [data-gk-form-tab] + .gk-tabs ~ .gk-form-row {
   margin-top: 16px;
+}
+
+/* === 1.114.0 — colour system === */
+/* The theme switcher: Theme::switcher(), and the "Appearance" part of the user menu
+   (Header::user()). Six swatches and one group for the mode.
+
+   A swatch is the theme's real accent (Theme::available(), the colour its buttons will
+   have) as a 22px disc with a hairline inside, so a dark accent still has an edge on a
+   dark menu. The chosen one says so three ways: a ring in its own colour with a gap of
+   the ground between (the iOS / Linear pattern), a check mark, and aria-pressed — never
+   by colour alone. The ring holds 3:1 or more against the menu in every theme and mode,
+   the white check 4.98:1 or more on every swatch (ci/farben.js measures both).
+
+   The mode group is a track with one thumb. Without the script block of 1.114.0 in
+   gridkit.js it holds the plain toggle (the glyph of the mode in effect, on the thumb).
+   With it the track shows light | dark | auto, the thumb under the one in effect and the
+   chosen glyph in the accent. */
+.gk-theme-switcher {
+  --gk-swatch-gap: var(--gk-surface);
+  --gk-swatch-edge: rgba(0, 0, 0, 0.14);
+  --gk-seg-track: var(--gk-surface-container-high);
+  --gk-seg-thumb: var(--gk-surface);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 2px 0;
+}
+/* Dark: the swatches keep their light-mode accents (they name a theme, not a mode), so their edge
+   turns light, and the ring of the chosen one is the swatch lifted towards the text colour — the
+   accent itself sits under 3:1 on a dark menu. */
+[data-gk-mode="dark"] .gk-theme-switcher,
+.gk-dark .gk-theme-switcher {
+  --gk-swatch-edge: rgba(255, 255, 255, 0.2);
+  --gk-seg-track: var(--gk-surface-container-low);
+  --gk-seg-thumb: var(--gk-surface-container-highest);
+}
+[data-gk-mode="dark"] .gk-theme-dot,
+.gk-dark .gk-theme-dot {
+  --gk-swatch-ring: color-mix(in oklab, var(--gk-swatch, var(--gk-primary)) 40%, var(--gk-on-surface));
+}
+/* In the open user menu the gap of the ring is the menu's own ground. */
+[data-gk-mode="dark"] .gk-dropdown-menu .gk-theme-switcher,
+.gk-dark .gk-dropdown-menu .gk-theme-switcher {
+  --gk-swatch-gap: var(--gk-surface-container-high);
+}
+.gk-theme-colors {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Room for the ring of the chosen swatch: it is drawn outside the disc. */
+  padding: 4px;
+}
+.gk-theme-dot {
+  position: relative;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--gk-swatch, var(--gk-primary));
+  box-shadow: inset 0 0 0 1px var(--gk-swatch-edge, rgba(0, 0, 0, 0.14));
+  cursor: pointer;
+  transition: box-shadow var(--gk-dur-1) var(--gk-ease-out);
+}
+.gk-theme-dot:hover {
+  box-shadow:
+    inset 0 0 0 1px var(--gk-swatch-edge, rgba(0, 0, 0, 0.14)),
+    0 0 0 2px var(--gk-swatch-gap, var(--gk-surface)),
+    0 0 0 4px color-mix(in oklab, var(--gk-swatch-ring, var(--gk-swatch, var(--gk-primary))) 40%, transparent);
+}
+.gk-theme-dot.gk-theme-active,
+.gk-theme-dot[aria-pressed="true"] {
+  box-shadow:
+    inset 0 0 0 1px var(--gk-swatch-edge, rgba(0, 0, 0, 0.14)),
+    0 0 0 2px var(--gk-swatch-gap, var(--gk-surface)),
+    0 0 0 4px var(--gk-swatch-ring, var(--gk-swatch, var(--gk-primary)));
+}
+/* The check mark: two white strokes, drawn here so it needs no icon font. */
+.gk-theme-dot.gk-theme-active::after,
+.gk-theme-dot[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: translate(-50%, -70%) rotate(-45deg);
+}
+/* Focus is not selection: a ring in the text colour, further out than the ring of the chosen one. */
+.gk-theme-dot:focus-visible {
+  outline: 2px solid var(--gk-on-surface);
+  outline-offset: 5px;
+}
+
+.gk-mode-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9999px;
+  background: var(--gk-seg-track);
+  box-shadow: inset 0 0 0 1px var(--gk-outline-variant);
+}
+.gk-mode-toggle,
+.gk-mode-auto {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 30px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--gk-on-surface-variant);
+  font: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--gk-transition-state);
+}
+.gk-mode-toggle .material-icons,
+.gk-mode-auto .material-icons {
+  font-size: 16px;
+}
+/* The plain toggle (no script block): the thumb carries the glyph of the mode in effect. */
+.gk-mode-toggle {
+  background: var(--gk-seg-thumb);
+  color: var(--gk-on-surface);
+  box-shadow: var(--gk-elev-1), 0 0 0 1px var(--gk-outline-variant);
+}
+.gk-mode-toggle:hover,
+.gk-mode-auto:hover {
+  color: var(--gk-primary-text);
+}
+.gk-mode-toggle:focus-visible,
+.gk-mode-auto:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+/* With the script: three segments, one thumb. The toggle gives up its own thumb and shows both
+   glyphs as segments; the one in effect (or auto) takes the thumb and the accent. */
+.gk-theme-switcher[data-gk-mode-ready] .gk-mode-toggle {
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+}
+.gk-theme-switcher[data-gk-mode-ready] .gk-mode-toggle .material-icons {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  /* Without the icon font a glyph is its name as text; it must not spill over its neighbour. */
+  overflow: hidden;
+  border-radius: 9999px;
+  color: var(--gk-on-surface-variant);
+  transition: var(--gk-transition-state);
+}
+.gk-theme-switcher[data-gk-mode-ready] .gk-mode-toggle .material-icons:hover {
+  color: var(--gk-on-surface);
+}
+.gk-theme-switcher[data-gk-mode-state="light"] .gk-mode-toggle .gk-mode-light,
+.gk-theme-switcher[data-gk-mode-state="dark"] .gk-mode-toggle .gk-mode-dark,
+.gk-theme-switcher[data-gk-mode-state="auto"] .gk-mode-auto {
+  background: var(--gk-seg-thumb);
+  color: var(--gk-primary-text);
+  box-shadow: var(--gk-elev-1), 0 0 0 1px var(--gk-outline-variant);
+}
+/* Focus in the dark: a field's edge takes the accent, as it does in light. The dark rules that
+   set the resting edge (.gk-input, .gk-search, .gk-filter) outweighed :focus-visible, so in dark
+   mode only the halo showed and the edge stayed white at 12–15 %. */
+[data-gk-mode="dark"] :is(.gk-input, .gk-search, .gk-filter):focus-visible,
+.gk-dark :is(.gk-input, .gk-search, .gk-filter):focus-visible {
+  border-color: var(--gk-primary);
+}
+[data-gk-mode="dark"] .gk-input.gk-has-error:focus-visible,
+.gk-dark .gk-input.gk-has-error:focus-visible {
+  border-color: var(--gk-error);
+}
+
+@media (forced-colors: active) {
+  .gk-theme-dot.gk-theme-active,
+  .gk-theme-dot[aria-pressed="true"] {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
+  .gk-theme-switcher[data-gk-mode-state="light"] .gk-mode-toggle .gk-mode-light,
+  .gk-theme-switcher[data-gk-mode-state="dark"] .gk-mode-toggle .gk-mode-dark,
+  .gk-theme-switcher[data-gk-mode-state="auto"] .gk-mode-auto {
+    outline: 1px solid CanvasText;
+  }
+}
+
+/* === 1.115.0 — permission matrix === */
+/* GridKit\PermissionMatrix: .gk-perm is the card (as .gk-table-wrap is), .gk-perm-box the box the
+   matrix scrolls in, .gk-perm-table a .gk-table — so rows, lines, the head's type and the density
+   steps are the table's own. What is new is what a matrix needs: the role row and the permission
+   column stay in view (the 1.107.0 idea: a box with a height, separate borders that travel with their
+   cell, a surface of its own on every cell that sticks), the states of a cell — inherited, locked,
+   changed — each in a shape and in words, not in a colour alone, and one role at a time on a phone.
+
+   The surfaces, by mode: a cell that sticks lies over the cells that scroll under it and needs one.
+   Dark mode takes the table card's #161b22 (DARK MODE, "4-level"), whatever the theme. */
+.gk-perm {
+  --gk-perm-bg: var(--gk-surface);
+  --gk-perm-group-bg: var(--gk-surface-container);
+  --gk-perm-hover: var(--gk-surface-container-low);
+  --gk-perm-all-bg: color-mix(in srgb, var(--gk-surface-container) 55%, var(--gk-perm-bg));
+  --gk-perm-changed-bg: color-mix(in srgb, var(--gk-primary) 13%, var(--gk-perm-bg));
+  --gk-perm-line: var(--gk-outline-variant);
+  /* The mark of a cell that cannot be changed here: the muted text colour, 4.5:1 and more in both modes. */
+  --gk-perm-fixed: var(--gk-on-surface-variant);
+  min-width: 0;
+  max-width: 100%;
+  background: var(--gk-perm-bg);
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: 12px;
+  color: var(--gk-on-surface);
+}
+[data-gk-mode="dark"] .gk-perm,
+.gk-dark .gk-perm {
+  --gk-perm-bg: #161b22;
+  --gk-perm-group-bg: var(--gk-surface-container-high);
+  --gk-perm-hover: #1c2128;
+  --gk-perm-all-bg: #1a2029;
+  --gk-perm-line: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+/* The script shows what needs it ([data-gk-perm-js]) and hides the plain twins ([data-gk-perm-nojs]).
+   `hidden` alone loses to every rule that sets a display (.gk-toolbar, .gk-btn), so it is said here. */
+.gk-perm [hidden] {
+  display: none !important;
+}
+
+/* A width, not a flex-basis: .gk-toolbar turns into a column on a phone, where a basis is a height
+   (the field became a 280px disc). The phone rule below makes this toolbar a row again as well. */
+.gk-perm-toolbar .gk-search {
+  flex: 0 1 auto;
+  width: 280px;
+  max-width: 100%;
+}
+.gk-perm-changes {
+  font-size: var(--gk-text-caption);
+  color: var(--gk-on-surface-variant);
+}
+.gk-perm-changes[data-gk-perm-dirty] {
+  color: var(--gk-on-surface);
+  font-weight: 600;
+}
+.gk-perm-changes[data-gk-perm-dirty]::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--gk-primary);
+  vertical-align: 1px;
+}
+
+/* The phone's role select: shown by the script, and only on a phone (below). */
+.gk-perm-picker {
+  display: none;
+}
+
+/* The box: it scrolls both ways, as high as height() said (70vh), clipped to the card's corners.
+   A region with a tab stop (PermissionMatrix writes both), so the keyboard scrolls it too. */
+.gk-perm-box {
+  /* PermissionMatrix::height() writes its value inline on this element, which wins over this one. */
+  --gk-perm-height: 70vh;
+  overflow: auto;
+  position: relative;
+  max-height: var(--gk-perm-height);
+  border-radius: inherit;
+}
+.gk-perm-toolbar:not([hidden]) ~ .gk-perm-box {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.gk-perm-box:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+/* Separate borders: a collapsed border stays with the grid while its cell sticks (see 1.107.0). */
+.gk-perm-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.gk-perm-table th,
+.gk-perm-table td {
+  border-bottom-color: var(--gk-perm-line);
+}
+/* Every cell paints its own surface. A row's colour (dark mode's zebra and hover, DARK MODE) would
+   show behind the role cells and not behind the sticky column — a striped matrix with a plain edge. */
+.gk-perm-table > tbody > tr > td {
+  background: var(--gk-perm-bg);
+}
+
+/* The role row sticks to the top of the box, the permission column to its left; where they meet,
+   above both. */
+.gk-perm-table > thead > tr > th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--gk-perm-bg);
+}
+.gk-perm-table > tbody > tr > th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--gk-perm-bg);
+  box-shadow: inset -1px 0 0 var(--gk-perm-line);
+}
+.gk-perm-table > thead > tr > th.gk-perm-corner {
+  left: 0;
+  z-index: 3;
+  box-shadow: inset -1px 0 0 var(--gk-perm-line);
+  vertical-align: bottom;
+}
+
+/* A role: its name (a label when it has a colour), a line about it, what it is (locked, inherits),
+   the column's toggle and how many permissions it has. The head's caps are for the name only. */
+/* The table head does not wrap (.gk-table thead th); a role's head has to, or one description sets
+   the width of its column. */
+.gk-perm-table > thead > tr > th.gk-perm-role {
+  min-width: 88px;
+  max-width: 140px;
+  text-align: center;
+  vertical-align: bottom;
+  white-space: normal;
+}
+.gk-perm-role-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.gk-perm-role-desc,
+.gk-perm-role-note,
+.gk-perm-count {
+  font-size: var(--gk-text-overline);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--gk-on-surface-variant);
+}
+.gk-perm-role-desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+.gk-perm-role-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 2px;
+  font-weight: 600;
+}
+.gk-perm-role-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.gk-perm-count {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gk-perm-icon {
+  flex: none;
+}
+
+/* "All roles": the toggles of a row and of a group across every role that can change. A quieter
+   surface, so it does not read as one more role. */
+.gk-perm-table .gk-perm-all {
+  width: 1%;
+  min-width: 64px;
+  text-align: center;
+  background: var(--gk-perm-all-bg);
+}
+.gk-perm-table > thead > tr > th.gk-perm-all {
+  white-space: normal;
+  vertical-align: bottom;
+}
+
+/* A permission: its name, the "Risky" label, a line about it and what it needs. */
+.gk-perm-name {
+  min-width: 220px;
+  max-width: 340px;
+  font-weight: 500;
+  white-space: normal;
+}
+.gk-perm-label {
+  color: var(--gk-on-surface);
+}
+.gk-perm-risk {
+  margin-left: 4px;
+  font-size: var(--gk-text-overline);
+  padding: 1px 6px;
+}
+.gk-perm-desc,
+.gk-perm-needs {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--gk-text-caption);
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--gk-on-surface-variant);
+}
+.gk-perm-needs {
+  font-style: italic;
+}
+
+/* A module's heading row: the fold button, the count, the group toggles. */
+.gk-perm-table > tbody > tr.gk-perm-group-row > :is(th, td) {
+  background: var(--gk-perm-group-bg);
+  padding-top: 8px;
+  padding-bottom: 6px;
+}
+.gk-perm-table .gk-perm-group-head {
+  font-size: var(--gk-text-caption);
+}
+.gk-perm-fold,
+.gk-perm-group-plain {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.gk-perm-fold {
+  padding: 2px 4px 2px 0;
+  margin: 0;
+  border: 0;
+  border-radius: var(--gk-radius-sm, 6px);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.gk-perm-fold:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+.gk-perm-chevron {
+  flex: none;
+  transition: transform var(--gk-dur-1, 0.15s) ease;
+}
+tbody[data-gk-perm-folded] .gk-perm-chevron {
+  transform: rotate(-90deg);
+}
+.gk-perm-group-head .gk-perm-desc {
+  display: inline;
+  margin-left: 8px;
+}
+/* Folded and filtered rows; a group without a match goes as a whole. */
+.gk-perm-table > tbody[data-gk-perm-folded] > tr.gk-perm-row,
+.gk-perm-table > tbody > tr[data-gk-perm-out],
+.gk-perm-table > tbody[data-gk-perm-out] {
+  display: none;
+}
+
+/* A cell: the whole cell is the target (the script forwards a click to its box). The table selector
+   is for weight: .gk-table td aligns left. */
+.gk-perm-table td.gk-perm-cell {
+  position: relative;
+  min-width: 88px;
+  text-align: center;
+  vertical-align: middle;
+}
+.gk-perm[data-gk-perm-ready]:not([data-gk-perm-readonly]) .gk-perm-row > .gk-perm-cell:not(.gk-perm-locked, .gk-perm-inherited),
+.gk-perm[data-gk-perm-ready] .gk-perm-all {
+  cursor: pointer;
+}
+.gk-perm-check,
+.gk-perm-bulk {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  vertical-align: middle;
+  accent-color: var(--gk-primary);
+  cursor: pointer;
+}
+.gk-perm-table :is(.gk-perm-check, .gk-perm-bulk):focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+.gk-perm-table :is(th, td):focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+/* The row under the pointer or holding the focus (the table's own rule tints only its td, and the
+   sticky name cell beside them would stay plain). */
+.gk-perm-table .gk-perm-row:is(:hover, :focus-within) > :is(th, td) {
+  background: var(--gk-perm-hover);
+}
+.gk-perm-table .gk-perm-row:is(:hover, :focus-within) > .gk-perm-all {
+  background: color-mix(in srgb, var(--gk-on-surface) 4%, var(--gk-perm-all-bg));
+}
+/* A risky right, ticked: the error colour on top of the "Risky" label in words. */
+.gk-perm-danger > .gk-perm-cell:not(.gk-perm-locked, .gk-perm-inherited) .gk-perm-check {
+  accent-color: var(--gk-error);
+}
+/* Locked and inherited: ticked, and plainly not a choice here — the muted colour. Inherited also gets
+   a dashed ring and "via <role>" under it, so the state does not live in a colour; locked is said in
+   its column's head. Read-only (aria-disabled) is not dimmed: it has to stay legible. */
+:is(.gk-perm-locked, .gk-perm-inherited) .gk-perm-check {
+  accent-color: var(--gk-perm-fixed);
+  cursor: default;
+}
+.gk-perm-inherited .gk-perm-check {
+  outline: 1.5px dashed var(--gk-perm-fixed);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.gk-perm-table .gk-perm-inherited .gk-perm-check:focus-visible {
+  outline: 2px solid var(--gk-primary);
+}
+.gk-perm-note {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--gk-text-overline);
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--gk-on-surface-variant);
+}
+/* Changed and not saved: a tinted cell and a dot in its corner (the dot is the shape, the description
+   says it in words). */
+.gk-perm-changed {
+  background: var(--gk-perm-changed-bg);
+}
+.gk-perm-table .gk-perm-row > td.gk-perm-changed,
+.gk-perm-table .gk-perm-row:is(:hover, :focus-within) > td.gk-perm-changed {
+  background: var(--gk-perm-changed-bg);
+}
+.gk-perm-changed::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gk-primary);
+}
+.gk-perm-check[aria-busy="true"] {
+  opacity: 0.6;
+}
+
+/* Nothing matched the filter. */
+.gk-perm-empty {
+  margin: 0;
+  padding: 24px 16px;
+  text-align: center;
+  font-size: var(--gk-font-size);
+  color: var(--gk-on-surface-variant);
+}
+
+/* The legend: the marks as the cells draw them, each with its words. */
+.gk-perm-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0;
+  padding: 10px 16px 12px;
+  list-style: none;
+  border-top: 1px solid var(--gk-perm-line);
+  font-size: var(--gk-text-caption);
+  color: var(--gk-on-surface-variant);
+}
+.gk-perm-legend > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.gk-perm-swatch {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 30px;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+.gk-perm-swatch .gk-perm-note {
+  margin-top: 2px;
+}
+.gk-perm-swatch.gk-perm-changed {
+  padding-right: 12px;
+}
+.gk-perm-swatch.gk-perm-changed::after {
+  top: 3px;
+  right: 3px;
+}
+
+/* A phone: one role at a time — the column the select picked (.gk-perm-col-on), no "All roles"
+   column, and the head sticks to the page under GridKit's header. Without the script (no select)
+   the box keeps every column and scrolls sideways inside itself; the page does not. */
+@media (max-width: 768px) {
+  .gk-perm[data-gk-perm-ready] .gk-perm-picker:not([hidden]) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px var(--gk-spacing, 16px);
+    border-bottom: 1px solid var(--gk-perm-line);
+    font-size: var(--gk-font-size);
+  }
+  .gk-perm-picker .gk-filter {
+    flex: 1;
+    min-width: 0;
+  }
+  /* The search on a line of its own, the rest beside each other under it. */
+  .gk-perm-toolbar {
+    flex-direction: row;
+    align-items: center;
+  }
+  .gk-perm-toolbar .gk-search {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .gk-perm[data-gk-perm-ready] .gk-perm-table :is(th, td)[data-gk-perm-role]:not(.gk-perm-col-on),
+  .gk-perm[data-gk-perm-ready] .gk-perm-table .gk-perm-all {
+    display: none;
+  }
+  .gk-perm[data-gk-perm-ready] .gk-perm-box {
+    overflow: visible;
+    max-height: none;
+  }
+  /* The page's own setting for sticky table heads (--gk-table-sticky-top, 1.107.0) holds here too. */
+  .gk-perm[data-gk-perm-ready] .gk-perm-table > thead > tr > th {
+    top: var(--gk-table-sticky-top, var(--gk-sheet-top, 0px));
+  }
+  .gk-perm[data-gk-perm-ready] .gk-perm-name {
+    min-width: 0;
+    max-width: none;
+  }
+  .gk-perm[data-gk-perm-ready] .gk-perm-cell,
+  .gk-perm[data-gk-perm-ready] .gk-perm-role {
+    width: 96px;
+    min-width: 0;
+  }
+  /* A finger's target: a cell's height works as its least height. */
+  .gk-perm-cell {
+    height: 48px;
+  }
+  .gk-perm-check,
+  .gk-perm-bulk {
+    width: 22px;
+    height: 22px;
+  }
+  .gk-perm-name {
+    min-width: 180px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gk-perm-chevron {
+    transition: none;
+  }
+}
+
+/* === 1.116.0 — tree === */
+/* GridKit\Tree writes a nested list; js/tree.js makes it a tree view. The list works without the
+   script — every node in view, links and boxes that post — so nothing here hides a node unless the
+   script is there to show it again: (scripting: enabled) keeps a closed branch closed from the first
+   paint, and the script sets `hidden` on it as well, for a browser that does not know the query.
+
+   Roles only, so light, [data-gk-mode="dark"], .gk-dark and the six themes follow from the tokens.
+   A row is full width and indented by its level (data-gk-tree-level, written by the server, kept by
+   the script): the hover and the selection span the row, and the indent stops growing after eight
+   levels (five on a phone), where a small level number takes over — a deep tree never pushes the
+   page sideways. */
+.gk-tree {
+  --gk-tree-indent: 20px;
+  --gk-tree-row: 36px;
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  font-size: var(--gk-text-body);
+  color: var(--gk-on-surface);
+}
+.gk-tree-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 0 8px;
+}
+.gk-tree-toolbar .gk-tree-search {
+  flex: 1 1 200px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  background-color: var(--gk-surface-container-low);
+  border-width: 1px;
+}
+.gk-tree-toolbar .gk-tree-search:focus-visible {
+  background-color: var(--gk-surface);
+}
+.gk-tree-list,
+.gk-tree-group {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gk-tree-node {
+  margin: 0;
+  padding: 0;
+}
+/* The treeitem is the <li> and holds its branch: the ring goes round its row, not round the branch. */
+.gk-tree-node:focus {
+  outline: none;
+}
+.gk-tree-node:focus-visible > .gk-tree-row {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+
+.gk-tree-row {
+  --gk-tree-depth: 7;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: var(--gk-tree-row);
+  padding-block: 2px;
+  padding-inline: calc(var(--gk-tree-depth) * var(--gk-tree-indent) + 4px) 4px;
+  border-radius: var(--gk-radius-sm);
+}
+.gk-tree-row[data-gk-tree-level="1"] { --gk-tree-depth: 0; }
+.gk-tree-row[data-gk-tree-level="2"] { --gk-tree-depth: 1; }
+.gk-tree-row[data-gk-tree-level="3"] { --gk-tree-depth: 2; }
+.gk-tree-row[data-gk-tree-level="4"] { --gk-tree-depth: 3; }
+.gk-tree-row[data-gk-tree-level="5"] { --gk-tree-depth: 4; }
+.gk-tree-row[data-gk-tree-level="6"] { --gk-tree-depth: 5; }
+.gk-tree-row[data-gk-tree-level="7"] { --gk-tree-depth: 6; }
+.gk-tree-row[data-gk-tree-level="8"] { --gk-tree-depth: 7; }
+/* Deeper than the indent goes: the level, as a number in a ring, in the last step of the indent —
+   the toggles of the deep rows stay in line. It is decoration: the level is read from aria-level, and
+   the name of the node is its label alone. The look is shared; `content` decides where it shows. */
+.gk-tree-row::before {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: calc(var(--gk-tree-depth) * var(--gk-tree-indent) - 20px);
+  box-sizing: border-box;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--gk-outline);
+  border-radius: 999px;
+  color: var(--gk-on-surface-variant);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  transform: translateY(-50%);
+}
+.gk-tree-row:not([data-gk-tree-level="1"], [data-gk-tree-level="2"], [data-gk-tree-level="3"], [data-gk-tree-level="4"],
+  [data-gk-tree-level="5"], [data-gk-tree-level="6"], [data-gk-tree-level="7"], [data-gk-tree-level="8"])::before {
+  content: attr(data-gk-tree-level);
+}
+.gk-tree-row:hover {
+  background: var(--gk-state-hover);
+}
+/* The selected node (select('single')): its colours, a bar on its start edge and a heavier name —
+   not the colour alone. */
+.gk-tree-node[aria-selected="true"] > .gk-tree-row {
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+  box-shadow: inset 3px 0 0 var(--gk-primary);
+}
+.gk-tree-node[aria-selected="true"] > .gk-tree-row .gk-tree-label {
+  font-weight: 600;
+  color: inherit;
+}
+
+/* The toggle: a chevron drawn with two borders, as the row link's is — no icon font to wait for.
+   It shows only on a node the script knows to be a parent (aria-expanded). */
+.gk-tree-toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--gk-on-surface-variant);
+}
+.gk-tree-node[aria-expanded] > .gk-tree-row > .gk-tree-toggle {
+  cursor: pointer;
+}
+.gk-tree-node[aria-expanded] > .gk-tree-row > .gk-tree-toggle:hover {
+  background: var(--gk-state-pressed);
+  color: var(--gk-on-surface);
+}
+.gk-tree-node[aria-expanded] > .gk-tree-row > .gk-tree-toggle::before {
+  content: "";
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  margin-inline-start: -3px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+  transform: rotate(45deg);
+}
+.gk-tree-node[aria-expanded="true"] > .gk-tree-row > .gk-tree-toggle::before {
+  margin: -4px 0 0;
+  transform: rotate(135deg);
+}
+.gk-tree-node[aria-expanded="false"]:dir(rtl) > .gk-tree-row > .gk-tree-toggle::before {
+  margin-inline-start: 0;
+  margin-inline-end: -3px;
+  transform: rotate(-135deg);
+}
+/* Children on their way (lazyUrl): the chevron turns into a ring. */
+.gk-tree-node[aria-busy="true"] > .gk-tree-row > .gk-tree-toggle::before {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  border: 2px solid var(--gk-outline-variant);
+  border-top-color: var(--gk-primary);
+  border-radius: 50%;
+  transform: none;
+  animation: gk-spin 0.7s linear infinite;
+}
+
+.gk-tree-check {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--gk-primary);
+  cursor: pointer;
+}
+.gk-tree-check:disabled {
+  cursor: not-allowed;
+}
+/* Single selection is a radio button only without the script; with it the row is the control. */
+.gk-tree-radio {
+  flex: none;
+  margin: 0;
+  accent-color: var(--gk-primary);
+}
+.gk-tree[data-gk-tree-ready] .gk-tree-radio {
+  display: none;
+}
+/* A missing icon font must not push the row: the box is the icon's size, a ligature word is cut. */
+.gk-tree-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  overflow: hidden;
+  font-size: 20px;
+  line-height: 20px;
+  color: var(--gk-on-surface-variant);
+}
+.gk-tree-node[aria-selected="true"] > .gk-tree-row .gk-tree-icon {
+  color: inherit;
+}
+/* The name takes what the row has left and is cut with an ellipsis; the script sets a title while it
+   is cut, and the focused node shows its name in full. */
+.gk-tree-label {
+  flex: 1 1 auto;
+  min-width: 2em;
+  padding-block: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+a.gk-tree-label:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.gk-tree-node:focus-visible > .gk-tree-row .gk-tree-label {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+/* Muted (an unpublished page): italic and the quieter text role — a shape and a colour; the word
+   ("inactive", or the node's own) is read with the name. */
+.gk-tree-muted > .gk-tree-row .gk-tree-label {
+  font-style: italic;
+  color: var(--gk-on-surface-variant);
+}
+.gk-tree-disabled > .gk-tree-row .gk-tree-label {
+  color: var(--gk-on-surface-variant);
+  cursor: default;
+}
+.gk-tree-badge {
+  flex: none;
+}
+.gk-tree-count {
+  flex: none;
+  box-sizing: border-box;
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.gk-tree-actions {
+  flex: none;
+}
+.gk-tree-hit {
+  padding: 0 1px;
+  border-radius: 3px;
+  background: #fef08a;
+  color: inherit;
+}
+
+/* The handle (movable trees): six dots drawn by a mask in the text colour, so the theme and the mode
+   reach it. Only the handle takes the finger — the rest of the row still scrolls the page. */
+.gk-tree-handle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gk-on-surface-variant);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.gk-tree-handle::before {
+  content: "";
+  width: 10px;
+  height: 16px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16'%3E%3Cg fill='%23000'%3E%3Ccircle cx='2' cy='2' r='1.6'/%3E%3Ccircle cx='8' cy='2' r='1.6'/%3E%3Ccircle cx='2' cy='8' r='1.6'/%3E%3Ccircle cx='8' cy='8' r='1.6'/%3E%3Ccircle cx='2' cy='14' r='1.6'/%3E%3Ccircle cx='8' cy='14' r='1.6'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16'%3E%3Cg fill='%23000'%3E%3Ccircle cx='2' cy='2' r='1.6'/%3E%3Ccircle cx='8' cy='2' r='1.6'/%3E%3Ccircle cx='2' cy='8' r='1.6'/%3E%3Ccircle cx='8' cy='8' r='1.6'/%3E%3Ccircle cx='2' cy='14' r='1.6'/%3E%3Ccircle cx='8' cy='14' r='1.6'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+}
+.gk-tree-handle:hover {
+  background: var(--gk-state-pressed);
+  color: var(--gk-on-surface);
+}
+.gk-tree-handle:active {
+  cursor: grabbing;
+}
+.gk-tree-handle:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+/* Lifted with the keyboard: the handle says so by its colours and a frame, the row by a dashed one,
+   the live region in words. */
+.gk-tree-handle[aria-pressed="true"] {
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+  box-shadow: inset 0 0 0 1px var(--gk-primary);
+}
+.gk-tree-lifted > .gk-tree-row {
+  background: var(--gk-state-primary);
+  outline: 2px dashed var(--gk-primary);
+  outline-offset: -2px;
+}
+/* Dragged with the pointer: the row it left stays, framed, and a label follows the pointer. */
+.gk-tree-dragging > .gk-tree-row {
+  outline: 2px dashed var(--gk-outline);
+  outline-offset: -2px;
+}
+.gk-tree-ghost {
+  position: fixed;
+  z-index: 1100;
+  box-sizing: border-box;
+  max-width: 260px;
+  padding: 4px 10px;
+  overflow: hidden;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface);
+  color: var(--gk-on-surface);
+  box-shadow: var(--gk-shadow-lg);
+  font-size: var(--gk-text-label);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+/* Over a place it cannot go (its own branch, a disabled node): struck through and framed in the
+   error role. */
+.gk-tree-ghost-no {
+  border-color: var(--gk-error);
+  text-decoration: line-through;
+}
+.gk-tree-drop-line {
+  position: absolute;
+  z-index: 2;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--gk-primary);
+  pointer-events: none;
+}
+.gk-tree-drop-line::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -5px;
+  width: 6px;
+  height: 6px;
+  border: 2px solid var(--gk-primary);
+  border-radius: 50%;
+  background: var(--gk-surface);
+}
+.gk-tree-row.gk-tree-drop-inside {
+  background: var(--gk-state-primary);
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+
+/* A branch that could not be loaded: a sign, the words and a button, in the row of its node. */
+.gk-tree-loaderror {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gk-on-error-container);
+  font-size: var(--gk-text-caption);
+}
+.gk-tree-loaderror::before,
+.gk-tree-error::before {
+  content: "!";
+  flex: none;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 12px;
+  text-align: center;
+}
+.gk-tree-retry {
+  min-height: 24px;
+  padding: 0 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gk-tree-retry:hover {
+  background: color-mix(in oklab, var(--gk-error) 10%, transparent);
+}
+.gk-tree-retry:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+/* A failed save where no toast is (gridkit.js not loaded): the line above the list. */
+.gk-tree-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in oklab, var(--gk-error) 25%, transparent);
+  border-radius: var(--gk-radius-sm);
+  background: color-mix(in oklab, var(--gk-error) 8%, transparent);
+  color: var(--gk-on-error-container);
+  font-size: var(--gk-text-label);
+}
+.gk-tree-error[hidden],
+.gk-tree-empty[hidden] {
+  display: none;
+}
+.gk-tree-empty {
+  margin: 4px 0;
+  padding: 8px 4px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+}
+
+/* With the script, a closed branch is closed from the first paint. Without it the toolbar and the
+   chevrons would do nothing: they are not drawn, and a long name wraps instead of being cut. */
+@media (scripting: enabled) {
+  .gk-tree-node:not(.gk-tree-open) > .gk-tree-group {
+    display: none;
+  }
+}
+@media (scripting: none) {
+  .gk-tree-toolbar,
+  .gk-tree-toggle {
+    display: none;
+  }
+  .gk-tree-label {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+/* A finger: rows and the handle at 44px. */
+@media (pointer: coarse) {
+  .gk-tree {
+    --gk-tree-row: var(--gk-target-min);
+  }
+  .gk-tree-handle {
+    width: var(--gk-target-min);
+    height: var(--gk-target-min);
+  }
+}
+/* A phone: a smaller step, and the indent stops after five levels. */
+@media (max-width: 600px) {
+  .gk-tree {
+    --gk-tree-indent: 12px;
+  }
+  .gk-tree-row:not([data-gk-tree-level="1"], [data-gk-tree-level="2"], [data-gk-tree-level="3"],
+    [data-gk-tree-level="4"], [data-gk-tree-level="5"]) {
+    --gk-tree-depth: 4;
+  }
+  .gk-tree-row:is([data-gk-tree-level="6"], [data-gk-tree-level="7"], [data-gk-tree-level="8"])::before {
+    content: attr(data-gk-tree-level);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gk-tree-toggle::before {
+    transition: transform var(--gk-dur-2) var(--gk-ease-out);
+  }
+}
+@media (forced-colors: active) {
+  .gk-tree-handle::before {
+    background-color: ButtonText;
+  }
+  .gk-tree-hit {
+    background: Mark;
+    color: MarkText;
+  }
+}
+@media print {
+  .gk-tree-toolbar,
+  .gk-tree-handle,
+  .gk-tree-actions {
+    display: none;
+  }
+}
+/* The marked part of a match on a dark ground: the search hit's own pair (1.80.1). */
+[data-gk-mode="dark"] .gk-tree-hit,
+.gk-dark .gk-tree-hit {
+  background: #854d0e;
+  color: #fef9c3;
+}
+
+/* === 1.117.0 — line items === */
+/* GridKit\LineItems: the lines of an invoice, an offer or an order. Every line is a grid of its own
+   (an <li> in an <ol>, so js/sortierbar.js can move it), and the heading row is another grid with the
+   same tracks: --gk-lines-cols, written by PHP from the columns — fixed widths and fr shares with a
+   fixed minimum only, which come out the same in every one of those grids. The editor is a container:
+   narrower than 56rem (a phone, a medium modal, a side column) every line becomes a card, the labels
+   come out from under the fields, and nothing scrolls sideways.
+   Roles only, so light, [data-gk-mode="dark"], .gk-dark and the six themes follow from the tokens;
+   the one dark rule below lifts the fields off a card the way the table's inline edit does. */
+/* A size container ignores its content when it is sized: in a flex row it needs its width given,
+   hence width: 100% (a grid track or a block gives it anyway). */
+.gk-lines {
+  container: gk-lines / inline-size;
+  --gk-lines-pos: 3.25rem;
+  --gk-lines-act: 3.75rem;
+  --gk-lines-gap: 8px;
+  /* PHP writes the tracks inline, from the columns; this is the shape of one text column. */
+  --gk-lines-cols: var(--gk-lines-pos) minmax(9rem, 1fr) var(--gk-lines-act);
+  width: 100%;
+  min-width: 0;
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-body);
+}
+.gk-lines-readonly {
+  --gk-lines-pos: 2.25rem;
+}
+.gk-lines-head,
+.gk-lines-line {
+  display: grid;
+  grid-template-columns: var(--gk-lines-cols);
+  column-gap: var(--gk-lines-gap);
+  align-items: start;
+  padding-inline: 8px;
+}
+/* The heading reads like a table's: caps, small, muted, a darker hairline under it. */
+.gk-lines-head {
+  padding-block: 8px;
+  border-bottom: 1px solid var(--gk-surface-container-highest);
+  font-size: var(--gk-text-overline);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gk-on-surface-variant);
+}
+.gk-lines-th {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gk-lines-body {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gk-lines-row {
+  border-bottom: 1px solid var(--gk-outline-variant);
+}
+/* The line being worked on stands out a little, as a table row under the pointer does. */
+.gk-lines-row:focus-within {
+  background: color-mix(in oklab, var(--gk-primary) 5%, var(--gk-surface));
+}
+.gk-lines-line {
+  padding-block: 6px;
+}
+.gk-lines-cell {
+  position: relative;
+  min-width: 0;
+}
+/* The number of the line, on the baseline of the fields beside it. */
+.gk-lines-pos {
+  padding-top: 10px;
+  text-align: end;
+  color: var(--gk-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}
+.gk-lines-head .gk-lines-pos {
+  padding-top: 0;
+}
+/* Room for the handle js/sortierbar.js adds, once there are two lines to order. */
+.gk-sort-aktiv > .gk-lines-row .gk-lines-pos {
+  padding-inline-start: 30px;
+}
+.gk-lines-row > .gk-sort-griff {
+  inset-block-start: 8px;
+  inset-inline-start: 6px;
+  inset-inline-end: auto;
+  width: 28px;
+  height: 36px;
+}
+.gk-lines-row > .gk-sort-griff .material-icons {
+  font-size: var(--gk-icon-md);
+}
+/* In the air (sortierbar's own states): the line keeps its ground, and its fields their width. */
+.gk-lines-row.gk-sort-zieht {
+  background: var(--gk-surface);
+}
+/* What is not a field: the line total, a read-only column, a sent invoice. */
+.gk-lines-out {
+  display: block;
+  padding-top: 10px;
+  overflow-wrap: anywhere;
+}
+.gk-lines-num .gk-lines-out {
+  text-align: right;
+}
+.gk-lines-sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+  line-height: var(--gk-leading-snug);
+}
+/* Every field has its label; on a wide editor the heading row says it for the eye, so the label is
+   there for a screen reader only (the clip of .gk-sr-only). A card shows it. */
+.gk-lines-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+/* Fields a little lower than a form's: a line is one row of eight of them. */
+.gk-lines .gk-input {
+  height: 40px;
+  padding: 8px 10px;
+}
+.gk-lines .gk-input:focus-visible {
+  padding: 7.75px 9.75px;
+}
+.gk-lines textarea.gk-input {
+  height: auto;
+  min-height: 40px;
+  max-height: 12rem;
+  resize: vertical;
+  line-height: 1.45;
+  field-sizing: content;
+}
+/* The arrow keeps its room: a value as long as "flat rate" ran under it with 4px (1.117.0). */
+.gk-lines select.gk-input {
+  padding-inline-end: 26px;
+  background-position: right 8px center;
+}
+.gk-lines .gk-ajax-select .gk-select-display {
+  min-height: 40px;
+}
+/* The list of articles is wider than its cell: a name and a number should fit on their lines. */
+.gk-lines .gk-ajax-select .gk-select-dropdown {
+  min-width: min(18rem, 80vw);
+}
+/* An empty message line takes no room; it stays in the tree, so what it says later is heard. The
+   words in the text-safe red: .gk-field-error's own --gk-danger reads 3.46:1 on white. */
+.gk-lines .gk-field-error {
+  color: var(--gk-danger-text);
+}
+.gk-lines .gk-field-error:empty {
+  margin: 0;
+}
+.gk-lines-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 7px;
+}
+.gk-lines-actions .gk-action-group {
+  flex-wrap: nowrap;
+  gap: 2px;
+}
+/* Without the script these buttons could not do anything: they keep their place and stay unseen. */
+.gk-lines:not([data-gk-lines-ready]) :is(.gk-lines-actions, .gk-lines-tools) {
+  visibility: hidden;
+}
+.gk-lines > .gk-empty {
+  padding: 32px 16px;
+  border-bottom: 1px solid var(--gk-outline-variant);
+}
+/* The totals: right, under the figures, the last line the one that counts. */
+.gk-lines-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 8px 0;
+}
+.gk-lines-totals {
+  display: grid;
+  gap: 2px;
+  min-width: min(100%, 20rem);
+  margin: 0 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+.gk-lines-sum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 24px;
+  padding: 4px 0;
+}
+.gk-lines-sum > dt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--gk-on-surface-variant);
+}
+.gk-lines-sum > dd {
+  margin: 0;
+  white-space: nowrap;
+  color: var(--gk-on-surface);
+}
+.gk-lines-grand {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--gk-outline);
+  font-size: var(--gk-text-subtitle);
+}
+.gk-lines-grand > dt {
+  color: var(--gk-on-surface);
+  font-weight: 600;
+}
+.gk-lines-grand > dd {
+  font-weight: 700;
+}
+.gk-lines-adjust {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.gk-lines .gk-lines-adjust .gk-input {
+  width: 5.5rem;
+  height: 32px;
+  padding: 4px 8px;
+}
+.gk-lines .gk-lines-adjust .gk-input:focus-visible {
+  padding: 3.75px 7.75px;
+}
+.gk-lines-sum .gk-field-error {
+  flex-basis: 100%;
+}
+/* Empty, out of the flow: a wrapped empty line would open a gap between two sums. Still rendered,
+   so the alert is in the tree before it speaks. */
+.gk-lines-sum .gk-field-error:empty {
+  position: absolute;
+}
+/* Undo, in the toast that says a line went: the toast's own colours, a word that looks pressable. */
+.gk-toast [data-gk-lines-undo] {
+  min-height: 32px;
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: var(--gk-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.gk-toast [data-gk-lines-undo]:hover {
+  background: color-mix(in oklab, currentColor 12%, transparent);
+}
+.gk-toast [data-gk-lines-undo]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.gk-toast [data-gk-lines-undo] + .gk-toast-close {
+  margin-left: 0;
+}
+/* A sent invoice: no field, so the figures sit on the line, not on a field's baseline. */
+.gk-lines-readonly .gk-lines-line {
+  padding-block: 10px;
+}
+.gk-lines-readonly :is(.gk-lines-out, .gk-lines-pos) {
+  padding-top: 0;
+}
+[data-gk-mode="dark"] .gk-lines .gk-lines-row .gk-input,
+.gk-dark .gk-lines .gk-lines-row .gk-input {
+  background-color: var(--gk-surface-container);
+}
+/* A card per line. */
+@container gk-lines (width < 56rem) {
+  .gk-lines-head {
+    display: none;
+  }
+  .gk-lines-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .gk-lines-row {
+    border: 1px solid var(--gk-outline-variant);
+    border-radius: var(--gk-radius);
+    background: var(--gk-surface);
+  }
+  .gk-lines-line {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
+    padding: 12px;
+  }
+  .gk-lines-pos {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    padding: 0;
+    text-align: start;
+    font-weight: 600;
+    color: var(--gk-on-surface);
+  }
+  .gk-lines-pos::before {
+    content: "# ";
+    color: var(--gk-on-surface-variant);
+    font-weight: 400;
+  }
+  .gk-sort-aktiv > .gk-lines-row .gk-lines-pos {
+    padding-inline-start: 52px;
+    min-height: var(--gk-target-min);
+    display: flex;
+    align-items: center;
+  }
+  .gk-lines-row > .gk-sort-griff {
+    inset-block-start: 12px;
+    inset-inline-start: 12px;
+    width: var(--gk-target-min);
+    height: var(--gk-target-min);
+  }
+  .gk-lines-actions {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    padding: 0;
+  }
+  .gk-lines-wide {
+    grid-column: 1 / -1;
+  }
+  .gk-lines-label {
+    position: static;
+    display: block;
+    width: auto;
+    height: auto;
+    margin: 0 0 4px;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    font-size: var(--gk-text-caption);
+    font-weight: 600;
+    color: var(--gk-on-surface-variant);
+  }
+  .gk-lines-out {
+    padding-top: 0;
+  }
+  .gk-lines-num .gk-lines-out {
+    text-align: start;
+  }
+  /* The line total closes the card: its label left, the amount right, across the card. */
+  .gk-lines-line > .gk-lines-cell:has(> [data-gk-lines-out]) {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--gk-outline-variant);
+    font-weight: 600;
+  }
+  .gk-lines-line > .gk-lines-cell:has(> [data-gk-lines-out]) > .gk-lines-label {
+    margin: 0;
+  }
+  .gk-lines-foot {
+    flex-direction: column;
+    align-items: stretch;
+    padding-inline: 0;
+  }
+  .gk-lines-totals {
+    min-width: 0;
+    width: 100%;
+  }
+}
+@media print {
+  .gk-lines-actions,
+  .gk-lines-tools,
+  .gk-lines-row > .gk-sort-griff {
+    display: none;
+  }
+}
+
+/* === 1.118.0 — one pager === */
+/*
+ * Table::paginate() draws the bar of GridKit\Pagination now (Table::renderPager(), and the 1.118.0
+ * block of js/gridkit.js for a rebuilt setData() table): <nav class="gk-pagination gk-rowpager">,
+ * the count on the left, the .gk-pg buttons on the right. One look for every pager: the same
+ * boxes, sizes and colours below a table and below a list paged by hand.
+ *
+ * The nav keeps .gk-pagination, the class an older gridkit.js removes before it writes its own
+ * pager. That class's rule (centred, a 4px gap, 16px all round) stands later in this file than
+ * .gk-rowpager's and would win, so the bar's own layout is said again here, at 0,2,0, and
+ * .gk-rowpager's margin taken off: the bar closes the card. The line above it is .gk-pagination's;
+ * the count stands in line with the first column (the cell padding, which the density steps move).
+ */
+.gk-pagination.gk-rowpager {
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 10px var(--gk-table-pad-x, 16px);
+}
+/* The table's page controls are buttons, Pagination's are links: a button inherits neither the
+   font nor the line height of the page. */
+button.gk-pg {
+  font-family: inherit;
+  line-height: inherit;
+}
+/* Every pager's focus. .gk-pg had the browser's ring, the table's old pager the button's; this
+   is the button's (.gk-btn:focus-visible). */
+.gk-pg:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+
+/*
+ * A copy of js/gridkit.js from before 1.118.0 (the PawBot dashboard keeps its own) still writes
+ * its own pager when it rebuilds a setData() table after a sort, a search or a page: .gk-btn
+ * buttons with data-gk-page in a bare .gk-pagination, straight inside the wrap. They take the
+ * same boxes here, so the table does not change its look on the first click. The count is the
+ * one thing that script cannot write; its pager keeps the right-hand side the buttons stand on.
+ * :has() keeps the new bar out (its buttons are .gk-pg, inside .gk-rowpager-nav), and a pager
+ * written by hand with .gk-page-btn.
+ */
+.gk-table-wrap > .gk-pagination:has(> .gk-btn[data-gk-page]) {
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 10px var(--gk-table-pad-x, 16px);
+}
+.gk-table-wrap > .gk-pagination > .gk-btn[data-gk-page] {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--gk-border);
+  border-radius: 8px;
+  background: var(--gk-surface);
+  color: var(--gk-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.gk-table-wrap > .gk-pagination > .gk-btn[data-gk-page]:hover {
+  background: var(--gk-surface-variant);
+}
+/* The page it is on: every version of that script makes it the primary button. */
+.gk-table-wrap > .gk-pagination > .gk-btn.gk-btn-primary[data-gk-page] {
+  background: var(--gk-primary);
+  border-color: var(--gk-primary);
+  color: var(--gk-on-primary);
+  cursor: default;
+}
+.gk-table-wrap > .gk-pagination > .gk-btn-icon-only[data-gk-page] {
+  padding: 0;
+}
+.gk-table-wrap > .gk-pagination > .gk-btn[data-gk-page]:disabled {
+  opacity: 0.4;
+}
+/* That script sets 16px on the glyph inline; .gk-pg-icon's is 18px. */
+.gk-table-wrap > .gk-pagination > .gk-btn[data-gk-page] .material-icons {
+  font-size: 18px !important;
+}
+/* Its gap between the page numbers. */
+.gk-table-wrap > .gk-pagination:has(> .gk-btn[data-gk-page]) > span {
+  padding: 0 4px;
+  color: var(--gk-text-muted);
 }

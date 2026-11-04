@@ -195,8 +195,8 @@ return [
     (new GridKit\Table('t'))->setData($rows)->column('name', 'Name')->paginate(10)->render();
     $html = (string) ob_get_clean();
 
-    T::contains($html, '<nav class="gk-pagination"', 'a landmark that can be skipped');
-    T::ok((bool) preg_match('/<nav class="gk-pagination" aria-label="[^"]+"/', $html),
+    T::contains($html, '<nav class="gk-pagination gk-rowpager"', 'a landmark that can be skipped');
+    T::ok((bool) preg_match('/<nav class="gk-pagination gk-rowpager" aria-label="[^"]+"/', $html),
         'and it is named');
     T::contains($html, 'aria-current="page"', 'the page you are on is stated, not only coloured');
     T::ok(!str_contains($html, 'aria-label="Chevron left"'),
@@ -353,6 +353,28 @@ return [
         'toggling the mode moves the attribute with it');
     T::contains($js, 'this._markMode(document.body.dataset.gkMode',
         'and a restored mode is marked too, not just the server-rendered one');
+},
+
+/**
+ * 1.114.0: the switcher is two named groups — the swatches and the mode (light | dark | auto).
+ * The auto button is rendered hidden and shown by the script block of 1.114.0: a copy of
+ * gridkit.js without it (the PawBot dashboard keeps its own) must not show a button that does
+ * nothing. Every button is type="button", so a switcher inside a form never submits it.
+ */
+'the theme switcher names its groups, and the auto button waits for its script' => function (): void {
+    Lang::set('en');
+    GridKit\Theme::set('indigo', 'light');
+    $html = GridKit\Theme::switcher();
+    T::contains($html, '<div class="gk-theme-colors" role="group" aria-label="Accent colour">', 'the swatches are a named group');
+    T::contains($html, '<div class="gk-mode-group" role="group" aria-label="Colour mode">', 'the mode is a named group');
+    T::ok((bool) preg_match('/<button type="button" class="gk-mode-auto" data-gk-mode-auto aria-pressed="false" aria-label="[^"]+" title="[^"]+" hidden>/', $html),
+        'the auto button is named, not pressed, and hidden until the script shows it');
+    T::eq(substr_count($html, '<button type="button"'), substr_count($html, '<button'), 'every button is type="button"');
+    T::eq(substr_count($html, 'style="--gk-swatch:#'), count(GridKit\Theme::available()), 'each swatch hands its colour to the ring');
+    $js = (string) file_get_contents(__DIR__ . '/../js/gridkit.js');
+    $at = strpos($js, '// === 1.114.0 — colour system: theme switcher ===');
+    T::ok($at !== false, 'the script block of 1.114.0 is missing');
+    T::ok(strpos($js, 'btn.hidden = false', (int) $at) !== false, 'the script block does not show the auto button');
 },
 
 /**

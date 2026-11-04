@@ -70,7 +70,7 @@ return [
     T::eq(stickyBox($html), '<div class="gk-table-sticky-box" role="region" tabindex="0" aria-label="Scrollable table" style="--gk-table-sticky-height:480px">',
         'the box is not a named region with a tab stop and its height');
     T::contains($html, 'data-gk-table-status="t"></div><div class="gk-table-sticky-box"', 'the box does not follow the status line');
-    T::contains($html, '</table></div><nav class="gk-pagination"', 'the box does not end with the table, before the pager');
+    T::contains($html, '</table></div><nav class="gk-pagination gk-rowpager"', 'the box does not end with the table, before the pager');
     T::notContains(stickyBox($html), 'data-gk-sticky-col', 'cells stick sideways without stickyColumn()');
 },
 
@@ -156,7 +156,7 @@ return [
     T::ok(str_starts_with($html, '<div class="gk-sr-only" role="status"'), 'the fragment does not start with the status line');
     T::contains($html, '<div class="gk-table-sticky-box" role="region" tabindex="0" aria-label="Scrollable table" data-gk-sticky-col="2" style="--gk-table-sticky-height:400px"><table',
         'the fragment has no box — the reload would leave the table outside it');
-    T::contains($html, '</table></div><nav class="gk-pagination"', 'the pager went into the box');
+    T::contains($html, '</table></div><nav class="gk-pagination gk-rowpager"', 'the pager went into the box');
     T::notContains($html, 'gk-table-wrap', 'the fragment carries a wrap of its own');
 },
 

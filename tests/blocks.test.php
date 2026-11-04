@@ -154,9 +154,10 @@ return [
     T::contains($changed, 'gk-label gk-label-blue', 'a changed block is not marked with the blue label');
     T::contains($changed, 'Changed in 1.95', 'the mark does not say when it changed');
 
-    // A block that fell out of the window (the sortable container is new in 1.97,
-    // the window is 1.106 and 1.105; the picker and the announcement are older still) carries no mark.
-    foreach (['sortierbar' => '1.97', 'picker' => '1.94', 'announce' => '1.93'] as $key => $minor) {
+    // A block that fell out of the window (the portrait video frame is new in 1.96, the picker and the
+    // announcement are older still) carries no mark. The sortable container (1.97) stood here until
+    // 1.114.0 restyled it and it came back into the window.
+    foreach (['video-frame' => '1.96', 'picker' => '1.94', 'announce' => '1.93'] as $key => $minor) {
         T::notContains(since($key), 'gk-label', "a block older than the last two minors carries a mark ($key)");
         T::contains(since($key), "since $minor", "a block that fell out of the window does not say since when ($key)");
     }

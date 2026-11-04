@@ -348,7 +348,7 @@ class Form
         // is a group of them — so `for` either dangled or, worse, resolved to
         // a 1x1 aria-hidden input, and clicking the label focused nothing you
         // could see. They are named through aria-labelledby instead.
-        $composite = in_array($type, ['radio', 'choice', 'multiselect', 'ajaxselect', 'richtext', 'color'], true)
+        $composite = in_array($type, ['radio', 'choice', 'multiselect', 'ajaxselect', 'richtext', 'color', 'lineitems'], true)
                   || ($type === 'select' && empty($f['native']));
         $labelId   = $e($name) . '-label';
 
@@ -401,6 +401,8 @@ class Form
             case 'file':        $this->renderFile($f, $e, $x); break;
             case 'color':       $this->renderColor($f, $e, $x); break;
             case 'richtext':    $this->renderRichtext($f, $e, $x); break;
+            // 1.117.0: the editor of GridKit\LineItems, given as 'lines', named by this label.
+            case 'lineitems':   echo LineItems::forForm($f['lines'] ?? null, $name, $value); break;
             default:            $this->renderInput($f, $e, $x); // text, number, email, tel, url, password, date, time, datetime
         }
         if (!$showLabel && $help !== '') echo $help;

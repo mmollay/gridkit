@@ -1,4 +1,4 @@
-# GridKit 1.113.0 — CSS
+# GridKit 1.118.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -45,7 +45,9 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-picker` `gk-picker-grid` `gk-picker-item` `gk-picker-media` `gk-picker-input` `gk-picker-caption` | Image picker (since 1.94.0): container, grid, one tile, its picture area, the radio drawn as that area, the title row |
 | `gk-card-elevated` `gk-card-flat` | Card with a shadow / with a hairline border instead |
 | `gk-card-image` | A picture flush with the top of a card (rounds the two upper corners) |
-| `gk-card-title` `gk-card-actions` | Heading inside a card / a right-aligned row of buttons in its header |
+| `gk-card-title` `gk-card-actions` | Heading inside a card (since 1.114.0 semibold in the text colour, in the case it is written in — it was the accent in capitals) / a right-aligned row of buttons in its header |
+| `gk-card-header` `gk-card-body` `gk-card-footer` | A card made of parts: since 1.114.0 a card with a `gk-card-body` lets its parts do the padding — header and footer lines run edge to edge, the footer is a quiet band, a `gk-card-image` sits flush. A card without a body keeps its own padding (20px 24px) |
+| `gk-card-link` | The whole card is a link: under the pointer one step of elevation and a firmer edge, 1px up (none with reduced motion); a focus ring in the accent |
 | `gk-field-hint` `gk-field-has-error` | Help text under a field / colours a label to match its error |
 | `gk-checkbox-label` `gk-radio-label` | Label sitting beside its own box or dot |
 | `gk-form-page` `gk-form-wide` | A form capped at 800 px / one with no cap at all |
@@ -61,6 +63,8 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-header-meta` | A quiet line beside the header title, on its baseline; shortened first, gone at 768px and below |
 | `gk-table-sticky-head` `gk-table-sticky-col` `gk-table-sticky-box` | `Table->stickyHead()` / `->stickyColumn()` (since 1.107.0): on `.gk-table-wrap`, what sticks; the box around the `<table>` it scrolls in (`data-gk-sticky-col` = how many cells of a row stick, `--gk-table-sticky-height` its height) |
 | `gk-table-list` | On `.gk-table-wrap` (`Table->size('list')`): the list row of the six rules — 64px, name 15px over 13px, quiet groups; a size container, never cards, never sideways scroll |
+| `gk-rowpager` `gk-rowpager-info` `gk-rowpager-count` `gk-rowpager-nav` `gk-pg` `gk-pg-active` `gk-pg-icon` `gk-pg-off` `gk-pg-gap` | The one pager bar — `Pagination`, `Table->paginate()` (since 1.118.0, `<nav class="gk-pagination gk-rowpager">` inside the card, a line above it) and `GK.rowPager`: the count on the left, then the controls; the current page, an arrow, an arrow that leads nowhere, the ellipsis |
+| `gk-pagination` `gk-page-btn` | The landmark class of a table's pager (an older gridkit.js removes it before it draws its own, which then wears the `.gk-pg` boxes), and the hand-written pager of 0.9 — write the bar above instead |
 | `gk-col-p2` `gk-col-p3` `gk-col-p4` `gk-col-p5` | On th and td of a list column (`'priority' => n`): gone below 560 / 720 / 900 / 1040px of LIST width |
 | `gk-cell-who` `gk-cell-who-text` `gk-cell-sub-wrap` | The who cell: avatar, name, a label that moves under the name, the address underneath; a second line that breaks instead of being shortened |
 | `gk-avatar-tone-1` … `gk-avatar-tone-5` | Five quiet role pairs for initials, told apart side by side |
@@ -78,8 +82,10 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-timeline-ok` `gk-timeline-failed` `gk-timeline-running` `gk-timeline-waiting` `gk-timeline-skipped` | The state of a step, on its `<li>`: check, cross, a turning ring (still under reduced motion), an empty ring, a dash |
 | `gk-video-frame` `gk-video-frame-media` `gk-video-frame-caption` | A 9:16 frame for a video or picture (since 1.96.0): never wider than the column or taller than 75% of the window, the picture shown whole, no autoplay |
 | `gk-video-frame-safe` `gk-video-frame-busy` `gk-video-frame-error` | On the frame: guide lines for the zones a platform covers (top 10%, bottom 20%, no click caught) / nothing to show yet / it broke — the last two reuse `.gk-empty` |
-| `gk-sort-griff` `gk-sort-aktiv` | The handle the script puts in an entry (since 1.97.0) and the mark on a container that has handles (two entries or more) |
-| `gk-sort-zieht` `gk-sort-frei` `gk-sort-platz` | The entry in the air (outline, shadow), the entry flying with the pointer (fixed), and the dashed gap it left |
+| `gk-sort-griff` `gk-sort-aktiv` | The handle the script puts in an entry (since 1.97.0) and the mark on a container that has handles (two entries or more). Since 1.114.0 a quiet grip (subtle surface, hairline); under the pointer the tonal accent, lifted with the keyboard the accent fill, and the entry whose grip is under the pointer or in focus gets a thin accent ring |
+| `gk-sort-zieht` `gk-sort-frei` `gk-sort-platz` | The entry in the air (accent outline, the surface, the highest elevation), the entry flying with the pointer (fixed), and the dashed gap it left (in a share of the accent) |
+| `gk-theme-switcher` `gk-theme-colors` `gk-theme-dot` `gk-theme-active` | The theme switcher: its swatches (`--gk-swatch`, the chosen one with ring and check) |
+| `gk-mode-group` `gk-mode-toggle` `gk-mode-auto` `gk-mode-light` `gk-mode-dark` | The mode group of the switcher (1.114.0): the light/dark toggle and the auto button the script shows (light, dark, auto as one track with one thumb) |
 | `gk-sort-meldungen` `gk-sort-ok` `gk-sort-fehler` | Under a sortable container: the wrapper of the two lines, "saved" for a moment, and the failure as a sentence beside a symbol |
 | `gk-show-mobile` | Shown at 768px and below only — the counterpart of `gk-hide-mobile` |
 | `gk-choice` `gk-choice-mark` `gk-choice-text` `gk-choice-title` `gk-choice-hint` | A radio or checkbox as an answer tile with a letter (Form `'choice'`) |

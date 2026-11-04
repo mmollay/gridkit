@@ -474,7 +474,10 @@ const HELPERS = `window.GKT = {
             minimal: GKT.bg(GKT.wrap("v-minimal").querySelector("thead th:last-child")),
           }));
           check(`${mode} v-striped: the sticky cell of an even row has the row's colour`, even.striped[0] === even.striped[1], even.striped);
-          if (mode === "dark") check(`dark sc: the sticky cell of an even row has the dark row colour`, even.plain[0] === even.plain[1] && even.plain[0] === "rgb(28, 33, 40)", even.plain);
+          // The dark row colour is the role --gk-surface-container-low (1.114.0; it was GitHub's #1c2128, rgb(28, 33, 40)).
+          const darkRow = await page.evaluate(() => { const s = document.createElement("span"); s.style.color = "var(--gk-surface-container-low)";
+            GKT.wrap("sc").appendChild(s); const c = getComputedStyle(s).color; s.remove(); return c; });
+          if (mode === "dark") check(`dark sc: the sticky cell of an even row has the dark row colour`, even.plain[0] === even.plain[1] && even.plain[0] === darkRow, { plain: even.plain, darkRow });
           else check(`light sc: the sticky cell of a plain row has the surface of the wrap`, even.plain[0] === even.plain[2], even.plain);
           if (mode === "light") check(`light v-inverted: sticky cells have the inverted surface, the head its own`, even.inverted[0] === "rgb(30, 41, 59)" && even.inverted[2] === "rgb(15, 23, 42)" && even.inverted[3] === even.inverted[2], even.inverted);
           if (mode === "light") {
@@ -516,14 +519,16 @@ const HELPERS = `window.GKT = {
           const state = () => page.evaluate(() => {
             const w = GKT.wrap("st"), b = GKT.box("st");
             const kids = [...w.children].map((c) => c.className || c.tagName);
+            // By its class, not its whole class attribute: since 1.118.0 the pager is "gk-pagination gk-rowpager".
+            const pagerAt = [...w.children].findIndex((c) => c.classList.contains("gk-pagination"));
             const head = b ? b.querySelector("thead tr") : null;
             const widths = head ? [...head.children].slice(0, 3).map((c) => GKT.r(c).width) : [];
             return {
               inBox: !!b && !!b.querySelector(":scope > .gk-table"),
               loose: w.querySelectorAll(":scope > .gk-table").length,
               // (a search with a page of matches has no pager)
-              pagerAfterBox: kids.indexOf("gk-pagination") === -1 || kids.indexOf("gk-pagination") > kids.indexOf("gk-table-sticky-box"),
-              pager: kids.indexOf("gk-pagination") > -1,
+              pagerAfterBox: pagerAt === -1 || pagerAt > kids.indexOf("gk-table-sticky-box"),
+              pager: pagerAt > -1,
               x: b ? b.scrollLeft : -1,
               y: b ? b.scrollTop : -1,
               vars: b ? [parseFloat(b.style.getPropertyValue("--gk-table-sticky-left-2")), parseFloat(b.style.getPropertyValue("--gk-table-sticky-left-3"))] : [],
@@ -665,8 +670,14 @@ const HELPERS = `window.GKT = {
     // ── The other dark spelling ──────────────────────────────────────────
     {
       const page = await open(fixture, 1000, 700, "dark-class");
-      const r = await page.evaluate(() => ({ head: GKT.bg(GKT.wrap("bo").querySelector("thead th:last-child")), cell: GKT.bg(GKT.rows("sc")[0].children[2]), even: GKT.bg(GKT.rows("sc")[1].children[2]) }));
-      check(".gk-dark: the head and the sticky cells take the dark surfaces", r.head === "rgb(22, 27, 34)" && r.cell === "rgb(22, 27, 34)" && r.even === "rgb(28, 33, 40)", r);
+      // The dark surfaces are roles (1.114.0; they were GitHub's #161b22 and #1c2128): the card level for head and
+      // cells, the recessed step for an even row — resolved here, so the check holds the relation, not the hex.
+      const r = await page.evaluate(() => {
+        const role = (v) => { const s = document.createElement("span"); s.style.color = `var(${v})`; GKT.wrap("sc").appendChild(s); const c = getComputedStyle(s).color; s.remove(); return c; };
+        return { head: GKT.bg(GKT.wrap("bo").querySelector("thead th:last-child")), cell: GKT.bg(GKT.rows("sc")[0].children[2]), even: GKT.bg(GKT.rows("sc")[1].children[2]),
+          surface: role("--gk-surface"), low: role("--gk-surface-container-low") };
+      });
+      check(".gk-dark: the head and the sticky cells take the dark surfaces", r.head === r.surface && r.cell === r.surface && r.even === r.low && r.surface !== r.low, r);
       await page.evaluate(() => GKT.box("sc").scrollIntoView());
       await opaque(page, "gk-dark", "sc", "rows at rest");
       await page.close();

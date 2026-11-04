@@ -214,7 +214,7 @@ by `ci/build-skill.sh`, and a test fails if the two drift apart.
 
 ## Components
 
-Eighteen, each a PHP class with a chainable API:
+Twenty-one, each a PHP class with a chainable API:
 
 | | | |
 |---|---|---|
@@ -224,6 +224,7 @@ Eighteen, each a PHP class with a chainable API:
 | `FilterChips` — one-click filters | `TableHeader` — unified filter bar | `PageSize` — rows per page |
 | `ActionGroup` — grouped row actions | `SortLink` — sortable headers | `YearFilter` — year navigation |
 | `BelegModal` — document preview | `ImagePicker` — choose one image from many: a compact grid, an enlarged view that can pick | `Tabs` — every tab style and option, deep links, remembered tabs, lazy panels |
+| `PermissionMatrix` — roles × permissions: inheritance, locked roles, bulk toggles, one role at a time on a phone | `Tree` — page trees, categories, folders: keys, selection, lazy branches, drag and drop | `LineItems` — the lines of an invoice: live totals per VAT rate, the same in PHP to the cent |
 
 Plus `Theme`, `Layout`, `Lang`, `Auth`, `Icon` and `Tooltip` (the attributes and the
 help icon of the tooltips, since 1.112.0) as infrastructure — and the
@@ -237,7 +238,8 @@ stylesheet of its own. Two blocks are markup and classes as well: a timeline
 (`.gk-timeline`, since 1.96.0) for a log of steps whose state is a symbol and a word,
 and a portrait video frame (`.gk-video-frame`) for a 9:16 video or picture. A sortable
 container (`data-gk-sortierbar`, `js/sortierbar.js`, since 1.97.0) lets a person put cards
-or rows in order by dragging or by keyboard, and tells the server.
+or rows in order by dragging or by keyboard, and tells the server. The tree (`Tree`, since
+1.116.0) brings a script of its own as well, `js/tree.js`, loaded the same way.
 
 ---
 

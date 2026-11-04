@@ -22,7 +22,10 @@ return (static function (): array {
 $sidebar = static function (): string {
     $s = new Sidebar('demo');
     $s->brand('', 'widgets')->group('Components');
-    foreach (['table', 'form', 'cards', 'layout', 'tabs', 'navigation', 'gallery', 'suche', 'feedback', 'ui', 'tooltip', 'changelog'] as $id) {
+    // The demo's own items, read from demo/index.php: a component section added later (Permissions 1.115.0,
+    // Tree 1.116.0) is in the stand-in without an edit here.
+    preg_match_all("~->item\\('[^']*', '#([a-z-]+)'~", (string) file_get_contents(__DIR__ . '/../demo/index.php'), $items);
+    foreach (array_diff($items[1], ['examples']) as $id) {
         $s->item(ucfirst($id), '#' . $id, 'circle');
     }
     ob_start();

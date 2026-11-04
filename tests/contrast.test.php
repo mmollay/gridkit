@@ -531,16 +531,15 @@ return [
         '--gk-text-muted' => '--gk-on-surface-variant',
         '--gk-text-subtle' => '--gk-outline',
         '--gk-border' => '--gk-outline-variant',
+        // The four surface aliases were held back until 1.114.0: themes.css gave --gk-surface
+        // and --gk-surface-container the same colour in dark mode, so deriving them would have
+        // made --gk-bg and --gk-bg-muted identical. 1.114.0 decided the ladder — one for both
+        // files and both dark spellings, every step its own value — and they follow their role.
+        '--gk-bg' => '--gk-surface',
+        '--gk-bg-muted' => '--gk-surface-container',
+        '--gk-bg-subtle' => '--gk-surface-container-low',
+        '--gk-bg-hover' => '--gk-surface-container-high',
     ];
-    // The four surface aliases are NOT in this list, deliberately: themes.css gives
-    // --gk-surface and --gk-surface-container the same colour in dark mode, so
-    // deriving them would make --gk-bg and --gk-bg-muted identical and every muted
-    // surface lying on a plain one would lose its edge. Held back until the ladder
-    // is decided; the comment in the dark block says so, and ci/farben.js measures
-    // and reports them without failing.
-    foreach (['--gk-bg', '--gk-bg-muted', '--gk-bg-subtle', '--gk-bg-hover'] as $offen) {
-        T::ok(!isset($paare[$offen]), "$offen is knowingly still a literal in dark mode");
-    }
     // Only the dark ROOT block — not the many component rules that also carry
     // [data-gk-mode="dark"], and not the light block, which spells these the same way.
     // preg_match_all, not preg_match: with a single match this test would silently
@@ -768,7 +767,10 @@ return [
     // reset a value the page sets on <html>, so it is not declared at all.
     // --gk-table-sticky-top (1.107.0): where a sticky table head stops on the page, set on the
     // wrap or anywhere above it; declared by GridKit it would reset a page's value the same way.
-    $hooks = ['--gk-inverse-surface', '--gk-on-inverse-surface', '--gk-primary-rgb', '--gk-main-max', '--gk-table-sticky-top'];
+    // --gk-swatch (1.114.0): the colour of one theme swatch, written inline on its button by
+    // Theme::switcher() (from Theme::available()); every read has a fallback.
+    $hooks = ['--gk-inverse-surface', '--gk-on-inverse-surface', '--gk-primary-rgb', '--gk-main-max', '--gk-table-sticky-top',
+              '--gk-swatch'];
     $missing = array_values(array_diff(array_unique($use[1]), array_unique($def[1]), $hooks));
     T::eq($missing, [], 'tokens read but never defined');
 

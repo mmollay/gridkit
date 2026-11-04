@@ -234,27 +234,28 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-card-flush { padding:0; overflow:hidden; }
         .demo-rule { border:none; border-top:1px solid var(--gk-outline-variant); margin:40px 0; }
         .demo-intro-pad { padding:16px 24px 0; margin:0; }
-        .demo-card { background:var(--gk-surface, #fff); border-radius:8px; padding:24px; border:1px solid transparent; box-shadow:var(--gk-shadow); margin-bottom:24px; }
+        /* The demo's panels look like .gk-card (1.114.0): the surface, a hairline, the first step of elevation. */
+        .demo-card { background:var(--gk-surface, #fff); border-radius:var(--gk-radius, 12px); padding:24px; border:1px solid var(--gk-outline-variant); box-shadow:var(--gk-elev-1); margin-bottom:24px; }
         [data-gk-mode="dark"] .demo-card, .gk-dark .demo-card {
-            background:var(--gk-surface-container);
-            border:1px solid rgba(255,255,255,0.14);
-            box-shadow:none;
+            background:var(--gk-surface);
+            border:1px solid rgba(255,255,255,0.1);
+            box-shadow:var(--gk-elev-1), inset 0 1px 0 rgba(255,255,255,0.04);
         }
         [data-gk-mode="dark"] .demo-stat, .gk-dark .demo-stat {
-            background:var(--gk-surface-container);
-            border:1px solid rgba(255,255,255,0.14);
+            background:var(--gk-surface);
+            border:1px solid rgba(255,255,255,0.1);
             box-shadow:none;
         }
         [data-gk-mode="dark"] .demo-code, .gk-dark .demo-code {
-            background:var(--gk-surface);
+            background:var(--gk-surface-container-lowest);
             border:1px solid rgba(255,255,255,0.08);
-            color:#E6EDF3;
+            color:var(--gk-on-surface);
         }
         [data-gk-mode="dark"] .demo-intro, .gk-dark .demo-intro {
-            color:#8B949E;
+            color:var(--gk-on-surface-variant);
         }
         [data-gk-mode="dark"] .demo-section h2, .gk-dark .demo-section h2 {
-            color:#E6EDF3;
+            color:var(--gk-on-surface);
         }
         .demo-card .gk-table-wrap { border:none !important; }
         .demo-code { background:var(--gk-surface-dim, #1e293b); color:var(--gk-on-surface, #e2e8f0); padding:20px; border-radius:8px; overflow-x:auto; font-family:'SF Mono',Monaco,Consolas,monospace; font-size:13px; line-height:1.6; margin-top:16px; }
@@ -360,6 +361,8 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-news-count { color:var(--gk-on-surface-variant); font-weight:500; }
         .demo-news-list { margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:4px; font-size:14px; line-height:1.5; }
         .demo-news-list li { padding-left:14px; text-indent:-14px; }
+        /* A method name such as PermissionMatrix::fromPost($posted, is wider than the card on a phone. */
+        .demo-news-list code { overflow-wrap:anywhere; }
         .demo-news-list li::before { content:"\00b7\00a0\00a0"; }
         .demo-news-list .demo-news-more::before { content:none; }
         .demo-news-more { color:var(--gk-on-surface-variant); }
@@ -399,6 +402,16 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
             .anatomy-layout { flex-direction:column; }
             .anatomy-mockup { display:none; }
         }
+        /* The entries of the sortable demo (1.114.0): cards, not grey boxes — the surface, a hairline,
+           the first step of elevation; a firmer edge under the pointer. Later than the rule of 1.97.0
+           above and of the same weight, so these win. */
+        .demo-sort-grid > *, .demo-sort-list > * { background:var(--gk-surface); border-color:var(--gk-outline-variant);
+            box-shadow:var(--gk-elev-1); transition:var(--gk-transition-state); }
+        .demo-sort-grid > *:hover, .demo-sort-list > *:hover { border-color:color-mix(in oklab, var(--gk-outline-variant) 45%, var(--gk-outline)); }
+        [data-gk-mode="dark"] :is(.demo-sort-grid, .demo-sort-list) > *, .gk-dark :is(.demo-sort-grid, .demo-sort-list) > * {
+            border-color:rgba(255,255,255,0.1); box-shadow:var(--gk-elev-1), inset 0 1px 0 rgba(255,255,255,0.04); }
+        .demo-sort-grid > .gk-sort-platz, .demo-sort-list > .gk-sort-platz { border:2px dashed color-mix(in oklab, var(--gk-primary) 55%, var(--gk-outline));
+            background:color-mix(in oklab, var(--gk-primary) 7%, transparent); box-shadow:none; }
     </style>
 <?= Lang::jsConfig() ?>
 </head>
@@ -419,6 +432,9 @@ $sidebar->brand('', 'widgets')
     ->item('Feedback', '#feedback', 'notifications')
     ->item('UI', '#ui', 'palette')
     ->item('Tooltip', '#tooltip', 'chat_bubble')
+    ->item('Permissions', '#permissions', 'admin_panel_settings')
+    ->item('Tree', '#tree', 'account_tree')
+    ->item('Line items', '#lineitems', 'receipt_long')
     ->group('Examples')
     ->item('Examples', '#examples', 'rocket_launch')
     ->group('Info')
@@ -469,11 +485,15 @@ echo $demoHeader->title($headerTitle, true)
 <?php require __DIR__ . '/sections/ui.php'; ?>
 <?php require __DIR__ . '/sections/examples.php'; ?>
 <?php require __DIR__ . '/sections/tooltip.php'; ?>
+<?php require __DIR__ . '/sections/permissions.php'; ?>
+<?php require __DIR__ . '/sections/tree.php'; ?>
+<?php require __DIR__ . '/sections/lineitems.php'; ?>
 <?php require __DIR__ . '/sections/changelog.php'; ?>
 </div><!-- /gk-with-sidebar -->
 
 <script src="<?= Layout::asset('../js/gridkit.js') ?>"></script>
 <script src="<?= Layout::asset('../js/sortierbar.js') ?>" defer></script>
+<script src="<?= Layout::asset('../js/tree.js') ?>" defer></script>
 <script>
 (function() {
     var sections = document.querySelectorAll('.demo-section');

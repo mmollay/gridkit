@@ -278,6 +278,81 @@ block was taken out in turn and a check turned red. About forty seconds.
 GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-tooltip.js
 ```
 
+The permission matrix (`PermissionMatrix`, 1.115.0) is driven by `ci/browser-permission-matrix.js`
+on `ci/browser-permission-matrix-fixture.php`: a matrix in a form with a locked role, two heirs
+of one parent and a two-level chain, `requires` chains, risky rights, a folded group and rows
+without a group; one that saves as you go (fetch is stubbed: ok, a refusal with a reason, a
+broken answer) and a read-only one. It toggles cells and the bulk toggles of a row, a column, a
+group and all roles, checks inheritance (live, not removable, the heir's own grant kept),
+`requires` both ways and through the heirs, the filter, folding, the count of changes, Reset,
+the form's own reset, `commit()`, the event and its veto, the grid's keys, a phone at 390px, and
+the form as posted with and without the script — handed to PHP (`--read`) and read back with
+`read()` and `fromPost()`. Then 450 measurements of contrast and shape in the six themes, light
+and both dark spellings. Each rule of the script, the stylesheet and `PermissionMatrix` was
+taken out in turn and a check turned red. About twenty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-permission-matrix.js
+```
+
+The tree view (`GridKit\Tree` and `js/tree.js`, 1.116.0) is checked by `ci/browser-tree.js` on
+`ci/browser-tree-fixture.php`: a CMS page tree (single selection, links, moving, lazy branches,
+a filter), categories with checkboxes inside a form, folders that move without a URL, and a chain
+eleven levels deep. The lazy branches (`GET http://gk.test/children?parent=…`, answered with what
+`Tree::renderBranch()` wrote into the fixture) and the moves (`POST http://gk.test/move`) are
+answered by `page.route()` — ok, 500, `{"ok":false}`, no network, or held until released. It
+checks the ARIA tree the script builds, every key of the WAI pattern and type-ahead, what is
+remembered across a reload, a branch that loads, fails, is tried again and is empty, single and
+multiple selection with tri-state parents and what the form posts, the filter with the ancestors
+of a match, drag and drop (before, after, into, first child, refused into its own branch and into
+a disabled node), moving by keyboard, the way back after a failed save (and of the moves queued
+behind it), the event veto, the API, 390px, contrast in 21 looks and the page without script.
+`GK_VERBOSE=1` prints each case as it runs. About a minute.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-tree.js
+```
+
+Line items (`GridKit\LineItems`, 1.117.0) are checked by `ci/browser-line-items.js` on
+`ci/browser-line-items-fixture.php`: nine editors (an invoice in a form, three of 60 random
+lines — net and line rounding, net and total rounding, gross —, limits, empty, read-only, an
+article search, a `Form` field). The article search asks `http://gk.test/articles` and the
+forms post to `http://gk.test/…`, both answered by `page.route()`. The point is that the
+browser and PHP arrive at the same figures: the totals of every editor against
+`LineItems::totals()`, lines typed by hand in every shape against `parse()` of the very POST the
+browser builds (`php ci/browser-line-items-fixture.php --parse <editor>` reads it), 300 random
+sets against `totals()`, 244 inputs against `parseNumber()`. Then add, Enter, duplicate,
+delete and Undo, the order by keyboard and mouse, validation, the article search, an AJAX
+Form's errors, read-only, a phone at 390px, the POST without script and contrast in light,
+dark and `.gk-dark` with the six themes. `GK_SEED=…` repeats a run. About forty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-line-items.js
+```
+
+One pager (1.118.0): the pager of `Table::paginate()` is the bar of `GridKit\Pagination`, and
+`ci/browser-pager.js` on `ci/browser-pager-fixture.php` measures the two side by side: every
+state of a control (a page, the current page, an arrow, an arrow that leads nowhere), the
+count, the ellipsis and the bar compared property by property in light, dark and `.gk-dark`,
+under no theme and each of the six, at 1280px and 390px; the bar right under the rows and
+closing the card; contrast (4.5:1 for the count and the numbers, 3:1 for the current page's box
+and the focus ring). Then a `setData()` table paged in the browser — its rows, its count, the
+status line, and the pager the script draws compared byte for byte with the one Table.php writes
+for that page, in English and German, and with strings that hold `& " ' < >` and no thousands
+separator — a search back to page 1, a server table through its AJAX reload (answered from the
+fragments Table.php renders), the pager receding while it loads, Pagination's links, Enter and
+Space, the focus kept on the control (after a reload once, never taken from another table or
+from a field it moved to), the names in Chrome's accessibility tree. And the same page with
+js/gridkit.js without its 1.118.0 block, the script of 1.117.0 the PawBot dashboard keeps
+(`GK_OLD_JS=<file>` runs it on any other copy): the new markup pages with it, client and
+server, first and last included, and the pager it draws after a rebuild is the only one and
+wears the same boxes, in a narrow card too. About twenty-five seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-pager.js
+GK_OLD_JS=/path/to/dashboard/js/gridkit.js node ci/browser-pager.js   # the dashboard's own copy, or any other
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in
@@ -300,3 +375,35 @@ not failed, until the surface ladder in `themes.css` is decided. Run it when
 touching a colour variable in either file.
 
 Like `ci/browser.js` and `ci/parity.php` it stays outside the suite.
+
+## Automatic delivery
+
+`gridkit-deploy.sh` brings `main` to the live checkout on the server — the document root of
+gridkit.at — without anyone logging in. pawbot's cron starts it every minute. It is quiet while
+nothing is new; for a new commit on `origin/main` it runs `php tests/run.php` on that commit in a
+worktree next to the live checkout (`/home/pawbot/projects/gridkit-deploy-check`, never in the
+website itself), and only when the suite is green it moves the website forward (`--ff-only`)
+and tags `v<VERSION>` if that tag does not exist yet. Packagist takes the tag from there.
+
+- A red commit is not delivered, tried once (not every minute) and reported in the log; the
+  next commit is tried again. The output of the suite is in `~/.gridkit-deploy/tests.log`.
+- A file changed by hand in the website stops the delivery instead of being overwritten.
+- An existing tag is never moved: Packagist keeps the first commit a version pointed at
+  (1.110.3, 2026-11-03). When one merge carries several versions, only the last is tagged;
+  earlier ones can be tagged by hand.
+- No workflow file and no GitHub setting is involved (see above: the push token cannot carry
+  workflow files). Merging to `main` IS the release.
+
+**Switching it on**, once, as root on the server:
+
+```bash
+mkdir -p /home/pawbot/bin
+curl -fsSL https://raw.githubusercontent.com/mmollay/gridkit/main/ci/gridkit-deploy.sh -o /home/pawbot/bin/gridkit-deploy.sh
+chown -R pawbot:pawbot /home/pawbot/bin && chmod 750 /home/pawbot/bin/gridkit-deploy.sh
+sudo -u pawbot /home/pawbot/bin/gridkit-deploy.sh; echo "exit $?"
+(sudo -u pawbot crontab -l 2>/dev/null; echo '* * * * * /home/pawbot/bin/gridkit-deploy.sh >> /home/pawbot/gridkit-deploy.log 2>&1') | sudo -u pawbot crontab -
+```
+
+The copy in `/home/pawbot/bin` is deliberate: the script that runs on the server does not change
+with what is merged. After a change to `ci/gridkit-deploy.sh`, copy it again. Its behaviour is
+held by `tests/deploy.test.php`, which runs it against a stand-in origin and website.

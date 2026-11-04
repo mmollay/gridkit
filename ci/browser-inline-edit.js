@@ -580,13 +580,18 @@ const cell = (table, id, column) => `[data-gk-table="${table}"] .gk-table > tbod
 
     // ── Look: the affordance, the field, light and dark ────────────────
     const lineOf = (sel) => page.$eval(sel, (td) => getComputedStyle(td).backgroundImage);
-    check("an editable cell shows its dotted line without a hover (muted text colour, light: rgb(71, 85, 105))",
-      /repeating-linear-gradient/.test(await lineOf(cell("inv", "4", "name"))) && /rgb\(71, 85, 105\)/.test(await lineOf(cell("inv", "4", "name"))),
+    // The colours are roles, resolved on the page: since 1.114.0 the checks hold the role, not the hex it had
+    // (muted text was rgb(71, 85, 105), the accent rgb(99, 102, 241), the dark field GitHub's #161b22).
+    const role = (v) => page.evaluate((v) => { const s = document.createElement("span"); s.style.color = `var(${v})`;
+      document.querySelector('[data-gk-table="inv"]').appendChild(s); const c = getComputedStyle(s).color; s.remove(); return c; }, v);
+    const has = (text, colour) => text.includes(colour);
+    check("an editable cell shows its dotted line without a hover (muted text colour, --gk-on-surface-variant)",
+      /repeating-linear-gradient/.test(await lineOf(cell("inv", "4", "name"))) && has(await lineOf(cell("inv", "4", "name")), await role("--gk-on-surface-variant")),
       await lineOf(cell("inv", "4", "name")));
     check("a cell that cannot be edited has none", (await page.$eval('[data-gk-table="sel"] td[data-label="Amount"]', (td) => getComputedStyle(td).backgroundImage)) === "none");
     await page.hover(cell("inv", "4", "name"));
     check("under the pointer the line turns solid and primary",
-      /^linear-gradient\(rgb\(99, 102, 241\)/.test(await lineOf(cell("inv", "4", "name"))), await lineOf(cell("inv", "4", "name")));
+      (await lineOf(cell("inv", "4", "name"))).startsWith(`linear-gradient(${await role("--gk-primary")}`), await lineOf(cell("inv", "4", "name")));
     await page.focus(cell("inv", "4", "name"));
     await page.keyboard.press("Shift+Tab");
     await page.keyboard.press("Tab");
@@ -597,26 +602,29 @@ const cell = (table, id, column) => `[data-gk-table="${table}"] .gk-table > tbod
       const s = getComputedStyle(i);
       return { bg: s.backgroundColor, border: s.borderTopColor, color: s.color };
     });
-    check("the field in light mode: surface, a primary border", lightField.bg === "rgb(255, 255, 255)" && lightField.border === "rgb(99, 102, 241)", JSON.stringify(lightField));
+    check("the field in light mode: surface, a primary border", lightField.bg === await role("--gk-surface") && lightField.border === await role("--gk-primary"), JSON.stringify(lightField));
     await page.keyboard.press("Escape");
 
     // On the body, where .gk-root sets the light tokens (as ci/browser-karten.js does).
     await page.mouse.move(0, 0);
     await page.evaluate(() => { document.body.dataset.gkMode = "dark"; });
-    check("dark mode: the line takes the dark muted colour (rgb(139, 148, 158))",
-      /rgb\(139, 148, 158\)/.test(await lineOf(cell("inv", "4", "name"))), await lineOf(cell("inv", "4", "name")));
+    const darkMuted = await role("--gk-on-surface-variant");
+    check("dark mode: the line takes the dark muted colour (--gk-on-surface-variant of the dark ladder)",
+      has(await lineOf(cell("inv", "4", "name")), darkMuted) && darkMuted !== "rgb(86, 89, 101)", await lineOf(cell("inv", "4", "name")));
     await page.click(cell("inv", "4", "name"));
     const darkField = await page.$eval(cell("inv", "4", "name") + " > input", (i) => {
       const s = getComputedStyle(i);
       return { bg: s.backgroundColor, border: s.borderTopColor, color: s.color };
     });
-    check("dark mode: the field steps up one container (#161b22), light text, a primary border",
-      darkField.bg === "rgb(22, 27, 34)" && darkField.color === "rgb(230, 237, 243)" && darkField.border === "rgb(165, 180, 252)", JSON.stringify(darkField));
+    const darkStep = await role("--gk-surface-container-high");
+    check("dark mode: the field steps up one container (--gk-surface-container-high), light text, a primary border",
+      darkField.bg === darkStep && darkField.bg !== await role("--gk-surface") && darkField.color === await role("--gk-on-surface")
+        && darkField.border === await role("--gk-primary"), JSON.stringify({ darkField, darkStep }));
     await page.keyboard.press("Escape");
     await page.evaluate(() => { delete document.body.dataset.gkMode; document.body.classList.add("gk-dark"); });
     await page.click(cell("inv", "4", "name"));
     check("…the same with the class .gk-dark",
-      (await page.$eval(cell("inv", "4", "name") + " > input", (i) => getComputedStyle(i).backgroundColor)) === "rgb(22, 27, 34)");
+      (await page.$eval(cell("inv", "4", "name") + " > input", (i) => getComputedStyle(i).backgroundColor)) === darkStep);
     await page.keyboard.press("Escape");
     await page.evaluate(() => document.body.classList.remove("gk-dark"));
 
