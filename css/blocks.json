@@ -368,6 +368,32 @@
                 "gk-choice-title": "1.92.0"
             }
         },
+        "line-items": {
+            "name": "Line items",
+            "classes": {
+                "gk-lines": "1.117.0",
+                "gk-lines-actions": "1.117.0",
+                "gk-lines-adjust": "1.117.0",
+                "gk-lines-body": "1.117.0",
+                "gk-lines-cell": "1.117.0",
+                "gk-lines-foot": "1.117.0",
+                "gk-lines-grand": "1.117.0",
+                "gk-lines-head": "1.117.0",
+                "gk-lines-label": "1.117.0",
+                "gk-lines-line": "1.117.0",
+                "gk-lines-num": "1.117.0",
+                "gk-lines-out": "1.117.0",
+                "gk-lines-pos": "1.117.0",
+                "gk-lines-readonly": "1.117.0",
+                "gk-lines-row": "1.117.0",
+                "gk-lines-sub": "1.117.0",
+                "gk-lines-sum": "1.117.0",
+                "gk-lines-th": "1.117.0",
+                "gk-lines-tools": "1.117.0",
+                "gk-lines-totals": "1.117.0",
+                "gk-lines-wide": "1.117.0"
+            }
+        },
         "card": {
             "name": "Cards",
             "changed": "1.114.0",

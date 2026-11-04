@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.116.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.117.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -32,6 +32,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 |-----------|-------|---------|
 | Table | `GridKit\Table` | Data tables with search, sort, pagination |
 | Form | `GridKit\Form` | Grid-based forms (16-column), all field types, AJAX submit |
+| LineItems | `GridKit\LineItems` | The lines of an invoice, offer or order: posts `name[i][field]`, live totals per VAT rate, the same totals in PHP to the cent, add/duplicate/delete with Undo/reorder, cards on a phone, read-only for a sent invoice (since 1.117.0) |
 | Header | `GridKit\Header` | Fixed header with breadcrumb, user menu |
 | Sidebar | `GridKit\Sidebar` | Navigation with groups, badges, collapse |
 | Modal | `GridKit\Modal` | Dialog overlays |
@@ -1644,6 +1645,11 @@ no tab that can be opened raise `E_USER_WARNING` and fall back. A form without `
 `toggle` · `radio` · `file` (drag & drop) · `richtext` (CKEditor) · `color` · `range` ·
 `choice` (answer tiles, since 1.92.0)
 
+and `lineitems` (since 1.117.0): the editor of `GridKit\LineItems`, handed in as the option
+`lines` — `->field('items', 'Lines', 'lineitems', ['lines' => $lines])`. The field's label names
+it, `values(['items' => $rows])` fills it when it has no `items()` of its own, and an AJAX
+answer `{"errors": {"items[1][qty]": "…"}}` lands under that cell. See **LineItems**.
+
 Anything else becomes an `<input type="…">`, so every HTML type works:
 `text`, `number`, `email`, `tel`, `url`, `password`, `date`, `time`,
 `datetime` (rendered as `datetime-local`), `month`, `week`, `search`, `hidden`.
@@ -1675,6 +1681,7 @@ searchable select is plain `'select'`.
 | `preset` | `richtext` | `'full'` (default) or `'basic'` — how much toolbar |
 | `upload` | `richtext` | a URL. Turns pictures on: an upload button, drag & drop, paste, **alignment** (left/right with text flowing beside it, own line centred), size handles and alt text. Off without it, because an upload button with nowhere to put the file is worse than none. The endpoint takes a POST with the file under `upload` and answers `{"url":"https://…"}`, or `{"error":{"message":"…"}}` — CKEditor's SimpleUploadAdapter contract. **Return an absolute URL**: relative ones work on the page and break the moment the content is mailed. Pictures render as a plain `<img>` in the paragraph with the size as an inline `style`, deliberately not as `<figure class="image">`, so the same content survives being sent as an e-mail |
 | `min`, `max`, `step` | `range`, `number`, `date`/`time` | bounds (`range` defaults to `0`/`100`/`1` and starts at `min`) |
+| `lines` | `lineitems` | the `GridKit\LineItems` the field shows (since 1.117.0); without it the field is left out with an `E_USER_WARNING` |
 | `->cancel($label, $href)` | — | a link beside the submit button — a method, not a field |
 | `->hidden($name, $value)` | — | a hidden input — a method, not a field |
 | `error` | every field | a validation message, rendered red under the field. This is how a classic POST-redisplay shows errors: `['value' => $_POST['email'] ?? '', 'error' => $errors['email'] ?? '']`. The AJAX handler writes into the same slot, so both paths look identical |
@@ -1740,6 +1747,195 @@ echo json_encode(['ok' => true]);                          // success
 echo json_encode(['ok' => true, 'message' => 'Saved!']);  // with toast
 echo json_encode(['ok' => false, 'errors' => ['email' => 'Already exists']]);  // validation
 ```
+
+### LineItems (since 1.117.0)
+
+The lines of an invoice, an offer or an order: a description that may run to a second line,
+quantity, unit, unit price, discount, VAT rate, the line total — and under them the subtotal,
+an optional overall discount and shipping, one VAT line per rate and the total. The totals
+follow every keystroke, and **`LineItems::totals()` computes the very same figures in PHP, to
+the cent**, so the server never has to take the browser's word for an amount. Every line is an
+`<li>` of an `<ol data-gk-sortierbar>`: `js/sortierbar.js` moves it (mouse, finger, keyboard).
+
+```php
+$lines = (new LineItems('items'))
+    ->invoiceColumns()          // description, qty, unit, unit price, discount %, VAT, amount
+    ->locale('de')              // numbers with a decimal comma: 1.234,50
+    ->currency('EUR')
+    ->vatRates([20, 10, 13, 0]) // the VAT select, in this order; the first is a new line's rate
+    ->discount(3)               // an overall discount line with its field (posts items_discount)
+    ->shipping('4.90')          // a shipping line with its field (posts items_shipping)
+    ->limits(1, 50)             // at least one line (it starts with one empty), at most fifty
+    ->items([
+        ['id' => 41, 'description' => "Website relaunch\nDesign, templates", 'qty' => 1,
+         'unit' => 'flat', 'price' => '2400', 'discount' => 5, 'vat' => 20],
+        ['id' => 42, 'description' => 'Hosting, annual', 'qty' => 12, 'unit' => 'month',
+         'price' => 19.9, 'vat' => 20],
+    ]);
+$lines->render();   // prints, like Table::render(); ->html() returns the same string
+```
+
+**On the POST**, the same object (without `items()`) reads what came back:
+
+```php
+$lines = (new LineItems('items'))->invoiceColumns()->locale('de')->vatRates([20, 10])->discount(0);
+$in = $lines->parse($_POST);
+if ($in['errors']) {
+    // Show the form again: what was typed, the messages under their fields.
+    $lines->items($in['rows'])->errors($in['errors'])->discount($in['discount'] ?? 0);
+    // An AJAX Form answers instead: echo json_encode(['ok' => false, 'errors' => $in['errors']]);
+} else {
+    $store = $in['items'];             // lines in machine form ('1234.5'), blank ones dropped
+    $gross = $in['totals']['gross'];   // computed here — never taken from the browser
+}
+```
+
+**The totals contract** — `LineItems::totals($rows, $opts)`, the same in the browser as
+`GK.lineItems.calc(rows, opts)`:
+
+```php
+$t = LineItems::totals([
+    ['qty' => 3, 'price' => '120', 'discount' => 10, 'vat' => 20],
+    ['qty' => 2, 'price' => '39.90', 'vat' => 10],
+], ['discount' => 5, 'shipping' => '4.90']);
+// $t['gross'] === '458.63'
+// $t['vat'] === [['rate' => '20', 'base' => '312.70', 'amount' => '62.54'],
+//                ['rate' => '10', 'base' => '75.81', 'amount' => '7.58']]
+```
+
+- **Returns** strings with two decimals, `"-12.30"`, never floats: `lines` (one
+  `['total' => …, 'vat' => '20']` per row, in order), `subtotal` (the lines, net or gross like
+  the prices), `discount` (≤ 0), `shipping`, `net`, `vat` (per rate, highest first:
+  `rate`, `base` = the net, `amount`; a rate whose base and amount are both 0 is left out),
+  `vatTotal`, `gross`, and the `pricesNet` and `rounding` it used.
+- **Rows** hold numbers in machine form — an int, a float, `'1234.5'`; with the option `locale`
+  strings are read as a person types them. A figure that cannot be read counts as 0; a row
+  without a quantity column counts once.
+- **Options:** `pricesNet` (default `true`), `rounding` (`'line'`), `discount` (an overall
+  percentage, taken off each rate's sum before VAT), `shipping` (an amount, net or gross like the
+  prices, added after the discount), `shippingVat` (its rate; default the highest rate of the
+  lines), `keys` (which row key is the quantity, price, discount and VAT:
+  `['qty' => 'quantity', 'vat' => null]` — `null` for one the rows do not have), `locale`.
+  `->totalsOptions()` returns these for an editor, so `LineItems::totals($rows, $lines->totalsOptions())`
+  agrees with what it showed.
+- **The arithmetic is integer arithmetic.** Quantities and prices are read to 4 decimals,
+  percentages to 2, then multiplied, summed and rounded as integers of any length (on decimal
+  strings in PHP, BigInt in the browser) — no float, no drift, no overflow.
+  `->pricesNet(true)`: VAT = round(net × rate); `false` (gross entry): VAT =
+  round(gross × rate / (100 + rate)), net = gross − VAT, and the total is exactly the sum of the
+  lines. **Rounding** is half away from zero (0.005 → 0.01, −0.005 → −0.01).
+  `->rounding('line')` (default) rounds every line to the cent and sums what the lines show;
+  `->rounding('total')` sums the lines unrounded and rounds each rate's sum once (the lines still
+  show cents; their sum may then differ from the subtotal by a cent).
+
+**Posted shape.** `items[0][description]`, `items[0][qty]`, … — **the index is the position on
+the screen, 0 to n−1**, renumbered after every add, delete and move, so reading the array in
+order is reading the invoice in order. A line drawn from a row with an `id` posts it back as
+`items[i][id]` (a duplicate gets none: it is a new line). `items_discount` and
+`items_shipping` beside the array. A `readonly` column posts its value back (hidden) — the
+server decides whether to trust it. The line total (`computed`) does not post; `parse()` puts
+it into each item under the total column's key.
+
+**`parse($request)`** returns `items` (to store), `rows` (every posted line in posted order, a
+figure that could not be read left as typed — for `items()` when the form is shown again),
+`errors`, `discount`, `shipping` (machine form, or `null`) and `totals`. A **blank line** — every
+field empty or at its `default` — is not a line: it is dropped, nothing in it is required, and
+in the browser it does not block the form (except the first ones `->limits()` asks for). At most
+`maxRows` lines are read, never more than 1000 (a larger POST is an attack, and is said so).
+
+**Errors are keyed like the POST:** `items[2][qty]`, `items` (too few or too many lines),
+`items_discount`. That is the key `GK.form` looks for, so an AJAX Form's
+`{"ok": false, "errors": {"items[2][qty]": "Only 3 in stock."}}` lands under that very cell
+and moves the caret there. `->errors()` takes the same keys, or `items.2.qty`. The messages
+`parse()` writes are the ones the browser shows on leaving a field and on sending the form
+(constraint validation): a figure that is none ("Enter a number, such as 1.234,50."), too many
+decimals, `min`/`max`, a required field, a select value the list does not offer.
+
+**Numbers as people type them** — `LineItems::parseNumber($text, $locale)`, in the browser
+`GK.lineItems.parse(text, locale)`: `1.234,50`, `1,234.50`, `1234.5` and `1 234,50` are all
+1234.5; spaces, no-break spaces and apostrophes group thousands; a currency sign or code and a
+`%` at either end are ignored; `-` and `−` are minus. With both `.` and `,` the last one is the
+decimal sign. One sign alone is the decimal sign — unless exactly three digits follow it and one
+to three come before (`1.500`, `12,500`): only then does the language decide, as it would for a
+person (`de`: 1500, `en`: 1.5). Exponents, hex, other scripts' digits, a repeated decimal sign,
+groups that are not three digits, more than 15 digits before the sign: `null`. A field that can
+be read is written back in the page's shape when it is left (`1234,5` → `1.234,50`); it is
+never rounded — a decimal too many stays, with its message.
+
+**Columns** — `->column($key, $label, $opts)`; a `$label` of `''` takes the role's own words.
+`->invoiceColumns()` is description (`textarea`, required), `qty` (`number`, required, default
+1), `unit` (`select` of `->units()`), `price` (`money`, required), `discount` (`percent`, 0 to
+100), `vat` (`select` of `->vatRates()`, required) and `total` (`computed`). The position number
+is always the first cell and carries the handle.
+
+| Option | Types | Effect |
+|---|---|---|
+| `type` | — | `text` (default), `textarea` (grows with its text, so a description has room for a second line; read-only, the second line is set quieter beneath the first), `number`, `select`, `money`, `percent`, `computed` (the line total), `readonly` (shown and posted back), `lookup` (below). An unknown type warns and is `text` |
+| `role` | see effect | what the totals read: `qty` (`number`), `price` (`money`, `number`), `discount` (`percent`, `number`), `vat` (`select`, `percent`, `number`), `total` (`computed`). Default: the key itself when it is one of these names; a `computed` column is the total. One column per role |
+| `required` | editable | the browser's `required` (only on lines that are lines) and `parse()`'s message |
+| `decimals` | `number`, `money`, `percent` | how many a person may type: default 3, 2, 2; at most 4, 4, 2. `money` shows at least this many |
+| `min`, `max` | `number`, `money`, `percent` | bounds, checked in both places |
+| `default` | all | the value of a new line (`qty` 1, the first VAT rate); a line still at its defaults is blank |
+| `placeholder` | `text`, `textarea`, figures, `lookup` | the field's placeholder |
+| `width` | all | its grid track: `6rem`, `120px`, `2fr`, `minmax(8rem, 1fr)` — anything else warns |
+| `options` | `select` | `value => label`. A `unit` key without options takes `->units()`, the `vat` role takes `->vatRates()`. A stored value the list does not offer is shown as it is and marked; `parse()` and the browser refuse it |
+| `rows` | `textarea` | its height in rows to start with (default 1) |
+| `url`, `fill`, `labelField`, `valueField`, `subtextField`, `minChars`, `searchParam`, `display` | `lookup` | an article search (below) |
+
+**Article lookup.** A `lookup` column is Form's `ajaxselect` in a cell (`GK.ajaxSelect`, the
+same markup): typing asks `url?q=…` (`searchParam`, after `minChars`, default 2) for a JSON
+array; `labelField` (default `name`) is shown, `valueField` (default `id`) is posted under the
+column's key, `subtextField` is a second line in the list. Picking one fills the line by `fill`
+— `['description' => 'name', 'unit' => 'unit', 'price' => 'price', 'vat' => 'vat']`, target
+column => key of the JSON item; figures in machine form are written in the page's shape — and
+sets an empty quantity to 1. With `display` => a row key, the words shown post too
+(`items[i][article_name]`) and `items()` shows them again.
+
+**Other setters:** `->units(['h' => 'hours', 'pcs' => 'pieces'])` (default: pcs, h, day, month,
+km, flat rate in the page's language), `->pricesNet(false)` (gross entry: the unit price label
+says so), `->currency('USD')` (EUR, USD and GBP get their sign, any other ISO code is written
+out: `CHF 12.50`), `->locale('en')` (default `Lang::locale()`; `de` and `en` with their regions,
+anything else warns and reads English), `->label('Positions')` (the editor's accessible name,
+default "Line items"), `->readonly()`.
+
+**Read-only** (a sent invoice): the same columns and grid, the figures as text, no field, no
+button, no handle, nothing that posts; `GK.lineItems.totals()` still reads it (each cell carries
+its figure in machine form).
+
+**On a phone** — whenever the editor itself is narrower than 56rem, so also in a medium modal —
+every line is a card: the number and the handle (a finger's width) and the buttons on top, the
+description across, the other fields two by two with their labels shown, the line total last;
+the totals beneath, full width. Nothing scrolls sideways; fields are 16px, iOS does not zoom.
+
+**In the browser** (the block at the end of `js/gridkit.js`; `js/sortierbar.js` for the order):
+Add line (`data-gk-lines-action="add"`, also on a button of your own inside the editor), Enter
+in the last field of the last line adds one, and Enter in any other field of a line does not send
+the form. Duplicate puts a copy below. Delete takes the line out and says so in a toast with
+**Undo**, which puts it back where it was. Add and Duplicate are off at the maximum, Delete at
+the minimum. After every change `gk:lineitemschange` fires on the editor (bubbles; `detail.items`
+as `parse()` would return them, `detail.totals` as `totals()`), and the total is said once the
+typing stops. **Without script** the fields post as drawn and the server computes the totals;
+the buttons that could not work are not shown.
+
+```javascript
+document.addEventListener('gk:lineitemschange', e => preview(e.detail.totals.gross));
+const editor = document.querySelector('.gk-lines');   // or a selector, or any element inside it
+GK.lineItems.totals(editor);                 // the totals of what the editor holds now
+GK.lineItems.items(editor);                  // its lines, as parse() returns them as items
+GK.lineItems.add(editor, { description: 'Travel', qty: 1, price: '40', vat: 20 });
+GK.lineItems.calc(rows, opts);               // LineItems::totals() without an editor
+GK.lineItems.parse('1.234,50', 'de');        // '1234.5'
+```
+
+**In a Form** — `->field('items', 'Lines', 'lineitems', ['lines' => $lines])` (see Form): what
+`Form` calls is `LineItems::forForm($lines, $field, $value)`, which names the editor by the
+field's label and its message line and takes the Form's value as the lines. An AJAX Form needs
+nothing more: its JSON `errors` reach the cells by their names. For a Form shown again after a
+plain POST, give the cells' messages to the editor — `$lines->errors($in['errors'])` — and the
+others to `Form::errors()`: a cell is not a field of the Form, so `Form::errors()` would list its
+message in the box above the form instead (only the key `items` itself goes under the field). **Do not** read the
+totals from the POST, compute amounts with floats, or write a line's markup by hand: the script
+renumbers what it finds by its `data-gk-lines-*` attributes.
 
 ### Admin blocks: settings, figures, dots, colours (since 1.92.0)
 
@@ -2754,6 +2950,11 @@ document.addEventListener('gk:treemove', e => { if (e.detail.parent === 'legal')
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
+
+// Line items (since 1.117.0) — see "LineItems". The same totals as LineItems::totals(), to the cent.
+document.addEventListener('gk:lineitemschange', e => { /* e.detail: { items, totals } */ });
+GK.lineItems.totals(document.querySelector('.gk-lines'));
+GK.lineItems.add(document.querySelector('.gk-lines'), { description: 'Travel', qty: 1, price: '40', vat: 20 });
 
 // Tabs (since 1.111.0) — see "Tabs". A row by its .gk-tabs element or id; hand-written rows too.
 GK.tabs.select('settings', 'bank');            // as a click (gk:tabchange can refuse it); { focus, force }

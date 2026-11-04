@@ -211,9 +211,12 @@ return [
     $c = $css();
     T::contains($rule($c, '.gk-table-wrap.gk-table-list'), 'container: gk-list / inline-size', 'the list is not a named size container');
     // container-type changes how a box is sized; on every wrap it would move
-    // tables that sit in a flex row. One rule may set it.
+    // tables that sit in a flex row. One rule of a table may set it. (The line
+    // items editor, 1.117.0, is a size container of its own and no table.)
     // Declarations only (indented), not the word in a comment.
-    T::eq(preg_match_all('/\n\s+container(?:-type)?\s*:/', $c), 1, 'something besides the list is a size container');
+    preg_match_all('/([^{}]+)\{[^{}]*\n\s+container(?:-type)?\s*:/', (string) preg_replace('~/\*.*?\*/~s', '', $c), $containers);
+    T::eq(count(array_filter($containers[1], static fn(string $sel): bool => str_contains($sel, 'gk-table'))), 1,
+        'something besides the list is a size container');
     // A list does not scroll sideways: its min-width beats the phone rule that
     // gives every other table 540px — same specificity, so it must come later.
     $min = $at($c, '.gk-table-wrap.gk-table-list .gk-table');

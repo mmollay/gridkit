@@ -93,7 +93,11 @@ $doc  = static fn (): string => (string) file_get_contents($root . '/GRIDKIT_SKI
 $sheet = static function (): string {
     $css = gkCssText();
     $from = strpos($css, '=== 1.116.0 — tree ===');
-    return $from === false ? '' : (string) preg_replace('#/\*.*?\*/#s', '', substr($css, $from));
+    if ($from === false) return '';
+    // Up to the next release's block (1.117.0 appended one after it), or the end.
+    $next = strpos($css, "\n/* === ", $from);
+    $block = $next === false ? substr($css, $from) : substr($css, $from, $next - $from);
+    return (string) preg_replace('#/\*.*?\*/#s', '', $block);
 };
 
 return [
@@ -474,7 +478,9 @@ return [
     $css = gkCssText();
     $at = strpos($css, '/* === 1.116.0 — tree === */');
     T::ok($at !== false, 'the block heading is there');
-    T::ok(!preg_match('~/\* === ~', substr($css, (int) $at + 10)), 'it is the last block of the file');
+    // Only a later release's block may follow it (1.117.0 appended one).
+    $later = preg_match_all('~/\* === 1\.(\d+)\.~', substr($css, (int) $at + 10), $v) ? $v[1] : [];
+    T::ok(array_filter($later, static fn(string $m): bool => (int) $m <= 116) === [], 'it is the last block of the file, but for later releases');
     $s = $sheet();
     T::contains($s, '[data-gk-mode="dark"] .gk-tree-hit', 'dark, attribute spelling');
     T::contains($s, '.gk-dark .gk-tree-hit', 'dark, class spelling');

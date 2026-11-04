@@ -313,6 +313,23 @@ behind it), the event veto, the API, 390px, contrast in 21 looks and the page wi
 GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-tree.js
 ```
 
+Line items (`GridKit\LineItems`, 1.117.0) are checked by `ci/browser-line-items.js` on
+`ci/browser-line-items-fixture.php`: nine editors (an invoice in a form, three of 60 random
+lines — net and line rounding, net and total rounding, gross —, limits, empty, read-only, an
+article search, a `Form` field). The article search asks `http://gk.test/articles` and the
+forms post to `http://gk.test/…`, both answered by `page.route()`. The point is that the
+browser and PHP arrive at the same figures: the totals of every editor against
+`LineItems::totals()`, lines typed by hand in every shape against `parse()` of the very POST the
+browser builds (`php ci/browser-line-items-fixture.php --parse <editor>` reads it), 300 random
+sets against `totals()`, 244 inputs against `parseNumber()`. Then add, Enter, duplicate,
+delete and Undo, the order by keyboard and mouse, validation, the article search, an AJAX
+Form's errors, read-only, a phone at 390px, the POST without script and contrast in light,
+dark and `.gk-dark` with the six themes. `GK_SEED=…` repeats a run. About forty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-line-items.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

@@ -1,4 +1,4 @@
-# GridKit 1.116.0 — JavaScript
+# GridKit 1.117.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -71,6 +71,11 @@ document.addEventListener('gk:treemove', e => { if (e.detail.parent === 'legal')
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
+
+// Line items (since 1.117.0) — see "LineItems". The same totals as LineItems::totals(), to the cent.
+document.addEventListener('gk:lineitemschange', e => { /* e.detail: { items, totals } */ });
+GK.lineItems.totals(document.querySelector('.gk-lines'));
+GK.lineItems.add(document.querySelector('.gk-lines'), { description: 'Travel', qty: 1, price: '40', vat: 20 });
 
 // Tabs (since 1.111.0) — see "Tabs". A row by its .gk-tabs element or id; hand-written rows too.
 GK.tabs.select('settings', 'bank');            // as a click (gk:tabchange can refuse it); { focus, force }

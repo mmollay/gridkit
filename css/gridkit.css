@@ -12939,3 +12939,392 @@ a.gk-tree-label:hover {
   background: #854d0e;
   color: #fef9c3;
 }
+
+/* === 1.117.0 — line items === */
+/* GridKit\LineItems: the lines of an invoice, an offer or an order. Every line is a grid of its own
+   (an <li> in an <ol>, so js/sortierbar.js can move it), and the heading row is another grid with the
+   same tracks: --gk-lines-cols, written by PHP from the columns — fixed widths and fr shares with a
+   fixed minimum only, which come out the same in every one of those grids. The editor is a container:
+   narrower than 56rem (a phone, a medium modal, a side column) every line becomes a card, the labels
+   come out from under the fields, and nothing scrolls sideways.
+   Roles only, so light, [data-gk-mode="dark"], .gk-dark and the six themes follow from the tokens;
+   the one dark rule below lifts the fields off a card the way the table's inline edit does. */
+/* A size container ignores its content when it is sized: in a flex row it needs its width given,
+   hence width: 100% (a grid track or a block gives it anyway). */
+.gk-lines {
+  container: gk-lines / inline-size;
+  --gk-lines-pos: 3.25rem;
+  --gk-lines-act: 3.75rem;
+  --gk-lines-gap: 8px;
+  /* PHP writes the tracks inline, from the columns; this is the shape of one text column. */
+  --gk-lines-cols: var(--gk-lines-pos) minmax(9rem, 1fr) var(--gk-lines-act);
+  width: 100%;
+  min-width: 0;
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-body);
+}
+.gk-lines-readonly {
+  --gk-lines-pos: 2.25rem;
+}
+.gk-lines-head,
+.gk-lines-line {
+  display: grid;
+  grid-template-columns: var(--gk-lines-cols);
+  column-gap: var(--gk-lines-gap);
+  align-items: start;
+  padding-inline: 8px;
+}
+/* The heading reads like a table's: caps, small, muted, a darker hairline under it. */
+.gk-lines-head {
+  padding-block: 8px;
+  border-bottom: 1px solid var(--gk-surface-container-highest);
+  font-size: var(--gk-text-overline);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gk-on-surface-variant);
+}
+.gk-lines-th {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gk-lines-body {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gk-lines-row {
+  border-bottom: 1px solid var(--gk-outline-variant);
+}
+/* The line being worked on stands out a little, as a table row under the pointer does. */
+.gk-lines-row:focus-within {
+  background: color-mix(in oklab, var(--gk-primary) 5%, var(--gk-surface));
+}
+.gk-lines-line {
+  padding-block: 6px;
+}
+.gk-lines-cell {
+  position: relative;
+  min-width: 0;
+}
+/* The number of the line, on the baseline of the fields beside it. */
+.gk-lines-pos {
+  padding-top: 10px;
+  text-align: end;
+  color: var(--gk-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}
+.gk-lines-head .gk-lines-pos {
+  padding-top: 0;
+}
+/* Room for the handle js/sortierbar.js adds, once there are two lines to order. */
+.gk-sort-aktiv > .gk-lines-row .gk-lines-pos {
+  padding-inline-start: 30px;
+}
+.gk-lines-row > .gk-sort-griff {
+  inset-block-start: 8px;
+  inset-inline-start: 6px;
+  inset-inline-end: auto;
+  width: 28px;
+  height: 36px;
+}
+.gk-lines-row > .gk-sort-griff .material-icons {
+  font-size: var(--gk-icon-md);
+}
+/* In the air (sortierbar's own states): the line keeps its ground, and its fields their width. */
+.gk-lines-row.gk-sort-zieht {
+  background: var(--gk-surface);
+}
+/* What is not a field: the line total, a read-only column, a sent invoice. */
+.gk-lines-out {
+  display: block;
+  padding-top: 10px;
+  overflow-wrap: anywhere;
+}
+.gk-lines-num .gk-lines-out {
+  text-align: right;
+}
+.gk-lines-sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+  line-height: var(--gk-leading-snug);
+}
+/* Every field has its label; on a wide editor the heading row says it for the eye, so the label is
+   there for a screen reader only (the clip of .gk-sr-only). A card shows it. */
+.gk-lines-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+/* Fields a little lower than a form's: a line is one row of eight of them. */
+.gk-lines .gk-input {
+  height: 40px;
+  padding: 8px 10px;
+}
+.gk-lines .gk-input:focus-visible {
+  padding: 7.75px 9.75px;
+}
+.gk-lines textarea.gk-input {
+  height: auto;
+  min-height: 40px;
+  max-height: 12rem;
+  resize: vertical;
+  line-height: 1.45;
+  field-sizing: content;
+}
+.gk-lines select.gk-input {
+  padding-inline-end: 4px;
+}
+.gk-lines .gk-ajax-select .gk-select-display {
+  min-height: 40px;
+}
+/* The list of articles is wider than its cell: a name and a number should fit on their lines. */
+.gk-lines .gk-ajax-select .gk-select-dropdown {
+  min-width: min(18rem, 80vw);
+}
+/* An empty message line takes no room; it stays in the tree, so what it says later is heard. The
+   words in the text-safe red: .gk-field-error's own --gk-danger reads 3.46:1 on white. */
+.gk-lines .gk-field-error {
+  color: var(--gk-danger-text);
+}
+.gk-lines .gk-field-error:empty {
+  margin: 0;
+}
+.gk-lines-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 7px;
+}
+.gk-lines-actions .gk-action-group {
+  flex-wrap: nowrap;
+  gap: 2px;
+}
+/* Without the script these buttons could not do anything: they keep their place and stay unseen. */
+.gk-lines:not([data-gk-lines-ready]) :is(.gk-lines-actions, .gk-lines-tools) {
+  visibility: hidden;
+}
+.gk-lines > .gk-empty {
+  padding: 32px 16px;
+  border-bottom: 1px solid var(--gk-outline-variant);
+}
+/* The totals: right, under the figures, the last line the one that counts. */
+.gk-lines-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 8px 0;
+}
+.gk-lines-totals {
+  display: grid;
+  gap: 2px;
+  min-width: min(100%, 20rem);
+  margin: 0 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+.gk-lines-sum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 24px;
+  padding: 4px 0;
+}
+.gk-lines-sum > dt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--gk-on-surface-variant);
+}
+.gk-lines-sum > dd {
+  margin: 0;
+  white-space: nowrap;
+  color: var(--gk-on-surface);
+}
+.gk-lines-grand {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--gk-outline);
+  font-size: var(--gk-text-subtitle);
+}
+.gk-lines-grand > dt {
+  color: var(--gk-on-surface);
+  font-weight: 600;
+}
+.gk-lines-grand > dd {
+  font-weight: 700;
+}
+.gk-lines-adjust {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.gk-lines .gk-lines-adjust .gk-input {
+  width: 5.5rem;
+  height: 32px;
+  padding: 4px 8px;
+}
+.gk-lines .gk-lines-adjust .gk-input:focus-visible {
+  padding: 3.75px 7.75px;
+}
+.gk-lines-sum .gk-field-error {
+  flex-basis: 100%;
+}
+/* Empty, out of the flow: a wrapped empty line would open a gap between two sums. Still rendered,
+   so the alert is in the tree before it speaks. */
+.gk-lines-sum .gk-field-error:empty {
+  position: absolute;
+}
+/* Undo, in the toast that says a line went: the toast's own colours, a word that looks pressable. */
+.gk-toast [data-gk-lines-undo] {
+  min-height: 32px;
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: var(--gk-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.gk-toast [data-gk-lines-undo]:hover {
+  background: color-mix(in oklab, currentColor 12%, transparent);
+}
+.gk-toast [data-gk-lines-undo]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.gk-toast [data-gk-lines-undo] + .gk-toast-close {
+  margin-left: 0;
+}
+/* A sent invoice: no field, so the figures sit on the line, not on a field's baseline. */
+.gk-lines-readonly .gk-lines-line {
+  padding-block: 10px;
+}
+.gk-lines-readonly :is(.gk-lines-out, .gk-lines-pos) {
+  padding-top: 0;
+}
+[data-gk-mode="dark"] .gk-lines .gk-lines-row .gk-input,
+.gk-dark .gk-lines .gk-lines-row .gk-input {
+  background-color: var(--gk-surface-container);
+}
+/* A card per line. */
+@container gk-lines (width < 56rem) {
+  .gk-lines-head {
+    display: none;
+  }
+  .gk-lines-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .gk-lines-row {
+    border: 1px solid var(--gk-outline-variant);
+    border-radius: var(--gk-radius);
+    background: var(--gk-surface);
+  }
+  .gk-lines-line {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
+    padding: 12px;
+  }
+  .gk-lines-pos {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    padding: 0;
+    text-align: start;
+    font-weight: 600;
+    color: var(--gk-on-surface);
+  }
+  .gk-lines-pos::before {
+    content: "# ";
+    color: var(--gk-on-surface-variant);
+    font-weight: 400;
+  }
+  .gk-sort-aktiv > .gk-lines-row .gk-lines-pos {
+    padding-inline-start: 52px;
+    min-height: var(--gk-target-min);
+    display: flex;
+    align-items: center;
+  }
+  .gk-lines-row > .gk-sort-griff {
+    inset-block-start: 12px;
+    inset-inline-start: 12px;
+    width: var(--gk-target-min);
+    height: var(--gk-target-min);
+  }
+  .gk-lines-actions {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    padding: 0;
+  }
+  .gk-lines-wide {
+    grid-column: 1 / -1;
+  }
+  .gk-lines-label {
+    position: static;
+    display: block;
+    width: auto;
+    height: auto;
+    margin: 0 0 4px;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    font-size: var(--gk-text-caption);
+    font-weight: 600;
+    color: var(--gk-on-surface-variant);
+  }
+  .gk-lines-out {
+    padding-top: 0;
+  }
+  .gk-lines-num .gk-lines-out {
+    text-align: start;
+  }
+  /* The line total closes the card: its label left, the amount right, across the card. */
+  .gk-lines-line > .gk-lines-cell:has(> [data-gk-lines-out]) {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--gk-outline-variant);
+    font-weight: 600;
+  }
+  .gk-lines-line > .gk-lines-cell:has(> [data-gk-lines-out]) > .gk-lines-label {
+    margin: 0;
+  }
+  .gk-lines-foot {
+    flex-direction: column;
+    align-items: stretch;
+    padding-inline: 0;
+  }
+  .gk-lines-totals {
+    min-width: 0;
+    width: 100%;
+  }
+}
+@media print {
+  .gk-lines-actions,
+  .gk-lines-tools,
+  .gk-lines-row > .gk-sort-griff {
+    display: none;
+  }
+}

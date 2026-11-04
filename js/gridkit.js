@@ -10236,3 +10236,1004 @@ function _gkShowIfInit(root) {
   }
   _gkReady(function () { GK.permMatrix.init(document); });
 })();
+// === 1.117.0 — line items (GridKit\LineItems) ===
+/*
+ * The editor of the lines of an invoice, an offer or an order (LineItems::render()). PHP writes every
+ * line and its fields (name[i][field]), the totals and an empty line in a <template>; this block makes
+ * it live: the totals follow every keystroke, a line is added (the button, or Enter in the last field
+ * of the last line), duplicated and deleted (with Undo in a toast), and the order comes from
+ * js/sortierbar.js, which the <ol> asks for with data-gk-sortierbar. After every change the names are
+ * numbered again, so the POST is always name[0..n-1][field] in the order on the screen, and
+ * gk:lineitemschange fires on the editor with { items, totals }.
+ *
+ * The arithmetic is LineItems::totals() written again, rule for rule, in BigInt: scaled integers
+ * (quantity and price to 4 decimals, percentages to 2), rounding half away from zero, the same
+ * order of steps. ci/browser-line-items.js holds both to the cent on random lines. So is reading
+ * a number (LineItems::parseNumber()) and writing one. Change one side, change the other.
+ *
+ * Without this block (a copy of gridkit.js that has no such block, or no script at all) the editor
+ * is a set of fields that post; the server computes the totals after the POST. Nothing outside this
+ * block is changed or wrapped: it listens on the document and finds its editors by data-gk-lines.
+ */
+(function () {
+  "use strict";
+  if (!window.GK) return;
+
+  var ROOT = "[data-gk-lines]";
+  var SCALE = { qty: 4, price: 4, discount: 2, vat: 2 };
+  var NUMERIC = { number: true, money: true, percent: true };
+  var BLANKABLE = { text: true, textarea: true, number: true, money: true, percent: true, lookup: true };
+  var HAS_BIG = typeof BigInt === "function";
+  // No BigInt literals (1n): a browser without BigInt must still parse the rest of this file.
+  var ZERO = HAS_BIG ? BigInt(0) : 0;
+  var ONE = HAS_BIG ? BigInt(1) : 1;
+  var TWO = HAS_BIG ? BigInt(2) : 2;
+  var keyCounter = 0;
+
+  /* ── Numbers: LineItems::parseNumber(), ::machine() and the formatting, to the letter ── */
+
+  // The spaces by name, as PHP lists them (\s means more in JavaScript than in PCRE).
+  var SPACES = /[ \t\n\x0B\f\r\u00A0\u2007\u2009\u202F'\u2019]+/g;
+  var CUR = "(?:€|\\$|£|EUR|USD|GBP|CHF)";
+  var EDGES = new RegExp("^" + CUR + "|(?:" + CUR + "|%)$", "gi");
+  var LEAD = new RegExp("^" + CUR, "i");
+  var encoder = typeof TextEncoder === "function" ? new TextEncoder() : null;
+
+  /** PHP's trim(): the six characters it strips, not every Unicode space. */
+  function phpTrim(s) {
+    return String(s).replace(/^[ \t\n\r\0\x0B]+|[ \t\n\r\0\x0B]+$/g, "");
+  }
+
+  function count(s, ch) {
+    return s.split(ch).length - 1;
+  }
+
+  function groupsOk(s, sep) {
+    var parts = s.split(sep);
+    if (!/^\d{1,3}$/.test(parts[0])) return false;
+    for (var k = 1; k < parts.length; k++) if (!/^\d{3}$/.test(parts[k])) return false;
+    return true;
+  }
+
+  /** The decimal sign of a language, as LineItems::localeFamily() decides it. */
+  function decOf(locale) {
+    return String(locale || "en").slice(0, 2).toLowerCase() === "de" ? "," : ".";
+  }
+
+  /** A number in machine form ("-1234.5") or null: an int, a finite float, or such a string. */
+  function machine(v) {
+    if (typeof v === "number") {
+      if (!isFinite(v)) return null;
+      v = v.toFixed(12).replace(/0+$/, "").replace(/\.$/, "");
+    }
+    if (typeof v !== "string") return null;
+    var m = /^[ \t\n\x0B\f\r]*([+-]?)(\d{1,15})(?:\.(\d{1,20}))?[ \t\n\x0B\f\r]*$/.exec(v);
+    if (!m) return null;
+    var int = m[2].replace(/^0+/, "");
+    var frac = (m[3] || "").replace(/0+$/, "");
+    var out = (int === "" ? "0" : int) + (frac === "" ? "" : "." + frac);
+    return out === "0" || m[1] !== "-" ? out : "-" + out;
+  }
+
+  /** What a person typed, in machine form, or null. dec is the decimal sign of the page. */
+  function parseNumber(input, dec) {
+    if (typeof input === "number") return machine(input);
+    if (typeof input !== "string") return null;
+    if ((encoder ? encoder.encode(input).length : unescape(encodeURIComponent(input)).length) > 64) return null;
+    var s = input.replace(SPACES, "").replace(EDGES, "");
+    var sign = "";
+    var marks = [["-", "-"], ["+", ""], ["\u2212", "-"]];
+    for (var k = 0; k < marks.length; k++) {
+      if (s.indexOf(marks[k][0]) === 0) {
+        sign = marks[k][1];
+        s = s.slice(marks[k][0].length).replace(LEAD, "");
+        break;
+      }
+    }
+    if (!/^[0-9.,]+$/.test(s) || !/[0-9]/.test(s)) return null;
+    var dots = count(s, ".");
+    var commas = count(s, ",");
+    var int;
+    var frac = "";
+    var parts;
+    if (dots && commas) {
+      var decSep = s.lastIndexOf(".") > s.lastIndexOf(",") ? "." : ",";
+      var thou = decSep === "." ? "," : ".";
+      if (count(s, decSep) !== 1) return null;
+      parts = s.split(decSep);
+      int = parts[0];
+      frac = parts[1];
+      if (frac.indexOf(thou) >= 0 || !groupsOk(int, thou)) return null;
+      int = int.split(thou).join("");
+    } else if (dots + commas) {
+      var sep = dots ? "." : ",";
+      if (dots + commas > 1) {
+        if (!groupsOk(s, sep)) return null;
+        int = s.split(sep).join("");
+      } else {
+        parts = s.split(sep);
+        int = parts[0];
+        frac = parts[1];
+        if (/^[1-9]\d{0,2}$/.test(int) && /^\d{3}$/.test(frac) && sep !== dec) {
+          int += frac;
+          frac = "";
+        }
+      }
+    } else {
+      int = s;
+    }
+    int = int.replace(/^0+/, "");
+    frac = frac.replace(/0+$/, "");
+    if (int === "") int = "0";
+    if (int.length > 15 || frac.length > 12) return null;
+    var out = frac === "" ? int : int + "." + frac;
+    return out === "0" ? "0" : sign + out;
+  }
+
+  /** A machine number with the page's signs, at least minDec decimals, never rounded. */
+  function display(canon, minDec, fmt) {
+    var neg = canon.charAt(0) === "-";
+    var parts = (neg ? canon.slice(1) : canon).split(".");
+    var int = parts[0];
+    var frac = parts[1] || "";
+    while (frac.length < minDec) frac += "0";
+    var grouped = "";
+    for (var k = 0; k < int.length; k++) {
+      if (k > 0 && (int.length - k) % 3 === 0) grouped += fmt.thou;
+      grouped += int.charAt(k);
+    }
+    return (neg ? "-" : "") + grouped + (frac !== "" ? fmt.dec + frac : "");
+  }
+
+  function money(amount, fmt) {
+    var neg = amount.charAt(0) === "-";
+    return (neg ? "-" : "") + fmt.money.split("{value}").join(display(neg ? amount.slice(1) : amount, 2, fmt));
+  }
+
+  /* ── The arithmetic: LineItems::totals() ─────────────────────────────── */
+
+  function toScaled(canon, scale) {
+    var neg = canon.charAt(0) === "-";
+    var parts = (neg ? canon.slice(1) : canon).split(".");
+    var frac = parts[1] || "";
+    var head = frac.slice(0, scale);
+    while (head.length < scale) head += "0";
+    var mag = BigInt(parts[0] + head);
+    if (frac.length > scale && frac.charAt(scale) >= "5") mag += ONE;
+    return neg ? -mag : mag;
+  }
+
+  function fromScaled(n, scale, minDec) {
+    var neg = n < ZERO;
+    var mag = (neg ? -n : n).toString();
+    while (mag.length < scale + 1) mag = "0" + mag;
+    var int = mag.slice(0, mag.length - scale);
+    var frac = mag.slice(mag.length - scale).replace(/0+$/, "");
+    while (frac.length < (minDec || 0)) frac += "0";
+    var out = int + (frac === "" ? "" : "." + frac);
+    return neg ? "-" + out : out;
+  }
+
+  /** n / d, half away from zero (d > 0). */
+  function divRound(n, d) {
+    var neg = n < ZERO;
+    var m = neg ? -n : n;
+    var q = m / d;
+    if ((m % d) * TWO >= d) q += ONE;
+    return neg ? -q : q;
+  }
+
+  /** LineItems::totals($rows, $opts), the same shape, the same strings. */
+  function calc(rows, opts) {
+    opts = opts || {};
+    var net = opts.pricesNet !== false;
+    var mode = opts.rounding === "total" ? "total" : "line";
+    var keys = { qty: "qty", price: "price", discount: "discount", vat: "vat" };
+    Object.keys(opts.keys || {}).forEach(function (k) { keys[k] = opts.keys[k]; });
+    var dec = typeof opts.locale === "string" ? decOf(opts.locale) : null;
+    var read = function (v) { return dec === null ? machine(v) : parseNumber(v, dec); };
+    var scaled = function (row, role) {
+      var key = keys[role];
+      if (key === null || key === undefined) return null;
+      var c = read(row[key] === undefined ? null : row[key]);
+      return toScaled(c === null ? "0" : c, SCALE[role]);
+    };
+    var lineScale = BigInt("10000000000");
+    var hundredPct = BigInt(10000);
+    var groups = {};
+    var order = [];
+    var lines = [];
+    (rows || []).forEach(function (row) {
+      row = row && typeof row === "object" ? row : {};
+      var q = scaled(row, "qty");
+      var p = scaled(row, "price");
+      var d = scaled(row, "discount");
+      var r = scaled(row, "vat");
+      if (q === null) q = hundredPct;
+      if (p === null) p = ZERO;
+      if (d === null) d = ZERO;
+      if (r === null) r = ZERO;
+      var exact = q * p * (hundredPct - d);
+      var cents = divRound(exact, lineScale);
+      lines.push({ total: fromScaled(cents, 2, 2), vat: fromScaled(r, 2, 0) });
+      var key = r.toString();
+      if (!groups[key]) { groups[key] = [ZERO, ZERO]; order.push(key); }
+      groups[key] = [groups[key][0] + exact, groups[key][1] + cents];
+    });
+
+    var sums = {};
+    var rates = [];
+    var subtotal = ZERO;
+    order.forEach(function (key) {
+      sums[key] = mode === "line" ? groups[key][1] : divRound(groups[key][0], lineScale);
+      rates.push(key);
+      subtotal += sums[key];
+    });
+
+    var discount = ZERO;
+    var percent = opts.discount !== undefined && opts.discount !== null ? toScaled(machine(opts.discount) || "0", 2) : ZERO;
+    if (percent !== ZERO) {
+      rates.forEach(function (key) {
+        var off = divRound(sums[key] * percent, hundredPct);
+        sums[key] -= off;
+        discount -= off;
+      });
+    }
+
+    var shipping = opts.shipping !== undefined && opts.shipping !== null
+      ? divRound(toScaled(machine(opts.shipping) || "0", 4), BigInt(100)) : ZERO;
+    if (shipping !== ZERO) {
+      var rate = opts.shippingVat !== undefined && opts.shippingVat !== null ? machine(opts.shippingVat) : null;
+      if (rate !== null) {
+        rate = toScaled(rate, 2);
+      } else {
+        rate = ZERO;
+        rates.forEach(function (key) { if (BigInt(key) > rate) rate = BigInt(key); });
+      }
+      var rk = rate.toString();
+      if (!(rk in sums)) { sums[rk] = ZERO; rates.push(rk); }
+      sums[rk] += shipping;
+    }
+
+    rates.sort(function (a, b) { var x = BigInt(a); var y = BigInt(b); return x < y ? 1 : x > y ? -1 : 0; });
+    var vat = [];
+    var vatTotal = ZERO;
+    var netTotal = ZERO;
+    var grossTotal = ZERO;
+    rates.forEach(function (key) {
+      var r = BigInt(key);
+      var sum = sums[key];
+      var base;
+      var amount;
+      var gross;
+      if (net) {
+        base = sum;
+        amount = divRound(sum * r, hundredPct);
+        gross = sum + amount;
+      } else {
+        gross = sum;
+        amount = divRound(sum * r, hundredPct + r);
+        base = sum - amount;
+      }
+      netTotal += base;
+      grossTotal += gross;
+      vatTotal += amount;
+      if (base === ZERO && amount === ZERO) return;
+      vat.push({ rate: fromScaled(r, 2, 0), base: fromScaled(base, 2, 2), amount: fromScaled(amount, 2, 2) });
+    });
+
+    return {
+      lines: lines,
+      subtotal: fromScaled(subtotal, 2, 2),
+      discount: fromScaled(discount, 2, 2),
+      shipping: fromScaled(shipping, 2, 2),
+      net: fromScaled(netTotal, 2, 2),
+      vat: vat,
+      vatTotal: fromScaled(vatTotal, 2, 2),
+      gross: fromScaled(grossTotal, 2, 2),
+      pricesNet: net,
+      rounding: mode,
+    };
+  }
+
+  /* ── Reading an editor ───────────────────────────────────────────────── */
+
+  function cfgOf(el) {
+    var src = el.getAttribute("data-gk-lines");
+    if (el._gkLinesSrc !== src) {
+      el._gkLinesSrc = src;
+      try { el._gkLinesCfg = JSON.parse(src); } catch (e) { el._gkLinesCfg = null; }
+      if (el._gkLinesCfg) {
+        el._gkLinesCfg.byKey = {};
+        el._gkLinesCfg.columns.forEach(function (c) { el._gkLinesCfg.byKey[c.key] = c; });
+      }
+    }
+    return el._gkLinesCfg;
+  }
+
+  function bodyOf(el) {
+    return el.querySelector(":scope > .gk-lines-body");
+  }
+
+  function rowsOf(el) {
+    var body = bodyOf(el);
+    return body ? Array.prototype.filter.call(body.children, function (li) { return li.classList.contains("gk-lines-row"); }) : [];
+  }
+
+  function fieldOf(li, key) {
+    return li.querySelector('[data-gk-lines-field="' + key + '"]');
+  }
+
+  /** The fields of a line a person can reach, in order (not the hidden ones). */
+  function fieldsOf(li) {
+    return Array.prototype.filter.call(li.querySelectorAll("[data-gk-lines-field]"), function (f) {
+      return f.type !== "hidden" && !f.classList.contains("gk-select-value-input");
+    });
+  }
+
+  /** The first place in a line to put the caret: its first field, or the search of a lookup. */
+  function firstFocusable(li) {
+    var f = li.querySelector("textarea[data-gk-lines-field], input[data-gk-lines-field]:not([type=hidden]):not(.gk-select-value-input), select[data-gk-lines-field], .gk-ajax-search-input");
+    return f;
+  }
+
+  /**
+   * One line as parse() reads it: numbers in machine form, or as typed when they are none; text
+   * trimmed like PHP trims it; the id when the line has one.
+   */
+  function readRow(el, cfg, li) {
+    var out = {};
+    var id = fieldOf(li, "id");
+    if (id) out.id = phpTrim(id.value);
+    cfg.columns.forEach(function (c) {
+      if (c.type === "computed") return;
+      var raw;
+      if (cfg.readonly) {
+        var cell = li.querySelector('[data-gk-lines-cell="' + c.key + '"]');
+        raw = cell ? cell.getAttribute("data-gk-lines-value") || "" : "";
+        out[c.key] = NUMERIC[c.type] ? (machine(raw) === null ? raw : machine(raw)) : raw;
+        return;
+      }
+      var f = fieldOf(li, c.key);
+      raw = f ? f.value : "";
+      var t = phpTrim(raw);
+      if (NUMERIC[c.type]) {
+        var canon = t === "" ? null : parseNumber(t, cfg.fmt.dec);
+        out[c.key] = t === "" ? "" : canon === null ? t : canon;
+      } else {
+        out[c.key] = t;
+      }
+      // The words an article search shows, posted with it under its 'display' key.
+      if (c.type === "lookup" && c.display) {
+        var shown = fieldOf(li, c.display);
+        out[c.display] = shown ? phpTrim(shown.value) : "";
+      }
+    });
+    return out;
+  }
+
+  /** LineItems::isBlank(): every field empty or at its default. */
+  function isBlank(row, cfg) {
+    return cfg.columns.every(function (c) {
+      if (!BLANKABLE[c.type]) return true;
+      var v = row[c.key] === undefined || row[c.key] === null ? "" : phpTrim(row[c.key]);
+      if (NUMERIC[c.type] && machine(v) !== null) v = machine(v);
+      return v === "" || v === c["default"];
+    });
+  }
+
+  /** LineItems::numbersOf(): the figures the totals read. */
+  function numbersOf(row, cfg) {
+    var out = {};
+    cfg.columns.forEach(function (c) {
+      if (c.role && c.role !== "total") out[c.key] = machine(row[c.key] === undefined ? null : row[c.key]);
+    });
+    return out;
+  }
+
+  function roleKey(cfg, role) {
+    for (var k = 0; k < cfg.columns.length; k++) if (cfg.columns[k].role === role) return cfg.columns[k].key;
+    return null;
+  }
+
+  /** The overall discount or the shipping as typed, in machine form: "0" when it cannot be read. */
+  function adjustValue(el, cfg, what) {
+    if (!cfg[what]) return null;
+    var f = el.querySelector('[data-gk-lines-adjust="' + what + '"]');
+    if (!f) {
+      var row = el.querySelector('[data-gk-lines-sum="' + what + '"]');
+      return row && row.getAttribute("data-gk-lines-value") ? row.getAttribute("data-gk-lines-value") : "0";
+    }
+    var t = phpTrim(f.value);
+    return (t === "" ? null : parseNumber(t, cfg.fmt.dec)) || "0";
+  }
+
+  function totalsOptions(el, cfg) {
+    return {
+      pricesNet: cfg.net,
+      rounding: cfg.rounding,
+      discount: adjustValue(el, cfg, "discount"),
+      shipping: adjustValue(el, cfg, "shipping"),
+      shippingVat: cfg.shippingVat,
+      keys: { qty: roleKey(cfg, "qty"), price: roleKey(cfg, "price"), discount: roleKey(cfg, "discount"), vat: roleKey(cfg, "vat") },
+    };
+  }
+
+  /** Everything at once: the lines as read, the ones that count, their totals, every line's own total. */
+  function compute(el) {
+    var cfg = cfgOf(el);
+    var lis = rowsOf(el);
+    var rows = lis.map(function (li) { return readRow(el, cfg, li); });
+    var blank = rows.map(function (r) { return isBlank(r, cfg); });
+    var opts = totalsOptions(el, cfg);
+    var items = rows.filter(function (r, k) { return !blank[k]; });
+    var totals = HAS_BIG ? calc(items.map(function (r) { return numbersOf(r, cfg); }), opts) : null;
+    var lineTotals = HAS_BIG ? calc(rows.map(function (r) { return numbersOf(r, cfg); }), opts).lines : null;
+    var totalKey = roleKey(cfg, "total");
+    if (totals && totalKey) items.forEach(function (item, k) { item[totalKey] = totals.lines[k].total; });
+    return { cfg: cfg, lis: lis, rows: rows, blank: blank, items: items, totals: totals, lineTotals: lineTotals };
+  }
+
+  /* ── Checking a field: the messages parse() would give ──────────────── */
+
+  function say(text, params) {
+    var out = String(text || "");
+    Object.keys(params || {}).forEach(function (k) { out = out.split("{" + k + "}").join(params[k]); });
+    return out;
+  }
+
+  /** LineItems::numberProblem(), or "" when the figure can be taken. */
+  function numberProblem(cfg, spec, canon) {
+    if (canon === null) return say(cfg.text.err_number, { example: cfg.text.example });
+    var dot = canon.indexOf(".");
+    if (dot >= 0 && canon.length - dot - 1 > spec.decimals) return say(cfg.text.err_decimals, { n: spec.decimals });
+    if (!HAS_BIG) return "";
+    var num = toScaled(canon, 4);
+    if (spec.min !== null && spec.min !== undefined && num < toScaled(spec.min, 4)) return say(cfg.text.err_min, { min: display(spec.min, 0, cfg.fmt) });
+    if (spec.max !== null && spec.max !== undefined && num > toScaled(spec.max, 4)) return say(cfg.text.err_max, { max: display(spec.max, 0, cfg.fmt) });
+    return "";
+  }
+
+  var ADJUST = {
+    discount: { decimals: 2, min: "0", max: "100" },
+    shipping: { decimals: 2, min: "0", max: null },
+  };
+
+  /** What is wrong with a field, as a sentence; "" when nothing is. Sets it as the field's validity. */
+  function check(el, cfg, f) {
+    var msg = "";
+    var t = phpTrim(f.value);
+    var adjust = f.getAttribute("data-gk-lines-adjust");
+    var c = adjust ? null : cfg.byKey[f.getAttribute("data-gk-lines-field")];
+    if (adjust) {
+      if (t !== "") msg = numberProblem(cfg, ADJUST[adjust], parseNumber(t, cfg.fmt.dec));
+    } else if (c) {
+      if (t === "" && f.required) msg = say(cfg.text.err_required, { name: c.label });
+      else if (t !== "" && NUMERIC[c.type]) msg = numberProblem(cfg, c, parseNumber(t, cfg.fmt.dec));
+      // A value the list does not offer (an old unit, a rate no longer in use): parse() refuses it.
+      else if (c.type === "select" && f.selectedOptions && f.selectedOptions[0] && f.selectedOptions[0].hasAttribute("data-gk-lines-unknown")) msg = cfg.text.err_option;
+    }
+    if (f.setCustomValidity) f.setCustomValidity(msg);
+    return msg;
+  }
+
+  /** The line a field's message goes into: the one of its cell (the article search points at it from
+   *  its visible part, not from the value it posts), or the one it names. */
+  function slotOf(f) {
+    var cell = f.closest ? f.closest("[data-gk-lines-cell]") : null;
+    var slot = cell ? cell.querySelector(":scope > .gk-field-error") : null;
+    return slot || document.getElementById(f.getAttribute("aria-describedby") || "");
+  }
+
+  /** Writes a message under a field, or takes it away; the field says so to a screen reader. */
+  function show(f, msg) {
+    var slot = slotOf(f);
+    if (slot) slot.textContent = msg;
+    f.classList.toggle("gk-has-error", msg !== "");
+    if (msg) f.setAttribute("aria-invalid", "true");
+    else f.removeAttribute("aria-invalid");
+  }
+
+  /** A figure that can be read, written back in the page's shape (1234,5 → 1.234,50): what was
+   *  understood is what the person sees. Never rounded — a decimal too many stays, with its message. */
+  function reformat(cfg, f) {
+    var adjust = f.getAttribute("data-gk-lines-adjust");
+    var c = adjust ? null : cfg.byKey[f.getAttribute("data-gk-lines-field")];
+    if (!adjust && !(c && NUMERIC[c.type])) return;
+    var t = phpTrim(f.value);
+    if (t === "") return;
+    var canon = parseNumber(t, cfg.fmt.dec);
+    if (canon === null) return;
+    var minDec = adjust ? (adjust === "shipping" ? 2 : 0) : c.type === "money" ? c.decimals : 0;
+    var text = display(canon, minDec, cfg.fmt);
+    if (f.value !== text) f.value = text;
+  }
+
+  /* ── Writing an editor ───────────────────────────────────────────────── */
+
+  /** Names, ids of messages, the number, the words: everything that says where a line stands. */
+  function renumber(el) {
+    var cfg = cfgOf(el);
+    if (!cfg) return;
+    rowsOf(el).forEach(function (li, i) {
+      var n = i + 1;
+      var pos = li.querySelector(".gk-lines-pos");
+      if (pos && pos.textContent !== String(n)) pos.textContent = String(n);
+      var group = li.querySelector(".gk-lines-line");
+      if (group) group.setAttribute("aria-label", say(cfg.text.line, { n: n }));
+      if (cfg.readonly) return;
+      li.querySelectorAll("[data-gk-lines-field]").forEach(function (f) {
+        var name = cfg.name + "[" + i + "][" + f.getAttribute("data-gk-lines-field") + "]";
+        if (f.name !== name) f.name = name;
+        // The message line is keyed like the field, so an AJAX Form's {"errors": {"items[2][qty]": …}}
+        // still finds it after a move. (Only a column's own field: the words of an article search
+        // share the cell, not the key.)
+        var slot = f.type === "hidden" || !cfg.byKey[f.getAttribute("data-gk-lines-field")] ? null : slotOf(f);
+        if (slot && slot.getAttribute("data-gk-error") !== name) slot.setAttribute("data-gk-error", name);
+      });
+      var dup = li.querySelector('[data-gk-lines-action="duplicate"]');
+      var del = li.querySelector('[data-gk-lines-action="delete"]');
+      if (dup) dup.setAttribute("aria-label", say(cfg.text.duplicate, { n: n }));
+      if (del) del.setAttribute("aria-label", say(cfg.text["delete"], { n: n }));
+      var first = li.querySelector("textarea[data-gk-lines-field], input[type=text][data-gk-lines-field]:not(.gk-select-value-input)");
+      var text = first && !first.hasAttribute("inputmode") ? phpTrim(first.value.split("\n")[0]) : "";
+      li.setAttribute("data-gk-sort-titel", text ? say(cfg.text.line_titled, { n: n, text: text }) : say(cfg.text.line, { n: n }));
+    });
+  }
+
+  /** A line gets a key of its own: every id in it, and what points at one, moves along. */
+  function rekey(li, cfg, key) {
+    var old = cfg.base + "-" + li.getAttribute("data-gk-sort-id") + "-";
+    var now = cfg.base + "-" + key + "-";
+    li.setAttribute("data-gk-sort-id", key);
+    [li].concat(Array.prototype.slice.call(li.querySelectorAll("*"))).forEach(function (node) {
+      ["id", "for", "aria-describedby", "aria-labelledby", "aria-controls"].forEach(function (a) {
+        var v = node.getAttribute(a);
+        if (v && v.indexOf(old) >= 0) node.setAttribute(a, v.split(old).join(now));
+      });
+    });
+  }
+
+  function nextKey() {
+    keyCounter++;
+    return "c" + keyCounter;
+  }
+
+  /** A row's figures, rewritten from the totals; the VAT lines rebuilt when the rates change. */
+  function paint(el, state) {
+    var cfg = state.cfg;
+    var fmt = cfg.fmt;
+    var totalKey = roleKey(cfg, "total");
+    if (state.lineTotals && totalKey) {
+      state.lis.forEach(function (li, k) {
+        var out = li.querySelector('[data-gk-lines-out="' + totalKey + '"]');
+        var text = money(state.lineTotals[k].total, fmt);
+        if (out && out.textContent !== text) out.textContent = text;
+      });
+    }
+    var t = state.totals;
+    if (!t) return;
+    ["subtotal", "discount", "shipping", "net", "gross"].forEach(function (what) {
+      var dd = el.querySelector('[data-gk-lines-sum="' + what + '"] > dd');
+      var text = money(t[what], fmt);
+      if (dd && dd.textContent !== text) dd.textContent = text;
+    });
+    var dl = el.querySelector(".gk-lines-totals");
+    var grand = el.querySelector('[data-gk-lines-sum="gross"]');
+    if (!dl || !grand) return;
+    var have = Array.prototype.map.call(dl.querySelectorAll("[data-gk-lines-vat]"), function (d) { return d.getAttribute("data-gk-lines-vat"); });
+    var want = t.vat.map(function (v) { return v.rate; });
+    if (have.join("|") !== want.join("|")) {
+      dl.querySelectorAll("[data-gk-lines-vat]").forEach(function (d) { d.remove(); });
+      t.vat.forEach(function (v) {
+        // The markup of LineItems::vatRowsHtml(), element for element.
+        var row = document.createElement("div");
+        row.className = "gk-lines-sum";
+        row.setAttribute("data-gk-lines-vat", v.rate);
+        var dt = document.createElement("dt");
+        var dd = document.createElement("dd");
+        dd.className = "gk-td-num";
+        row.appendChild(dt);
+        row.appendChild(dd);
+        dl.insertBefore(row, grand);
+      });
+    }
+    t.vat.forEach(function (v) {
+      var row = dl.querySelector('[data-gk-lines-vat="' + v.rate + '"]');
+      if (!row) return;
+      var label = say(cfg.net ? cfg.text.vat_rate : cfg.text.vat_incl, { rate: display(v.rate, 0, fmt) });
+      var amount = money(v.amount, fmt);
+      if (row.firstChild.textContent !== label) row.firstChild.textContent = label;
+      if (row.lastChild.textContent !== amount) row.lastChild.textContent = amount;
+    });
+  }
+
+  /**
+   * After every change: figures, VAT lines, which fields are required (a blank line is not a line,
+   * so nothing in it is — except the first ones limits() asks for), what the buttons may do, the
+   * empty state. Then, when asked, the event and a word for a screen reader.
+   */
+  function update(el, emit) {
+    var state = compute(el);
+    var cfg = state.cfg;
+    paint(el, state);
+    if (cfg.readonly) return state;
+    var nonBlank = state.blank.filter(function (b) { return !b; }).length;
+    var spare = Math.max(0, cfg.min - nonBlank);
+    state.lis.forEach(function (li, k) {
+      var required = !state.blank[k] || spare-- > 0;
+      li.querySelectorAll("[data-gk-lines-required]").forEach(function (f) {
+        if (f.required !== required) f.required = required;
+      });
+    });
+    el.querySelectorAll("[data-gk-lines-field], [data-gk-lines-adjust]").forEach(function (f) {
+      if (f.type === "hidden") return;
+      var msg = check(el, cfg, f);
+      // A message already on screen follows the field; a new one waits until the field is left.
+      if (f.getAttribute("aria-invalid") === "true" && f._gkLinesShown) show(f, msg);
+    });
+    var count = state.lis.length;
+    var full = cfg.max !== null && cfg.max !== undefined && count >= cfg.max;
+    el.querySelectorAll('[data-gk-lines-action="add"], [data-gk-lines-action="duplicate"]').forEach(function (b) { b.disabled = full; });
+    el.querySelectorAll('[data-gk-lines-action="delete"]').forEach(function (b) { b.disabled = count <= cfg.min; });
+    var empty = el.querySelector(":scope > [data-gk-lines-empty]");
+    if (empty) empty.hidden = count > 0;
+    if (emit) {
+      el.dispatchEvent(new CustomEvent("gk:lineitemschange", { bubbles: true, detail: { items: state.items, totals: state.totals } }));
+      announce(el, state);
+    }
+    return state;
+  }
+
+  /** The total, said once the typing stops — not on every keystroke. */
+  function announce(el, state) {
+    var live = el.querySelector(":scope > [data-gk-lines-live]");
+    if (!live || !state.totals) return;
+    clearTimeout(el._gkLinesSay);
+    el._gkLinesSay = setTimeout(function () {
+      var text = say(state.cfg.text.said_total, { amount: money(state.totals.gross, state.cfg.fmt) });
+      if (live.textContent !== text) live.textContent = text;
+    }, 900);
+  }
+
+  var growable = typeof CSS !== "undefined" && CSS.supports && CSS.supports("field-sizing", "content");
+
+  /** A textarea as tall as its text, where CSS cannot say so itself (field-sizing). */
+  function grow(t) {
+    if (growable || !t || t.tagName !== "TEXTAREA") return;
+    t.style.height = "auto";
+    t.style.height = t.scrollHeight + 2 + "px";
+  }
+
+  /** What a line needs once it is in the page: the article search bound, the textareas sized. */
+  function wake(li) {
+    if (GK.ajaxSelect && li.querySelector("[data-gk-ajax-select]")) GK.ajaxSelect.init(li);
+    li.querySelectorAll("textarea[data-gk-lines-field]").forEach(grow);
+  }
+
+  /** Puts a value in a field from machine form, as LineItems::items() would have drawn it. */
+  function setField(li, cfg, key, value) {
+    var c = cfg.byKey[key];
+    var f = fieldOf(li, key);
+    if (!c || !f || value === undefined || value === null) return;
+    if (c.type === "lookup" || c.type === "computed") return;
+    var text;
+    if (NUMERIC[c.type]) {
+      var canon = machine(value);
+      text = canon === null ? String(value) : display(canon, c.type === "money" ? c.decimals : 0, cfg.fmt);
+    } else if (c.type === "select") {
+      text = c.role === "vat" && machine(value) !== null ? machine(value) : String(value);
+      if (!Array.prototype.some.call(f.options, function (o) { return o.value === text; })) {
+        // A value the list does not know is shown and marked, as on the server (selectHtml()).
+        var o = document.createElement("option");
+        o.value = text;
+        o.textContent = c.role === "vat" && machine(text) !== null ? display(text, 0, cfg.fmt) + "\u00A0%" : text;
+        o.setAttribute("data-gk-lines-unknown", "");
+        f.appendChild(o);
+      }
+    } else {
+      text = String(value);
+    }
+    f.value = text;
+    if (c.type === "readonly") {
+      var out = f.parentNode.querySelector(".gk-lines-out");
+      if (out) out.textContent = text;
+    }
+    grow(f);
+  }
+
+  function focus(node) {
+    if (!node) return;
+    try { node.focus({ preventScroll: false }); } catch (e) { node.focus(); }
+  }
+
+  /** A new line from the template (at the end, or after `after`), filled from `values`. */
+  function addRow(el, values, after) {
+    var cfg = cfgOf(el);
+    var body = bodyOf(el);
+    var tpl = el.querySelector(":scope > template[data-gk-lines-template]");
+    if (!cfg || cfg.readonly || !body || !tpl) return null;
+    if (cfg.max !== null && cfg.max !== undefined && rowsOf(el).length >= cfg.max) {
+      if (GK.toast) GK.toast.warning(say(cfg.text.err_max_rows, { n: cfg.max }));
+      return null;
+    }
+    var li = tpl.content.firstElementChild.cloneNode(true);
+    rekey(li, cfg, nextKey());
+    if (values) {
+      Object.keys(values).forEach(function (k) { if (k !== "id") setField(li, cfg, k, values[k]); });
+      if (values.id !== undefined && values.id !== null) {
+        var id = document.createElement("input");
+        id.type = "hidden";
+        id.setAttribute("data-gk-lines-field", "id");
+        id.value = String(values.id);
+        li.querySelector(".gk-lines-line").appendChild(id);
+      }
+    }
+    body.insertBefore(li, after ? after.nextSibling : null);
+    wake(li);
+    renumber(el);
+    update(el, true);
+    return li;
+  }
+
+  function duplicateRow(el, li) {
+    var cfg = cfgOf(el);
+    if (cfg.max !== null && cfg.max !== undefined && rowsOf(el).length >= cfg.max) return null;
+    var copy = li.cloneNode(true);
+    // What cloneNode leaves behind or takes along by mistake: the handle sortierbar puts in (it adds
+    // its own), the line's id (a copy is a new line), the state of the article search, and what was
+    // typed into a select or a textarea, which is not an attribute.
+    Array.prototype.forEach.call(copy.querySelectorAll(":scope > .gk-sort-griff"), function (h) { h.remove(); });
+    copy.classList.remove("gk-sort-zieht");
+    var id = fieldOf(copy, "id");
+    if (id) id.remove();
+    var from = li.querySelectorAll("[data-gk-lines-field]");
+    var to = copy.querySelectorAll("[data-gk-lines-field]");
+    for (var k = 0; k < from.length && k < to.length; k++) to[k].value = from[k].value;
+    var search = li.querySelector(".gk-ajax-search-input");
+    var searchCopy = copy.querySelector(".gk-ajax-search-input");
+    if (search && searchCopy) searchCopy.value = search.value;
+    copy.querySelectorAll(".gk-select-dropdown").forEach(function (d) { d.style.display = ""; });
+    copy.querySelectorAll('[aria-expanded="true"]').forEach(function (d) { d.setAttribute("aria-expanded", "false"); });
+    rekey(copy, cfg, nextKey());
+    li.parentNode.insertBefore(copy, li.nextSibling);
+    wake(copy);
+    renumber(el);
+    update(el, true);
+    focus(firstFocusable(copy));
+    return copy;
+  }
+
+  function deleteRow(el, li, trigger) {
+    var cfg = cfgOf(el);
+    var rows = rowsOf(el);
+    if (rows.length <= cfg.min) return;
+    var index = rows.indexOf(li);
+    var n = index + 1;
+    var next = rows[index + 1] || rows[index - 1] || null;
+    li.remove();
+    renumber(el);
+    update(el, true);
+    // The caret stays where the hand is: on the same button of the line that took this one's place.
+    var same = next && trigger ? next.querySelector('[data-gk-lines-action="' + trigger + '"]') : null;
+    focus(same && !same.disabled ? same : next ? firstFocusable(next) : el.querySelector('[data-gk-lines-action="add"]'));
+    offerUndo(el, cfg, say(cfg.text.deleted, { n: n }), function () {
+      if (li.isConnected) return;
+      if (cfg.max !== null && cfg.max !== undefined && rowsOf(el).length >= cfg.max) {
+        if (GK.toast) GK.toast.warning(say(cfg.text.err_max_rows, { n: cfg.max }));
+        return;
+      }
+      var body = bodyOf(el);
+      body.insertBefore(li, rowsOf(el)[index] || null);
+      renumber(el);
+      update(el, true);
+      focus(firstFocusable(li));
+    });
+  }
+
+  /**
+   * "Line 2 deleted." with Undo, in GridKit's own toast. GK.toast.show() draws the toast and returns
+   * nothing, so the button goes into the newest toast it drew — in front of the close button.
+   */
+  function offerUndo(el, cfg, text, undo) {
+    if (!GK.toast || typeof GK.toast.show !== "function") return;
+    GK.toast.show(text, "info", 8000);
+    var toast = GK.toast.container && GK.toast.container.lastElementChild;
+    if (!toast) return;
+    var button = document.createElement("button");
+    button.type = "button";
+    button.setAttribute("data-gk-lines-undo", "");
+    button.textContent = cfg.text.undo;
+    button.addEventListener("click", function () {
+      undo();
+      var close = toast.querySelector(".gk-toast-close");
+      if (close) close.click();
+      else toast.remove();
+    });
+    toast.insertBefore(button, toast.querySelector(".gk-toast-close"));
+  }
+
+  /* ── Listening ───────────────────────────────────────────────────────── */
+
+  /**
+   * One update for what arrives as several events at once: an article picked fires change on the
+   * value it posts and then gk-select; a cleared one only change. A microtask later, once.
+   */
+  function soon(el) {
+    if (el._gkLinesSoon) return;
+    el._gkLinesSoon = true;
+    Promise.resolve().then(function () {
+      el._gkLinesSoon = false;
+      renumber(el);
+      update(el, true);
+    });
+  }
+
+  /**
+   * The listeners of one editor, on the editor itself: a click anywhere else on the page runs none
+   * of this. (On the document they were measurable in the timing of js/sortierbar.js's own checks,
+   * ci/browser-sortierbar.js S06, which reads the order between a drop and the answer to it.)
+   */
+  function listen(el) {
+    // A node of this editor, not of one nested in it.
+    var own = function (node) { return !!(node && node.closest && node.closest(ROOT) === el); };
+
+    el.addEventListener("click", function (e) {
+      var button = e.target.closest ? e.target.closest("[data-gk-lines-action]") : null;
+      if (!own(button) || button.disabled) return;
+      var action = button.getAttribute("data-gk-lines-action");
+      var li = button.closest(".gk-lines-row");
+      var added;
+      if (action === "add") {
+        added = addRow(el, null, null);
+        if (added) focus(firstFocusable(added));
+      } else if (action === "duplicate" && li) duplicateRow(el, li);
+      else if (action === "delete" && li) deleteRow(el, li, "delete");
+    });
+
+    el.addEventListener("input", function (e) {
+      var f = e.target;
+      if (!own(f) || !f.matches("[data-gk-lines-field], [data-gk-lines-adjust]")) return;
+      grow(f);
+      if (f.getAttribute("aria-invalid") === "true") f._gkLinesShown = true;
+      if (f.hasAttribute("data-gk-lines-field")) renumber(el);
+      update(el, true);
+    });
+
+    // Leaving a field: the figure in the page's shape, and its message if there is one.
+    el.addEventListener("change", function (e) {
+      var f = e.target;
+      if (!own(f) || !f.matches("input[data-gk-lines-field], input[data-gk-lines-adjust], textarea[data-gk-lines-field]")) return;
+      var cfg = cfgOf(el);
+      if (f.classList.contains("gk-select-value-input")) {
+        soon(el);
+        return;
+      }
+      reformat(cfg, f);
+      f._gkLinesShown = true;
+      show(f, check(el, cfg, f));
+    });
+
+    // A form that is sent with something wrong: each field says why (the browser shows one bubble).
+    // invalid does not bubble: hence the capture.
+    el.addEventListener("invalid", function (e) {
+      var f = e.target;
+      if (!own(f)) return;
+      f._gkLinesShown = true;
+      show(f, check(el, cfgOf(el), f) || f.validationMessage);
+    }, true);
+
+    // Enter in a field of a line does not send the form; in the last field of the last line it adds one.
+    el.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" || e.defaultPrevented || e.isComposing || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+      var f = e.target;
+      if (!own(f) || !f.matches("input, select") || f.matches("[type=button], [type=submit]")) return;
+      e.preventDefault();
+      var li = f.closest(".gk-lines-row");
+      if (!li || !f.hasAttribute("data-gk-lines-field")) return;
+      var rows = rowsOf(el);
+      var fields = fieldsOf(li);
+      if (li === rows[rows.length - 1] && f === fields[fields.length - 1]) {
+        reformat(cfgOf(el), f);
+        focus(firstFocusable(addRow(el, null, null) || li));
+      }
+    });
+
+    // An article picked in a lookup column fills its line. GK.ajaxSelect fires gk-select on the select,
+    // without bubbling: hence the capture.
+    el.addEventListener("gk-select", function (e) {
+      var wrap = e.target;
+      var li = wrap && wrap.closest ? wrap.closest(".gk-lines-row") : null;
+      var cell = wrap && wrap.closest ? wrap.closest("[data-gk-lines-cell]") : null;
+      if (!own(li) || !cell) return;
+      var cfg = cfgOf(el);
+      var col = cfg.byKey[cell.getAttribute("data-gk-lines-cell")];
+      var item = e.detail || {};
+      if (!col || !col.fill) return;
+      Object.keys(col.fill).forEach(function (target) {
+        if (Object.prototype.hasOwnProperty.call(item, col.fill[target])) setField(li, cfg, target, item[col.fill[target]]);
+      });
+      var qtyKey = roleKey(cfg, "qty");
+      var qty = qtyKey ? fieldOf(li, qtyKey) : null;
+      if (qty && phpTrim(qty.value) === "") qty.value = display("1", 0, cfg.fmt);
+      // A field that carried a message is checked again at once: the article may have mended it.
+      fieldsOf(li).forEach(function (f) { if (f.getAttribute("aria-invalid") === "true") f._gkLinesShown = true; });
+      soon(el);
+    }, true);
+
+    // A line put in a new place by js/sortierbar.js.
+    el.addEventListener("gk:sortiert", function (e) {
+      if (e.target !== bodyOf(el)) return;
+      renumber(el);
+      update(el, true);
+    });
+  }
+
+  /* ── Starting ────────────────────────────────────────────────────────── */
+
+  function setup(el) {
+    if (el._gkLinesReady) return;
+    var cfg = cfgOf(el);
+    if (!cfg) return;
+    el._gkLinesReady = true;
+    if (cfg.readonly) return;
+    el.setAttribute("data-gk-lines-ready", "");
+    listen(el);
+    rowsOf(el).forEach(function (li) { li.querySelectorAll("textarea[data-gk-lines-field]").forEach(grow); });
+    var body = bodyOf(el);
+    // While a line is moved with the keyboard, its number follows it.
+    if (body) new MutationObserver(function () { renumber(el); }).observe(body, { childList: true });
+    update(el, false);
+  }
+
+  function scan(root) {
+    if (!root || root.nodeType !== 1) return;
+    if (root.matches(ROOT)) setup(root);
+    root.querySelectorAll(ROOT).forEach(setup);
+  }
+
+  function resolve(target) {
+    var node = typeof target === "string" ? document.querySelector(target) : target;
+    var el = node && node.closest ? node.closest(ROOT) : null;
+    if (el) scan(el);
+    return el;
+  }
+
+  GK.lineItems = {
+    /** LineItems::totals() of what the editor holds now. */
+    totals: function (target) {
+      var el = resolve(target);
+      return el ? compute(el).totals : null;
+    },
+    /** The lines that count, as parse() returns them as 'items'. */
+    items: function (target) {
+      var el = resolve(target);
+      return el ? compute(el).items : [];
+    },
+    /** A new line at the end, filled from machine values ({ description: "…", qty: 2, price: "12.5" }). */
+    add: function (target, row) {
+      var el = resolve(target);
+      return el ? addRow(el, row || {}, null) : null;
+    },
+    /** LineItems::totals($rows, $opts) without an editor. */
+    calc: calc,
+    /** LineItems::parseNumber($text, $locale). */
+    parse: function (text, locale) {
+      return parseNumber(text, decOf(locale));
+    },
+  };
+
+  // An editor that arrives later — a modal, a sheet, AJAX navigation — comes through GK.initContent,
+  // like every other component (wrapped, not changed: the sticky head of 1.107.0 does the same).
+  // Not a MutationObserver on the whole document: one there slowed every change of the page by
+  // enough to move the timing of js/sortierbar.js's own checks (ci/browser-sortierbar.js, S06).
+  var initContent = GK.initContent;
+  if (typeof initContent === "function") {
+    GK.initContent = function (root) {
+      var result = initContent.apply(GK, arguments);
+      scan(root && root.nodeType === 1 ? root : document.documentElement);
+      return result;
+    };
+  }
+  _gkReady(function () { scan(document.documentElement); });
+})();
