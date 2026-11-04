@@ -11299,8 +11299,10 @@ function _gkShowIfInit(root) {
         })
       : "";
     function icon(glyph, target, key, fallback, off) {
+      // A title on the ones that lead somewhere, as PHP writes it (1.118.1).
       return '<button type="button" class="gk-pg gk-pg-icon' + (off ? " gk-pg-off" : "") + '" data-gk-page="' + target + '"' +
-        ' aria-label="' + esc(text(key, fallback)) + '"' + (off ? " disabled" : "") + ">" +
+        ' aria-label="' + esc(text(key, fallback)) + '"' +
+        (off ? " disabled" : ' title="' + esc(text(key, fallback)) + '"') + ">" +
         '<span class="material-icons" aria-hidden="true">' + glyph + "</span></button>";
     }
     var html = '<nav class="gk-pagination gk-rowpager" aria-label="' + esc(text("pagination_aria", "Page navigation")) + '">' +
