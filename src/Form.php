@@ -516,16 +516,54 @@ class Form
     private function renderAjaxSelect(array $f, \Closure $e, array $x): void
     {
         ['name' => $name, 'value' => $value, 'req' => $req, 'composedBy' => $composedBy] = $x;
-        $url = $f['url'] ?? '';
-        $displayValue = $f['displayValue'] ?? '';
-        $placeholder = $f['placeholder'] ?? Lang::t('form.search');
-        $labelField = $f['labelField'] ?? 'name';
-        $valueField = $f['valueField'] ?? 'id';
-        $subtextField = $f['subtextField'] ?? '';
-        $minChars = $f['minChars'] ?? 2;
-        $searchParam = $f['searchParam'] ?? 'q';
-        echo "<div class=\"gk-ajax-select\" data-gk-ajax-select data-url=\"{$e($url)}\" data-label-field=\"{$e($labelField)}\" data-value-field=\"{$e($valueField)}\" data-subtext-field=\"{$e($subtextField)}\" data-min-chars=\"{$e($minChars)}\" data-search-param=\"{$e($searchParam)}\">";
-        echo "<input type=\"text\" class=\"gk-select-value-input\" tabindex=\"-1\" aria-hidden=\"true\" name=\"{$e($name)}\" value=\"{$e($value)}\"{$req}>";
+        echo self::ajaxSelectHtml(
+            $e, $f,
+            value: $value,
+            shown: $f['displayValue'] ?? '',
+            placeholder: $f['placeholder'] ?? Lang::t('form.search'),
+            idBase: $name,
+            // Any falsy value, '0' among them, starts with the clear button hidden — as it always
+            // has here; the lookup column of LineItems hides it only for ''.
+            hideClear: !$value,
+            hidden: ' name="' . $e($name) . '"',
+            hiddenTail: $req,
+            combo: $composedBy,
+        );
+    }
+
+    /**
+     * The markup GK.ajaxSelect binds, written in this one place: the 'ajaxselect' field above and
+     * the 'lookup' column of LineItems (1.117.0) both render it from here, so the two cannot
+     * drift apart. js/gridkit.js reads its classes and data-* attributes.
+     *
+     * $opts holds the options both share: url, labelField, valueField, subtextField, minChars
+     * and searchParam (their defaults as documented for the field). $value is what the hidden
+     * input posts, $shown the words in the search box; $idBase names the listbox
+     * (<idBase>-list); $hideClear: nothing is chosen yet, the clear button starts hidden.
+     *
+     * What differs between the callers arrives as finished attribute strings, each '' or
+     * starting with a space, at the place each caller has always written it: $hidden before the
+     * posted value and $hiddenTail after it, $combo on the combobox, $searchBox before the
+     * placeholder of the search box and $searchTail after it. Each caller escapes with its own
+     * $e, so the bytes stay its own.
+     *
+     * @internal Not part of the API: its parameters follow its two callers and change with them.
+     * @param array<string,mixed> $opts
+     */
+    public static function ajaxSelectHtml(
+        \Closure $e,
+        array $opts,
+        mixed $value,
+        mixed $shown,
+        mixed $placeholder,
+        string $idBase,
+        bool $hideClear,
+        string $hidden = '',
+        string $hiddenTail = '',
+        string $combo = '',
+        string $searchBox = '',
+        string $searchTail = '',
+    ): string {
         /*
          * The same three gaps the static select had, in the variant
          * that fetches its options: the combobox promised a listbox
@@ -533,21 +571,28 @@ class Form
          * no role, and aria-expanded was written here once while six
          * places in gridkit.js change the dropdown's visibility.
          */
-        $listId = preg_replace('/[^A-Za-z0-9_-]/', '-', $name) . '-list';
-        echo '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox"'
-           . ' aria-expanded="false" aria-controls="' . $e($listId) . '"' . $composedBy . '>';
-        echo '<span class="material-icons gk-select-icon" aria-hidden="true">search</span>';
-        $clearStyle = $value ? '' : ' style="display:none;"';
-        echo "<input type=\"text\" class=\"gk-ajax-search-input\" value=\"{$e($displayValue)}\" placeholder=\"{$e($placeholder)}\" autocomplete=\"off\">";
+        $listId = $e(preg_replace('/[^A-Za-z0-9_-]/', '-', $idBase) . '-list');
         // Was a bare &times; with no name — a button announced as
         // "times", exactly like the chip and the toast close button.
         $clearLabel = $e(Lang::t('form.clear'));
-        echo "<button type=\"button\" class=\"gk-ajax-clear\" aria-label=\"{$clearLabel}\" title=\"{$clearLabel}\"{$clearStyle}>"
-           . "<span aria-hidden=\"true\">&times;</span></button>";
-        echo '</div>';
-        echo '<div class="gk-select-dropdown"><div class="gk-select-options" id="' . $e($listId) . '" role="listbox"></div>';
-        echo '<div class="gk-select-loading" style="display:none;"><span class="material-icons gk-spin" aria-hidden="true">sync</span> ' . $e(Lang::t('form.loading')) . '</div>';
-        echo '</div></div>';
+        return '<div class="gk-ajax-select" data-gk-ajax-select data-url="' . $e($opts['url'] ?? '') . '"'
+             . ' data-label-field="' . $e($opts['labelField'] ?? 'name') . '" data-value-field="' . $e($opts['valueField'] ?? 'id') . '"'
+             . ' data-subtext-field="' . $e($opts['subtextField'] ?? '') . '" data-min-chars="' . $e($opts['minChars'] ?? 2) . '"'
+             . ' data-search-param="' . $e($opts['searchParam'] ?? 'q') . '">'
+             . '<input type="text" class="gk-select-value-input" tabindex="-1" aria-hidden="true"' . $hidden
+             . ' value="' . $e($value) . '"' . $hiddenTail . '>'
+             . '<div class="gk-select-display" tabindex="0" role="combobox" aria-haspopup="listbox"'
+             . ' aria-expanded="false" aria-controls="' . $listId . '"' . $combo . '>'
+             . '<span class="material-icons gk-select-icon" aria-hidden="true">search</span>'
+             . '<input type="text" class="gk-ajax-search-input" value="' . $e($shown) . '"' . $searchBox
+             . ' placeholder="' . $e($placeholder) . '" autocomplete="off"' . $searchTail . '>'
+             . '<button type="button" class="gk-ajax-clear" aria-label="' . $clearLabel . '" title="' . $clearLabel . '"'
+             . ($hideClear ? ' style="display:none;"' : '') . '><span aria-hidden="true">&times;</span></button>'
+             . '</div>'
+             . '<div class="gk-select-dropdown"><div class="gk-select-options" id="' . $listId . '" role="listbox"></div>'
+             . '<div class="gk-select-loading" style="display:none;"><span class="material-icons gk-spin" aria-hidden="true">sync</span> '
+             . $e(Lang::t('form.loading')) . '</div>'
+             . '</div></div>';
     }
 
     /** A 'toggle' field: a switch, or a settings row when it has a 'hint'. */
