@@ -436,6 +436,7 @@ $sidebar->brand('', 'widgets')
     ->item('Tree', '#tree', 'account_tree')
     ->item('Line items', '#lineitems', 'receipt_long')
     ->item('Import', '#import', 'upload_file')
+    ->item('Dates', '#dates', 'calendar_month')
     ->group('Examples')
     ->item('Examples', '#examples', 'rocket_launch')
     ->group('Info')
@@ -490,12 +491,14 @@ echo $demoHeader->title($headerTitle, true)
 <?php require __DIR__ . '/sections/tree.php'; ?>
 <?php require __DIR__ . '/sections/lineitems.php'; ?>
 <?php require __DIR__ . '/sections/import.php'; ?>
+<?php require __DIR__ . '/sections/dates.php'; ?>
 <?php require __DIR__ . '/sections/changelog.php'; ?>
 </div><!-- /gk-with-sidebar -->
 
 <script src="<?= Layout::asset('../js/gridkit.js') ?>"></script>
 <script src="<?= Layout::asset('../js/sortierbar.js') ?>" defer></script>
 <script src="<?= Layout::asset('../js/tree.js') ?>" defer></script>
+<script src="<?= Layout::asset('../js/calendar.js') ?>" defer></script>
 <script src="<?= Layout::asset('../js/import.js') ?>" defer></script>
 <script>
 (function() {

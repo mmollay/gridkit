@@ -38,6 +38,12 @@
       "gk-btn-icon-text"
     ]
   },
+  "calendar": {
+    "reason": "Written only for a month that holds no event, in the agenda a calendar narrower than 600px shows; the months of the demo hold events. tests/calendar.test.php and ci/browser-dates.js check it.",
+    "classes": [
+      "gk-cal-empty"
+    ]
+  },
   "cell-who": {
     "reason": "Hand-written markup of the 'rows of people' recipe in the skill (or 'format' => 'html'); not a PHP component.",
     "classes": [

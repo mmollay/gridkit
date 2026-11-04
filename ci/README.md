@@ -379,6 +379,31 @@ screenshots (with `GK_ICONFONT=<material-icons.woff2>` for the symbols). About f
 GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-import.js
 ```
 
+Dates (1.120.0): `GridKit\DateRange` and `GridKit\Calendar` with `js/calendar.js` are checked by
+`ci/browser-dates.js` on `ci/browser-dates-fixture.php` — a period picker in a filter bar (its own
+GET form, a kept parameter), one as a `Form` field, one with every preset, one in German, a month
+of appointments (bars across days, two busy days, an event without a link, week numbers, a day
+link), the same month in a 380px column and an empty one. Every page is the fixture, served from
+`http://gk.test/` by `page.route()`, so a month link loads it again in the same origin and the focus
+can follow; the forms post to `http://gk.test/…`, and what they send is read back by
+`DateRange::fromRequest()` (`php ci/browser-dates-fixture.php --read '<query>' --name=<name>`). It
+checks that the browser counts all 240 preset ranges and writes all 142 periods in words exactly as
+PHP does (`--parity`: the edges of months, quarters and years, leap years, clock changes, the years 1
+and 9999, English and German); a preset filling the dates, typing switching to Custom, each date
+bounding the other, a filter sending a preset at once and typed dates on Apply, `name[shown]` left
+out with the script and decisive without it; the grid roles and the one tab stop, every key (arrows,
+Home/End, PageUp/PageDown and Shift, Enter, Space, Tab into a day and out, Escape), a month loaded
+past the edge with the focus on the same day, the veto of `gk:calendarnav` and `gk:calendarselect`,
+"+n more" in the window and one at a time, the API, a bar straight and joined across its week, the
+names in Chrome's accessibility tree, the agenda in a narrow column and at 390px with nothing
+sideways, the page without script, and contrast in 21 looks (plain and six themes × light,
+`data-gk-mode="dark"` and `.gk-dark`). About ten seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-dates.js
+GK_SHOTS=/some/dir node ci/browser-dates.js   # screenshots: the calendar light and dark, the filter, 390px
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

@@ -13732,3 +13732,488 @@ td.gk-import-ignored { color: var(--gk-on-surface-variant); }
     min-height: 44px;
   }
 }
+
+/* === 1.120.0 — dates === */
+/*
+ * GridKit\DateRange and GridKit\Calendar. Roles only, so light, [data-gk-mode="dark"], .gk-dark and the
+ * six themes follow from the tokens; the few dark rules below name both spellings.
+ *
+ * DateRange: a select of presets and two native date fields in one row that wraps. In a toolbar the
+ * fields are .gk-filter (the pill of the bar), in a Form .gk-input. A date field is no select: it
+ * loses the arrow .gk-filter draws, the browser draws its own picker button. On a phone the row is
+ * the width of the page: the select on top, the two dates side by side, the period in words below.
+ */
+.gk-daterange-form {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+.gk-daterange {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.gk-daterange-dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+.gk-daterange-sep {
+  color: var(--gk-on-surface-variant);
+}
+.gk-daterange input.gk-daterange-from,
+.gk-daterange input.gk-daterange-to {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+}
+.gk-daterange input.gk-filter {
+  background-image: none;
+  padding-inline-end: 10px;
+  cursor: text;
+}
+.gk-daterange .gk-daterange-preset.gk-input {
+  width: auto;
+  min-width: 10rem;
+}
+.gk-daterange-text {
+  font-size: var(--gk-text-label);
+  color: var(--gk-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gk-daterange-text:empty {
+  display: none;
+}
+@media (max-width: 600px) {
+  .gk-daterange-form,
+  .gk-daterange {
+    display: flex;
+    width: 100%;
+  }
+  .gk-daterange .gk-daterange-preset {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .gk-daterange-dates {
+    flex: 1 1 100%;
+  }
+  /* width 0: a date field's own width would hold a Form's column open past the page. */
+  .gk-daterange input.gk-daterange-from,
+  .gk-daterange input.gk-daterange-to {
+    flex: 1 1 0;
+    width: 0;
+  }
+  .gk-daterange-text {
+    flex: 1 1 auto;
+    white-space: normal;
+  }
+}
+
+/*
+ * Calendar: a table, a column per weekday, a row per week. The day cells are at least six lines
+ * high; an event is one line (--gk-cal-line) in a lane, and an empty lane above a bar keeps its place
+ * (.gk-cal-slot), so a bar across days stays straight. A segment joined to the day before or after
+ * reaches over the cell's padding and the line between (gk-cal-span-in / -out); the first segment of
+ * a run carries the title across the run (gk-cal-span-head, --gk-cal-days), above the segments after
+ * it. Today is the day number in a filled disc, and is read as "today". Days of the months around
+ * are on the quieter ground.
+ *
+ * The calendar is a size container: narrower than 600px — a phone, a side column — the grid gives
+ * way to the agenda, the days that hold something one under the other. Nothing scrolls sideways.
+ */
+.gk-cal {
+  --gk-cal-pad: 4px;
+  --gk-cal-line: 22px;
+  /* How many days the title of a bar runs across; the server writes it on the first segment. */
+  --gk-cal-days: 1;
+  container: gk-cal / inline-size;
+  min-width: 0;
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-body);
+}
+.gk-cal-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 0 0 12px;
+}
+.gk-cal-title {
+  font-size: var(--gk-text-title);
+  font-weight: 600;
+  line-height: var(--gk-leading-tight);
+}
+.gk-cal-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.gk-cal-nav .gk-btn-icon-only {
+  min-width: 32px;
+  min-height: 32px;
+  justify-content: center;
+}
+.gk-cal-nav .gk-btn-icon-only .material-icons {
+  font-size: var(--gk-icon-md);
+}
+
+.gk-cal-grid {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius);
+  background: var(--gk-surface);
+}
+.gk-cal-grid th,
+.gk-cal-grid td {
+  box-sizing: border-box;
+  padding: var(--gk-cal-pad);
+  vertical-align: top;
+  border-top: 1px solid var(--gk-outline-variant);
+  border-inline-start: 1px solid var(--gk-outline-variant);
+}
+.gk-cal-grid tr > :first-child {
+  border-inline-start: 0;
+}
+.gk-cal-grid thead th {
+  border-top: 0;
+  padding: 8px var(--gk-cal-pad);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+  color: var(--gk-on-surface-variant);
+  text-align: center;
+}
+/* The corners of the cells follow the corners of the table, so a tinted day does not stick out. */
+.gk-cal-grid thead tr > :first-child {
+  border-start-start-radius: calc(var(--gk-radius) - 1px);
+}
+.gk-cal-grid thead tr > :last-child {
+  border-start-end-radius: calc(var(--gk-radius) - 1px);
+}
+.gk-cal-grid tbody tr:last-child > :first-child {
+  border-end-start-radius: calc(var(--gk-radius) - 1px);
+}
+.gk-cal-grid tbody tr:last-child > :last-child {
+  border-end-end-radius: calc(var(--gk-radius) - 1px);
+}
+.gk-cal-grid th.gk-cal-wk {
+  width: 2.75rem;
+  padding-inline: 2px;
+  background: var(--gk-surface-container-low);
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.gk-cal-grid tbody th.gk-cal-wk {
+  padding-top: 8px;
+}
+
+.gk-cal-day {
+  position: relative;
+  height: calc(var(--gk-cal-line) * 4 + 36px);
+  min-width: 0;
+  overflow: visible;
+}
+.gk-cal-outside {
+  background: var(--gk-surface-container-low);
+}
+.gk-cal-daynum {
+  display: flex;
+  margin: 0 0 2px;
+  line-height: 1;
+}
+.gk-cal-daynum time > [aria-hidden] {
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  border-radius: 999px;
+  font-size: var(--gk-text-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.gk-cal-outside .gk-cal-daynum {
+  color: var(--gk-on-surface-variant);
+}
+.gk-cal-day.gk-cal-today .gk-cal-daynum time > [aria-hidden] {
+  background: var(--gk-primary);
+  color: var(--gk-on-primary);
+}
+.gk-cal-daylink {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 999px;
+}
+.gk-cal-daylink:hover time > [aria-hidden] {
+  background: var(--gk-state-hover);
+}
+.gk-cal-daylink:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+/* With the script the cell is the grid's cell: hover, the focus ring, the pointer. */
+.gk-cal[data-gk-cal-ready] .gk-cal-day {
+  cursor: pointer;
+}
+.gk-cal[data-gk-cal-ready] .gk-cal-day:hover {
+  background-image: linear-gradient(var(--gk-state-hover), var(--gk-state-hover));
+}
+.gk-cal-day:focus {
+  outline: none;
+}
+.gk-cal-day:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+
+.gk-cal-events {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gk-cal-slot {
+  display: block;
+  height: var(--gk-cal-line);
+}
+.gk-cal-event {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  min-width: 0;
+  height: var(--gk-cal-line);
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: var(--gk-text-caption);
+  font-weight: 500;
+  line-height: var(--gk-cal-line);
+  white-space: nowrap;
+  text-decoration: none;
+  overflow: hidden;
+}
+/* An event takes the colours of its label (.gk-label-blue …); without one, the accent's tonal pair. */
+.gk-cal-accent {
+  background-color: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+}
+a.gk-cal-event:hover,
+.gk-cal-event[role="button"]:hover {
+  background-image: linear-gradient(var(--gk-state-hover), var(--gk-state-hover));
+}
+.gk-cal-event:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+.gk-cal-event[role="button"] {
+  cursor: pointer;
+}
+.gk-cal-time {
+  flex: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.gk-cal-event-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gk-cal-span-in {
+  margin-inline-start: calc(-1 * var(--gk-cal-pad) - 1px);
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+.gk-cal-span-out {
+  margin-inline-end: calc(-1 * var(--gk-cal-pad));
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+.gk-cal-span-head {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+.gk-cal-span-head .gk-cal-event-title {
+  flex: none;
+  width: calc(var(--gk-cal-days) * 100% + (var(--gk-cal-days) - 1) * (var(--gk-cal-pad) + 13px));
+}
+
+/* "+3 more": a disclosure that opens the whole day over the grid — no script needed. */
+.gk-cal-more {
+  position: relative;
+}
+.gk-cal-more > summary {
+  display: block;
+  height: var(--gk-cal-line);
+  padding: 0 6px;
+  border-radius: 4px;
+  color: var(--gk-primary-text);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+  line-height: var(--gk-cal-line);
+  list-style: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.gk-cal-more > summary::-webkit-details-marker {
+  display: none;
+}
+.gk-cal-more > summary:hover {
+  background: var(--gk-state-hover);
+}
+.gk-cal-more > summary:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+.gk-cal-more-list {
+  position: absolute;
+  z-index: 20;
+  inset-block-start: calc(100% + 4px);
+  inset-inline-start: calc(-1 * var(--gk-cal-pad));
+  box-sizing: border-box;
+  width: max(100%, 15rem);
+  max-width: 80vw;
+  padding: 8px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface);
+  box-shadow: var(--gk-elev-3);
+  cursor: auto;
+}
+/* In the last three columns it opens towards the start, so it never leaves the page. */
+.gk-cal-day:nth-last-child(-n + 3) .gk-cal-more-list {
+  inset-inline-start: auto;
+  inset-inline-end: calc(-1 * var(--gk-cal-pad));
+}
+.gk-cal-more-date {
+  margin: 0 0 6px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+}
+.gk-cal-more-list ul,
+.gk-cal-agenda-day ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* An event in a list: the time (or "All day", or its days) in a column of its own, the title wraps. */
+.gk-cal-event-row {
+  align-items: baseline;
+  gap: 8px;
+  height: auto;
+  min-height: 28px;
+  padding: 4px 8px;
+  line-height: var(--gk-leading-snug);
+  white-space: normal;
+}
+.gk-cal-event-row .gk-cal-time {
+  min-width: 4.5em;
+}
+.gk-cal-event-row .gk-cal-event-title {
+  overflow-wrap: anywhere;
+}
+
+/* The agenda: what a narrow container shows instead of the grid. */
+.gk-cal-agenda {
+  display: none;
+}
+.gk-cal-agenda-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius);
+  background: var(--gk-surface);
+}
+.gk-cal-agenda-day {
+  padding: 10px 12px;
+}
+.gk-cal-agenda-day + .gk-cal-agenda-day {
+  border-top: 1px solid var(--gk-outline-variant);
+}
+.gk-cal-agenda-date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 0 6px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+  font-weight: 600;
+}
+.gk-cal-agenda-day.gk-cal-today .gk-cal-agenda-date {
+  color: var(--gk-primary-text);
+}
+.gk-cal-today-mark {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--gk-primary);
+  color: var(--gk-on-primary);
+  font-size: var(--gk-text-overline);
+  font-weight: 600;
+  line-height: 1.5;
+}
+.gk-cal-empty {
+  margin: 0;
+  padding: 24px 12px;
+  border: 1px dashed var(--gk-outline-variant);
+  border-radius: var(--gk-radius);
+  color: var(--gk-on-surface-variant);
+  text-align: center;
+}
+@container gk-cal (max-width: 599.98px) {
+  .gk-cal-grid {
+    display: none;
+  }
+  .gk-cal-agenda {
+    display: block;
+  }
+  .gk-cal-head {
+    margin-bottom: 8px;
+  }
+  .gk-cal-title {
+    font-size: var(--gk-text-subtitle);
+  }
+}
+
+/* Dark: the open day stands on the raised step of the dark ladder, as a menu does. */
+[data-gk-mode="dark"] .gk-cal-more-list,
+.gk-dark .gk-cal-more-list {
+  background: var(--gk-surface-container-high);
+}
+
+@media (forced-colors: active) {
+  .gk-cal-event {
+    border: 1px solid CanvasText;
+  }
+  .gk-cal-day.gk-cal-today .gk-cal-daynum time > [aria-hidden] {
+    outline: 2px solid CanvasText;
+  }
+}
+@media print {
+  .gk-cal-nav,
+  .gk-daterange-apply {
+    display: none;
+  }
+}

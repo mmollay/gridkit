@@ -44,6 +44,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | StatCards | `GridKit\StatCards` | KPI cards with icon, color, format |
 | FilterChips | `GridKit\FilterChips` | URL-based filter chip buttons |
 | YearFilter | `GridKit\YearFilter` | Year navigation filter |
+| DateRange | `GridKit\DateRange` / `js/calendar.js` / `GK.dateRange` | A period for reports and invoice lists: presets (today … last year, custom) and two native date fields, the period in words, `DateRange::fromRequest()` for the checked `from`/`to` (in order, within min/max, today in a time zone); stand-alone as a GET filter or the Form field type `daterange`; works without script (since 1.120.0) |
 | TableHeader | `GridKit\TableHeader` | **Unified filter/search bar above tables — Status / Toolbar / Advanced (since v1.10.0)** |
 | Lang | `GridKit\Lang` | i18n / multilingual support |
 | Pagination | `GridKit\Pagination` | Server-side pager below the table (`.gk-rowpager`), optional PageSize — the bar `Table::paginate()` draws too (since 1.118.0) |
@@ -64,6 +65,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Portrait video frame | `.gk-video-frame` | A 9:16 frame for a video or picture: never wider than its column or taller than the window, optional guide lines for the zones a platform covers, an empty "being made" state and a failed state, a caption (since 1.96.0) |
 | Sortable container (JS) | `[data-gk-sortierbar]` / `js/sortierbar.js` | Cards or rows a person puts in order by hand: a handle in every entry (from two entries on), dragging with mouse or finger, Space and arrow keys, a spoken position, the order posted as JSON when there is a `url`, and a sentence beside a symbol when saving failed (since 1.97.0) |
 | Tree | `GridKit\Tree` / `js/tree.js` / `GK.tree` | Page trees, categories, folders: a nested list that works without script, made a WAI-ARIA tree view — keys, type-ahead, open/closed remembered, single or multi selection with tri-state parents, a filter, children loaded on demand, moving by drag and drop or keyboard with a save URL and a way back (since 1.116.0) |
+| Calendar | `GridKit\Calendar` / `js/calendar.js` / `GK.calendar` | A month of appointments, deadlines and campaigns: a table of days with events as links, bars across days, "+3 more", week numbers, months as links (`?month=2026-12`), an agenda when narrower than 600px, arrow keys / Home / End / PageUp / PageDown with the script (since 1.120.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
 
@@ -84,8 +86,8 @@ without tripping over this.
 | `ActionGroup::render()` | `Modal::container()` | `BelegModal::container()` |
 | `Tabs::render()` (1.111.0) | | |
 
-`Tree::render()` and `Tree::renderBranch()` (1.116.0) print as well, and so does
-`Import::render()` (1.119.0) — `Import::html()` is its string twin.
+`Tree::render()` and `Tree::renderBranch()` (1.116.0) print as well, and so do `Import::render()` (1.119.0),
+`DateRange::render()` and `Calendar::render()` (1.120.0) — their `->html()` returns the same string.
 
 `PageSize::render()` above is an INSTANCE method — build it with the static
 `PageSize::make('per_page')` first, then chain. Same for `TableHeader::make()`.
@@ -1330,6 +1332,111 @@ reopens the exact hole the clamp closes: `?year=abc` becomes `0`, passes as
 "all years", and silently widens the report to every year instead of falling
 back to the current one.
 
+### DateRange (since 1.120.0)
+
+A period for reports and invoice lists: a select of presets and two native `<input type="date">`,
+from and to, with the period written out in words beside them ("Oct 1 – 31, 2026",
+"1.–31. Okt. 2026"). **Without any script it works as it is** — choose a preset or type the dates,
+send. With `js/calendar.js` — a file of its own like `js/tree.js`, loaded with `defer` after `gridkit.js`;
+`skeleton.php` and the demo do it, a page of your own adds `<script src=".../js/calendar.js" defer></script>`
+— a preset fills the dates at once, typing a date switches the select to *Custom*, and the words follow.
+There is no call to make: the script finds every picker and calendar, also one inserted later.
+`DateRange::render()` prints, `->html()` returns the same string.
+
+```php
+// A list page: the period in the filter bar, and the query reads the very same period.
+$range = (new DateRange('period'))
+    ->presets(['this-month', 'last-month', 'this-quarter', 'last-quarter', 'this-year', 'custom'])
+    ->default('this-month')
+    ->max(date('Y-m-d'))           // nothing after today
+    ->filter()                     // its own <form method="get"> with Apply; a preset is sent at once
+    ->preserve(['status', 'q']);   // the other filters stay in the URL
+['from' => $from, 'to' => $to] = $range->current();   // checked: real days, from <= to, within min/max
+// $stmt = $pdo->prepare('SELECT … WHERE invoice_date BETWEEN ? AND ?'); $stmt->execute([$from, $to]);
+
+TableHeader::make('invoices')
+    ->filter(fn () => $range->render())
+    ->render();
+```
+
+**Reading it** — on the page that queries, or on the POST of a form:
+
+```php
+$period = DateRange::fromRequest('period', 'this-month', ['max' => date('Y-m-d'), 'timezone' => 'Europe/Vienna']);
+// ['from' => '2026-11-01', 'to' => '2026-11-04', 'preset' => 'this-month']
+
+DateRange::presetRange('last-quarter', '2026-01-15');   // ['from' => '2025-10-01', 'to' => '2025-12-31']
+DateRange::text('2026-10-01', '2026-10-31');            // 'Oct 1 – 31, 2026' — '1.–31. Okt. 2026' with Lang 'de'
+DateRange::date('2026-02-30');                          // null: not a day
+```
+
+**In a Form** — the field type `daterange`; the field's options are the picker's, its label names the
+group, its message line describes every control:
+
+```php
+(new Form('report'))
+    ->field('period', 'Period', 'daterange', ['presets' => ['last-7-days', 'last-30-days', 'last-month'],
+        'default' => 'last-30-days', 'max' => date('Y-m-d'), 'required' => true])
+    ->values($_POST)                     // what was posted comes back, read by the same rules
+    ->submit('Show')
+    ->render();
+```
+
+| Method | What it does |
+|---|---|
+| `new DateRange($name)` | The name it posts under (default `period`): `name[preset]`, `name[from]`, `name[to]`, `name[shown]`. A plain name (letters, digits, `_`, `-`); anything else warns and is cleaned. |
+| `->presets([...])` | The presets offered, in this order: `today`, `yesterday`, `last-7-days`, `last-30-days`, `this-month`, `last-month`, `this-quarter`, `last-quarter`, `this-year`, `last-year`, `custom` (all of them by default, `DateRange::PRESETS`). `custom` — the dates as typed — is added at the end when it is missing; `[]` shows no select, only the dates. An unknown key warns and is left out. A posted preset the list does not offer is ignored. |
+| `->default('this-month')` | What is shown when the request names no period: a preset (`this-month` by default) or `['from' => 'Y-m-d', 'to' => 'Y-m-d']`. |
+| `->value($v)` | The period to show instead of the request's: a preset, `['from' => …, 'to' => …]`, or what was posted under the name — read by the same rules as the request. |
+| `->min('2020-01-01')` / `->max(date('Y-m-d'))` | The first and last day that can be chosen. Every date is held within them, the presets too; a preset that lies wholly outside is not offered. A day that is none, or a min after the max, warns and is no bound. |
+| `->timezone('Europe/Vienna')` | The zone "today" is counted in (default `date_default_timezone_get()`): at 00:30 in Vienna it is already the next day there, whatever the server's clock says. |
+| `->today('2026-11-04')` | The day the presets count from instead of today — `'Y-m-d'` or a `DateTimeInterface` (read in the time zone). For a report of a fixed day and for tests. |
+| `->label('Invoice date')` | The accessible name of the group (default "Period"). In a Form the field's label names it. |
+| `->filter()` | Stand-alone in a filter bar: its own `<form method="get">` (`gk-daterange-form`) and an Apply button; with the script a chosen preset is sent at once. Without `filter()` the picker is part of the form it stands in. |
+| `->baseUrl('/invoices')` | The action of the filter form (default: the page itself; a `#fragment` is kept). |
+| `->preserve(['status', 'q'])` | Query parameters the filter form carries along as hidden fields — names read from the URL, or `name => value`. |
+| `->required()` | Both dates must be filled in (the browser's `required`). |
+| `->current()` | `['from', 'to', 'preset']` of this picker — checked, as `fromRequest()` gives it. Call it on the picker you render, so both read the same options. |
+| `DateRange::fromRequest($name, $default, $opts)` | The same, without a picker. `$opts`: `presets`, `min`, `max`, `timezone`, `today` (as above), `request` (an array to read instead of `$_POST`, then `$_GET`). An unknown option warns. |
+| `DateRange::presetRange($preset, $today, $timezone)` | The days a preset covers: `['from', 'to']`, or `null` for `custom`. `$today` is `'Y-m-d'`, a moment, or null for today in `$timezone`. |
+| `DateRange::text($from, $to)` | A period in words, in the page's language. |
+| `DateRange::date($value)` | `'Y-m-d'` when it is a day that exists (years 1 to 9999), else `null` — the check every date here goes through. |
+| `DateRange::forForm($f, $field, $value, $invalid)` | What `Form` calls for a `daterange` field; not for your own use. |
+| `->render()` / `->html()` | Prints the picker / returns it. |
+
+- **The presets** count from today (or `today()`), on the calendar — a day of 23 or 25 hours changes
+  nothing: `last-7-days` is today and the six days before it, `last-30-days` today and 29 before;
+  `this-month`, `this-quarter` and `this-year` are the **whole** period, the days still to come included
+  (hold them with `->max(date('Y-m-d'))` for "so far"); `last-month`, `last-quarter` and `last-year` the
+  whole one before. February has 29 days in 2028 and 2000, 28 in 2100.
+- **What the server reads** (`current()`, `fromRequest()`): a preset wins and is counted from today
+  again — so a bookmarked "this month" is always this month. Dates win when the preset is `custom` or
+  missing, or when they were typed over without a script (they differ from `name[shown]`, the dates the
+  page showed). Reversed dates are swapped, both are held within min/max. A date that is no day, an
+  array, a hostile string: as if nothing was sent — the default. The script keeps preset and dates in
+  step and leaves `name[shown]` out.
+- **In the browser** (`js/calendar.js`): choosing a preset fills the dates (counted from the server's
+  today, in the browser the same days as `presetRange()`), typing a date makes the select *Custom*, the
+  words follow (`<output aria-live="polite">`), and each date bounds the other (`max` of from, `min` of
+  to), so the browser itself refuses an end before the start. In `filter()` mode a preset is sent at
+  once (`requestSubmit()`); typed dates wait for Apply. Every change by the person fires
+  **`gk:daterange`** on the `.gk-daterange` (bubbles; `detail: { name, from, to, preset, text }`).
+  `GK.dateRange.get(el)`, `GK.dateRange.set(el, 'last-month' | { from, to })` (fires nothing),
+  `GK.dateRange.presetRange(key, today)`, `GK.dateRange.text(from, to, el)` — `el` is the element, its
+  id or the name it posts under.
+- **Accessible**: a `role="group"` named "Period" (or the Form label); the select is "Preset", the
+  dates "From" and "To"; the words are an `<output>` for both. No colour carries anything.
+- **On a phone** (600px and less) the picker is the width of the page: the select on top, the two dates
+  side by side, the words below; the fields are 16px, iOS does not zoom.
+- **Classes** (block "DateRange" in `css/blocks.json`): `gk-daterange`, `gk-daterange-form`,
+  `gk-daterange-preset`, `gk-daterange-dates`, `gk-daterange-from`, `gk-daterange-to`,
+  `gk-daterange-sep`, `gk-daterange-text`, `gk-daterange-apply`. Fields are `.gk-filter` stand-alone,
+  `.gk-input` in a Form.
+- **Words**: `daterange.*` and `date.months_short` in `lang/`; the script takes them from the picker's
+  own `data-gk-daterange`, so it writes what PHP writes.
+- **Do not** compare the posted strings yourself or count "this month" by hand — `current()` /
+  `fromRequest()` have checked them; do not build `BETWEEN` from `$_GET['period']['from']`.
+
 ### SortLink
 
 Sortable headers for tables you build by hand. `Table` already sorts its own
@@ -1664,7 +1771,11 @@ no tab that can be opened raise `E_USER_WARNING` and fall back. A form without `
 `toggle` · `radio` · `file` (drag & drop) · `richtext` (CKEditor) · `color` · `range` ·
 `choice` (answer tiles, since 1.92.0)
 
-and `lineitems` (since 1.117.0): the editor of `GridKit\LineItems`, handed in as the option
+and `daterange` (since 1.120.0): the period picker of `GridKit\DateRange` — the options `presets`,
+`default`, `min`, `max`, `timezone`, `today` and `required` are the picker's; `values($_POST)` hands
+back what was posted (`name[preset]`, `name[from]`, `name[to]`), read like a request. See **DateRange**.
+
+And `lineitems` (since 1.117.0): the editor of `GridKit\LineItems`, handed in as the option
 `lines` — `->field('items', 'Lines', 'lineitems', ['lines' => $lines])`. The field's label names
 it, `values(['items' => $rows])` fills it when it has no `items()` of its own, and an AJAX
 answer `{"errors": {"items[1][qty]": "…"}}` lands under that cell. See **LineItems**.
@@ -1699,7 +1810,8 @@ searchable select is plain `'select'`.
 | `showIf` | every field | the field shows only while another field of the form has a value (since 1.105.0): `['field' => 'kind', 'equals' => 'company']`, with exactly one of `equals`, `not` (a value), `in` (a list of values) or `filled` (`true`: anything entered, `false`: empty). A field that is not shown is hidden **and disabled**: it is not posted, `required` blocks nothing, it takes no focus. A condition on a field that is itself hidden counts as empty, so a chain folds away together. An unusable condition raises `E_USER_WARNING` and the field stays visible. Needs `js/gridkit.js` 1.105.0; a copy without it shows every field. |
 | `preset` | `richtext` | `'full'` (default) or `'basic'` — how much toolbar |
 | `upload` | `richtext` | a URL. Turns pictures on: an upload button, drag & drop, paste, **alignment** (left/right with text flowing beside it, own line centred), size handles and alt text. Off without it, because an upload button with nowhere to put the file is worse than none. The endpoint takes a POST with the file under `upload` and answers `{"url":"https://…"}`, or `{"error":{"message":"…"}}` — CKEditor's SimpleUploadAdapter contract. **Return an absolute URL**: relative ones work on the page and break the moment the content is mailed. Pictures render as a plain `<img>` in the paragraph with the size as an inline `style`, deliberately not as `<figure class="image">`, so the same content survives being sent as an e-mail |
-| `min`, `max`, `step` | `range`, `number`, `date`/`time` | bounds (`range` defaults to `0`/`100`/`1` and starts at `min`) |
+| `min`, `max`, `step` | `range`, `number`, `date`/`time`, `daterange` | bounds (`range` defaults to `0`/`100`/`1` and starts at `min`); a `daterange` takes `min` and `max` as `'Y-m-d'` |
+| `presets`, `default`, `timezone`, `today` | `daterange` | the presets offered, the period without a request (a preset or `['from' => …, 'to' => …]`), the zone of "today", a fixed today — as `DateRange`'s methods (since 1.120.0) |
 | `lines` | `lineitems` | the `GridKit\LineItems` the field shows (since 1.117.0); without it the field is left out with an `E_USER_WARNING` |
 | `->cancel($label, $href)` | — | a link beside the submit button — a method, not a field |
 | `->hidden($name, $value)` | — | a hidden input — a method, not a field |
@@ -2944,6 +3056,103 @@ Promise that waits for a lazy branch), `GK.tree.collapse(el, id)`, `GK.tree.sele
 - **Do not** write the handle, the roles or the tabindex yourself, put a `<form>` inside a row, or
   give a node a second link — the label is the link.
 
+### Calendar (since 1.120.0)
+
+A month view for appointments, deadlines and campaigns. The server writes the month as a plain table —
+a column per weekday, a row per week, today marked, every day named by its full date — with the events
+as links in their days; the months before and after are links with a query parameter
+(`?month=2026-12`). **It works as it is, without script.** `js/calendar.js` (the file `DateRange` uses
+too, loaded after `gridkit.js`) makes the table a grid for the keyboard. `Calendar::render()` prints,
+`->html()` returns the same string.
+
+```php
+$cal = (new Calendar('appointments'))
+    ->label('Appointments')                         // the accessible name (default "Calendar")
+    ->weekNumbers()                                 // a column with the ISO week
+    ->preserve(['user'])                            // kept in the month links
+    ->dayUrl('/appointments/new?date={date}');      // the day number is a link
+['from' => $from, 'to' => $to] = $cal->visibleRange();   // the days the grid shows: fetch these
+$rows = [   // e.g. SELECT … WHERE begins_at <= :to AND COALESCE(ends_at, begins_at) >= :from
+    ['id' => 7, 'subject' => 'Team meeting', 'begins_at' => '2026-11-04 09:30', 'ends_at' => null, 'color' => 'blue'],
+    ['id' => 8, 'subject' => 'Trade fair', 'begins_at' => '2026-11-10', 'ends_at' => '2026-11-13', 'color' => 'orange'],
+];
+$cal->events($rows, ['title' => 'subject', 'start' => 'begins_at', 'end' => 'ends_at'])
+    ->event('2026-11-20', 'Invoice run', ['href' => '/runs/3', 'color' => 'red', 'allDay' => true])
+    ->event(['start' => '2026-11-23', 'end' => '2026-12-04'], 'Winter campaign')
+    ->render();
+```
+
+| Method | What it does |
+|---|---|
+| `new Calendar($id)` | The id: the element is `#gk-cal-<id>`, the script and the events name it. |
+| `->event($when, $title, $opts)` | One event. `$when`: a day `'2026-11-04'`, a day and time `'2026-11-04 09:30'` (or `T09:30`), a `DateTimeInterface` (read in the time zone; midnight is no time), or `['start' => …, 'end' => …]` — the last day included — for one that lasts days. |
+| `->events($rows, $map)` | Many from rows (arrays or objects): each has `date`, or `start` and maybe `end`, a `title` and any option under its own name; `$map` renames them (`['title' => 'subject', 'start' => 'begins_at']`). A row without a title or a date warns and is left out. |
+| `->month('2026-11')` | The month shown. Default: the query parameter when it names a month (`2026-11`, years 1 to 9999), else this month. Anything else in the URL is ignored. |
+| `->current()` | That month, `'Y-m'`. |
+| `->visibleRange()` | `['from', 'to']`: the first and last day of the weeks shown — the range to query. |
+| `->param('m')` | The query parameter of the month links (default `month`). |
+| `->weekStart('monday')` | `'monday'` or `'sunday'`; default by the page's language: Sunday for English, Monday otherwise. |
+| `->weekNumbers()` | A first column with the ISO 8601 week of each row (the week of its Monday), read as "Week 45". |
+| `->timezone('Europe/Vienna')` / `->today('2026-11-04')` | The zone "today" is counted in (default `date_default_timezone_get()`), or a fixed today (`'Y-m-d'` or a `DateTimeInterface`). |
+| `->baseUrl('/calendar')` / `->preserve(['user'])` | Where the month links lead (default the page; a `#fragment` stays last) and which query parameters they keep — names read from the URL, or `name => value`. |
+| `->maxPerDay(3)` | Events a day shows before "+n more" (default 3, at least 1). |
+| `->dayUrl('/new?date={date}')` | Makes every day number a link; `{date}` is the day. Enter on a day follows it. |
+| `->label('Appointments')` | The accessible name of the table and the agenda (default "Calendar"). |
+| `->render()` / `->html()` | Prints the calendar / returns it. |
+
+**Event options:** `href` (the event is a link; a `javascript:`, `vbscript:` or `data:` URL warns and is
+left out — the event is text), `color` (the label palette: `blue`, `green`, `orange`, `red`, `gray`;
+without one, the theme's accent; anything else warns), `time` (text before the title; default the time
+of the start), `allDay` (`true`: no time; read as yes/no like a database hands it over), `id` (handed to
+the script's events; default `e1`, `e2`, … in the order added). An unknown option, an end before the
+start (swapped), a date that is no day (the event is left out): `E_USER_WARNING`, and the calendar
+renders.
+
+- **A bar across days.** An event of several days is a segment in each day it covers, in the same lane of
+  the week, so the bar is straight (an empty lane above it keeps its place); the title is written once
+  per week and runs across the bar. Every segment still reads the title to a screen reader — a day says
+  what is on it. In a list (the agenda, "+n more") such an event says its days ("Nov 10 – 13, 2026").
+- **Order in a day:** events without a time (all day, several days) first, then by time, then as added.
+- **"+n more".** A day that holds more than `maxPerDay()` shows one less and "+3 more" — a `<details>`
+  that opens the whole day over the grid (no script needed; in the last three columns it opens towards
+  the start). With the script, Escape closes it and gives the focus back, a click elsewhere closes it,
+  and one is open at a time.
+- **Today** is the day number in a filled disc, `aria-current="date"` and ", today" in its name. Days of
+  the months around are on a quieter ground and keep their events.
+- **On a phone** — whenever the calendar itself is narrower than 600px (a container query, so a side
+  column counts too) — the grid gives way to an **agenda**: the days of the month that hold something, one
+  under the other, each event with its time, "All day" or its days. Nothing scrolls sideways. A month
+  without events says "Nothing this month."
+- **What a screen reader gets**: a table named by its label and the month ("Appointments November 2026"), column headers with the
+  whole weekday, every day's number read as "Wednesday, November 4, 2026"; the events are links (or,
+  without `href`, buttons once the script runs) named by their time and title. Without the script it is a
+  table of links in reading order.
+- **Keys** (with the script: `role="grid"`, one tab stop — the day; Tab from it reaches that day's events
+  and "+n more", then leaves): arrows move a day and a week (past the edge of the grid: that month),
+  Home/End to the ends of the week, PageUp/PageDown a month (Shift: a year) — the page loads it and the
+  same day takes the focus there (`sessionStorage`, read in `try`) — Enter and Space choose the day
+  (Enter then follows its `dayUrl`). A click on a day chooses it too. "Today" in the month shown only
+  moves the focus. In `rtl` Left and Right swap.
+- **Events**, on the `.gk-cal`, bubbling — for what the person does:
+  `gk:calendarnav` (`{ calendar, month, url, date }`, **cancelable**: before another month loads; call
+  `preventDefault()` and load it your own way) and `gk:calendarselect` (`{ calendar, date, event, events }`
+  — `event` is `{ id, title, href, start, end }` of the event chosen, or `null` for the day; cancelable:
+  then Enter does not follow the day link).
+- **JavaScript API** (first argument: the calendar's id, element or a selector): `GK.calendar.month(el)`
+  (`'2026-11'`), `GK.calendar.focus(el, '2026-11-12')` (false when the grid does not show it),
+  `GK.calendar.go(el, '2027-01')` (after `gk:calendarnav`; false when cancelled), `GK.calendar.events(el,
+  date)` (the events of a day).
+- **Classes** (all `gk-cal-*`, block "Calendar" in `css/blocks.json`): `gk-cal`, `-head`, `-title`,
+  `-nav`, `-grid`, `-wk`, `-day`, `-outside`, `-today`, `-daynum`, `-daylink`, `-events`, `-slot`,
+  `-event`, `-accent`, `-time`, `-event-title`, `-span-in`, `-span-out`, `-span-head`, `-more`,
+  `-more-list`, `-more-date`, `-event-row`, `-agenda`, `-agenda-list`, `-agenda-day`, `-agenda-date`,
+  `-today-mark`, `-empty`; an event's colour is its `gk-label-*`. Roles only: light, both dark spellings
+  and the six themes follow (the event colours are the labels' pairs, 4.5:1).
+- **Words**: `calendar.*` and `date.*` in `lang/` — month and weekday names, the full date
+  (`date.full`), "+{n} more". The week numbers, the order of the weekdays and the names follow `Lang`.
+- **Do not** put a form inside a day, write the grid roles or tabindex yourself, or hand the calendar a
+  month's events you did not limit to `visibleRange()` — a year of events is a year of markup.
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -3216,6 +3425,19 @@ document.addEventListener('gk:treemove', e => { if (e.detail.parent === 'legal')
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
+
+// Dates (since 1.120.0) — js/calendar.js, see "DateRange" and "Calendar".
+GK.dateRange.get('period');                    // { from: '2026-11-01', to: '2026-11-30', preset: 'this-month' }
+GK.dateRange.set('period', 'last-month');      // or { from, to } (custom); fires no event
+GK.dateRange.presetRange('this-quarter', '2026-11-04');   // { from: '2026-10-01', to: '2026-12-31' }
+GK.dateRange.text('2026-10-01', '2026-10-31', 'period');  // 'Oct 1 – 31, 2026', in the picker's words
+document.addEventListener('gk:daterange', e => { /* e.detail: { name, from, to, preset, text } */ });
+GK.calendar.month('appointments');            // '2026-11'
+GK.calendar.focus('appointments', '2026-11-12');
+GK.calendar.go('appointments', '2027-01');    // loads that month (gk:calendarnav can refuse it)
+GK.calendar.events('appointments', '2026-11-04');   // [{ id, title, href, start, end }]
+document.addEventListener('gk:calendarselect', e => { /* { calendar, date, event, events }, cancelable */ });
+document.addEventListener('gk:calendarnav', e => { /* { calendar, month, url, date }, cancelable */ });
 
 // Line items (since 1.117.0) — see "LineItems". The same totals as LineItems::totals(), to the cent.
 document.addEventListener('gk:lineitemschange', e => { /* e.detail: { items, totals } */ });

@@ -711,6 +711,41 @@
                 "gk-tree-toolbar": "1.116.0"
             }
         },
+        "calendar": {
+            "name": "Calendar",
+            "classes": {
+                "gk-cal": "1.120.0",
+                "gk-cal-accent": "1.120.0",
+                "gk-cal-agenda": "1.120.0",
+                "gk-cal-agenda-date": "1.120.0",
+                "gk-cal-agenda-day": "1.120.0",
+                "gk-cal-agenda-list": "1.120.0",
+                "gk-cal-day": "1.120.0",
+                "gk-cal-daylink": "1.120.0",
+                "gk-cal-daynum": "1.120.0",
+                "gk-cal-empty": "1.120.0",
+                "gk-cal-event": "1.120.0",
+                "gk-cal-event-row": "1.120.0",
+                "gk-cal-event-title": "1.120.0",
+                "gk-cal-events": "1.120.0",
+                "gk-cal-grid": "1.120.0",
+                "gk-cal-head": "1.120.0",
+                "gk-cal-more": "1.120.0",
+                "gk-cal-more-date": "1.120.0",
+                "gk-cal-more-list": "1.120.0",
+                "gk-cal-nav": "1.120.0",
+                "gk-cal-outside": "1.120.0",
+                "gk-cal-slot": "1.120.0",
+                "gk-cal-span-head": "1.120.0",
+                "gk-cal-span-in": "1.120.0",
+                "gk-cal-span-out": "1.120.0",
+                "gk-cal-time": "1.120.0",
+                "gk-cal-title": "1.120.0",
+                "gk-cal-today": "1.120.0",
+                "gk-cal-today-mark": "1.120.0",
+                "gk-cal-wk": "1.120.0"
+            }
+        },
         "breadcrumb": {
             "name": "Breadcrumb",
             "classes": {
@@ -807,6 +842,20 @@
             "name": "YearFilter",
             "classes": {
                 "gk-year-filter": "0.9.0"
+            }
+        },
+        "daterange": {
+            "name": "DateRange",
+            "classes": {
+                "gk-daterange": "1.120.0",
+                "gk-daterange-apply": "1.120.0",
+                "gk-daterange-dates": "1.120.0",
+                "gk-daterange-form": "1.120.0",
+                "gk-daterange-from": "1.120.0",
+                "gk-daterange-preset": "1.120.0",
+                "gk-daterange-sep": "1.120.0",
+                "gk-daterange-text": "1.120.0",
+                "gk-daterange-to": "1.120.0"
             }
         },
         "global-search": {
