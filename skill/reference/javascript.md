@@ -1,4 +1,4 @@
-# GridKit 1.119.0 — JavaScript
+# GridKit 1.120.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -71,6 +71,19 @@ document.addEventListener('gk:treemove', e => { if (e.detail.parent === 'legal')
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
+
+// Dates (since 1.120.0) — js/calendar.js, see "DateRange" and "Calendar".
+GK.dateRange.get('period');                    // { from: '2026-11-01', to: '2026-11-30', preset: 'this-month' }
+GK.dateRange.set('period', 'last-month');      // or { from, to } (custom); fires no event
+GK.dateRange.presetRange('this-quarter', '2026-11-04');   // { from: '2026-10-01', to: '2026-12-31' }
+GK.dateRange.text('2026-10-01', '2026-10-31', 'period');  // 'Oct 1 – 31, 2026', in the picker's words
+document.addEventListener('gk:daterange', e => { /* e.detail: { name, from, to, preset, text } */ });
+GK.calendar.month('appointments');            // '2026-11'
+GK.calendar.focus('appointments', '2026-11-12');
+GK.calendar.go('appointments', '2027-01');    // loads that month (gk:calendarnav can refuse it)
+GK.calendar.events('appointments', '2026-11-04');   // [{ id, title, href, start, end }]
+document.addEventListener('gk:calendarselect', e => { /* { calendar, date, event, events }, cancelable */ });
+document.addEventListener('gk:calendarnav', e => { /* { calendar, month, url, date }, cancelable */ });
 
 // Line items (since 1.117.0) — see "LineItems". The same totals as LineItems::totals(), to the cent.
 document.addEventListener('gk:lineitemschange', e => { /* e.detail: { items, totals } */ });
