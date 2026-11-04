@@ -1,4 +1,4 @@
-# GridKit 1.122.1 — components
+# GridKit 1.123.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -3177,6 +3177,183 @@ off();
 - **Do not** render the same palette twice or inside a hidden container, bind Ctrl+K yourself on a
   page that has one, or put markup in a label — it is shown as text.
 
+### FilterBuilder (`GridKit\FilterBuilder`, since 1.123.0)
+
+Conditions a person combines freely, for an invoice list, a newsletter segment, any table: rows of
+**[field] [operator] [value]**, joined by AND or OR, in groups nested to `maxDepth()`; rows added,
+duplicated and removed; saved views ("My open invoices"). The page queries with the checked tree:
+**`FilterBuilder::toSql()`** for a database (placeholders only), **`FilterBuilder::matches()`** for rows in
+memory. **`js/filter-builder.js`** makes it instant; it is a file of its own like `js/tree.js` (the PawBot
+dashboard keeps its own `gridkit.js`), loaded with `defer` after `gridkit.js` — `skeleton.php` and the
+demo do it; a page of your own adds `<script src=".../js/filter-builder.js" defer></script>`.
+
+**`->render()` PRINTS the form, `->html()` RETURNS it.** Nothing else prints.
+
+```php
+$fields = (new FilterBuilder('f'))                         // the name: the query parameter (?f=…) and the ids
+    ->field('status', 'Status', ['type' => 'select', 'options' => ['open' => 'Open', 'paid' => 'Paid', 'overdue' => 'Overdue']])
+    ->field('amount', 'Amount', ['type' => 'money'])
+    ->field('customer', 'Customer', ['placeholder' => 'Name'])            // type text
+    ->field('due', 'Due', ['type' => 'date', 'operators' => ['lt', 'gt', 'between']])
+    ->field('tags', 'Tags', ['type' => 'multiselect', 'options' => ['vip' => 'VIP', 'eu' => 'EU']])
+    ->field('reminded', 'Reminded', ['type' => 'bool'])
+    ->value(['join' => 'and', 'rules' => [['field' => 'status', 'op' => 'is', 'value' => 'open']]])   // without ?f=
+    ->maxDepth(3)->maxRows(20)
+    ->views([['label' => 'My open invoices', 'state' => '["and",["status","is","open"]]'],
+             ['label' => 'Large ones', 'state' => ['join' => 'and', 'rules' => [['field' => 'amount', 'op' => 'gt', 'value' => 1000]]]]])
+    ->saveUrl('/invoices/views')                           // "Save view" posts here (see below)
+    ->preserve(['sort', 'period']);                        // other query parameters the form carries along
+
+$tree = $fields->tree();                                   // the checked conditions — or FilterBuilder::fromRequest('f', $fields)
+['sql' => $where, 'params' => $params] = FilterBuilder::toSql($tree, $fields, [
+    'amount' => 'i.total',                                 // the column of a field; default: the field key
+    'tags'   => fn (array $rule, array $field): array => [  // a multiselect needs a callable
+        'sql' => ($rule['op'] === 'has_none' ? 'NOT ' : '') . 'EXISTS (SELECT 1 FROM invoice_tags t WHERE t.invoice_id = i.id AND t.tag IN ('
+               . implode(', ', array_fill(0, count($rule['value']), '?')) . '))',
+        'params' => $rule['value'],
+    ],
+]);
+// $pdo->prepare("SELECT … FROM invoices i WHERE $where ORDER BY …")->execute($params);
+
+$fields->render();                                         // PRINTS the form
+echo '<h2>' . htmlspecialchars(FilterBuilder::summary($tree, $fields)) . '</h2>';   // "Status is Open"
+```
+
+| Method | What it does |
+|---|---|
+| `new FilterBuilder($name = 'f')` | The query parameter the state travels in, and the ids (`gk-fb-<name>`). Letters, digits, `_` and `-`; anything else a warning and cleaned. |
+| `->field($key, $label, $opts = [])` | A field. `$key`: letters, digits, `_ . -`. Options: `type` (`text` default, `number`, `money`, `date`, `bool`, `select`, `multiselect`), `options` (select and multiselect: `key => label`, or a list of `['value' => …, 'label' => …]`), `operators` (this field's operators, a subset of its type's), `placeholder` (of a text or number value). |
+| `->operators($type, $list)` | The operators a type offers, in this order (a field's own `operators` wins). |
+| `->value($state)` | What the builder shows when the request carries no state of its own, and what **Reset** brings back: either shape below, or its JSON. |
+| `->maxDepth(int)` | How deep groups nest, the top level counted (1 to 5, default 3; 1: no groups). |
+| `->maxRows(int)` | Conditions in all (1 to 100, default 20). At the limit "Condition", "Group" and duplicate are disabled and the limit is said. |
+| `->views(iterable)` | Saved views as links above the conditions: `label` (or `name`), `state` (either shape or JSON), `href` (a link of your own instead). The one applied is marked (`aria-current`, a tick). |
+| `->saveUrl($url)` | Shows **Save view**: a name and a button that posts the form there. |
+| `->localViews(true)` | With the script, views are kept in this browser too (`localStorage`, `gk-filterbuilder-<name>`), when there is no `saveUrl()` or the page cancels `gk:filtersave`; each with a remove button. |
+| `->method('get' \| 'post')` | Default `get`: the filter is in the URL and a view is a link. |
+| `->action($url)` | Where the form goes (default: the page itself). A `#section` keeps its fragment. |
+| `->preserve(array)` | Other query parameters as hidden fields: names read from the URL (`['sort']`) or `name => value`. |
+| `->label($text)` | The accessible name (default "Filter"). |
+| `->request(array)` | Read this array instead of `$_POST` / `$_GET` (a framework's request, a test). |
+| `->tree()` | The checked conditions of the current state (request, else `value()`). |
+| `->render()` / `->html()` | Prints / returns the form. |
+
+**Types and operators** (`FilterBuilder::OPERATORS`; the default set first, the rest through `operators()`):
+
+| Type | Default | Also |
+|---|---|---|
+| `text` | `contains`, `not_contains`, `equals`, `starts`, `ends`, `empty`, `not_empty` | `not_equals` |
+| `number`, `money` | `eq` =, `ne` ≠, `lt` <, `gt` >, `between` | `lte`, `gte`, `empty`, `not_empty` |
+| `date` | `eq` (is on), `ne`, `lt` (before), `gt` (after), `between` | `lte`, `gte`, `empty`, `not_empty` |
+| `select` | `is`, `is_not`, `any_of` | `none_of`, `empty`, `not_empty` |
+| `multiselect` (the row holds a list) | `has_any`, `has_all`, `has_none` | `empty`, `not_empty` |
+| `bool` | `true`, `false` | |
+
+**The state** has two shapes, and every reader takes both (and their JSON):
+
+```php
+// The documented shape — what tree(), clean() and fromRequest() return:
+$state = ['join' => 'and', 'rules' => [
+    ['field' => 'status', 'op' => 'any_of', 'value' => ['open', 'overdue']],
+    ['join' => 'or', 'rules' => [
+        ['field' => 'amount', 'op' => 'between', 'value' => [100, 500]],
+        ['field' => 'customer', 'op' => 'starts', 'value' => 'Eck'],
+        ['field' => 'reminded', 'op' => 'true'],               // no value: empty, not_empty, true, false
+    ]],
+]];
+// The compact one of the URL (?f=…): a group is [join, …children], a condition [field, op] or [field, op, value].
+echo FilterBuilder::encode($state);   // ["and",["status","any_of",["open","overdue"]],["or",["amount","between",[100,500]],…]]
+```
+
+A value is a string (text: trimmed, at most 200 characters, control characters removed), a number
+(int or float; typed as `19.99` or `19,99`), a day `Y-m-d`, an option key (string), a list of option
+keys, or `[from, to]` for `between` (put in order).
+
+**Static readers** (`$fields` is the builder, or an array `key => ['label' => …, 'type' => …, 'options' => …]`):
+
+| | |
+|---|---|
+| `FilterBuilder::fromRequest($name, $fields, $opts = [])` | The checked tree a request names (POST, else GET): the JSON parameter, or the arrays of the form without script with its command applied. `$opts`: `maxDepth`, `maxRows`, `operators` (type => list), `default` (the state without a request), `request` (an array to read instead). |
+| `FilterBuilder::clean($state, $fields, $opts = [])` | Any state checked — a stored view, a hand-written one. |
+| `FilterBuilder::encode($tree)` | The compact JSON. A link: `'?f=' . rawurlencode(FilterBuilder::encode($tree))`. |
+| `FilterBuilder::toSql($tree, $fields, $columnMap = [])` | `['sql' => '(status = ? AND i.total > ?)', 'params' => ['open', 100]]` — see below. |
+| `FilterBuilder::matches($tree, $row, $fields)` | Whether a row (array or object, keyed by the field keys) passes — `array_filter($rows, fn ($r) => FilterBuilder::matches($tree, $r, $fields))`. |
+| `FilterBuilder::summary($tree, $fields)` | The conditions in words, in the page's language. |
+| `FilterBuilder::savedView($name, $fields, $opts = [])` | What **Save view** sent: `['label', 'state', 'json']`, or null without a name. |
+
+**What is checked**, every time a tree is read (`clean()` underlies them all; `toSql()` and `matches()`
+clean again): a field the builder does not have, an operator its field does not offer, a value of the
+wrong type (`"abc"` for a number, `2026-02-30`, an option that is not one), a group deeper than
+`maxDepth`, conditions past `maxRows` — all left out, silently (it is input); an empty group goes too.
+The JSON is read only up to 8 KB, lists up to 200 values, at most 1000 nodes are looked at. A
+condition left incomplete in the form (nothing typed yet) is kept for the form and not applied.
+
+**`toSql()`** writes **placeholders only**. A column name comes from `$columnMap` or is the field key —
+never from the request; it has to be an identifier (`total`, `i.total`, `` `order` ``, `"order"`) or a
+callable `fn (array $rule, array $field): array` returning `['sql' => …, 'params' => […]]` with one `?`
+per param. Text is compared with `LIKE ? ESCAPE '!'` (`%`, `_` and `!` in the value are escaped; case
+follows the column's collation — MySQL's default ignores it, as `matches()` does), `equals` too.
+`between` is `BETWEEN ? AND ?`, `any_of` an `IN (?, ?, …)` with one placeholder per value. A date column
+may hold times: a day is `[day, next day)`, `before` is `< day`. "is not", "does not contain", `ne` and
+`none_of` keep the rows where the column is NULL; `empty` is `IS NULL` (text and select: `IS NULL OR = ''`);
+`bool` is `= 1`. Nothing: `1=1`. A column that is not an identifier, a multiselect without a callable,
+a callable that throws or miscounts: a warning and `1=0` — a broken condition never widens the result.
+
+**Saved views.** The page stores them; the builder shows them (`views()`) and sends a new one:
+
+```php
+// POST /invoices/views — what "Save view" sends: the state under the builder's name, the name under f_view.
+$fields = (new FilterBuilder('f'))->field('status', 'Status', ['type' => 'select', 'options' => ['open' => 'Open', 'paid' => 'Paid']]);
+$view = FilterBuilder::savedView('f', $fields, ['request' => ['f' => '["and",["status","is","open"]]', 'f_view' => 'My open invoices']]);
+// ['label' => 'My open invoices', 'state' => [...the checked tree...], 'json' => '["and",["status","is","open"]]']
+// store $view['label'] and $view['json'] for the user, then redirect back to the list.
+```
+
+**Without script** the form works as it is: nested `<fieldset>`s, the controls named
+`f[rules][0][field]`, `f[rules][1][rules][0][op]` …, and submit buttons named `f[cmd]` that add a
+condition or a group, duplicate or remove (`add:1`, `group:`, `dup:0`, `remove:1.0`) — the page is drawn
+again with the change; Apply and Reset are buttons too. A hidden first Apply button makes Enter in a field
+apply, not remove. Changing a field or operator shows its operators and value fields after the next
+submit; an incomplete or wrong value is kept and said under its row.
+
+**With `js/filter-builder.js`** the same markup is drawn at once: add, duplicate and remove without a
+request (the focus goes to the new row, or to the row that took the removed one's place), the operators
+follow the field's type, the value fields follow the operator (a date field, a select, a multiple
+select for "any of", two fields for `between`), and the line "Shown: Status is Open AND Amount > 100.00"
+follows what is typed. Apply sends the state as compact JSON in one parameter (`?f=["and",…]`), the
+nested fields switched off; an incomplete condition is marked and focused instead.
+
+- **Accessible**: every control has a name ("Field of condition 2.1", "Remove group 2"), a group is a
+  `fieldset` named by its legend, the join is a labelled select, a wrong value is
+  `aria-invalid` and described by a sentence with a symbol (not the colour alone), the summary is a polite
+  live region. On a phone (600px) field and operator share a line, the value takes the next, the buttons
+  are 44px, nothing scrolls sideways.
+- **Classes** (all in `css/blocks.json` as "Filter builder"): `gk-filter-builder`, and `gk-fb-` +
+  `views`, `views-label`, `view-list`, `view`, `view-remove`, `group`, `legend`, `group-head`, `join`,
+  `join-label`, `rules`, `row`, `row-group`, `conj`, `cells`, `field`, `op`, `value`, `input`, `multi`,
+  `between-and`, `actions`, `btn`, `dup`, `remove`, `invalid`, `error`, `add`, `add-rule`, `add-group`,
+  `limit`, `empty`, `note`, `foot`, `summary`, `summary-label`, `summary-text`, `buttons`, `apply`,
+  `reset`, `default`, `save`, `save-label`, `save-name`, `save-btn`. Colours are roles: light, both dark
+  spellings and the six themes follow.
+- **Words** come from `filterbuilder.*` in `lang/`; the server hands the script the ones it needs in the
+  builder's configuration.
+- **Warnings** (`E_USER_WARNING`, the builder still renders): a field key that is not one, a type or
+  operator that does not exist, a select without options, an option it does not know, a limit out of
+  range, a method other than get/post, a `javascript:` link, a view without a label, a `value()` with
+  conditions that are not complete, a builder without fields.
+
+**Events**, on the form, bubbling:
+
+| Event | `detail` |
+|---|---|
+| `gk:filterchange` | `{ name, tree, json, summary }` — **cancelable**: Apply, before the form is sent. `preventDefault()` and filter yourself (a fetch, a live table). |
+| `gk:filtersave` | `{ name, label, tree, json, summary }` — **cancelable**: Save view. Cancelled, the page stores it; else it posts to `saveUrl()`, or stays in this browser with `localViews()`. |
+
+**JavaScript API** (first argument: the form, its id, or the builder's name): `GK.filterBuilder.get('f')`
+(the checked tree), `GK.filterBuilder.set('f', state)` (either shape or JSON, drawn at once, nothing
+sent), `GK.filterBuilder.reset('f')` (back to `value()`, nothing sent), `GK.filterBuilder.apply('f')`
+(as the button), `GK.filterBuilder.json('f')`, `GK.filterBuilder.summary('f')`.
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -3624,5 +3801,6 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Tree | `GridKit\Tree` / `js/tree.js` / `GK.tree` | Page trees, categories, folders: a nested list that works without script, made a WAI-ARIA tree view — keys, type-ahead, open/closed remembered, single or multi selection with tri-state parents, a filter, children loaded on demand, moving by drag and drop or keyboard with a save URL and a way back (since 1.116.0) |
 | Calendar | `GridKit\Calendar` / `js/calendar.js` / `GK.calendar` | A month of appointments, deadlines and campaigns: a table of days with events as links, bars across days, "+3 more", week numbers, months as links (`?month=2026-12`), an agenda when narrower than 600px, arrow keys / Home / End / PageUp / PageDown with the script (since 1.120.0) |
 | CommandPalette | `GridKit\CommandPalette` / `js/command-palette.js` / `GK.palette` | Ctrl+K (Cmd+K on a Mac): a few letters, Enter — to a page of the sidebar (read from the page), an entry or a command of yours, or a record your search URL returns as you type (same origin, debounced, the stale answer dropped); fuzzy, umlauts both ways, marked matches, recent entries, groups; a modal dialog with the keys of a combobox and a listbox; a full-screen sheet on a phone (since 1.122.0) |
+| FilterBuilder | `GridKit\FilterBuilder` / `js/filter-builder.js` / `GK.filterBuilder` | Conditions combined freely for tables, segments, invoice lists: rows of field, operator, value; AND/OR groups nested to a depth; add, duplicate, remove; saved views stored by the page. The state is compact JSON in one URL parameter, `FilterBuilder::fromRequest()` checks it, `toSql()` writes a WHERE clause with placeholders only, `matches()` filters rows in memory, `summary()` says it in words; a form without script, instant with it (since 1.123.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |

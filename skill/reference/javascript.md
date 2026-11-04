@@ -1,4 +1,4 @@
-# GridKit 1.122.1 — JavaScript
+# GridKit 1.123.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -83,6 +83,13 @@ GK.palette.close();
 const off = GK.palette.register({ group: 'Tools', items: () => [{ label: 'Reload', action: 'reload' }] });  // off() takes it away
 document.addEventListener('gk:paletteselect', e => { if (e.detail.item.kind === 'record') { /* cancelable */ } });
 document.addEventListener('gk:paletteaction', e => { if (e.detail.action === 'reload') location.reload(); });
+
+// Filter builder (since 1.123.0) — GridKit\FilterBuilder and js/filter-builder.js, see "FilterBuilder". First argument: the form, its id or the name.
+GK.filterBuilder.get('f');                 // { join: 'and', rules: [{ field: 'status', op: 'is', value: 'open' }] } — the checked tree
+GK.filterBuilder.set('f', '["and",["amount","gt",100]]');   // either shape or its JSON; drawn at once, nothing sent
+GK.filterBuilder.reset('f');               // back to value(); GK.filterBuilder.apply('f') sends it like the button
+GK.filterBuilder.json('f');                // '["and",["amount","gt",100]]' — the URL parameter
+document.addEventListener('gk:filterchange', e => { e.preventDefault(); reloadTable(e.detail.json); });  // cancelable: filter live
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
