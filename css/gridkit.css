@@ -16111,3 +16111,913 @@ a.gk-kanban-card-title:focus-visible {
 .gk-dark .gk-kanban-drop::after {
   background: var(--gk-surface-container-low);
 }
+
+/* === 1.125.0 — file manager === */
+/* GridKit\FileManager: a breadcrumb, a toolbar (search, type, sort, grid or list), an upload box, the
+   selected files' actions, the listing and a details panel beside it. Without script the toolbar is a GET
+   form, the upload a multipart form, the actions a POST form with checkboxes; js/file-manager.js (.gk-files-js)
+   hides the two submit buttons it no longer needs and shows the queue of uploads with a bar for each.
+
+   A state is never the colour alone: a ticked file has its tick, an upload a symbol and a word, a failed one
+   its message. A phone: two columns of tiles, the details as a sheet over the whole screen, nothing wider than
+   the screen, every target 44px. Roles only, so light, [data-gk-mode="dark"], .gk-dark and the six themes
+   follow from the tokens. */
+.gk-files {
+  /* The frame of a field, the view switch and the upload box: the outline role a quarter of the way to
+     the text, so it clears 3:1 on every ground of every theme (the outline alone stops at 2.4:1). */
+  --gk-files-line: color-mix(in srgb, var(--gk-outline) 75%, var(--gk-on-surface));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  color: var(--gk-on-surface);
+  font-family: var(--gk-font);
+  font-size: var(--gk-text-body);
+  line-height: var(--gk-leading-snug);
+}
+.gk-files-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-width: 0;
+}
+.gk-files-top:empty {
+  display: none;
+}
+
+/* The path: the top, the folders in between as links, the current one in words. */
+.gk-files-crumbs {
+  min-width: 0;
+}
+.gk-files-crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gk-files-crumbs li {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.gk-files-crumbs li + li::before {
+  content: "/";
+  margin-inline-end: 4px;
+  color: var(--gk-on-surface-variant);
+}
+.gk-files-crumbs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 4px;
+  border-radius: var(--gk-radius-sm);
+  color: var(--gk-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.gk-files-crumbs a:hover {
+  background: var(--gk-state-hover);
+}
+.gk-files-crumbs [aria-current] {
+  padding: 0 4px;
+  font-weight: 600;
+}
+
+.gk-files-newfolder {
+  position: relative;
+}
+.gk-files-newfolder > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.gk-files-newfolder > summary::-webkit-details-marker {
+  display: none;
+}
+.gk-files-newfolder[open] > form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Fields of the toolbar, the bulk bar, the new folder and the rename form: a word above, the control below. */
+.gk-files-field {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+  font-weight: 500;
+}
+.gk-files-field input,
+.gk-files-field select,
+.gk-files-search input {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid var(--gk-files-line);
+  border-radius: var(--gk-radius-sm);
+  background-color: var(--gk-surface);
+  color: var(--gk-on-surface);
+  font: inherit;
+  font-size: var(--gk-text-body);
+  font-weight: 400;
+}
+.gk-files-field input[readonly] {
+  background-color: var(--gk-surface-container-low);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--gk-text-label);
+}
+.gk-files-field input:focus-visible,
+.gk-files-field select:focus-visible,
+.gk-files-search input:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+  border-color: var(--gk-primary);
+}
+
+.gk-files-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+  min-width: 0;
+}
+.gk-files-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.gk-files-search > .material-icons {
+  position: absolute;
+  inset-inline-start: 9px;
+  color: var(--gk-on-surface-variant);
+  font-size: 20px;
+  pointer-events: none;
+}
+.gk-files-search input {
+  width: 100%;
+  padding-inline-start: 36px;
+}
+.gk-files-search input::placeholder {
+  color: var(--gk-on-surface-variant);
+  opacity: 1;
+}
+
+/* Grid or list: two radio buttons that look like one switch; the word stays beside the symbol. */
+.gk-files-views {
+  display: inline-flex;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--gk-files-line);
+  border-radius: var(--gk-radius-sm);
+  overflow: hidden;
+}
+.gk-files-viewbtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 34px;
+  padding: 0 10px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+  font-weight: 500;
+  cursor: pointer;
+}
+.gk-files-viewbtn + .gk-files-viewbtn {
+  border-inline-start: 1px solid var(--gk-files-line);
+}
+.gk-files-viewbtn input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.gk-files-viewbtn .material-icons {
+  font-size: 18px;
+}
+.gk-files-viewbtn:hover {
+  background: var(--gk-state-hover);
+}
+.gk-files-viewbtn:has(input:checked) {
+  background: var(--gk-secondary-container);
+  color: var(--gk-on-secondary-container);
+}
+.gk-files-viewbtn:has(input:focus-visible) {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: -2px;
+}
+.gk-files-js .gk-files-apply,
+.gk-files-js .gk-files-send {
+  display: none;
+}
+
+/* The upload box. Without script the file field is the browser's own, so the names chosen are seen. */
+.gk-files-drop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 2px dashed var(--gk-files-line);
+  border-radius: var(--gk-radius);
+  background: var(--gk-surface-container-low);
+  color: var(--gk-on-surface);
+}
+.gk-files-drop-icon {
+  color: var(--gk-primary);
+  font-size: 28px;
+}
+.gk-files-drop-text {
+  font-weight: 500;
+}
+.gk-files-pick {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+.gk-files-pick input[type="file"] {
+  min-width: 0;
+  max-width: 100%;
+  font: inherit;
+  font-size: var(--gk-text-label);
+}
+.gk-files-hint {
+  flex-basis: 100%;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+}
+/* With the script the field hides inside a label that looks like a button and takes the focus ring. */
+.gk-files-js .gk-files-pick {
+  position: relative;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-secondary-container);
+  color: var(--gk-on-secondary-container);
+  font-weight: 500;
+  cursor: pointer;
+}
+.gk-files-js .gk-files-pick:hover {
+  background: color-mix(in srgb, var(--gk-secondary-container) 88%, var(--gk-on-secondary-container));
+}
+.gk-files-js .gk-files-pick input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.gk-files-js .gk-files-pick:focus-within {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+.gk-files-pick .material-icons {
+  font-size: 18px;
+}
+/* A file over the manager: the box is framed and says "Drop to upload". */
+.gk-files-dragover {
+  outline: 2px dashed var(--gk-primary);
+  outline-offset: 4px;
+  border-radius: var(--gk-radius);
+}
+.gk-files-dragover .gk-files-drop {
+  border-color: var(--gk-primary);
+  background: var(--gk-primary-container);
+  color: var(--gk-on-primary-container);
+}
+
+/* The uploads: a row each — the picture before it is sent, the name, a bar, a symbol and a word. */
+.gk-files-queue {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.gk-files-job {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface);
+}
+.gk-files-job[data-state="error"] {
+  border-color: var(--gk-danger-text);
+  box-shadow: inset 3px 0 0 var(--gk-danger-text);
+}
+.gk-files-job-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface-container);
+  color: var(--gk-on-surface-variant);
+}
+.gk-files-job-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gk-files-job-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.gk-files-job-name {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gk-files-progress {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--gk-surface-container-highest);
+  color: var(--gk-primary);
+  accent-color: var(--gk-primary);
+  appearance: none;
+  overflow: hidden;
+}
+.gk-files-progress::-webkit-progress-bar {
+  border-radius: 3px;
+  background: var(--gk-surface-container-highest);
+}
+.gk-files-progress::-webkit-progress-value {
+  border-radius: 3px;
+  background: var(--gk-primary);
+}
+.gk-files-progress::-moz-progress-bar {
+  border-radius: 3px;
+  background: var(--gk-primary);
+}
+.gk-files-job-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+  overflow-wrap: anywhere;
+}
+.gk-files-job-state .material-icons {
+  flex: none;
+  font-size: 16px;
+}
+.gk-files-job[data-state="done"] .gk-files-job-state {
+  color: var(--gk-success-text);
+}
+.gk-files-job[data-state="error"] .gk-files-job-state {
+  color: var(--gk-danger-text);
+}
+.gk-files-job-actions {
+  display: flex;
+  gap: 2px;
+}
+.gk-files-job-btn,
+.gk-files-details-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--gk-radius-sm);
+  background: transparent;
+  color: var(--gk-on-surface-variant);
+  text-decoration: none;
+  cursor: pointer;
+}
+.gk-files-job-btn:hover,
+.gk-files-details-close:hover {
+  background: var(--gk-state-hover);
+  color: var(--gk-on-surface);
+}
+.gk-files-job-btn .material-icons,
+.gk-files-details-close .material-icons {
+  font-size: 20px;
+}
+.gk-files-job-btn:focus-visible,
+.gk-files-details-close:focus-visible,
+.gk-files-crumbs a:focus-visible,
+.gk-files-name:focus-visible,
+.gk-files-details:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+
+/* The listing and, beside it, the details. */
+.gk-files-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  min-width: 0;
+}
+.gk-files-main:has(> .gk-files-details:not([hidden])) {
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+}
+.gk-files-body,
+.gk-files-upload,
+.gk-files-details-body {
+  min-width: 0;
+  margin: 0;
+}
+.gk-files-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 0;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface-container-low);
+}
+.gk-files-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  min-height: 32px;
+  cursor: pointer;
+}
+.gk-files-all input,
+.gk-files-check {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--gk-primary);
+  cursor: pointer;
+}
+.gk-files-count {
+  align-self: center;
+  margin-inline-end: auto;
+  font-weight: 500;
+}
+.gk-files-move {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+.gk-files-act[disabled],
+.gk-files-move select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.gk-files-summary {
+  margin: 0 0 8px;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+}
+.gk-files-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gk-files-item {
+  position: relative;
+  min-width: 0;
+}
+.gk-files-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+  background: var(--gk-surface-container);
+  color: var(--gk-on-surface-variant);
+}
+label.gk-files-thumb {
+  cursor: pointer;
+}
+.gk-files-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gk-files-ext {
+  font-size: var(--gk-text-overline);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.gk-files-folder .gk-files-thumb {
+  color: var(--gk-primary);
+}
+.gk-files-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--gk-on-surface);
+  font-weight: 500;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gk-files-name:hover {
+  color: var(--gk-primary);
+  text-decoration: underline;
+}
+.gk-files-type,
+.gk-files-size,
+.gk-files-date,
+.gk-files-meta {
+  min-width: 0;
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+}
+.gk-files-head {
+  display: none;
+}
+.gk-files-empty {
+  margin: 16px 0;
+  padding: 24px 16px;
+  border: 1px dashed var(--gk-outline-variant);
+  border-radius: var(--gk-radius);
+  color: var(--gk-on-surface-variant);
+  text-align: center;
+}
+
+/* Grid: tiles, the tick in the corner of the picture. */
+.gk-files-view-grid .gk-files-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.gk-files-view-grid .gk-files-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 0;
+  padding-bottom: 8px;
+  overflow: hidden;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius);
+  background: var(--gk-surface);
+}
+.gk-files-view-grid .gk-files-thumb {
+  flex: 0 0 100%;
+  aspect-ratio: 4 / 3;
+}
+.gk-files-view-grid .gk-files-thumb > .material-icons {
+  font-size: 40px;
+}
+.gk-files-view-grid .gk-files-check {
+  position: absolute;
+  top: 8px;
+  inset-inline-start: 8px;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+}
+.gk-files-view-grid .gk-files-name {
+  flex: 0 0 100%;
+  box-sizing: border-box;
+  padding: 8px 10px 2px;
+}
+.gk-files-view-grid .gk-files-size,
+.gk-files-view-grid .gk-files-date,
+.gk-files-view-grid .gk-files-meta {
+  padding-inline-start: 10px;
+}
+.gk-files-view-grid .gk-files-type {
+  display: none;
+}
+.gk-files-view-grid .gk-files-item:hover {
+  border-color: var(--gk-outline);
+}
+.gk-files-view-grid .gk-files-selected {
+  border-color: var(--gk-primary);
+  box-shadow: inset 0 0 0 1px var(--gk-primary);
+  background: color-mix(in srgb, var(--gk-primary-container) 45%, var(--gk-surface));
+}
+.gk-files-current {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+
+/* List: a row per file — tick, picture, name, type, size, date. */
+.gk-files-view-list .gk-files-head,
+.gk-files-view-list .gk-files-item {
+  display: grid;
+  grid-template-columns: 24px 40px minmax(0, 1fr) minmax(0, 150px) 80px 130px;
+  align-items: center;
+  gap: 0 12px;
+  padding: 4px 8px;
+}
+.gk-files-view-list .gk-files-head {
+  padding-block: 6px;
+  border-bottom: 1px solid var(--gk-outline-variant);
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-caption);
+  font-weight: 600;
+}
+.gk-files-view-list .gk-files-item {
+  min-height: 48px;
+  border-bottom: 1px solid var(--gk-outline-variant);
+}
+.gk-files-view-list .gk-files-check {
+  grid-column: 1;
+}
+.gk-files-view-list .gk-files-thumb {
+  grid-column: 2;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--gk-radius-sm);
+}
+.gk-files-view-list .gk-files-thumb > .material-icons {
+  font-size: 22px;
+}
+.gk-files-view-list .gk-files-thumb .gk-files-ext {
+  display: none;
+}
+.gk-files-view-list .gk-files-name {
+  grid-column: 3;
+}
+.gk-files-view-list .gk-files-type {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gk-files-view-list .gk-files-size {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.gk-files-view-list .gk-files-date {
+  font-variant-numeric: tabular-nums;
+}
+.gk-files-view-list .gk-files-meta {
+  grid-column: 4 / -1;
+}
+.gk-files-view-list .gk-files-item:hover {
+  background: var(--gk-state-hover);
+}
+.gk-files-view-list .gk-files-selected {
+  background: color-mix(in srgb, var(--gk-primary-container) 55%, var(--gk-surface));
+  box-shadow: inset 3px 0 0 var(--gk-primary);
+}
+
+/* Details: sticks beside the listing at a desk. */
+.gk-files-details {
+  position: sticky;
+  top: 72px;
+  box-sizing: border-box;
+  min-width: 0;
+  max-height: calc(100vh - 96px);
+  overflow: auto;
+  padding: 12px 16px 16px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius);
+  background: var(--gk-surface);
+}
+.gk-files-details-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.gk-files-details-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 4px 0 0;
+  font-size: var(--gk-text-subtitle);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.gk-files-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  margin: 12px 0;
+  overflow: hidden;
+  border-radius: var(--gk-radius-sm);
+  background: var(--gk-surface-container);
+  color: var(--gk-on-surface-variant);
+}
+.gk-files-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.gk-files-preview > .material-icons {
+  font-size: 56px;
+}
+.gk-files-props {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: 0 0 12px;
+}
+.gk-files-props dt {
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-label);
+}
+.gk-files-props dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.gk-files-url .gk-files-field {
+  display: flex;
+}
+.gk-files-details-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.gk-files-rename {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gk-outline-variant);
+}
+.gk-files-rename .gk-files-field {
+  flex: 1 1 160px;
+}
+
+/* A phone: two columns of tiles, the details over the whole screen, every field full width and 16px. */
+@media (max-width: 600px) {
+  .gk-files-view-grid .gk-files-items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .gk-files-main,
+  .gk-files-main:has(> .gk-files-details:not([hidden])) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gk-files-details {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    max-height: none;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    border: 0;
+    border-radius: 0;
+    overscroll-behavior: contain;
+  }
+  .gk-files-search {
+    flex: 1 1 100%;
+  }
+  /* Type and order side by side: two fields of about 170px on a 390px phone, one each below 300px. */
+  .gk-files-toolbar > .gk-files-field {
+    flex: 1 1 130px;
+  }
+  .gk-files-field input,
+  .gk-files-field select,
+  .gk-files-search input {
+    width: 100%;
+    font-size: 16px;
+  }
+  .gk-files-views {
+    flex: 1 1 100%;
+  }
+  .gk-files-viewbtn {
+    flex: 1 1 50%;
+    justify-content: center;
+  }
+  .gk-files-move,
+  .gk-files-move .gk-files-field {
+    flex: 1 1 100%;
+  }
+  .gk-files-view-list .gk-files-head,
+  .gk-files-view-list .gk-files-item {
+    grid-template-columns: 24px 40px minmax(0, 1fr) auto;
+  }
+  .gk-files-view-list .gk-files-type,
+  .gk-files-view-list .gk-files-date,
+  .gk-files-view-list .gk-files-head > :nth-child(3),
+  .gk-files-view-list .gk-files-head > :nth-child(5) {
+    display: none;
+  }
+  .gk-files-view-list .gk-files-meta {
+    grid-column: 4;
+  }
+  .gk-files-hint {
+    flex-basis: 100%;
+  }
+}
+html.gk-files-sheet-open {
+  overflow: hidden;
+}
+/* A finger: 44px for everything it touches. */
+@media (max-width: 600px), (pointer: coarse) {
+  .gk-files-job-btn,
+  .gk-files-details-close {
+    width: var(--gk-target-min);
+    height: var(--gk-target-min);
+  }
+  .gk-files-crumbs a,
+  .gk-files-all,
+  .gk-files-viewbtn,
+  .gk-files-js .gk-files-pick,
+  .gk-files-field input,
+  .gk-files-field select,
+  .gk-files-search input,
+  .gk-files-newfolder > summary,
+  .gk-files-bulk .gk-btn,
+  .gk-files-details .gk-btn,
+  .gk-files-rename .gk-btn,
+  .gk-files-newfolder .gk-btn {
+    min-height: var(--gk-target-min);
+  }
+  .gk-files-view-grid .gk-files-name,
+  .gk-files-view-list .gk-files-name {
+    display: flex;
+    align-items: center;
+    min-height: var(--gk-target-min);
+  }
+  .gk-files-view-grid .gk-files-name {
+    display: block;
+    line-height: calc(var(--gk-target-min) - 10px);
+    padding-top: 0;
+  }
+  .gk-files-view-list .gk-files-thumb {
+    width: var(--gk-target-min);
+    height: var(--gk-target-min);
+  }
+  .gk-files-view-list .gk-files-head,
+  .gk-files-view-list .gk-files-item {
+    grid-template-columns: 24px var(--gk-target-min) minmax(0, 1fr) auto;
+  }
+  .gk-files-view-grid .gk-files-check {
+    width: 24px;
+    height: 24px;
+  }
+}
+@media (forced-colors: active) {
+  .gk-files-selected {
+    outline: 3px solid Highlight;
+    outline-offset: -3px;
+  }
+  .gk-files-progress {
+    border: 1px solid CanvasText;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gk-files-item,
+  .gk-files-drop {
+    transition: background-color var(--gk-dur-1) var(--gk-ease-out), border-color var(--gk-dur-1) var(--gk-ease-out);
+  }
+}
+/* Dark: the tiles and the panel one step above the page, the fields keep their own ground. */
+[data-gk-mode="dark"] .gk-files-view-grid .gk-files-item,
+.gk-dark .gk-files-view-grid .gk-files-item,
+[data-gk-mode="dark"] .gk-files-details,
+.gk-dark .gk-files-details,
+[data-gk-mode="dark"] .gk-files-job,
+.gk-dark .gk-files-job {
+  background: var(--gk-surface-container-low);
+}
+[data-gk-mode="dark"] .gk-files-view-grid .gk-files-selected,
+.gk-dark .gk-files-view-grid .gk-files-selected {
+  background: color-mix(in srgb, var(--gk-primary-container) 45%, var(--gk-surface-container-low));
+}
+[data-gk-mode="dark"] .gk-files-thumb,
+.gk-dark .gk-files-thumb,
+[data-gk-mode="dark"] .gk-files-preview,
+.gk-dark .gk-files-preview {
+  background: var(--gk-surface-container-high);
+}

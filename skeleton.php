@@ -4,7 +4,7 @@
  * ----------------
  * Copy it, change the parts marked below, and you have a working page.
  * Needs: autoload.php, css/gridkit.css, css/themes.css, js/gridkit.js, js/sortierbar.js, js/tree.js, js/import.js, js/calendar.js,
- * js/chart.js, js/command-palette.js, js/filter-builder.js, js/kanban.js
+ * js/chart.js, js/command-palette.js, js/filter-builder.js, js/kanban.js, js/file-manager.js
  *
  * Copied out of the GridKit directory this file used to die on its first line
  * with an uncaught Error, because the require below was relative to itself.
@@ -236,6 +236,7 @@ $palette = (new CommandPalette('main'))
 <script src="<?= Layout::asset($gkAssets . 'js/command-palette.js') ?>" defer></script>
 <script src="<?= Layout::asset($gkAssets . 'js/filter-builder.js') ?>" defer></script>
 <script src="<?= Layout::asset($gkAssets . 'js/kanban.js') ?>" defer></script>
+<script src="<?= Layout::asset($gkAssets . 'js/file-manager.js') ?>" defer></script>
 <script>
 // A command of the palette is yours to carry out.
 document.addEventListener('gk:paletteaction', function (e) {

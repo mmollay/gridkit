@@ -511,6 +511,36 @@ GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-kan
 GK_SHOTS=/some/dir node ci/browser-kanban.js
 ```
 
+The file manager (`GridKit\FileManager` and `js/file-manager.js`, 1.125.0) is checked by
+`ci/browser-files.js` on `ci/browser-files-fixture.php`: a media library with two folders, eight files
+(one with a hostile name, two in a folder), every action, an upload limited to 64 KB and four files, two
+at a time, a token and a hidden field; and a receipt drawer with single selection in a list under its own
+parameters. `page.route()` serves the page as `http://gk.test/fixture.html` — drawn by PHP again for
+every query, so the links and the toolbar of the page without script are answered by the server — and
+answers `POST /upload` (taken, held until released, refused, a 500 once, an answer that is no JSON, a
+hostile name) and `POST /act` (done or refused). It checks the toolbar acting at once and the state in
+the address (defaults left out, a second manager under its own name); the selection by keyboard (arrows,
+down by a row of tiles, Home, End, Space, Shift+arrow, Ctrl+A, Escape, Delete with a confirmation) and by
+pointer (the picture, Shift+click, "Select all" with its mixed state); the details (Enter, a click on a
+name, dimensions measured, Copy URL, rename with its fields and headers, the focus given back); delete
+confirmed and refused, move, a new folder, an action left to the page and a veto; the upload — one
+request per file with the token, the hidden field and the folder, the new file drawn like the server's,
+symbol and word for each state, a full bar when done, the count in the live region, object URLs given
+back, the checks in the browser (type, size, empty, SVG for `image/*`, count), two at a time, the percent
+while sending, cancel while sending and while waiting, retry after a cancel and after a 500, no retry after
+a refusal, an answer that is no answer, a hostile name; drop and paste (not into the search field), a veto
+of `gk:filesupload`, the API; 390px (two columns, 16px fields, every target 44px, the details as a sheet
+with Tab kept inside, no sideways scroll in grid, list and queue); contrast of 19 parts in 18 looks; and
+the page without script (the forms post: the files at once, the toolbar as GET, a folder and a name as
+links drawn by the server, Delete with its form). Each new rule, branch and option of the script, the
+stylesheet and `FileManager.php` was taken out in turn (a bounded sample) and a check turned red. About
+ninety seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-files.js
+GK_SHOTS=/some/dir GK_ICONFONT=/path/MaterialIcons.woff2 node ci/browser-files.js   # with pictures
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

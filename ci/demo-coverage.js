@@ -100,6 +100,28 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await sleep(200);
     await collect();
     await page.evaluate(() => { try { localStorage.removeItem("gk-filterbuilder-g"); } catch (e) { /* nothing kept */ } });
+    // The file manager (1.125.0): a file over it, the details of a picture, and an upload — a picture that
+    // api/files.php takes (and keeps nowhere) and a text that the browser refuses — so the queue shows.
+    await page.evaluate(() => { location.hash = "#files"; });
+    await sleep(250);
+    await page.evaluate(() => {
+      const root = document.querySelector('[data-gk-files="demo-media"]');
+      if (!root || !window.GK || !GK.files) return;
+      const dt = new DataTransfer();
+      dt.items.add(new File(["x"], "x.png", { type: "image/png" }));
+      root.dispatchEvent(new DragEvent("dragenter", { bubbles: true, cancelable: true, dataTransfer: dt }));
+    });
+    await collect();
+    await page.evaluate(() => {
+      const root = document.querySelector('[data-gk-files="demo-media"]');
+      if (!root || !window.GK || !GK.files) return;
+      root.dispatchEvent(new DragEvent("dragleave", { bubbles: true }));
+      GK.files.open("demo-media", "f-team");
+      const png = Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAEklEQVR4nGP4z8AARMg0AwMDAEO+B/kmOaB8AAAAAElFTkSuQmCC"), (c) => c.charCodeAt(0));
+      GK.files.upload("demo-media", [new File([png], "pixel.png", { type: "image/png" }), new File(["hello"], "notes.txt", { type: "text/plain" })]);
+    });
+    await sleep(1200);
+    await collect();
   } finally {
     await browser.close();
   }

@@ -214,7 +214,7 @@ by `ci/build-skill.sh`, and a test fails if the two drift apart.
 
 ## Components
 
-Twenty-eight, each a PHP class with a chainable API:
+Twenty-nine, each a PHP class with a chainable API:
 
 | | | |
 |---|---|---|
@@ -228,6 +228,7 @@ Twenty-eight, each a PHP class with a chainable API:
 | `Import` — a CSV file into checked rows: columns matched to fields, a preview with every error, Excel's encoding, works without script | `DateRange` — a period for reports and invoice lists: presets, two date fields, the period in words | `Calendar` — a month of appointments: bars across days, "+3 more", an agenda on a phone, keys |
 | `Chart` — line, area, bar, donut and sparkline as SVG from the server: nice axes, numbers in the reader's language, a summary in words, the data as a table | | |
 | `CommandPalette` — Ctrl+K: pages, commands and records from your server, fuzzy, recent entries first | `FilterBuilder` — conditions combined freely: AND/OR groups, saved views, the same tree as SQL with placeholders or as a row matcher, works without script | `Kanban` — columns with cards: drag and drop, full keyboard moving, limits, saved with a way back, lanes on a phone |
+| `FileManager` — a media library and a receipt drawer: folders, thumbnails or a list, many uploads with progress, and a server check that trusts nothing an upload claims | | |
 
 Plus `Theme`, `Layout`, `Lang`, `Auth`, `Icon` and `Tooltip` (the attributes and the
 help icon of the tooltips, since 1.112.0) as infrastructure — and the
@@ -246,8 +247,9 @@ or rows in order by dragging or by keyboard, and tells the server. The tree (`Tr
 import (`Import`, since 1.119.0): `js/import.js`, `DateRange` and `Calendar` (1.120.0): `js/calendar.js`, the charts
 (`Chart`, since 1.121.0): `js/chart.js`, which adds the tooltip, the keys and the legend's switches to a chart that is
 already complete without it, the command palette (`CommandPalette`, since 1.122.0): `js/command-palette.js`, the filter builder
-(`FilterBuilder`, since 1.123.0): `js/filter-builder.js`, and the kanban board (`Kanban`, since 1.124.0): `js/kanban.js`, which
-adds dragging and keyboard moving to a board whose "Move to" forms already post without it.
+(`FilterBuilder`, since 1.123.0): `js/filter-builder.js`, the kanban board (`Kanban`, since 1.124.0): `js/kanban.js`, which
+adds dragging and keyboard moving to a board whose "Move to" forms already post without it, and the file manager
+(`FileManager`, since 1.125.0): `js/file-manager.js`.
 
 ---
 

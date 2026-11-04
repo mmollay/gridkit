@@ -98,6 +98,12 @@
       "gk-empty-row"
     ]
   },
+  "files": {
+    "reason": "The class on <html> while the details of a file cover a phone's screen (600px and narrower); the demo is opened at a desk's width. ci/browser-files.js opens the sheet at 390px and checks it.",
+    "classes": [
+      "gk-files-sheet-open"
+    ]
+  },
   "form": {
     "reason": "Widths a field asks for with 'width' => N and the error state a failed save sets; the demo uses the widths it needs, the skill lists the scale.",
     "classes": [
