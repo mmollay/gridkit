@@ -28,7 +28,7 @@ Every tracked file that does not start with a dot is served. Tool notes live und
   `browser-line-items.js` for `LineItems`, `browser-pager.js` for the table pager,
   `browser-import.js` for `Import`, `browser-dates.js` for `DateRange` and `Calendar`,
   `browser-chart.js` for `Chart`, `browser-palette.js` for `CommandPalette`,
-  `browser-filter-builder.js` for `FilterBuilder`) and
+  `browser-filter-builder.js` for `FilterBuilder`, `browser-kanban.js` for `Kanban`) and
   contrast (`farben.js`). They are not part of the suite and need the `playwright`
   package. Run them when touching `js/gridkit.js` or the markup they exercise.
 - `node ci/demo-coverage.js` opens the demo and fails when a class of `css/blocks.json` is

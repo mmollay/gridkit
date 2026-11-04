@@ -1,4 +1,4 @@
-# GridKit 1.123.0 — JavaScript
+# GridKit 1.124.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -90,6 +90,15 @@ GK.filterBuilder.set('f', '["and",["amount","gt",100]]');   // either shape or i
 GK.filterBuilder.reset('f');               // back to value(); GK.filterBuilder.apply('f') sends it like the button
 GK.filterBuilder.json('f');                // '["and",["amount","gt",100]]' — the URL parameter
 document.addEventListener('gk:filterchange', e => { e.preventDefault(); reloadTable(e.detail.json); });  // cancelable: filter live
+
+// Kanban (since 1.124.0) — GridKit\Kanban and js/kanban.js, see "Kanban". First argument: the board's id, element or selector.
+GK.kanban.move('tickets', 'T-101', 'done', 0);           // like a person's move: the veto, the save; a Promise of { ok, reverted }
+GK.kanban.move('tickets', 'T-101', 'done', null, { save: false });  // only put there (the server knows it): no event, no request
+GK.kanban.cards('tickets', 'done');                      // ['T-108', 'T-101']; without a column { new: [...], done: [...] }
+GK.kanban.columns('tickets');                            // [{ key, label, count, limit, over }, …]
+GK.kanban.refresh('tickets');                            // after the page added a card itself: handles, counts, limits
+document.addEventListener('gk:kanbanmove', e => { if (e.detail.to === 'done' && !mayClose(e.detail.id)) e.preventDefault(); });
+document.addEventListener('gk:kanbanmoved', e => { /* e.detail: { board, id, from, to, index, fromIndex, ok, reverted } */ });
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });

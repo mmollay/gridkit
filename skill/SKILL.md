@@ -8,7 +8,7 @@ description: >-
   GridKit in composer.json.
 ---
 
-# GridKit 1.123.0
+# GridKit 1.124.0
 
 PHP components for admin dashboards. Zero dependencies, no build step,
 PHP 8.2+. A checkout is a working install.
@@ -46,8 +46,8 @@ without tripping over this.
 | `Tabs::render()` (1.111.0) | | |
 
 `Tree::render()` and `Tree::renderBranch()` (1.116.0) print as well, and so do `Import::render()` (1.119.0),
-`DateRange::render()` and `Calendar::render()` (1.120.0), `Chart::render()` (1.121.0) and `CommandPalette::render()`
-(1.122.0) — their `->html()` returns the same string (`Chart::sparkline()` and `CommandPalette::trigger()` return a
+`DateRange::render()` and `Calendar::render()` (1.120.0), `Chart::render()` (1.121.0), `CommandPalette::render()`
+(1.122.0) and `Kanban::render()` (1.124.0) — their `->html()` returns the same string (`Chart::sparkline()` and `CommandPalette::trigger()` return a
 string to place).
 
 `PageSize::render()` above is an INSTANCE method — build it with the static
