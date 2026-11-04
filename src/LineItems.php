@@ -1039,7 +1039,7 @@ class LineItems
             'select' => $this->selectHtml($c, $raw, $attrs, $errCls, $e),
             'number', 'money', 'percent' => '<input type="text" inputmode="decimal" autocomplete="off" class="gk-input gk-td-num' . $errCls . '"'
                 . $attrs . ' value="' . $e($this->inputValue($raw, $c)) . '">',
-            'lookup' => $this->lookupHtml($row, $c, $id, $postName, $raw, $isReq, $e),
+            'lookup' => $this->lookupHtml($row, $c, $id, $postName, $raw, $isReq, $e, $invalid),
             default => '<input type="text" class="gk-input' . $errCls . '"' . $attrs . ' value="' . $e($raw) . '">',
         };
         return $cell . $label . $field
@@ -1080,7 +1080,7 @@ class LineItems
      * @param array<string,mixed> $row
      * @param array<string,mixed> $c
      */
-    private function lookupHtml(array $row, array $c, string $id, string $postName, string $raw, bool $isReq, \Closure $e): string
+    private function lookupHtml(array $row, array $c, string $id, string $postName, string $raw, bool $isReq, \Closure $e, string $invalid = ''): string
     {
         $shown = $c['display'] !== null && is_scalar($row[$c['display']] ?? null) ? (string) $row[$c['display']] : '';
         $labelledBy = ' aria-labelledby="' . $e($id . '-label') . '"';
@@ -1093,7 +1093,8 @@ class LineItems
             hideClear: $raw === '',
             hidden: ' id="' . $e($id) . '" name="' . $e($postName) . '" data-gk-lines-field="' . $e($c['key']) . '"'
                 . ($c['required'] ? ' data-gk-lines-required' : '') . ($isReq ? ' required' : ''),
-            combo: $labelledBy . ' aria-describedby="' . $e($id . '-error') . '"',
+            // aria-invalid on the combobox when the line has an error, as the other cells have (1.122.1).
+            combo: $labelledBy . ' aria-describedby="' . $e($id . '-error') . '"' . $invalid,
             // With 'display' the words shown post too (name[i][display]), so a form shown again
             // after its POST still names the article.
             searchBox: $c['display'] !== null
