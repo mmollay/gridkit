@@ -444,3 +444,27 @@ above, "Just the push event", Active. GitHub sends a ping at once; Recent Delive
 `200 pong`. A push to `main` answers `202 queued`, and the log says `delivered` seconds later.
 Keep the cron line as a safety net, hourly: `0 * * * *` instead of `* * * * *` — a delivery that
 was missed (server down, a webhook lost) then still arrives.
+
+## PawBot sync
+
+The PawBot dashboard keeps its own `js/gridkit.js` (PawBot extensions), and its sync never
+overwrites it. Since 1.107.0 every release adds its script as ONE block at the end of
+`js/gridkit.js`, headed `// === <version> — <name> ===`, so the copy is brought up to date by
+adding the blocks it lacks:
+
+```bash
+php ci/pawbot-sync.php /path/to/dashboard/js/gridkit.js            # report: ok, MISSING, DIFFERS, OWN, BY HAND
+php ci/pawbot-sync.php /path/to/dashboard/js/gridkit.js --apply    # append the missing blocks (backup first)
+php ci/pawbot-sync.php /path/to/dashboard/js/gridkit.js --update   # also replace blocks a later release changed
+```
+
+- A block counts as there when its text stands in the copy as whole lines; the dashboard's own
+  code may follow it or sit between blocks, and stays where it is.
+- `--update` replaces a block only where the copy holds one of GridKit's earlier texts of it, taken
+  from the git history of `js/gridkit.js` (a shallow clone knows little of it: `git fetch
+  --unshallow`). Any other text is the dashboard's own (`OWN`) and is left to a person.
+- Two changes since 1.107.0 sit inside the old code, not in blocks (1.110.1: the header cell over
+  left row buttons in `renderStatic`; 1.113.0: `_tOr("field_required", …)` in the rich-text
+  check). They are reported as `BY HAND` with what to change, never patched.
+- Files of their own (`js/tree.js`, `js/sortierbar.js`, and those of later components) are copied
+  as they are. `tests/pawbot-sync.test.php` holds the rules above.
