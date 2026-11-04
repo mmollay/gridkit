@@ -1707,65 +1707,77 @@ class Table
         }
     }
 
-    /** The pager under the table, for a table with more rows than one page. */
+    /**
+     * The pager under the table, for a table with more rows than one page.
+     *
+     * Since 1.118.0 it is the bar GridKit\Pagination draws: .gk-rowpager, the count on the left
+     * ("6–10 of 12") and the page buttons on the right (.gk-rowpager-nav, .gk-pg, first and last
+     * included), so a table and a list paged by hand look the same. What it keeps of its own:
+     *
+     *   - <button data-gk-page>, not links. A table pages in place: a setData() table slices
+     *     the rows it holds, a server table reloads its fragment. A copy of js/gridkit.js from
+     *     before 1.118.0 (the PawBot dashboard keeps its own) binds to [data-gk-page] and skips
+     *     a disabled button, and it never cancels a click: a link would have navigated away
+     *     under it.
+     *   - .gk-pagination on the nav: what that script removes before it writes its own pager
+     *     into a rebuilt table. Without it the table showed two.
+     *   - a disabled button where Pagination leaves a hidden span, and "Page 3 of 12" as the
+     *     name of a page button.
+     *
+     * The 1.118.0 block of js/gridkit.js writes the same markup when it rebuilds a setData()
+     * table, attribute for attribute: keep the two in step.
+     */
     private function renderPager(\Closure $e): void
     {
-        if ($this->perPage > 0 && $this->totalRows > $this->perPage) {
-            $pages = (int)ceil($this->totalRows / $this->perPage);
-            // nav, so the pager is a landmark a screen reader can jump to and
-            // skip past, instead of a run of unexplained numbers in the middle
-            // of the table.
-            echo '<nav class="gk-pagination" aria-label="' . $e(Lang::t('pagination.aria')) . '">';
-            // Named from the catalogue. Without 'aria' Button::icon falls back
-            // to the icon ligature, so this button announced itself as "Chevron
-            // left" — the name of the glyph, not of what it does. Pagination.php
-            // has always passed the label; this pager never did.
-            echo Button::icon('chevron_left', [
-                'variant' => 'text', 'color' => 'neutral', 'size' => 'sm',
-                'aria' => Lang::t('pagination.prev'),
-                'data' => ['gk-page' => max(1, $this->currentPage - 1)],
-                'disabled' => $this->currentPage <= 1,
+        if ($this->perPage <= 0 || $this->totalRows <= $this->perPage) return;
+        $page  = $this->currentPage;
+        $pages = (int) ceil($this->totalRows / $this->perPage);
+        $num   = static fn (int $n): string => number_format($n, 0, Lang::t('format.decimal'), Lang::t('format.thousands'));
+        // The rows this page shows. A page past the end (a hand-typed ?gk_page=99) shows the
+        // empty state and has no rows; the count then says how many there are.
+        $count = $page > $pages
+            ? $num($this->totalRows) . ' ' . Lang::t('pagination.entries')
+            : Lang::t('pagination.range', [
+                'from'  => $num(($page - 1) * $this->perPage + 1),
+                'to'    => $num(min($this->totalRows, $page * $this->perPage)),
+                'total' => $num($this->totalRows),
             ]);
-            // A window around the current page, plus the first and the last —
-            // the same shape Pagination uses. Printing every page put 400
-            // buttons in the DOM for a 10,000-row list, on every reload, which
-            // is precisely the size the server-side path exists for.
-            $window = 2;
-            $show = [1, $pages];
-            for ($i = $this->currentPage - $window; $i <= $this->currentPage + $window; $i++) {
-                if ($i >= 1 && $i <= $pages) $show[] = $i;
-            }
-            $show = array_values(array_unique($show));
-            sort($show);
+        // First, previous, next and last, named for what they do and not for their glyph.
+        $icon = static fn (string $glyph, int $target, string $name, bool $off): string =>
+            '<button type="button" class="gk-pg gk-pg-icon' . ($off ? ' gk-pg-off' : '') . '" data-gk-page="' . $target . '"'
+            . ' aria-label="' . $e(Lang::t($name)) . '"' . ($off ? ' disabled' : '') . '>'
+            . '<span class="material-icons" aria-hidden="true">' . $glyph . '</span></button>';
 
-            $previous = 0;
-            foreach ($show as $i) {
-                if ($previous && $i - $previous > 1) {
-                    echo '<span class="gk-pg-gap">…</span>';
-                }
-                $isActive = $i === $this->currentPage;
-                // "3" on its own is not a name — it is a digit. The label says
-                // which page, and aria-current marks the one you are on, which
-                // was conveyed by colour alone.
-                echo Button::render((string)$i, [
-                    'variant' => $isActive ? 'tonal' : 'text',
-                    'color' => $isActive ? 'primary' : 'neutral',
-                    'size' => 'sm',
-                    'shape' => 'pill',
-                    'aria' => Lang::t('pagination.page_of', ['page' => $i, 'total' => $pages]),
-                    'attrs' => $isActive ? ['aria-current' => 'page'] : [],
-                    'data' => ['gk-page' => $i],
-                ]);
-                $previous = $i;
-            }
-            echo Button::icon('chevron_right', [
-                'variant' => 'text', 'color' => 'neutral', 'size' => 'sm',
-                'aria' => Lang::t('pagination.next'),
-                'data' => ['gk-page' => min($pages, $this->currentPage + 1)],
-                'disabled' => $this->currentPage >= $pages,
-            ]);
-            echo '</nav>';
+        // nav, so the pager is a landmark a screen reader can jump to and skip past, instead of
+        // a run of unexplained numbers in the middle of the table.
+        $html = '<nav class="gk-pagination gk-rowpager" aria-label="' . $e(Lang::t('pagination.aria')) . '">'
+            . '<span class="gk-rowpager-info"><span class="gk-rowpager-count">' . $e($count) . '</span></span>'
+            . '<div class="gk-rowpager-nav">'
+            . $icon('first_page', 1, 'pagination.first', $page <= 1)
+            . $icon('chevron_left', max(1, min($page - 1, $pages)), 'pagination.prev', $page <= 1);
+        // A window around the current page, plus the first and the last: Pagination's shape.
+        // Printing every page put 400 buttons in the DOM for a 10,000-row list, on every
+        // reload, which is precisely the size the server-side path exists for.
+        $show = [1, $pages];
+        for ($i = $page - 2; $i <= $page + 2; $i++) {
+            if ($i >= 1 && $i <= $pages) $show[] = $i;
         }
+        $show = array_values(array_unique($show));
+        sort($show);
+        $previous = 0;
+        foreach ($show as $i) {
+            if ($previous && $i - $previous > 1) $html .= '<span class="gk-pg-gap">…</span>';
+            // "3" on its own is not a name, it is a digit; aria-current says which page you are
+            // on, which the colour says only to those who see it.
+            $html .= '<button type="button" class="gk-pg' . ($i === $page ? ' gk-pg-active' : '') . '" data-gk-page="' . $i . '"'
+                . ' aria-label="' . $e(Lang::t('pagination.page_of', ['page' => $i, 'total' => $pages])) . '"'
+                . ($i === $page ? ' aria-current="page"' : '') . '>' . $i . '</button>';
+            $previous = $i;
+        }
+        echo $html
+            . $icon('chevron_right', min($pages, $page + 1), 'pagination.next', $page >= $pages)
+            . $icon('last_page', $pages, 'pagination.last', $page >= $pages)
+            . '</div></nav>';
     }
 
     /** The buttons on one side of a row, in the order they were added: each one that shows in this row. */

@@ -3,7 +3,7 @@
     "blocks": {
         "table": {
             "name": "Table",
-            "changed": "1.114.0",
+            "changed": "1.118.0",
             "classes": {
                 "gk-actions": "0.9.0",
                 "gk-actions-col": "0.9.0",
@@ -148,6 +148,7 @@
         },
         "pagination": {
             "name": "Pagination",
+            "changed": "1.118.0",
             "classes": {
                 "gk-page-btn": "0.9.0",
                 "gk-pagesize": "1.20.0",

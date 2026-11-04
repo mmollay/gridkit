@@ -45,7 +45,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | YearFilter | `GridKit\YearFilter` | Year navigation filter |
 | TableHeader | `GridKit\TableHeader` | **Unified filter/search bar above tables — Status / Toolbar / Advanced (since v1.10.0)** |
 | Lang | `GridKit\Lang` | i18n / multilingual support |
-| Pagination | `GridKit\Pagination` | Server-side pager below the table (`.gk-rowpager`), optional PageSize |
+| Pagination | `GridKit\Pagination` | Server-side pager below the table (`.gk-rowpager`), optional PageSize — the bar `Table::paginate()` draws too (since 1.118.0) |
 | PageSize | `GridKit\PageSize` | Rows per page — lives in the pager bar, not in the table footer |
 | liveTable (JS) | `GK.liveTable` | AJAX tables (search/filter/sort/pagination live, no reload) |
 | BelegModal | `GridKit\BelegModal` | PDF / document preview modal with iframe + mobile fallback (since v1.15.0) |
@@ -358,6 +358,23 @@ every declared filter, the `ORDER BY`, the `COUNT` and the `LIMIT`:
     ->paginate(25)
     ->render();
 ```
+
+**`paginate($perPage)`: the pager under the rows.** `paginate(false)` or `0` shows
+every row. With a page size, a table with more rows than that gets one pager, the
+same bar `Pagination` draws (since 1.118.0; before, a centred row of pill
+buttons): on the left which rows the page shows, "6–10 of 12" (`pagination.range`,
+with the thousands separator of the language), on the right first, previous, the
+first and the last page and two either side of the current one with `…` between
+(never 400 buttons), next and last. A `setData()` table pages in the browser, a
+`rows()` or `query()` table asks the server for `gk_page` (below); a search or a
+filter goes back to page 1, a sort of a server table too. The controls are
+`<button data-gk-page>`, not links — the table pages in place — inside
+`<nav class="gk-pagination gk-rowpager">`, a landmark named "Page navigation";
+each control has a name ("First page", "Page 3 of 12"), the current page
+`aria-current="page"`, and the keyboard focus stays on the control you pressed.
+Do not put a `Pagination` under a paginated table: that is two pagers. The rows
+per page from a `PageSize` select: `->paginate(PageSize::make('per_page')->resolve(25))`,
+the select in `toolbarHtml()` — it reloads the page and starts at page 1.
 
 **`filter($column, $type, $opts)`:** a dropdown in the toolbar, bound to the
 table — this is what "every declared filter" above means. `$type` is `'select'`;
@@ -3005,8 +3022,12 @@ of it.
 ### Pagination + PageSize (since 1.22 / 1.27)
 
 Server-side pager **below** `.gk-table-wrap`, not inside the card and not
-and not inside the live container. Same look as `GK.rowPager`
-(`.gk-rowpager` / `.gk-pg`).
+inside the live container. Same look as `GK.rowPager`
+(`.gk-rowpager` / `.gk-pg`), and since 1.118.0 as the pager of
+`Table::paginate()`: one bar for every pager in GridKit. This one is for a list
+you page yourself — its controls are links (`?page=N`, no script needed), its
+count reads "238 invoices · Page 5 of 12" because it is handed pages, not rows
+(a table's says "101–125 of 238"). A `Table` with `paginate()` draws its own.
 
 **The two URL parameters you read yourself.** This pager does *not* use the
 `gk_*` convention of `Table`: the page links are `?…&page=N` and the PageSize
@@ -3298,6 +3319,8 @@ Features:
 | `gk-header-meta` | A quiet line beside the header title, on its baseline; shortened first, gone at 768px and below |
 | `gk-table-sticky-head` `gk-table-sticky-col` `gk-table-sticky-box` | `Table->stickyHead()` / `->stickyColumn()` (since 1.107.0): on `.gk-table-wrap`, what sticks; the box around the `<table>` it scrolls in (`data-gk-sticky-col` = how many cells of a row stick, `--gk-table-sticky-height` its height) |
 | `gk-table-list` | On `.gk-table-wrap` (`Table->size('list')`): the list row of the six rules — 64px, name 15px over 13px, quiet groups; a size container, never cards, never sideways scroll |
+| `gk-rowpager` `gk-rowpager-info` `gk-rowpager-count` `gk-rowpager-nav` `gk-pg` `gk-pg-active` `gk-pg-icon` `gk-pg-off` `gk-pg-gap` | The one pager bar — `Pagination`, `Table->paginate()` (since 1.118.0, `<nav class="gk-pagination gk-rowpager">` inside the card, a line above it) and `GK.rowPager`: the count on the left, then the controls; the current page, an arrow, an arrow that leads nowhere, the ellipsis |
+| `gk-pagination` `gk-page-btn` | The landmark class of a table's pager (an older gridkit.js removes it before it draws its own, which then wears the `.gk-pg` boxes), and the hand-written pager of 0.9 — write the bar above instead |
 | `gk-col-p2` `gk-col-p3` `gk-col-p4` `gk-col-p5` | On th and td of a list column (`'priority' => n`): gone below 560 / 720 / 900 / 1040px of LIST width |
 | `gk-cell-who` `gk-cell-who-text` `gk-cell-sub-wrap` | The who cell: avatar, name, a label that moves under the name, the address underneath; a second line that breaks instead of being shortened |
 | `gk-avatar-tone-1` … `gk-avatar-tone-5` | Five quiet role pairs for initials, told apart side by side |

@@ -13330,3 +13330,87 @@ a.gk-tree-label:hover {
     display: none;
   }
 }
+
+/* === 1.118.0 — one pager === */
+/*
+ * Table::paginate() draws the bar of GridKit\Pagination now (Table::renderPager(), and the 1.118.0
+ * block of js/gridkit.js for a rebuilt setData() table): <nav class="gk-pagination gk-rowpager">,
+ * the count on the left, the .gk-pg buttons on the right. One look for every pager: the same
+ * boxes, sizes and colours below a table and below a list paged by hand.
+ *
+ * The nav keeps .gk-pagination, the class an older gridkit.js removes before it writes its own
+ * pager. That class's rule (centred, a 4px gap, 16px all round) stands later in this file than
+ * .gk-rowpager's and would win, so the bar's own layout is said again here, at 0,2,0, and
+ * .gk-rowpager's margin taken off: the bar closes the card. The line above it is .gk-pagination's;
+ * the count stands in line with the first column (the cell padding, which the density steps move).
+ */
+.gk-pagination.gk-rowpager {
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 10px var(--gk-table-pad-x, 16px);
+}
+/* The table's page controls are buttons, Pagination's are links: a button inherits neither the
+   font nor the line height of the page. */
+button.gk-pg {
+  font-family: inherit;
+  line-height: inherit;
+}
+/* Every pager's focus. .gk-pg had the browser's ring, the table's old pager the button's; this
+   is the button's (.gk-btn:focus-visible). */
+.gk-pg:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+
+/*
+ * A copy of js/gridkit.js from before 1.118.0 (the PawBot dashboard keeps its own) still writes
+ * its own pager when it rebuilds a setData() table after a sort, a search or a page: .gk-btn
+ * buttons with data-gk-page in a bare .gk-pagination, straight inside the wrap. They take the
+ * same boxes here, so the table does not change its look on the first click. The count is the
+ * one thing that script cannot write; its pager keeps the right-hand side the buttons stand on.
+ * :has() keeps the new bar out (its buttons are .gk-pg, inside .gk-rowpager-nav), and a pager
+ * written by hand with .gk-page-btn.
+ */
+.gk-table-wrap > .gk-pagination:has(> .gk-btn[data-gk-page]) {
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 10px var(--gk-table-pad-x, 16px);
+}
+.gk-table-wrap > .gk-pagination > .gk-btn[data-gk-page] {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--gk-border);
+  border-radius: 8px;
+  background: var(--gk-surface);
+  color: var(--gk-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.gk-table-wrap > .gk-pagination > .gk-btn[data-gk-page]:hover {
+  background: var(--gk-surface-variant);
+}
+/* The page it is on: every version of that script makes it the primary button. */
+.gk-table-wrap > .gk-pagination > .gk-btn.gk-btn-primary[data-gk-page] {
+  background: var(--gk-primary);
+  border-color: var(--gk-primary);
+  color: var(--gk-on-primary);
+  cursor: default;
+}
+.gk-table-wrap > .gk-pagination > .gk-btn-icon-only[data-gk-page] {
+  padding: 0;
+}
+.gk-table-wrap > .gk-pagination > .gk-btn[data-gk-page]:disabled {
+  opacity: 0.4;
+}
+/* That script sets 16px on the glyph inline; .gk-pg-icon's is 18px. */
+.gk-table-wrap > .gk-pagination > .gk-btn[data-gk-page] .material-icons {
+  font-size: 18px !important;
+}
+/* Its gap between the page numbers. */
+.gk-table-wrap > .gk-pagination:has(> .gk-btn[data-gk-page]) > span {
+  padding: 0 4px;
+  color: var(--gk-text-muted);
+}

@@ -10,6 +10,8 @@ namespace GridKit;
  * Replaces every bespoke pager variant (.bl-pager / .ssi-pagination / .gk-page-btn /
  * .gk-pagination …). Looks identical to the client-side GK.rowPager: it uses the same
  * CSS classes `.gk-rowpager` (wrapper) + `.gk-pg` (buttons) — no own or inline CSS.
+ * Since 1.118.0 the pager of Table::paginate() is this bar too (Table::renderPager(): buttons
+ * that page in place instead of links, and the rows of the page as its count).
  *
  * Rendering: « First · ‹ Prev · 1 … current±2 … last · Next › · Last »
  * + the info "N entries · Page X of Y" + an optional PageSize dropdown.

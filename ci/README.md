@@ -330,6 +330,29 @@ dark and `.gk-dark` with the six themes. `GK_SEED=…` repeats a run. About fort
 GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-line-items.js
 ```
 
+One pager (1.118.0): the pager of `Table::paginate()` is the bar of `GridKit\Pagination`, and
+`ci/browser-pager.js` on `ci/browser-pager-fixture.php` measures the two side by side: every
+state of a control (a page, the current page, an arrow, an arrow that leads nowhere), the
+count, the ellipsis and the bar compared property by property in light, dark and `.gk-dark`,
+under no theme and each of the six, at 1280px and 390px; the bar right under the rows and
+closing the card; contrast (4.5:1 for the count and the numbers, 3:1 for the current page's box
+and the focus ring). Then a `setData()` table paged in the browser — its rows, its count, the
+status line, and the pager the script draws compared byte for byte with the one Table.php writes
+for that page, in English and German, and with strings that hold `& " ' < >` and no thousands
+separator — a search back to page 1, a server table through its AJAX reload (answered from the
+fragments Table.php renders), the pager receding while it loads, Pagination's links, Enter and
+Space, the focus kept on the control (after a reload once, never taken from another table or
+from a field it moved to), the names in Chrome's accessibility tree. And the same page with
+js/gridkit.js without its 1.118.0 block, the script of 1.117.0 the PawBot dashboard keeps
+(`GK_OLD_JS=<file>` runs it on any other copy): the new markup pages with it, client and
+server, first and last included, and the pager it draws after a rebuild is the only one and
+wears the same boxes, in a narrow card too. About twenty-five seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-pager.js
+GK_OLD_JS=/path/to/dashboard/js/gridkit.js node ci/browser-pager.js   # the dashboard's own copy, or any other
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

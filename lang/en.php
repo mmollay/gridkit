@@ -200,6 +200,8 @@ return [
     'pagination.prev'          => 'Previous',
     'pagination.next'          => 'Next',
     'pagination.last'          => 'Last page',
+    // The count of a table's pager (1.118.0): which rows the page shows, of how many
+    'pagination.range'         => '{from}–{to} of {total}',
     'pagesize.label'           => 'Rows',
     'select.placeholder'       => '— Select —',
     'select.search'            => 'Search…',

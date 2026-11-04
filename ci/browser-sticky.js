@@ -519,14 +519,16 @@ const HELPERS = `window.GKT = {
           const state = () => page.evaluate(() => {
             const w = GKT.wrap("st"), b = GKT.box("st");
             const kids = [...w.children].map((c) => c.className || c.tagName);
+            // By its class, not its whole class attribute: since 1.118.0 the pager is "gk-pagination gk-rowpager".
+            const pagerAt = [...w.children].findIndex((c) => c.classList.contains("gk-pagination"));
             const head = b ? b.querySelector("thead tr") : null;
             const widths = head ? [...head.children].slice(0, 3).map((c) => GKT.r(c).width) : [];
             return {
               inBox: !!b && !!b.querySelector(":scope > .gk-table"),
               loose: w.querySelectorAll(":scope > .gk-table").length,
               // (a search with a page of matches has no pager)
-              pagerAfterBox: kids.indexOf("gk-pagination") === -1 || kids.indexOf("gk-pagination") > kids.indexOf("gk-table-sticky-box"),
-              pager: kids.indexOf("gk-pagination") > -1,
+              pagerAfterBox: pagerAt === -1 || pagerAt > kids.indexOf("gk-table-sticky-box"),
+              pager: pagerAt > -1,
               x: b ? b.scrollLeft : -1,
               y: b ? b.scrollTop : -1,
               vars: b ? [parseFloat(b.style.getPropertyValue("--gk-table-sticky-left-2")), parseFloat(b.style.getPropertyValue("--gk-table-sticky-left-3"))] : [],

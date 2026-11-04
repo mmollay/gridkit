@@ -192,9 +192,9 @@
     ]
   },
   "pagination": {
-    "reason": "A disabled pager button: shown when the pager stands on its first or last page.",
+    "reason": "The hand-written pager of 0.9 (.gk-pagination with .gk-page-btn buttons), kept in the stylesheet for pages that still write it. Since 1.118.0 every pager GridKit draws is the .gk-rowpager bar (Pagination, Table::paginate()), and that is what the demo shows.",
     "classes": [
-      "gk-pg-off"
+      "gk-page-btn"
     ]
   },
   "richtext": {

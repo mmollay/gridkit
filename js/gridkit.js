@@ -11237,3 +11237,156 @@ function _gkShowIfInit(root) {
   }
   _gkReady(function () { scan(document.documentElement); });
 })();
+// === 1.118.0 — one pager (Table::paginate) ===
+/*
+ * The pager of a paginated table is the bar of GridKit\Pagination now: Table::renderPager() writes
+ * .gk-rowpager with the count on the left ("6–10 of 12", pagination.range) and the .gk-pg buttons
+ * on the right, first and last included; css/gridkit.css dresses it in the block "1.118.0 — one
+ * pager". This block writes the same markup, attribute for attribute, when renderStatic() rebuilds
+ * a setData() table after a sort, a search, a filter or a page (ci/browser-pager.js compares the
+ * two). A server table's AJAX reload brings the server's own pager and needs nothing from here.
+ *
+ * Nothing above is changed. Replaced or wrapped from here:
+ *   GK.table._staticPager   the new markup. renderStatic() hands it the page and the number of
+ *                           pages, and the count needs more: the rows that match (wrap._gkMatching,
+ *                           which renderStatic sets before it asks) and the page size. So the
+ *                           wrap being drawn is kept aside while renderStatic runs.
+ *   GK.table.renderStatic   that, and the focus. A page button pressed from the keyboard went
+ *   GK.table.reload         with the pager it stood in, and the focus fell to the page: a person
+ *                           paging with Enter started again from the top after every page. It goes
+ *                           to the same control of the new pager now, or to the page just chosen
+ *                           when that control is disabled (Next on the last page). A reload lands
+ *                           later; a MutationObserver on the wrap sees the old pager go, as the
+ *                           sticky head's sees the rows go, and gives the focus back once, and only
+ *                           if nothing else has taken it in the meantime.
+ *
+ * The click handler stays as it was: it reads data-gk-page and skips a disabled button, and the
+ * new buttons carry both. A copy of this file without the block (the PawBot dashboard keeps its
+ * own) pages a table from the new Table.php all the same: its renderStatic() removes
+ * .gk-pagination, which the new nav carries, before it writes its own pager, and the stylesheet
+ * gives that older pager the same boxes.
+ */
+(function () {
+  "use strict";
+  if (!window.GK || !GK.table || typeof GK.table.renderStatic !== "function") return;
+
+  function text(key, fallback, params) {
+    var out = (window.GK_LANG || {})[key] || fallback;
+    for (var k in params || {}) out = out.replace("{" + k + "}", params[k]);
+    return out;
+  }
+
+  /** htmlspecialchars(ENT_QUOTES), as Table.php escapes. */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c];
+    });
+  }
+
+  /** A whole number as number_format() writes it there, with the catalogue's separator (which may be none). */
+  function num(n) {
+    var sep = (window.GK_LANG || {}).format_thousands;
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, typeof sep === "string" ? sep : ",");
+  }
+
+  /** Table::renderPager() in the browser. The page is never past the end here: renderStatic() keeps it in range. */
+  function pagerHtml(page, pages, total, perPage) {
+    var count = perPage > 0 && total > 0
+      ? text("pagination_range", "{from}–{to} of {total}", {
+          from: num((page - 1) * perPage + 1),
+          to: num(Math.min(total, page * perPage)),
+          total: num(total),
+        })
+      : "";
+    function icon(glyph, target, key, fallback, off) {
+      return '<button type="button" class="gk-pg gk-pg-icon' + (off ? " gk-pg-off" : "") + '" data-gk-page="' + target + '"' +
+        ' aria-label="' + esc(text(key, fallback)) + '"' + (off ? " disabled" : "") + ">" +
+        '<span class="material-icons" aria-hidden="true">' + glyph + "</span></button>";
+    }
+    var html = '<nav class="gk-pagination gk-rowpager" aria-label="' + esc(text("pagination_aria", "Page navigation")) + '">' +
+      '<span class="gk-rowpager-info"><span class="gk-rowpager-count">' + esc(count) + "</span></span>" +
+      '<div class="gk-rowpager-nav">' +
+      icon("first_page", 1, "pagination_first", "First page", page <= 1) +
+      icon("chevron_left", Math.max(1, page - 1), "pagination_prev", "Previous", page <= 1);
+    var show = [1, pages];
+    for (var i = page - 2; i <= page + 2; i++) if (i >= 1 && i <= pages) show.push(i);
+    show = show.filter(function (n, at) { return show.indexOf(n) === at; }).sort(function (a, b) { return a - b; });
+    var previous = 0;
+    show.forEach(function (n) {
+      if (previous && n - previous > 1) html += '<span class="gk-pg-gap">…</span>';
+      html += '<button type="button" class="gk-pg' + (n === page ? " gk-pg-active" : "") + '" data-gk-page="' + n + '"' +
+        ' aria-label="' + esc(text("pagination_page_of", "Page {page} of {total}", { page: n, total: pages })) + '"' +
+        (n === page ? ' aria-current="page"' : "") + ">" + n + "</button>";
+      previous = n;
+    });
+    return html +
+      icon("chevron_right", Math.min(pages, page + 1), "pagination_next", "Next", page >= pages) +
+      icon("last_page", pages, "pagination_last", "Last page", page >= pages) +
+      "</div></nav>";
+  }
+
+  var drawing = null; // the wrap renderStatic() is drawing
+
+  // Called on its own, outside a rebuild, it has no rows to count: the bar with an empty count.
+  GK.table._staticPager = function (page, pages) {
+    var data = drawing && drawing._gkData;
+    var perPage = data ? parseInt(data.perPage, 10) || 0 : 0;
+    var total = drawing && drawing._gkMatching ? drawing._gkMatching.length : 0;
+    return pagerHtml(page, pages, total, perPage);
+  };
+
+  /** The control of this wrap's pager that has the focus: its pager and its glyph ("" for a page number). */
+  function focused(wrap) {
+    var el = document.activeElement;
+    if (!el || !el.matches(".gk-pagination [data-gk-page]") || !wrap.contains(el)) return null;
+    var glyph = el.querySelector(".material-icons");
+    return { nav: el.closest(".gk-pagination"), glyph: glyph ? glyph.textContent : "" };
+  }
+
+  /** The same control in the wrap's new pager, or the current page where that one is switched off. */
+  function refocus(wrap, was) {
+    var nav = wrap.querySelector(".gk-pagination");
+    if (!nav) return; // the rows fit one page now: no pager, nothing to go back to
+    var target = null;
+    if (was.glyph) {
+      nav.querySelectorAll("[data-gk-page]").forEach(function (b) {
+        var g = b.querySelector(".material-icons");
+        if (g && g.textContent === was.glyph) target = b;
+      });
+    }
+    if (!target || target.disabled) target = nav.querySelector('[aria-current="page"]');
+    target.focus();
+  }
+
+  var renderStatic = GK.table.renderStatic;
+  GK.table.renderStatic = function (wrap) {
+    var was = focused(wrap);
+    var outer = drawing;
+    drawing = wrap;
+    try {
+      var result = renderStatic.apply(this, arguments);
+    } finally {
+      drawing = outer;
+    }
+    if (was) refocus(wrap, was);
+    return result;
+  };
+
+  var reload = GK.table.reload;
+  GK.table.reload = function (wrap) {
+    var was = (wrap._gkPagerFocus = focused(wrap));
+    if (was && !wrap._gkPagerWatch) {
+      wrap._gkPagerWatch = new MutationObserver(function () {
+        var w = wrap._gkPagerFocus;
+        if (!w || w.nav.isConnected) return; // not landed yet
+        wrap._gkPagerFocus = null;
+        var el = document.activeElement;
+        // Taken by something else in the meantime (the search field, a dialog): left there.
+        if (el && el !== document.body) return;
+        refocus(wrap, w);
+      });
+      wrap._gkPagerWatch.observe(wrap, { childList: true });
+    }
+    return reload.apply(this, arguments);
+  };
+})();

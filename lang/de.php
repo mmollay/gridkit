@@ -200,6 +200,8 @@ return [
     'pagination.prev'          => 'Zurück',
     'pagination.next'          => 'Weiter',
     'pagination.last'          => 'Letzte Seite',
+    // Die Zählung im Seitenwechsler einer Tabelle (1.118.0): welche Zeilen die Seite zeigt, von wie vielen
+    'pagination.range'         => '{from}–{to} von {total}',
     'pagesize.label'           => 'Zeilen',
     'select.placeholder'       => '— Wählen —',
     'select.search'            => 'Suchen…',

@@ -195,8 +195,8 @@ return [
     (new GridKit\Table('t'))->setData($rows)->column('name', 'Name')->paginate(10)->render();
     $html = (string) ob_get_clean();
 
-    T::contains($html, '<nav class="gk-pagination"', 'a landmark that can be skipped');
-    T::ok((bool) preg_match('/<nav class="gk-pagination" aria-label="[^"]+"/', $html),
+    T::contains($html, '<nav class="gk-pagination gk-rowpager"', 'a landmark that can be skipped');
+    T::ok((bool) preg_match('/<nav class="gk-pagination gk-rowpager" aria-label="[^"]+"/', $html),
         'and it is named');
     T::contains($html, 'aria-current="page"', 'the page you are on is stated, not only coloured');
     T::ok(!str_contains($html, 'aria-label="Chevron left"'),
