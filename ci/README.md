@@ -460,6 +460,31 @@ GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-pal
 GK_SHOTS=/some/dir GK_ICONFONT=/path/MaterialIcons.woff2 node ci/browser-palette.js   # with pictures
 ```
 
+The filter builder (`GridKit\FilterBuilder` and `js/filter-builder.js`, 1.123.0) is checked by
+`ci/browser-filter-builder.js` on `ci/browser-filter-builder-fixture.php`: an invoice list with a
+builder of every field type, three saved views and Save view to `http://gk.test/save`, a small
+builder that keeps its views in the browser, and the rows that pass (`matches()`). `page.route()`
+runs the fixture with the query string of every request, so the form without script really goes
+round the server: “Condition” and “Group” as submit buttons, a changed field and its operators,
+an empty value said in words, Enter in a value applying (the hidden default button, not the first
+remove button), duplicate, remove, Reset, a view as a link. With the script: the group the script
+draws is the server's attribute for attribute, and for ten states — odd and hostile ones too — the
+script's checked tree, summary and markup are PHP's (`window.GK_TEST_PARITY`); rows added,
+duplicated and removed without a request and the focus where it belongs; the operators following
+the field and the value fields the operator; a wrong value marked when the field is left and
+unmarked as it is typed right; Apply with an incomplete condition stopped, `gk:filterchange`
+vetoed, the compact JSON sent and read back; back from the next page; `GK.filterBuilder`; Save view
+posted, asked for a name, and kept in `localStorage` across a reload; the keyboard alone; hostile
+labels; German numbers; 390px without a sideways scroll, with 44px targets and the buttons on the
+line of the joining word, and 320px three levels deep; contrast in 18 looks. Each new rule and branch
+of `FilterBuilder.php`, the script and the stylesheet was taken out in turn (a bounded sample of 60)
+and a check turned red. About twenty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-filter-builder.js
+GK_SHOTS=/some/dir GK_ICONFONT=/path/MaterialIcons.woff2 node ci/browser-filter-builder.js   # with pictures
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

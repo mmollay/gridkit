@@ -92,6 +92,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       await collect();
     }
     await page.evaluate(() => { if (window.GK && GK.palette) GK.palette.close(); });
+    // The filter builder (1.123.0): a view saved in the browser brings its remove button.
+    await page.evaluate(() => { location.hash = "#filterbuilder"; });
+    await sleep(250);
+    await page.fill("#gk-fb-g-view", "Mine", { timeout: 2000 }).catch(() => {});
+    await page.click("#gk-fb-g .gk-fb-save-btn", { timeout: 2000 }).catch(() => {});
+    await sleep(200);
+    await collect();
+    await page.evaluate(() => { try { localStorage.removeItem("gk-filterbuilder-g"); } catch (e) { /* nothing kept */ } });
   } finally {
     await browser.close();
   }

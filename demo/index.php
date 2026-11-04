@@ -447,6 +447,7 @@ $sidebar->brand('', 'widgets')
     ->item('Dates', '#dates', 'calendar_month')
     ->item('Charts', '#charts', 'bar_chart')
     ->item('Command palette', '#palette', 'keyboard_command_key')
+    ->item('Filter builder', '#filterbuilder', 'filter_alt')
     ->group('Examples')
     ->item('Examples', '#examples', 'rocket_launch')
     ->group('Info')
@@ -525,6 +526,7 @@ echo $demoHeader->title($headerTitle, true)
 <?php require __DIR__ . '/sections/dates.php'; ?>
 <?php require __DIR__ . '/sections/charts.php'; ?>
 <?php require __DIR__ . '/sections/palette.php'; ?>
+<?php require __DIR__ . '/sections/filterbuilder.php'; ?>
 <?php require __DIR__ . '/sections/changelog.php'; ?>
 </div><!-- /gk-with-sidebar -->
 
@@ -537,6 +539,7 @@ echo $demoHeader->title($headerTitle, true)
 <script src="<?= Layout::asset('../js/calendar.js') ?>" defer></script>
 <script src="<?= Layout::asset('../js/import.js') ?>" defer></script>
 <script src="<?= Layout::asset('../js/command-palette.js') ?>" defer></script>
+<script src="<?= Layout::asset('../js/filter-builder.js') ?>" defer></script>
 <script>
 (function() {
     var sections = document.querySelectorAll('.demo-section');

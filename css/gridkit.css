@@ -15053,3 +15053,443 @@ a.gk-cal-event:hover,
 .gk-dark .gk-palette::backdrop {
   background: rgba(0, 0, 0, 0.6);
 }
+
+/* === 1.123.0 — filter builder === */
+/* GridKit\FilterBuilder writes a form: a fieldset per group (named by its legend), an ordered list of
+   conditions, a row of [field] [operator] [value] with duplicate and remove; js/filter-builder.js draws the
+   same markup. The controls are .gk-filter, the pill of the filter bar; a value field is no select and
+   loses its arrow. The word between two conditions (AND / OR) is a small label at the start of the row;
+   a group inside a group is indented and on the next ground of the surface ladder. A wrong value is
+   said in words with a symbol, under the row — never by the red border alone.
+
+   Roles only, so light, [data-gk-mode="dark"], .gk-dark and the six themes follow from the tokens. On a
+   phone (600px) the field and the operator share a line, the value takes the next, the buttons are 44px,
+   and nothing scrolls sideways: a fieldset's min-content width is switched off. */
+.gk-filter-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  color: var(--gk-on-surface);
+  font-family: var(--gk-font);
+  font-size: var(--gk-text-body);
+}
+.gk-fb-default,
+.gk-fb-default[hidden] {
+  display: none;
+}
+
+/* Saved views: links in a row, the one applied marked by a tick and its weight as well as its colour. */
+.gk-fb-views {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  min-width: 0;
+}
+.gk-fb-views[hidden] {
+  display: none;
+}
+.gk-fb-views-label {
+  font-size: var(--gk-text-label);
+  font-weight: 600;
+  color: var(--gk-on-surface-variant);
+}
+.gk-fb-view-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gk-fb-view-list > li {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+.gk-fb-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  max-width: 100%;
+  padding: 4px 12px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: 999px;
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-label);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.gk-fb-view:hover {
+  background: var(--gk-state-hover);
+}
+.gk-fb-view[aria-current="true"] {
+  border-color: transparent;
+  background: var(--gk-secondary-container);
+  color: var(--gk-on-secondary-container);
+  font-weight: 600;
+}
+.gk-fb-view[aria-current="true"]::before {
+  content: "✓";
+}
+
+/* A group: the root is the frame of the builder, a group inside it is indented with a bar at its start. */
+.gk-fb-group {
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px 8px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius);
+  background: var(--gk-surface);
+}
+.gk-fb-group .gk-fb-group {
+  border-inline-start: 3px solid var(--gk-primary);
+  background: var(--gk-surface-container-low);
+}
+.gk-fb-group .gk-fb-group .gk-fb-group {
+  background: var(--gk-surface-container);
+}
+.gk-fb-legend {
+  padding: 0 6px;
+  font-size: var(--gk-text-label);
+  font-weight: 600;
+  color: var(--gk-on-surface-variant);
+}
+.gk-fb-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-bottom: 8px;
+}
+.gk-fb-join-label {
+  font-size: var(--gk-text-label);
+  color: var(--gk-on-surface-variant);
+}
+.gk-fb-group-head > .gk-fb-actions {
+  margin-inline-start: auto;
+}
+.gk-fb-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A condition: the word that joins it to the one before, its cells, its buttons, what is wrong. */
+.gk-fb-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-width: 0;
+}
+.gk-fb-rules > .gk-fb-row:first-child {
+  padding-inline-start: calc(3.5rem + 8px);
+}
+.gk-fb-row-group {
+  align-items: flex-start;
+}
+.gk-fb-row-group > .gk-fb-group {
+  flex: 1 1 0;
+}
+.gk-fb-conj {
+  flex: none;
+  box-sizing: border-box;
+  width: 3.5rem;
+  padding: 2px 4px;
+  border-radius: 999px;
+  background: var(--gk-surface-container-high);
+  color: var(--gk-on-surface-variant);
+  font-size: var(--gk-text-overline);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.gk-fb-row-group > .gk-fb-conj {
+  margin-top: 14px;
+}
+.gk-fb-cells {
+  display: flex;
+  flex: 1 1 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-width: 0;
+}
+.gk-fb-cells .gk-filter {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 36px;
+}
+.gk-fb-field,
+.gk-fb-op {
+  flex: 0 1 auto;
+  width: auto;
+}
+.gk-fb-value {
+  display: flex;
+  flex: 1 1 12rem;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.gk-fb-value > .gk-fb-input {
+  flex: 1 1 0;
+  width: 0;
+}
+.gk-filter-builder input.gk-filter {
+  background-image: none;
+  padding-inline-end: 10px;
+  cursor: text;
+}
+.gk-fb-cells .gk-fb-multi {
+  height: auto;
+  padding: 4px;
+  background-image: none;
+  cursor: default;
+}
+.gk-fb-between-and {
+  flex: none;
+  font-size: var(--gk-text-label);
+  color: var(--gk-on-surface-variant);
+}
+.gk-fb-actions {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+}
+.gk-fb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--gk-radius-sm);
+  background: transparent;
+  color: var(--gk-on-surface-variant);
+  cursor: pointer;
+}
+.gk-fb-btn:hover:not(:disabled) {
+  background: var(--gk-state-hover);
+  color: var(--gk-on-surface);
+}
+.gk-fb-remove:hover:not(:disabled) {
+  color: var(--gk-danger-text);
+}
+.gk-fb-dup:disabled,
+.gk-fb-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+.gk-fb-btn:focus-visible,
+.gk-fb-view:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 1px;
+}
+.gk-fb-invalid .gk-filter[aria-invalid="true"] {
+  border-color: var(--gk-error);
+  border-width: 2px;
+}
+.gk-fb-error,
+.gk-fb-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--gk-danger-text);
+  font-size: var(--gk-text-label);
+  font-weight: 500;
+}
+.gk-fb-error {
+  flex: 1 1 100%;
+  padding-inline-start: 2px;
+}
+.gk-fb-error > svg,
+.gk-fb-note > svg {
+  flex: none;
+}
+.gk-fb-note[hidden] {
+  display: none;
+}
+
+/* Adding, the limit, the empty group. */
+.gk-fb-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 8px;
+}
+.gk-fb-add-rule,
+.gk-fb-add-group {
+  gap: 4px;
+}
+.gk-fb-limit,
+.gk-fb-empty {
+  margin: 0;
+  font-size: var(--gk-text-label);
+  color: var(--gk-on-surface-variant);
+}
+
+/* The foot: the conditions in words, Apply and Reset, Save view. */
+.gk-fb-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  min-width: 0;
+}
+.gk-fb-summary {
+  flex: 1 1 18rem;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.gk-fb-summary-text {
+  color: var(--gk-on-surface);
+}
+.gk-fb-summary-label {
+  font-weight: 600;
+  color: var(--gk-on-surface-variant);
+}
+.gk-fb-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gk-fb-apply,
+.gk-fb-reset,
+.gk-fb-save-btn {
+  flex: none;
+}
+.gk-fb-save {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-width: 0;
+}
+.gk-fb-save[hidden] {
+  display: none;
+}
+.gk-fb-save-label {
+  font-size: var(--gk-text-label);
+  color: var(--gk-on-surface-variant);
+}
+.gk-fb-save .gk-fb-save-name {
+  flex: 0 1 16rem;
+  box-sizing: border-box;
+  width: auto;
+  min-width: 0;
+  min-height: 36px;
+}
+.gk-fb-view-remove {
+  width: 28px;
+  height: 28px;
+}
+
+@media (pointer: coarse) {
+  .gk-fb-btn,
+  .gk-fb-view-remove {
+    width: var(--gk-target-min);
+    height: var(--gk-target-min);
+  }
+  .gk-fb-view {
+    min-height: var(--gk-target-min);
+  }
+}
+@media (max-width: 600px) {
+  .gk-fb-group {
+    padding: 8px;
+  }
+  .gk-fb-rules > .gk-fb-row:first-child {
+    padding-inline-start: 0;
+  }
+  /* The joining word on a line of its own, above the condition it joins (and no pill, dark or light). */
+  .gk-filter-builder .gk-fb-rules .gk-fb-conj {
+    grid-column: 1;
+    width: auto;
+    padding: 0;
+    background: none;
+    text-align: start;
+  }
+  .gk-fb-row-group > .gk-fb-conj {
+    margin-top: 0;
+  }
+  .gk-fb-field,
+  .gk-fb-op {
+    flex: 1 1 8rem;
+  }
+  .gk-fb-value {
+    flex: 1 1 100%;
+  }
+  .gk-fb-cells .gk-filter,
+  .gk-fb-save .gk-fb-save-name {
+    min-height: var(--gk-target-min);
+  }
+  .gk-fb-btn {
+    width: var(--gk-target-min);
+    height: var(--gk-target-min);
+  }
+  /* A grid: the joining word and the buttons share the first line, the cells take the whole width. */
+  .gk-fb-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+  .gk-filter-builder .gk-fb-rules .gk-fb-conj,
+  .gk-fb-row > .gk-fb-actions {
+    grid-row: 1;
+  }
+  .gk-fb-row > .gk-fb-actions {
+    grid-column: 2;
+  }
+  .gk-fb-row > .gk-fb-cells,
+  .gk-fb-row > .gk-fb-error,
+  .gk-fb-row-group > .gk-fb-group {
+    grid-column: 1 / -1;
+  }
+  .gk-fb-join {
+    flex: 1 1 10rem;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .gk-fb-save .gk-fb-save-name {
+    flex: 1 1 100%;
+  }
+}
+@media (forced-colors: active) {
+  .gk-fb-view[aria-current="true"] {
+    outline: 2px solid Highlight;
+  }
+  .gk-fb-group .gk-fb-group {
+    border-inline-start-color: CanvasText;
+  }
+}
+/* Dark: a group inside a group steps up the ladder instead of down, the joining word with it. */
+[data-gk-mode="dark"] .gk-fb-group .gk-fb-group,
+.gk-dark .gk-fb-group .gk-fb-group {
+  background-color: var(--gk-surface-container);
+}
+[data-gk-mode="dark"] .gk-fb-group .gk-fb-group .gk-fb-group,
+.gk-dark .gk-fb-group .gk-fb-group .gk-fb-group {
+  background-color: var(--gk-surface-container-high);
+}
+[data-gk-mode="dark"] .gk-fb-conj,
+.gk-dark .gk-fb-conj {
+  background-color: var(--gk-surface-container-highest);
+}
