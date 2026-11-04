@@ -1,4 +1,4 @@
-# GridKit 1.124.0 — JavaScript
+# GridKit 1.125.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -99,6 +99,19 @@ GK.kanban.columns('tickets');                            // [{ key, label, count
 GK.kanban.refresh('tickets');                            // after the page added a card itself: handles, counts, limits
 document.addEventListener('gk:kanbanmove', e => { if (e.detail.to === 'done' && !mayClose(e.detail.id)) e.preventDefault(); });
 document.addEventListener('gk:kanbanmoved', e => { /* e.detail: { board, id, from, to, index, fromIndex, ok, reverted } */ });
+
+// File manager (since 1.125.0) — GridKit\FileManager and js/file-manager.js, see "FileManager". First argument: the id, element or selector.
+GK.files.upload('media', fileInput.files);  // queues files as if dropped: checked here, sent with progress; returns [{ name, state, message }]
+GK.files.add('media', { id: 7, name: 'Logo.png', size: 4096, mime: 'image/png', url: '/media/7' });  // a row as files() takes it
+GK.files.remove('media', [7, 8]);
+GK.files.select('media', [7], true);        // ticks (false unticks); returns the ticked ids
+GK.files.selected('media');                 // ['7', '8']
+GK.files.view('media', 'list');             // 'grid' or 'list'; returns the view
+GK.files.open('media', 7);                  // the details of a file; GK.files.close('media')
+document.addEventListener('gk:filesuploaded', e => { /* e.detail: { manager, file, answer } */ });
+document.addEventListener('gk:filesaction', e => { if (e.detail.action === 'download') { e.preventDefault(); /* yours */ } });
+// Also: gk:filesselect { ids }, gk:filesopen { id, file }, gk:filesupload { file, name } (cancelable),
+// gk:fileserror { name, message }, gk:filesdone { action, ids, ok, answer }.
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });

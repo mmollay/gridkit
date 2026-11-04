@@ -1,4 +1,4 @@
-# GridKit 1.124.0 — components
+# GridKit 1.125.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -3514,6 +3514,274 @@ limits.
   handle or the roles yourself, or trust the page's limits on the server — the page can be old, another
   person faster.
 
+### FileManager (`GridKit\FileManager`, since 1.125.0)
+
+A media library for a CMS and a drawer for invoice receipts: folders with a breadcrumb, thumbnails or a
+list, search, a filter by type, the order, a selection with actions, a details panel — and an upload of
+many files at once. **The page supplies the listing** (`files()`, `folders()`) and the URLs the actions
+post to; the component never reads a directory and never deletes, renames or moves a file — it renders,
+and posts. The one thing it does with files is **check an upload on the server**: `FileManager::receive()`
+(below). `render()` prints; `html()` returns the same string.
+
+Everything works without script: the folders and the names are links (`?folder=`, `?file=`), the toolbar
+is a GET form, the upload a `multipart/form-data` form posting `files[]` to `uploadUrl()`, the actions a
+POST form with a checkbox per file. **`js/file-manager.js`** — a file of its own like `js/tree.js`, loaded
+with `defer` after `gridkit.js` (`skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/file-manager.js" defer></script>`) — filters and sorts in place, uploads each file with
+a progress bar, opens the details beside the list and posts the actions with `fetch`. Nothing to call.
+
+```php
+$folderRows = [
+    ['id' => 1, 'name' => 'Receipts', 'parent' => null],
+    ['id' => 2, 'name' => '2026', 'parent' => 1, 'count' => 14],
+];
+$fileRows = [
+    ['id' => 31, 'filename' => 'Beach.jpg', 'size' => 482113, 'mime' => 'image/jpeg', 'created_at' => '2026-10-02 09:12',
+     'url' => '/media/31/Beach.jpg', 'thumb' => '/media/31/thumb.jpg', 'folder' => null, 'width' => 2400, 'height' => 1600],
+    ['id' => 32, 'filename' => 'Invoice 2026-118.pdf', 'size' => 88210, 'mime' => 'application/pdf', 'created_at' => 1790000000,
+     'url' => '/media/32/Invoice.pdf', 'folder' => 2],
+];
+$fm = (new FileManager('media'))
+    ->label('Media')                                    // the accessible name; the top of the breadcrumb
+    ->folders($folderRows)                              // id, name, parent, url, count
+    ->files($fileRows, ['name' => 'filename', 'modified' => 'created_at', 'thumbUrl' => 'thumb'])
+    ->path($_GET['folder'] ?? null)                     // the folder on screen; the breadcrumb follows
+    ->fromQuery()                                       // view, sort, type, q, folder and file of the request
+    ->uploadUrl('/admin/media/upload')
+    ->accept(['image/*', 'application/pdf'])->maxSize('10M')->maxFiles(20)
+    ->actions(['delete' => '/admin/media/delete', 'move' => '/admin/media/move',
+               'rename' => '/admin/media/rename', 'folder' => '/admin/media/folder', 'download' => '/admin/media/zip'])
+    ->csrf('the-csrf-token-of-the-page');
+$fm->render();
+```
+
+**Rows.** `->files($rows, $map)` takes arrays or objects; `$map` renames the page's fields to the
+manager's, every field is read under its own name otherwise:
+
+| Field | |
+|---|---|
+| `id` | required; text or a number, unique (a second row with the same id is left out) |
+| `name` | required; what is shown — the name the person gave the file, not the stored one |
+| `size` | bytes; shown as "482 KB", "1.4 MB" |
+| `mime` | the type (`image/png`); without it the extension of `name` decides. It chooses the kind (image, document, other), the symbol and the words ("PDF document", "PNG image") |
+| `modified` | a Unix timestamp, a date string or a `DateTime`; shown in `files.date_format` |
+| `url` | where the file is opened: the preview in the details, "Open", "Copy URL"; an image without `thumbUrl` uses it as its thumbnail |
+| `thumbUrl` | a small picture for the tile; without one a symbol and the extension are shown |
+| `folder` | the id of the folder it lies in (`null` or `''`: the top) |
+| `width`, `height` | of an image, in pixels; shown in the details (the script measures an image without them) |
+
+A `javascript:`, `vbscript:` or `data:` URL is left out with a warning — except a picture: a `data:` URL
+of a PNG, JPEG, GIF or WebP is taken for `url` and `thumbUrl`, and an SVG one for `thumbUrl` (only ever
+an `<img>`, where no script runs).
+
+`->folders($rows, $map)` — `id`, `name`, `parent` (the id of its folder; `null` or `''` the top), `url`
+(where it leads; default `?folder=<id>` on this page), `count` (shown as "14 items"). The folders of the
+current folder are listed first, by name. Without `folders()` and `path()` every file is listed.
+
+**Methods**
+
+| Method | |
+|---|---|
+| `->files($rows, $map)` / `->folders($rows, $map)` | the listing (above); call again to add more |
+| `->path($folderId)` | the folder on screen (`null`: the top); its path through `folders()` is the breadcrumb. An id `folders()` does not have shows the top, with a warning |
+| `->breadcrumb([['name' => 'Media', 'url' => '/media'], ['name' => 'Receipts', 'url' => '']])` | the breadcrumb given as it is (each crumb `name` or `label`, `url` or `href`), for folders not all in `folders()` |
+| `->view('grid' \| 'list')` | thumbnails (default) or a row per file with type, size and date |
+| `->sort('name' \| 'date' \| 'size' \| 'type', 'asc' \| 'desc')` | the order of the files; default name, ascending |
+| `->filter('all' \| 'image' \| 'document' \| 'other')` | only one kind |
+| `->search('invoice')` | only names that hold this (case, accents and umlauts ignored) |
+| `->fromQuery($get = null)` | view, sort (`name-asc` … `type-desc`), type, q, folder and file from the request (default `$_GET`). A value it does not know is ignored without a warning — the request is the visitor's |
+| `->param('media')` | the parameters under one name: `?media[folder]=2&media[view]=list` — for two managers on a page, or a page whose own parameters are called `sort` or `q` |
+| `->anchor('files')` | every link and the toolbar end with `#files` (a section or a tab of the page) |
+| `->keep(['page' => 'media'])` | parameters of the page every link and the toolbar carry along |
+| `->label('Media')` | the accessible name; default "Files" |
+| `->select('none' \| 'single' \| 'multi')` | checkboxes (default), a radio button per file, or none |
+| `->selected([31, 32])` | ticked when the page opens |
+| `->open(31)` | the details of a file are open when the page opens (`fromQuery()` reads `?file=31`) |
+| `->actions([...])` | what the person can do (below) |
+| `->uploadUrl('/admin/media/upload')` | where uploads are posted; without it there is no upload |
+| `->accept(['image/*', 'application/pdf', '.csv'])` | MIME types, families or extensions; default JPEG, PNG, GIF, WebP and PDF. **`image/*` does not take SVG** — name `image/svg+xml` for that. A type a browser or a server runs (`text/html`, `application/x-php`, `.php`) is never taken |
+| `->maxSize('10M')` | bytes, or `'512K'`, `'10M'`, `'2 MB'`; 1 KB to 2 GB, default 10 MB |
+| `->maxFiles(20)` | files per upload, 1 to 1000 |
+| `->parallel(3)` | files the script sends at the same time, 1 to 6 |
+| `->csrf($token, '_token')` | a hidden field in every form and the `X-CSRF-Token` header of every request of the script |
+| `->hidden(['tenant' => '7'])` | hidden fields posted with every upload and action |
+| `->rules()` | `['accept' => …, 'maxSize' => …, 'maxFiles' => …]` — hand it to `receive()` so the server checks what the browser was told |
+| `->render()` / `->html()` | prints / returns |
+| `FileManager::receive($_FILES['files'], $opts)` | checks an upload (below) |
+| `FileManager::check($path, $name, $opts)` | the same checks for a file already on the server |
+
+**Actions.** `->actions()` takes `delete`, `move`, `download` (for the ticked files), `rename` (in the
+details) and `folder` (a new folder in the current one). Each is a URL the manager POSTs to, or `true`:
+then only the event `gk:filesaction` fires and the page does the rest (`false` removes one). Every action
+posts the same fields, with and without script:
+
+| Field | |
+|---|---|
+| `action` | `delete`, `move`, `rename`, `folder` or `download` |
+| `ids[]` | the ticked files (rename: the one in the details) |
+| `target` | move: the id of the folder chosen in "Move to" (`''` the top) |
+| `name` | rename: the new name; folder: the name of the new folder |
+| `parent` | folder: the folder it is created in |
+| `folder` | the folder on screen |
+| the `csrf()` field and `hidden()` | |
+
+With the script the request carries `X-Requested-With: XMLHttpRequest`, `Accept: application/json` and
+`X-CSRF-Token`, and expects JSON: `{"ok": true}` — and for rename optionally `"file": {…}` (the row as
+it is now), for folder `"folder": {"id": …, "name": …, "url": …}` so it appears at once — or
+`{"ok": false, "message": "Shown to the person."}`. Deleted and moved files leave the listing, a renamed
+one is drawn again, the answer's `message` (or the manager's own sentence) is announced and shown in a
+toast. A download is not fetched: the form posts to its URL and the browser receives what the page sends
+(a ZIP). Without the script every action is a plain POST — answer with a redirect back (PRG).
+
+```php
+// POST /admin/media/delete — with or without script
+$ids = array_map('intval', (array) ($_POST['ids'] ?? []));
+// … check the token and that these files belong to this person, delete them …
+$wantsJson = ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
+if ($wantsJson) {
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => true]);                 // or ['ok' => false, 'message' => 'The contract is kept for ten years.']
+}
+// else: header('Location: /admin/media?folder=' . urlencode((string) ($_POST['folder'] ?? '')), true, 303);
+```
+
+**Upload, in the browser.** Files chosen with "Choose files", **dropped anywhere on the manager**, or
+**pasted** (a picture from the clipboard, while the focus is in the manager — or on the page, when it has
+only one manager; named "Pasted picture 20261104-101500.png") are checked first: the type against
+`accept()` (by the browser's type, or the extension when it has none), the size against `maxSize()`, an
+empty file, and the count against `maxFiles()` (counting what is still waiting) — a refused file says why
+in its row ("Big.pdf is too large (12 MB); at most 10 MB per file."). Each file is then sent on its own,
+`parallel()` at a time: a `POST` to `uploadUrl()` with `files[]` (one file), `folder`, the `csrf()` field
+and `hidden()`, the headers above, through `XMLHttpRequest` for its progress. Each row has a picture
+(an object URL of the file itself, revoked once drawn), the name, a `<progress>` bar, a symbol **and** a
+word for its state — waiting, "Uploading, 45 %", uploaded, failed with the reason, cancelled — and a
+button: cancel while it waits or is sent, try again after a failure of the line or a 5xx, remove from the
+list. **The server answers** `{"ok": true, "file": {…}}` — the row as `files()` takes it (`id` and `name`
+required; `folder` defaults to the folder on screen) — and the file appears in the listing, in its
+place in the order, without a reload; or `{"ok": false, "message": "…"}`, shown in the row. Anything
+else is "The upload failed (HTTP 500)." or "The server sent an answer that is not one an upload expects."
+A live region says each file taken or refused, and at the end "3 of 4 files uploaded."
+
+**Upload, on the server — `FileManager::receive()`.** Nothing an upload says is believed: not the name,
+not the type, not the size.
+
+```php
+// POST /admin/media/upload — check the CSRF token first. $fm: the manager the page drew, built the same way.
+$fm = (new FileManager('media'))->accept(['image/*', 'application/pdf'])->maxSize('10M')->maxFiles(20);
+$results = FileManager::receive($_FILES['files'] ?? [], $fm->rules() + [
+    'target' => '/srv/app/uploads',                  // outside the web root; without it nothing is moved
+]);
+foreach ($results as $r) {
+    if ($r['ok']) {
+        // $r['path']: /srv/app/uploads/9f86d081884c7d659a2feaa0c55ad015.jpg — the stored name is random
+        // $r['name']: 'Beach.jpg' (the client's name, cleaned — store it in your table, never on the disk)
+        // $r['mime'], $r['size'], $r['width'], $r['height'], $r['sha256'], $r['kind']
+    } else {
+        // $r['error']: 'type', 'mismatch', 'size', 'script', 'dimensions', …; $r['message']: the words
+    }
+}
+$r = $results[0] ?? null;
+header('Content-Type: application/json');
+echo json_encode($r === null ? ['ok' => false, 'message' => 'No file was chosen.']
+    : ($r['ok'] ? ['ok' => true, 'file' => ['id' => 7, 'name' => $r['name'], 'size' => $r['size'], 'mime' => $r['mime'],
+                                            'url' => '/media/7', 'modified' => time()]]
+               : ['ok' => false, 'message' => $r['message']]));
+```
+
+What it checks, in this order — a file that fails one is refused with a sentence that says which:
+
+1. **One per entry, any shape** of `$_FILES` (one file, `files[]`, nested — each with `name`,
+   `tmp_name`, `error`, `size`); an empty slot is skipped.
+   More than `maxFiles` — the rest is refused (`count`).
+2. **The upload's error code**, in words: too large for `upload_max_filesize` (`ini_size`) or the form
+   (`size`), arrived in part (`partial`), the server's own trouble (`server`).
+3. **Only a file PHP received in this request** (`is_uploaded_file`) — a path smuggled into the array
+   is refused (`not_uploaded`).
+4. **The name**: a NUL byte, a leading dot (`.htaccess`, `.user.ini`) or an empty name — refused
+   (`name`); a part that a server or Windows runs **anywhere** in the name — `invoice.php.jpg`,
+   `x.phtml.png`, `.phar`, `.cgi`, `.jsp`, `.exe`, `.html`, `.htaccess` … — refused (`name`). Trailing dots
+   and spaces are dropped first (Windows does: `x.php.` is `x.php`); the path a client sends
+   (`C:\fakepath\…`, `../../`) is dropped.
+5. **The size on disk**, not the one claimed: 0 bytes (`empty`), more than `maxSize` (`size`).
+6. **The type by content** (`finfo`): a type a browser or a server runs (HTML, XML, PHP, JavaScript,
+   shell, executables, Java archives) is never taken; it must be one `accept` names (`type`), and the
+   name's extension must be one of that type's — a PNG named `.jpg`, a text named `.png` (`mismatch`).
+   Without the `fileinfo` extension nothing is taken (a warning says why).
+7. **Code where none belongs**: `<?php` in any file; `<?=`, `<script`, `<html`, `<iframe`, `<svg` … in a
+   picture or a text file — a polyglot (`script`).
+8. **A picture must be one**: `getimagesize()` reads its size (`unreadable`), and
+   it is at most `maxWidth` × `maxHeight` (default 20,000 each) and `maxPixels` (default 50 million) — a
+   100-byte PNG that claims 50,000 × 50,000 pixels would take 10 GB to open (`dimensions`).
+9. **An SVG** is taken only when `accept` names `image/svg+xml`, and only without a DOCTYPE or entity,
+   script, `foreignObject`, `iframe`, `embed`, `object`, animation elements, an `on…` attribute, a link
+   to `javascript:`, `vbscript:` or `data:` (other than a raster picture), or a style that imports or
+   runs (`script`) — refused, not cleaned: ask for a PNG instead.
+10. **The stored name** is 32 random hex digits and the extension the name has, checked against the type (a JPEG always `.jpg`) —
+    the client's name never reaches the disk.
+11. **Storing**: only with `target` — an existing, writable directory, and **not inside the web root**
+    (`$_SERVER['DOCUMENT_ROOT']`, or `webRoot`) unless `'public' => true` says so; otherwise a warning and
+    nothing is stored (`store`). The file is moved with `move_uploaded_file()` and made `0640` (`0644`
+    when public). Without `target` nothing is moved: `tmp` is the temporary file, which PHP deletes when
+    the request ends.
+
+| Option | |
+|---|---|
+| `accept`, `maxSize`, `maxFiles` | as the manager's — pass `$fm->rules()` |
+| `maxWidth`, `maxHeight`, `maxPixels` | the size of a picture in pixels (above) |
+| `target` | the directory to move accepted files into |
+| `public` | `true`: `target` may lie inside the web root (serve it with `X-Content-Type-Options: nosniff`) |
+| `webRoot` | the web root to compare with; default `$_SERVER['DOCUMENT_ROOT']` |
+
+A result: `ok`, `index` (the entry in `$_FILES`), `name` (the client's, cleaned, for display), `size`,
+`mime`, `ext`, `kind`, `width`, `height`, `stored`, `path` (when moved), `tmp` (when not), `sha256`, `error`
+(`null`, or `count`, `ini_size`, `size`, `partial`, `server`, `not_uploaded`, `name`, `empty`,
+`unreadable`, `type`, `mismatch`, `script`, `dimensions`, `store`), `message`. An empty list: nothing was
+chosen. When a request is larger than `post_max_size`, PHP drops it whole — `$_POST` and `$_FILES` are
+empty while `CONTENT_LENGTH` is not; say so yourself.
+
+`FileManager::check($path, $name, $opts)` runs the same checks on a file that was **not** uploaded in this
+request (an import directory, a mail attachment) and returns one result; with `target` it **copies** the
+file there. Only `receive()` trusts a file as an upload.
+
+**Serving.** Store outside the web root and send files through a script with the stored `mime` as
+`Content-Type`, `X-Content-Type-Options: nosniff`, and `Content-Disposition: attachment` for anything that
+is not a picture or a PDF. Check the CSRF token and the person's right to the folder before
+`receive()` — the component does not know your users.
+
+**Keys and the screen reader.** In the listing: arrow keys move between the files (up and down by a row
+of tiles), Home/End, Space ticks, Shift+arrow and Shift+click tick a range, Ctrl+A (Cmd+A) ticks all,
+Enter on a box opens the details, Delete deletes the ticked files (after a confirmation), Escape lets go
+of the selection or closes the details and gives the focus back. Every box is named "Select Beach.jpg";
+a folder link says "Folder Receipts"; the count of ticked files is in the bar; filtering says "3 of 12
+files shown"; uploads, refusals and actions are said in a polite live region. A ticked file has its tick,
+an upload a symbol and a word — **never the colour alone**.
+
+- **Phone** (600px and narrower): two columns of tiles; the details are a sheet over the whole screen
+  (`role="dialog"`, `aria-modal`, Tab kept inside, Escape and the close button give the focus back); the
+  toolbar and the bulk bar one field per line, 16px; every target 44px (with a finger at any width too);
+  nothing wider than the screen.
+- **Classes** (all `gk-files-*`, in `css/blocks.json` as "File manager"): `gk-files`, `-js` (the script
+  runs), `-view-grid`, `-view-list`, `-top`, `-crumbs`, `-newfolder`, `-field`, `-toolbar`, `-search`,
+  `-views`, `-viewbtn`, `-apply`, `-upload`, `-drop`, `-drop-icon`, `-drop-text`, `-pick`, `-hint`,
+  `-send`, `-dragover`, `-queue`, `-job`, `-job-thumb`, `-job-main`, `-job-name`, `-progress`,
+  `-job-state`, `-job-actions`, `-job-btn`, `-main`, `-body`, `-bulk`, `-all`, `-count`, `-move`, `-act`,
+  `-summary`, `-head`, `-items`, `-item`, `-folder`, `-check`, `-thumb`, `-ext`, `-name`, `-type`,
+  `-size`, `-date`, `-meta`, `-selected`, `-current`, `-empty`, `-details`, `-details-head`,
+  `-details-title`, `-details-close`, `-details-body`, `-preview`, `-props`, `-url`, `-details-actions`,
+  `-rename`, `-sheet-open` (on `<html>` while the sheet is open). Colours are roles: light, both dark
+  spellings and the six themes follow.
+- **Words** come from `files.*` in `lang/` and reach the script inside the manager's own config — no
+  `Lang::jsConfig()` needed. `files.date_format` is the date's shape (`Y-m-d H:i`, `d.m.Y H:i`).
+- **Warnings** (`E_USER_WARNING`, the manager still renders): a row without an id or a name, an id twice,
+  a map naming a field it does not know, a `javascript:` URL, an unknown view, sort, type, selection mode
+  or action, an action that is neither a URL nor `true`, an `accept` entry that is not a type or names one
+  that runs, a size or count out of range, a field name of `csrf()` or `hidden()` that clashes, a
+  `path()` folder it does not have. `receive()` warns about an unknown option, a `target` that is not a
+  writable directory or lies in the web root, and a missing `fileinfo`.
+- **Do not** put the manager inside another `<form>`, trust `$_FILES[...]['type']` or the name, write the
+  client's name to the disk, store uploads in the web root, or answer an upload with HTML when the script
+  asked for JSON.
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -3963,5 +4231,6 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | CommandPalette | `GridKit\CommandPalette` / `js/command-palette.js` / `GK.palette` | Ctrl+K (Cmd+K on a Mac): a few letters, Enter — to a page of the sidebar (read from the page), an entry or a command of yours, or a record your search URL returns as you type (same origin, debounced, the stale answer dropped); fuzzy, umlauts both ways, marked matches, recent entries, groups; a modal dialog with the keys of a combobox and a listbox; a full-screen sheet on a phone (since 1.122.0) |
 | FilterBuilder | `GridKit\FilterBuilder` / `js/filter-builder.js` / `GK.filterBuilder` | Conditions combined freely for tables, segments, invoice lists: rows of field, operator, value; AND/OR groups nested to a depth; add, duplicate, remove; saved views stored by the page. The state is compact JSON in one URL parameter, `FilterBuilder::fromRequest()` checks it, `toSql()` writes a WHERE clause with placeholders only, `matches()` filters rows in memory, `summary()` says it in words; a form without script, instant with it (since 1.123.0) |
 | Kanban | `GridKit\Kanban` / `js/kanban.js` / `GK.kanban` | Columns with cards for tasks, orders, campaigns, tickets: a labelled region of lists with headings and counts that works without script (links, a "Move to" form per card); with the script dragging by mouse or finger with a drop line and the board scrolling under the card, full keyboard moving with every step spoken, work-in-progress limits that warn or refuse, every move saved as JSON one at a time with the way back on a refusal; lanes that snap on a phone (since 1.124.0) |
+| FileManager | `GridKit\FileManager` / `js/file-manager.js` / `GK.files` | A media library and a receipt drawer: folders with a breadcrumb, thumbnails or a list, search, a filter by type, sorting, single or multi selection by mouse and keyboard, bulk actions (delete, move, download) and a details panel (dimensions, URL to copy, rename) — from rows the page supplies, posting to the page's URLs; many uploads at once, chosen, dropped or pasted, each with a progress bar, cancel and retry, the new file in the listing without a reload; `FileManager::receive()` checks an upload on the server by its content (type, extension, size, pixels, code in it, SVG script) and stores it under a random name outside the web root; a sheet on a phone; works without script (since 1.125.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
