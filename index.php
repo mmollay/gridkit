@@ -259,7 +259,7 @@ if (isset($_GET['skill-html'])) {
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="GridKit – Agent-Ready PHP Component Framework">
-    <meta property="og:description" content="Zero-dependency PHP framework for admin dashboards. 24 components, built for AI agents. Open Source.">
+    <meta property="og:description" content="Zero-dependency PHP framework for admin dashboards. 25 components, built for AI agents. Open Source.">
     <meta property="og:url" content="<?= $canonicalSelf ?>">
     <meta property="og:site_name" content="GridKit">
     <meta property="og:image" content="<?= $canonicalUrl ?>/docs/social-preview.png">
@@ -880,7 +880,7 @@ if (isset($_GET['skill-html'])) {
     </h1>
     <p class="hero-sub">
         GridKit is a zero-dependency PHP component framework designed for AI agents.
-        24 components, 1 CSS + 1 JS file, no build process. Your agent reads the skill file
+        25 components, 1 CSS + 1 JS file, no build process. Your agent reads the skill file
         and builds complete CRUD applications in seconds.
     </p>
     <div class="hero-actions">
@@ -896,7 +896,7 @@ if (isset($_GET['skill-html'])) {
     </div>
     <div class="hero-stats">
         <div>
-            <div class="hero-stat-num">24</div>
+            <div class="hero-stat-num">25</div>
             <div class="hero-stat-label">Components</div>
         </div>
         <div>
@@ -1122,7 +1122,7 @@ if (isset($_GET['skill-html'])) {
                 </div>
             </div>
             <p class="skill-desc">
-                Add this file to your AI agent's project context. It contains complete documentation for all 24 components,
+                Add this file to your AI agent's project context. It contains complete documentation for all 25 components,
                 code patterns, JavaScript API reference, and common recipes.
             </p>
             <div class="skill-preview collapsed" id="skill-preview" data-src="?skill-html=1"></div>
@@ -1136,7 +1136,7 @@ if (isset($_GET['skill-html'])) {
 <section class="section section-alt" id="components">
     <div class="container">
         <div class="section-header">
-            <h2>Twenty-four Components, One API</h2>
+            <h2>Twenty-five Components, One API</h2>
             <p>Each component follows the same fluent PHP API. Chainable, declarative, zero boilerplate.</p>
         </div>
 

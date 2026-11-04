@@ -20,7 +20,7 @@ const PRELUDE = <<<'PHP_PRELUDE'
 declare(strict_types=1);
 error_reporting(E_ALL);
 require_once '%ROOT%/autoload.php';
-use GridKit\{ActionGroup, Auth, BelegModal, Button, Calendar, DateRange, FilterChips, Form, Header, Icon, Import,
+use GridKit\{ActionGroup, Auth, BelegModal, Button, Calendar, Chart, DateRange, FilterChips, Form, Header, Icon, Import,
               Lang, Layout, LineItems, Modal, PageSize, Pagination, PermissionMatrix, Select, Sidebar,
               SortLink, StatCards, Table, TableHeader, Tabs, Theme, Tooltip, Tree, YearFilter};
 Lang::set('en');
@@ -176,9 +176,9 @@ return [
     $md     = (string) file_get_contents(SKILL);
     $readme = (string) file_get_contents(__DIR__ . '/../README.md');
 
-    preg_match('/Twenty-four, each a PHP class.*?\n\n(.*?)\n\nPlus/s', $readme, $m);
+    preg_match('/Twenty-five, each a PHP class.*?\n\n(.*?)\n\nPlus/s', $readme, $m);
     preg_match_all('/`(\w+)` +—/', $m[1] ?? '', $c);
-    T::ok(count($c[1]) === 24, 'the README component table changed shape');
+    T::ok(count($c[1]) === 25, 'the README component table changed shape');
 
     foreach ($c[1] as $component) {
         T::ok(

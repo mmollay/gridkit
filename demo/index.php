@@ -384,6 +384,13 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-util-box { min-height:32px; background:var(--gk-surface-variant, rgba(0,0,0,.04)); border-radius:4px; overflow:hidden; }
         @media (max-width:600px) { .demo-news-row { grid-template-columns:minmax(0, 1fr); } }
         .demo-announce-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+        /* Charts (1.121.0): each chart beside its code on a wide screen, the code under it on a narrow one. */
+        [data-section="charts"] .demo-card > .demo-showcase { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(0, 1fr); gap:16px 24px; align-items:start; margin-bottom:0; }
+        [data-section="charts"] .demo-card > .demo-showcase > .demo-showcase-code { margin-top:0; }
+        @media (max-width:1180px) { [data-section="charts"] .demo-card > .demo-showcase { grid-template-columns:minmax(0, 1fr); } }
+        .demo-chart-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap:16px; margin-bottom:24px; }
+        .demo-chart-grid > .demo-card { margin-bottom:0; }
+        .demo-chart-grid .demo-card > .demo-showcase { display:block; }
         .demo-pair { display:flex; flex-direction:column; gap:16px; margin-bottom:24px; }
         .demo-pair-left { display:contents; }
         .demo-stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:24px; }
@@ -437,6 +444,7 @@ $sidebar->brand('', 'widgets')
     ->item('Line items', '#lineitems', 'receipt_long')
     ->item('Import', '#import', 'upload_file')
     ->item('Dates', '#dates', 'calendar_month')
+    ->item('Charts', '#charts', 'bar_chart')
     ->group('Examples')
     ->item('Examples', '#examples', 'rocket_launch')
     ->group('Info')
@@ -492,12 +500,14 @@ echo $demoHeader->title($headerTitle, true)
 <?php require __DIR__ . '/sections/lineitems.php'; ?>
 <?php require __DIR__ . '/sections/import.php'; ?>
 <?php require __DIR__ . '/sections/dates.php'; ?>
+<?php require __DIR__ . '/sections/charts.php'; ?>
 <?php require __DIR__ . '/sections/changelog.php'; ?>
 </div><!-- /gk-with-sidebar -->
 
 <script src="<?= Layout::asset('../js/gridkit.js') ?>"></script>
 <script src="<?= Layout::asset('../js/sortierbar.js') ?>" defer></script>
 <script src="<?= Layout::asset('../js/tree.js') ?>" defer></script>
+<script src="<?= Layout::asset('../js/chart.js') ?>" defer></script>
 <script src="<?= Layout::asset('../js/calendar.js') ?>" defer></script>
 <script src="<?= Layout::asset('../js/import.js') ?>" defer></script>
 <script>

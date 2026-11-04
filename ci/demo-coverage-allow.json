@@ -52,6 +52,19 @@
       "gk-cell-who-text"
     ]
   },
+  "chart": {
+    "reason": "Drawn by js/chart.js only while a category is under the pointer or the keys: the rows of the tooltip (title, line key, value, name, the total of a stack) and the marks of that category against the others stepping back. A still page cannot show them; ci/browser-chart.js exercises every one.",
+    "classes": [
+      "gk-chart-active",
+      "gk-chart-on",
+      "gk-chart-tip-key",
+      "gk-chart-tip-name",
+      "gk-chart-tip-row",
+      "gk-chart-tip-title",
+      "gk-chart-tip-total",
+      "gk-chart-tip-value"
+    ]
+  },
   "checkbox-radio": {
     "reason": "Written only for a page that sets the matching option or markup; the demo shows the common case and the skill lists this one.",
     "classes": [
@@ -126,7 +139,6 @@
   "formatter": {
     "reason": "Number cells in the 'number' format; the demo's formatter table uses currency, percent, date, boolean, label and email.",
     "classes": [
-      "gk-num",
       "gk-num-empty"
     ]
   },

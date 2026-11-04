@@ -74,6 +74,7 @@ class StatCards
                 $dir   = str_starts_with(ltrim($trend), '-') ? 'down' : 'up';
                 echo '<span class="gk-stat-trend gk-stat-trend-' . $dir . '">' . $e($trend) . '</span>';
             }
+            echo self::sparkline($card);
             echo '</div>';
 
             if (isset($card['icon'])) {
@@ -118,6 +119,27 @@ class StatCards
         return (string) $val;
     }
 
+    /**
+     * 'sparkline' (1.121.0): the trend of the figure as a small line under it — a list of values,
+     * or ['values' => [...], 'color' => 2, 'area' => true, …] with any option of
+     * Chart::sparkline(). It is named by the card's label and written in the card's format; a
+     * card without it is drawn exactly as before.
+     */
+    private static function sparkline(array $card): string
+    {
+        if (!isset($card['sparkline']) || !is_iterable($card['sparkline'])) return '';
+        $spark = $card['sparkline'];
+        $opts = is_array($spark) && array_key_exists('values', $spark) ? $spark : ['values' => $spark];
+        $values = is_iterable($opts['values']) ? $opts['values'] : [];
+        unset($opts['values']);
+        $opts += [
+            'label' => (string) $card['label'],
+            'format' => match ($card['format'] ?? null) { 'currency' => 'money', 'percent' => 'percent', default => 'number' },
+        ];
+        if (isset($card['decimals']) && is_int($card['decimals']) && !array_key_exists('decimals', $opts)) $opts['decimals'] = $card['decimals'];
+        return Chart::sparkline($values, $opts);
+    }
+
     /** The compact form: .gk-stat-tiles, one .gk-stat-tile per card(). */
     private function renderTiles(\Closure $e): void
     {
@@ -134,6 +156,7 @@ class StatCards
             if (isset($card['sub']) && (string) $card['sub'] !== '') {
                 $inner .= '<span class="gk-stat-tile-sub">' . $e($card['sub']) . '</span>';
             }
+            $inner .= self::sparkline($card);
             echo isset($card['href'])
                 ? '<a href="' . $e($card['href']) . '" class="gk-stat-tile' . $tone . '">' . $inner . '</a>'
                 : '<div class="gk-stat-tile' . $tone . '">' . $inner . '</div>';

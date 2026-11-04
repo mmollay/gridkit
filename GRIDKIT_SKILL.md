@@ -64,6 +64,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Timeline | `.gk-timeline` | A log of steps, one under the other: a real ordered list, each step with a symbol and a word for its state (ok · failed · running · waiting · skipped), title, time, small chips, a detail and — when it broke — a message block (since 1.96.0) |
 | Portrait video frame | `.gk-video-frame` | A 9:16 frame for a video or picture: never wider than its column or taller than the window, optional guide lines for the zones a platform covers, an empty "being made" state and a failed state, a caption (since 1.96.0) |
 | Sortable container (JS) | `[data-gk-sortierbar]` / `js/sortierbar.js` | Cards or rows a person puts in order by hand: a handle in every entry (from two entries on), dragging with mouse or finger, Space and arrow keys, a spoken position, the order posted as JSON when there is a `url`, and a sentence beside a symbol when saving failed (since 1.97.0) |
+| Chart | `GridKit\Chart` / `js/chart.js` / `GK.chart` | Line, area, bar (grouped, stacked, horizontal) and donut charts and sparklines as inline SVG from the server: nice axes, numbers in the chart's language, a summary in words, a legend, the data as a table; with the script a tooltip, the keys, a crosshair, series switched off in the legend, `GK.chart.update()` drawing the same SVG as PHP (since 1.121.0) |
 | Tree | `GridKit\Tree` / `js/tree.js` / `GK.tree` | Page trees, categories, folders: a nested list that works without script, made a WAI-ARIA tree view — keys, type-ahead, open/closed remembered, single or multi selection with tri-state parents, a filter, children loaded on demand, moving by drag and drop or keyboard with a save URL and a way back (since 1.116.0) |
 | Calendar | `GridKit\Calendar` / `js/calendar.js` / `GK.calendar` | A month of appointments, deadlines and campaigns: a table of days with events as links, bars across days, "+3 more", week numbers, months as links (`?month=2026-12`), an agenda when narrower than 600px, arrow keys / Home / End / PageUp / PageDown with the script (since 1.120.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
@@ -87,7 +88,8 @@ without tripping over this.
 | `Tabs::render()` (1.111.0) | | |
 
 `Tree::render()` and `Tree::renderBranch()` (1.116.0) print as well, and so do `Import::render()` (1.119.0),
-`DateRange::render()` and `Calendar::render()` (1.120.0) — their `->html()` returns the same string.
+`DateRange::render()` and `Calendar::render()` (1.120.0) and `Chart::render()` (1.121.0) — their `->html()` returns
+the same string (`Chart::sparkline()` returns a string to place).
 
 `PageSize::render()` above is an INSTANCE method — build it with the static
 `PageSize::make('per_page')` first, then chain. Same for `TableHeader::make()`.
@@ -1557,7 +1559,10 @@ page.
 makes the tile a link. `'color' => 'danger'` or `'warning'` (also `'red'`,
 `'orange'`, and `'highlight' => true`) tones the tile — every other colour stays
 neutral, because a colour that means nothing costs the one that does (rule 4).
-`icon` and `trend` belong to the full card and are not shown. By hand a tile may
+`icon` and `trend` belong to the full card and are not shown. `sparkline` (since 1.121.0) works on a
+card and a tile alike: `'sparkline' => [8200, 7900, 9400]` draws `Chart::sparkline()` under the figure,
+named by the label and written in the card's format (`['values' => [...], 'color' => 3, 'area' => true]`
+passes options — see "Chart"). By hand a tile may
 also be a `<button>`: at least 44px tall, with a focus ring and a hover that
 keeps its tone.
 
@@ -3153,6 +3158,170 @@ renders.
 - **Do not** put a form inside a day, write the grid roles or tabindex yourself, or hand the calendar a
   month's events you did not limit to `visibleRange()` — a year of events is a year of markup.
 
+### Chart (`GridKit\Chart`, since 1.121.0)
+
+Line, area, bar and donut charts and sparklines, drawn on the server as inline SVG — no library,
+no canvas, nothing to wait for. Revenue per month, newsletter open rates, the sources of orders.
+**`js/chart.js`** adds what needs a script; it is a file of its own like `js/tree.js`, loaded with
+`defer` after `gridkit.js` — `skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/chart.js" defer></script>`. There is no call to make: the script finds every
+`.gk-chart`, also one inserted later. `Chart::render()` prints, `Chart::html()` returns the same
+string, `Chart::sparkline()` returns a string.
+
+```php
+(new Chart('revenue'))
+    ->type('bar')                                    // line (default), area, bar, donut, sparkline
+    ->title('Revenue per month')                     // the caption and the name a screen reader hears
+    ->labels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'])
+    ->series('2025', [8200, 7900, 9400, 10100, 9800, 11200])
+    ->series('2026', [9100, 8800, 10900, 11600, null, null])   // null: a gap (no bar, no point)
+    ->format('money', ['currency' => 'EUR', 'locale' => 'de'])   // 9.100,00 € — the axis: 10 Tsd. €
+    ->height(280)
+    ->render();
+```
+
+```php
+(new Chart('open-rates'))
+    ->type('line')
+    ->title('Newsletter open rate')
+    ->labels(['W1', 'W2', 'W3', 'W4'])
+    ->series('Customers', [41.2, 43.5, 39.8, 44.1])
+    ->series('Trial users', [28.4, 30.1, 33.6, 31.2], ['color' => 3])   // keep an entity on its slot
+    ->format('percent', ['locale' => 'en'])          // 41.2% — values are percentages, as in StatCards
+    ->zero(false)                                    // a line's axis may start near its data
+    ->markers()->dashes()                            // a point shape and a dash pattern per series
+    ->render();
+
+(new Chart('sources'))
+    ->type('donut')
+    ->title('Where the orders came from')
+    ->labels(['Online shop', 'Marketplace', 'Phone', 'Retail', 'Fairs', 'E-mail'])
+    ->series('Orders', [1240, 860, 410, 380, 150, 60])    // from the sixth part on: one grey "Other"
+    ->render();
+
+echo Chart::sparkline([30, 32, 35, 33, 38, 41, 44], ['label' => 'Sign-ups', 'color' => 2]);
+```
+
+| Method | What it does |
+|---|---|
+| `->type($type)` | `line` (default), `area`, `bar`, `donut`, `sparkline`. Anything else warns and keeps the type. |
+| `->title($text, $show = true)` | The `<figcaption>` above the chart and the `<title>` of the SVG; `$show = false` keeps it for a screen reader only (`gk-sr-only`). Default: the catalogue's "Chart". |
+| `->description($text)` | Your own sentence for the SVG's `<desc>` instead of the summary the chart writes. |
+| `->labels($labels)` | The categories along the axis (a donut: the names of its parts). Without labels a chart numbers its values 1 … n. A float label is written as its digits; an array is no label (warning). |
+| `->series($name, $values, $opts = [])` | One series, a value per label: an int, a float or a numeric string (`'1234.5'`); `null` or `''` is a gap. Options: `color` (the slot 1 … 5 of `--gk-chart-N`, default its position) and `hidden` (`true`: drawn switched off, the legend switches it on). At most five series (the five colours); a donut and a sparkline draw the first. |
+| `->format($kind, $opts = [])` | `number` (default), `money` or `percent` (`12.5` is 12.5 %). Options: `currency` (an ISO code, default EUR — EUR, USD and GBP get their sign, others are written out: `CHF 12.50`), `locale` (`de`, `en` and their regions; default the page's language — a German chart on an English page keeps its `1.234,50`), `decimals` (0 … 6; default: money 2, number up to 2, percent up to 1). |
+| `->height($px)` | 120 … 1200, default 280 (a sparkline 12 … 200, default 28). A donut is as wide as it is high. |
+| `->width($px)` | The width of the viewBox, 200 … 4000, default 640 (a sparkline 24 … 1000, default 96). The chart always fills its box; with the script it is drawn again at the box's width, so this matters only for the first paint without it. |
+| `->stacked()` | Bars or areas on top of each other (`bar`, `area`); negative values stack below zero, a gap counts as 0, the table gets a Total column. |
+| `->horizontal()` | Bars from the left, the categories down the side — for long names (`bar`). |
+| `->zero(false)` | A line chart's axis starts near its data. Bars and areas always start at zero (a warning says so). |
+| `->markers()` | A point shape per series — circle, square, diamond, triangle, triangle down (`line`, `area`). |
+| `->dashes()` | A dash pattern per series (`line`, `area`); in print and in forced colours they are always on. |
+| `->table($mode)` | The data as a table: `toggle` (default — behind "Show as table"), `open`, or `hidden` (for a screen reader only, `gk-sr-only`). |
+| `->config()` | The chart as data — what `data-gk-chart` holds and `GK.chart.update()` takes: `id`, `type`, `title`, `showTitle`, `desc`, `labels`, `series` (`name`, `values` as decimal strings, `color`, `hidden`), `format` (`kind`, `currency`, `locale`, `decimals`), `width`, `height`, `stacked`, `horizontal`, `zero`, `markers`, `dashes`, `table`, `area`. A JSON endpoint can answer with it. |
+| `->html()` / `->render()` | The markup, returned / printed. |
+| `Chart::sparkline($values, $opts)` | A small inline line for a sentence, a StatCards card or a table cell: an `<svg role="img">` named by its numbers in words ("Sign-ups: 7 values from 30 to 44, lowest 30, highest 44."). Options: `label` (default "Trend"), `format`, `currency`, `locale`, `decimals` (as `format()`), `width`, `height`, `color` (1 … 5), `area` (`true`: a wash under the line). |
+
+**What it draws.** The value axis steps by 1, 2 or 5 times a power of ten ("nice" ticks), about one
+tick per 44px, and from 10,000 on it writes `12K` / `12 Tsd.` (`M` / `Mio.`, `B` / `Mrd.`). Bars and
+areas start at zero; negative values hang below the zero line, which is drawn firmer than the grid.
+Bars are at most 24px thick, 2px apart, their end rounded and their base square. Lines are 2px; a
+point shows where there is room (a category 24px wide or more), where it stands alone between two
+gaps, and on the active category. A long category name is cut with "…" and keeps its full text in a
+`<title>`; when the names do not fit side by side, every second (third, …) is written. No values at
+all: the chart says "No data" in its middle. One value: a point. Only zeros: an axis 0 … 1 and no
+bar. A donut takes the first five parts in colour and folds the rest into a grey "Other"; its total
+stands in the hole (compact when it would not fit); a negative part counts as 0 (warning).
+
+**Numbers** are written by the chart, not by `number_format()`: the decimal string of the value,
+rounded half away from zero (`1.005` → `1.01`), grouped by the locale — `1.234,50 €`, `€1,234.50`,
+`12,5 %`, `12.5%`, a minus in front. The tooltip, the legend of a donut, the table and the summary
+use the value's decimals; the axis uses the tick's.
+
+**What a screen reader gets.** The SVG is `role="img"`, named by its `<title>` and described by a
+`<desc>` the chart writes from the data: "Bar chart, 6 categories from Jan to Jun. 2025: from
+8.200,00 € to 11.200,00 €, lowest 7.900,00 € (Feb), highest 11.200,00 € (Jun). …" (a donut: each
+part with its value and share). The legend names every series beside a mark like its own (a short
+line with its point shape, or a swatch) — never colour alone; a single series has no legend, the
+title names it. **The data table** is a `<details>` "Show as table" under the chart, not a visually
+hidden table: it works without a script, every reader can open it — a person who wants the exact
+figures, a keyboard user, a screen reader user — and it is not read twice by a screen reader that
+already heard the summary. `->table('hidden')` makes it a screen-reader-only table where a card has
+no room for the link.
+
+**With the script** (`js/chart.js`):
+
+- **Width.** The chart is drawn again at the width of its box, and again when the box changes — one
+  px of the viewBox is one px on the screen, so its text stays 12px on a phone. The script draws
+  with the code of `Chart.php`, ported line by line: `GK.chart.html($chart->config())` is
+  `$chart->html()` byte for byte (`ci/browser-chart.js` holds it for 400 random charts). Without the
+  script the SVG scales with its box; under 560px it keeps 560px and its box scrolls sideways.
+- **Pointer.** Over a category the tooltip lists the value of every series (the value first, then
+  the name, a line key in the series' colour), a line or area chart shows a crosshair on the
+  category, the bars of the category stay and the others step back. The way from the category to
+  its tooltip belongs to that category, so the pointer can reach the tooltip and rest on it.
+  A tap does the same on a touch screen. Leaving the chart closes it.
+- **Keys.** The plot is one tab stop (`role="application"`, named by the title and "Arrow keys move
+  between the values, Enter selects one", described by the summary). ← → (↑ ↓) move between the
+  categories that have a value, Home and End to the ends, Enter or Space selects, Escape closes the
+  tooltip. Each move is said through a polite live region ("Feb. 2025: 7.900,00 €. 2026: 8.800,00 €.").
+- **Legend.** With two series or more each name becomes a button (`.gk-chart-toggle`,
+  `aria-pressed`) that switches its series off and on; the axis follows what is shown, the series
+  keeps its colour, and the change is said ("2025 hidden"). A donut's legend lists its parts with
+  value and share instead — taking a part away would change every share.
+- `prefers-reduced-motion` drops the short fade of the marks; print hides the tooltip and turns the
+  dashes on; forced colours draw in the system's ink with dashes.
+
+**Events**, on the `.gk-chart`, bubbling — for what the person does, not for calls of `GK.chart`:
+
+| Event | `detail` |
+|---|---|
+| `gk:chartselect` | `{ chart, index, label, series, values }` — a click on a mark or Enter on the keys; `series` is the clicked mark's series (null from the keys or the band), `values` is `[{ series, name, value, text }]` for every series shown (a donut: its part, `text` with the share) |
+| `gk:charttoggle` | `{ chart, series, name, visible }` — a series switched in the legend |
+
+**JavaScript API** (the first argument is the chart's id as given to `new Chart()`, its element, or a selector):
+`GK.chart.update(el, data)` draws new data — any key of `config()`: `labels`, `series` (values as
+numbers or strings), `title`, `type`, `format`, `stacked` … — checked as the server checks it;
+`GK.chart.data(el)` returns the config as it is now (a copy), `GK.chart.toggle(el, series, visible)`
+switches a series (without `visible` the other way round; returns whether it is shown),
+`GK.chart.html(config)` returns the markup `Chart::html()` writes for a config, and
+`GK.chart.init(root)` sets up charts inserted without the MutationObserver seeing them.
+
+```javascript
+const rows = await (await fetch('/api/revenue?year=2026')).json();   // e.g. $chart->config()['series']
+GK.chart.update('revenue', { series: rows });
+document.addEventListener('gk:chartselect', e => openMonth(e.detail.label));
+```
+
+**Colours.** `--gk-chart-1` … `5` on `.gk-chart` and `.gk-chart-spark`, derived from the roles: the
+five `--gk-series-N`, mixed in light mode towards the theme's ink (`--gk-on-surface`) until each
+clears 3:1 on the card, the page and a hover row; in dark mode the dark steps of `--gk-series-N`,
+which clear it already. Measured in all six themes and both dark spellings — series ≥ 3:1, text
+≥ 4.5:1. `--gk-chart-ground` (default `--gk-surface`) is the ring round a point; set it when a chart
+sits on another ground. Text never wears a series colour.
+
+**In StatCards and a Table.** `->card('Revenue', 16900, ['format' => 'currency', 'sparkline' => [8200,
+…, 16900]])` puts a sparkline under the figure, named by the card's label and written in its format;
+`'sparkline' => ['values' => [...], 'color' => 3, 'area' => true]` passes options. A card without
+it is drawn exactly as before. In a table, a column with `'format' => 'html'` takes
+`Chart::sparkline()` as its cell value.
+
+- **Classes** (all `gk-chart-*`, in `css/blocks.json` as "Chart"): `gk-chart`, `-type-area`,
+  `-type-donut` (and `-type-line`, `-type-bar` on the figure), `-stacked`, `-dashes`, `-title`,
+  `-plot`, `-svg`, `-gridline`, `-zero`, `-bar`, `-line`, `-area`, `-dot`, `-dot-on`, `-slice`,
+  `-track`, `-total`, `-total-label`, `-empty`, `-c1` … `-c5`, `-other`, `-legend`, `-key`,
+  `-key-off`, `-keymark`, `-swatch`, `-key-label`, `-key-value`, `-toggle`, `-data`, `-table-wrap`,
+  `-table`, `-spark`, and from the script `-cross`, `-tip`, `-tip-title`, `-tip-row`, `-tip-key`,
+  `-tip-value`, `-tip-name`, `-tip-total`, `-active`, `-on`.
+- **Words** come from `chart.*` in `lang/`; `Lang::jsConfig()` hands them to the script as
+  `chart_*`, so a chart drawn again says what the server said.
+- **Warnings** (`E_USER_WARNING`, the chart still renders): an unknown type, format, option or table
+  mode; a sixth series; a value that is no number (a gap), not finite (a gap), beyond ±1e15 (cut);
+  more values than labels; a negative donut part; `stacked()`, `horizontal()`, `zero(false)`,
+  `markers()` or `dashes()` on a type that has no use for it; a width or height out of range.
+- **Do not** write the SVG yourself, colour text with a series colour, put two value scales in one
+  chart (draw two charts), or pass `0.125` for 12.5 % — `percent` takes the percentage.
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -3422,6 +3591,14 @@ GK.tree.select('cats', ['books', 'music']); // ticks (multi) or selects (single)
 GK.tree.selected('cats');                  // ['books', 'novels', …]
 GK.tree.reload('pages', '5');              // fetches the children of 5 again (lazyUrl)
 document.addEventListener('gk:treemove', e => { if (e.detail.parent === 'legal') e.preventDefault(); });
+
+// Charts (since 1.121.0) — GridKit\Chart and js/chart.js, see "Chart". First argument: the chart's id, element or selector.
+GK.chart.update('revenue', { series: [{ name: '2026', values: [9100, 8800, 10900] }] });  // any key of Chart::config()
+GK.chart.data('revenue');                  // the config as it is now (a copy)
+GK.chart.toggle('revenue', 1, false);      // switches series 1 off; returns whether it is shown
+GK.chart.html(config);                     // the markup Chart::html() writes for a config, byte for byte
+document.addEventListener('gk:chartselect', e => { /* e.detail: { chart, index, label, series, values } */ });
+document.addEventListener('gk:charttoggle', e => { /* e.detail: { chart, series, name, visible } */ });
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
@@ -3807,6 +3984,7 @@ Features:
 | `gk-stat-tiles` `gk-stat-tile` `gk-stat-tile-value` `gk-stat-tile-label` `gk-stat-tile-sub` `gk-stat-tile-warning` `gk-stat-tile-danger` | Compact key figures (`StatCards->compact()`); a tile may be a `<button>` or `<a>` |
 | `gk-sheet-meta` | A line under the side sheet's title |
 | `gk-swatch` `gk-swatch-1` … `gk-swatch-5`, `gk-series-fill-1` … `-5`, `gk-series-stroke-1` … `-5` | Chart colours from `--gk-series-1` … `-5`: legend mark, SVG fill, SVG stroke |
+| `gk-chart` `gk-chart-*` (since 1.121.0) | Written by `GridKit\Chart`, never by hand — see "Chart". `--gk-chart-1` … `5` are the series colours at 3:1 on every ground; `gk-chart-c1` … `c5` set them on a mark or a legend key |
 | `gk-btn-touch` | A button at least `--gk-target-min` (44px) in both directions, type unchanged |
 | `gk-message-actions` | Actions on the right of a `.gk-message` |
 | `gk-message-sm` | A small message (since 1.95.0): denser than `.gk-message-compact` and with no margin of its own; the tone comes from `-info` `-success` `-warning` `-error` |

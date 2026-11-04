@@ -14217,3 +14217,433 @@ a.gk-cal-event:hover,
     display: none;
   }
 }
+
+/* === 1.121.0 — chart === */
+/* GridKit\Chart writes an inline SVG with a viewBox, a legend and the data as a table; js/chart.js
+   draws the SVG again at the width of its box and adds the tooltip, the crosshair and the legend's
+   switches. Roles only, so light, [data-gk-mode="dark"], .gk-dark and the six themes follow.
+
+   The colours of the series: --gk-chart-1 … 5, from the five --gk-series-N. On a light ground
+   slots 2 to 5 sit under 3:1 (2.0–2.9:1 on the page), so a chart mixes each of them towards the
+   theme's own ink (--gk-on-surface) until it clears 3:1 on the card, the page and a hover row
+   (L 0.947): 94, 87, 75 and 85 per cent of the hue. The dark steps of --gk-series-N clear 3:1 on
+   every step of the dark ladder already and are taken as they are. Adjacent pairs stay apart
+   under simulated protanopia and deuteranopia (OKLab ΔE ≥ 8.2 light, 8.4 dark) and for normal
+   vision (≥ 15.1, 19.3). Measured in all six themes by ci/browser-chart.js. A colour never
+   carries a series alone: the legend names it, lines can carry dashes and point shapes, and
+   the values are in the table. Text wears text roles, never a series colour. */
+.gk-chart,
+.gk-chart-spark {
+  --gk-chart-1: #2a78d6;
+  --gk-chart-2: #dd6335;
+  --gk-chart-3: #239a6e;
+  --gk-chart-4: #b27d28;
+  --gk-chart-5: #c56c8f;
+  --gk-chart-other: var(--gk-on-surface-variant);
+  /* The ring round a point: the ground the chart sits on (a card). */
+  --gk-chart-ground: var(--gk-surface);
+}
+@supports (color: color-mix(in oklab, red, blue)) {
+  .gk-chart,
+  .gk-chart-spark {
+    --gk-chart-1: var(--gk-series-1);
+    --gk-chart-2: color-mix(in oklab, var(--gk-series-2) 94%, var(--gk-on-surface));
+    --gk-chart-3: color-mix(in oklab, var(--gk-series-3) 87%, var(--gk-on-surface));
+    --gk-chart-4: color-mix(in oklab, var(--gk-series-4) 75%, var(--gk-on-surface));
+    --gk-chart-5: color-mix(in oklab, var(--gk-series-5) 85%, var(--gk-on-surface));
+  }
+}
+[data-gk-mode="dark"] :is(.gk-chart, .gk-chart-spark),
+.gk-dark :is(.gk-chart, .gk-chart-spark) {
+  --gk-chart-1: var(--gk-series-1);
+  --gk-chart-2: var(--gk-series-2);
+  --gk-chart-3: var(--gk-series-3);
+  --gk-chart-4: var(--gk-series-4);
+  --gk-chart-5: var(--gk-series-5);
+}
+.gk-chart-c1 { --gk-chart-color: var(--gk-chart-1); }
+.gk-chart-c2 { --gk-chart-color: var(--gk-chart-2); }
+.gk-chart-c3 { --gk-chart-color: var(--gk-chart-3); }
+.gk-chart-c4 { --gk-chart-color: var(--gk-chart-4); }
+.gk-chart-c5 { --gk-chart-color: var(--gk-chart-5); }
+.gk-chart-other { --gk-chart-color: var(--gk-chart-other); }
+
+.gk-chart {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-body);
+}
+.gk-chart-title {
+  margin: 0 0 8px;
+  font-size: var(--gk-text-subtitle);
+  font-weight: 600;
+  line-height: var(--gk-leading-tight);
+  color: var(--gk-on-surface);
+}
+.gk-chart-plot {
+  position: relative;
+  min-width: 0;
+  border-radius: var(--gk-radius-sm, 4px);
+}
+/* The width of the box decides; the donut is as wide as it is high and shrinks with a narrow box. */
+.gk-chart:not(.gk-chart-type-donut) > .gk-chart-plot {
+  container-type: inline-size;
+}
+.gk-chart-plot:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+.gk-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--gk-font);
+}
+/* Before the script has fitted it (or without the script), a chart scales with its box. Under
+   560px its text would shrink below 11px, so it keeps 560px and its box scrolls sideways
+   instead — the page never does. Once fitted, one px of the viewBox is one px on the screen. */
+.gk-chart:not([data-gk-chart-fit]) > .gk-chart-plot {
+  overflow-x: auto;
+}
+@container (max-width: 559px) {
+  .gk-chart:not([data-gk-chart-fit]) .gk-chart-svg {
+    width: 560px;
+    max-width: none;
+  }
+}
+.gk-chart-svg text {
+  font-size: 12px;
+  fill: var(--gk-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}
+.gk-chart-gridline {
+  stroke: var(--gk-outline-variant);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.gk-chart-gridline.gk-chart-zero {
+  stroke: var(--gk-outline);
+}
+.gk-chart-svg text.gk-chart-empty {
+  font-size: var(--gk-text-body);
+}
+
+/* ── The marks ── */
+.gk-chart-bar,
+.gk-chart-slice,
+.gk-chart-swatch {
+  fill: var(--gk-chart-color, var(--gk-chart-1));
+}
+.gk-chart-line {
+  fill: none;
+  stroke: var(--gk-chart-color, var(--gk-chart-1));
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+/* An area is a wash under its line; stacked, the bands are firmer and their lines part them. */
+.gk-chart-area {
+  fill: var(--gk-chart-color, var(--gk-chart-1));
+  fill-opacity: 0.12;
+}
+.gk-chart-type-area.gk-chart-stacked .gk-chart-area {
+  fill-opacity: 0.35;
+}
+/* Every value has its point; it shows where there is room (or it stands alone) and on the active
+   category. The ring in the ground's colour keeps it legible where it crosses a line. */
+.gk-chart-dot {
+  fill: var(--gk-chart-color, var(--gk-chart-1));
+  stroke: var(--gk-chart-ground);
+  stroke-width: 2;
+  paint-order: stroke;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.gk-chart-dot-on,
+.gk-chart-dot.gk-chart-on {
+  opacity: 1;
+}
+.gk-chart-dot.gk-chart-on {
+  transform: scale(1.35);
+}
+.gk-chart-track {
+  fill: none;
+  stroke: var(--gk-surface-container-high);
+}
+.gk-chart-svg text.gk-chart-total {
+  font-size: 20px;
+  font-weight: 600;
+  fill: var(--gk-on-surface);
+}
+.gk-chart-svg text.gk-chart-total-label {
+  font-size: 12px;
+}
+/* The category under the pointer or the keys: its marks stay, the others step back. */
+.gk-chart-active :is(.gk-chart-bar, .gk-chart-slice):not(.gk-chart-on) {
+  opacity: 0.55;
+}
+
+/* Dash patterns per slot (->dashes(); always in print and in forced colours). */
+.gk-chart-dashes .gk-chart-c2 .gk-chart-line { stroke-dasharray: 6 4; }
+.gk-chart-dashes .gk-chart-c3 .gk-chart-line { stroke-dasharray: 2 3; }
+.gk-chart-dashes .gk-chart-c4 .gk-chart-line { stroke-dasharray: 10 3 2 3; }
+.gk-chart-dashes .gk-chart-c5 .gk-chart-line { stroke-dasharray: 14 4; }
+
+/* ── Crosshair and tooltip (js/chart.js) ── */
+.gk-chart-cross {
+  position: absolute;
+  width: 0;
+  border-left: 1px solid var(--gk-outline);
+  pointer-events: none;
+}
+/* A card, not the slate bubble of a hint: it holds the values of every series with a line key in
+   its colour, and those keys need 3:1 on its ground. The pointer may rest on it (WCAG 1.4.13). */
+.gk-chart-tip {
+  position: absolute;
+  z-index: 3;
+  box-sizing: border-box;
+  min-width: 8rem;
+  max-width: min(18rem, calc(100% - 8px));
+  padding: 8px 10px;
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: var(--gk-radius-sm, 6px);
+  background: var(--gk-surface-container-lowest);
+  box-shadow: var(--gk-elev-2);
+  color: var(--gk-on-surface);
+  font-size: var(--gk-text-caption);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+[data-gk-mode="dark"] .gk-chart-tip,
+.gk-dark .gk-chart-tip {
+  background: var(--gk-surface-container-high);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.gk-chart-tip-title {
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.gk-chart-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+/* A line key, not a box: a short stroke of the series' colour. */
+.gk-chart-tip-key {
+  flex: none;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--gk-chart-color, transparent);
+}
+.gk-chart-tip-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.gk-chart-tip-name {
+  min-width: 0;
+  color: var(--gk-on-surface-variant);
+}
+.gk-chart-tip-total {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--gk-outline-variant);
+}
+
+/* ── Legend ── */
+.gk-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--gk-text-label);
+  color: var(--gk-on-surface);
+}
+.gk-chart-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.gk-chart-keymark {
+  flex: none;
+  overflow: visible;
+}
+.gk-chart-key-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.gk-chart-key-value {
+  color: var(--gk-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* With the script a legend of two series or more is a row of switches. */
+.gk-chart-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  margin: 0 -8px;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: var(--gk-radius-sm, 6px);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.gk-chart-toggle:hover {
+  background: var(--gk-surface-container-high);
+}
+.gk-chart-toggle:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 0;
+}
+.gk-chart-key-off .gk-chart-keymark,
+.gk-chart-toggle[aria-pressed="false"] .gk-chart-keymark {
+  opacity: 0.35;
+}
+.gk-chart-key-off .gk-chart-key-label,
+.gk-chart-toggle[aria-pressed="false"] .gk-chart-key-label {
+  color: var(--gk-on-surface-variant);
+  text-decoration: line-through;
+}
+/* A donut: the ring and its parts side by side, one under the other when the box is narrow. */
+.gk-chart-type-donut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+}
+.gk-chart-type-donut > .gk-chart-title,
+.gk-chart-type-donut > .gk-chart-data {
+  flex: 1 1 100%;
+}
+.gk-chart-type-donut > .gk-chart-legend {
+  flex: 1 1 12rem;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+/* ── The data as a table ── */
+.gk-chart-data {
+  margin-top: 8px;
+  font-size: var(--gk-text-label);
+}
+.gk-chart-data > summary {
+  width: fit-content;
+  min-height: 24px;
+  padding: 2px 0;
+  color: var(--gk-primary);
+  cursor: pointer;
+}
+.gk-chart-data > summary:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.gk-chart-table-wrap {
+  max-width: 100%;
+  margin-top: 8px;
+  overflow-x: auto;
+}
+.gk-chart-table th[scope="row"] {
+  font-weight: 500;
+}
+.gk-chart-table .gk-num {
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ── Sparkline: a line in a sentence, a card or a cell ── */
+.gk-chart-spark {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+  vertical-align: middle;
+}
+.gk-chart-spark .gk-chart-line {
+  stroke-width: 1.5;
+}
+.gk-chart-spark .gk-chart-dot {
+  stroke-width: 1.5;
+}
+/* In a StatCards card or tile ('sparkline' => [...]): under the figure. */
+.gk-stat-content > .gk-chart-spark,
+.gk-stat-tile > .gk-chart-spark {
+  display: block;
+  margin-top: 6px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gk-chart-bar,
+  .gk-chart-slice,
+  .gk-chart-dot {
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+}
+
+@media print {
+  .gk-chart {
+    break-inside: avoid;
+  }
+  .gk-chart-tip,
+  .gk-chart-cross {
+    display: none !important;
+  }
+  .gk-chart-svg,
+  .gk-chart-keymark,
+  .gk-chart-spark {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .gk-chart .gk-chart-c2 .gk-chart-line { stroke-dasharray: 6 4; }
+  .gk-chart .gk-chart-c3 .gk-chart-line { stroke-dasharray: 2 3; }
+  .gk-chart .gk-chart-c4 .gk-chart-line { stroke-dasharray: 10 3 2 3; }
+  .gk-chart .gk-chart-c5 .gk-chart-line { stroke-dasharray: 14 4; }
+}
+
+/* Forced colours: the system's two inks, the series told apart by dashes, shapes and the legend. */
+@media (forced-colors: active) {
+  .gk-chart-bar,
+  .gk-chart-slice,
+  .gk-chart-swatch,
+  .gk-chart-dot {
+    fill: CanvasText;
+    stroke: Canvas;
+  }
+  .gk-chart-line {
+    stroke: CanvasText;
+  }
+  .gk-chart-area {
+    fill: CanvasText;
+    fill-opacity: 0.15;
+  }
+  .gk-chart-svg text {
+    fill: CanvasText;
+  }
+  .gk-chart-gridline {
+    stroke: GrayText;
+  }
+  .gk-chart-gridline.gk-chart-zero {
+    stroke: CanvasText;
+  }
+  .gk-chart-tip-key {
+    background: CanvasText;
+  }
+  .gk-chart .gk-chart-c2 .gk-chart-line { stroke-dasharray: 6 4; }
+  .gk-chart .gk-chart-c3 .gk-chart-line { stroke-dasharray: 2 3; }
+  .gk-chart .gk-chart-c4 .gk-chart-line { stroke-dasharray: 10 3 2 3; }
+  .gk-chart .gk-chart-c5 .gk-chart-line { stroke-dasharray: 14 4; }
+}

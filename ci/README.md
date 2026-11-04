@@ -404,6 +404,33 @@ GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-dat
 GK_SHOTS=/some/dir node ci/browser-dates.js   # screenshots: the calendar light and dark, the filter, 390px
 ```
 
+Charts (`GridKit\Chart` and `js/chart.js`, 1.121.0) are checked by `ci/browser-chart.js` on
+`ci/browser-chart-fixture.php`. The script draws a chart again — at the width of its box, after
+`GK.chart.update()`, after a series is switched off — with the code of `src/Chart.php` ported line
+by line, so the first question is whether the two agree: `GK.chart.html(config)` against
+`Chart::html()` for every chart of the page and 400 random ones (every type, gaps, zeros,
+negative values, hidden series, the three formats, both locales, odd widths and heights, `& " ' <
+>` and emoji in the words), byte for byte, in English and German; and the SVG on the page after
+fitting to 480 and 358px, after an update with new values, another type, a donut of one part and
+hostile strings, and after a click in the legend, against the `<template>` with what Chart.php
+writes for that state. Then the look in light, `[data-gk-mode="dark"]` and `.gk-dark`, without a
+theme and in each of the six: every series colour 3:1 against the card, the page, a hover row and
+the tooltip, the axis, the legend, a switched-off name, the tooltip's words, the table and the
+link 4.5:1, the focus ring 3:1. At 390px: no page scrolls sideways, every chart drawn at its box's
+width with 12px text, the legend wrapping, the table scrolling in its box; without the script the
+server's chart (an image with a title and a summary, the table, no switches) keeps 560px in a
+narrow box and scrolls inside it. The keys (one tab stop, the arrows, Home, End, Enter and Space
+as `gk:chartselect`, Escape, the live region, the legend's switches with Space, a donut's parts),
+the pointer (the tooltip of every series, the crosshair on the point, the way to the tooltip,
+leaving, a click on a bar, a donut's slice, markup in a label as text), reduced motion, print,
+forced colours, and the script without `js/gridkit.js`. Each rule and branch taken out in turn
+turned it (or `tests/chart`) red. About twenty seconds; `GK_SHOTS=<dir>` saves the pages.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-chart.js
+GK_SHOTS=/some/dir node ci/browser-chart.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in
