@@ -12,6 +12,9 @@
 #      An existing tag is never moved: Packagist keeps the first commit a version pointed at.
 # A commit whose tests failed is tried once, not every minute; the next commit is tried again.
 #
+# Started by hand (a terminal), it says what it does and why it does nothing, and tries a commit
+# whose tests failed once more; from cron or systemd it stays quiet. GK_VERBOSE=1/0 forces either.
+#
 # Settings (environment, for tests and other servers):
 #   GK_LIVE   the live checkout            (default /home/pawbot/projects/gridkit)
 #   GK_CHECK  the worktree the suite runs in (default /home/pawbot/projects/gridkit-deploy-check)
@@ -23,12 +26,22 @@ LIVE=${GK_LIVE:-/home/pawbot/projects/gridkit}
 CHECK=${GK_CHECK:-/home/pawbot/projects/gridkit-deploy-check}
 STATE=${GK_STATE:-$HOME/.gridkit-deploy}
 PHP=${GK_PHP:-php}
+if [ -n "${GK_VERBOSE:-}" ]; then VERBOSE=$GK_VERBOSE; elif [ -t 1 ]; then VERBOSE=1; else VERBOSE=0; fi
+
+say() { echo "$(date '+%F %T') $*"; }
+note() { [ "$VERBOSE" = 1 ] && say "$*" || true; }
 
 mkdir -p "$STATE"
 exec 9>"$STATE/lock"
-flock -n 9 || exit 0                       # the previous run is still testing
+if ! flock -n 9; then note "another run is still at work, nothing to do"; exit 0; fi
 
-say() { echo "$(date '+%F %T') $*"; }
+# The suite reads HTML with DOMDocument and counts letters with mbstring: without them it is red
+# for a reason that is not GridKit's. Say so, instead of a log full of failed tests.
+missing=$("$PHP" -r 'foreach (["dom", "mbstring"] as $x) if (!extension_loaded($x)) echo "$x ";' 2>/dev/null || echo "php")
+if [ -n "$missing" ]; then
+    say "NOT delivered: $PHP lacks: $missing— install it (e.g. apt install php8.2-xml php8.2-mbstring) or set GK_PHP"
+    exit 1
+fi
 
 # Tag the VERSION of the live checkout, push the tag once; a failed push is tried again next run.
 tag() {
@@ -49,10 +62,15 @@ git fetch -q --tags origin main
 new=$(git rev-parse FETCH_HEAD)
 
 if [ "$(git rev-parse HEAD)" = "$new" ]; then
+    note "up to date ($(git rev-parse --short HEAD), $(tr -d '[:space:]' < VERSION))"
     tag
     exit 0
 fi
-[ "$(cat "$STATE/failed" 2>/dev/null)" = "$new" ] && exit 0
+if [ "$(cat "$STATE/failed" 2>/dev/null)" = "$new" ]; then
+    if [ "$VERBOSE" != 1 ]; then exit 0; fi
+    note "$(git rev-parse --short "$new") failed its tests before; trying again"
+fi
+note "testing $(git rev-parse --short "$new") in $CHECK"
 
 short=$(git rev-parse --short "$new")
 if [ ! -e "$CHECK/.git" ]; then

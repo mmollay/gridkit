@@ -37,11 +37,11 @@ $commit = static function (array $w, string $version, bool $green, string $msg =
 };
 
 /** One run of the script on the stand-in: [exit code, output]. */
-$run = static function (array $w) use ($script): array {
-    $env = 'GK_LIVE=' . escapeshellarg($w['dir'] . '/live')
+$run = static function (array $w, string $extra = '') use ($script): array {
+    $env = $extra . ' GK_LIVE=' . escapeshellarg($w['dir'] . '/live')
          . ' GK_CHECK=' . escapeshellarg($w['dir'] . '/check')
          . ' GK_STATE=' . escapeshellarg($w['dir'] . '/state')
-         . ' GK_PHP=' . escapeshellarg(PHP_BINARY);
+         . (str_contains($extra, 'GK_PHP=') ? '' : ' GK_PHP=' . escapeshellarg(PHP_BINARY));
     exec($env . ' bash ' . escapeshellarg($script) . ' 2>&1', $out, $code);
     return [$code, implode("\n", $out)];
 };
@@ -133,6 +133,41 @@ return [
     [$code] = $run($w);
     T::eq($code, 0, 'delivered');
     T::eq($head($w, 'origin.git', 'v1.0.0^{commit}'), $tagged, 'v1.0.0 still points where it pointed');
+    $cleanup($w);
+},
+
+'started by hand it says why it does nothing, and tries a red commit again' => function () use ($world, $commit, $run, $head, $cleanup): void {
+    $w = $world();
+    $commit($w, '1.0.0', true, 'first');
+    ($w['git'])($w['dir'], 'clone -q origin.git live');
+    [, $out] = $run($w, 'GK_VERBOSE=1');
+    T::contains($out, 'up to date', 'nothing new: it says so');
+    $commit($w, '1.1.0', false, 'broken');
+    $run($w);                                                           // cron: red, remembered
+    [$code, $out] = $run($w, 'GK_VERBOSE=1');
+    T::contains($out, 'failed its tests before; trying again', 'by hand the red commit is tried again');
+    T::contains($out, 'NOT delivered', 'and is still red');
+    T::ok($code !== 0, 'an error');
+    [$code, $out] = $run($w, 'GK_VERBOSE=0');
+    T::eq([$code, $out], [0, ''], 'from cron it stays quiet about the same red commit');
+    $cleanup($w);
+},
+
+'a PHP without dom or mbstring is named, instead of a log full of failed tests' => function () use ($world, $commit, $run, $head, $cleanup): void {
+    $w = $world();
+    $commit($w, '1.0.0', true, 'first');
+    ($w['git'])($w['dir'], 'clone -q origin.git live');
+    $before = $head($w, 'live');
+    $commit($w, '1.1.0', true, 'second');
+    $fake = $w['dir'] . '/php-without-dom';
+    file_put_contents($fake, "#!/bin/sh\nif [ \"\$1\" = \"-r\" ]; then echo 'dom '; exit 0; fi\nexec " . escapeshellarg(PHP_BINARY) . " \"\$@\"\n");
+    chmod($fake, 0755);
+    [$code, $out] = $run($w, 'GK_PHP=' . escapeshellarg($fake));
+    T::ok($code !== 0, 'an error');
+    T::contains($out, 'lacks: dom', 'it names the missing extension');
+    T::contains($out, 'apt install', 'and how to get it');
+    T::eq($head($w, 'live'), $before, 'nothing was delivered');
+    T::ok(!is_file($w['dir'] . '/state/failed'), 'and the commit is not marked red: it was never tested');
     $cleanup($w);
 },
 

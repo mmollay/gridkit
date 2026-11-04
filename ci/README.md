@@ -393,6 +393,11 @@ and tags `v<VERSION>` if that tag does not exist yet. Packagist takes the tag fr
   earlier ones can be tagged by hand.
 - No workflow file and no GitHub setting is involved (see above: the push token cannot carry
   workflow files). Merging to `main` IS the release.
+- The server's command-line PHP needs `dom` and `mbstring` (the suite reads HTML with
+  `DOMDocument`): `apt install php8.2-xml php8.2-mbstring`. Without them the script says so and
+  delivers nothing (server6, 2026-11-04: `Class "DOMDocument" not found`).
+- Started by hand it says what it does and why it does nothing, and tries a red commit once more;
+  from cron and systemd it is quiet unless it delivers or fails.
 
 **Switching it on**, once, as root on the server:
 
