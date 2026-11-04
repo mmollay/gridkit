@@ -1,4 +1,4 @@
-# GridKit 1.118.1 — JavaScript
+# GridKit 1.119.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -76,6 +76,12 @@ document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, colu
 document.addEventListener('gk:lineitemschange', e => { /* e.detail: { items, totals } */ });
 GK.lineItems.totals(document.querySelector('.gk-lines'));
 GK.lineItems.add(document.querySelector('.gk-lines'), { description: 'Travel', qty: 1, price: '40', vat: 20 });
+
+// Import (since 1.119.0) — GridKit\Import and js/import.js, see "Import". First argument: the importer's name, form or selector.
+GK.import.read('customers', file);             // a File, Blob, bytes or text, as if chosen; a Promise of the result
+GK.import.map('customers', { 'E-Mail': 'email' }); // set the mapping (column name or index => field key); no 2nd argument reads it
+GK.import.result('customers');                 // { rows, errors, total, valid, invalid, columns, mapping, missing, notes, meta, error }
+document.addEventListener('gk:importready', e => { /* e.detail.result — after every change */ });
 
 // Tabs (since 1.111.0) — see "Tabs". A row by its .gk-tabs element or id; hand-written rows too.
 GK.tabs.select('settings', 'bank');            // as a click (gk:tabchange can refuse it); { focus, force }
