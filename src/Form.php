@@ -280,7 +280,9 @@ class Form
      */
     private function renderField(array $f): void
     {
-        $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+        // ENT_SUBSTITUTE (1.122.1): invalid UTF-8 in a value becomes U+FFFD instead of emptying the
+        // whole attribute, as the line items editor has always written it.
+        $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $name = $f['name'];
         $label = $f['label'] ?? '';
         $type = $f['type'];
@@ -524,12 +526,15 @@ class Form
             shown: $f['displayValue'] ?? '',
             placeholder: $f['placeholder'] ?? Lang::t('form.search'),
             idBase: $name,
-            // Any falsy value, '0' among them, starts with the clear button hidden — as it always
-            // has here; the lookup column of LineItems hides it only for ''.
-            hideClear: !$value,
+            // Only nothing chosen hides the clear button: a chosen '0' or 0 is a value (1.122.1; it
+            // used to be any falsy value).
+            hideClear: !is_scalar($value) || (string) $value === '',
             hidden: ' name="' . $e($name) . '"',
             hiddenTail: $req,
             combo: $composedBy,
+            // The search box names itself by the label like the combobox does, not by its placeholder
+            // alone (1.122.1) — without the error pointer and aria-invalid: those stay on the combobox.
+            searchTail: (string) preg_replace('/ aria-(?:describedby|invalid)="[^"]*"/', '', $composedBy),
         );
     }
 

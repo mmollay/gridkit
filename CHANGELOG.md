@@ -7,6 +7,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.122.1] - 2026-11-04
+
+The AJAX select gets four small corrections: a chosen "0" keeps its clear button, its search box has a name for a screen reader, invalid UTF-8 in a value is replaced instead of emptying the attribute, and the article search of `LineItems` says it is invalid when its line has an error.
+
+### Fixed
+- **`Form` field `ajaxselect`: a chosen value `"0"` (or `0`)** no longer starts without the clear button — only nothing chosen hides it, as in `LineItems`.
+- **The search box of an `ajaxselect`** is named by the field's label (`aria-labelledby`, or the field's `aria` text), not by its placeholder alone.
+- **Invalid UTF-8 in a field's value or text** becomes U+FFFD (`ENT_SUBSTITUTE`) in `Form`'s fields, where the whole attribute used to become empty — as the line items editor wrote it.
+- **`LineItems` lookup column:** when the line has an error, its combobox carries `aria-invalid="true"`, like the other cells.
+
+### Notes
+- `tests/golden-form`: four `ajaxselect` cases differ, only by the `aria-labelledby` on the search box. `js/gridkit.js` is untouched.
+
+### Tests
+- `tests/a11y`: the four corrections, each red with the old sources.
+
+---
 ## [1.122.0] - 2026-11-04
 
 `GridKit\CommandPalette` opens with Ctrl+K (Cmd+K on a Mac): type a few letters to jump to a page of the sidebar, a customer or an invoice from your server, or to run a command — umlauts found both ways, recent choices first.

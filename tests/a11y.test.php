@@ -803,4 +803,34 @@ return [
     T::ok($ratio >= 4.5, sprintf('--gk-danger-text on white is %.2f:1, under 4.5:1', $ratio));
 },
 
+'the AJAX select: a chosen "0" keeps its clear button, the search box has a name, bad UTF-8 is replaced, a lookup line says it is invalid (1.122.1)' => function (): void {
+    $render = static function (array $field, array $values = [], array $errors = []): string {
+        $f = new GridKit\Form('f');
+        $f->field($field['name'], 'Customer', 'ajaxselect', $field);
+        if ($values) $f->values($values);
+        if ($errors) $f->errors($errors);
+        ob_start(); $f->render(); return (string) ob_get_clean();
+    };
+    $opts = ['name' => 'cust', 'url' => '/api/customers'];
+    foreach (['0', 0, '7'] as $v) {
+        T::notContains($render($opts, ['cust' => $v]), 'class="gk-ajax-clear" aria-label="' . GridKit\Lang::t('form.clear') . '" title="' . GridKit\Lang::t('form.clear') . '" style="display:none;"', 'a chosen ' . var_export($v, true) . ' shows the clear button');
+    }
+    T::contains($render($opts, ['cust' => '']), 'style="display:none;"><span aria-hidden="true">&times;</span>', 'nothing chosen hides it');
+    $html = $render($opts);
+    T::ok((bool) preg_match('/<input type="text" class="gk-ajax-search-input"[^>]*aria-labelledby="[^"]+"/', $html), 'the search box is named by the label');
+    $withErr = $render($opts, [], ['cust' => 'Required']);
+    T::ok(!preg_match('/<input type="text" class="gk-ajax-search-input"[^>]*aria-(invalid|describedby)/', $withErr), 'and carries neither the error pointer nor aria-invalid (the combobox does)');
+    $bad = $render($opts + ['displayValue' => "Caf\xE9"], ['cust' => "7\xFF"]);
+    T::contains($bad, "\u{FFFD}", 'invalid UTF-8 becomes U+FFFD');
+    T::notContains($bad, 'value=""><div class="gk-select-display"', 'and does not empty the posted value');
+
+    $lines = static function (array $errors): string {
+        $li = (new GridKit\LineItems('items'))->column('article', 'Article', ['type' => 'lookup', 'url' => '/api/articles', 'required' => true])
+            ->items([['article' => '']])->errors($errors);
+        ob_start(); $li->render(); return (string) ob_get_clean();
+    };
+    T::ok(!preg_match('/role="combobox"[^>]*aria-invalid/', $lines([])), 'a lookup cell without an error is not invalid');
+    T::ok((bool) preg_match('/role="combobox"[^>]*aria-invalid="true"/', $lines(['items[0][article]' => 'Required'])), 'with an error its combobox says so');
+},
+
 ];
