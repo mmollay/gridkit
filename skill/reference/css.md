@@ -1,4 +1,4 @@
-# GridKit 1.117.0 — CSS
+# GridKit 1.118.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -63,6 +63,8 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-header-meta` | A quiet line beside the header title, on its baseline; shortened first, gone at 768px and below |
 | `gk-table-sticky-head` `gk-table-sticky-col` `gk-table-sticky-box` | `Table->stickyHead()` / `->stickyColumn()` (since 1.107.0): on `.gk-table-wrap`, what sticks; the box around the `<table>` it scrolls in (`data-gk-sticky-col` = how many cells of a row stick, `--gk-table-sticky-height` its height) |
 | `gk-table-list` | On `.gk-table-wrap` (`Table->size('list')`): the list row of the six rules — 64px, name 15px over 13px, quiet groups; a size container, never cards, never sideways scroll |
+| `gk-rowpager` `gk-rowpager-info` `gk-rowpager-count` `gk-rowpager-nav` `gk-pg` `gk-pg-active` `gk-pg-icon` `gk-pg-off` `gk-pg-gap` | The one pager bar — `Pagination`, `Table->paginate()` (since 1.118.0, `<nav class="gk-pagination gk-rowpager">` inside the card, a line above it) and `GK.rowPager`: the count on the left, then the controls; the current page, an arrow, an arrow that leads nowhere, the ellipsis |
+| `gk-pagination` `gk-page-btn` | The landmark class of a table's pager (an older gridkit.js removes it before it draws its own, which then wears the `.gk-pg` boxes), and the hand-written pager of 0.9 — write the bar above instead |
 | `gk-col-p2` `gk-col-p3` `gk-col-p4` `gk-col-p5` | On th and td of a list column (`'priority' => n`): gone below 560 / 720 / 900 / 1040px of LIST width |
 | `gk-cell-who` `gk-cell-who-text` `gk-cell-sub-wrap` | The who cell: avatar, name, a label that moves under the name, the address underneath; a second line that breaks instead of being shortened |
 | `gk-avatar-tone-1` … `gk-avatar-tone-5` | Five quiet role pairs for initials, told apart side by side |

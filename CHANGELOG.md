@@ -7,6 +7,29 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.118.0] - 2026-11-04
+
+The pager of `Table::paginate()` is now the bar of `GridKit\Pagination` — the count on the left ("6–10 of 12"), the page buttons on the right, first and last included — so every pager in GridKit looks the same. No new class: the table's pager wears `Pagination`'s.
+
+### Changed
+- **`Table::paginate()` draws the bar of `Pagination`** (`Table::renderPager()`): `<nav class="gk-pagination gk-rowpager">` with `.gk-rowpager-info` / `.gk-rowpager-count` (which rows the page shows, "6–10 of 12", the new string `pagination.range`, numbers separated as the language does) and `.gk-rowpager-nav` holding `.gk-pg` boxes: first, previous, the first and the last page and two either side of the current one (`.gk-pg-active`, `aria-current="page"`) with `.gk-pg-gap` between, next, last; the arrows are `.gk-pg-icon`, an arrow that leads nowhere `.gk-pg-off`. Until now it was a centred row of pill `gk-btn` buttons with no count and no first or last. Kept as they were: the controls are `<button type="button" data-gk-page>` (a table pages in place, so no links), a dead arrow is `disabled`, every control is named ("Previous", "Page 3 of 12" — now also "First page" and "Last page"), the nav is a landmark named "Page navigation", the window never prints more than seven page numbers, a search or a filter goes back to page 1. A page past the end (a hand-typed `?gk_page=99`) counts "12 entries", and its Previous leads to the last page instead of page 98.
+- **`js/gridkit.js`**, one block at the end (`// === 1.118.0 — one pager`): the rebuild of a `setData()` table after a sort, a search, a filter or a page writes the same markup, attribute for attribute (`GK.table._staticPager` replaced, `GK.table.renderStatic` wrapped). A page control pressed from the keyboard keeps the focus — on the same control of the new pager, on the page just chosen where that control is now switched off — after a rebuild and, once, after the AJAX reload of a server table (`GK.table.reload` wrapped); a focus moved elsewhere in the meantime is left there, and a rebuild of another table does not take it. A server table's pager now recedes while it reloads, like the rows (`.gk-table-wrap[data-gk-loading] .gk-rowpager`).
+- **`css/gridkit.css`**, one block at the end (`/* === 1.118.0 — one pager === */`): the bar inside the table's card — `.gk-pagination.gk-rowpager` closes the card under the rows, the count in line with the first column, the buttons at the far side, the line above it `.gk-pagination`'s; `button.gk-pg` takes the page's font and line height; `.gk-pg:focus-visible` gets the ring of `.gk-btn`, for Pagination's links too. No rule above the block changed.
+- **A `gridkit.js` from before 1.118.0** — the PawBot dashboard keeps its own — pages the new markup unchanged: it binds `[data-gk-page]`, skips a disabled button and removes `.gk-pagination` before it writes its own pager. The pager it writes after a rebuild wears the same boxes (rules for `.gk-table-wrap > .gk-pagination:has(> .gk-btn[data-gk-page])`, in a narrow card too); only the count is missing there.
+- `GridKit\Pagination` writes what it wrote in 1.117.0.
+
+### Demo
+- Navigation & Filter: "One pager for tables and lists" — a table of twelve rows that pages itself above a `Pagination` with the same numbers. It replaces the hand-written pager of 0.9 (`.gk-page-btn`, still in the stylesheet, now in `ci/demo-coverage-allow.json`); `gk-pg-off` came off that list, since every paged table shows it now.
+
+### Tests
+- `tests/pager.test.php` (286 assertions): the table writes the classes of `Pagination` in `Pagination`'s order, page for page (four lengths, first to last page) and the same frame; every control a `<button type="button" data-gk-page>` with the right target, disabled exactly where it leads nowhere; the count in English and German, with separators and past the end (and Previous there); the names in both languages; the window (seven numbers for 400 pages); the AJAX fragment; `PageSize`; `Pagination` byte for byte as in 1.117.0; the catalogue; the script block and the stylesheet block.
+- `ci/browser-pager.js` (430 cases, `ci/browser-pager-fixture.php`): every state of a control, the count, the ellipsis and the bar against `Pagination` in light, `data-gk-mode="dark"` and `.gk-dark`, under no theme and the six, at 1280px and 390px; contrast; a `setData()` table paged in the browser and its pager compared byte for byte with Table.php's (English, German, and strings holding `& " ' < >` with no thousands separator); a server table through its AJAX reload; the focus; Chrome's accessibility tree; and the script of 1.117.0 (`GK_OLD_JS` runs any other copy). Each new rule, declaration and branch of the stylesheet, the script, `Table.php` and the catalogue was taken out in turn and a check turned red.
+- Changed on purpose, with the pager: `tests/golden/table.json` (9 of 58 cases, the pager and nothing else), `tests/a11y.test.php`, `tests/sticky.test.php`, `ci/browser-sticky.js` (finds the pager by its class, not by its whole class attribute). `ci/parity.php` no longer lists the two pager differences between server and client; there are none.
+- Whole suite: 12,696 assertions.
+
+---
+
+---
 ## [1.117.0] - 2026-11-03
 
 `GridKit\LineItems` edits the lines of an invoice, an offer or an order — description, quantity, unit, unit price, discount, VAT — with totals per VAT rate that follow every keystroke, and `LineItems::totals()` computes the very same figures in PHP, to the cent.

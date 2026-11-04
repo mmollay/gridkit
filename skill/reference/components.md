@@ -1,4 +1,4 @@
-# GridKit 1.117.0 — components
+# GridKit 1.118.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -40,6 +40,23 @@ every declared filter, the `ORDER BY`, the `COUNT` and the `LIMIT`:
     ->paginate(25)
     ->render();
 ```
+
+**`paginate($perPage)`: the pager under the rows.** `paginate(false)` or `0` shows
+every row. With a page size, a table with more rows than that gets one pager, the
+same bar `Pagination` draws (since 1.118.0; before, a centred row of pill
+buttons): on the left which rows the page shows, "6–10 of 12" (`pagination.range`,
+with the thousands separator of the language), on the right first, previous, the
+first and the last page and two either side of the current one with `…` between
+(never 400 buttons), next and last. A `setData()` table pages in the browser, a
+`rows()` or `query()` table asks the server for `gk_page` (below); a search or a
+filter goes back to page 1, a sort of a server table too. The controls are
+`<button data-gk-page>`, not links — the table pages in place — inside
+`<nav class="gk-pagination gk-rowpager">`, a landmark named "Page navigation";
+each control has a name ("First page", "Page 3 of 12"), the current page
+`aria-current="page"`, and the keyboard focus stays on the control you pressed.
+Do not put a `Pagination` under a paginated table: that is two pagers. The rows
+per page from a `PageSize` select: `->paginate(PageSize::make('per_page')->resolve(25))`,
+the select in `toolbarHtml()` — it reloads the page and starts at page 1.
 
 **`filter($column, $type, $opts)`:** a dropdown in the toolbar, bound to the
 table — this is what "every declared filter" above means. `$type` is `'select'`;
@@ -2566,8 +2583,12 @@ the `{placeholder}` substitution that `Lang::t()` does for free.
 ### Pagination + PageSize (since 1.22 / 1.27)
 
 Server-side pager **below** `.gk-table-wrap`, not inside the card and not
-and not inside the live container. Same look as `GK.rowPager`
-(`.gk-rowpager` / `.gk-pg`).
+inside the live container. Same look as `GK.rowPager`
+(`.gk-rowpager` / `.gk-pg`), and since 1.118.0 as the pager of
+`Table::paginate()`: one bar for every pager in GridKit. This one is for a list
+you page yourself — its controls are links (`?page=N`, no script needed), its
+count reads "238 invoices · Page 5 of 12" because it is handed pages, not rows
+(a table's says "101–125 of 238"). A `Table` with `paginate()` draws its own.
 
 **The two URL parameters you read yourself.** This pager does *not* use the
 `gk_*` convention of `Table`: the page links are `?…&page=N` and the PageSize
@@ -2780,7 +2801,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | YearFilter | `GridKit\YearFilter` | Year navigation filter |
 | TableHeader | `GridKit\TableHeader` | **Unified filter/search bar above tables — Status / Toolbar / Advanced (since v1.10.0)** |
 | Lang | `GridKit\Lang` | i18n / multilingual support |
-| Pagination | `GridKit\Pagination` | Server-side pager below the table (`.gk-rowpager`), optional PageSize |
+| Pagination | `GridKit\Pagination` | Server-side pager below the table (`.gk-rowpager`), optional PageSize — the bar `Table::paginate()` draws too (since 1.118.0) |
 | PageSize | `GridKit\PageSize` | Rows per page — lives in the pager bar, not in the table footer |
 | liveTable (JS) | `GK.liveTable` | AJAX tables (search/filter/sort/pagination live, no reload) |
 | BelegModal | `GridKit\BelegModal` | PDF / document preview modal with iframe + mobile fallback (since v1.15.0) |
