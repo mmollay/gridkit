@@ -33,6 +33,7 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Table | `GridKit\Table` | Data tables with search, sort, pagination |
 | Form | `GridKit\Form` | Grid-based forms (16-column), all field types, AJAX submit |
 | LineItems | `GridKit\LineItems` | The lines of an invoice, offer or order: posts `name[i][field]`, live totals per VAT rate, the same totals in PHP to the cent, add/duplicate/delete with Undo/reorder, cards on a phone, read-only for a sent invoice (since 1.117.0) |
+| Import | `GridKit\Import` / `js/import.js` / `GK.import` | A CSV file into checked rows: recipients, customers, articles. Fields with types, aliases, required and unique; separator, quotes, header row and encoding (UTF-8, Windows-1252 from Excel) found by themselves; columns matched by name, a select per column; a preview with every error in words; import the valid rows or cancel. A form in three steps without script, an instant preview with it; the server reads and checks the file again either way (since 1.119.0) |
 | Header | `GridKit\Header` | Fixed header with breadcrumb, user menu |
 | Sidebar | `GridKit\Sidebar` | Navigation with groups, badges, collapse |
 | Modal | `GridKit\Modal` | Dialog overlays |
@@ -83,7 +84,8 @@ without tripping over this.
 | `ActionGroup::render()` | `Modal::container()` | `BelegModal::container()` |
 | `Tabs::render()` (1.111.0) | | |
 
-`Tree::render()` and `Tree::renderBranch()` (1.116.0) print as well.
+`Tree::render()` and `Tree::renderBranch()` (1.116.0) print as well, and so does
+`Import::render()` (1.119.0) — `Import::html()` is its string twin.
 
 `PageSize::render()` above is an INSTANCE method — build it with the static
 `PageSize::make('per_page')` first, then chain. Same for `TableHeader::make()`.
@@ -1954,6 +1956,253 @@ message in the box above the form instead (only the key `items` itself goes unde
 totals from the POST, compute amounts with floats, or write a line's markup by hand: the script
 renumbers what it finds by its `data-gk-lines-*` attributes.
 
+### Import (`GridKit\Import`, since 1.119.0)
+
+A CSV file into rows a page can store: the recipients of a newsletter, customers, articles. The
+page defines the fields; the person chooses (or drops, or pastes) a file, sees which column fills
+which field and a preview with every error in words, and imports the valid rows or cancels.
+**It is a form of its own** (`<form method="post" enctype="multipart/form-data">`, so do not put it
+inside another form) that works without any script, in three steps: the file, the columns and the
+check, done. **`js/import.js`** — a file of its own like `js/tree.js`, loaded with `defer` after
+`gridkit.js` (`skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/import.js" defer></script>`) — reads the file in the browser instead: the
+mapping and the preview are there the moment a file is chosen, dropped or pasted, and follow every
+change. `Import::render()` prints; `->html()` returns the same string.
+
+```php
+$import = (new Import('customers'))
+    ->label('Import customers')                          // the form's accessible name
+    ->field('customer_no', 'Customer no.', ['required' => true, 'unique' => true, 'aliases' => ['Kundennummer', 'Nr']])
+    ->field('name', 'Name', ['required' => true, 'aliases' => ['Nachname', 'Last name']])
+    ->field('email', 'E-mail', ['type' => 'email', 'required' => true, 'unique' => true, 'aliases' => ['E-Mail', 'Mail']])
+    ->field('country', 'Country', ['type' => 'select', 'options' => ['AT' => 'Austria', 'DE' => 'Germany', 'CH' => 'Switzerland']])
+    ->field('revenue', 'Revenue', ['type' => 'money', 'aliases' => ['Umsatz']])
+    ->field('since', 'Customer since', ['type' => 'date'])
+    ->field('newsletter', 'Newsletter', ['type' => 'bool'])
+    ->locale('de')                                       // 1.500 is fifteen hundred, 1.234,50 an amount
+    ->limits(5000, 2 * 1024 * 1024)                      // rows and bytes: a larger file is refused
+    ->hidden(['_token' => 'the-csrf-token-of-the-page']); // carried through every step
+
+// Check the page's CSRF token first, then:
+$import->handle();                                       // reads $_POST and $_FILES of this importer
+if ($import->step() === 'done') {
+    foreach ($import->result()['rows'] as $row => $values) {
+        // $row: the row in the sheet (the header is row 1). $values, typed:
+        // ['customer_no' => 'K-1001', 'email' => 'anna@example.at', 'revenue' => '1234.50', 'newsletter' => true, ...]
+    }
+}
+$import->render();                                       // the step it stands at
+```
+
+**The steps.** `step()` says where the importer stands; `render()` draws it.
+
+| Step | What the person sees | What posts |
+|---|---|---|
+| `upload` | A drop box around the file field (`.csv`, `.txt`, `.tsv`), the limits in words, and in a disclosure a box for pasted text. "Check file". A refused file is said here (`role="alert"`). | `customers[file]` or `customers[text]`, `customers[step]=upload` |
+| `map` | The file in one line (name, size, rows); notes (a field chosen twice, a quote never closed); **how it is read** — separator, encoding, the header checkbox, preset to what was found; **which field each column fills** — per column its name, two sample values and a select of the fields (or "ignore"; required fields marked); a message for every required field no column fills; the **summary** ("238 rows, 3 with errors.", `role="status"`); the **preview** of the first `preview()` rows (a `.gk-table` in a box that scrolls sideways by itself; per row its number and "OK" or "2 errors", the message under each wrong cell); **every row with errors**, the rows the preview does not show included (the first 100); the buttons "Import the 235 valid rows" (off while a required field has no column or no row is valid), "Check again" and "Cancel". | `customers[map][i]` (a field key or `''`), `delimiter`, `encoding`, `header`, `cols`, and `token` (or the file itself, see storage) |
+| `done` | "235 rows imported; 3 with errors left out." and "Import another file". Take `result()['rows']` before you render — and if saving fails, show your own message instead. | |
+
+"Check again" checks the posted mapping; "Cancel" forgets the file and goes back to the start
+("The import was cancelled. Nothing was imported."). Import is only possible when every required
+field has a column and at least one row is valid; rows with errors are left out — the button says
+how many are imported.
+
+**Fields** — `->field($key, $label, $opts)`; the key is letters, digits, `_`, `.` and `-`:
+
+| Option | |
+|---|---|
+| `type` | `text` (default), `email`, `number`, `money`, `date`, `bool`, `select` — see below |
+| `required` | a row without a value here is not imported; a required field without a column stops the import |
+| `unique` | two rows of the file may not hold the same value: the second and every later one get "Already in row 5." (text and e-mail ignore case) |
+| `aliases` | other column names that mean this field: `['E-Mail', 'Mail', 'E-Mail-Adresse']` |
+| `options` | `select`: `value => label`, or a list of values |
+
+**Types** — what a cell may hold, and what `result()` hands over. Spaces around a value (the
+no-break space too) are ignored; an empty cell is `null` (`bool`: `false`) unless the field is
+required.
+
+| Type | Accepts | In `rows` |
+|---|---|---|
+| `text` | anything | the text |
+| `email` | an address mail servers take: ASCII, a dot in the domain, a TLD of letters (or `xn--`) | the address, its domain in lower case |
+| `number` | `1.234,5`, `1,234.5`, `1234.5`, `1 234,5`, `-12` — `LineItems::parseNumber()`: with both signs the last is the decimal sign; one sign before exactly three digits is decided by `locale()` | a string in machine form: `'1234.5'` |
+| `money` | the same, at most 2 decimals; a currency sign or code is ignored | `'1234.50'` |
+| `date` | `31.12.2026`, `2026-12-31`, `31/12/2026`, day and month with or without a zero; `31.02.` is an error | `'2026-12-31'` |
+| `bool` | `ja`, `j`, `yes`, `y`, `x`, `1`, `true`, `wahr`, `on` / `nein`, `n`, `no`, `0`, `false`, `falsch`, `off`, empty | `true` / `false` |
+| `select` | an option's value or its label; case, umlauts and spaces do not count | the option's value |
+
+Numbers and amounts are strings so nothing is lost to a float: cast them where you store them.
+
+**Reading the file** (`Import::parseCsv()` does it, and the script the same):
+
+- **Encoding**: a byte order mark decides (UTF-8, UTF-16 LE or BE); a file with NUL bytes in every
+  other place is UTF-16 without one; valid UTF-8 is UTF-8; anything else is **Windows-1252** — what
+  German Excel writes, and a superset of ISO-8859-1, which is read as Windows-1252 the way browsers
+  do. Everything comes out as UTF-8. A file with NUL bytes otherwise is "not a text file".
+- **Separator**: `;`, `,`, tab or `|` — the one that gives the first 50 records the same number of
+  cells most often (more than one); a tie goes to that order. A first line `sep=;` (Excel's hint)
+  names it and is not a row. When none splits the lines, the one that occurs least, so a single
+  column with a comma in one value stays one column.
+- **Quotation mark**: `"` (RFC 4180: a doubled `""` is a quote, a quoted cell may hold the separator
+  and line breaks), or `'` when the file quotes its cells with that. A quote inside an unquoted cell
+  is a character. A quote that is never closed takes the rest of the file into one cell — said as a
+  note ("Row 5 opens a quotation mark that is never closed…").
+- **Header row**: yes when a cell of the first row names a field (key, label or alias); no when a
+  cell holds what data holds (a number, a date, an e-mail address); yes otherwise. Without one the
+  columns are "Column 1", "Column 2", … and nothing is matched by name.
+- **Rows**: CRLF, LF and CR all end a row; a line break inside quotes does not, and becomes `\n`.
+  Row numbers are those of the sheet: the header is row 1, an empty line is a row that is left out,
+  a cell with a line break is still one row. Columns with no name and nothing in them at the end
+  (Excel's `;;;;`) are dropped.
+
+**Matching.** Column names are compared with the fields' keys and labels first, then with their
+aliases, from the left: lower case, accents folded, an umlaut matching both its spellings (`ue`
+and `u`), the sharp s as `ss`, signs and spaces dropped — "E-Mail" is "email", "Mueller" and
+"Muller" are the same name with an umlaut.
+A field takes one column; in the browser, choosing it for another column lets go of the first.
+`->map(['E-Mail' => 'email', 3 => 'country'])` starts from a mapping of your own instead (one saved
+from the last import, say): column name or index => field key, `null` to ignore; columns it does
+not name are ignored. What the person chooses on the page wins over both — but only for the very
+columns it was drawn for (the form posts their signature in `cols`).
+
+**`result()`** — what the file holds, checked:
+
+| Key | |
+|---|---|
+| `rows` | the valid rows, keyed by their row number: `[2 => ['email' => 'anna@example.at', ...], ...]`; only mapped fields are there |
+| `errors` | row number => `[field key => message]` for every row that is left out |
+| `total`, `valid`, `invalid` | counts of data rows (empty lines are not rows) |
+| `columns` | the column names |
+| `mapping` | column index => field key, or `null` when ignored |
+| `missing` | required fields that no column fills |
+| `notes` | what the person should know: a field chosen twice, a quote never closed |
+| `meta` | `filename`, `bytes`, `encoding`, `bom`, `delimiter`, `enclosure`, `lineEnding` (`CRLF`, `LF`, `CR` or `''`), `header`, `sep`, `unclosed` |
+| `error` | why the file was refused, or `null` |
+
+**Without a form** — a cron job, an API, a sample:
+
+```php
+$csv = "Kundennummer;Nachname;E-Mail;Umsatz\r\nK-1;Mueller;anna@example.at;1.234,50\r\nK-2;Huber;max@;12\r\n";
+$r = (new Import('api'))
+    ->field('no', 'No.', ['required' => true, 'aliases' => ['Kundennummer']])
+    ->field('name', 'Name', ['aliases' => ['Nachname']])
+    ->field('email', 'E-mail', ['type' => 'email', 'required' => true])
+    ->field('revenue', 'Revenue', ['type' => 'money', 'aliases' => ['Umsatz']])
+    ->locale('de')
+    ->fromString($csv, 'customers.csv')                  // or ->fromFile('/path/customers.csv')
+    ->result();
+// $r['rows'] === [2 => ['no' => 'K-1', 'name' => 'Mueller', 'email' => 'anna@example.at', 'revenue' => '1234.50']]
+// $r['errors'] === [3 => ['email' => 'Not a valid e-mail address.']]
+
+$parsed = Import::parseCsv($csv, ['delimiter' => 'auto', 'header' => true]);
+// ['columns' => ['Kundennummer', 'Nachname', 'E-Mail', 'Umsatz'], 'rows' => [2 => [...], 3 => [...]], 'meta' => [...], 'error' => null]
+```
+
+`Import::parseCsv($bytes, $opts)` reads a CSV without fields: `columns`, `rows` (row number =>
+cells, padded to the columns), `meta`, `error`. Options: `delimiter`, `enclosure`, `encoding`,
+`header` (as the setters), `maxRows`, `maxBytes`, `names` (column names that mark a header row).
+
+**Limits.** `->limits($rows, $bytes)` — default 10,000 rows and 5 MB, at most 100,000 and 20 MB; a
+row may have at most 200 columns. A larger file is **refused, never cut short**, with a sentence
+that says so ("The file has more than 10,000 rows. Import it in parts of at most 10,000 rows.",
+"The file is 7.4 MB; at most 5 MB can be imported."). An upload larger than `upload_max_filesize`
+or `post_max_size` is said in words too. The script refuses the same before it reads a byte.
+
+**Between the steps — and why nothing from the browser is trusted.** Without script the file has
+to wait for step 2 and 3. By default it waits **on the server**: `->storage($dir, $ttl)` (default:
+the system's temporary directory `/gridkit-import`, 3600 seconds) keeps the raw file under a token
+of 128 random bits (`random_bytes`), in a file only the server user may read; the form carries only
+the token. With a PHP session the token also belongs to that session, so another browser cannot use
+it. Files older than `$ttl` are removed whenever an importer is handled; "Cancel" and the import
+remove their own at once. `->storage(false)` keeps **nothing** on the server: the file travels in
+the form (base64), for several servers without a shared directory, or a public demo. Either way
+**every step reads the file again and checks every row again**, with the mapping as posted (each
+key checked against the fields) — the server never takes a row, a value or a count from the
+browser, so a forged form is no more than another file. With the script the browser shows step 2
+itself and the form posts the file and the mapping once (`step=confirm`); the server reads and
+checks it as above. Checking the page's CSRF token before `handle()` is the page's job — put the
+token in `->hidden()`.
+
+**Methods**
+
+| Method | |
+|---|---|
+| `->field($key, $label, $opts)` | a field a column can fill (above) |
+| `->label('Import customers')` | the form's accessible name; default "CSV import" |
+| `->locale('de')` | how a lone separator is read in numbers; default `Lang::locale()` |
+| `->limits($rows, $bytes)` | the most a file may hold |
+| `->preview(20)` | rows in the preview (1 to 500); every row is checked either way |
+| `->delimiter('auto')` | `'auto'`, `';'`, `','`, `"\t"` (or `'tab'`) or the vertical bar |
+| `->enclosure('auto')` | `'auto'`, `'"'`, `"'"` |
+| `->encoding('auto')` | `'auto'`, `'UTF-8'`, `'Windows-1252'` (`'ISO-8859-1'`), `'UTF-16LE'`, `'UTF-16BE'` |
+| `->header(null)` | `true`, `false`, or `null` to decide from the file |
+| `->map([...])` | the mapping to start from (above) |
+| `->action('/admin/import')` | where the form posts; default the page itself |
+| `->hidden(['_token' => $csrf])` | hidden fields carried through every step |
+| `->storage($dir, $ttl)` / `->storage(false)` | where the file waits between the steps (above) |
+| `->handle($post = null, $files = null)` | reads the POST of this importer (default `$_POST`, `$_FILES`) and moves it on a step |
+| `->fromString($bytes, $filename)` / `->fromFile($path)` | a CSV without an upload; the importer is then in step `map` |
+| `->step()` | `'upload'`, `'map'` or `'done'` |
+| `->result()` | the checked rows (above) |
+| `->render()` / `->html()` | prints / returns the step it stands at |
+| `Import::parseCsv($bytes, $opts)` | a CSV read without fields (above) |
+
+A wrong option value is an `E_USER_WARNING` with a fallback that still works: an unknown type
+(text), an unknown option, a field defined twice (the second is left out), a key that cannot be a
+field name, a select without options (text), a limit out of range (clamped), a `javascript:`
+action (the page itself), a name that is not a field name (cleaned).
+
+**In the browser** (`js/import.js`; nothing to call): a file chosen or dropped on the box is read
+with `FileReader`, decoded with `TextDecoder` (Windows-1252, UTF-16 and UTF-8 by the same rules) and
+split, matched and checked by the same rules as the server — the same counts, rows, messages and
+order. Text typed into the paste box is read a moment after the typing stops. A change of the
+separator, the encoding or the header checkbox reads the file again; a change of a column's field
+checks again and redraws what follows the mapping; the summary is a live region, so a screen reader
+hears "238 rows, 3 with errors." The file stays in the file field (a dropped one too), so
+"Import" posts it with the mapping. "Cancel" empties the form without a request. A step 2 the server
+drew with `storage(false)` is taken over the same way. A choice that makes the file unreadable
+(UTF-8 for a Windows-1252 file) is said, and the file is read as before — on the server as well.
+
+| Event (on the form, bubbling) | `detail` |
+|---|---|
+| `gk:importread` | `{ import, filename, bytes, meta, columns, total }` — a file or text was read |
+| `gk:importmap` | `{ import, mapping, source }` — `source`: `auto`, `user` or `api` |
+| `gk:importready` | `{ import, result }` — the rows were checked, after every change; `result` as `result()` |
+| `gk:importerror` | `{ import, message }` — a file was refused (too large, too many rows, not text) |
+
+```javascript
+GK.import.read('customers', file, 'customers.csv');   // a File, Blob or bytes as if chosen (it goes into the file field,
+                                                       // so Import posts it); text without a name as if pasted. A Promise of the result
+GK.import.map('customers', { 'E-Mail': 'email', 4: null });  // set the mapping; without a second argument, read it
+GK.import.result('customers');                         // what result() would say about what the browser holds
+GK.import.check('customers', 'revenue', '1.234,5');    // { value: '1234.50', error: null } — one value by a field's rules
+GK.import.reset('customers');                          // back to step 1
+GK.import.parse(bytesOrText, { delimiter: 'auto' });  // Import::parseCsv() without an importer
+```
+
+The first argument is the importer's name, its form, an element inside it, or a selector.
+
+- **Accessible**: every control has a label (a column's select is "Column E-Mail"), the preview is
+  a named region with a tab stop and a caption, the steps are `.gk-steps` with `aria-current`, a
+  refused file is an alert, the summary a status. **Errors are never colour alone**: a symbol, the
+  words under the cell, "2 errors" in the row's check column, a bar at the cell's start; an ignored
+  column says "ignored" and has a dashed frame.
+- **Phone**: the mapping is one column of cards, the options and buttons full width, the fields
+  16px; only the preview scrolls sideways, inside its box.
+- **Classes** (all `gk-import-*`, in `css/blocks.json` as "Import"): `gk-import` (the form),
+  `-upload`, `-drop`, `-drop-icon`, `-drop-text`, `-hint`, `-paste`, `-text`, `-dragover` (a file
+  over the box), `-panel`, `-source`, `-notes`, `-options`, `-option`, `-map`, `-col`, `-col-name`,
+  `-col-sample`, `-ignored`, `-missing`, `-summary`, `-preview`, `-target`, `-rowno`, `-state`,
+  `-badrow`, `-bad`, `-msg`, `-errors`, `-errors-title`, `-more`, `-actions`, `-skip`. Colours are
+  roles: light, both dark spellings and the six themes follow.
+- **Words** come from `import.*` in `lang/` and reach the script inside the importer's own config —
+  no `Lang::jsConfig()` needed.
+- **CSV injection** (a cell like `=HYPERLINK(...)` that a spreadsheet would run) concerns the other
+  direction: writing CSV for Excel. An import stores text and runs nothing; escape on output as
+  always. Guarding an export is not this component's job.
+- **Do not** put the importer inside another `<form>`, take rows or counts from the POST, or
+  trust `result()` of a request you did not `handle()` — and check the CSRF token before `handle()`.
+
 ### Admin blocks: settings, figures, dots, colours (since 1.92.0)
 
 The small parts an admin page kept writing for itself — each a class, light and
@@ -2972,6 +3221,12 @@ document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, colu
 document.addEventListener('gk:lineitemschange', e => { /* e.detail: { items, totals } */ });
 GK.lineItems.totals(document.querySelector('.gk-lines'));
 GK.lineItems.add(document.querySelector('.gk-lines'), { description: 'Travel', qty: 1, price: '40', vat: 20 });
+
+// Import (since 1.119.0) — GridKit\Import and js/import.js, see "Import". First argument: the importer's name, form or selector.
+GK.import.read('customers', file);             // a File, Blob, bytes or text, as if chosen; a Promise of the result
+GK.import.map('customers', { 'E-Mail': 'email' }); // set the mapping (column name or index => field key); no 2nd argument reads it
+GK.import.result('customers');                 // { rows, errors, total, valid, invalid, columns, mapping, missing, notes, meta, error }
+document.addEventListener('gk:importready', e => { /* e.detail.result — after every change */ });
 
 // Tabs (since 1.111.0) — see "Tabs". A row by its .gk-tabs element or id; hand-written rows too.
 GK.tabs.select('settings', 'bank');            // as a click (gk:tabchange can refuse it); { focus, force }

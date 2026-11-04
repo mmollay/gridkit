@@ -1,0 +1,23 @@
+Kundennummer;Vorname;Nachname;E-Mail;Land;Geburtsdatum;Umsatz;Newsletter;Notiz
+K-1001;Anna;Müller;anna.mueller@example.at;AT;12.03.1985;1.234,50;ja;
+K-1002;Jürgen;Weiß;juergen.weiss@example.de;DE;01.07.1979;980;nein;"Rückruf; bitte vormittags
+Tel. nur Mo–Fr"
+K-1003;Zoë;Brandstätter;zoe.brandstaetter@example.at;AT;7.11.1992;12.500,00;x;
+K-1004;Lukas;Österreicher;lukas@example.at;at;1988-05-23;0,99;ja;
+K-1005;Marie;Schäfer;marie.schaefer@example.de;Germany;30.09.1975;2.310;nein;Stammkundin
+K-1006;Noah;Gruber;noah.gruber@example.ch;CH;14/02/2001;455,20;1;
+K-1007;Max;Huber;max.huber@;AT;03.04.1990;120,00;ja;
+K-1008;Sophie;Wagner;sophie.wagner@example.at;AT;31.02.1990;75,5;nein;
+K-1002;Emil;Bauer;emil.bauer@example.de;DE;22.12.1968;1.050,00;ja;Nummer doppelt vergeben
+K-1010;Lena;;lena.koch@example.ch;CH;05.06.1999;89,90;;
+K-1011;Felix;Pichler;felix.pichler@example.at;AT;18.08.1983;3.400,00;ja;
+K-1012;Clara;Moser;clara.moser@example.at;AT;29.02.1996;640;x;Schaltjahr
+K-1013;Jonas;Steiner;jonas.steiner@example.de;DE;11.01.1971;1.999,99;nein;
+K-1014;Ella;Hofer;ella.hofer@example.at;Atlantis;23.10.1987;210,00;ja;
+K-1015;Paul;Leitner;paul.leitner@example.at;AT;02.03.1994;15,00;nein;
+K-1016;Mia;Fuchs;mia.fuchs@example.ch;CH;17.07.1980;780,40;ja;
+K-1017;Ben;Eder;ben.eder@example.at;AT;09.09.1966;5.020,00;ja;Rechnung per Post
+K-1018;Hanna;Winkler;hanna.winkler@example.de;DE;28.04.2002;44,00;nein;
+K-1019;Elias;Schwarz;elias.schwarz@example.at;AT;13.12.1977;910,10;x;
+K-1020;Lea;Reiter;LEA.REITER@Example.AT;AT;06.05.1991;330;ja;
+;;;;;;;;

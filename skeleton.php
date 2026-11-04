@@ -3,7 +3,7 @@
  * GridKit skeleton
  * ----------------
  * Copy it, change the parts marked below, and you have a working page.
- * Needs: autoload.php, css/gridkit.css, css/themes.css, js/gridkit.js, js/sortierbar.js, js/tree.js
+ * Needs: autoload.php, css/gridkit.css, css/themes.css, js/gridkit.js, js/sortierbar.js, js/tree.js, js/import.js
  *
  * Copied out of the GridKit directory this file used to die on its first line
  * with an uncaught Error, because the require below was relative to itself.
@@ -221,5 +221,6 @@ Layout::mode('header-first');
 <script src="<?= Layout::asset($gkAssets . 'js/gridkit.js') ?>"></script>
 <script src="<?= Layout::asset($gkAssets . 'js/sortierbar.js') ?>" defer></script>
 <script src="<?= Layout::asset($gkAssets . 'js/tree.js') ?>" defer></script>
+<script src="<?= Layout::asset($gkAssets . 'js/import.js') ?>" defer></script>
 </body>
 </html>

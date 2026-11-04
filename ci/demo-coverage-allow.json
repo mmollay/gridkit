@@ -158,6 +158,15 @@
       "gk-skip-link"
     ]
   },
+  "import": {
+    "reason": "Said only when a required field has no column (gk-import-missing), when a field is chosen for two columns or a quotation mark is never closed (gk-import-notes), when more than a hundred rows have errors (gk-import-more), and drawn only while a file is dragged over the box (gk-import-dragover); the sample file of the demo has none of these. tests/import.test.php and ci/browser-import.js show every one.",
+    "classes": [
+      "gk-import-dragover",
+      "gk-import-missing",
+      "gk-import-more",
+      "gk-import-notes"
+    ]
+  },
   "label": {
     "reason": "A single modifier of a block the demo shows; listed in the skill's CSS reference.",
     "classes": [

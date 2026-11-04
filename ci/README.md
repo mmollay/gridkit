@@ -353,6 +353,32 @@ GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-pag
 GK_OLD_JS=/path/to/dashboard/js/gridkit.js node ci/browser-pager.js   # the dashboard's own copy, or any other
 ```
 
+The CSV import (`GridKit\Import` and `js/import.js`, 1.119.0) is checked by `ci/browser-import.js`
+on `ci/browser-import-fixture.php`, which runs behind PHP's own server so the forms really post:
+the script starts `php -S` on a free port with a temporary directory for the kept files
+(`GK_URL=http://127.0.0.1:8140/` uses a server already running the fixture instead). First the
+point of the whole thing — the browser reads and checks as the server does: 196 files (written by
+hand for each rule, 160 drawn at random from a fixed seed: every separator, quoting, line ending,
+encoding — Windows-1252, UTF-8 with and without a byte order mark, UTF-16 LE and BE — and every
+value shape) go through `GK.import.parse()` and `GK.import.read()` and must come out as
+`Import::parseCsv()` and `result()` say (rows, every message, counts, mapping, notes, meta), and the
+panel the script draws must be the one `Import.php` draws, byte for byte. Then the flow with the
+script: a file chosen (no request), dropped (the file field takes it) and pasted; the mapping
+changed (a field taken from another column, the summary changing in place, the focus kept); the
+separator, the encoding (UTF-8 for a Windows-1252 file is said, the file stays) and the header row;
+a refused file in words; Cancel; a step 2 drawn by the server taken over unchanged; and Import,
+after which the server, reading the posted file and mapping again, hands over the rows the browser
+showed. The same without script: upload, the file waiting under a token (0600, gone after the
+import and after Cancel), Check again with a field chosen twice, Import; the file carried in the
+form with `storage(false)`. Then 390px (no sideways scroll, the preview scrolling in its box),
+Chrome's accessibility tree, the keyboard, and contrast in 21 looks — no theme and the six × light,
+`data-gk-mode="dark"`, `.gk-dark`: text 4.5:1, edges, bars and symbols 3:1. `GK_SHOTS=<dir>` writes
+screenshots (with `GK_ICONFONT=<material-icons.woff2>` for the symbols). About forty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-import.js
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

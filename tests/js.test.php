@@ -20,8 +20,9 @@ return [
 
 'every GK call the skill document shows really exists' => function (): void {
     $doc = (string) file_get_contents(__DIR__ . '/../GRIDKIT_SKILL.md');
-    // GK.tree lives in a file of its own (1.116.0) — the dashboard's copy of gridkit.js never takes a sync.
-    $js  = (string) file_get_contents(__DIR__ . '/../js/gridkit.js') . (string) file_get_contents(__DIR__ . '/../js/tree.js');
+    // GK.tree (1.116.0) and GK.import (1.119.0) live in files of their own — the dashboard's copy of gridkit.js never takes a sync.
+    $js  = (string) file_get_contents(__DIR__ . '/../js/gridkit.js') . (string) file_get_contents(__DIR__ . '/../js/tree.js')
+         . (string) file_get_contents(__DIR__ . '/../js/import.js');
 
     // GK.a.b( … ) — the two-level calls the JavaScript API section teaches.
     preg_match_all('/\bGK\.([a-zA-Z_]\w*)\.([a-zA-Z_]\w*)\s*\(/', $doc, $m, PREG_SET_ORDER);
@@ -113,8 +114,9 @@ return [
     $css = (string) file_get_contents(__DIR__ . '/../css/gridkit.css')
          . (string) file_get_contents(__DIR__ . '/../css/themes.css');
 
-    // js/tree.js (1.116.0) reads what src/Tree.php writes; it is a file of its own for the dashboard's sake.
-    $js .= (string) file_get_contents(__DIR__ . '/../js/tree.js');
+    // js/tree.js (1.116.0) reads what src/Tree.php writes, js/import.js (1.119.0) what src/Import.php writes;
+    // files of their own for the dashboard's sake.
+    $js .= (string) file_get_contents(__DIR__ . '/../js/tree.js') . (string) file_get_contents(__DIR__ . '/../js/import.js');
     preg_match_all('/data-gk-([a-z-]+)/', $php, $m);
     $attrs = array_unique($m[1]);
     T::ok(count($attrs) > 15, 'expected many data-gk attributes, found ' . count($attrs));

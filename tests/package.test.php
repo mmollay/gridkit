@@ -132,6 +132,9 @@ return [
         // The "what is new" box and the since()/marks helpers, read from
         // CHANGELOG.md and css/blocks.json, included by demo/index.php (1.93.0).
         'demo/_whatsnew.php',
+        // The importer of the demo, included by sections/import.php and by its endpoint
+        // api/import.php — one definition for both (1.119.0).
+        'demo/_import.php',
     ];
 
     foreach ($out as $path) {

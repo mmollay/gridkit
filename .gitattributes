@@ -50,3 +50,6 @@
 *.png binary
 *.webm binary
 *.ico binary
+# A CSV is kept byte for byte: the import sample (1.119.0) is what Excel writes — CRLF and
+# Windows-1252 — and normalising it to LF would test a file nobody has.
+*.csv binary
