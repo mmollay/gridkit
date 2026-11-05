@@ -1,4 +1,4 @@
-# GridKit 1.126.0 — components
+# GridKit 1.127.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -1185,7 +1185,7 @@ TableHeader::make('exp')
     ->filter(fn() => $yearFilter->render())                    // closure
     ->filter('<select class="gk-filter">…</select>')           // raw HTML
     ->advanced(fn() => renderDateRange(), 'Date & amount')     // optional collapsible
-    ->reset('/expenses')                                     // optional reset btn
+    ->reset('/expenses')                                     // optional reset: outlined pill, filter_alt_off icon + "Reset filters" (1.127.0)
     ->render();
 ```
 

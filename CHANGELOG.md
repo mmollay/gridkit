@@ -7,6 +7,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.127.0] - 2026-11-05
+
+The reset of `TableHeader` is seen at a glance. It was a text button with a 16px "close" icon and an inline style — in the SSI Panel's invoice list a small grey "X" next to the filters that nobody found. Every list that calls `->reset()` gets the new button without a change.
+
+### Changed
+- **`TableHeader::reset()`** draws an outlined pill (the shape of the filters beside it) with the `filter_alt_off` icon and the words ("Filter zurücksetzen" / "Reset filters", or the label handed in) instead of a text button with an "X". The button sits at the right edge of the toolbar, also when the toolbar wraps on a phone.
+- No inline style any more: the icon size, colours and shape are in the stylesheet (**`gk-tableheader-reset`**, tokens only). Text in `--gk-on-surface` (14.6:1 dark, 17.4:1 light), border mixed from it and the surface (about 3.3:1 in both modes), the focus ring of `.gk-btn` stays; on touch and up to 600px the button is at least `--gk-target-min` (44px) tall.
+
+### Notes
+- The button no longer carries `gk-btn-text gk-btn-sm` but `gk-btn-outlined gk-btn-sm gk-tableheader-reset`. A page that styled `.gk-tableheader-toolbar .gk-btn-text` for the reset has to look at it. Not `gk-btn-neutral` on purpose: its dark-mode rule is three classes deep and would win over ours.
+
+### Tests
+- `tests/tableheader-reset.test.php` (red against 1.126.0): markup, icon, label (de/en, escaped), no inline style, no "X", the stylesheet (tokens only, pill, 44px on touch, focus ring), position at the right edge. Photos from `ci/browser-tableheader-reset-fixture.php`.
+
+---
 ## [1.126.0] - 2026-11-05
 
 The name of the system is the first step of the "you are here" line and the way back to the dashboard — the path stands to its right, like a repository path on GitHub. Opt-in: `Header::ortszeile(['marke' => ['label' => 'SSI Panel', 'href' => '/', 'icon' => '...']])`.

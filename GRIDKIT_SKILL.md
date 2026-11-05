@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.126.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.127.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -1514,7 +1514,7 @@ TableHeader::make('exp')
     ->filter(fn() => $yearFilter->render())                    // closure
     ->filter('<select class="gk-filter">…</select>')           // raw HTML
     ->advanced(fn() => renderDateRange(), 'Date & amount')     // optional collapsible
-    ->reset('/expenses')                                     // optional reset btn
+    ->reset('/expenses')                                     // optional reset: outlined pill, filter_alt_off icon + "Reset filters" (1.127.0)
     ->render();
 ```
 

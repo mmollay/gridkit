@@ -165,8 +165,8 @@ class TableHeader
             if ($this->resetUrl !== null) {
                 echo '<div class="gk-tableheader-spacer"></div>';
                 $resetText = $this->resetLabel !== '' ? $this->resetLabel : Lang::t('tableheader.reset');
-                echo '<a href="' . $e($this->resetUrl) . '" class="gk-btn gk-btn-text gk-btn-sm" title="' . $e($resetText) . '">';
-                echo '<span class="material-icons" style="font-size:16px;vertical-align:-3px;" aria-hidden="true">close</span> ' . $e($resetText);
+                echo '<a href="' . $e($this->resetUrl) . '" class="gk-btn gk-btn-outlined gk-btn-sm gk-tableheader-reset" title="' . $e($resetText) . '">';
+                echo '<span class="material-icons" aria-hidden="true">filter_alt_off</span>' . $e($resetText);
                 echo '</a>';
             }
 

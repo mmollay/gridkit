@@ -8225,6 +8225,33 @@ a.gk-stat-card:hover {
   padding-left: 14px;
 }
 
+/* The reset of a table header is seen at a glance and stays quiet: an outlined pill
+   (the shape of the filters beside it) in the full text colour, the filter icon and
+   the words. It was a text button with a 16px "X" and an inline style. */
+.gk-btn.gk-tableheader-reset {
+  color: var(--gk-on-surface);
+  border-color: color-mix(in oklab, var(--gk-on-surface) 45%, var(--gk-surface));
+  border-radius: 9999px;
+  padding-left: 12px;
+  padding-right: 14px;
+  margin-left: auto;   /* the right edge, also when the toolbar wraps (390px) */
+}
+.gk-btn.gk-tableheader-reset:hover {
+  background: var(--gk-state-hover);
+}
+.gk-btn.gk-tableheader-reset .material-icons {
+  font-size: var(--gk-icon-sm);
+}
+.gk-btn.gk-tableheader-reset:focus-visible {
+  outline: 2px solid var(--gk-primary);
+  outline-offset: 2px;
+}
+@media (pointer: coarse), (max-width: 600px) {
+  .gk-btn.gk-tableheader-reset {
+    min-height: var(--gk-target-min);
+  }
+}
+
 /* ── Secondary columns step back ────────────────────────────────────────
    An article or document number is a reference, not content. In full text
    color it competes with the label beside it for the same glance.
