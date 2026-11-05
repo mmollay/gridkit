@@ -98,6 +98,12 @@
       "gk-empty-row"
     ]
   },
+  "files": {
+    "reason": "The class on <html> while the details of a file cover a phone's screen (600px and narrower); the demo is opened at a desk's width. ci/browser-files.js opens the sheet at 390px and checks it.",
+    "classes": [
+      "gk-files-sheet-open"
+    ]
+  },
   "form": {
     "reason": "Widths a field asks for with 'width' => N and the error state a failed save sets; the demo uses the widths it needs, the skill lists the scale.",
     "classes": [
@@ -183,6 +189,19 @@
       "gk-import-missing",
       "gk-import-more",
       "gk-import-notes"
+    ]
+  },
+  "kanban": {
+    "reason": "Drawn by js/kanban.js only while someone lifts a card with the keyboard (the frame) or drags one (the copy under the pointer, the faded card, the drop line, the framed column — in the error role over a full column — and the grabbing cursor); a still page cannot show them. ci/browser-kanban.js exercises every one.",
+    "classes": [
+      "gk-kanban-busy",
+      "gk-kanban-dragging",
+      "gk-kanban-drop",
+      "gk-kanban-ghost",
+      "gk-kanban-ghost-no",
+      "gk-kanban-lifted",
+      "gk-kanban-target",
+      "gk-kanban-target-no"
     ]
   },
   "label": {

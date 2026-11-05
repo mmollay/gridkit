@@ -460,6 +460,87 @@ GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-pal
 GK_SHOTS=/some/dir GK_ICONFONT=/path/MaterialIcons.woff2 node ci/browser-palette.js   # with pictures
 ```
 
+The filter builder (`GridKit\FilterBuilder` and `js/filter-builder.js`, 1.123.0) is checked by
+`ci/browser-filter-builder.js` on `ci/browser-filter-builder-fixture.php`: an invoice list with a
+builder of every field type, three saved views and Save view to `http://gk.test/save`, a small
+builder that keeps its views in the browser, and the rows that pass (`matches()`). `page.route()`
+runs the fixture with the query string of every request, so the form without script really goes
+round the server: “Condition” and “Group” as submit buttons, a changed field and its operators,
+an empty value said in words, Enter in a value applying (the hidden default button, not the first
+remove button), duplicate, remove, Reset, a view as a link. With the script: the group the script
+draws is the server's attribute for attribute, and for ten states — odd and hostile ones too — the
+script's checked tree, summary and markup are PHP's (`window.GK_TEST_PARITY`); rows added,
+duplicated and removed without a request and the focus where it belongs; the operators following
+the field and the value fields the operator; a wrong value marked when the field is left and
+unmarked as it is typed right; Apply with an incomplete condition stopped, `gk:filterchange`
+vetoed, the compact JSON sent and read back; back from the next page; `GK.filterBuilder`; Save view
+posted, asked for a name, and kept in `localStorage` across a reload; the keyboard alone; hostile
+labels; German numbers; 390px without a sideways scroll, with 44px targets and the buttons on the
+line of the joining word, and 320px three levels deep; contrast in 18 looks. Each new rule and branch
+of `FilterBuilder.php`, the script and the stylesheet was taken out in turn (a bounded sample of 60)
+and a check turned red. About twenty seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-filter-builder.js
+GK_SHOTS=/some/dir GK_ICONFONT=/path/MaterialIcons.woff2 node ci/browser-filter-builder.js   # with pictures
+```
+
+The kanban board (`GridKit\Kanban` and `js/kanban.js`, 1.124.0) is checked by `ci/browser-kanban.js`
+on `ci/browser-kanban-fixture.php`: a ticket board that saves to `http://gk.test/move` (headers,
+hidden fields, a limit of two in `'block'`, a locked card, links, every card option), a compact board
+that moves without a URL with a limit that only warns, and a board of eight columns wider than any
+screen; `page.route()` answers the moves — saved, held until released, 500 with a message,
+`{"ok":false}`, no network. It checks the handles and what a screen reader finds (the region, a
+heading and a counted list per column); the mouse by the handle and by the body of a card (the copy
+under the pointer, the drop line, the framed column, all gone after the release, a link and a small
+move are no drag); the request (`{id, column, index}`, the headers) and both events with their
+detail; the counts, the over-limit mark and its words, a full column refused by a drop, by the arrow
+keys and in every "Move to" list; Escape during a drag; the keyboard (Space and Enter lift, Up, Down,
+Left, Right, Home, End, the edges, Escape, leaving the handle, the focus kept) and every spoken
+sentence; the veto of `gk:kanbanmove` (keyboard and drop); the way back after a 500, a refusal while a
+second move waits (both back, the second never sent, an event for each), no network, the toast; the
+"Move to" form sent as JSON; the board scrolling sideways under a card held at its edge; `GK.kanban`;
+a finger on the handle (it drags) and on the body (it does not); 44px targets on a touch screen;
+390px as lanes that snap, and no sideways page scroll from 320 to 1600px; contrast in 21 looks; the
+page without script and with an old `gridkit.js` that has no `kanban.js` (the form posts, `id`,
+`_token`, `column`). Each new rule and branch of the script, the stylesheet and `Kanban.php` was
+taken out in turn (a bounded sample) and a check turned red. About twenty-five seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-kanban.js
+GK_SHOTS=/some/dir node ci/browser-kanban.js
+```
+
+The file manager (`GridKit\FileManager` and `js/file-manager.js`, 1.125.0) is checked by
+`ci/browser-files.js` on `ci/browser-files-fixture.php`: a media library with two folders, eight files
+(one with a hostile name, two in a folder), every action, an upload limited to 64 KB and four files, two
+at a time, a token and a hidden field; and a receipt drawer with single selection in a list under its own
+parameters. `page.route()` serves the page as `http://gk.test/fixture.html` — drawn by PHP again for
+every query, so the links and the toolbar of the page without script are answered by the server — and
+answers `POST /upload` (taken, held until released, refused, a 500 once, an answer that is no JSON, a
+hostile name) and `POST /act` (done or refused). It checks the toolbar acting at once and the state in
+the address (defaults left out, a second manager under its own name); the selection by keyboard (arrows,
+down by a row of tiles, Home, End, Space, Shift+arrow, Ctrl+A, Escape, Delete with a confirmation) and by
+pointer (the picture, Shift+click, "Select all" with its mixed state); the details (Enter, a click on a
+name, dimensions measured, Copy URL, rename with its fields and headers, the focus given back); delete
+confirmed and refused, move, a new folder, an action left to the page and a veto; the upload — one
+request per file with the token, the hidden field and the folder, the new file drawn like the server's,
+symbol and word for each state, a full bar when done, the count in the live region, object URLs given
+back, the checks in the browser (type, size, empty, SVG for `image/*`, count), two at a time, the percent
+while sending, cancel while sending and while waiting, retry after a cancel and after a 500, no retry after
+a refusal, an answer that is no answer, a hostile name; drop and paste (not into the search field), a veto
+of `gk:filesupload`, the API; 390px (two columns, 16px fields, every target 44px, the details as a sheet
+with Tab kept inside, no sideways scroll in grid, list and queue); contrast of 19 parts in 18 looks; and
+the page without script (the forms post: the files at once, the toolbar as GET, a folder and a name as
+links drawn by the server, Delete with its form). Each new rule, branch and option of the script, the
+stylesheet and `FileManager.php` was taken out in turn (a bounded sample) and a check turned red. About
+ninety seconds.
+
+```bash
+GK_PLAYWRIGHT=/path/to/node_modules/playwright GK_PHP=php8.2 node ci/browser-files.js
+GK_SHOTS=/some/dir GK_ICONFONT=/path/MaterialIcons.woff2 node ci/browser-files.js   # with pictures
+```
+
 ## Colour variables that resolve across two files
 
 A theme lives in `css/themes.css`, the roles and their older aliases in

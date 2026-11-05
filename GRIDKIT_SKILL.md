@@ -1,6 +1,6 @@
 # GridKit – Agent Skill
 
-> **Version:** 1.122.1 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
+> **Version:** 1.125.0 | **License:** MIT | **Repository:** https://github.com/mmollay/gridkit
 > **Demo:** https://gridkit.at
 
 ## Purpose
@@ -68,6 +68,9 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Tree | `GridKit\Tree` / `js/tree.js` / `GK.tree` | Page trees, categories, folders: a nested list that works without script, made a WAI-ARIA tree view — keys, type-ahead, open/closed remembered, single or multi selection with tri-state parents, a filter, children loaded on demand, moving by drag and drop or keyboard with a save URL and a way back (since 1.116.0) |
 | Calendar | `GridKit\Calendar` / `js/calendar.js` / `GK.calendar` | A month of appointments, deadlines and campaigns: a table of days with events as links, bars across days, "+3 more", week numbers, months as links (`?month=2026-12`), an agenda when narrower than 600px, arrow keys / Home / End / PageUp / PageDown with the script (since 1.120.0) |
 | CommandPalette | `GridKit\CommandPalette` / `js/command-palette.js` / `GK.palette` | Ctrl+K (Cmd+K on a Mac): a few letters, Enter — to a page of the sidebar (read from the page), an entry or a command of yours, or a record your search URL returns as you type (same origin, debounced, the stale answer dropped); fuzzy, umlauts both ways, marked matches, recent entries, groups; a modal dialog with the keys of a combobox and a listbox; a full-screen sheet on a phone (since 1.122.0) |
+| FilterBuilder | `GridKit\FilterBuilder` / `js/filter-builder.js` / `GK.filterBuilder` | Conditions combined freely for tables, segments, invoice lists: rows of field, operator, value; AND/OR groups nested to a depth; add, duplicate, remove; saved views stored by the page. The state is compact JSON in one URL parameter, `FilterBuilder::fromRequest()` checks it, `toSql()` writes a WHERE clause with placeholders only, `matches()` filters rows in memory, `summary()` says it in words; a form without script, instant with it (since 1.123.0) |
+| Kanban | `GridKit\Kanban` / `js/kanban.js` / `GK.kanban` | Columns with cards for tasks, orders, campaigns, tickets: a labelled region of lists with headings and counts that works without script (links, a "Move to" form per card); with the script dragging by mouse or finger with a drop line and the board scrolling under the card, full keyboard moving with every step spoken, work-in-progress limits that warn or refuse, every move saved as JSON one at a time with the way back on a refusal; lanes that snap on a phone (since 1.124.0) |
+| FileManager | `GridKit\FileManager` / `js/file-manager.js` / `GK.files` | A media library and a receipt drawer: folders with a breadcrumb, thumbnails or a list, search, a filter by type, sorting, single or multi selection by mouse and keyboard, bulk actions (delete, move, download) and a details panel (dimensions, URL to copy, rename) — from rows the page supplies, posting to the page's URLs; many uploads at once, chosen, dropped or pasted, each with a progress bar, cancel and retry, the new file in the listing without a reload; `FileManager::receive()` checks an upload on the server by its content (type, extension, size, pixels, code in it, SVG script) and stores it under a random name outside the web root; a sheet on a phone; works without script (since 1.125.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
 | Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
 
@@ -89,8 +92,8 @@ without tripping over this.
 | `Tabs::render()` (1.111.0) | | |
 
 `Tree::render()` and `Tree::renderBranch()` (1.116.0) print as well, and so do `Import::render()` (1.119.0),
-`DateRange::render()` and `Calendar::render()` (1.120.0), `Chart::render()` (1.121.0) and `CommandPalette::render()`
-(1.122.0) — their `->html()` returns the same string (`Chart::sparkline()` and `CommandPalette::trigger()` return a
+`DateRange::render()` and `Calendar::render()` (1.120.0), `Chart::render()` (1.121.0), `CommandPalette::render()`
+(1.122.0), `Kanban::render()` (1.124.0) and `FileManager::render()` (1.125.0) — their `->html()` returns the same string (`Chart::sparkline()` and `CommandPalette::trigger()` return a
 string to place).
 
 `PageSize::render()` above is an INSTANCE method — build it with the static
@@ -3503,6 +3506,611 @@ off();
 - **Do not** render the same palette twice or inside a hidden container, bind Ctrl+K yourself on a
   page that has one, or put markup in a label — it is shown as text.
 
+### FilterBuilder (`GridKit\FilterBuilder`, since 1.123.0)
+
+Conditions a person combines freely, for an invoice list, a newsletter segment, any table: rows of
+**[field] [operator] [value]**, joined by AND or OR, in groups nested to `maxDepth()`; rows added,
+duplicated and removed; saved views ("My open invoices"). The page queries with the checked tree:
+**`FilterBuilder::toSql()`** for a database (placeholders only), **`FilterBuilder::matches()`** for rows in
+memory. **`js/filter-builder.js`** makes it instant; it is a file of its own like `js/tree.js` (the PawBot
+dashboard keeps its own `gridkit.js`), loaded with `defer` after `gridkit.js` — `skeleton.php` and the
+demo do it; a page of your own adds `<script src=".../js/filter-builder.js" defer></script>`.
+
+**`->render()` PRINTS the form, `->html()` RETURNS it.** Nothing else prints.
+
+```php
+$fields = (new FilterBuilder('f'))                         // the name: the query parameter (?f=…) and the ids
+    ->field('status', 'Status', ['type' => 'select', 'options' => ['open' => 'Open', 'paid' => 'Paid', 'overdue' => 'Overdue']])
+    ->field('amount', 'Amount', ['type' => 'money'])
+    ->field('customer', 'Customer', ['placeholder' => 'Name'])            // type text
+    ->field('due', 'Due', ['type' => 'date', 'operators' => ['lt', 'gt', 'between']])
+    ->field('tags', 'Tags', ['type' => 'multiselect', 'options' => ['vip' => 'VIP', 'eu' => 'EU']])
+    ->field('reminded', 'Reminded', ['type' => 'bool'])
+    ->value(['join' => 'and', 'rules' => [['field' => 'status', 'op' => 'is', 'value' => 'open']]])   // without ?f=
+    ->maxDepth(3)->maxRows(20)
+    ->views([['label' => 'My open invoices', 'state' => '["and",["status","is","open"]]'],
+             ['label' => 'Large ones', 'state' => ['join' => 'and', 'rules' => [['field' => 'amount', 'op' => 'gt', 'value' => 1000]]]]])
+    ->saveUrl('/invoices/views')                           // "Save view" posts here (see below)
+    ->preserve(['sort', 'period']);                        // other query parameters the form carries along
+
+$tree = $fields->tree();                                   // the checked conditions — or FilterBuilder::fromRequest('f', $fields)
+['sql' => $where, 'params' => $params] = FilterBuilder::toSql($tree, $fields, [
+    'amount' => 'i.total',                                 // the column of a field; default: the field key
+    'tags'   => fn (array $rule, array $field): array => [  // a multiselect needs a callable
+        'sql' => ($rule['op'] === 'has_none' ? 'NOT ' : '') . 'EXISTS (SELECT 1 FROM invoice_tags t WHERE t.invoice_id = i.id AND t.tag IN ('
+               . implode(', ', array_fill(0, count($rule['value']), '?')) . '))',
+        'params' => $rule['value'],
+    ],
+]);
+// $pdo->prepare("SELECT … FROM invoices i WHERE $where ORDER BY …")->execute($params);
+
+$fields->render();                                         // PRINTS the form
+echo '<h2>' . htmlspecialchars(FilterBuilder::summary($tree, $fields)) . '</h2>';   // "Status is Open"
+```
+
+| Method | What it does |
+|---|---|
+| `new FilterBuilder($name = 'f')` | The query parameter the state travels in, and the ids (`gk-fb-<name>`). Letters, digits, `_` and `-`; anything else a warning and cleaned. |
+| `->field($key, $label, $opts = [])` | A field. `$key`: letters, digits, `_ . -`. Options: `type` (`text` default, `number`, `money`, `date`, `bool`, `select`, `multiselect`), `options` (select and multiselect: `key => label`, or a list of `['value' => …, 'label' => …]`), `operators` (this field's operators, a subset of its type's), `placeholder` (of a text or number value). |
+| `->operators($type, $list)` | The operators a type offers, in this order (a field's own `operators` wins). |
+| `->value($state)` | What the builder shows when the request carries no state of its own, and what **Reset** brings back: either shape below, or its JSON. |
+| `->maxDepth(int)` | How deep groups nest, the top level counted (1 to 5, default 3; 1: no groups). |
+| `->maxRows(int)` | Conditions in all (1 to 100, default 20). At the limit "Condition", "Group" and duplicate are disabled and the limit is said. |
+| `->views(iterable)` | Saved views as links above the conditions: `label` (or `name`), `state` (either shape or JSON), `href` (a link of your own instead). The one applied is marked (`aria-current`, a tick). |
+| `->saveUrl($url)` | Shows **Save view**: a name and a button that posts the form there. |
+| `->localViews(true)` | With the script, views are kept in this browser too (`localStorage`, `gk-filterbuilder-<name>`), when there is no `saveUrl()` or the page cancels `gk:filtersave`; each with a remove button. |
+| `->method('get' \| 'post')` | Default `get`: the filter is in the URL and a view is a link. |
+| `->action($url)` | Where the form goes (default: the page itself). A `#section` keeps its fragment. |
+| `->preserve(array)` | Other query parameters as hidden fields: names read from the URL (`['sort']`) or `name => value`. |
+| `->label($text)` | The accessible name (default "Filter"). |
+| `->request(array)` | Read this array instead of `$_POST` / `$_GET` (a framework's request, a test). |
+| `->tree()` | The checked conditions of the current state (request, else `value()`). |
+| `->render()` / `->html()` | Prints / returns the form. |
+
+**Types and operators** (`FilterBuilder::OPERATORS`; the default set first, the rest through `operators()`):
+
+| Type | Default | Also |
+|---|---|---|
+| `text` | `contains`, `not_contains`, `equals`, `starts`, `ends`, `empty`, `not_empty` | `not_equals` |
+| `number`, `money` | `eq` =, `ne` ≠, `lt` <, `gt` >, `between` | `lte`, `gte`, `empty`, `not_empty` |
+| `date` | `eq` (is on), `ne`, `lt` (before), `gt` (after), `between` | `lte`, `gte`, `empty`, `not_empty` |
+| `select` | `is`, `is_not`, `any_of` | `none_of`, `empty`, `not_empty` |
+| `multiselect` (the row holds a list) | `has_any`, `has_all`, `has_none` | `empty`, `not_empty` |
+| `bool` | `true`, `false` | |
+
+**The state** has two shapes, and every reader takes both (and their JSON):
+
+```php
+// The documented shape — what tree(), clean() and fromRequest() return:
+$state = ['join' => 'and', 'rules' => [
+    ['field' => 'status', 'op' => 'any_of', 'value' => ['open', 'overdue']],
+    ['join' => 'or', 'rules' => [
+        ['field' => 'amount', 'op' => 'between', 'value' => [100, 500]],
+        ['field' => 'customer', 'op' => 'starts', 'value' => 'Eck'],
+        ['field' => 'reminded', 'op' => 'true'],               // no value: empty, not_empty, true, false
+    ]],
+]];
+// The compact one of the URL (?f=…): a group is [join, …children], a condition [field, op] or [field, op, value].
+echo FilterBuilder::encode($state);   // ["and",["status","any_of",["open","overdue"]],["or",["amount","between",[100,500]],…]]
+```
+
+A value is a string (text: trimmed, at most 200 characters, control characters removed), a number
+(int or float; typed as `19.99` or `19,99`), a day `Y-m-d`, an option key (string), a list of option
+keys, or `[from, to]` for `between` (put in order).
+
+**Static readers** (`$fields` is the builder, or an array `key => ['label' => …, 'type' => …, 'options' => …]`):
+
+| | |
+|---|---|
+| `FilterBuilder::fromRequest($name, $fields, $opts = [])` | The checked tree a request names (POST, else GET): the JSON parameter, or the arrays of the form without script with its command applied. `$opts`: `maxDepth`, `maxRows`, `operators` (type => list), `default` (the state without a request), `request` (an array to read instead). |
+| `FilterBuilder::clean($state, $fields, $opts = [])` | Any state checked — a stored view, a hand-written one. |
+| `FilterBuilder::encode($tree)` | The compact JSON. A link: `'?f=' . rawurlencode(FilterBuilder::encode($tree))`. |
+| `FilterBuilder::toSql($tree, $fields, $columnMap = [])` | `['sql' => '(status = ? AND i.total > ?)', 'params' => ['open', 100]]` — see below. |
+| `FilterBuilder::matches($tree, $row, $fields)` | Whether a row (array or object, keyed by the field keys) passes — `array_filter($rows, fn ($r) => FilterBuilder::matches($tree, $r, $fields))`. |
+| `FilterBuilder::summary($tree, $fields)` | The conditions in words, in the page's language. |
+| `FilterBuilder::savedView($name, $fields, $opts = [])` | What **Save view** sent: `['label', 'state', 'json']`, or null without a name. |
+
+**What is checked**, every time a tree is read (`clean()` underlies them all; `toSql()` and `matches()`
+clean again): a field the builder does not have, an operator its field does not offer, a value of the
+wrong type (`"abc"` for a number, `2026-02-30`, an option that is not one), a group deeper than
+`maxDepth`, conditions past `maxRows` — all left out, silently (it is input); an empty group goes too.
+The JSON is read only up to 8 KB, lists up to 200 values, at most 1000 nodes are looked at. A
+condition left incomplete in the form (nothing typed yet) is kept for the form and not applied.
+
+**`toSql()`** writes **placeholders only**. A column name comes from `$columnMap` or is the field key —
+never from the request; it has to be an identifier (`total`, `i.total`, `` `order` ``, `"order"`) or a
+callable `fn (array $rule, array $field): array` returning `['sql' => …, 'params' => […]]` with one `?`
+per param. Text is compared with `LIKE ? ESCAPE '!'` (`%`, `_` and `!` in the value are escaped; case
+follows the column's collation — MySQL's default ignores it, as `matches()` does), `equals` too.
+`between` is `BETWEEN ? AND ?`, `any_of` an `IN (?, ?, …)` with one placeholder per value. A date column
+may hold times: a day is `[day, next day)`, `before` is `< day`. "is not", "does not contain", `ne` and
+`none_of` keep the rows where the column is NULL; `empty` is `IS NULL` (text and select: `IS NULL OR = ''`);
+`bool` is `= 1`. Nothing: `1=1`. A column that is not an identifier, a multiselect without a callable,
+a callable that throws or miscounts: a warning and `1=0` — a broken condition never widens the result.
+
+**Saved views.** The page stores them; the builder shows them (`views()`) and sends a new one:
+
+```php
+// POST /invoices/views — what "Save view" sends: the state under the builder's name, the name under f_view.
+$fields = (new FilterBuilder('f'))->field('status', 'Status', ['type' => 'select', 'options' => ['open' => 'Open', 'paid' => 'Paid']]);
+$view = FilterBuilder::savedView('f', $fields, ['request' => ['f' => '["and",["status","is","open"]]', 'f_view' => 'My open invoices']]);
+// ['label' => 'My open invoices', 'state' => [...the checked tree...], 'json' => '["and",["status","is","open"]]']
+// store $view['label'] and $view['json'] for the user, then redirect back to the list.
+```
+
+**Without script** the form works as it is: nested `<fieldset>`s, the controls named
+`f[rules][0][field]`, `f[rules][1][rules][0][op]` …, and submit buttons named `f[cmd]` that add a
+condition or a group, duplicate or remove (`add:1`, `group:`, `dup:0`, `remove:1.0`) — the page is drawn
+again with the change; Apply and Reset are buttons too. A hidden first Apply button makes Enter in a field
+apply, not remove. Changing a field or operator shows its operators and value fields after the next
+submit; an incomplete or wrong value is kept and said under its row.
+
+**With `js/filter-builder.js`** the same markup is drawn at once: add, duplicate and remove without a
+request (the focus goes to the new row, or to the row that took the removed one's place), the operators
+follow the field's type, the value fields follow the operator (a date field, a select, a multiple
+select for "any of", two fields for `between`), and the line "Shown: Status is Open AND Amount > 100.00"
+follows what is typed. Apply sends the state as compact JSON in one parameter (`?f=["and",…]`), the
+nested fields switched off; an incomplete condition is marked and focused instead.
+
+- **Accessible**: every control has a name ("Field of condition 2.1", "Remove group 2"), a group is a
+  `fieldset` named by its legend, the join is a labelled select, a wrong value is
+  `aria-invalid` and described by a sentence with a symbol (not the colour alone), the summary is a polite
+  live region. On a phone (600px) field and operator share a line, the value takes the next, the buttons
+  are 44px, nothing scrolls sideways.
+- **Classes** (all in `css/blocks.json` as "Filter builder"): `gk-filter-builder`, and `gk-fb-` +
+  `views`, `views-label`, `view-list`, `view`, `view-remove`, `group`, `legend`, `group-head`, `join`,
+  `join-label`, `rules`, `row`, `row-group`, `conj`, `cells`, `field`, `op`, `value`, `input`, `multi`,
+  `between-and`, `actions`, `btn`, `dup`, `remove`, `invalid`, `error`, `add`, `add-rule`, `add-group`,
+  `limit`, `empty`, `note`, `foot`, `summary`, `summary-label`, `summary-text`, `buttons`, `apply`,
+  `reset`, `default`, `save`, `save-label`, `save-name`, `save-btn`. Colours are roles: light, both dark
+  spellings and the six themes follow.
+- **Words** come from `filterbuilder.*` in `lang/`; the server hands the script the ones it needs in the
+  builder's configuration.
+- **Warnings** (`E_USER_WARNING`, the builder still renders): a field key that is not one, a type or
+  operator that does not exist, a select without options, an option it does not know, a limit out of
+  range, a method other than get/post, a `javascript:` link, a view without a label, a `value()` with
+  conditions that are not complete, a builder without fields.
+
+**Events**, on the form, bubbling:
+
+| Event | `detail` |
+|---|---|
+| `gk:filterchange` | `{ name, tree, json, summary }` — **cancelable**: Apply, before the form is sent. `preventDefault()` and filter yourself (a fetch, a live table). |
+| `gk:filtersave` | `{ name, label, tree, json, summary }` — **cancelable**: Save view. Cancelled, the page stores it; else it posts to `saveUrl()`, or stays in this browser with `localViews()`. |
+
+**JavaScript API** (first argument: the form, its id, or the builder's name): `GK.filterBuilder.get('f')`
+(the checked tree), `GK.filterBuilder.set('f', state)` (either shape or JSON, drawn at once, nothing
+sent), `GK.filterBuilder.reset('f')` (back to `value()`, nothing sent), `GK.filterBuilder.apply('f')`
+(as the button), `GK.filterBuilder.json('f')`, `GK.filterBuilder.summary('f')`.
+
+### Kanban (`GridKit\Kanban`, since 1.124.0)
+
+Columns with cards for tasks, orders, campaigns and support tickets. The server writes a labelled
+region (`<section aria-label>`) of columns — each a heading, a count and a list of cards — that works
+without any script: every card is in view, a card with `href` is a link, and a card that may move has a
+**"Move to" form** (a `<details>` with a select of the columns and a button) that posts to `moveUrl()`
+like any form. **`js/kanban.js`** adds a handle to every movable card and with it dragging (mouse, pen,
+finger), moving with the keyboard, counts and limits that follow every move and the save as JSON; it is
+a file of its own like `js/tree.js` (the PawBot dashboard keeps its own `gridkit.js`), loaded with
+`defer` after `gridkit.js` — `skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/kanban.js" defer></script>`. There is no call to make: the script finds every
+`.gk-kanban`, also one inserted later. `Kanban::render()` prints, `->html()` returns the same string.
+
+```php
+$tickets = [
+    ['id' => 'T-101', 'subject' => 'Printer offline', 'status' => 'new', 'priority' => ['High', 'red'],
+     'owner' => 'Anna Huber', 'due' => '2026-11-02', 'tags' => ['Hardware', ['Office', 'blue']], 'href' => '/tickets/101'],
+    ['id' => 'T-102', 'subject' => 'New laptop', 'status' => 'doing', 'comments' => 3],
+    ['id' => 'T-103', 'subject' => 'Password policy', 'status' => 'review', 'draggable' => false],   // stays where it is
+];
+(new Kanban('tickets'))
+    ->label('Support tickets')                                    // the accessible name of the board
+    ->column('new', 'New', ['color' => 'blue', 'description' => 'Not looked at yet'])
+    ->column('doing', 'In progress', ['color' => 'orange', 'limit' => 3])
+    ->column('review', 'Review')
+    ->column('done', 'Done', ['color' => 'green'])
+    ->cards($tickets, ['title' => 'subject', 'column' => 'status', 'badge' => 'priority', 'assignee' => 'owner',
+                       'labels' => 'tags', 'count' => 'comments'])
+    ->moveUrl('/tickets/move', ['headers' => ['X-CSRF-Token' => 'token'], 'fields' => ['_token' => 'token']])
+    ->wipLimits('block')                                          // a full column takes no card
+    ->addUrl('/tickets/new?status={column}')
+    ->render();
+```
+
+| Method | What it does |
+|---|---|
+| `->column($key, $label, $opts = [])` | A column, in the order added. Options: `limit` (a work-in-progress limit, a whole number from 1: the count shows "2 / 3", a column over it is marked), `color` (`gray`, `green`, `orange`, `red`, `blue` — a stripe along its top), `description` (a line under the heading, also the list's description). |
+| `->card($id, $title, $column, $opts = [])` | One card (options below). A column the board does not have puts it in the first column, with a warning. |
+| `->cards($rows, $map = [])` | Rows as a database hands them over (arrays or objects). `$map` names the fields: `'id'`, `'title'` (default `title`), `'column'` (default `column`) and any card option (`'assignee' => 'owner'`); every option is read from the row under its own name unless the map says otherwise. |
+| `->moveUrl($url, ['headers' => [...], 'fields' => [...]])` | Cards can be moved, and every move is saved here (see "Moving"). `headers` go with every JSON move; `fields` are hidden fields of the "Move to" form (a form sends no header — put the CSRF token here too). |
+| `->movable()` | Cards can be moved without a URL: the page hears `gk:kanbanmove` / `gk:kanbanmoved` and saves itself. No "Move to" form (it would post nowhere). |
+| `->wipLimits('block' \| 'warn')` | What a move into a column at its `limit` does. `'warn'` (the default, also without a call): it is made, and the column is marked over its limit — the count in the error role, a frame and the words "Over limit". `'block'` (the argument's default): it is refused — no drop, no keyboard step, the column disabled and marked "(full)" in every "Move to" list — and the person is told why. Check the limit on the server too. |
+| `->empty('No tickets')` | The words in a column without cards; default "No cards". |
+| `->addUrl($url)` | An "Add card" link at the foot of every column. `{column}` in the URL is replaced by the column's key (URL-encoded); without it `?column=<key>` (or `&column=`) is added before any `#fragment`. |
+| `->compact()` | Smaller cards for a board with many: a card's `text` is left out, the gaps are tighter, columns narrower (200px instead of 232px), "Move" shows its symbol only. |
+| `->label('Support tickets')` | The accessible name of the board; default the catalogue's "Board". |
+| `->today('2026-11-04')` | The day a due date is measured against (`Y-m-d` or a `DateTimeInterface`); default today. For a fixed page and for tests. |
+| `->render()` / `->html()` | Prints the board / returns it. |
+| `Kanban::readMove($body = null, $post = null)` | Static. The move a request carries — the script's JSON or the form's fields — as `['id' => 'T-1', 'column' => 'done', 'index' => 1, 'form' => false]` (`index` null from the form: the end of the column), or null. `$body`/`$post` default to `php://input` and `$_POST`; JSON is read when the request's `Content-Type` says so (or `$body` is given). |
+
+**Card options** (in `card()`'s `$opts`, or as fields of a row):
+
+| Option | |
+|---|---|
+| `text` | A few lines under the title (cut after three; left out by `compact()`). |
+| `badge` | Text, or `['High', 'red']` / `['text' => 'High', 'color' => 'red']` — a `gk-label` beside the title (gray, green, orange, red, blue). |
+| `labels` | A list of the same: small labels under the text. |
+| `assignee` | A name: the initials in a circle, "Assigned to Anna Huber" for a screen reader, the name as its tooltip. |
+| `avatar` | A picture URL for that circle (with or without `assignee`). A `javascript:`/`vbscript:`/`data:` URL is refused (a `data:image/…` picture is taken). |
+| `due` | A day (`Y-m-d`) or a `DateTimeInterface`. Shown as "Due Nov 20" (the year when it is not this year); a day before `today()` is **"Overdue: Nov 2"** with a warning symbol and the error role, today is **"Due today"** — written out, never the colour alone. |
+| `href` | The title is a link. A `javascript:`/`vbscript:`/`data:` URL is refused with a warning. |
+| `count` | A number in a small pill (comments, attachments). |
+| `draggable` | `false`: the card keeps its place — no handle, no "Move to"; others can still be put beside it. |
+
+Yes/no options take `true`/`false`, `1`/`0` or `'1'`/`'0'`/`'yes'`/`'no'`; anything else is dropped with a
+warning.
+
+- **What a screen reader gets**: a region named by `label()`; per column a heading (`h3`) and a list
+  labelled by the heading and the count in words ("In progress 2 cards, limit 3"), described by the
+  column's `description`; every card a list item. With the script: a handle per movable card, a button
+  named "Move: <title>", described by the keys, `aria-pressed` while lifted; a polite live region speaks
+  every step, the save and a failure.
+- **Keys** (with the script): Tab reaches a card's links, its handle and its "Move" toggle. On the handle
+  Space (or Enter) lifts the card, Up/Down move it within its column, Left/Right to the column beside it
+  (at the same height, or its end), Home/End to the ends of the column; each step is spoken ("Column
+  Review, position 2 of 3."). Space puts it down ("Card Wi-Fi moved to column Review, position 2 of 3."),
+  Escape — or leaving the handle — gives it back. In `rtl` Left and Right swap. A full column in
+  `'block'` is refused with a word, the board's edge as well.
+- **The pointer**: drag the handle (mouse, pen or finger); a mouse may also take a card by its body (not
+  by a link, a button or the form in it) — a finger on the body scrolls the board. A press that travels
+  less than 4px is a click. While dragging a copy of the card follows the pointer, the card stays faded
+  in its place, a line with two dots stands where it would go (before the first card whose middle is
+  below the pointer, or at the end), the column under the pointer is framed (in the error role when it
+  is full in `'block'`); held near the side of the board it scrolls sideways, near the top or the bottom
+  of the window the page scrolls. Escape cancels.
+- **Phone**: the board is the box that scrolls sideways, never the page. Below 600px the columns are
+  lanes of 85% of the board that snap into place, the next one showing at the edge — every column stays
+  in the page, so Tab, a screen reader and a drag reach each one (a column switcher would hide all but
+  one and need a script). On a touch screen the handle, the title link, "Move", its form and "Add card"
+  are 44px.
+- **Counts and limits** follow every move, the way back too: the count ("4" or "2 / 3", in words for a
+  screen reader), the over-limit mark, the empty words, what each "Move to" list offers.
+
+**Moving.** Every move a person makes fires `gk:kanbanmove` first — **cancelable**: `preventDefault()`
+and the card stays (a keyboard move goes back). With `moveUrl()` it is then posted, one at a time in the
+order made: `POST` with `Content-Type: application/json`, `credentials: same-origin`,
+`X-Requested-With: XMLHttpRequest`, the `headers` of `moveUrl()` and the body
+`{"id": "T-101", "column": "done", "index": 1}` — `index` counts from 0 among the cards of the new
+column (the place the card now has). A 2xx is saved unless its JSON says `{"ok": false}`. A refusal,
+another status or no network puts the card back where the server last agreed — that move and every later
+one still waiting (they are never sent) — shows the answer's `"message"` (or "The move could not be
+saved. The card is back in its place.") in a toast (the line `.gk-kanban-error` above the board where
+`gridkit.js` is not loaded), and fires `gk:kanbanmoved` with `ok: false, reverted: true` for each.
+
+**Without the script** (or with an old `gridkit.js` that has no `kanban.js`) the card's "Move to" form
+posts `id`, the `fields` of `moveUrl()` and `column` as `application/x-www-form-urlencoded` — no
+`index`: the card goes to the end. The script sends the same form as JSON instead (no page load). Answer
+a form with a redirect back to the board (`303`), JSON with JSON — `Kanban::readMove()` says which:
+
+```php
+// POST /tickets/move — {"id": "T-101", "column": "done", "index": 1}, or the form: id=T-101&_token=…&column=done
+$move = Kanban::readMove('{"id": "T-101", "column": "done", "index": 1}');   // without an argument: the request
+// … check the token (header or field), the column, the limit and the person's right, store column and order …
+if ($move !== null && $move['form']) {
+    // header('Location: /tickets', true, 303);          // back to the board
+} else {
+    // header('Content-Type: application/json');
+    echo json_encode(['ok' => true]);   // or http_response_code(409) and ['ok' => false, 'message' => 'Shown to the person.']
+}
+```
+
+**Events**, on the `.gk-kanban`, bubbling — for every move a person makes (and for `GK.kanban.move()`
+without `save: false`):
+
+| Event | `detail` |
+|---|---|
+| `gk:kanbanmove` | `{ board, id, from, to, index, fromIndex }` — cancelable, before the move; `from`/`to` are column keys |
+| `gk:kanbanmoved` | the same plus `ok` and `reverted` — after the save (at once without a URL), or after the way back |
+
+**JavaScript API** (the first argument is the board's id as given to `new Kanban()`, its element, any
+element inside it, or a selector): `GK.kanban.move(el, id, column, index, opts)` moves a card the way a
+person would — the veto, the save, the way back; a Promise of `{ ok, reverted }`, or `false` when
+nothing moved (a full column in `'block'`, a card that may not move, an unknown id); `index` null or
+left out: the end; with `{ save: false }` it only puts the card there (a change the server already
+knows — another person's): no event, no request. `GK.kanban.cards(el, column)` — the ids of a column in
+order, or of every column as `{ key: [ids] }`. `GK.kanban.columns(el)` — `[{ key, label, count, limit,
+over }]`. `GK.kanban.refresh(el)` — after the page added or took out a card itself: handles, counts,
+limits.
+
+- **Classes** (all `gk-kanban-*`, in `css/blocks.json` as "Kanban"): `gk-kanban`, `-board`, `-column`,
+  `-column-gray`, `-column-green`, `-column-orange`, `-column-red`, `-column-blue`, `-head`, `-title`,
+  `-count`, `-over`, `-over-note`, `-desc`, `-list`, `-card`, `-card-head`, `-card-title`, `-badge`,
+  `-text`, `-labels`, `-meta`, `-due`, `-overdue`, `-due-today`, `-cardcount`, `-avatar`, `-move`,
+  `-move-toggle`, `-move-word`, `-move-form`, `-move-label`, `-move-select`, `-move-button`, `-empty`,
+  `-add`, `-compact`, `-error`, and from the script `-handle`, `-lifted`, `-dragging`, `-ghost`,
+  `-ghost-no`, `-target`, `-target-no`, `-drop`, `-busy`. Colours are roles: light, both dark spellings
+  and the six themes follow (measured: text 4.5:1, handle and focus ring 3:1).
+- **Words** come from `kanban.*` (server) and `js.kanban_*` (script) in `lang/`; the script's reach the
+  page through `Lang::jsConfig()`.
+- **Warnings** (`E_USER_WARNING`, the board still renders): an empty or duplicate column key (left out),
+  an empty or duplicate card id (left out), a card without a title (its id is shown), a card in a column
+  the board does not have (the first column), no `column()` at all (the columns are made from the
+  cards), an option it does not know or of the wrong type (a `limit` that is no whole number from 1, an
+  unknown colour — gray, a `due` that is no day, a script URL), an unknown `wipLimits()` mode (`'warn'`),
+  a `today()` that is no day, a `moveUrl()` option it does not know or a header or field that is not
+  name => text.
+- **Do not** put the board inside a `<form>` (every card that may move has a form of its own), write the
+  handle or the roles yourself, or trust the page's limits on the server — the page can be old, another
+  person faster.
+
+### FileManager (`GridKit\FileManager`, since 1.125.0)
+
+A media library for a CMS and a drawer for invoice receipts: folders with a breadcrumb, thumbnails or a
+list, search, a filter by type, the order, a selection with actions, a details panel — and an upload of
+many files at once. **The page supplies the listing** (`files()`, `folders()`) and the URLs the actions
+post to; the component never reads a directory and never deletes, renames or moves a file — it renders,
+and posts. The one thing it does with files is **check an upload on the server**: `FileManager::receive()`
+(below). `render()` prints; `html()` returns the same string.
+
+Everything works without script: the folders and the names are links (`?folder=`, `?file=`), the toolbar
+is a GET form, the upload a `multipart/form-data` form posting `files[]` to `uploadUrl()`, the actions a
+POST form with a checkbox per file. **`js/file-manager.js`** — a file of its own like `js/tree.js`, loaded
+with `defer` after `gridkit.js` (`skeleton.php` and the demo do it; a page of your own adds
+`<script src=".../js/file-manager.js" defer></script>`) — filters and sorts in place, uploads each file with
+a progress bar, opens the details beside the list and posts the actions with `fetch`. Nothing to call.
+
+```php
+$folderRows = [
+    ['id' => 1, 'name' => 'Receipts', 'parent' => null],
+    ['id' => 2, 'name' => '2026', 'parent' => 1, 'count' => 14],
+];
+$fileRows = [
+    ['id' => 31, 'filename' => 'Beach.jpg', 'size' => 482113, 'mime' => 'image/jpeg', 'created_at' => '2026-10-02 09:12',
+     'url' => '/media/31/Beach.jpg', 'thumb' => '/media/31/thumb.jpg', 'folder' => null, 'width' => 2400, 'height' => 1600],
+    ['id' => 32, 'filename' => 'Invoice 2026-118.pdf', 'size' => 88210, 'mime' => 'application/pdf', 'created_at' => 1790000000,
+     'url' => '/media/32/Invoice.pdf', 'folder' => 2],
+];
+$fm = (new FileManager('media'))
+    ->label('Media')                                    // the accessible name; the top of the breadcrumb
+    ->folders($folderRows)                              // id, name, parent, url, count
+    ->files($fileRows, ['name' => 'filename', 'modified' => 'created_at', 'thumbUrl' => 'thumb'])
+    ->path($_GET['folder'] ?? null)                     // the folder on screen; the breadcrumb follows
+    ->fromQuery()                                       // view, sort, type, q, folder and file of the request
+    ->uploadUrl('/admin/media/upload')
+    ->accept(['image/*', 'application/pdf'])->maxSize('10M')->maxFiles(20)
+    ->actions(['delete' => '/admin/media/delete', 'move' => '/admin/media/move',
+               'rename' => '/admin/media/rename', 'folder' => '/admin/media/folder', 'download' => '/admin/media/zip'])
+    ->csrf('the-csrf-token-of-the-page');
+$fm->render();
+```
+
+**Rows.** `->files($rows, $map)` takes arrays or objects; `$map` renames the page's fields to the
+manager's, every field is read under its own name otherwise:
+
+| Field | |
+|---|---|
+| `id` | required; text or a number, unique (a second row with the same id is left out) |
+| `name` | required; what is shown — the name the person gave the file, not the stored one |
+| `size` | bytes; shown as "482 KB", "1.4 MB" |
+| `mime` | the type (`image/png`); without it the extension of `name` decides. It chooses the kind (image, document, other), the symbol and the words ("PDF document", "PNG image") |
+| `modified` | a Unix timestamp, a date string or a `DateTime`; shown in `files.date_format` |
+| `url` | where the file is opened: the preview in the details, "Open", "Copy URL"; an image without `thumbUrl` uses it as its thumbnail |
+| `thumbUrl` | a small picture for the tile; without one a symbol and the extension are shown |
+| `folder` | the id of the folder it lies in (`null` or `''`: the top) |
+| `width`, `height` | of an image, in pixels; shown in the details (the script measures an image without them) |
+
+A `javascript:`, `vbscript:` or `data:` URL is left out with a warning — except a picture: a `data:` URL
+of a PNG, JPEG, GIF or WebP is taken for `url` and `thumbUrl`, and an SVG one for `thumbUrl` (only ever
+an `<img>`, where no script runs).
+
+`->folders($rows, $map)` — `id`, `name`, `parent` (the id of its folder; `null` or `''` the top), `url`
+(where it leads; default `?folder=<id>` on this page), `count` (shown as "14 items"). The folders of the
+current folder are listed first, by name. Without `folders()` and `path()` every file is listed.
+
+**Methods**
+
+| Method | |
+|---|---|
+| `->files($rows, $map)` / `->folders($rows, $map)` | the listing (above); call again to add more |
+| `->path($folderId)` | the folder on screen (`null`: the top); its path through `folders()` is the breadcrumb. An id `folders()` does not have shows the top, with a warning |
+| `->breadcrumb([['name' => 'Media', 'url' => '/media'], ['name' => 'Receipts', 'url' => '']])` | the breadcrumb given as it is (each crumb `name` or `label`, `url` or `href`), for folders not all in `folders()` |
+| `->view('grid' \| 'list')` | thumbnails (default) or a row per file with type, size and date |
+| `->sort('name' \| 'date' \| 'size' \| 'type', 'asc' \| 'desc')` | the order of the files; default name, ascending |
+| `->filter('all' \| 'image' \| 'document' \| 'other')` | only one kind |
+| `->search('invoice')` | only names that hold this (case, accents and umlauts ignored) |
+| `->fromQuery($get = null)` | view, sort (`name-asc` … `type-desc`), type, q, folder and file from the request (default `$_GET`). A value it does not know is ignored without a warning — the request is the visitor's |
+| `->param('media')` | the parameters under one name: `?media[folder]=2&media[view]=list` — for two managers on a page, or a page whose own parameters are called `sort` or `q` |
+| `->anchor('files')` | every link and the toolbar end with `#files` (a section or a tab of the page) |
+| `->keep(['page' => 'media'])` | parameters of the page every link and the toolbar carry along |
+| `->label('Media')` | the accessible name; default "Files" |
+| `->select('none' \| 'single' \| 'multi')` | checkboxes (default), a radio button per file, or none |
+| `->selected([31, 32])` | ticked when the page opens |
+| `->open(31)` | the details of a file are open when the page opens (`fromQuery()` reads `?file=31`) |
+| `->actions([...])` | what the person can do (below) |
+| `->uploadUrl('/admin/media/upload')` | where uploads are posted; without it there is no upload |
+| `->accept(['image/*', 'application/pdf', '.csv'])` | MIME types, families or extensions; default JPEG, PNG, GIF, WebP and PDF. **`image/*` does not take SVG** — name `image/svg+xml` for that. A type a browser or a server runs (`text/html`, `application/x-php`, `.php`) is never taken |
+| `->maxSize('10M')` | bytes, or `'512K'`, `'10M'`, `'2 MB'`; 1 KB to 2 GB, default 10 MB |
+| `->maxFiles(20)` | files per upload, 1 to 1000 |
+| `->parallel(3)` | files the script sends at the same time, 1 to 6 |
+| `->csrf($token, '_token')` | a hidden field in every form and the `X-CSRF-Token` header of every request of the script |
+| `->hidden(['tenant' => '7'])` | hidden fields posted with every upload and action |
+| `->rules()` | `['accept' => …, 'maxSize' => …, 'maxFiles' => …]` — hand it to `receive()` so the server checks what the browser was told |
+| `->render()` / `->html()` | prints / returns |
+| `FileManager::receive($_FILES['files'], $opts)` | checks an upload (below) |
+| `FileManager::check($path, $name, $opts)` | the same checks for a file already on the server |
+
+**Actions.** `->actions()` takes `delete`, `move`, `download` (for the ticked files), `rename` (in the
+details) and `folder` (a new folder in the current one). Each is a URL the manager POSTs to, or `true`:
+then only the event `gk:filesaction` fires and the page does the rest (`false` removes one). Every action
+posts the same fields, with and without script:
+
+| Field | |
+|---|---|
+| `action` | `delete`, `move`, `rename`, `folder` or `download` |
+| `ids[]` | the ticked files (rename: the one in the details) |
+| `target` | move: the id of the folder chosen in "Move to" (`''` the top) |
+| `name` | rename: the new name; folder: the name of the new folder |
+| `parent` | folder: the folder it is created in |
+| `folder` | the folder on screen |
+| the `csrf()` field and `hidden()` | |
+
+With the script the request carries `X-Requested-With: XMLHttpRequest`, `Accept: application/json` and
+`X-CSRF-Token`, and expects JSON: `{"ok": true}` — and for rename optionally `"file": {…}` (the row as
+it is now), for folder `"folder": {"id": …, "name": …, "url": …}` so it appears at once — or
+`{"ok": false, "message": "Shown to the person."}`. Deleted and moved files leave the listing, a renamed
+one is drawn again, the answer's `message` (or the manager's own sentence) is announced and shown in a
+toast. A download is not fetched: the form posts to its URL and the browser receives what the page sends
+(a ZIP). Without the script every action is a plain POST — answer with a redirect back (PRG).
+
+```php
+// POST /admin/media/delete — with or without script
+$ids = array_map('intval', (array) ($_POST['ids'] ?? []));
+// … check the token and that these files belong to this person, delete them …
+$wantsJson = ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
+if ($wantsJson) {
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => true]);                 // or ['ok' => false, 'message' => 'The contract is kept for ten years.']
+}
+// else: header('Location: /admin/media?folder=' . urlencode((string) ($_POST['folder'] ?? '')), true, 303);
+```
+
+**Upload, in the browser.** Files chosen with "Choose files", **dropped anywhere on the manager**, or
+**pasted** (a picture from the clipboard, while the focus is in the manager — or on the page, when it has
+only one manager; named "Pasted picture 20261104-101500.png") are checked first: the type against
+`accept()` (by the browser's type, or the extension when it has none), the size against `maxSize()`, an
+empty file, and the count against `maxFiles()` (counting what is still waiting) — a refused file says why
+in its row ("Big.pdf is too large (12 MB); at most 10 MB per file."). Each file is then sent on its own,
+`parallel()` at a time: a `POST` to `uploadUrl()` with `files[]` (one file), `folder`, the `csrf()` field
+and `hidden()`, the headers above, through `XMLHttpRequest` for its progress. Each row has a picture
+(an object URL of the file itself, revoked once drawn), the name, a `<progress>` bar, a symbol **and** a
+word for its state — waiting, "Uploading, 45 %", uploaded, failed with the reason, cancelled — and a
+button: cancel while it waits or is sent, try again after a failure of the line or a 5xx, remove from the
+list. **The server answers** `{"ok": true, "file": {…}}` — the row as `files()` takes it (`id` and `name`
+required; `folder` defaults to the folder on screen) — and the file appears in the listing, in its
+place in the order, without a reload; or `{"ok": false, "message": "…"}`, shown in the row. Anything
+else is "The upload failed (HTTP 500)." or "The server sent an answer that is not one an upload expects."
+A live region says each file taken or refused, and at the end "3 of 4 files uploaded."
+
+**Upload, on the server — `FileManager::receive()`.** Nothing an upload says is believed: not the name,
+not the type, not the size.
+
+```php
+// POST /admin/media/upload — check the CSRF token first. $fm: the manager the page drew, built the same way.
+$fm = (new FileManager('media'))->accept(['image/*', 'application/pdf'])->maxSize('10M')->maxFiles(20);
+$results = FileManager::receive($_FILES['files'] ?? [], $fm->rules() + [
+    'target' => '/srv/app/uploads',                  // outside the web root; without it nothing is moved
+]);
+foreach ($results as $r) {
+    if ($r['ok']) {
+        // $r['path']: /srv/app/uploads/9f86d081884c7d659a2feaa0c55ad015.jpg — the stored name is random
+        // $r['name']: 'Beach.jpg' (the client's name, cleaned — store it in your table, never on the disk)
+        // $r['mime'], $r['size'], $r['width'], $r['height'], $r['sha256'], $r['kind']
+    } else {
+        // $r['error']: 'type', 'mismatch', 'size', 'script', 'dimensions', …; $r['message']: the words
+    }
+}
+$r = $results[0] ?? null;
+header('Content-Type: application/json');
+echo json_encode($r === null ? ['ok' => false, 'message' => 'No file was chosen.']
+    : ($r['ok'] ? ['ok' => true, 'file' => ['id' => 7, 'name' => $r['name'], 'size' => $r['size'], 'mime' => $r['mime'],
+                                            'url' => '/media/7', 'modified' => time()]]
+               : ['ok' => false, 'message' => $r['message']]));
+```
+
+What it checks, in this order — a file that fails one is refused with a sentence that says which:
+
+1. **One per entry, any shape** of `$_FILES` (one file, `files[]`, nested — each with `name`,
+   `tmp_name`, `error`, `size`); an empty slot is skipped.
+   More than `maxFiles` — the rest is refused (`count`).
+2. **The upload's error code**, in words: too large for `upload_max_filesize` (`ini_size`) or the form
+   (`size`), arrived in part (`partial`), the server's own trouble (`server`).
+3. **Only a file PHP received in this request** (`is_uploaded_file`) — a path smuggled into the array
+   is refused (`not_uploaded`).
+4. **The name**: a NUL byte, a leading dot (`.htaccess`, `.user.ini`) or an empty name — refused
+   (`name`); a part that a server or Windows runs **anywhere** in the name — `invoice.php.jpg`,
+   `x.phtml.png`, `.phar`, `.cgi`, `.jsp`, `.exe`, `.html`, `.htaccess` … — refused (`name`). Trailing dots
+   and spaces are dropped first (Windows does: `x.php.` is `x.php`); the path a client sends
+   (`C:\fakepath\…`, `../../`) is dropped.
+5. **The size on disk**, not the one claimed: 0 bytes (`empty`), more than `maxSize` (`size`).
+6. **The type by content** (`finfo`): a type a browser or a server runs (HTML, XML, PHP, JavaScript,
+   shell, executables, Java archives) is never taken; it must be one `accept` names (`type`), and the
+   name's extension must be one of that type's — a PNG named `.jpg`, a text named `.png` (`mismatch`).
+   Without the `fileinfo` extension nothing is taken (a warning says why).
+7. **Code where none belongs**: `<?php` in any file; `<?=`, `<script`, `<html`, `<iframe`, `<svg` … in a
+   picture or a text file — a polyglot (`script`).
+8. **A picture must be one**: `getimagesize()` reads its size (`unreadable`), and
+   it is at most `maxWidth` × `maxHeight` (default 20,000 each) and `maxPixels` (default 50 million) — a
+   100-byte PNG that claims 50,000 × 50,000 pixels would take 10 GB to open (`dimensions`).
+9. **An SVG** is taken only when `accept` names `image/svg+xml`, and only without a DOCTYPE or entity,
+   script, `foreignObject`, `iframe`, `embed`, `object`, animation elements, an `on…` attribute, a link
+   to `javascript:`, `vbscript:` or `data:` (other than a raster picture), or a style that imports or
+   runs (`script`) — refused, not cleaned: ask for a PNG instead.
+10. **The stored name** is 32 random hex digits and the extension the name has, checked against the type (a JPEG always `.jpg`) —
+    the client's name never reaches the disk.
+11. **Storing**: only with `target` — an existing, writable directory, and **not inside the web root**
+    (`$_SERVER['DOCUMENT_ROOT']`, or `webRoot`) unless `'public' => true` says so; otherwise a warning and
+    nothing is stored (`store`). The file is moved with `move_uploaded_file()` and made `0640` (`0644`
+    when public). Without `target` nothing is moved: `tmp` is the temporary file, which PHP deletes when
+    the request ends.
+
+| Option | |
+|---|---|
+| `accept`, `maxSize`, `maxFiles` | as the manager's — pass `$fm->rules()` |
+| `maxWidth`, `maxHeight`, `maxPixels` | the size of a picture in pixels (above) |
+| `target` | the directory to move accepted files into |
+| `public` | `true`: `target` may lie inside the web root (serve it with `X-Content-Type-Options: nosniff`) |
+| `webRoot` | the web root to compare with; default `$_SERVER['DOCUMENT_ROOT']` |
+
+A result: `ok`, `index` (the entry in `$_FILES`), `name` (the client's, cleaned, for display), `size`,
+`mime`, `ext`, `kind`, `width`, `height`, `stored`, `path` (when moved), `tmp` (when not), `sha256`, `error`
+(`null`, or `count`, `ini_size`, `size`, `partial`, `server`, `not_uploaded`, `name`, `empty`,
+`unreadable`, `type`, `mismatch`, `script`, `dimensions`, `store`), `message`. An empty list: nothing was
+chosen. When a request is larger than `post_max_size`, PHP drops it whole — `$_POST` and `$_FILES` are
+empty while `CONTENT_LENGTH` is not; say so yourself.
+
+`FileManager::check($path, $name, $opts)` runs the same checks on a file that was **not** uploaded in this
+request (an import directory, a mail attachment) and returns one result; with `target` it **copies** the
+file there. Only `receive()` trusts a file as an upload.
+
+**Serving.** Store outside the web root and send files through a script with the stored `mime` as
+`Content-Type`, `X-Content-Type-Options: nosniff`, and `Content-Disposition: attachment` for anything that
+is not a picture or a PDF. Check the CSRF token and the person's right to the folder before
+`receive()` — the component does not know your users.
+
+**Keys and the screen reader.** In the listing: arrow keys move between the files (up and down by a row
+of tiles), Home/End, Space ticks, Shift+arrow and Shift+click tick a range, Ctrl+A (Cmd+A) ticks all,
+Enter on a box opens the details, Delete deletes the ticked files (after a confirmation), Escape lets go
+of the selection or closes the details and gives the focus back. Every box is named "Select Beach.jpg";
+a folder link says "Folder Receipts"; the count of ticked files is in the bar; filtering says "3 of 12
+files shown"; uploads, refusals and actions are said in a polite live region. A ticked file has its tick,
+an upload a symbol and a word — **never the colour alone**.
+
+- **Phone** (600px and narrower): two columns of tiles; the details are a sheet over the whole screen
+  (`role="dialog"`, `aria-modal`, Tab kept inside, Escape and the close button give the focus back); the
+  toolbar and the bulk bar one field per line, 16px; every target 44px (with a finger at any width too);
+  nothing wider than the screen.
+- **Classes** (all `gk-files-*`, in `css/blocks.json` as "File manager"): `gk-files`, `-js` (the script
+  runs), `-view-grid`, `-view-list`, `-top`, `-crumbs`, `-newfolder`, `-field`, `-toolbar`, `-search`,
+  `-views`, `-viewbtn`, `-apply`, `-upload`, `-drop`, `-drop-icon`, `-drop-text`, `-pick`, `-hint`,
+  `-send`, `-dragover`, `-queue`, `-job`, `-job-thumb`, `-job-main`, `-job-name`, `-progress`,
+  `-job-state`, `-job-actions`, `-job-btn`, `-main`, `-body`, `-bulk`, `-all`, `-count`, `-move`, `-act`,
+  `-summary`, `-head`, `-items`, `-item`, `-folder`, `-check`, `-thumb`, `-ext`, `-name`, `-type`,
+  `-size`, `-date`, `-meta`, `-selected`, `-current`, `-empty`, `-details`, `-details-head`,
+  `-details-title`, `-details-close`, `-details-body`, `-preview`, `-props`, `-url`, `-details-actions`,
+  `-rename`, `-sheet-open` (on `<html>` while the sheet is open). Colours are roles: light, both dark
+  spellings and the six themes follow.
+- **Words** come from `files.*` in `lang/` and reach the script inside the manager's own config — no
+  `Lang::jsConfig()` needed. `files.date_format` is the date's shape (`Y-m-d H:i`, `d.m.Y H:i`).
+- **Warnings** (`E_USER_WARNING`, the manager still renders): a row without an id or a name, an id twice,
+  a map naming a field it does not know, a `javascript:` URL, an unknown view, sort, type, selection mode
+  or action, an action that is neither a URL nor `true`, an `accept` entry that is not a type or names one
+  that runs, a size or count out of range, a field name of `csrf()` or `hidden()` that clashes, a
+  `path()` folder it does not have. `receive()` warns about an unknown option, a `target` that is not a
+  writable directory or lies in the web root, and a missing `fileinfo`.
+- **Do not** put the manager inside another `<form>`, trust `$_FILES[...]['type']` or the name, write the
+  client's name to the disk, store uploads in the web root, or answer an upload with HTML when the script
+  asked for JSON.
+
 ### Auth
 
 **Accounts live in a file, not in your code.** There is no array, DSN or
@@ -3787,6 +4395,35 @@ GK.palette.close();
 const off = GK.palette.register({ group: 'Tools', items: () => [{ label: 'Reload', action: 'reload' }] });  // off() takes it away
 document.addEventListener('gk:paletteselect', e => { if (e.detail.item.kind === 'record') { /* cancelable */ } });
 document.addEventListener('gk:paletteaction', e => { if (e.detail.action === 'reload') location.reload(); });
+
+// Filter builder (since 1.123.0) — GridKit\FilterBuilder and js/filter-builder.js, see "FilterBuilder". First argument: the form, its id or the name.
+GK.filterBuilder.get('f');                 // { join: 'and', rules: [{ field: 'status', op: 'is', value: 'open' }] } — the checked tree
+GK.filterBuilder.set('f', '["and",["amount","gt",100]]');   // either shape or its JSON; drawn at once, nothing sent
+GK.filterBuilder.reset('f');               // back to value(); GK.filterBuilder.apply('f') sends it like the button
+GK.filterBuilder.json('f');                // '["and",["amount","gt",100]]' — the URL parameter
+document.addEventListener('gk:filterchange', e => { e.preventDefault(); reloadTable(e.detail.json); });  // cancelable: filter live
+
+// Kanban (since 1.124.0) — GridKit\Kanban and js/kanban.js, see "Kanban". First argument: the board's id, element or selector.
+GK.kanban.move('tickets', 'T-101', 'done', 0);           // like a person's move: the veto, the save; a Promise of { ok, reverted }
+GK.kanban.move('tickets', 'T-101', 'done', null, { save: false });  // only put there (the server knows it): no event, no request
+GK.kanban.cards('tickets', 'done');                      // ['T-108', 'T-101']; without a column { new: [...], done: [...] }
+GK.kanban.columns('tickets');                            // [{ key, label, count, limit, over }, …]
+GK.kanban.refresh('tickets');                            // after the page added a card itself: handles, counts, limits
+document.addEventListener('gk:kanbanmove', e => { if (e.detail.to === 'done' && !mayClose(e.detail.id)) e.preventDefault(); });
+document.addEventListener('gk:kanbanmoved', e => { /* e.detail: { board, id, from, to, index, fromIndex, ok, reverted } */ });
+
+// File manager (since 1.125.0) — GridKit\FileManager and js/file-manager.js, see "FileManager". First argument: the id, element or selector.
+GK.files.upload('media', fileInput.files);  // queues files as if dropped: checked here, sent with progress; returns [{ name, state, message }]
+GK.files.add('media', { id: 7, name: 'Logo.png', size: 4096, mime: 'image/png', url: '/media/7' });  // a row as files() takes it
+GK.files.remove('media', [7, 8]);
+GK.files.select('media', [7], true);        // ticks (false unticks); returns the ticked ids
+GK.files.selected('media');                 // ['7', '8']
+GK.files.view('media', 'list');             // 'grid' or 'list'; returns the view
+GK.files.open('media', 7);                  // the details of a file; GK.files.close('media')
+document.addEventListener('gk:filesuploaded', e => { /* e.detail: { manager, file, answer } */ });
+document.addEventListener('gk:filesaction', e => { if (e.detail.action === 'download') { e.preventDefault(); /* yours */ } });
+// Also: gk:filesselect { ids }, gk:filesopen { id, file }, gk:filesupload { file, name } (cancelable),
+// gk:fileserror { name, message }, gk:filesdone { action, ids, ok, answer }.
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });
