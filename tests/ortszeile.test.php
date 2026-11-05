@@ -537,7 +537,7 @@ return [
 'marke: the stylesheet — brand heavier, one row on a phone, "more" menu only there, brand word only up to 520px' => function () use ($css, $rules, $phone): void {
     $c = $css();
     T::contains($rules($c, '.gk-ortszeile-marke'), 'font-weight: 700', 'the brand is not heavier than the steps');
-    T::contains($rules($c, '.gk-ortszeile-mehr'), 'display: none', 'the "more" menu shows on a computer');
+    T::contains($rules($c, '.gk-ortszeile .gk-ortszeile-mehr'), 'display: none', 'the "more" menu shows on a computer');
     $p = $phone($c, '.gk-ortszeile-mehr');
     T::contains($p, '.gk-ortszeile-mit-marke .gk-ortszeile-mitte', 'the steps in between are not hidden on a phone');
     T::contains($p, '.gk-ortszeile-mehr', 'the "more" menu is not shown on a phone');

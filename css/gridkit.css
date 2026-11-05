@@ -4784,7 +4784,7 @@ a.gk-stat-card:hover {
 .gk-ortszeile-mit-marke ol { flex-wrap: nowrap; }
 .gk-ortszeile-marke { color: var(--gk-on-surface); font-weight: 700; font-size: 1.0625rem; letter-spacing: -0.3px; }
 .gk-ortszeile-marke .material-icons { color: var(--gk-primary); font-size: 22px; }
-.gk-ortszeile-mehr { display: none; position: relative; }
+.gk-ortszeile .gk-ortszeile-mehr { display: none; position: relative; }   /* two classes: .gk-ortszeile li (display: flex) would win over one */
 .gk-ortszeile-mehr summary {
   display: inline-flex;
   align-items: center;
