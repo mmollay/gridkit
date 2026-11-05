@@ -354,6 +354,9 @@ async function ax(page, sel) {
     const box = await page.$eval(`${more("2026-11-12")} .gk-cal-more-list`, (el) => { const r = el.getBoundingClientRect(); return { right: r.right, left: r.left, w: innerWidth }; });
     check("the open day stays in the window", box.left >= 0 && box.right <= box.w, JSON.stringify(box));
     await page.click(`${more("2026-11-25")} > summary`);
+    // The first one closes on the `toggle` event of the second, which the browser fires a task later:
+    // wait for that state instead of reading it in the same instant.
+    await page.waitForFunction(() => document.querySelectorAll("details.gk-cal-more[open]").length === 1, null, { timeout: 2000 }).catch(() => {});
     check("one open at a time", !(await page.$eval(more("2026-11-12"), (d) => d.open)) && (await page.$eval(more("2026-11-25"), (d) => d.open)));
     const box2 = await page.$eval(`${more("2026-11-25")} .gk-cal-more-list`, (el) => { const r = el.getBoundingClientRect(); return { right: r.right, left: r.left, w: innerWidth }; });
     check("in a right-hand column it opens towards the start", box2.right <= box2.w && box2.left >= 0, JSON.stringify(box2));
