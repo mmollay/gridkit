@@ -31,7 +31,7 @@ $css  = static fn (): string => (string) file_get_contents($root . '/css/gridkit
 
 /** The one <nav class="gk-ortszeile"> of a rendered header. */
 $nav = static fn (string $html): string =>
-    preg_match('#<nav class="gk-ortszeile".*?</nav>#s', $html, $m) ? $m[0] : '';
+    preg_match('#<nav class="gk-ortszeile[ "].*?</nav>#s', $html, $m) ? $m[0] : '';
 
 /** Capture what a component echoes. */
 $echoed = static function (callable $fn): string {
@@ -483,6 +483,72 @@ return [
     $render = substr($js, (int) $at, 2500);
     T::contains($render, "doc.querySelector('header .gk-ortszeile')", 'the new page\'s line is not read');
     T::contains($render, 'oldLine.replaceWith(', 'the old line stays');
+},
+
+'marke (1.126.0): the brand is the first step and the way to the dashboard; "Dashboard" is not written twice; without the option nothing changes' => function () use ($tiefe, $nav): void {
+    $marke = ['label' => 'SSI Panel', 'href' => '/', 'icon' => 'dashboard_customize'];
+    $html = (new Header())->ortszeile($tiefe(['marke' => $marke]))->render();
+    $n = $nav($html);
+    T::contains($n, 'gk-ortszeile-mit-marke', 'the line does not say it carries the brand');
+    T::contains($n, '<a class="gk-ortszeile-link gk-ortszeile-marke" href="/"', 'the brand is not the first link, to the dashboard');
+    T::contains($n, '>dashboard_customize</span>', 'the brand has lost its sign');
+    T::contains($n, 'SSI Panel', 'the brand has lost its name');
+    T::notContains($n, '>Dashboard<', 'the dashboard is written once more beside the brand');
+    T::notContains($n, '>home<', 'the house of the dashboard is still there');
+    T::eq(substr_count($n, 'aria-current="page"'), 1, 'the page is not named exactly once');
+    T::contains($n, 'href="/shorts"', 'the module anchor is gone');
+    T::contains($n, 'href="/shorts/liste"', 'the step in between is gone');
+    T::notContains($n, 'style=', 'inline style in the line');
+    // The brand is a name that comes from the host: escaped like every label.
+    T::notContains($nav((new Header())->ortszeile($tiefe(['marke' => ['label' => '<b>x</b>'] + $marke]))->render()), '<b>x</b>', 'the brand name is not escaped');
+    // Not asked for: the bytes of before.
+    $alt = $nav((new Header())->ortszeile($tiefe())->render());
+    T::notContains($alt, 'marke', 'without the option the line speaks of a brand');
+    T::notContains($alt, 'gk-ortszeile-mehr', 'without the option the line has a "more" menu');
+    T::contains($alt, '>Dashboard<', 'without the option the dashboard step is gone');
+},
+
+'marke on the dashboard: the brand alone is the page (aria-current), the link stays the way home' => function () use ($nav): void {
+    $n = $nav((new Header())->ortszeile(['marke' => ['label' => 'SSI Panel', 'href' => '/', 'icon' => 'dashboard_customize']])->render());
+    T::eq(substr_count($n, 'aria-current="page"'), 1, 'the dashboard does not name itself the page');
+    T::contains($n, 'gk-ortszeile-marke', 'the brand is gone');
+    T::notContains($n, 'gk-ortszeile-mehr', 'a "more" menu with nothing in it');
+    T::eq(substr_count($n, '<li'), 1, 'more than the brand on the dashboard');
+},
+
+'marke: the steps in between are also in a "more" menu (details, no script needed); the page after the brand has none' => function () use ($tiefe, $nav): void {
+    $marke = ['label' => 'SSI Panel', 'href' => '/'];
+    $n = $nav((new Header())->ortszeile($tiefe(['marke' => $marke]))->render());
+    T::contains($n, '<li class="gk-ortszeile-mehr"><details>', 'no "more" menu');
+    T::contains($n, '<summary aria-label="', 'the "more" menu has no name for a screen reader');
+    preg_match('#<details>.*?</details>#s', $n, $m);
+    T::contains($m[0] ?? '', 'href="/shorts"', 'the module is not in the "more" menu');
+    T::contains($m[0] ?? '', 'href="/shorts/liste"', 'the step is not in the "more" menu');
+    T::eq(substr_count($n, 'class="gk-ortszeile-mitte"'), 2, 'the steps in between are not marked for the phone');
+    // Only the brand and the page: nothing in between, no menu.
+    $kurz = $nav((new Header())->ortszeile(['marke' => $marke, 'aktuell' => 'Einstellungen'])->render());
+    T::notContains($kurz, 'gk-ortszeile-mehr', 'a "more" menu with nothing in it');
+    T::contains($kurz, 'aria-current="page"', 'the page is not named');
+    // Escaped.
+    $boese = $nav((new Header())->ortszeile(['marke' => $marke, 'stufen' => ['<i>a</i>' => '/x'], 'aktuell' => 'b'])->render());
+    T::notContains($boese, '<i>a</i>', 'a step in the "more" menu is not escaped');
+},
+
+'marke: the stylesheet — brand heavier, one row on a phone, "more" menu only there, brand word only up to 520px' => function () use ($css, $rules, $phone): void {
+    $c = $css();
+    T::contains($rules($c, '.gk-ortszeile-marke'), 'font-weight: 700', 'the brand is not heavier than the steps');
+    T::contains($rules($c, '.gk-ortszeile-mehr'), 'display: none', 'the "more" menu shows on a computer');
+    $p = $phone($c, '.gk-ortszeile-mehr');
+    T::contains($p, '.gk-ortszeile-mit-marke .gk-ortszeile-mitte', 'the steps in between are not hidden on a phone');
+    T::contains($p, '.gk-ortszeile-mehr', 'the "more" menu is not shown on a phone');
+    T::contains($p, '.gk-header:has(.gk-ortszeile-mit-marke)', 'the header with a brand still wraps on a phone');
+    T::contains($c, '@media (min-width: 521px) and (max-width: 768px)', 'the brand word does not give way on a narrow phone');
+    T::contains($rules($c, '.gk-ortszeile-mehr summary:focus-visible'), 'outline', 'the "more" button has no focus ring');
+},
+
+'marke: the skill file and the script know it' => function (): void {
+    T::contains((string) file_get_contents(__DIR__ . '/../GRIDKIT_SKILL.md'), "'marke'", 'the skill does not mention marke');
+    T::contains((string) file_get_contents(__DIR__ . '/../js/gridkit.js'), 'gk-ortszeile-mehr', 'the script does not close the "more" menu');
 },
 
 'the skill file teaches the new calls' => function (): void {

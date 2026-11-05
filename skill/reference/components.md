@@ -1,4 +1,4 @@
-# GridKit 1.125.0 — components
+# GridKit 1.126.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -818,6 +818,16 @@ height and the page under it a fixed offset (56px), and a line that wraps would
 cover the page's first rows. Put the sticky header in the content column of the
 sidebar-first layout (or on a page without a sidebar); in the header-first
 layout the fixed sidebar would start at `top: 56px`, below a gap.
+
+**The system's name as the first step (1.126.0).** `'marke' => ['label' => 'SSI Panel',
+'href' => '/', 'icon' => 'dashboard_customize']` makes the brand the first step in place of
+"Dashboard": the name of the system is the way back to the dashboard and the path stands
+to its right, like the repository path on GitHub. Put no brand and no title in the header
+beside it (one name, not two). The line is one row at every width; up to 768px the steps in
+between give way to a "…" menu (`<details>`, the same links), up to 520px the brand is its sign
+alone (name stays for a screen reader and in `title`). On the dashboard the brand alone is the
+page (`aria-current`). Without `'marke'` nothing changes.
+`'ruhig' => true` (1.123.0, kept on the branch `kopf/harmonie`) draws the steps as plain links without the pill outline at every width.
 
 **The menu button with its word, the sidebar it points at, a way past both.**
 `->sidebarToggle(true, ['label' => true, 'controls' => 'main-nav'])` writes

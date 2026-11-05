@@ -88,6 +88,7 @@ return [
 
     // Ortszeile, breadcrumb, menu button, skip link (1.100.0)
     'ortszeile.aria'        => 'You are here',
+    'ortszeile.mehr'         => 'More levels',
     'ortszeile.dashboard'   => 'Dashboard',
     'breadcrumb.aria'       => 'Breadcrumb',
     'header.menu'           => 'Menu',

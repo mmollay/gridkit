@@ -7,6 +7,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.126.0] - 2026-11-05
+
+The name of the system is the first step of the "you are here" line and the way back to the dashboard — the path stands to its right, like a repository path on GitHub. Opt-in: `Header::ortszeile(['marke' => ['label' => 'SSI Panel', 'href' => '/', 'icon' => '...']])`.
+
+### Added
+- **`marke`** for `Header::ortszeile()` — the brand takes the place of the "Dashboard" step (no house, no second "Dashboard"); it is a link even on the dashboard, where it is the page (`aria-current`). The line is one row at every width, the header does not wrap for it.
+- **`gk-ortszeile-mit-marke`**, **`gk-ortszeile-marke`**, **`gk-ortszeile-mitte`**, **`gk-ortszeile-mehr`** — up to 768px the steps in between give way to a "…" menu (a `<details>` with the same links, no script needed; `gridkit.js` closes it on a click outside and on Escape); up to 520px the brand is its sign alone (name in `title` and for a screen reader).
+- `ortszeile.mehr` in `lang/de.php` and `lang/en.php`.
+
+### Notes
+- Without `marke` the markup and the stylesheet's effect are unchanged (the consumers without the option — PawBot dashboard, EasyForm, TugendCoach — draw as before).
+- The branch `kopf/harmonie` (1.123.0 `ruhig`) was written before 1.123.0–1.125.0 of main (FilterBuilder, Kanban, FileManager); its changelog entry stands below as `[1.123.0-kopf]`. Whoever merges has to sort out the version number of `ruhig`.
+
+### Tests
+- `tests/ortszeile.test.php`: markup of the brand (first link, no second Dashboard, escaping, one `aria-current`), the dashboard alone, the "more" menu (present with steps in between, absent without), the stylesheet rules, unchanged bytes without the option.
+
 ## [1.125.0] - 2026-11-04
 
 `GridKit\FileManager` is a media library and a receipt drawer — folders, thumbnails or a list, many files uploaded at once with a progress bar each, chosen, dropped or pasted — and `FileManager::receive()` checks every upload on the server by what the file holds, not by what the browser claims.

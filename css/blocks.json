@@ -758,12 +758,17 @@
         },
         "ortszeile": {
             "name": "Ortszeile",
-            "changed": "1.110.5",
+            "changed": "1.126.0",
             "classes": {
                 "gk-ortszeile": "1.100.0",
                 "gk-ortszeile-current": "1.100.0",
                 "gk-ortszeile-einzeilig": "1.100.0",
                 "gk-ortszeile-link": "1.100.0",
+                "gk-ortszeile-marke": "1.126.0",
+                "gk-ortszeile-mehr": "1.126.0",
+                "gk-ortszeile-mehr-liste": "1.126.0",
+                "gk-ortszeile-mit-marke": "1.126.0",
+                "gk-ortszeile-mitte": "1.126.0",
                 "gk-ortszeile-ruhig": "1.123.0",
                 "gk-ortszeile-schlicht": "1.104.0",
                 "gk-ortszeile-text": "1.100.0"

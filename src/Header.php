@@ -48,6 +48,10 @@ class Header
      *                        (the full text in title); without it the line wraps on a phone
      *   schlicht   bool    — on a phone (up to 768px) the steps are plain links without the
      *                        outline of a pill; the height of a target (44px) stays (1.104.0)
+     *   marke      array   — label, href, icon of the brand (1.126.0): it takes the place of the "Dashboard" step —
+     *                        the name of the system is the way back to the dashboard, the line goes on to its right,
+     *                        like the path in the name of a repository. Up to 768px the steps in between give way to a
+     *                        "…" menu, up to 520px the brand is its sign alone. Without it nothing changes
      *   ruhig      bool    — at every width the steps are plain links without the outline of a pill, a little lighter,
      *                        and on a computer the first one lines up with what stands above it; the height of
      *                        a target stays (1.123.0). Meant with `schlicht`, which only says it for the phone
@@ -276,7 +280,10 @@ class Header
     private function ortszeileHtml(array $o, \Closure $e): string
     {
         $dash = (array) ($o['dashboard'] ?? []);
-        $steps = [array_merge(['label' => Lang::t('ortszeile.dashboard'), 'href' => '/', 'icon' => 'home'], $dash)];
+        $marke = !empty($o['marke']) && is_array($o['marke']) ? $o['marke'] : null;
+        $steps = [$marke !== null
+            ? array_merge(['label' => '', 'href' => '/', 'icon' => ''], $marke)
+            : array_merge(['label' => Lang::t('ortszeile.dashboard'), 'href' => '/', 'icon' => 'home'], $dash)];
         if (!empty($o['modul'])) $steps[] = $o['modul'];
         foreach ((array) ($o['stufen'] ?? []) as $label => $href) {
             $steps[] = ['label' => (string) $label, 'href' => (string) $href];
@@ -285,26 +292,50 @@ class Header
 
         $last = array_key_last($steps);
         $oneRow = !empty($o['einzeilig']);
-        $html = '<nav class="gk-ortszeile' . ($oneRow ? ' gk-ortszeile-einzeilig' : '') . (!empty($o['schlicht']) ? ' gk-ortszeile-schlicht' : '') . (!empty($o['ruhig']) ? ' gk-ortszeile-ruhig' : '') . '" aria-label="' . $e((string) ($o['label'] ?? Lang::t('ortszeile.aria'))) . '"><ol>';
+        $html = '<nav class="gk-ortszeile' . ($oneRow ? ' gk-ortszeile-einzeilig' : '') . (!empty($o['schlicht']) ? ' gk-ortszeile-schlicht' : '') . (!empty($o['ruhig']) ? ' gk-ortszeile-ruhig' : '') . ($marke !== null ? ' gk-ortszeile-mit-marke' : '') . '" aria-label="' . $e((string) ($o['label'] ?? Lang::t('ortszeile.aria'))) . '"><ol>';
         foreach ($steps as $i => $step) {
+            // With a brand: the steps in between are hidden on a phone and stand in the "more" menu instead.
+            $mitte = $marke !== null && $i > 0 && $i < $last;
+            $li = $mitte ? '<li class="gk-ortszeile-mitte">' : '<li>';
             $label = (string) ($step['label'] ?? '');
             $href  = (string) ($step['href'] ?? '');
             $icon  = (string) ($step['icon'] ?? '');
             $inner = ($icon !== '' ? '<span class="material-icons" aria-hidden="true">' . $e($icon) . '</span>' : '')
                    . '<span class="gk-ortszeile-text">' . $e($label) . '</span>';
-            if ($i === $last) {
+            if ($i === 0 && $marke !== null) {
+                // The brand: a link even when it is the page (the dashboard) — a logo is the way home on every page.
+                $html .= '<li><a class="gk-ortszeile-link gk-ortszeile-marke" href="' . $e($href) . '"' . ($i === $last ? ' aria-current="page"' : '') . ' title="' . $e($label) . '">' . $inner . '</a></li>';
+                if ($last > 1) $html .= $this->mehrMenue(array_slice($steps, 1, $last - 1), $e);
+            } elseif ($i === $last) {
                 // The page you are on: no link to itself, the full title in title for when CSS shortens it.
-                $html .= '<li><span class="gk-ortszeile-current" aria-current="page" title="' . $e($label) . '">' . $inner . '</span></li>';
+                $html .= $li . '<span class="gk-ortszeile-current" aria-current="page" title="' . $e($label) . '">' . $inner . '</span></li>';
             } elseif ($href === '') {
-                $html .= '<li>' . $inner . '</li>';
+                $html .= $li . $inner . '</li>';
             } else {
                 // In one row a step may be shortened, and on a phone the dashboard is its house
                 // alone: their full text stays in title. The module anchor never shortens.
                 $tip = $oneRow && !($i === 1 && !empty($o['modul']));
-                $html .= '<li><a class="gk-ortszeile-link" href="' . $e($href) . '"' . ($tip ? ' title="' . $e($label) . '"' : '') . '>' . $inner . '</a></li>';
+                $html .= $li . '<a class="gk-ortszeile-link" href="' . $e($href) . '"' . ($tip ? ' title="' . $e($label) . '"' : '') . '>' . $inner . '</a></li>';
             }
         }
         return $html . '</ol></nav>';
+    }
+
+    /**
+     * The "…" menu of a line with a brand (1.126.0): on a phone it stands for the steps in between. A <details>, so it
+     * opens and closes by keyboard and screen reader without script; gridkit.js only closes it on a click outside and on Escape.
+     * Hidden by CSS above 768px, where the steps themselves are shown — the same links are never both on screen.
+     */
+    private function mehrMenue(array $steps, \Closure $e): string
+    {
+        $html = '<li class="gk-ortszeile-mehr"><details><summary aria-label="' . $e(Lang::t('ortszeile.mehr')) . '">'
+              . '<span class="material-icons" aria-hidden="true">more_horiz</span></summary><div class="gk-ortszeile-mehr-liste">';
+        foreach ($steps as $step) {
+            $label = $e((string) ($step['label'] ?? ''));
+            $href  = (string) ($step['href'] ?? '');
+            $html .= $href === '' ? '<span>' . $label . '</span>' : '<a href="' . $e($href) . '">' . $label . '</a>';
+        }
+        return $html . '</div></details></li>';
     }
 
     /**

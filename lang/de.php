@@ -88,6 +88,7 @@ return [
 
     // Ortszeile, Krume, Menü-Knopf, Sprunglink (1.100.0)
     'ortszeile.aria'        => 'Du bist hier',
+    'ortszeile.mehr'         => 'Weitere Ebenen',
     'ortszeile.dashboard'   => 'Dashboard',
     'breadcrumb.aria'       => 'Brotkrume',
     'header.menu'           => 'Menü',

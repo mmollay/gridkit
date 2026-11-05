@@ -3977,6 +3977,23 @@
     _gkDropdownSet(trigger, willOpen);
   });
 
+  // The "..." menu of a line with a brand (Header::ortszeile 'marke', 1.126.0) is a <details>: a click outside and Escape close it
+  // (Escape gives the focus back to its button); a click on one of its links follows the link and the page change replaces the line.
+  document.addEventListener("click", function (e) {
+    document.querySelectorAll(".gk-ortszeile-mehr details[open]").forEach(function (d) {
+      if (!d.contains(e.target)) d.removeAttribute("open");
+    });
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    var d = document.querySelector(".gk-ortszeile-mehr details[open]");
+    if (!d) return;
+    e.preventDefault();
+    d.removeAttribute("open");
+    var s = d.querySelector("summary");
+    if (s) s.focus();
+  });
+
   // Layout System
   GK.layout = {
     set(mode) {

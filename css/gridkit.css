@@ -4777,6 +4777,81 @@ a.gk-stat-card:hover {
   :where(.gk-ortszeile-ruhig) li:first-child { margin-left: -8px; }
 }
 
+/* Marke (1.126.0, opt-in: Header::ortszeile(['marke' => [...]])): the name of the system is the first step of the line and the way
+   back to the dashboard, the path goes on to its right (like a repository on GitHub). The line is one row at every width: the
+   header does not wrap for it. Up to 768px the steps in between give way to a "..." menu (a <details>, the same links), up to
+   520px the brand is its sign alone (its name stays for a screen reader and in title). The brand is the heaviest word of the line. */
+.gk-ortszeile-mit-marke ol { flex-wrap: nowrap; }
+.gk-ortszeile-marke { color: var(--gk-on-surface); font-weight: 700; font-size: 1.0625rem; letter-spacing: -0.3px; }
+.gk-ortszeile-marke .material-icons { color: var(--gk-primary); font-size: 22px; }
+.gk-ortszeile-mehr { display: none; position: relative; }
+.gk-ortszeile-mehr summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--gk-target-min);
+  min-height: var(--gk-target-min);
+  border-radius: 9999px;
+  color: var(--gk-on-surface-variant);
+  cursor: pointer;
+  list-style: none;
+}
+.gk-ortszeile-mehr summary::-webkit-details-marker { display: none; }
+.gk-ortszeile-mehr summary:hover { background: var(--gk-surface-container); }
+.gk-ortszeile-mehr summary:focus-visible { outline: 2px solid var(--gk-primary); outline-offset: 2px; }
+.gk-ortszeile-mehr-liste {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  min-width: 12rem;
+  max-width: calc(100vw - 32px);
+  margin-top: 4px;
+  padding: 4px;
+  background: var(--gk-surface);
+  border: 1px solid var(--gk-outline-variant);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.gk-ortszeile-mehr-liste a,
+.gk-ortszeile-mehr-liste span {
+  display: flex;
+  align-items: center;
+  min-height: var(--gk-target-min);
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--gk-primary-text);
+  font-weight: 500;
+  text-decoration: none;
+}
+.gk-ortszeile-mehr-liste span { color: var(--gk-on-surface-variant); }
+.gk-ortszeile-mehr-liste a:hover { background: var(--gk-surface-container); }
+.gk-ortszeile-mehr-liste a:focus-visible { outline: 2px solid var(--gk-primary); outline-offset: -2px; }
+@media (max-width: 768px) {
+  .gk-ortszeile-mit-marke .gk-ortszeile-mitte { display: none; }
+  .gk-ortszeile-mit-marke .gk-ortszeile-mehr { display: flex; }
+  /* Menu, line and the right side share ONE row (the line does not take a row of its own as it does without a brand). */
+  .gk-header:has(.gk-ortszeile-mit-marke) { flex-wrap: nowrap; row-gap: 0; }
+  .gk-header:has(.gk-ortszeile-mit-marke) .gk-ortszeile { order: 0; flex: 1 1 0; }
+}
+/* Up to 768px the dashboard anchor of a line is its house alone; the brand keeps its name until 520px. */
+@media (min-width: 521px) and (max-width: 768px) {
+  .gk-ortszeile-mit-marke.gk-ortszeile-einzeilig li:first-child:not(:last-child) .gk-ortszeile-text {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+  .gk-ortszeile-mit-marke.gk-ortszeile-einzeilig li:first-child:not(:last-child) .gk-ortszeile-link {
+    justify-content: flex-start;
+    min-width: 0;
+    padding: 0 8px;
+  }
+}
+
 /* The link that jumps over the header to the content (Layout::skipLink, 1.100.0):
    above the page until the keyboard reaches it — moved, not display: none, which
    no keyboard could land on. */
