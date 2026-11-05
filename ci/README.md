@@ -630,6 +630,32 @@ On GitHub: Settings → Webhooks → Add webhook — Payload URL
 `https://gridkit.at/hooks/github.php`, Content type `application/json`, Secret: the line printed
 above, "Just the push event", Active. GitHub sends a ping at once; Recent Deliveries shows
 `200 pong`. A push to `main` answers `202 queued`, and the log says `delivered` seconds later.
+**ModSecurity.** A server with the OWASP Core Rule Set answers GitHub's push payloads with `403`: they
+carry the commit messages, and rule 920370 ("argument value too long", over 400 characters) plus 910140
+reach the blocking score of 5 (server6, 2026-11-05: three merges, no delivery). The log says
+`ModSecurity: Access denied with code 403 … id "920370"` in `/var/log/apache2/*error*.log`. The script
+checks the HMAC signature itself and runs nothing, so the engine is switched off for this one path, as root:
+
+```bash
+cat > /etc/apache2/conf-available/gridkit-hook.conf <<'EOF'
+<Location "/hooks/github.php">
+    SecRuleEngine Off
+</Location>
+EOF
+a2enconf gridkit-hook && apachectl configtest && systemctl reload apache2
+```
+
+Test with a message of 700 characters (it must answer `202 queued`, not `403`):
+
+```bash
+S=$(cat /etc/gridkit-deploy/hook-secret); B='{"ref":"refs/heads/main","after":"0000000000000000000000000000000000000000","head_commit":{"message":"'$(printf 'x%.0s' $(seq 1 700))'"}}'
+SIG=$(printf '%s' "$B" | openssl dgst -sha256 -hmac "$S" | awk '{print $2}')
+curl -s -i -X POST https://gridkit.at/hooks/github.php -H 'Content-Type: application/json' -H 'X-GitHub-Event: push' -H "X-Hub-Signature-256: sha256=$SIG" --data-binary "$B" | sed -n '1p;$p'
+```
+
+Choose "Just the push event" in the webhook: every other event is answered `202 ignored` and starts nothing.
+The PHP-FPM user of the site (here `hpc`) must own `/var/lib/gridkit-deploy/` and read the secret.
+
 Keep the cron line as a safety net, hourly: `0 * * * *` instead of `* * * * *` — a delivery that
 was missed (server down, a webhook lost) then still arrives.
 
