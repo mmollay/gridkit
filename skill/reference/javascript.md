@@ -1,4 +1,4 @@
-# GridKit 1.123.0 — JavaScript
+# GridKit 1.125.0 — JavaScript
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -83,6 +83,35 @@ GK.palette.close();
 const off = GK.palette.register({ group: 'Tools', items: () => [{ label: 'Reload', action: 'reload' }] });  // off() takes it away
 document.addEventListener('gk:paletteselect', e => { if (e.detail.item.kind === 'record') { /* cancelable */ } });
 document.addEventListener('gk:paletteaction', e => { if (e.detail.action === 'reload') location.reload(); });
+
+// Filter builder (since 1.123.0) — GridKit\FilterBuilder and js/filter-builder.js, see "FilterBuilder". First argument: the form, its id or the name.
+GK.filterBuilder.get('f');                 // { join: 'and', rules: [{ field: 'status', op: 'is', value: 'open' }] } — the checked tree
+GK.filterBuilder.set('f', '["and",["amount","gt",100]]');   // either shape or its JSON; drawn at once, nothing sent
+GK.filterBuilder.reset('f');               // back to value(); GK.filterBuilder.apply('f') sends it like the button
+GK.filterBuilder.json('f');                // '["and",["amount","gt",100]]' — the URL parameter
+document.addEventListener('gk:filterchange', e => { e.preventDefault(); reloadTable(e.detail.json); });  // cancelable: filter live
+
+// Kanban (since 1.124.0) — GridKit\Kanban and js/kanban.js, see "Kanban". First argument: the board's id, element or selector.
+GK.kanban.move('tickets', 'T-101', 'done', 0);           // like a person's move: the veto, the save; a Promise of { ok, reverted }
+GK.kanban.move('tickets', 'T-101', 'done', null, { save: false });  // only put there (the server knows it): no event, no request
+GK.kanban.cards('tickets', 'done');                      // ['T-108', 'T-101']; without a column { new: [...], done: [...] }
+GK.kanban.columns('tickets');                            // [{ key, label, count, limit, over }, …]
+GK.kanban.refresh('tickets');                            // after the page added a card itself: handles, counts, limits
+document.addEventListener('gk:kanbanmove', e => { if (e.detail.to === 'done' && !mayClose(e.detail.id)) e.preventDefault(); });
+document.addEventListener('gk:kanbanmoved', e => { /* e.detail: { board, id, from, to, index, fromIndex, ok, reverted } */ });
+
+// File manager (since 1.125.0) — GridKit\FileManager and js/file-manager.js, see "FileManager". First argument: the id, element or selector.
+GK.files.upload('media', fileInput.files);  // queues files as if dropped: checked here, sent with progress; returns [{ name, state, message }]
+GK.files.add('media', { id: 7, name: 'Logo.png', size: 4096, mime: 'image/png', url: '/media/7' });  // a row as files() takes it
+GK.files.remove('media', [7, 8]);
+GK.files.select('media', [7], true);        // ticks (false unticks); returns the ticked ids
+GK.files.selected('media');                 // ['7', '8']
+GK.files.view('media', 'list');             // 'grid' or 'list'; returns the view
+GK.files.open('media', 7);                  // the details of a file; GK.files.close('media')
+document.addEventListener('gk:filesuploaded', e => { /* e.detail: { manager, file, answer } */ });
+document.addEventListener('gk:filesaction', e => { if (e.detail.action === 'download') { e.preventDefault(); /* yours */ } });
+// Also: gk:filesselect { ids }, gk:filesopen { id, file }, gk:filesupload { file, name } (cancelable),
+// gk:fileserror { name, message }, gk:filesdone { action, ids, ok, answer }.
 
 // Inline editing (since 1.110.0) — Table::editable(), see "Table". Cancelable; respondWith() answers.
 document.addEventListener('gk:celledit', e => { /* e.detail: { tableId, id, column, value, oldValue } */ });

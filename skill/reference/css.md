@@ -1,4 +1,4 @@
-# GridKit 1.123.0 — CSS
+# GridKit 1.125.0 — CSS
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -33,7 +33,6 @@ Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 | `gk-tab-nav-karte` `gk-tab-flaeche` `gk-tab-badge` `gk-tab-count` | Karteireiter: framed tabs on their surface, badge, count (1.101.0) |
 | `gk-tab-nav-raster` `gk-tab-badge-error` | Karteireiter row as a grid when it does not fit its box (set by `GK.tabsFit`, not by hand); the error badge (1.102.0) |
 | `gk-ortszeile-schlicht` | Option `schlicht` of `Header::ortszeile()`: on a phone (up to 768px) plain links without the pill outline, 44px target kept (1.104.0) |
-| `gk-ortszeile-ruhig` | Option `ruhig` of `Header::ortszeile()`: at every width plain links without the pill outline, a little lighter; the first step lines up with the logo on a computer (1.123.0) |
 | `gk-tab-nav-einzeilig` `gk-tab-nav-flach` | Karteireiter on a phone (up to 600px), opt-in: ONE row of equal cells instead of two columns; icon beside the word, cell 44px high instead of about 56px (1.104.0) |
 | `gk-tab-nav-overflow` `gk-tab-arrow` `gk-tab-arrow-start` `gk-tab-arrow-end` | A line, pill or text row wider than its box: the mark and the two round arrows `GK.tabsOverflow` puts on and in it — never written by hand (1.111.0) |
 | `gk-tab-loading` `gk-tab-fallback` | A lazy panel: the skeleton while it loads, the link a page without the 1.111.0 script shows (1.111.0) |
