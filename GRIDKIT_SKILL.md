@@ -408,6 +408,7 @@ build the query. Use this for a status dropdown that belongs to a table — not
 **⚠️ Search rule:** `search()` searches the column keys you name. If a column contains HTML (badges, links), use a separate plain-text key for search and a `_display` key for rendering. Never put HTML in searchable columns.
 
 **Column formats:** `currency`, `percent`, `date`, `datetime`, `boolean`, `label`, `html`, `email`, `number`
+(`date`/`datetime` render `<time datetime="…">`; `align` and `nowrap` are classes, not inline style — since 1.128.0)
 
 **A second line inside a cell** (subject, account, reference) — never widens the
 column: `->column('name', 'Customer', ['sub' => 'city'])`, see below. By hand only

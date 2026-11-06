@@ -121,6 +121,15 @@
    * Other keys in history.state (GK.navigate's gkNav) are kept. Safari throttles replaceState:
    * a refused write costs the memory, never the list.
    */
+  // A date cell's markup (1.128.0): the shown text, the ISO value in datetime — local time, like
+  // the text beside it. An unreadable date stays the plain text it always was.
+  function _gkTimeTag(d, shown, withTime) {
+    if (isNaN(d.getTime())) return shown;
+    const p = (n) => String(n).padStart(2, "0");
+    const iso = d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) +
+      (withTime ? "T" + p(d.getHours()) + ":" + p(d.getMinutes()) : "");
+    return '<time datetime="' + iso + '">' + shown + "</time>";
+  }
   var _gkBack = {
     read: function (id) {
       try {
@@ -1295,10 +1304,11 @@
               // would be the second source of truth this file keeps warning
               // about. So a date column redrawn in the browser still comes back
               // German. Fix needs localized month names first.
-              return val ? e(new Date(val).toLocaleDateString("de-DE")) : "";
+              // Since 1.128.0 inside <time datetime="…">, as Table.php writes it.
+              return val ? _gkTimeTag(new Date(val), e(new Date(val).toLocaleDateString("de-DE")), false) : "";
             case "datetime":
               return val
-                ? e(
+                ? _gkTimeTag(new Date(val), e(
                     new Date(val).toLocaleString("de-DE", {
                       day: "2-digit",
                       month: "2-digit",
@@ -1306,7 +1316,7 @@
                       hour: "2-digit",
                       minute: "2-digit",
                     }),
-                  )
+                  ), true)
                 : "";
             case "boolean":
               return parseInt(val)
@@ -1747,17 +1757,21 @@
               const val = typeof rohWert === "boolean" ? (rohWert ? "1" : "") : rohWert;
               // text-align and nowrap, as Table.php writes them on a cell: a
               // column's own nowrap, and a number or currency cell never wraps.
+              // Alignment and nowrap are classes since 1.128.0, as in Table::renderCell; only
+              // width, min-width and max-width stay a style.
               const tdStyles = [];
-              if (col.align) tdStyles.push("text-align:" + e(col.align));
+              const tdCls = [];
+              const isNum = col.format === "number" || col.format === "currency";
+              if (["left", "center", "right"].indexOf(col.align) >= 0) tdCls.push("gk-text-" + col.align);
+              else if (col.align) tdStyles.push("text-align:" + e(col.align));
               if (col.width && col.width !== "auto") tdStyles.push("width:" + e(col.width));
               if (col.minWidth) tdStyles.push("min-width:" + e(col.minWidth));
               if (col.maxWidth) tdStyles.push("max-width:" + e(col.maxWidth));
-              if (col.nowrap || col.format === "number" || col.format === "currency") tdStyles.push("white-space:nowrap");
+              if (col.nowrap || isNum) tdCls.push("gk-nowrap");
               const align = tdStyles.length ? ' style="' + tdStyles.join(";") + '"' : "";
               // Same order as Table::render writes them — a byte-for-byte
               // comparison of the two renderers is only possible if they agree.
-              const tdCls = [];
-              if (col.format === "number" || col.format === "currency")
+              if (isNum)
                 tdCls.push("gk-td-num");
               if (col.hideOnMobile) tdCls.push("gk-hide-mobile");
               // A list's column that gives way: header and cells together.

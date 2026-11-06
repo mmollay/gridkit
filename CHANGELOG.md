@@ -19,6 +19,10 @@ Back keeps the list, and a row button that may not act says why. In the SSI Pane
 - **`lockedIf`** on `Table::button()`: a non-empty row value locks the button instead of leaving it out. The lock icon in its place, `aria-disabled="true"`, still focusable, named "<name> — <reason>", the reason as title, no action, params, target, onclick or question; a click or Enter shows the reason in a toast. A text is the reason, another truthy value says `table.locked` / `js.locked` ("Gesperrt" / "Locked"). The client re-render writes the same button.
 - Icon `lock` (PHP `Icon::svg` and the client's `iconSvg`). Class `gk-btn-locked` (takes the pointer back from `[aria-disabled]`).
 
+### Changed
+- **No inline style for alignment or nowrap in table cells** (PHP and client renderer alike): `align` left/center/right is the class `gk-text-<align>`, `nowrap` and number/currency cells carry `gk-nowrap`. Only a column's own `width`, `min-width` and `max-width` stay a style (values, not design); an `align` outside the three words still goes out as a style. Golden markup re-recorded (7 cells); `ci/browser.js` reads the computed `white-space` now.
+- **Date cells in `<time datetime>`**: `format => 'date'` writes `<time datetime="YYYY-MM-DD">`, `datetime` `<time datetime="YYYY-MM-DDTHH:MM">`, around the same visible text. An unreadable date on the client stays plain text.
+
 ### Tests
 - `tests/table-locked.test.php` (42 assertions); `ci/browser-zurueck.js` (15 cases: search, filter and page after Back for a setData() table and a RowPager, served with `Cache-Control: no-store`; `gkNav` kept; the locked button before and after a sort). Against the 1.127.0 script 7 of 15 fail — the box says "LoA", the rows do not.
 

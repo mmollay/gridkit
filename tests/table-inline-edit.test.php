@@ -133,7 +133,7 @@ return [
         ->column('note', 'Note'));
     T::eq(tieCells($html, '1'), [
         '<td data-label="Name" data-gk-edit="name" tabindex="0" aria-describedby="gk-edit-hint-inv">',
-        '<td class="gk-td-num" style="white-space:nowrap" data-label="Amount" data-gk-edit="amount" tabindex="0" aria-describedby="gk-edit-hint-inv">',
+        '<td class="gk-nowrap gk-td-num" data-label="Amount" data-gk-edit="amount" tabindex="0" aria-describedby="gk-edit-hint-inv">',
         '<td data-label="Note">',
     ], 'the cell tags are not what js/gridkit.js writes on a rebuild (same attributes, same order)');
     T::contains($html, '<tr data-gk-row-id="1">', 'an editable table does not write the row id');
@@ -158,7 +158,7 @@ return [
         ->column('note', 'Note', ['edit' => 'text']));
     T::eq(tieCells($html, '1'), [
         '<td data-label="Name" data-gk-edit="name" tabindex="0" aria-describedby="gk-edit-hint-srv" data-gk-raw="Ada">',
-        '<td class="gk-td-num" style="white-space:nowrap" data-label="Amount" data-gk-edit="amount" tabindex="0" aria-describedby="gk-edit-hint-srv" data-gk-raw="1200.5">',
+        '<td class="gk-nowrap gk-td-num" data-label="Amount" data-gk-edit="amount" tabindex="0" aria-describedby="gk-edit-hint-srv" data-gk-raw="1200.5">',
         '<td data-label="OK" data-gk-edit="ok" tabindex="0" aria-describedby="gk-edit-hint-srv" data-gk-raw="1">',
         '<td data-label="Note" data-gk-edit="note" tabindex="0" aria-describedby="gk-edit-hint-srv" data-gk-raw="">',
     ], 'the raw values of row 1 (float, true, null)');

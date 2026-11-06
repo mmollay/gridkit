@@ -1635,20 +1635,34 @@ class Table
     }
 
     /** One cell: alignment, widths, classes, the label of the column for the card layout, the formatted value. */
+    /** A date cell: the shown text in its format, the ISO value in datetime (1.128.0). */
+    private static function timeTag(int $ts, string $format, string $iso, \Closure $e): string
+    {
+        return '<time datetime="' . $e(date($iso, $ts)) . '">' . $e(date($format, $ts)) . '</time>';
+    }
+
+    /** 'left', 'center' or 'right' as the GRIDKit text class (1.128.0); null for anything else. */
+    private static function alignClass(mixed $align): ?string
+    {
+        return in_array($align, ['left', 'center', 'right'], true) ? 'gk-text-' . $align : null;
+    }
+
     private function renderCell(int|string $key, array $col, array $row, ?string $linkKey, ?array $target, \Closure $e): void
     {
         $val = $row[$key] ?? '';
         $tdStyles = [];
         $tdCls = [];
-        if (isset($col['align'])) $tdStyles[] = 'text-align:' . $e($col['align']);
+        // Alignment and nowrap are classes since 1.128.0 (no inline style for design); only a column's
+        // own width, min-width and max-width stay a style — they are values, not a design choice.
+        $alignCls = self::alignClass($col['align'] ?? null);
+        if ($alignCls !== null) $tdCls[] = $alignCls;
+        elseif (isset($col['align'])) $tdStyles[] = 'text-align:' . $e($col['align']);
         if (isset($col['width']) && $col['width'] !== 'auto') $tdStyles[] = 'width:' . $e($col['width']);
         if (isset($col['minWidth'])) $tdStyles[] = 'min-width:' . $e($col['minWidth']);
         if (isset($col['maxWidth'])) $tdStyles[] = 'max-width:' . $e($col['maxWidth']);
-        if (!empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
-        if (($col['format'] ?? '') === 'currency' || ($col['format'] ?? '') === 'number') {
-            $tdCls[] = 'gk-td-num';
-            if (empty($col['nowrap'])) $tdStyles[] = 'white-space:nowrap';
-        }
+        $isNum = ($col['format'] ?? '') === 'currency' || ($col['format'] ?? '') === 'number';
+        if (!empty($col['nowrap']) || $isNum) $tdCls[] = 'gk-nowrap';
+        if ($isNum) $tdCls[] = 'gk-td-num';
         if (!empty($col['hideOnMobile'])) $tdCls[] = 'gk-hide-mobile';
         if (isset($col['priority'])) $tdCls[] = 'gk-col-p' . $col['priority'];
         // Secondary columns (numbers, identifiers) step back in text color
@@ -2198,11 +2212,12 @@ class Table
             'percent' => $e(self::percent($val, isset($col['decimals']) ? (int) $col['decimals'] : null)),
             // strtotime() takes a string and date() an int. A timestamp from the database is an int and
             // an unreadable date makes strtotime() answer false; both used to be coerced silently.
+            // Since 1.128.0 inside <time datetime="…">: the machine-readable date beside the shown one.
             'date' => $val
-                ? $e(date($col['dateFormat'] ?? Lang::t('format.date'), (int) strtotime(is_scalar($val) ? (string) $val : $val)))
+                ? self::timeTag((int) strtotime(is_scalar($val) ? (string) $val : $val), $col['dateFormat'] ?? Lang::t('format.date'), 'Y-m-d', $e)
                 : '',
             'datetime' => $val
-                ? $e(date($col['dateFormat'] ?? Lang::t('format.datetime'), (int) strtotime(is_scalar($val) ? (string) $val : $val)))
+                ? self::timeTag((int) strtotime(is_scalar($val) ? (string) $val : $val), $col['dateFormat'] ?? Lang::t('format.datetime'), 'Y-m-d\\TH:i', $e)
                 : '',
             'boolean' => (int)$val ? '<span class="gk-bool gk-bool-yes">✓</span>' : '<span class="gk-bool gk-bool-no">–</span>',
             // The empty guard the date formats two lines up already have. An

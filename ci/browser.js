@@ -367,7 +367,7 @@ fs.writeFileSync(announcePage, execFileSync(php, [path.join(__dirname, "browser-
                // die Messung sonst still auf eine andere Zelle schieben.
                share: [...document.querySelectorAll('[data-gk-table="prices"] tbody td[data-label="Share"]')]
                  .map((td) => (td.textContent || "").trim()).sort().join("|"),
-               numWrap: ((document.querySelector('[data-gk-table="prices"] tbody td.gk-td-num') || { style: {} }).style || {}).whiteSpace || null,
+               numWrap: (() => { const td = document.querySelector('[data-gk-table="prices"] tbody td.gk-td-num'); return td ? getComputedStyle(td).whiteSpace : null; })(), // a class since 1.128.0, so the computed style
                allBox: (document.querySelector('[data-gk-table="prices"] [data-gk-select-all]') || { getAttribute() {} }).getAttribute("aria-label"),
                // A row button with href is a real <a>, encoded the same on both
                // sides, and carries no data-gk-action (which would fire
