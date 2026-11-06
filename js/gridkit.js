@@ -112,6 +112,34 @@
   }
 
   /*
+   * What a list showed, kept in the history entry (1.128.0). Search for "LoA", open a row, press
+   * Back: the browser put "LoA" back into the search box (form restoration) but the rows were drawn
+   * without it — every row again, under a box that claimed a filter. A setData() table and a
+   * RowPager started from an empty query and never read the box. They now write what they show
+   * (search, filters, page) into history.state under "gkTable:<id>" and read it back when they are
+   * bound: Back shows the list as it was left, a fresh visit (a new history entry) starts clean.
+   * Other keys in history.state (GK.navigate's gkNav) are kept. Safari throttles replaceState:
+   * a refused write costs the memory, never the list.
+   */
+  var _gkBack = {
+    read: function (id) {
+      try {
+        var s = window.history.state;
+        var v = s && typeof s === "object" ? s["gkTable:" + id] : null;
+        return v && typeof v === "object" ? v : null;
+      } catch (e) { return null; }
+    },
+    write: function (id, value) {
+      try {
+        var s = window.history.state;
+        var next = s && typeof s === "object" && !Array.isArray(s) ? Object.assign({}, s) : {};
+        next["gkTable:" + id] = value;
+        window.history.replaceState(next, "");
+      } catch (e) { /* throttled or refused: the list stays as it is */ }
+    },
+  };
+
+  /*
    * Out-of-band updates: a <template data-gk-replace="css-selector"> inside the
    * fresh markup replaces an element OUTSIDE it — the summary cards above a
    * table, a status select beside it, the pager below. Both paths that swap
@@ -775,7 +803,6 @@
                   ? _savedSort
                   : { col: "", dir: "asc" };
               wrap._gkSearch = "";
-            wrap._gkPage = 1;
               wrap._gkPage = 1;
               wrap._gkFilters = {};
               wrap._gkRestoreSort = _savedSort && _savedSort.col ? true : false;
@@ -785,9 +812,38 @@
           }
         }
 
-        if (isStatic && wrap._gkData && wrap._gkRestoreSort) {
+        // Back to this list (1.128.0, see _gkBack): what the history entry kept, else what the
+        // browser restored into the box and the selects. Either way the rows follow the box.
+        let restoreView = false;
+        if (isStatic && wrap._gkData) {
+          const kept = _gkBack.read(id) || {};
+          const box = wrap.querySelector("[data-gk-search]");
+          const q = typeof kept.q === "string" ? kept.q : box ? box.value : "";
+          if (box) box.value = q;
+          wrap._gkSearch = q;
+          const keptFilters = kept.f && typeof kept.f === "object" ? kept.f : {};
+          wrap.querySelectorAll("[data-gk-filter]").forEach((sel) => {
+            const key = sel.dataset.gkFilter;
+            if (Object.prototype.hasOwnProperty.call(keptFilters, key)) sel.value = String(keptFilters[key]);
+            // sel.value, not the kept value: an option that no longer exists reads "".
+            if (sel.value !== "") wrap._gkFilters[key] = sel.value;
+          });
+          const p = parseInt(kept.p, 10);
+          if (p > 1) wrap._gkPage = p;
+          restoreView = q !== "" || Object.keys(wrap._gkFilters).length > 0 || wrap._gkPage > 1;
+        }
+
+        if (isStatic && wrap._gkData && (wrap._gkRestoreSort || restoreView)) {
           setTimeout(() => this.renderStatic(wrap), 0);
         }
+
+        // A locked row button (lockedIf, 1.128.0) acts on nothing; a click or Enter says why.
+        wrap.addEventListener("click", (e) => {
+          const locked = e.target.closest("[data-gk-locked]");
+          if (!locked || !wrap.contains(locked)) return;
+          e.preventDefault();
+          if (GK.toast && GK.toast.info) GK.toast.info(locked.getAttribute("data-gk-locked"));
+        });
 
         // Modal buttons
         wrap.addEventListener("click", (e) => {
@@ -1207,6 +1263,8 @@
         if (page > pages) page = pages;
         if (page < 1) page = 1;
         wrap._gkPage = page;
+        // What is drawn now is what Back brings back (1.128.0, see _gkBack).
+        _gkBack.write(wrap.dataset.gkTable, { q: wrap._gkSearch || "", f: Object.assign({}, filters), p: page });
         const totalRows = rows.length;   // after search and filter, before the page slice — what the footer counts
         if (perPage > 0) rows = rows.slice((page - 1) * perPage, page * perPage);
 
@@ -1449,6 +1507,21 @@
             // hideIf: skip button if row field is truthy
             if (bopts.hideIf && row[bopts.hideIf]) continue;
             const hasText = !!bopts.text;
+            // lockedIf (1.128.0): the same locked button Table::renderLockedButton writes.
+            const lockVal = bopts.lockedIf ? row[bopts.lockedIf] : null;
+            if (lockVal && lockVal !== "0") {
+              const reason = typeof lockVal === "string" && lockVal.trim() !== "" ? lockVal.trim() : _t("locked");
+              let lname = bopts.aria || bopts.title || _t("action_" + bname);
+              if (lname === "action_" + bname) {
+                lname = bname.replace(/[_-]+/g, " ");
+                lname = lname.charAt(0).toUpperCase() + lname.slice(1);
+              }
+              h += '<button type="button" class="' +
+                (hasText ? "gk-btn gk-btn-icon-text gk-btn-text gk-btn-neutral" : "gk-btn gk-btn-icon-only gk-btn-text gk-btn-neutral gk-btn-sm") +
+                ' gk-btn-locked" aria-disabled="true" data-gk-locked="' + e(reason) + '" aria-label="' + e(lname + " — " + reason) +
+                '" title="' + e(reason) + '">' + GK.table.iconSvg("lock") + (hasText ? "<span>" + e(bopts.text) + "</span>" : "") + "</button>";
+              continue;
+            }
             // Mirror PHP renderButtons: variant=text, color=neutral, size=sm by default
             const colorMap = {
               danger: "danger",
@@ -1898,6 +1971,8 @@
           case "plus":
           case "add":
             return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>';
+          case "lock":
+            return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
           case "eye":
           case "visibility":
             return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -2033,7 +2108,7 @@
             if (anchor) anchor.insertAdjacentHTML("afterend", html);
             else wrap.insertAdjacentHTML("afterbegin", html);
             _gkApplyReplacements(wrap);
-            window.history.replaceState(null, "", url);
+            window.history.replaceState(window.history.state, "", url);
           })
           .catch((err) => {
             // Only transport errors lead to the error display. If the render
@@ -3607,7 +3682,7 @@
           // GK.initContent calls GK.liveTable.init, which binds them. Every init
           // is idempotent; measured at 0.15 ms on a 2500-node invoice list.
           if (typeof GK.initContent === "function") GK.initContent(document);
-          window.history.replaceState(null, "", displayUrl);
+          window.history.replaceState(window.history.state, "", displayUrl);
           GK.liveTable.saveSession(container);
           container.dispatchEvent(new CustomEvent("gk-live-reloaded", { bubbles: true }));
           GK.liveTable.init(container);
@@ -3648,7 +3723,7 @@
       var baseUrl = container.dataset.gkLiveTable || window.location.pathname;
       var params = GK.liveTable.collectParams(container);
       var displayUrl = baseUrl + (params.toString() ? "?" + params.toString() : "");
-      window.history.replaceState(null, "", displayUrl);
+      window.history.replaceState(window.history.state, "", displayUrl);
       GK.liveTable.saveSession(container);
     },
     patchNavSelects: function (root) {
@@ -3719,7 +3794,13 @@
         var searchEl = searchSel ? document.querySelector(searchSel) : null;
         if (!searchEl && allRows.length <= per) return; // nothing to do
         tbl._gkRowPager = true;
-        var page = 1, query = "";
+        // Back to this list (1.128.0, see _gkBack): the kept page and search, else what the browser
+        // restored into the box — the rows follow the box instead of showing everything under it.
+        var backKey = tbl.id || searchSel ? "rows:" + (tbl.id || searchSel) : "";
+        var kept = (backKey && _gkBack.read(backKey)) || {};
+        var page = parseInt(kept.p, 10) > 1 ? parseInt(kept.p, 10) : 1;
+        if (searchEl && typeof kept.q === "string") searchEl.value = kept.q;
+        var query = searchEl ? (searchEl.value || "").toLowerCase().trim() : "";
         var host = tbl.closest(".gk-table-wrap") || tbl;
         var pager = document.createElement("div");
         pager.className = "gk-rowpager";
@@ -3736,6 +3817,7 @@
           allRows.forEach(function (r) { r.style.display = "none"; });
           rows.slice(start, end).forEach(function (r) { r.style.display = ""; });
           pager.innerHTML = rows.length > per ? GK.rowPager._html(page, pages, rows.length, per) : "";
+          if (backKey) _gkBack.write(backKey, { q: searchEl ? searchEl.value || "" : "", p: page });
         }
         pager.addEventListener("click", function (e) {
           var b = e.target.closest("[data-gp]");

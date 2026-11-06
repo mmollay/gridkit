@@ -7,6 +7,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.128.0] - 2026-11-06
+
+Back keeps the list, and a row button that may not act says why. In the SSI Panel a search for "LoA" on the customer list, a click on a customer and Back left "LoA" in the search box over every customer: the browser refilled the box, the table started from an empty search.
+
+### Fixed
+- **Back after a search, a filter or a page** (`setData()` tables and `RowPager`): both now keep search, filters and page in `history.state` (`gkTable:<id>`, RowPager `rows:<table id or search selector>`) and read them back when they are bound; without a kept state they follow what the browser restored into the box and the selects. A fresh visit is a new history entry and starts clean. Pages sent with `no-store` (every PHP session page) have no back/forward cache, so this is the path Back takes.
+- The AJAX table and the live table wrote `replaceState(null, …)` and wiped what else the history entry held (GK.navigate's `gkNav`); they keep `history.state` now.
+
+### Added
+- **`lockedIf`** on `Table::button()`: a non-empty row value locks the button instead of leaving it out. The lock icon in its place, `aria-disabled="true"`, still focusable, named "<name> — <reason>", the reason as title, no action, params, target, onclick or question; a click or Enter shows the reason in a toast. A text is the reason, another truthy value says `table.locked` / `js.locked` ("Gesperrt" / "Locked"). The client re-render writes the same button.
+- Icon `lock` (PHP `Icon::svg` and the client's `iconSvg`). Class `gk-btn-locked` (takes the pointer back from `[aria-disabled]`).
+
+### Tests
+- `tests/table-locked.test.php` (42 assertions); `ci/browser-zurueck.js` (15 cases: search, filter and page after Back for a setData() table and a RowPager, served with `Cache-Control: no-store`; `gkNav` kept; the locked button before and after a sort). Against the 1.127.0 script 7 of 15 fail — the box says "LoA", the rows do not.
+
+---
 ## [1.127.0] - 2026-11-05
 
 The reset of `TableHeader` is seen at a glance. It was a text button with a 16px "close" icon and an inline style — in the SSI Panel's invoice list a small grey "X" next to the filters that nobody found. Every list that calls `->reset()` gets the new button without a change.

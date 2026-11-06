@@ -41,6 +41,8 @@ class Icon
                 => '<svg ' . $s . '><path d="M12 5v14M5 12h14"/></svg>',
             'check'
                 => '<svg ' . $s . '><polyline points="20 6 9 17 4 12"/></svg>',
+            'lock'
+                => '<svg ' . $s . '><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
             'close', 'x'
                 => '<svg ' . $s . '><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
             'eye', 'visibility'

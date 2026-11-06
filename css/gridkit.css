@@ -8366,6 +8366,10 @@ a.gk-btn[aria-disabled="true"],
   cursor: not-allowed;
   pointer-events: none;
 }
+/* A locked row button (lockedIf) is disabled AND explains itself on click, focus and hover. */
+.gk-btn.gk-btn-locked {
+  pointer-events: auto;
+}
 
 /* ── Loading state ──────────────────────────────────────────────────────
    GridKit advertises that tables search and filter without a reload — and so

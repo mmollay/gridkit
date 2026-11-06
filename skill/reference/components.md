@@ -1,4 +1,4 @@
-# GridKit 1.127.0 — components
+# GridKit 1.128.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -208,6 +208,16 @@ adds more, and mapping `id` yourself overrides the default.
 
 **`hideIf`:** the opposite: `->button('edit', ['icon' => 'edit', 'hideIf' => 'archived'])` leaves the
 button out when the row's `archived` value is truthy.
+
+**`lockedIf`:** keep the button but lock it, with a reason, instead of leaving it out:
+`->button('delete', ['icon' => 'delete', 'color' => 'danger', 'confirm' => true, 'lockedIf' => 'lock_reason'])`.
+A non-empty row value locks it: a text is the reason (`'hat 3 Rechnungen'`), any other truthy value says
+"Gesperrt". The lock icon takes the button's place, `aria-disabled="true"`, named "Delete — reason",
+the reason as title; it carries no action, target or question, and a click shows the reason in a toast.
+
+**Back keeps the list (1.128.0):** a `setData()` table and a `RowPager` keep search, filters and page in
+`history.state` (`gkTable:<id>`; RowPager: `rows:<table id or search selector>`), so Back shows the list as it
+was left — not every row under a search box the browser refilled. Give a RowPager table an `id`.
 
 **Column options** (the 3rd argument of `column()`):
 

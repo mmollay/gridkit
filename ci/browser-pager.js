@@ -560,6 +560,8 @@ const btn = (id, label) => `[data-gk-table="${id}"] .gk-pagination [aria-label="
       });
       check(`O17 ${mode}: in a narrow card its buttons wrap inside it`, narrow.out === 0 && narrow.lines > 1, narrow);
       // "Last page", which only the new markup has, pages with the old script.
+      // From a clean page: since 1.128.0 a reload keeps the page the table was on (history.state).
+      await page.evaluate(() => history.replaceState(null, ""));
       await page.reload();
       await sleep(80);
       await page.click(btn("st", "Last page"));

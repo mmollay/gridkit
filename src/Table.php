@@ -1811,6 +1811,11 @@ class Table
      */
     private function renderButton(int|string $bname, array $bopts, array $row, \Closure $e): void
     {
+        $lockReason = self::buttonLock($bopts, $row);
+        if ($lockReason !== null) {
+            $this->renderLockedButton($bname, $bopts, $lockReason, $e);
+            return;
+        }
         // Almost every row button needs to say which row it belongs to, and
         // forgetting `'params' => ['id' => 'id']` failed silently: the edit
         // modal opened as if it were a new record. The row's own id is sent
@@ -1882,6 +1887,39 @@ class Table
             echo '<button type="button" class="' . $cls . '"' . $nameAttr . $titleAttr . $clickAttr . $dataAttrs . '>'
                . $inner . '</button>';
         }
+    }
+
+    /**
+     * 'lockedIf' (1.128.0): why this button cannot act in this row, or null when it can.
+     *
+     * A delete that may not run (the customer has invoices, it is your own account) was left out
+     * with showIf — and the row simply had no delete, with nothing saying why. A locked button
+     * stays in its place and names its reason: the row field's text, or the catalogue's
+     * "Locked" when the field is merely truthy.
+     */
+    private static function buttonLock(array $bopts, array $row): ?string
+    {
+        if (!isset($bopts['lockedIf'])) return null;
+        $v = $row[$bopts['lockedIf']] ?? null;
+        if (empty($v)) return null;
+        return is_string($v) && trim($v) !== '' ? trim($v) : Lang::t('table.locked');
+    }
+
+    /**
+     * A locked row button: the lock icon in the button's place, aria-disabled (still focusable, so
+     * a keyboard reaches the reason), named "<name> — <reason>", and nothing it could act with —
+     * no action, params, target, onclick or question. Clicking it shows the reason (gridkit.js).
+     * The same markup the client re-render writes.
+     */
+    private function renderLockedButton(int|string $bname, array $bopts, string $reason, \Closure $e): void
+    {
+        $hasText = !empty($bopts['text']);
+        $cls = ($hasText ? 'gk-btn gk-btn-icon-text gk-btn-text gk-btn-neutral'
+                         : 'gk-btn gk-btn-icon-only gk-btn-text gk-btn-neutral gk-btn-sm') . ' gk-btn-locked';
+        $name = self::buttonName($bname, $bopts) . ' — ' . $reason;
+        $inner = $this->iconSvg('lock') . ($hasText ? '<span>' . $e($bopts['text']) . '</span>' : '');
+        echo '<button type="button" class="' . $cls . '" aria-disabled="true" data-gk-locked="' . $e($reason) . '"'
+           . ' aria-label="' . $e($name) . '" title="' . $e($reason) . '">' . $inner . '</button>';
     }
 
     /**

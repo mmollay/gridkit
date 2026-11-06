@@ -18,10 +18,10 @@ use GridKit\Lang;
     <h2>Table <?= since('table') ?></h2>
 
     <h3 style="margin: 32px 0 16px;">Complete table with all features</h3>
-    <p class="demo-intro">The "VAT" header has a help icon, and the delete button a tooltip of its own instead of the browser's title <?= since('tooltip') ?></p>
+    <p class="demo-intro">The "VAT" header has a help icon, and the delete button a tooltip of its own instead of the browser's title <?= since('tooltip') ?>. Two articles are on invoices: their delete is locked with the reason (<code>'lockedIf'</code>, 1.128.0), and Back after a search shows the list as it was left.</p>
         <?php
         $articles = $demoRows([
-            ['article_id' => 1, 'article_number' => 'ART-001', 'name' => 'Webdesign Paket S', 'unit' => 'psch', 'net_price' => 1200.00, 'tax_rate' => 20, 'is_active' => 'active'],
+            ['article_id' => 1, 'article_number' => 'ART-001', 'name' => 'Webdesign Paket S', 'unit' => 'psch', 'net_price' => 1200.00, 'tax_rate' => 20, 'is_active' => 'active', 'in_use' => 'On 3 invoices'],
             ['article_id' => 2, 'article_number' => 'ART-002', 'name' => 'Hosting Standard', 'unit' => 'Stk', 'net_price' => 9.90, 'tax_rate' => 20, 'is_active' => 'active'],
             ['article_id' => 3, 'article_number' => 'ART-003', 'name' => 'SEO Beratung', 'unit' => 'h', 'net_price' => 95.00, 'tax_rate' => 20, 'is_active' => 'inactive'],
             ['article_id' => 4, 'article_number' => 'ART-004', 'name' => 'Logo Design', 'unit' => 'psch', 'net_price' => 450.00, 'tax_rate' => 20, 'is_active' => 'draft'],
@@ -32,7 +32,7 @@ use GridKit\Lang;
             ['article_id' => 9, 'article_number' => 'ART-009', 'name' => 'Server Administration', 'unit' => 'h', 'net_price' => 110.00, 'tax_rate' => 20, 'is_active' => 'inactive'],
             ['article_id' => 10, 'article_number' => 'ART-010', 'name' => 'SSL Zertifikat', 'unit' => 'Stk', 'net_price' => 49.00, 'tax_rate' => 20, 'is_active' => 'active'],
             ['article_id' => 11, 'article_number' => 'ART-011', 'name' => 'Domain Registration', 'unit' => 'Stk', 'net_price' => 15.00, 'tax_rate' => 20, 'is_active' => 'active'],
-            ['article_id' => 12, 'article_number' => 'ART-012', 'name' => 'Webdesign Paket L', 'unit' => 'psch', 'net_price' => 3500.00, 'tax_rate' => 20, 'is_active' => 'active'],
+            ['article_id' => 12, 'article_number' => 'ART-012', 'name' => 'Webdesign Paket L', 'unit' => 'psch', 'net_price' => 3500.00, 'tax_rate' => 20, 'is_active' => 'active', 'in_use' => 'On 1 invoice'],
             ['article_id' => 13, 'article_number' => 'ART-013', 'name' => 'App Entwicklung', 'unit' => 'h', 'net_price' => 125.00, 'tax_rate' => 20, 'is_active' => 'draft'],
             ['article_id' => 14, 'article_number' => 'ART-014', 'name' => 'Datenbank Migration', 'unit' => 'psch', 'net_price' => 890.00, 'tax_rate' => 20, 'is_active' => 'active'],
             ['article_id' => 15, 'article_number' => 'ART-015', 'name' => 'Security Audit', 'unit' => 'psch', 'net_price' => 1500.00, 'tax_rate' => 20, 'is_active' => 'inactive'],
@@ -51,7 +51,7 @@ use GridKit\Lang;
                         ->filter('is_active', 'select', ['options' => ['active' => 'Active', 'inactive' => 'Inactive', 'draft' => 'Draft'], 'placeholder' => 'All Status'])
                         ->button('edit', ['icon' => 'edit', 'class' => 'primary', 'position' => 'right', 'params' => ['id' => 'article_id']])
                         ->button('delete', ['icon' => 'delete', 'class' => 'danger', 'position' => 'right', 'params' => ['id' => 'article_id'],
-                                            'tooltip' => ['text' => 'Deletes the article', 'tone' => 'danger']])
+                                            'tooltip' => ['text' => 'Deletes the article', 'tone' => 'danger'], 'lockedIf' => 'in_use'])
                         ->newButton('New Article', ['icon' => 'add'])
                         ->nowrap(true)
                         // A box of its own where the content is narrower than the table
