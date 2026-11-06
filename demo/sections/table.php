@@ -18,7 +18,7 @@ use GridKit\Lang;
     <h2>Table <?= since('table') ?></h2>
 
     <h3 style="margin: 32px 0 16px;">Complete table with all features</h3>
-    <p class="demo-intro">The "VAT" header has a help icon, and the delete button a tooltip of its own instead of the browser's title <?= since('tooltip') ?>. Two articles are on invoices: their delete is locked with the reason (<code>'lockedIf'</code>, 1.128.0), and Back after a search shows the list as it was left.</p>
+    <p class="demo-intro">The "VAT" header has a help icon, and the delete button a tooltip of its own instead of the browser's title <?= since('tooltip') ?>. Two articles are on invoices: their delete is locked with the reason (<code>'lockedIf'</code>, 1.128.0), and Back after a search shows the list as it was left. The PDF symbol is one of the 40 row-action symbols that are SVG since 1.129.0; the buttons rest grey at full strength and take their colour on hover.</p>
         <?php
         $articles = $demoRows([
             ['article_id' => 1, 'article_number' => 'ART-001', 'name' => 'Webdesign Paket S', 'unit' => 'psch', 'net_price' => 1200.00, 'tax_rate' => 20, 'is_active' => 'active', 'in_use' => 'On 3 invoices'],
@@ -50,6 +50,7 @@ use GridKit\Lang;
                         ->column('is_active', 'Status', ['format' => 'label', 'nowrap' => true])
                         ->filter('is_active', 'select', ['options' => ['active' => 'Active', 'inactive' => 'Inactive', 'draft' => 'Draft'], 'placeholder' => 'All Status'])
                         ->button('edit', ['icon' => 'edit', 'class' => 'primary', 'position' => 'right', 'params' => ['id' => 'article_id']])
+                        ->button('pdf', ['icon' => 'picture_as_pdf', 'class' => 'secondary', 'position' => 'right', 'params' => ['id' => 'article_id'], 'title' => 'PDF'])
                         ->button('delete', ['icon' => 'delete', 'class' => 'danger', 'position' => 'right', 'params' => ['id' => 'article_id'],
                                             'tooltip' => ['text' => 'Deletes the article', 'tone' => 'danger'], 'lockedIf' => 'in_use'])
                         ->newButton('New Article', ['icon' => 'add'])

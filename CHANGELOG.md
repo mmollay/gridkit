@@ -7,6 +7,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.129.0] - 2026-11-06
+
+One look for every row button. The SSI Panel drew the row buttons of its accounting tables (invoices, expenses, receipts, bank) with the Material font and those of its master data (customers, users) with GridKit's SVGs — the same "edit" looked different from page to page, in size, colour and lock.
+
+### Added
+- **40 row-action symbols as outline SVG** (PHP `Icon::svg` and the client's `iconSvg`, drawn alike): `account_balance_wallet`, `account_tree`, `add_circle`, `analytics`, `archive`, `unarchive`, `autorenew`, `balance`, `cancel`, `check_circle`, `construction`, `event_available`, `event_busy`, `groups`, `help_outline`, `history`, `how_to_reg`, `info`, `insights`, `link`, `mark_email_read`, `unsubscribe`, `more_horiz`, `movie_creation`, `music_note`, `notification_important`, `payments`, `picture_as_pdf`, `play_circle`, `receipt_long`, `record_voice_over`, `restart_alt`, `schedule`, `skip_next`, `smart_toy`, `swap_horiz`, `tune`, `undo`, `visibility_off`, `web` — with short aliases (`wallet`, `network`, `bot`, `receipt`, `clock`, …). `delete_outline` is the same bin as `delete`, `file_copy` the same as `copy`.
+- Classes `gk-icon-s12`, `gk-icon-s14`, `gk-icon-s16`, `gk-icon-s18`, `gk-icon-s20`, `gk-icon-s24`, `gk-icon-s28`, `gk-icon-s32`, `gk-icon-s36`, `gk-icon-s40`, `gk-icon-s48` and `gk-icon-inline` for the font fallback.
+
+### Changed
+- **The font fallback has no inline style any more** at the standard sizes (`Icon::SIZES`): `Icon::svg('unknown', 16)` writes `class="material-icons gk-icon-s16"`; only an odd size still writes `font-size`. The client fallback likewise.
+- **Row buttons rest at full opacity** (still grey until the row is hovered or focused). At 0.5 their contrast was 2.3–2.7 : 1, under the 3 : 1 WCAG 1.4.11 asks of a control.
+- **A locked row button** (`gk-btn-locked`) rests at 0.55 with a `not-allowed` cursor and no hover fill, inside a table the same as outside.
+- **Touch size**: icon-only row buttons are `--gk-target-min` (44 px) on a coarse pointer and up to 768 px wide — was 40 px, and only up to 480 px.
+- Golden markup re-recorded (`archive` is an SVG now in table/buttons).
+
+### Tests
+- components: "row-action symbols are SVG, and the font fallback carries no inline style" (43 names, alias, no `style=` at 16 px, a class instead).
+
+---
 ## [1.128.0] - 2026-11-06
 
 Back keeps the list, and a row button that may not act says why. In the SSI Panel a search for "LoA" on the customer list, a click on a customer and Back left "LoA" in the search box over every customer: the browser refilled the box, the table started from an empty search.

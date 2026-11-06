@@ -8168,9 +8168,13 @@ a.gk-stat-card:hover {
    there the actions stayed permanently at 50 % opacity and desaturated, and
    were therefore indistinguishable from .gk-btn:disabled (0.45). */
 @media (hover: hover) {
+  /* 1.129.0: colourless, but no longer half transparent. At 0.5 the grey symbols reached
+     2.3 to 2.7 : 1 against the row — under the 3 : 1 a control needs (WCAG 1.4.11) — and the
+     SSI Panel overrode this rule on its own tables, so its row buttons looked different from
+     every GridKit table. Calm stays (no colour until the row is hovered), legibility returns. */
   .gk-table tbody td .gk-btn-icon-only,
   .gk-table tbody td.gk-actions .gk-btn {
-    opacity: 0.5;
+    opacity: 1;
     filter: grayscale(1);
     transition:
       opacity var(--gk-dur-1) var(--gk-ease-out),
@@ -8370,6 +8374,40 @@ a.gk-btn[aria-disabled="true"],
 .gk-btn.gk-btn-locked {
   pointer-events: auto;
 }
+/* 1.129.0: a locked row button stays visibly locked when its row is hovered — the hover rule
+   above lifted it to full colour like a live one. No hand, no light-up, the cursor says no. */
+.gk-btn.gk-btn-locked,
+.gk-table tbody tr td.gk-actions .gk-btn.gk-btn-locked {
+  opacity: 0.55;
+  filter: none;
+  cursor: not-allowed;
+}
+.gk-btn.gk-btn-locked:hover {
+  background: transparent;
+}
+/* 1.129.0: row buttons are a finger's size (--gk-target-min, 44 px) wherever a finger taps — a
+   coarse pointer or a narrow screen up to 768 px — and stay at their 26 px under a mouse. Before,
+   only screens up to 480 px got 40 px. */
+@media (pointer: coarse), (max-width: 768px) {
+  .gk-table td.gk-actions .gk-btn-icon-only {
+    min-width: var(--gk-target-min);
+    min-height: var(--gk-target-min);
+  }
+}
+/* 1.129.0: the size of an Icon::svg() font fallback, a class instead of style="font-size:…".
+   !important keeps the weight the inline style had over component rules. */
+.material-icons.gk-icon-s12 { font-size: 12px !important; }
+.material-icons.gk-icon-s14 { font-size: 14px !important; }
+.material-icons.gk-icon-s16 { font-size: 16px !important; }
+.material-icons.gk-icon-s18 { font-size: 18px !important; }
+.material-icons.gk-icon-s20 { font-size: 20px !important; }
+.material-icons.gk-icon-s24 { font-size: 24px !important; }
+.material-icons.gk-icon-s28 { font-size: 28px !important; }
+.material-icons.gk-icon-s32 { font-size: 32px !important; }
+.material-icons.gk-icon-s36 { font-size: 36px !important; }
+.material-icons.gk-icon-s40 { font-size: 40px !important; }
+.material-icons.gk-icon-s48 { font-size: 48px !important; }
+.material-icons.gk-icon-inline { vertical-align: middle; }
 
 /* ── Loading state ──────────────────────────────────────────────────────
    GridKit advertises that tables search and filter without a reload — and so

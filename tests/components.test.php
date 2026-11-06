@@ -129,6 +129,26 @@ return [
     T::notContains(Icon::svg('<script>x</script>'), '<script>', 'the name is escaped');
 },
 
+'row-action symbols are SVG, and the font fallback carries no inline style' => function (): void {
+    // 1.129.0: the SSI Panel drew its accounting row buttons (invoices, expenses, receipts,
+    // bank) with the Material font and its master-data rows (customers, users) with these
+    // SVGs — the same "edit" looked different on two pages. Every symbol a panel row button
+    // uses is an outline SVG now, so both paths draw the same thing.
+    $zeile = ['account_balance_wallet', 'account_tree', 'add_circle', 'analytics', 'archive', 'unarchive', 'autorenew', 'balance',
+        'cancel', 'check_circle', 'construction', 'delete_outline', 'event_available', 'event_busy', 'file_copy', 'groups', 'people',
+        'help_outline', 'history', 'how_to_reg', 'info', 'insights', 'link', 'mark_email_read', 'unsubscribe', 'more_horiz',
+        'movie_creation', 'music_note', 'notification_important', 'payments', 'picture_as_pdf', 'play_circle', 'receipt_long',
+        'record_voice_over', 'restart_alt', 'schedule', 'skip_next', 'smart_toy', 'swap_horiz', 'tune', 'undo', 'visibility_off', 'web'];
+    $fehlen = array_values(array_filter($zeile, static fn (string $n): bool => !Icon::has($n)));
+    T::eq($fehlen, [], 'row-action symbols without an SVG: ' . implode(', ', $fehlen));
+    T::eq(Icon::svg('delete_outline'), Icon::svg('delete'), 'delete_outline is the same bin as delete');
+
+    // The font fallback sized itself with style="font-size:…"; a class does it now.
+    T::notContains(Icon::svg('nope-not-real', 16), 'style=', 'no inline style at a standard size');
+    T::contains(Icon::svg('nope-not-real', 16), 'gk-icon-s16', 'the size is a class');
+    T::contains(Icon::svg('nope-not-real', 17), 'font-size:17px', 'an odd size still gets its value');
+},
+
 'the starter file is English and uses the layout wrapper' => function (): void {
     $skeleton = (string) file_get_contents(__DIR__ . '/../skeleton.php');
 

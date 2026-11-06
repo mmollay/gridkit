@@ -1,4 +1,4 @@
-# GridKit 1.128.0 — components
+# GridKit 1.129.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -4254,4 +4254,4 @@ a block: `css/blocks.json` names the release that first shipped each class.
 | Kanban | `GridKit\Kanban` / `js/kanban.js` / `GK.kanban` | Columns with cards for tasks, orders, campaigns, tickets: a labelled region of lists with headings and counts that works without script (links, a "Move to" form per card); with the script dragging by mouse or finger with a drop line and the board scrolling under the card, full keyboard moving with every step spoken, work-in-progress limits that warn or refuse, every move saved as JSON one at a time with the way back on a refusal; lanes that snap on a phone (since 1.124.0) |
 | FileManager | `GridKit\FileManager` / `js/file-manager.js` / `GK.files` | A media library and a receipt drawer: folders with a breadcrumb, thumbnails or a list, search, a filter by type, sorting, single or multi selection by mouse and keyboard, bulk actions (delete, move, download) and a details panel (dimensions, URL to copy, rename) — from rows the page supplies, posting to the page's URLs; many uploads at once, chosen, dropped or pasted, each with a progress bar, cancel and retry, the new file in the listing without a reload; `FileManager::receive()` checks an upload on the server by its content (type, extension, size, pixels, code in it, SVG script) and stores it under a random name outside the web root; a sheet on a phone; works without script (since 1.125.0) |
 | Side sheet (JS) | `.gk-sheet` / `GK.sheet` | A panel a row opens: docked right beside the list, full screen and modal on a phone (since 1.91.0) |
-| Icon | `GridKit\Icon` | Inline SVG icons with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
+| Icon | `GridKit\Icon` | Inline SVG icons (every panel row-action symbol is SVG since 1.129.0) with a Material Icons fallback — `Icon::svg($name, $px)`: the 2nd argument is an **int** pixel size (default 16), not an options array |
