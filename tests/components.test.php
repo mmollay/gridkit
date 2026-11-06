@@ -136,7 +136,7 @@ return [
     // uses is an outline SVG now, so both paths draw the same thing.
     $zeile = ['account_balance_wallet', 'account_tree', 'add_circle', 'analytics', 'archive', 'unarchive', 'autorenew', 'balance',
         'cancel', 'check_circle', 'construction', 'delete_outline', 'event_available', 'event_busy', 'file_copy', 'groups', 'people',
-        'help_outline', 'history', 'how_to_reg', 'info', 'insights', 'link', 'mark_email_read', 'unsubscribe', 'more_horiz',
+        'help_outline', 'history', 'how_to_reg', 'info', 'insights', 'link', 'mark_email_read', 'unsubscribe', 'more_horiz', 'more_vert',
         'movie_creation', 'music_note', 'notification_important', 'payments', 'picture_as_pdf', 'play_circle', 'receipt_long',
         'record_voice_over', 'restart_alt', 'schedule', 'skip_next', 'smart_toy', 'swap_horiz', 'tune', 'undo', 'visibility_off', 'web'];
     $fehlen = array_values(array_filter($zeile, static fn (string $n): bool => !Icon::has($n)));

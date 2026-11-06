@@ -132,6 +132,8 @@ class Icon
                 => '<svg ' . $s . '><path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h9"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7M17 17l4 4M21 17l-4 4"/></svg>',
             'more_horiz', 'more'
                 => '<svg ' . $s . '><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>',
+            'more_vert'
+                => '<svg ' . $s . '><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>',
             'movie_creation', 'movie', 'film'
                 => '<svg ' . $s . '><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg>',
             'music_note', 'music'
