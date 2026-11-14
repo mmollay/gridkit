@@ -529,6 +529,11 @@ return [
     T::eq(gkCssDecl(gkCssRule($flaeche . ' > :where(.gk-card:only-child) > :where(.gk-card-body)'))['padding'] ?? '', '0', 'the body of the card is indented against the other tabs');
     $fuss = gkCssDecl(gkCssRule($flaeche . ' > .gk-card:where(:only-child) > .gk-card-footer'));
     T::eq($fuss['background'] ?? '', 'transparent', 'the foot of the card keeps the tinted band of 1.114.0');
+    // Dark: [data-gk-mode="dark"] .gk-card (two classes) gives back fill and shadow — the dark rule here weighs as much and comes later.
+    $dunkel = gkCssDecl(gkCssRule('.gk-dark ' . $flaeche . ' > :where(.gk-card:only-child)'));
+    T::ok(($dunkel['background'] ?? '') === 'transparent' && ($dunkel['box-shadow'] ?? '') === 'none', 'in dark mode the card alone on the surface gets its fill and shadow back');
+    T::ok(str_contains(gkCssBare(), "\n[data-gk-mode=\"dark\"] " . $flaeche . ' > :where(.gk-card:only-child),'), 'the dark rule misses [data-gk-mode="dark"]');
+    T::ok(strpos(gkCssBare(), "\n[data-gk-mode=\"dark\"] .gk-card,") < strpos(gkCssBare(), "\n[data-gk-mode=\"dark\"] " . $flaeche), 'the dark rule of the card alone stands before the dark rule of .gk-card and loses');
     // Only a framed surface: right after a Karteireiter row, or before a row at the bottom. A surface without a frame keeps the card.
     T::ok(!str_contains(gkCssBare(), "\n.gk-tab-flaeche > .gk-card"), 'a card is flattened on every surface, also one without a frame');
     // Weight: the card, its head and its body as heavy as ONE class (:where), and nothing here may hide or show anything.

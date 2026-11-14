@@ -14,6 +14,7 @@ One frame, not two. A card that is the only content of a framed tab surface (`.g
 ### Changed
 - **A card alone on a framed surface** loses its edge, shadow, fill, padding and margin: the surface already is the card (without edge and fill its rounding no longer shows; it sets no radius of its own, the corners stay `--gk-tab-radius`). Its head (symbol, heading, line), body and foot stay, without side padding, so they stand flush with the content of the other tabs; the foot loses the tinted band of 1.114.0 and keeps its line. Nothing to order — it follows from the card being the only child of the surface.
 - Untouched: a card inside that card, a card next to other content on the surface, and a card on a surface without a frame (no Karteireiter row) keep their frame.
+- Dark: `[data-gk-mode="dark"] .gk-card` / `.gk-dark .gk-card` (two classes) gives a card fill and shadow; a dark rule of the same weight, later in the sheet, keeps the card alone flat in dark mode too.
 - Weight: the surface and the card sit in `:where()`, so the card, its head and its body weigh one class and a rule of the page still wins; only the foot weighs three classes, to undo the band of `.gk-card:has(> .gk-card-body) > .gk-card-footer`. No rule sets `display`.
 
 ### Demo
@@ -21,7 +22,7 @@ One frame, not two. A card that is the only content of a framed tab surface (`.g
 
 ### Tests
 - reiter: "a card alone on a framed surface draws no second frame; its parts stay, flush; one class of the page still wins (1.130.0)".
-- ci/browser-reiter.js: the card alone has no edge, shadow or fill and is as wide as the surface, head and text flush, the line under the head stays; a card inside it, next to other content and on an unframed surface keep their edge; with the row at the bottom none; one class of the page wins — at 1440 px light and 390 px dark.
+- ci/browser-reiter.js: the card alone has no edge, shadow or fill and is as wide as the surface, head and text flush, the line under the head stays; a card inside it, next to other content and on an unframed surface keep their edge; with the row at the bottom none; one class of the page wins — at 1440 px light and 390 px dark (dark through `data-gk-mode="dark"`, as GRIDKit switches it).
 
 ---
 ## [1.129.0] - 2026-11-06

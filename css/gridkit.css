@@ -10318,6 +10318,13 @@ label.gk-setting-title {
   padding: 12px 0 0;
   background: transparent;
 }
+/* Dunkel: [data-gk-mode="dark"] .gk-card gibt der Karte Füllung und Schatten zurück (zwei Klassen schwer). Hier gleich schwer
+   und später im Blatt, damit die Karte auch dunkel keinen zweiten Rahmen zeichnet. */
+[data-gk-mode="dark"] .gk-tab-flaeche:where(.gk-tab-nav-karte ~ *, :has(~ .gk-tab-nav-karte.gk-tab-nav-unten)) > :where(.gk-card:only-child),
+.gk-dark .gk-tab-flaeche:where(.gk-tab-nav-karte ~ *, :has(~ .gk-tab-nav-karte.gk-tab-nav-unten)) > :where(.gk-card:only-child) {
+  background: transparent;
+  box-shadow: none;
+}
 
 /* ── Reiter-Varianten (1.103.0): Stil × Ausrichtung × Option ─────────────────
    Alles hängt als Klasse an <nav class="gk-tab-nav">; ein Skript (GK.tabsMarkup) bedient jede Form.

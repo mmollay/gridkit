@@ -489,6 +489,8 @@ ${flaeche("k-eigen", karte("", " probe-eigen"))}
       const k = await browser.newPage({ viewport: { width: breite, height: 900 }, colorScheme: schema });
       k.on("pageerror", (e) => fehler.push(e.message));
       await k.setContent(kartenSeite);
+      // Dunkel schaltet GRIDKit über data-gk-mode (nicht über das Farbschema des Systems) — sonst misst der dunkle Lauf hell.
+      if (schema === "dark") await k.evaluate(() => document.body.setAttribute("data-gk-mode", "dark"));
       const m = await k.evaluate(() => {
         const st = (el) => getComputedStyle(el);
         const ka = (id) => document.querySelector(`#${id} > .gk-card`);
