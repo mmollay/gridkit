@@ -265,6 +265,36 @@ use GridKit\Tabs;
     &lt;div class="gk-card"&gt;…&lt;/div&gt;
 &lt;/div&gt;</pre></div>
 
+    <h3 class="demo-h3" id="tabs-eine-karte">One card alone on the surface</h3>
+    <p class="demo-intro">When a card is the only thing on a framed surface, the surface already is the card: the card loses its edge, shadow, rounding and padding, and its head (symbol, heading, line) and body stand flush with the content of the other tabs. A card inside it, or a card next to other content, keeps its frame. Nothing to order — it follows from <code>.gk-card</code> being the only child of <code>.gk-tab-flaeche</code>.</p>
+    <div class="demo-card">
+        <div class="gk-tabs">
+            <div class="gk-tab-nav gk-tab-nav-karte" aria-label="Areas of this video">
+                <button class="gk-tab-btn gk-active" data-tab="ek-material"><span class="material-icons gk-tab-icon" aria-hidden="true">perm_media</span><span>Material &amp; rights</span></button>
+                <button class="gk-tab-btn" data-tab="ek-kosten"><span class="material-icons gk-tab-icon" aria-hidden="true">payments</span><span>Log &amp; costs</span></button>
+            </div>
+            <div class="gk-tab-panel gk-tab-flaeche gk-active" data-tab="ek-material">
+                <div class="gk-card">
+                    <div class="gk-card-header"><span class="material-icons" aria-hidden="true">perm_media</span><span>Material and rights</span></div>
+                    <div class="gk-card-body">
+                        <p>Made with AI (for the video as a whole): <strong>Yes</strong>. Material of others needs a proof of rights.</p>
+                        <div class="gk-card gk-card-flat"><p>Music: a card inside the card keeps its frame.</p></div>
+                    </div>
+                </div>
+            </div>
+            <div class="gk-tab-panel gk-tab-flaeche" data-tab="ek-kosten">
+                <div class="gk-card"><p>Costs — a card next to another one keeps its frame.</p></div>
+                <div class="gk-card"><p>Steps.</p></div>
+            </div>
+        </div>
+    </div>
+    <div class="demo-code"><pre>&lt;div class="gk-tab-panel gk-tab-flaeche" data-tab="a"&gt;
+    &lt;div class="gk-card"&gt;   &lt;!-- the only child: no second frame --&gt;
+        &lt;div class="gk-card-header"&gt;…&lt;/div&gt;
+        &lt;div class="gk-card-body"&gt;…&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</pre></div>
+
     <h3 class="demo-h3" id="tabs-schmal">A row that does not fit its box</h3>
     <p class="demo-intro">Six tabs in boxes of 700, 560 and 340px. A row that fits stays the one line above; one that does not becomes the grid of the phone — every tab whole, every cell as tall as its row, the chosen one still grown into the surface. <code>GK.tabsFit</code> measures the row itself, so no window width has to be guessed (it puts <code>.gk-tab-nav-raster</code> on and takes it off). Without the script the row simply stays a line.</p>
     <div class="demo-card">

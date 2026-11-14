@@ -517,5 +517,29 @@ return [
     }
     T::contains($js, '.gk-tab-nav-karte:not(.gk-tab-nav-links):not(.gk-tab-nav-rechts)', 'a side Karteireiter row would be measured as a row (and become a grid)');
 },
+
+'a card alone on a framed surface draws no second frame; its parts stay, flush; one class of the page still wins (1.130.0)' => function (): void {
+    $flaeche = '.gk-tab-flaeche:where(.gk-tab-nav-karte ~ *, :has(~ .gk-tab-nav-karte.gk-tab-nav-unten))';
+    $karte = gkCssDecl(gkCssRule($flaeche . ' > :where(.gk-card:only-child)'));
+    foreach (['margin' => '0', 'padding' => '0', 'border' => '0', 'background' => 'transparent', 'box-shadow' => 'none'] as $p => $v) {
+        T::eq($karte[$p] ?? '', $v, "the card alone on the surface keeps its $p — a frame in a frame");
+    }
+    $kopf = gkCssDecl(gkCssRule($flaeche . ' > :where(.gk-card:only-child) > :where(.gk-card-header)'));
+    T::eq($kopf['padding'] ?? '', '0 0 12px', 'the head of the card is indented against the other tabs (or lost its line spacing)');
+    T::eq(gkCssDecl(gkCssRule($flaeche . ' > :where(.gk-card:only-child) > :where(.gk-card-body)'))['padding'] ?? '', '0', 'the body of the card is indented against the other tabs');
+    $fuss = gkCssDecl(gkCssRule($flaeche . ' > .gk-card:where(:only-child) > .gk-card-footer'));
+    T::eq($fuss['background'] ?? '', 'transparent', 'the foot of the card keeps the tinted band of 1.114.0');
+    // Only a framed surface: right after a Karteireiter row, or before a row at the bottom. A surface without a frame keeps the card.
+    T::ok(!str_contains(gkCssBare(), "\n.gk-tab-flaeche > .gk-card"), 'a card is flattened on every surface, also one without a frame');
+    // Weight: the card, its head and its body as heavy as ONE class (:where), and nothing here may hide or show anything.
+    preg_match_all('/\n(\.gk-tab-flaeche:where\(\.gk-tab-nav-karte ~ \*[^{]*)\{([^}]*)\}/', gkCssBare(), $m, PREG_SET_ORDER);
+    T::eq(count($m), 4, 'the four rules of a card alone on the surface');
+    foreach ($m as [, $sel, $body]) {
+        T::ok(!str_contains($body, 'display'), 'a rule of the card alone on the surface sets display: ' . trim($sel));
+    }
+    foreach (array_slice($m, 0, 3) as [, $sel]) {
+        T::ok(!preg_match('/>\s*\.gk-card/', $sel), 'the card or its parts weigh more than one class: ' . trim($sel));
+    }
+},
 ];
 })();

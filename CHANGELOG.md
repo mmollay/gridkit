@@ -7,6 +7,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.130.0] - 2026-11-14
+
+One frame, not two. A card that is the only content of a framed tab surface (`.gk-tab-flaeche` after a Karteireiter row, or before a `.gk-tab-nav-unten` row) drew its own edge and shadow inside the edge of the surface — the SSI Panel's tab "Material & Rechte" showed a frame in a frame (Martin, 14.11.2026: "ein Rahmen in einem Frame ist etwas zu viel").
+
+### Changed
+- **A card alone on a framed surface** loses its edge, shadow, fill, padding and margin: the surface already is the card (without edge and fill its rounding no longer shows; it sets no radius of its own, the corners stay `--gk-tab-radius`). Its head (symbol, heading, line), body and foot stay, without side padding, so they stand flush with the content of the other tabs; the foot loses the tinted band of 1.114.0 and keeps its line. Nothing to order — it follows from the card being the only child of the surface.
+- Untouched: a card inside that card, a card next to other content on the surface, and a card on a surface without a frame (no Karteireiter row) keep their frame.
+- Weight: the surface and the card sit in `:where()`, so the card, its head and its body weigh one class and a rule of the page still wins; only the foot weighs three classes, to undo the band of `.gk-card:has(> .gk-card-body) > .gk-card-footer`. No rule sets `display`.
+
+### Demo
+- Tabs: "One card alone on the surface" — a card with a card inside on one tab, two cards on the other.
+
+### Tests
+- reiter: "a card alone on a framed surface draws no second frame; its parts stay, flush; one class of the page still wins (1.130.0)".
+- ci/browser-reiter.js: the card alone has no edge, shadow or fill and is as wide as the surface, head and text flush, the line under the head stays; a card inside it, next to other content and on an unframed surface keep their edge; with the row at the bottom none; one class of the page wins — at 1440 px light and 390 px dark.
+
+---
 ## [1.129.0] - 2026-11-06
 
 One look for every row button. The SSI Panel drew the row buttons of its accounting tables (invoices, expenses, receipts, bank) with the Material font and those of its master data (customers, users) with GridKit's SVGs — the same "edit" looked different from page to page, in size, colour and lock.

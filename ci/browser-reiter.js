@@ -473,6 +473,42 @@ const check = (name, ok, why) => results.push({ name, ok: !!ok, why: ok ? "" : J
       check("Reiterposition: bei gesperrtem sessionStorage führt der Reiter hin, ohne Fehler und ohne Verschiebung", gesperrt === 0 && fehlerSeite.length === 0, { gesperrt, fehlerSeite });
       await ctx.close();
     }
+    // Eine Karte allein auf der Fläche (1.130.0): nur EIN Rahmen, Kopf und Körper bündig mit der Fläche; eine Karte darin, eine Karte neben
+    // anderem Inhalt und eine Karte in einer Fläche ohne Rahmen behalten ihren; eine Klasse der Seite gewinnt. Hell und dunkel, breit und schmal.
+    const karte = (inhalt = "", klasse = "") => `<div class="gk-card${klasse}"><div class="gk-card-header"><span>Kopf</span></div><div class="gk-card-body"><p>Körper</p>${inhalt}</div></div>`;
+    const flaeche = (id, innen) => `<div class="gk-tabs"><div class="gk-tab-nav gk-tab-nav-karte">${knopf("x", "X", true)}</div><div class="gk-tab-panel gk-tab-flaeche gk-active" id="${id}" data-tab="x">${innen}</div></div>`;
+    const kartenSeite = `<!doctype html><html lang="de"><head><meta charset="utf-8"><style>${lies("css/gridkit.css")}</style><style>${lies("css/themes.css")}</style>
+<style>.probe-eigen { border: 3px solid currentColor; }</style></head><body class="gk-root"><main class="gk-container">
+${flaeche("k-allein", karte('<div class="gk-card gk-card-flat" id="k-innen"><p>innen</p></div>'))}
+${flaeche("k-neben", karte() + "<p>daneben</p>")}
+<div class="gk-tab-flaeche" id="k-ohne">${karte()}</div>
+<div class="gk-tabs"><div class="gk-tab-panel gk-tab-flaeche gk-active" id="k-unten" data-tab="x">${karte()}</div><div class="gk-tab-nav gk-tab-nav-karte gk-tab-nav-unten">${knopf("x", "X", true)}</div></div>
+${flaeche("k-eigen", karte("", " probe-eigen"))}
+</main></body></html>`;
+    for (const [breite, schema] of [[1440, "light"], [390, "dark"]]) {
+      const k = await browser.newPage({ viewport: { width: breite, height: 900 }, colorScheme: schema });
+      k.on("pageerror", (e) => fehler.push(e.message));
+      await k.setContent(kartenSeite);
+      const m = await k.evaluate(() => {
+        const st = (el) => getComputedStyle(el);
+        const ka = (id) => document.querySelector(`#${id} > .gk-card`);
+        const f = document.getElementById("k-allein"), c = ka("k-allein"), fs = st(f);
+        const fr = f.getBoundingClientRect(), cr = c.getBoundingClientRect();
+        const kopf = c.querySelector(".gk-card-header"), koerper = c.querySelector(".gk-card-body"), text = koerper.querySelector("p").getBoundingClientRect();
+        return { rand: st(c).borderTopWidth, schatten: st(c).boxShadow, fuellung: st(c).backgroundColor,
+          links: Math.round(cr.left - fr.left - parseFloat(fs.borderLeftWidth) - parseFloat(fs.paddingLeft)), rechts: Math.round(fr.right - cr.right - parseFloat(fs.borderRightWidth) - parseFloat(fs.paddingRight)),
+          kopfLinks: parseFloat(st(kopf).paddingLeft), kopfLinie: st(kopf).borderBottomWidth, textLinks: Math.round(text.left - cr.left),
+          innen: st(document.getElementById("k-innen")).borderTopWidth, neben: st(ka("k-neben")).borderTopWidth, ohne: st(document.querySelector("#k-ohne > .gk-card")).borderTopWidth,
+          unten: st(ka("k-unten")).borderTopWidth, eigen: st(ka("k-eigen")).borderTopWidth, flaecheRand: fs.borderTopWidth };
+      });
+      await k.close();
+      check(`eine Karte allein auf der Fläche (${breite} px, ${schema}): kein zweiter Rahmen, kein Schatten, keine eigene Füllung — die Fläche behält ihren`,
+        m.rand === "0px" && m.schatten === "none" && m.fuellung === "rgba(0, 0, 0, 0)" && m.flaecheRand === "1px", m);
+      check(`eine Karte allein auf der Fläche (${breite} px, ${schema}): so breit wie die Fläche, Kopf und Text bündig, die Linie unter dem Kopf bleibt`,
+        m.links === 0 && m.rechts === 0 && m.kopfLinks === 0 && m.textLinks === 0 && m.kopfLinie === "1px", m);
+      check(`eine Karte allein auf der Fläche (${breite} px, ${schema}): eine Karte darin, eine neben anderem Inhalt, eine ohne gerahmte Fläche behalten ihren Rahmen; mit der Reihe unten keiner; eine Klasse der Seite gewinnt`,
+        m.innen === "1px" && m.neben === "1px" && m.ohne === "1px" && m.unten === "0px" && m.eigen === "3px", m);
+    }
     // Ohne Skript ändert sich nichts: die Zeile bleibt eine Zeile, wie in 1.101.0 (sie schiebt dann in sich, wie dort).
     const ohne = await browser.newPage({ viewport: { width: 1440, height: 900 }, javaScriptEnabled: false });
     await ohne.goto("file://" + datei);

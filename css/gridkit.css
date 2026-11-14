@@ -10286,6 +10286,39 @@ label.gk-setting-title {
 .gk-tab-nav-karte.gk-tab-nav-raster ~ .gk-tab-flaeche { border-radius: var(--gk-tab-radius); }
 .gk-tab-badge-error { background: var(--gk-error-container); color: var(--gk-on-error-container); }
 
+/* ── Eine Karte allein auf der Fläche (1.130.0) ─────────────────────────────
+   Steht eine Karte (.gk-card) als EINZIGER Inhalt in einer gerahmten Fläche (nach einer Karteireiter-Zeile oder
+   vor einer Zeile .gk-tab-nav-unten), ist die Fläche schon die Karte: Rand, Schatten, Füllung, Innen- und Außenabstand
+   der Karte entfallen (ohne Rand und Füllung ist auch ihre Rundung nicht mehr zu sehen; die Ecken der Fläche bleiben
+   --gk-tab-radius). Kopf (Symbol, Überschrift, Trennlinie), Körper und Fuß bleiben, ohne seitlichen
+   Abstand: Sie stehen bündig mit dem Inhalt der anderen Reiter, den Abstand gibt die Fläche. Vorher zeichnete die
+   Fläche einen Rahmen und die Karte darin einen zweiten (SSI Panel, Reiter „Material & Rechte“; Martin, 14.11.2026:
+   „ein Rahmen in einem Frame ist etwas zu viel“). Karten IN dieser Karte, Karten neben anderem Inhalt und Karten in
+   einer Fläche ohne Rahmen bleiben, wie sie sind.
+   Gewicht: Fläche und Karte stehen in :where() — Karte, Kopf und Körper wiegen so viel wie EINE Klasse, eine Regel
+   der Seite gewinnt. Nur der Fuß wiegt mehr: .gk-card:has(> .gk-card-body) > .gk-card-footer (1.114.0) gibt ihm ein
+   getöntes Band, das hier entfallen muss. Keine Regel hier setzt display. */
+.gk-tab-flaeche:where(.gk-tab-nav-karte ~ *, :has(~ .gk-tab-nav-karte.gk-tab-nav-unten)) > :where(.gk-card:only-child) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.gk-tab-flaeche:where(.gk-tab-nav-karte ~ *, :has(~ .gk-tab-nav-karte.gk-tab-nav-unten)) > :where(.gk-card:only-child) > :where(.gk-card-header) {
+  min-height: 0;
+  margin: 0 0 16px;
+  padding: 0 0 12px;
+}
+.gk-tab-flaeche:where(.gk-tab-nav-karte ~ *, :has(~ .gk-tab-nav-karte.gk-tab-nav-unten)) > :where(.gk-card:only-child) > :where(.gk-card-body) {
+  padding: 0;
+}
+.gk-tab-flaeche:where(.gk-tab-nav-karte ~ *, :has(~ .gk-tab-nav-karte.gk-tab-nav-unten)) > .gk-card:where(:only-child) > .gk-card-footer {
+  margin-top: 16px;
+  padding: 12px 0 0;
+  background: transparent;
+}
+
 /* ── Reiter-Varianten (1.103.0): Stil × Ausrichtung × Option ─────────────────
    Alles hängt als Klasse an <nav class="gk-tab-nav">; ein Skript (GK.tabsMarkup) bedient jede Form.
    Ohne eine dieser Klassen bleibt jede Reiterzeile, wie sie war. Nur additiv: keine Regel davor ist
