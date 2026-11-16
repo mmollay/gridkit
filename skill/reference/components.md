@@ -1,4 +1,4 @@
-# GridKit 1.130.0 — components
+# GridKit 1.131.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -2330,6 +2330,12 @@ Markup and classes only.
   `min(100%, limit × 9/16)`, so the shape holds when the limit bites (a `max-height` alone would
   leave a wide, flat box). A page changes the limit on the frame (`--gk-video-frame-max-h`), not
   with a width of its own. It is left-aligned; add `gk-mx-auto` to the `<figure>` to centre it.
+- **Landscape — `gk-video-frame-landscape`** (since 1.131.0): a second class on the `<figure>` makes
+  the same frame 16:9, for a recording or a film. The box is `aspect-ratio: 16 / 9` and the WIDTH is
+  `min(100%, limit × 16/9)` — as wide as the column until the limit bites, then it keeps its shape. The
+  picture (shown whole, so a portrait file in it is not cut), the caption, the limit, busy and failed are
+  the frame's own; the safe zones are drawn for a portrait short. One class on the figure, the box inside
+  `:where()`: a rule of a page with one class still wins.
 - **No autoplay, ever:** write `controls` and `playsinline` (a phone opens a video without
   `playsinline` full screen on its own), give the `<video>` an `aria-label`, never `autoplay`.
 - **Safe zones — `gk-video-frame-safe`:** a second class on the `<figure>` draws, over the

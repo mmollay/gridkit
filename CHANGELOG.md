@@ -7,6 +7,26 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.131.0] - 2026-11-16
+
+The video frame in landscape. `.gk-video-frame` has been 9:16 only: the SSI Panel put a 16:9 video (its approval dialog "Video freigeben", a recording of a survival day) into a narrow portrait box with black bars on both sides (Martin, 16.11.2026: "das ist ja ein Video, aber hier sehe ich eine Short-Vorschau"). The Panel had a local override for its page; the dialog had none.
+
+### Added
+- **`.gk-video-frame-landscape`** — a second class on the `<figure>` makes the same frame 16:9. The box is `aspect-ratio: 16 / 9`; the width comes from the same height limit, `min(100%, calc(var(--gk-video-frame-max-h) * 16 / 9))`: as wide as the column until the limit bites (75 % of the window, or the page's own `--gk-video-frame-max-h`), then it keeps its shape.
+- Everything else is the frame's own and not repeated: the picture lies in the box and is shown whole (a portrait file in a landscape frame is not cut), caption, busy, failed, the limit variable. The safe zones are drawn for a portrait short; a landscape video has no use for them.
+- Weight: one class on the figure and the box inside `:where()` (one class), both after the 9:16 rules they change — a rule of a page with one class still wins, as for every GridKit rule a page may want to override (`css/blocks.json`: the class since 1.131.0, the block "changed").
+
+### Demo
+- Gallery, "Portrait video frame": a paragraph and two landscape frames (a picture, the busy state); `demo/media/sample-landscape.svg`.
+
+### Docs
+- `GRIDKIT_SKILL.md`, `skill/reference/components.md`, `skill/reference/css.md`, `SPEC.md`: the variant.
+
+### Tests
+- video-frame: "the landscape variant is 16:9 and takes its width from the same height limit" (the two declarations and nothing more, the weight, the order in the file) and "keeps everything else of the frame" (exactly two rules, the height limit stays on the box).
+- ci/browser-timeline-video.js, V09–V13: 16:9 at every width and window height (the limit bites at 400 px: 300 × 533), a column of 300 and 150 px, the picture whole in the box (a portrait file and a portrait picture), busy and failed unchanged, a rule of a page with one class wins on the figure and on the box, a phone (360 and 320 px): no sideways scroll. V06 now expects the pulse of two busy frames.
+
+---
 ## [1.130.0] - 2026-11-14
 
 One frame, not two. A card that is the only content of a framed tab surface (`.gk-tab-flaeche` after a Karteireiter row, or before a `.gk-tab-nav-unten` row) drew its own edge and shadow inside the edge of the surface — the SSI Panel's tab "Material & Rechte" showed a frame in a frame (Martin, 14.11.2026: "ein Rahmen in einem Frame ist etwas zu viel").

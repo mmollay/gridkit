@@ -213,6 +213,34 @@ GK.lightbox.show([{ src: '/g/1.webp', caption: 'Fireplace', meta: 'Own image' }]
         });
         ?>
 
+    <p class="demo-intro"><strong>Landscape</strong> (1.131.0): <code>gk-video-frame-landscape</code> on the <code>&lt;figure&gt;</code> makes the same frame 16:9 — a recording, a film. It is as wide as its column until the 75 % limit of the window bites, then it keeps its shape; a portrait file in it is shown whole, not cut. Busy and failed work as in the 9:16 frame. One class on the figure, so a rule of your page with one class still wins.</p>
+        <?php
+        showcase(function () {
+            echo <<<'HTML'
+            <div class="demo-frames">
+              <figure class="gk-video-frame gk-video-frame-landscape">
+                <div class="gk-video-frame-media">
+                  <img src="media/sample-landscape.svg" alt="The first frame of the recording: a blue field with a pale disc">
+                </div>
+                <figcaption class="gk-video-frame-caption">A recording, 16:9</figcaption>
+              </figure>
+              <figure class="gk-video-frame gk-video-frame-landscape gk-video-frame-busy">
+                <div class="gk-video-frame-media">
+                  <div class="gk-empty" role="status">
+                    <div class="gk-empty-inner">
+                      <span class="material-icons gk-empty-icon" aria-hidden="true">movie</span>
+                      <div class="gk-empty-title">Video is being made</div>
+                      <div class="gk-empty-hint">This takes a minute or two.</div>
+                    </div>
+                  </div>
+                </div>
+                <figcaption class="gk-video-frame-caption">Version 3</figcaption>
+              </figure>
+            </div>
+            HTML;
+        });
+        ?>
+
     <hr style="border:none;border-top:1px solid var(--gk-outline-variant);margin:40px 0">
 </div>
 

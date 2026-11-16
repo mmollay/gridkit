@@ -305,6 +305,16 @@ if (isset($argv[1]) && $argv[1] === '--timeline-video') {
        . $frame('vf-error', 'gk-video-frame-error', '<div class="gk-empty"><div class="gk-empty-inner"><span class="material-icons gk-empty-icon" aria-hidden="true">error</span>'
              . '<div class="gk-empty-title">No video</div><div class="gk-empty-hint">' . $long . $long . '</div></div></div>', 'Version 3 failed')
        . '</div></div>'
+       // 1.131.0: the landscape variant — a portrait file and a portrait picture in it (the box does not grow), a landscape picture, the two states.
+       . '<div id="vq-box">'
+       . $frame('vq-video', 'gk-video-frame-landscape', $video, 'A portrait file in a 16:9 frame')
+       . $frame('vq-img', 'gk-video-frame-landscape', '<img src="' . $svg(1600, 900, 5) . '" alt="Landscape picture">', 'A landscape picture')
+       . $frame('vq-hoch', 'gk-video-frame-landscape', '<img src="' . $svg(540, 960, 3) . '" alt="Portrait picture">', 'A portrait picture')
+       . $frame('vq-busy', 'gk-video-frame-landscape gk-video-frame-busy', '<div class="gk-empty" role="status"><div class="gk-empty-inner"><span class="material-icons gk-empty-icon" aria-hidden="true">movie</span>'
+             . '<div class="gk-empty-title">Video is being made</div><div class="gk-empty-hint">This takes a minute or two.</div></div></div>', 'Version 3')
+       . $frame('vq-error', 'gk-video-frame-landscape gk-video-frame-error', '<div class="gk-empty"><div class="gk-empty-inner"><span class="material-icons gk-empty-icon" aria-hidden="true">error</span>'
+             . '<div class="gk-empty-title">No video</div><div class="gk-empty-hint">' . $long . $long . '</div></div></div>', 'Version 3 failed')
+       . '</div>'
        . '<button type="button" id="after">After</button>'
        . '</main>' . $script . '</body></html>';
     exit;

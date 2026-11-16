@@ -253,10 +253,10 @@ const rect = (page, sel) => page.evaluate((s) => { const r = document.querySelec
     // ═══ THE PORTRAIT VIDEO FRAME ═══════════════════════════════════════════════════════════════
 
     const FRAMES = ["vf-video", "vf-safe", "vf-img", "vf-wide", "vf-busy", "vf-error"];
-    const masse = () => page.evaluate((ids) => Object.fromEntries(ids.map((id) => {
+    const masse = (liste = FRAMES) => page.evaluate((ids) => Object.fromEntries(ids.map((id) => {
       const f = document.getElementById(id), m = f.querySelector(".gk-video-frame-media"), r = m.getBoundingClientRect(), fr = f.getBoundingClientRect(), cap = f.querySelector(".gk-video-frame-caption").getBoundingClientRect();
       return [id, { w: r.width, h: r.height, ratio: r.width / r.height, frameW: fr.width, left: r.left, right: r.right, top: r.top, bottom: r.bottom, capTop: cap.top, capRight: cap.right, capW: cap.width }];
-    })), FRAMES);
+    })), liste);
 
     // ── V01 9:16, whatever is inside, at the default size ────────────────────────────────────
     const v1 = await masse();
@@ -366,7 +366,7 @@ const rect = (page, sel) => page.evaluate((s) => { const r = document.querySelec
     check("V06 in a frame 120px wide the long message scrolls down inside the box and does not run out sideways", klein.over <= 0 && klein.scrolls, klein);
     const puls = await page.evaluate(() => document.getAnimations().filter((a) => a.effect && a.effect.target && a.effect.target.closest && a.effect.target.closest(".gk-video-frame"))
       .map((a) => ({ name: a.animationName, frame: a.effect.target.closest(".gk-video-frame").id })));
-    check("V06 the busy symbol pulses (gk-dot-pulse) and nothing else in the frames moves", puls.length === 1 && puls[0].name === "gk-dot-pulse" && puls[0].frame === "vf-busy", puls);
+    check("V06 the busy symbol pulses (gk-dot-pulse) and nothing else in the frames moves (the busy 9:16 frame and the busy landscape frame, 1.131.0)", puls.length === 2 && puls.every((a) => a.name === "gk-dot-pulse") && puls.map((a) => a.frame).sort().join() === "vf-busy,vq-busy", puls);
     await page.emulateMedia({ reducedMotion: "reduce" });
     const ruhig = await page.evaluate(() => getComputedStyle(document.querySelector("#vf-busy .gk-empty-icon")).animationName);
     await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -395,6 +395,76 @@ const rect = (page, sel) => page.evaluate((s) => { const r = document.querySelec
       check(`V08 ${w}×${h}: no sideways scroll, each frame inside the window, 9:16, at most 75 % of the height`,
         quer <= 0 && FRAMES.every((id) => ph[id].right <= w && near(ph[id].ratio, 9 / 16, 0.004) && ph[id].h <= h * 0.75 + 1 && ph[id].capRight <= w + 0.5), { quer, ph });
       if (w === 360) await shot(page, "video-frames-360", "#vf-box");
+    }
+    await page.setViewportSize({ width: 1440, height: 1000 });
+
+    // ═══ THE LANDSCAPE VARIANT (1.131.0) ════════════════════════════════════════════════════════
+
+    const QUER = ["vq-video", "vq-img", "vq-hoch", "vq-busy", "vq-error"];
+    const q1 = await masse(QUER);
+    check("V09 every landscape frame is 16:9 (a portrait file, a landscape and a portrait picture, busy, failed) — a portrait file does not give the box a height of its own",
+      QUER.every((id) => near(q1[id].ratio, 16 / 9, 0.01)), q1);
+    check("V09 … in a window 1000px high the limit (750px) does not bite: the frame is as wide as the column (928px) and 522px high; the caption lies under the box and does not widen the frame",
+      QUER.every((id) => near(q1[id].w, 928, 1.5) && near(q1[id].h, 522, 1.5) && near(q1[id].frameW, q1[id].w, 0.5) && q1[id].capTop >= q1[id].bottom - 0.5), q1);
+    // The limit follows the window, and the shape holds when it bites: 400px high → 300px, 533.3px wide.
+    const qh = {};
+    for (const h of [400, 2000]) {
+      await page.setViewportSize({ width: 1440, height: h });
+      qh[h] = await masse(QUER);
+    }
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    check("V10 a window 400px high: the limit bites — 300px high, 533px wide, still 16:9 (the width follows the limit, not a max-height alone); at 2000px the column (928px) is the limit; the figure itself is as wide as its box, so the caption and a centring margin follow the box",
+      QUER.every((id) => near(qh[400][id].h, 300, 1) && near(qh[400][id].w, 533.33, 1.5) && near(qh[400][id].frameW, qh[400][id].w, 1.5) && near(qh[400][id].ratio, 16 / 9, 0.01) && near(qh[2000][id].w, 928, 1.5) && near(qh[2000][id].ratio, 16 / 9, 0.01)), qh);
+    // A column narrower than the limit: the column wins, the shape stays.
+    const qs = {};
+    for (const w of [300, 150]) {
+      await page.evaluate((w) => { document.getElementById("vq-box").style.width = w + "px"; }, w);
+      qs[w] = await masse(QUER);
+    }
+    await page.evaluate(() => { document.getElementById("vq-box").style.width = ""; });
+    check("V10 a column 300px wide: 300 × 169px, 16:9; at 150px: 150 × 84px", QUER.every((id) => near(qs[300][id].w, 300, 1) && near(qs[300][id].h, 168.75, 1.5) && near(qs[150][id].w, 150, 1) && near(qs[150][id].h, 84.4, 1.5)), qs);
+    // The picture lies in the box and is shown whole, in a landscape box too.
+    const qi = await page.evaluate(() => {
+      const o = {};
+      for (const [id, sel] of [["vq-video", "video"], ["vq-img", "img"], ["vq-hoch", "img"]]) {
+        const m = document.querySelector("#" + id + " .gk-video-frame-media"), el = m.querySelector(sel), r = el.getBoundingClientRect(), b = m.getBoundingClientRect(), c = getComputedStyle(el);
+        o[id] = { dl: r.left - b.left, dt: r.top - b.top, dr: b.right - r.right, db: b.bottom - r.bottom, fit: c.objectFit, pos: c.position };
+      }
+      return o;
+    });
+    check("V11 the <video> and the <img> fill the landscape box inside its 1px edge, in the box and not in the flow, shown whole (contain) — a portrait picture is not cut",
+      Object.values(qi).every((o) => near(o.dl, 1, 0.6) && near(o.dt, 1, 0.6) && near(o.dr, 1, 0.6) && near(o.db, 1, 0.6) && o.fit === "contain" && o.pos === "absolute"), qi);
+    // The frame is left-aligned like the 9:16 one; the safe zones, the states and the caption are the frame's own.
+    const qz = await page.evaluate(() => {
+      const f = document.getElementById("vq-busy"), m = f.querySelector(".gk-video-frame-media"), bm = getComputedStyle(m), e = getComputedStyle(f.querySelector(".gk-empty-icon"));
+      const er = getComputedStyle(document.querySelector("#vq-error .gk-video-frame-media"));
+      return { busyBorder: bm.borderTopStyle, busyAnim: e.animationName, errBorder: er.borderTopColor, margin: getComputedStyle(f).marginLeft, left: f.getBoundingClientRect().left - document.getElementById("vq-box").getBoundingClientRect().left };
+    });
+    check("V11 busy keeps its dashed edge and its pulse in the landscape frame, failed its edge in the error colour, the figure keeps margin 0 and the left edge of the column",
+      qz.busyBorder === "dashed" && /gk-dot-pulse/.test(qz.busyAnim) && qz.errBorder !== "rgba(0, 0, 0, 0)" && qz.margin === "0px" && near(qz.left, 0, 0.5), qz);
+    // Weight: a rule of a page with ONE class wins, on the figure and on the box (it is loaded after GridKit, as every consumer's CSS is).
+    await page.addStyleTag({ content: ".vq-eigen { width: 200px; } .vq-eigen-box { aspect-ratio: 1 / 1; }" });
+    const gewicht = await page.evaluate(() => {
+      const f = document.getElementById("vq-img"), m = f.querySelector(".gk-video-frame-media");
+      f.classList.add("vq-eigen"); m.classList.add("vq-eigen-box");
+      const r = m.getBoundingClientRect(), fr = f.getBoundingClientRect();
+      return { frameW: fr.width, ratio: r.width / r.height };
+    });
+    check("V12 weight: a rule of a page with one class (width on the figure, aspect-ratio on the box) wins over the landscape variant — GridKit is never more specific than its consumers", near(gewicht.frameW, 200, 0.5) && near(gewicht.ratio, 1, 0.02), gewicht);
+    await page.evaluate(() => { const f = document.getElementById("vq-img"); f.classList.remove("vq-eigen"); f.querySelector(".gk-video-frame-media").classList.remove("vq-eigen-box"); });
+    await shot(page, "video-frames-landscape-1440", "#vq-box");
+    await mode(page, "dark");
+    await shot(page, "video-frames-landscape-dark-1440", "#vq-box");
+    await mode(page, "light");
+    // A phone: no sideways scroll, each landscape frame inside the window.
+    for (const [w, h] of [[360, 640], [320, 568]]) {
+      await page.setViewportSize({ width: w, height: h });
+      await settle(page);
+      const ph = await masse(QUER);
+      const seitwaerts = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      check(`V13 ${w}×${h}: no sideways scroll, each landscape frame inside the window, 16:9, at most 75 % of the height`,
+        seitwaerts <= 0 && QUER.every((id) => ph[id].right <= w && near(ph[id].ratio, 16 / 9, 0.01) && ph[id].h <= h * 0.75 + 1 && ph[id].capRight <= w + 0.5), { seitwaerts, ph });
+      if (w === 360) await shot(page, "video-frames-landscape-360", "#vq-box");
     }
     await page.setViewportSize({ width: 1440, height: 1000 });
   } finally {

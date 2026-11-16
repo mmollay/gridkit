@@ -279,6 +279,7 @@ $version = trim(file_get_contents(__DIR__ . '/../VERSION'));
         .demo-timelines h4 { margin:0 0 12px; font-size:13px; font-weight:600; color:var(--gk-on-surface-variant); }
         .demo-frames { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start; }
         .demo-frames .gk-video-frame { flex:0 1 220px; }
+        .demo-frames .gk-video-frame-landscape { flex:0 1 380px; }
 
         /* ── Sortable container (1.97.0) ────────────────────────────────── */
         .demo-sort-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; }

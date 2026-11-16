@@ -65,6 +65,32 @@ return [
     T::ok(!isset($c['autoplay']) && !str_contains(gkCssBare(), 'autoplay'), 'something in the stylesheet speaks of autoplay');
 },
 
+// ── The landscape variant (1.131.0): the same frame at 16:9 ───────────────
+
+'the landscape variant is 16:9 and takes its width from the same height limit — one class on the figure, nothing for the page to override' => function (): void {
+    $f = gkCssDecl(gkCssRule('.gk-video-frame-landscape'));
+    T::ok($f !== [], '.gk-video-frame-landscape has no rule');
+    T::eq($f['width'] ?? '', 'min(100%, calc(var(--gk-video-frame-max-h) * 16 / 9))', 'the width is not the smaller of the column and 16/9 of the height limit');
+    $m = gkCssDecl(gkCssRule(':where(.gk-video-frame-landscape) > .gk-video-frame-media'));
+    T::eq($m['aspect-ratio'] ?? '', '16 / 9', 'the box of the landscape frame is not 16:9');
+    // The limit and the rest stay the frame\'s own: the variant adds a shape and nothing else.
+    T::eq(array_keys($f), ['width'], 'the variant sets more than the width on the figure: ' . implode(', ', array_keys($f)));
+    T::eq(array_keys($m), ['aspect-ratio'], 'the variant sets more than the shape on the box: ' . implode(', ', array_keys($m)));
+    // Weight: one class on the figure, the box inside :where() — a rule of a page with one class (loaded after GridKit) still wins (memory of 21.09.2026).
+    $css = gkCssBare();
+    T::ok(!preg_match('/\.gk-video-frame-landscape\s+\.gk-video-frame-media\s*\{/', $css) && !preg_match('/\.gk-video-frame\.gk-video-frame-landscape/', $css), 'a rule of the variant weighs two classes — it beats a page\'s own one-class rule');
+    // It stands after the 9:16 rules it changes, so the same weight is decided by the order.
+    T::ok(strpos($css, '.gk-video-frame-landscape') > strpos($css, "\n.gk-video-frame-media {"), 'the variant stands before the rules of the box it changes');
+    T::ok(strpos($css, '.gk-video-frame-landscape') > strpos($css, "\n.gk-video-frame {"), 'the variant stands before the rule of the frame it changes');
+},
+
+'the landscape variant keeps everything else of the frame: limit, picture whole, states' => function (): void {
+    // Not a second block of rules: the media in the box, the caption and the two states are the frame\'s, shared.
+    $css = gkCssBare();
+    T::eq(substr_count($css, '.gk-video-frame-landscape'), 2, 'the variant has more rules than the width and the shape — it is a second frame');
+    T::eq(gkCssDeclFor('.gk-video-frame-media')['max-height'] ?? '', 'var(--gk-video-frame-max-h)', 'the box has lost the height limit the variant relies on');
+},
+
 // ── The safe zones ──────────────────────────────────────────────────────────
 
 'the safe zones are guide lines on request: a modifier class, two numbers a page can change, nothing in the way of the controls' => function (): void {

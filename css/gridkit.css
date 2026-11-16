@@ -9441,7 +9441,8 @@ label.gk-setting-title {
 }
 
 /* === VIDEO FRAME (1.96.0): .gk-video-frame ================================
-   A frame for a portrait video or picture (9:16): a short, a story, a phone screenshot.
+   A frame for a portrait video or picture (9:16): a short, a story, a phone screenshot; with
+   .gk-video-frame-landscape (1.131.0) the same frame at 16:9 (see below).
    A bare <video> of a vertical file is as wide as its column and three screens tall, so
    the frame limits the height (75% of the window, dvh with vh behind it) and takes its
    WIDTH from that limit — min(column, limit × 9/16) — because a max-height alone would
@@ -9481,6 +9482,18 @@ label.gk-setting-title {
   border: 1px solid var(--gk-outline-variant);
   border-radius: var(--gk-radius-lg);
   background: var(--gk-surface-container);
+}
+/* 1.131.0: .gk-video-frame-landscape — the same frame for a 16:9 video or picture (a recording, a film, a screen shot).
+   Only the shape changes: the box is 16:9 and the WIDTH comes from the same height limit, min(column, limit × 16/9) — in a
+   column the frame is as wide as the column until the limit bites, then it keeps its 16:9. Everything else (the picture lies in
+   the box and is shown whole, the caption, the safe zones, busy and failed, the limit --gk-video-frame-max-h) is the frame's own.
+   The safe zones are drawn for a portrait short; a landscape video has no use for them. Weight: one class on the figure and
+   the box inside :where() (one class), both after the 9:16 rules they change — a rule of a page with one class still wins. */
+.gk-video-frame-landscape {
+  width: min(100%, calc(var(--gk-video-frame-max-h) * 16 / 9));
+}
+:where(.gk-video-frame-landscape) > .gk-video-frame-media {
+  aspect-ratio: 16 / 9;
 }
 .gk-video-frame-media > video,
 .gk-video-frame-media > img {

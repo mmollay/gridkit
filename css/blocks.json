@@ -655,11 +655,13 @@
         },
         "video-frame": {
             "name": "Portrait video frame",
+            "changed": "1.131.0",
             "classes": {
                 "gk-video-frame": "1.96.0",
                 "gk-video-frame-busy": "1.96.0",
                 "gk-video-frame-caption": "1.96.0",
                 "gk-video-frame-error": "1.96.0",
+                "gk-video-frame-landscape": "1.131.0",
                 "gk-video-frame-media": "1.96.0",
                 "gk-video-frame-safe": "1.96.0"
             }
