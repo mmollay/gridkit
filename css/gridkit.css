@@ -381,6 +381,13 @@ a:hover {
   display: none !important;
 }
 
+/* A drawing of the view toggle (1.132.0, [data-gk-view]) is hidden the same way: it is the
+   page's own block, often without a gk- class, and a page that gives it display: grid would
+   otherwise show both drawings. Same shape as the rule above, [hidden] last. */
+:where([data-gk-view]):not([style*="display"])[hidden] {
+  display: none !important;
+}
+
 /* === TABLE === */
 .gk-table-wrap {
   /* A table must never widen the space it was given. Without these two lines

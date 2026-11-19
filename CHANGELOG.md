@@ -7,6 +7,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 > left as written. From 1.28.0 onwards the changelog is in English.
 
 ---
+## [1.132.0] - 2026-11-19
+
+A switch between two drawings of one list. The SSI Panel draws its ideas as a table and as cards and needs the person to choose; until now every page that wanted this wrote the same twenty lines of script (hide one block, show the other, press the button, remember it). Now it is markup.
+
+### Added
+- **View toggle** (`js/gridkit.js`, block "1.132.0 — view toggle"): a `.gk-segmented` with `data-gk-view-toggle="<id>"` and buttons `data-gk-set-view="<name>"` chooses between `[data-gk-view="<name>"]` blocks inside `[data-gk-view-scope="<id>"]`. The chosen block is shown, the others get `hidden`; the pressed button gets `aria-pressed="true"`; the scope names the drawing in `data-gk-view-active`.
+- The choice is remembered in the browser under `gk-view-<id>` (in the namespace of `GK.theme`, so the next person at a shared computer does not inherit it). Start: stored, else `data-gk-view-default`, else the first button; a stored name no button knows is ignored. Every storage access is wrapped: without storage the toggle still switches, for this page view.
+- Scopes with the same id switch together; a person's choice fires `gk:viewchange` (`detail: { id, view }`, bubbling) on each scope.
+- `GK.view.init(root)` shows the stored choice in content that arrives later (`GK.initContent` calls it; a page that swaps a scope itself calls it on the new element), `GK.view.get(id)`, `GK.view.set(id, name)`.
+- No PHP class: the toggle is the existing `.gk-segmented`, the state is the `hidden` attribute. One zero-weight rule, `:where([data-gk-view])[hidden]`, makes it hide even a block of the page that sets its own `display` (the rule for every `gk-` class does the same for GridKit blocks). The server writes the default drawing visible and the others `hidden`, the toggle `hidden`: a page without the script shows the default and offers no dead switch.
+
+### Demo
+- Tabs, "View toggle": a table and cards with the switch.
+
+### Docs
+- `GRIDKIT_SKILL.md` ("View toggle" under the segmented button), `skill/reference/components.md` (generated), `SPEC.md`.
+
+### Tests
+- `tests/view-toggle.test.php`: the block is one closed function after the density block, every storage access is in a try, the first pass and later content are hooked, the state is the attributes (no style, no class), the documentation and the demo show the markup.
+- `ci/browser-view.js` (fixture `ci/browser-view-fixture.php`): defaults, a click, the keyboard (Enter, Tab, Space; the outline), two scopes of one id, a reload, a stored name no button knows, storage that throws, `GK.initContent`, a scope without a toggle, 390 px without sideways scroll, the page without the script. Counter-checks: nine one-line breaks of the block, each turns it red.
+
+---
 ## [1.131.0] - 2026-11-16
 
 The video frame in landscape. `.gk-video-frame` has been 9:16 only: the SSI Panel put a 16:9 video (its approval dialog "Video freigeben", a recording of a survival day) into a narrow portrait box with black bars on both sides (Martin, 16.11.2026: "das ist ja ein Video, aber hier sehe ich eine Short-Vorschau"). The Panel had a local override for its page; the dialog had none.

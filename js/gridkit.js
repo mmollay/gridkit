@@ -11469,6 +11469,148 @@ function _gkShowIfInit(root) {
   }
   _gkReady(function () { scan(document.documentElement); });
 })();
+// === 1.132.0 — view toggle ([data-gk-view-toggle]) ===
+/*
+ * One list, drawn two ways: a table and cards, a list and a grid. The page renders every drawing
+ * next to the others, each in a [data-gk-view="name"] block inside a [data-gk-view-scope="id"]
+ * element; a [data-gk-view-toggle="id"] group of [data-gk-set-view="name"] buttons (a
+ * .gk-segmented) chooses which one stands. This block shows the chosen drawing, hides the
+ * others (the hidden attribute), writes the name on the scope as data-gk-view-active, marks the
+ * pressed button with aria-pressed and remembers the choice in the browser.
+ *
+ * The choice a person starts with: the one stored under "gk-view-<id>" (in the namespace of
+ * GK.theme, like the density of a table), else the toggle's data-gk-view-default, else its first
+ * button. localStorage can be missing or throw (a private window, blocked site data); every
+ * access is wrapped and the choice then holds for this page view only. The server writes the
+ * default drawing visible and the others hidden, so a page without this script shows the default
+ * and nothing is lost; the toggle is rendered hidden and shown here, because a toggle that does
+ * nothing is not offered.
+ *
+ * Content that arrives later (GK.initContent: AJAX navigation, a modal, a live table) goes through
+ * GK.view.init(root); a page that swaps a scope itself calls GK.view.init(newScope). Scopes with
+ * the same id share one choice, so two lists of one page switch together.
+ * A choice made by the person fires gk:viewchange on every scope of that id: { id, view }.
+ */
+(function () {
+  function storageKey(id) {
+    var name = "gk-view-" + id;
+    return GK.theme && typeof GK.theme._key === "function" ? GK.theme._key(name) : name;
+  }
+
+  function stored(id) {
+    try {
+      return window.localStorage.getItem(storageKey(id));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function store(id, view) {
+    try {
+      window.localStorage.setItem(storageKey(id), view);
+    } catch (e) {}
+  }
+
+  function byId(attr, id) {
+    return document.querySelectorAll("[" + attr + '="' + String(id).replace(/["\\]/g, "\\$&") + '"]');
+  }
+
+  /** The drawings of one scope: its own [data-gk-view] blocks, not those of a scope nested inside. */
+  function blocks(scope) {
+    return Array.prototype.filter.call(scope.querySelectorAll("[data-gk-view]"), function (el) {
+      return el.closest("[data-gk-view-scope]") === scope;
+    });
+  }
+
+  function names(id) {
+    var out = [];
+    byId("data-gk-view-toggle", id).forEach(function (group) {
+      group.querySelectorAll("[data-gk-set-view]").forEach(function (btn) {
+        out.push(btn.getAttribute("data-gk-set-view"));
+      });
+    });
+    return out;
+  }
+
+  /** The drawing that stands now: stored, else the toggle's default, else its first button. */
+  function current(id) {
+    var known = names(id);
+    var saved = stored(id);
+    if (saved !== null && known.indexOf(saved) > -1) return saved;
+    var group = byId("data-gk-view-toggle", id)[0];
+    var first = group ? group.getAttribute("data-gk-view-default") : "";
+    return first && known.indexOf(first) > -1 ? first : known[0] || "";
+  }
+
+  function showScope(scope, view) {
+    scope.setAttribute("data-gk-view-active", view);
+    blocks(scope).forEach(function (el) {
+      el.hidden = el.getAttribute("data-gk-view") !== view;
+    });
+  }
+
+  function showToggle(group, view) {
+    group.querySelectorAll("[data-gk-set-view]").forEach(function (btn) {
+      btn.setAttribute("aria-pressed", btn.getAttribute("data-gk-set-view") === view ? "true" : "false");
+    });
+    group.hidden = false;
+  }
+
+  function show(id, view) {
+    byId("data-gk-view-scope", id).forEach(function (scope) { showScope(scope, view); });
+    byId("data-gk-view-toggle", id).forEach(function (group) { showToggle(group, view); });
+  }
+
+  /** The person chose: show, remember, tell the scopes. */
+  function choose(id, view) {
+    if (names(id).indexOf(view) < 0) return;
+    store(id, view);
+    show(id, view);
+    byId("data-gk-view-scope", id).forEach(function (scope) {
+      scope.dispatchEvent(new CustomEvent("gk:viewchange", { bubbles: true, detail: { id: id, view: view } }));
+    });
+  }
+
+  function each(root, selector, fn) {
+    var scope = root && root.querySelectorAll ? root : document;
+    if (scope !== document && scope.matches && scope.matches(selector)) fn(scope);
+    scope.querySelectorAll(selector).forEach(fn);
+  }
+
+  GK.view = {
+    /** Shows the current choice on every toggle and scope in root (the document by default). */
+    init: function (root) {
+      each(root, "[data-gk-view-toggle]", function (group) {
+        var id = group.getAttribute("data-gk-view-toggle");
+        showToggle(group, current(id));
+      });
+      each(root, "[data-gk-view-scope]", function (scope) {
+        var view = current(scope.getAttribute("data-gk-view-scope"));
+        if (view) showScope(scope, view);
+      });
+    },
+    /** The drawing that stands for id, "" when no toggle names one. */
+    get: current,
+    /** Chooses a drawing for id as a click would: shown, remembered, gk:viewchange fired. */
+    set: choose,
+  };
+
+  document.addEventListener("click", function (ev) {
+    var btn = ev.target.closest ? ev.target.closest("[data-gk-set-view]") : null;
+    var group = btn ? btn.closest("[data-gk-view-toggle]") : null;
+    if (group) choose(group.getAttribute("data-gk-view-toggle"), btn.getAttribute("data-gk-set-view"));
+  });
+
+  if (typeof GK.initContent === "function") {
+    var initContent = GK.initContent;
+    GK.initContent = function (root) {
+      var result = initContent.apply(this, arguments);
+      GK.view.init(root);
+      return result;
+    };
+  }
+  _gkReady(function () { GK.view.init(document); });
+})();
 // === 1.118.0 — one pager (Table::paginate) ===
 /*
  * The pager of a paginated table is the bar of GridKit\Pagination now: Table::renderPager() writes

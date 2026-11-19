@@ -349,6 +349,38 @@ use GridKit\Tabs;
     &lt;div class="gk-segmented" role="group" aria-label="Period"&gt;…&lt;/div&gt;
 &lt;/div&gt;</pre></div>
 
+    <h3 class="demo-h3">View toggle</h3>
+    <p class="demo-intro">One list, two drawings: a table and cards. The page renders both, each in a <code>data-gk-view</code> block inside a <code>data-gk-view-scope</code>; a <code>.gk-segmented</code> with <code>data-gk-view-toggle</code> chooses, and the choice is remembered in the browser (since 1.132.0). The toggle is rendered <code>hidden</code> and shown by the script; without it the default drawing stands.</p>
+    <div class="demo-card">
+        <div class="gk-segmented" role="group" aria-label="View of the list" data-gk-view-toggle="demo-ansicht" data-gk-view-default="table" hidden>
+            <button type="button" class="gk-segmented-item" data-gk-set-view="table" aria-pressed="false">Table</button>
+            <button type="button" class="gk-segmented-item" data-gk-set-view="cards" aria-pressed="false">Cards</button>
+        </div>
+        <div data-gk-view-scope="demo-ansicht">
+            <div data-gk-view="table">
+                <div class="gk-table-wrap"><table class="gk-table gk-table-mobile-card">
+                    <thead><tr><th>Name</th><th>State</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Name">Carla</td><td data-label="State">Active</td></tr>
+                        <tr><td data-label="Name">Anton</td><td data-label="State">Draft</td></tr>
+                    </tbody>
+                </table></div>
+            </div>
+            <div data-gk-view="cards" hidden>
+                <div class="gk-card"><strong>Carla</strong><p>Active</p></div>
+                <div class="gk-card"><strong>Anton</strong><p>Draft</p></div>
+            </div>
+        </div>
+    </div>
+    <div class="demo-code"><pre>&lt;div class="gk-segmented" role="group" aria-label="View" data-gk-view-toggle="list" data-gk-view-default="table" hidden&gt;
+    &lt;button type="button" class="gk-segmented-item" data-gk-set-view="table" aria-pressed="false"&gt;Table&lt;/button&gt;
+    &lt;button type="button" class="gk-segmented-item" data-gk-set-view="cards" aria-pressed="false"&gt;Cards&lt;/button&gt;
+&lt;/div&gt;
+&lt;div data-gk-view-scope="list"&gt;
+    &lt;div data-gk-view="table"&gt;…&lt;/div&gt;
+    &lt;div data-gk-view="cards" hidden&gt;…&lt;/div&gt;
+&lt;/div&gt;</pre></div>
+
     <h3 class="demo-h3">Nested tabs</h3>
     <p class="demo-intro">A <code>.gk-tabs</code> inside a panel of another: a click on an outer tab leaves the inner choice alone (fixed in 1.101.0 — it used to clear every inner tab). Arrow keys move inside one row only.</p>
     <div class="demo-card">

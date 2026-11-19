@@ -1,4 +1,4 @@
-# GridKit 1.131.0 — components
+# GridKit 1.132.0 — components
 
 Generated from GRIDKIT_SKILL.md. Rules first: see ../SKILL.md.
 
@@ -981,6 +981,33 @@ of a list. Everything else (URLs, `current()`, `preserve()`) is unchanged; an ic
 
 The chosen one is `aria-current` (any value but "false"), `aria-pressed="true"` (buttons) or
 `.gk-active`. A row too wide for a phone scrolls; it never takes the whole width by itself.
+
+### View toggle
+
+A list drawn two ways — a table and cards, a list and a grid — with a switch between them
+(since 1.132.0, `js/gridkit.js`, no PHP class). The page renders every drawing; the script shows one.
+
+```html
+<div class="gk-segmented" role="group" aria-label="View" data-gk-view-toggle="orders" data-gk-view-default="table" hidden>
+    <button type="button" class="gk-segmented-item" data-gk-set-view="table" aria-pressed="false">Table</button>
+    <button type="button" class="gk-segmented-item" data-gk-set-view="cards" aria-pressed="false">Cards</button>
+</div>
+<div data-gk-view-scope="orders">
+    <div data-gk-view="table">…</div>
+    <div data-gk-view="cards" hidden>…</div>
+</div>
+```
+
+- The server writes the default drawing visible and the others `hidden`; the toggle is rendered `hidden`
+  and shown by the script. Without the script the default stands and no dead switch is offered.
+- Start: the choice stored in the browser (`gk-view-<id>`, in the namespace of `GK.theme`), else
+  `data-gk-view-default`, else the first button. A stored name no button knows is ignored. A browser
+  without storage still switches, for this page view.
+- Scopes with the same id switch together. The scope gets `data-gk-view-active="<name>"`, a person's
+  choice fires `gk:viewchange` (`detail: { id, view }`, bubbles) on each scope.
+- `GK.view.init(root)` shows the stored choice in new content (`GK.initContent` calls it; a page that
+  swaps a scope itself calls it on the new element), `GK.view.get(id)`, `GK.view.set(id, name)`.
+- A drawing is a block of its own, any element: `hidden` hides it even where the page gives it a `display` rule (`:where([data-gk-view])[hidden]`, as for every `gk-` class).
 
 ### YearFilter
 
